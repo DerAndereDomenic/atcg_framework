@@ -1,6 +1,11 @@
 #pragma once
 
 #include <Core/LayerStack.h>
+#include <Core/Window.h>
+
+#include <Events/WindowEvent.h>
+
+#include <memory>
 
 int main(int argc, char** argv);
 
@@ -47,10 +52,13 @@ namespace atcg
 
     private:
         void run();
-
+        bool onWindowClose(WindowCloseEvent& e);
+        bool onWindowResize(WindowResizeEvent& e);
     private:
         bool _running = false;
         LayerStack _layer_stack;
+        std::unique_ptr<Window> _window;
+
         friend int ::main(int argc, char** argv);
     };
 

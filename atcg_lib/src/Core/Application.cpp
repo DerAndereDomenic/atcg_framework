@@ -1,11 +1,12 @@
 #include <Core/Application.h>
-#include <Events/WindowEvent.h>
+#include <Core/API.h>
 
 namespace atcg
 {
     Application::Application()
     {
-
+        _window = std::make_unique<Window>(WindowProps());
+        _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
     }
 
     Application::~Application()
@@ -27,6 +28,8 @@ namespace atcg
     void Application::onEvent(Event& e)
     {
         EventDispatcher dispatcher(e);
+        dispatcher.dispatch<WindowCloseEvent>(ATCG_BIND_EVENT_FN(Application::onWindowClose));
+        dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(Application::onWindowResize));
         
         for(auto it = _layer_stack.rbegin(); it != _layer_stack.rend(); ++it)
         {
@@ -51,6 +54,19 @@ namespace atcg
             {
                 layer->onImGuiRender();
             }
+
+            _window->onUpdate();
         }
+    }
+
+    bool Application::onWindowClose(WindowCloseEvent& e)
+    {
+        _running = false;
+        return true;
+    }
+
+    bool Application::onWindowResize(WindowResizeEvent& e)
+    {
+        return false;
     }
 }

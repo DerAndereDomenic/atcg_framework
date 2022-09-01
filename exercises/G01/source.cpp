@@ -10,13 +10,13 @@ class G01Layer : public atcg::Layer
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        printf("Attach\n");
+
     }
 
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
-        printf("Frame\n");
+
     }
 
     private:
