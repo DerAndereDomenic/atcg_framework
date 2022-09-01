@@ -2,6 +2,7 @@
 
 #include <Renderer/Camera.h>
 #include <Events/Event.h>
+#include <Events/MouseEvent.h>
 
 #include <memory>
 
@@ -19,6 +20,16 @@ namespace atcg
         inline const std::unique_ptr<Camera>& getCamera() const {return _camera;}
 
     private:
+        bool onMouseZoom(MouseScrolledEvent& event);
+
+        // Adjustable only through here for now
+        struct CameraParameters
+        {
+            float zoom_speed = 0.25f;
+        };
+
+        float _distance;
+        CameraParameters _parameters;
         std::unique_ptr<Camera> _camera;
     };
 }

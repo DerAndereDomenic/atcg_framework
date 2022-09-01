@@ -21,6 +21,8 @@ namespace atcg
         Camera(const float& aspect_ratio, const glm::vec3& position = glm::vec3(0), const glm::vec3& look_at = glm::vec3(0));
 
         inline glm::vec3 getPosition() const {return _position;}
+
+        inline glm::vec3 getLookAt() const {return _look_at;}
         
         inline glm::mat4 getProjection() const {return _projection;}
 
