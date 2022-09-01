@@ -30,6 +30,8 @@ class G01Layer : public atcg::Layer
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
         glEnableVertexAttribArray(0);
+
+        shader = std::make_unique<atcg::Shader>("shader/base.vs", "shader/base.fs");
     }
 
     // This gets called each frame
@@ -37,6 +39,7 @@ class G01Layer : public atcg::Layer
     {
         atcg::Renderer::clear();
 
+        shader->use();
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
@@ -44,6 +47,7 @@ class G01Layer : public atcg::Layer
     private:
     unsigned int vbo;
     unsigned int vao;
+    std::unique_ptr<atcg::Shader> shader;
 };
 
 class G01 : public atcg::Application
