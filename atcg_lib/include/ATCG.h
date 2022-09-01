@@ -5,6 +5,7 @@
 #include <Core/LayerStack.h>
 #include <Core/Application.h>
 #include <Core/Window.h>
+#include <Core/Input.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>

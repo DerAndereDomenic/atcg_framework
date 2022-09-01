@@ -50,6 +50,20 @@ namespace atcg
          */
         void close();
 
+        /**
+         * @brief Get the Window object
+         * 
+         * @return const std::unique_ptr<Window>& The window
+         */
+        inline const std::unique_ptr<Window>& getWindow() const {return _window;}
+
+        /**
+         * @brief Get an instance of the application
+         * 
+         * @return Application* The application instance
+         */
+        inline static Application* get() {return s_instance;}
+
     private:
         void run();
         bool onWindowClose(WindowCloseEvent& e);
@@ -60,6 +74,7 @@ namespace atcg
         std::unique_ptr<Window> _window;
 
         friend int ::main(int argc, char** argv);
+        static Application* s_instance;
     };
 
     // Entry point for client
