@@ -8,6 +8,11 @@ namespace atcg
 
     }
 
+    Application::~Application()
+    {
+        
+    }
+
     void Application::pushLayer(Layer* layer)
     {
         _layer_stack.pushLayer(layer);

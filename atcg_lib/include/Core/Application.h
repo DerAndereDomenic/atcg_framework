@@ -2,6 +2,8 @@
 
 #include <Core/LayerStack.h>
 
+int main(int argc, char** argv);
+
 namespace atcg
 {
     /**
@@ -49,6 +51,7 @@ namespace atcg
     private:
         bool _running = false;
         LayerStack _layer_stack;
+        friend int ::main(int argc, char** argv);
     };
 
     // Entry point for client

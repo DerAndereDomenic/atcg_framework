@@ -42,7 +42,7 @@ namespace atcg
          * 
          * @param delta_time The time since the last frame
          */
-        virtual void onUpdate(float delta_time);
+        virtual void onUpdate(float delta_time) {}
 
         /**
          * @brief This function should only handle imgui code
