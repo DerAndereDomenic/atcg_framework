@@ -1,6 +1,8 @@
 #pragma once
 
 //-------- CORE ---------
+#include <Core/Layer.h>
+#include <Core/LayerStack.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>
