@@ -14,3 +14,4 @@
 
 //-------- Renderer ------
 #include <Renderer/Renderer.h>
+#include <Renderer/Shader.h>
