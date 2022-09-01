@@ -16,7 +16,7 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        atcg::Renderer::clearColor(glm::vec4(1,0,0,1));
+        atcg::Renderer::clearColor(glm::vec4(0.8, 0.8, 0.8,1));
 
         float vertices[] = 
         {
@@ -36,6 +36,9 @@ public:
         glEnableVertexAttribArray(0);
 
         shader = std::make_unique<atcg::Shader>("shader/base.vs", "shader/base.fs");
+
+        float aspect_ratio = (float)atcg::Application::get()->getWindow()->getWidth() / (float)atcg::Application::get()->getWindow()->getHeight();
+        camera = std::make_unique<atcg::Camera>(aspect_ratio, glm::vec3(8,0,-10));
     }
 
     // This gets called each frame
@@ -44,6 +47,7 @@ public:
         atcg::Renderer::clear();
 
         shader->use();
+        shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
@@ -63,6 +67,7 @@ private:
     unsigned int vbo;
     unsigned int vao;
     std::unique_ptr<atcg::Shader> shader;
+    std::unique_ptr<atcg::Camera> camera;
 };
 
 class G01 : public atcg::Application

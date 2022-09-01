@@ -16,3 +16,4 @@
 //-------- Renderer ------
 #include <Renderer/Renderer.h>
 #include <Renderer/Shader.h>
+#include <Renderer/Camera.h>
