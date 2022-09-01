@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
@@ -42,6 +44,12 @@ class G01Layer : public atcg::Layer
         shader->use();
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+    // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
+    virtual void onEvent(atcg::Event& event) override
+    {
+        
     }
 
     private:
