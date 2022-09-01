@@ -1,6 +1,8 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
+#include <glad/glad.h>
+
 class G01Layer : public atcg::Layer
 {
     public:
@@ -11,15 +13,37 @@ class G01Layer : public atcg::Layer
     virtual void onAttach() override
     {
         atcg::Renderer::clearColor(glm::vec4(1,0,0,1));
+
+        float vertices[] = 
+        {
+            -0.5f, -0.5f, 0.0f,
+            0.5f, -0.5f, 0.0f,
+            0.0f, 0.5f, 0.0f
+        };
+
+        glGenVertexArrays(1, &vao);
+        glBindVertexArray(vao);
+
+        glGenBuffers(1, &vbo);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+        glEnableVertexAttribArray(0);
     }
 
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
         atcg::Renderer::clear();
+
+        glBindVertexArray(vao);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 
     private:
+    unsigned int vbo;
+    unsigned int vao;
 };
 
 class G01 : public atcg::Application
