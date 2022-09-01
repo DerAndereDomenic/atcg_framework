@@ -1,5 +1,6 @@
 #include <Core/Application.h>
 #include <Core/API.h>
+#include <Renderer/Renderer.h>
 
 namespace atcg
 {
@@ -7,6 +8,8 @@ namespace atcg
     {
         _window = std::make_unique<Window>(WindowProps());
         _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
+
+        Renderer::init();
     }
 
     Application::~Application()

@@ -11,3 +11,6 @@
 #include <Events/MouseEvent.h>
 #include <Events/WindowEvent.h>
 #include <Events/KeyEvent.h>
+
+//-------- Renderer ------
+#include <Renderer/Renderer.h>

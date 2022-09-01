@@ -10,13 +10,13 @@ class G01Layer : public atcg::Layer
     // This is run at the start of the program
     virtual void onAttach() override
     {
-
+        atcg::Renderer::clearColor(glm::vec4(1,0,0,1));
     }
 
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
-
+        atcg::Renderer::clear();
     }
 
     private:

@@ -125,6 +125,8 @@ namespace atcg
 			MouseMovedEvent event((float)xPos, (float)yPos);
 			data.on_event(event);
 		});
+
+        glfwMakeContextCurrent(_window);
     }
 
     Window::~Window()
