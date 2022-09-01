@@ -38,7 +38,7 @@ public:
         shader = std::make_unique<atcg::Shader>("shader/base.vs", "shader/base.fs");
 
         float aspect_ratio = (float)atcg::Application::get()->getWindow()->getWidth() / (float)atcg::Application::get()->getWindow()->getHeight();
-        camera = std::make_unique<atcg::Camera>(aspect_ratio, glm::vec3(8,0,-10));
+        camera_controller = std::make_unique<atcg::CameraController>(aspect_ratio);
     }
 
     // This gets called each frame
@@ -47,6 +47,7 @@ public:
         atcg::Renderer::clear();
 
         shader->use();
+        const std::unique_ptr<atcg::Camera>& camera = camera_controller->getCamera();
         shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -60,14 +61,14 @@ public:
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event& event) override
     {
-        
+        camera_controller->onEvent(event);
     }
 
 private:
     unsigned int vbo;
     unsigned int vao;
     std::unique_ptr<atcg::Shader> shader;
-    std::unique_ptr<atcg::Camera> camera;
+    std::unique_ptr<atcg::CameraController> camera_controller;
 };
 
 class G01 : public atcg::Application
