@@ -4,6 +4,8 @@
 #include <ATCG.h>
 
 #include <glad/glad.h>
+#include <OpenMesh/Core/IO/MeshIO.hh>
+#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 
 #include <glfw/glfw3.h>
 
@@ -16,30 +18,45 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        float vertices[] = 
-        {
-            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
-            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
-            -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
-            0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f
-        };
+        typedef OpenMesh::TriMesh_ArrayKernelT<> MyMesh;
+        MyMesh mesh;
+        OpenMesh::IO::read_mesh(mesh, "res/suzanne_blender.obj");
 
-        uint32_t indices[] = 
+        std::vector<float> vertex_data;
+        vertex_data.resize(mesh.n_vertices() * 3);
+        std::vector<uint32_t> indices_data;
+        indices_data.resize(mesh.n_faces() * 3);
+
+        for(auto vertex = mesh.vertices_begin(); vertex != mesh.vertices_end(); ++vertex)
         {
-            0, 1, 2,
-            1, 3, 2
-        };
+            int32_t vertex_id = vertex->idx();
+            OpenMesh::Vec3f pos = mesh.point(*vertex);
+            vertex_data[3 * vertex_id + 0] = pos[0];
+            vertex_data[3 * vertex_id + 1] = pos[1];
+            vertex_data[3 * vertex_id + 2] = pos[2];
+        }
+
+        int32_t face_id = 0;
+        for(auto face = mesh.faces_begin(); face != mesh.faces_end(); ++face)
+        {
+            int32_t vertex_id = 0;
+            for(auto vertex = face->vertices().begin(); vertex != face->vertices().end(); ++vertex)
+            {
+                indices_data[3 * face_id + vertex_id] = vertex->idx();
+                ++vertex_id;
+            }
+            ++face_id;
+        }
 
         vao = std::make_shared<atcg::VertexArray>();
-        vbo = std::make_shared<atcg::VertexBuffer>(vertices, static_cast<uint32_t>(sizeof(vertices)));
+        vbo = std::make_shared<atcg::VertexBuffer>(vertex_data.data(), static_cast<uint32_t>(sizeof(float) * vertex_data.size()));
         vbo->setLayout({
-            {atcg::ShaderDataType::Float3, "aPosition"},
-            {atcg::ShaderDataType::Float3, "aColor"}
+            {atcg::ShaderDataType::Float3, "aPosition"}
         });
 
         vao->addVertexBuffer(vbo);
 
-        std::shared_ptr<atcg::IndexBuffer> ibo = std::make_shared<atcg::IndexBuffer>(indices, 6);
+        std::shared_ptr<atcg::IndexBuffer> ibo = std::make_shared<atcg::IndexBuffer>(indices_data.data(), static_cast<uint32_t>(indices_data.size()));
         vao->setIndexBuffer(ibo);
 
         shader = std::make_shared<atcg::Shader>("shader/base.vs", "shader/base.fs");
