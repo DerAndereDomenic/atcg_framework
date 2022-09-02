@@ -12,5 +12,5 @@ void main()
 {
     gl_Position = P * V * M * vec4(aPosition, 1);
     frag_pos = vec3(M * vec4(aPosition, 1));
-    frag_normal = aNormal;
+    frag_normal = normalize(vec3(inverse(transpose(M)) * vec4(aNormal, 0)));
 }

@@ -96,12 +96,12 @@ namespace atcg
     private:
         void calculateModelMatrix();
 
-        glm::vec3 _position;
-        glm::vec3 _scale;
+        glm::vec3 _position = glm::vec3(0);
+        glm::vec3 _scale = glm::vec3(1);
         glm::mat4 _model = glm::mat4(1);
 
-        glm::vec3 _rotation_axis;
-        float _rotation_angle;
+        glm::vec3 _rotation_axis = glm::vec3(0,1,0);
+        float _rotation_angle = 0;
 
         std::shared_ptr<VertexArray> _vao;
     };

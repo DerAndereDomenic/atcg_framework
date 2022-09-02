@@ -23,6 +23,10 @@ public:
         render_mesh = std::make_shared<atcg::RenderMesh>();
         render_mesh->uploadData(mesh);
 
+        //render_mesh->setScale(glm::vec3(0.7f));
+        //render_mesh->setRotation(glm::vec3(-1,0,1), glm::radians(210.0f));
+        //render_mesh->setPosition(glm::vec3(0,0,3));
+
         float aspect_ratio = (float)atcg::Application::get()->getWindow()->getWidth() / (float)atcg::Application::get()->getWindow()->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
     }
