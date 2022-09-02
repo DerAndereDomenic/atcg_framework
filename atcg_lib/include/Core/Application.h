@@ -5,6 +5,8 @@
 
 #include <Events/WindowEvent.h>
 
+#include <ImGui/ImGuiLayer.h>
+
 #include <memory>
 
 int main(int argc, char** argv);
@@ -71,6 +73,7 @@ namespace atcg
     private:
         bool _running = false;
         LayerStack _layer_stack;
+        ImGuiLayer* _imgui_layer;
         std::unique_ptr<Window> _window;
 
         friend int ::main(int argc, char** argv);

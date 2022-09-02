@@ -20,6 +20,10 @@ namespace atcg
         ShaderManager::addShaderFromName("base");
 
         s_instance = this;
+
+        _imgui_layer = new ImGuiLayer();
+        _layer_stack.pushOverlay(_imgui_layer);
+        _imgui_layer->onAttach();
     }
 
     Application::~Application()
@@ -69,10 +73,12 @@ namespace atcg
             }
 
             //First finish the main content of all layers before doing any imgui stuff
+            _imgui_layer->begin();
             for(Layer* layer : _layer_stack)
             {
                 layer->onImGuiRender();
             }
+            _imgui_layer->end();
 
             _window->onUpdate();
 
