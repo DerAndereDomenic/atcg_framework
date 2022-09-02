@@ -22,8 +22,12 @@ public:
         MyMesh mesh;
         OpenMesh::IO::read_mesh(mesh, "res/suzanne_blender.obj");
 
+        mesh.request_vertex_normals();
+        mesh.request_face_normals();
+        mesh.update_normals();
+
         std::vector<float> vertex_data;
-        vertex_data.resize(mesh.n_vertices() * 3);
+        vertex_data.resize(mesh.n_vertices() * 6);
         std::vector<uint32_t> indices_data;
         indices_data.resize(mesh.n_faces() * 3);
 
@@ -31,9 +35,13 @@ public:
         {
             int32_t vertex_id = vertex->idx();
             OpenMesh::Vec3f pos = mesh.point(*vertex);
-            vertex_data[3 * vertex_id + 0] = pos[0];
-            vertex_data[3 * vertex_id + 1] = pos[1];
-            vertex_data[3 * vertex_id + 2] = pos[2];
+            OpenMesh::Vec3f normal = mesh.calc_vertex_normal(*vertex);
+            vertex_data[6 * vertex_id + 0] = pos[0];
+            vertex_data[6 * vertex_id + 1] = pos[1];
+            vertex_data[6 * vertex_id + 2] = pos[2];
+            vertex_data[6 * vertex_id + 3] = normal[0];
+            vertex_data[6 * vertex_id + 4] = normal[1];
+            vertex_data[6 * vertex_id + 5] = normal[2];
         }
 
         int32_t face_id = 0;
@@ -51,7 +59,8 @@ public:
         vao = std::make_shared<atcg::VertexArray>();
         vbo = std::make_shared<atcg::VertexBuffer>(vertex_data.data(), static_cast<uint32_t>(sizeof(float) * vertex_data.size()));
         vbo->setLayout({
-            {atcg::ShaderDataType::Float3, "aPosition"}
+            {atcg::ShaderDataType::Float3, "aPosition"},
+            {atcg::ShaderDataType::Float3, "aNormal"}
         });
 
         vao->addVertexBuffer(vbo);
