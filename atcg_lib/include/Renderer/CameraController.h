@@ -43,7 +43,7 @@ namespace atcg
          * 
          * @return const std::unique_ptr<Camera>& The camera
          */
-        inline const std::unique_ptr<Camera>& getCamera() const {return _camera;}
+        inline const std::shared_ptr<Camera>& getCamera() const {return _camera;}
 
     private:
         bool onMouseZoom(MouseScrolledEvent& event);
@@ -59,7 +59,7 @@ namespace atcg
 
         float _distance;
         CameraParameters _parameters;
-        std::unique_ptr<Camera> _camera;
+        std::shared_ptr<Camera> _camera;
         float _lastX = 0, _lastY = 0;
         float _currentX = 0, _currentY = 0;
     };

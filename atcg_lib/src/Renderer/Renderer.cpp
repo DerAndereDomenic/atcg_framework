@@ -28,4 +28,21 @@ namespace atcg
     {
         glClear(GL_COLOR_BUFFER_BIT);
     }
+
+    void Renderer::drawImpl(const std::shared_ptr<VertexArray>& vao, 
+                            const std::shared_ptr<Shader>& shader, 
+                            const std::shared_ptr<Camera>& camera)
+    {
+        vao->use();
+        shader->use();
+        if(camera)
+            shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+
+        const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
+
+        if(ibo)
+            glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+        else
+            std::cerr << "Missing IndexBuffer!\n";
+    }
 }

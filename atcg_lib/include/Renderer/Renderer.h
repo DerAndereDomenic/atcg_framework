@@ -1,5 +1,10 @@
 #pragma once
 
+#include <Renderer/Buffer.h>
+#include <Renderer/VertexArray.h>
+#include <Renderer/Shader.h>
+#include <Renderer/Camera.h>
+
 #include <glm/glm.hpp>
 
 namespace atcg
@@ -33,6 +38,18 @@ namespace atcg
         inline static void setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height) {s_renderer->setViewportImpl(x, y, width, height);}
 
         /**
+         * @brief Render a vao
+         * NEEDS to have an index buffer
+         * 
+         * @param vao The vertex array
+         * @param shader The shader
+         * @param camera The camera
+         */
+        inline static void draw(const std::shared_ptr<VertexArray>& vao,
+                                const std::shared_ptr<Shader>& shader,
+                                const std::shared_ptr<Camera>& camera = {}) {s_renderer->drawImpl(vao, shader, camera);}
+
+        /**
          * @brief Clear the currently bound framebuffer
          */
         inline static void clear() {return s_renderer->clearImpl();}
@@ -46,6 +63,7 @@ namespace atcg
         void initImpl();
         void clearColorImpl(const glm::vec4& color);
         void setViewportImpl(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height);
+        void drawImpl(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
         void clearImpl();
 
         static Renderer* s_renderer;
