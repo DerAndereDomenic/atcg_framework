@@ -44,6 +44,8 @@ public:
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
+        camera_controller->onUpdate(delta_time);
+
         atcg::Renderer::clear();
 
         shader->use();

@@ -23,10 +23,14 @@ namespace atcg
         inline glm::vec3 getPosition() const {return _position;}
 
         inline glm::vec3 getLookAt() const {return _look_at;}
+
+        inline glm::vec3 getUp() const {return _up;}
         
         inline glm::mat4 getProjection() const {return _projection;}
 
         inline glm::mat4 getViewProjection() const {return _projection * _view;}
+
+        inline float getAspectRatio() const {return _aspect_ratio;}
 
         inline glm::mat4 getView() const {return _view;}
 

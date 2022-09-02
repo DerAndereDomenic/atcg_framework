@@ -23,15 +23,19 @@ namespace atcg
     private:
         bool onMouseZoom(MouseScrolledEvent& event);
         bool onWindowResize(WindowResizeEvent& event);
+        bool onMouseMove(MouseMovedEvent& event);
 
         // Adjustable only through here for now
         struct CameraParameters
         {
             float zoom_speed = 0.25f;
+            float rotation_speed = 0.2f;
         };
 
         float _distance;
         CameraParameters _parameters;
         std::unique_ptr<Camera> _camera;
+        float _lastX = 0, _lastY = 0;
+        float _currentX = 0, _currentY = 0;
     };
 }
