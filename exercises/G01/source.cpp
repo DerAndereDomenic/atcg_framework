@@ -23,15 +23,11 @@ public:
             0.0f, 0.5f, 0.0f
         };
 
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
+        vao = std::make_shared<atcg::VertexArray>();
+        vbo = std::make_shared<atcg::VertexBuffer>(vertices, static_cast<uint32_t>(sizeof(vertices)));
+        vbo->setLayout({{atcg::ShaderDataType::Float3, "aPosition"}});
 
-        glGenBuffers(1, &vbo);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
+        vao->addVertexBuffer(vbo);
 
         shader = std::make_unique<atcg::Shader>("shader/base.vs", "shader/base.fs");
 
@@ -49,7 +45,8 @@ public:
         shader->use();
         const std::unique_ptr<atcg::Camera>& camera = camera_controller->getCamera();
         shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
-        glBindVertexArray(vao);
+
+        vao->use();
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         if(atcg::Input::isKeyPressed(GLFW_KEY_SPACE))
@@ -65,8 +62,8 @@ public:
     }
 
 private:
-    unsigned int vbo;
-    unsigned int vao;
+    std::shared_ptr<atcg::VertexArray> vao;
+    std::shared_ptr<atcg::VertexBuffer> vbo;
     std::unique_ptr<atcg::Shader> shader;
     std::unique_ptr<atcg::CameraController> camera_controller;
 };
