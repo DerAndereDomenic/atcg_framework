@@ -70,6 +70,11 @@ namespace atcg
         _fragment_path = fragmentPath;
     }
 
+    Shader::~Shader()
+    {
+        glDeleteProgram(_ID);
+    }
+
     void
     Shader::readShaderCode(const std::string& path, std::string* code)
     {
@@ -158,11 +163,6 @@ namespace atcg
             std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" + std::string(infoLog) + "\n";
             free(infoLog);
         }
-    }
-
-    Shader::~Shader()
-    {
-        glDeleteProgram(_ID);
     }
 
     void

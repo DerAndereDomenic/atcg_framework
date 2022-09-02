@@ -1,6 +1,7 @@
 #include <Core/Application.h>
 #include <Core/API.h>
 #include <Renderer/Renderer.h>
+#include <Renderer/ShaderManager.h>
 #include <chrono>
 
 namespace atcg
@@ -15,6 +16,8 @@ namespace atcg
         Renderer::init();
 
         Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
+
+        ShaderManager::addShaderFromName("base");
 
         s_instance = this;
     }

@@ -68,8 +68,6 @@ public:
         std::shared_ptr<atcg::IndexBuffer> ibo = std::make_shared<atcg::IndexBuffer>(indices_data.data(), static_cast<uint32_t>(indices_data.size()));
         vao->setIndexBuffer(ibo);
 
-        shader = std::make_shared<atcg::Shader>("shader/base.vs", "shader/base.fs");
-
         float aspect_ratio = (float)atcg::Application::get()->getWindow()->getWidth() / (float)atcg::Application::get()->getWindow()->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
     }
@@ -81,7 +79,7 @@ public:
 
         atcg::Renderer::clear();
 
-        atcg::Renderer::draw(vao, shader, camera_controller->getCamera());
+        atcg::Renderer::draw(vao, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(atcg::Input::isKeyPressed(GLFW_KEY_SPACE))
         {
@@ -98,7 +96,6 @@ public:
 private:
     std::shared_ptr<atcg::VertexArray> vao;
     std::shared_ptr<atcg::VertexBuffer> vbo;
-    std::shared_ptr<atcg::Shader> shader;
     std::shared_ptr<atcg::CameraController> camera_controller;
 };
 

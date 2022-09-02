@@ -16,6 +16,7 @@
 //-------- Renderer ------
 #include <Renderer/Renderer.h>
 #include <Renderer/Shader.h>
+#include <Renderer/ShaderManager.h>
 #include <Renderer/Camera.h>
 #include <Renderer/CameraController.h>
 #include <Renderer/Buffer.h>
