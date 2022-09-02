@@ -12,6 +12,8 @@ namespace atcg
         {
             std::cerr << "Error loading glad!\n";
         }
+
+        glEnable(GL_DEPTH_TEST);
     }
 
     void Renderer::clearColorImpl(const glm::vec4& color)
@@ -26,7 +28,7 @@ namespace atcg
 
     void Renderer::clearImpl()
     {
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
     void Renderer::drawImpl(const std::shared_ptr<VertexArray>& vao, 
