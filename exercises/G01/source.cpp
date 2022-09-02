@@ -8,6 +8,7 @@
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 
 #include <glfw/glfw3.h>
+#include <imgui.h>
 
 class G01Layer : public atcg::Layer
 {
@@ -85,6 +86,13 @@ public:
         {
             std::cout << "Pressed Space!\n";
         }
+    }
+
+    virtual void onImGuiRender() override
+    {
+        ImGui::Begin("Test");
+
+        ImGui::End();
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
