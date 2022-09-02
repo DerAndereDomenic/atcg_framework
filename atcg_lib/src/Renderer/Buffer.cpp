@@ -42,6 +42,14 @@ namespace atcg
         glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
     }
 
+    IndexBuffer::IndexBuffer(uint32_t count)
+        :_count(0)
+    {
+        glGenBuffers(1, &_ID);
+        glBindBuffer(GL_ARRAY_BUFFER, _ID);
+        glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
+    }
+
     IndexBuffer::~IndexBuffer()
     {
         glDeleteBuffers(1, &_ID);
@@ -50,6 +58,13 @@ namespace atcg
     void IndexBuffer::use() const
     {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ID);
+    }
+
+    void IndexBuffer::setData(const uint32_t* data, uint32_t count)
+    {
+        _count = count;
+        glBindBuffer(GL_ARRAY_BUFFER, _ID);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(uint32_t), data);
     }
 
 }

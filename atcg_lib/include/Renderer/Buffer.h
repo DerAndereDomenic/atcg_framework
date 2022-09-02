@@ -214,6 +214,13 @@ namespace atcg
         IndexBuffer(const uint32_t* indices, uint32_t count);
 
         /**
+         * @brief Construct a new Index Buffer object
+         * 
+         * @param count The size
+         */
+        IndexBuffer(uint32_t count);
+
+        /**
          * @brief Destroy the Index Buffer object
          */
         ~IndexBuffer();
@@ -222,6 +229,14 @@ namespace atcg
          * @brief Use this ibo
          */
         void use() const;
+
+        /**
+         * @brief Set the Data of the buffer
+         * 
+         * @param data The data
+         * @param size The count
+         */
+        void setData(const uint32_t* data, uint32_t count);
 
         /**
          * @brief Get the Count of objects
