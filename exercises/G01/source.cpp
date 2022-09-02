@@ -18,23 +18,28 @@ public:
     {
         float vertices[] = 
         {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.0f, 0.5f, 0.0f
+            -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,
+            0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,
+            -0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f,
+            0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f
         };
 
         uint32_t indices[] = 
         {
-            0, 1, 2
+            0, 1, 2,
+            1, 3, 2
         };
 
         vao = std::make_shared<atcg::VertexArray>();
         vbo = std::make_shared<atcg::VertexBuffer>(vertices, static_cast<uint32_t>(sizeof(vertices)));
-        vbo->setLayout({{atcg::ShaderDataType::Float3, "aPosition"}});
+        vbo->setLayout({
+            {atcg::ShaderDataType::Float3, "aPosition"},
+            {atcg::ShaderDataType::Float3, "aColor"}
+        });
 
         vao->addVertexBuffer(vbo);
 
-        std::shared_ptr<atcg::IndexBuffer> ibo = std::make_shared<atcg::IndexBuffer>(indices, 3);
+        std::shared_ptr<atcg::IndexBuffer> ibo = std::make_shared<atcg::IndexBuffer>(indices, 6);
         vao->setIndexBuffer(ibo);
 
         shader = std::make_shared<atcg::Shader>("shader/base.vs", "shader/base.fs");
