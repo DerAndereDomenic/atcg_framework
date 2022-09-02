@@ -14,6 +14,8 @@ namespace atcg
 
         Renderer::init();
 
+        Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
+
         s_instance = this;
     }
 

@@ -20,7 +20,7 @@ namespace atcg
          * 
          * @param color The clear color
          */
-        inline static void clearColor(const glm::vec4& color) {return s_renderer->clearColorImpl(color);}
+        inline static void setClearColor(const glm::vec4& color) {return s_renderer->clearColorImpl(color);}
 
         /**
          * @brief Change the viewport of the renderer

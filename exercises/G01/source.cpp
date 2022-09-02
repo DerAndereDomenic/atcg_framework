@@ -16,8 +16,6 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        atcg::Renderer::clearColor(glm::vec4(0.8, 0.8, 0.8,1));
-
         float vertices[] = 
         {
             -0.5f, -0.5f, 0.0f,
