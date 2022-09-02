@@ -4,8 +4,6 @@
 #include <ATCG.h>
 
 #include <glad/glad.h>
-#include <OpenMesh/Core/IO/MeshIO.hh>
-#include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 
 #include <glfw/glfw3.h>
 #include <imgui.h>
@@ -19,8 +17,7 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        typedef OpenMesh::TriMesh_ArrayKernelT<> MyMesh;
-        MyMesh mesh;
+        atcg::TriMesh mesh;
         OpenMesh::IO::read_mesh(mesh, "res/suzanne_blender.obj");
 
         mesh.request_vertex_normals();
