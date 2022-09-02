@@ -27,6 +27,8 @@ public:
         vao->setIndexBuffer(ibo);
 
         float aspect_ratio = (float)atcg::Application::get()->getWindow()->getWidth() / (float)atcg::Application::get()->getWindow()->getHeight();
+
+        atcg::ShaderManager::addShaderFromName("bezier");
     }
 
     // This gets called each frame
@@ -35,6 +37,35 @@ public:
         atcg::Renderer::clear();
 
         atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
+
+        int discretization = 20;
+        uint32_t point_index = 0;
+
+        const auto& shader = atcg::ShaderManager::getShader("bezier");
+        shader->use();
+        vao->use();
+        shader->setInt("discretization", discretization);
+        shader->setVec3("flat_color", glm::vec3(1,0,0));
+        if(points.size() >= 4)
+        {
+            shader->setVec3("points[0]", points[0]);
+            shader->setVec3("points[1]", points[1]);
+            shader->setVec3("points[2]", points[2]);
+            shader->setVec3("points[3]", points[3]);
+            glDrawArraysInstanced(GL_POINTS, 0, 1, discretization);
+
+            glm::vec3 last_point = points[3];
+
+            for(uint32_t i = 0; i < (points.size() - 4)/3; ++i)
+            {
+                shader->setVec3("points[0]", last_point);
+                shader->setVec3("points[1]", points[3*(i+1)+1]);
+                shader->setVec3("points[2]", points[3*(i+1)+2]);
+                shader->setVec3("points[3]", points[3*(i+1)+3]);
+                last_point = points[3*(i+1)+3];
+                glDrawArraysInstanced(GL_POINTS, 0, 1, discretization);
+            }
+        }
 
     }
 
@@ -92,7 +123,6 @@ public:
 
         vbo->setData(reinterpret_cast<float*>(points.data()), static_cast<uint32_t>(points.size() * 3 * sizeof(float)));
         ibo->setData(indices.data(), static_cast<uint32_t>(indices.size()));
-
         return true;
     }
 

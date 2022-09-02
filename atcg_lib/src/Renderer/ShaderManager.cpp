@@ -37,7 +37,7 @@ namespace atcg
         std::shared_ptr<Shader> shader;
         if(std::filesystem::exists(geometry_path))
         {
-            shader = std::make_shared<Shader>(vertex_path, fragment_path, geometry_path);
+            shader = std::make_shared<Shader>(vertex_path, geometry_path, fragment_path);
         }
         else
         {
@@ -89,7 +89,7 @@ namespace atcg
             if(recompile)
             {
                 if(has_geoemtry)
-                    shader.second.reset(new Shader(vertex_path, fragment_path, geometry_path));
+                    shader.second.reset(new Shader(vertex_path, geometry_path, fragment_path));
                 else
                     shader.second.reset(new Shader(vertex_path, fragment_path));
             }  
