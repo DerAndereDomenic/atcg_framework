@@ -58,6 +58,7 @@ namespace atcg
         auto last_time = std::chrono::high_resolution_clock::now();
         auto current_time = std::chrono::high_resolution_clock::now();
         float delta_time = 1.0f/60.0f; //Only for first frame
+        float total_time = 0.0f;
         while(_running)
         {
             last_time = current_time;
@@ -78,6 +79,15 @@ namespace atcg
             current_time = std::chrono::high_resolution_clock::now();
 
             delta_time = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_time).count() / 1000.0f;
+
+            total_time += delta_time;
+
+            //Only check for shader reloading every second
+            if(total_time >= 1.0f)
+            {
+                total_time = 0.0f;
+                ShaderManager::onUpdate();
+            }
         }
     }
 

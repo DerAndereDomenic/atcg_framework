@@ -54,7 +54,7 @@ namespace atcg
 
     void ShaderManager::onUpdateImpl()
     {
-        for(auto shader : _shader)
+        for(auto& shader : _shader)
         {
             const std::string& vertex_path = shader.second->getVertexPath();
             const std::string& fragment_path = shader.second->getFragmentPath();
