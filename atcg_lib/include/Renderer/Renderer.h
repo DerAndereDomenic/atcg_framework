@@ -4,6 +4,7 @@
 #include <Renderer/VertexArray.h>
 #include <Renderer/Shader.h>
 #include <Renderer/Camera.h>
+#include <DataStructure/RenderMesh.h>
 
 #include <glm/glm.hpp>
 
@@ -50,6 +51,17 @@ namespace atcg
                                 const std::shared_ptr<Camera>& camera = {}) {s_renderer->drawImpl(vao, shader, camera);}
 
         /**
+         * @brief Render a mesh
+         * 
+         * @param mesh The mesh
+         * @param shader The shader
+         * @param camera The camera
+         */
+        inline static void draw(const std::shared_ptr<RenderMesh>& mesh,
+                                const std::shared_ptr<Shader>& shader,
+                                const std::shared_ptr<Camera>& camera = {}) {s_renderer->drawImpl(mesh, shader, camera);}
+
+        /**
          * @brief Clear the currently bound framebuffer
          */
         inline static void clear() {return s_renderer->clearImpl();}
@@ -64,6 +76,7 @@ namespace atcg
         void clearColorImpl(const glm::vec4& color);
         void setViewportImpl(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height);
         void drawImpl(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
+        void drawImpl(const std::shared_ptr<RenderMesh>& mesh, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
         void clearImpl();
 
         static Renderer* s_renderer;

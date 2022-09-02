@@ -86,12 +86,19 @@ namespace atcg
          */
         inline void setRotation(const glm::vec3& axis, const float& angle) {_rotation_axis = axis; _rotation_angle = angle; calculateModelMatrix();}
 
+        /**
+         * @brief Get the Vertex Array object
+         * 
+         * @return std::shared_ptr<VertexArray> The vao
+         */
+        inline std::shared_ptr<VertexArray> getVertexArray() const {return _vao;}
+
     private:
         void calculateModelMatrix();
 
         glm::vec3 _position;
         glm::vec3 _scale;
-        glm::mat4 _model;
+        glm::mat4 _model = glm::mat4(1);
 
         glm::vec3 _rotation_axis;
         float _rotation_angle;

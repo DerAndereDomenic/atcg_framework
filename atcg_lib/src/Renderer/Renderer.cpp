@@ -50,4 +50,25 @@ namespace atcg
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
+
+    void Renderer::drawImpl(const std::shared_ptr<RenderMesh>& mesh, 
+                            const std::shared_ptr<Shader>& shader, 
+                            const std::shared_ptr<Camera>& camera)
+    {
+        std::shared_ptr<VertexArray> vao = mesh->getVertexArray();
+        vao->use();
+        shader->use();
+        if(camera)
+        {
+            shader->setVec3("camera_pos", camera->getPosition());
+            shader->setMVP(mesh->getModel(), camera->getView(), camera->getProjection());
+        }
+
+        const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
+
+        if(ibo)
+            glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+        else
+            std::cerr << "Missing IndexBuffer!\n";
+    }
 }
