@@ -30,11 +30,26 @@ namespace atcg
         void pushLayer(Layer* layer);
 
         /**
+         * @brief Push an overlay to the stack.
+         * Overlays always are on top of the whole stack
+         * 
+         * @param layer The layer
+         */
+        void pushOverlay(Layer* layer);
+
+        /**
          * @brief Remove a layer from the stack
          * 
          * @param layer The layer
          */
         void popLayer(Layer* layer);
+
+        /**
+         * @brief Pop an overlay
+         * 
+         * @param layer The overlay layer
+         */
+        void popOverlay(Layer* layer);
 
         // Iterators for easy access
         std::vector<Layer*>::iterator begin() { return _layers.begin(); }
