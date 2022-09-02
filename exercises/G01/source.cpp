@@ -38,8 +38,11 @@ public:
 
         atcg::Renderer::clear();
 
-        atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
-        atcg::Renderer::drawPoints(render_mesh, glm::vec3(1,0,0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+        if(render_faces)
+            atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+
+        if(render_points)
+            atcg::Renderer::drawPoints(render_mesh, glm::vec3(1,0,0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
 
         if(atcg::Input::isKeyPressed(GLFW_KEY_SPACE))
         {
@@ -53,7 +56,7 @@ public:
 
         if(ImGui::BeginMenu("Exercise"))
         {
-            ImGui::MenuItem("Test", nullptr, &show_test_window);
+            ImGui::MenuItem("Settings", nullptr, &show_test_window);
             ImGui::EndMenu();
         }
 
@@ -61,7 +64,9 @@ public:
 
         if(show_test_window)
         {
-            ImGui::Begin("Test", &show_test_window);
+            ImGui::Begin("Settings", &show_test_window);
+            ImGui::Checkbox("Render Faces", &render_faces);
+            ImGui::Checkbox("Render Vertices", &render_points);
             ImGui::End();
         }
 
@@ -77,6 +82,8 @@ private:
     std::shared_ptr<atcg::RenderMesh> render_mesh;
     std::shared_ptr<atcg::CameraController> camera_controller;
     bool show_test_window = false;
+    bool render_points = false;
+    bool render_faces = true;
 };
 
 class G01 : public atcg::Application
