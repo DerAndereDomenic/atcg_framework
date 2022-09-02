@@ -24,3 +24,6 @@
 
 //-------- OpenMesh -------
 #include <OpenMesh/OpenMesh.h>
+
+//-------- DataStructure --
+#include <DataStructure/RenderMesh.h>
