@@ -17,37 +17,25 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        std::shared_ptr<atcg::TriMesh> mesh = std::make_shared<atcg::TriMesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), "res/suzanne_blender.obj");
+        vao = std::make_shared<atcg::VertexArray>();
 
-        render_mesh = std::make_shared<atcg::RenderMesh>();
-        render_mesh->uploadData(mesh);
+        vbo = std::make_shared<atcg::VertexBuffer>(static_cast<uint32_t>(100 * sizeof(float) * 3));
+        vbo->setLayout({{atcg::ShaderDataType::Float3, "aPosition"}});
+        vao->addVertexBuffer(vbo);
 
-        //render_mesh->setScale(glm::vec3(0.7f));
-        //render_mesh->setRotation(glm::vec3(-1,0,1), glm::radians(210.0f));
-        //render_mesh->setPosition(glm::vec3(0,0,3));
+        ibo = std::make_shared<atcg::IndexBuffer>(100);
+        vao->setIndexBuffer(ibo);
 
         float aspect_ratio = (float)atcg::Application::get()->getWindow()->getWidth() / (float)atcg::Application::get()->getWindow()->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
     }
 
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
-        camera_controller->onUpdate(delta_time);
-
         atcg::Renderer::clear();
 
-        if(render_faces)
-            atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+        atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
 
-        if(render_points)
-            atcg::Renderer::drawPoints(render_mesh, glm::vec3(1,0,0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
-
-        if(atcg::Input::isKeyPressed(GLFW_KEY_SPACE))
-        {
-            std::cout << "Pressed Space!\n";
-        }
     }
 
     virtual void onImGuiRender() override
@@ -65,8 +53,6 @@ public:
         if(show_test_window)
         {
             ImGui::Begin("Settings", &show_test_window);
-            ImGui::Checkbox("Render Faces", &render_faces);
-            ImGui::Checkbox("Render Vertices", &render_points);
             ImGui::End();
         }
 
@@ -75,15 +61,48 @@ public:
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event& event) override
     {
-        camera_controller->onEvent(event);
+        atcg::EventDispatcher distpatcher(event);
+        if(atcg::Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT))
+        {
+            distpatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(G01Layer::onMousePressed));
+        }
+    }
+
+    bool onMousePressed(atcg::MouseButtonPressedEvent& e)
+    {
+        if(points.size() >= 100)
+        {
+            printf("Max numbers of points reached\n");
+            return false;
+        }
+
+        const auto& window = atcg::Application::get()->getWindow();
+
+        float width = (float)window->getWidth();
+        float height = (float)window->getHeight();
+        glm::vec2 mouse_pos = atcg::Input::getMousePosition();
+
+        float x_ndc = (static_cast<float>(mouse_pos.x)) / (static_cast<float>(width) / 2.0f) - 1.0f;
+		float y_ndc = (static_cast<float>(height) - static_cast<float>(mouse_pos.y)) / (static_cast<float>(height) / 2.0f) - 1.0f;
+
+		glm::vec3 world_pos(x_ndc, y_ndc, 0.0f);
+
+        points.push_back(world_pos);
+        indices.push_back(static_cast<uint32_t>(indices.size()));
+
+        vbo->setData(reinterpret_cast<float*>(points.data()), static_cast<uint32_t>(points.size() * 3 * sizeof(float)));
+        ibo->setData(indices.data(), static_cast<uint32_t>(indices.size()));
+
+        return true;
     }
 
 private:
-    std::shared_ptr<atcg::RenderMesh> render_mesh;
-    std::shared_ptr<atcg::CameraController> camera_controller;
+    std::vector<glm::vec3> points;
+    std::vector<uint32_t> indices;
+    std::shared_ptr<atcg::VertexArray> vao;
+    std::shared_ptr<atcg::VertexBuffer> vbo;
+    std::shared_ptr<atcg::IndexBuffer> ibo;
     bool show_test_window = false;
-    bool render_points = false;
-    bool render_faces = true;
 };
 
 class G01 : public atcg::Application
