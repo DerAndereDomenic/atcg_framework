@@ -90,9 +90,22 @@ public:
 
     virtual void onImGuiRender() override
     {
-        ImGui::Begin("Test");
+        ImGui::BeginMainMenuBar();
 
-        ImGui::End();
+        if(ImGui::BeginMenu("Exercise"))
+        {
+            ImGui::MenuItem("Test", nullptr, &show_test_window);
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+
+        if(show_test_window)
+        {
+            ImGui::Begin("Test", &show_test_window);
+            ImGui::End();
+        }
+
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -105,6 +118,7 @@ private:
     std::shared_ptr<atcg::VertexArray> vao;
     std::shared_ptr<atcg::VertexBuffer> vbo;
     std::shared_ptr<atcg::CameraController> camera_controller;
+    bool show_test_window = false;
 };
 
 class G01 : public atcg::Application
