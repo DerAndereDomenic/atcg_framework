@@ -30,7 +30,7 @@ namespace atcg
                 float pitchDelta = offsetY * delta_time * _parameters.rotation_speed * _camera->getAspectRatio();
                 float yawDelta = - offsetX * delta_time * _parameters.rotation_speed;
 
-                glm::vec3 forward = glm::normalize(_camera->getPosition());
+                glm::vec3 forward = glm::normalize(_camera->getPosition() - _camera->getLookAt());
 
                 glm::vec3 rightDirection = glm::cross(forward, _camera->getUp());
 
@@ -38,7 +38,28 @@ namespace atcg
                                                         glm::angleAxis(-yawDelta, _camera->getUp())));
                 forward = glm::rotate(q, forward);
 
-                _camera->setPosition(_distance * forward);
+                _camera->setPosition(_camera->getLookAt() + _distance * forward);
+            }
+        }
+        else if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_2))
+        {
+            float offsetX = _lastX - _currentX;
+            float offsetY = _lastY - _currentY;
+
+            if(offsetX != 0 || offsetY != 0)
+            {
+                float yDelta = -offsetY * delta_time * _parameters.rotation_speed * _camera->getAspectRatio();
+                float xDelta = -offsetX * delta_time * _parameters.rotation_speed;
+
+                glm::vec3 forward = glm::normalize(_camera->getPosition() - _camera->getLookAt());
+
+                glm::vec3 up_local = glm::vec3(_camera->getView()[1]);
+                glm::vec3 rightDirection = glm::cross(forward, up_local);
+
+                glm::vec3 tangent = xDelta * rightDirection + yDelta * up_local;
+
+                _camera->setPosition(_camera->getPosition() + tangent);
+                _camera->setLookAt(_camera->getLookAt() + tangent);
             }
         }
 
@@ -59,8 +80,8 @@ namespace atcg
         float offset = event.getYOffset();
         
         _distance *= glm::exp2(-offset * _parameters.zoom_speed);
-        glm::vec3 back_dir = glm::normalize(_camera->getPosition());
-        _camera->setPosition(back_dir * _distance);
+        glm::vec3 back_dir = glm::normalize(_camera->getPosition() - _camera->getLookAt());
+        _camera->setPosition(_camera->getLookAt() + back_dir * _distance);
 
         return false;
     }
