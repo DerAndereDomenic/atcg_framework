@@ -3,6 +3,7 @@
 #include <Renderer/Camera.h>
 #include <Events/Event.h>
 #include <Events/MouseEvent.h>
+#include <Events/WindowEvent.h>
 
 #include <memory>
 
@@ -21,6 +22,7 @@ namespace atcg
 
     private:
         bool onMouseZoom(MouseScrolledEvent& event);
+        bool onWindowResize(WindowResizeEvent& event);
 
         // Adjustable only through here for now
         struct CameraParameters

@@ -19,6 +19,7 @@ namespace atcg
     {
         EventDispatcher dispatcher(e);
         dispatcher.dispatch<MouseScrolledEvent>(ATCG_BIND_EVENT_FN(CameraController::onMouseZoom));
+        dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(CameraController::onWindowResize));
     }
 
     bool CameraController::onMouseZoom(MouseScrolledEvent& event)
@@ -29,6 +30,13 @@ namespace atcg
         glm::vec3 back_dir = glm::normalize(_camera->getPosition());
         _camera->setPosition(back_dir * _distance);
 
+        return false;
+    }
+
+    bool CameraController::onWindowResize(WindowResizeEvent& event)
+    {
+        float aspect_ratio = (float)event.getWidth() / (float)event.getHeight();
+        _camera->setAspectRatio(aspect_ratio);
         return false;
     }
 }

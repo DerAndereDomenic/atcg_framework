@@ -19,6 +19,11 @@ namespace atcg
         glClearColor(color.r, color.g, color.b, color.a);
     }
 
+    void Renderer::setViewportImpl(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
+    {
+        glViewport(x, y, width, height);
+    }
+
     void Renderer::clearImpl()
     {
         glClear(GL_COLOR_BUFFER_BIT);

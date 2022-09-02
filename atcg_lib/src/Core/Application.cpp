@@ -74,6 +74,7 @@ namespace atcg
 
     bool Application::onWindowResize(WindowResizeEvent& e)
     {
+        Renderer::setViewport(0, 0, e.getWidth(), e.getHeight());
         return false;
     }
 }
