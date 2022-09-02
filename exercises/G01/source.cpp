@@ -27,8 +27,12 @@ public:
         mesh.request_face_normals();
         mesh.update_normals();
 
-        std::vector<float> vertex_data;
-        vertex_data.resize(mesh.n_vertices() * 6);
+        std::vector<float> position_data;
+        std::vector<float> normal_data;
+        position_data.resize(mesh.n_vertices() * 3);
+        normal_data.resize(mesh.n_vertices() * 3);
+
+
         std::vector<uint32_t> indices_data;
         indices_data.resize(mesh.n_faces() * 3);
 
@@ -37,12 +41,12 @@ public:
             int32_t vertex_id = vertex->idx();
             OpenMesh::Vec3f pos = mesh.point(*vertex);
             OpenMesh::Vec3f normal = mesh.calc_vertex_normal(*vertex);
-            vertex_data[6 * vertex_id + 0] = pos[0];
-            vertex_data[6 * vertex_id + 1] = pos[1];
-            vertex_data[6 * vertex_id + 2] = pos[2];
-            vertex_data[6 * vertex_id + 3] = normal[0];
-            vertex_data[6 * vertex_id + 4] = normal[1];
-            vertex_data[6 * vertex_id + 5] = normal[2];
+            position_data[3 * vertex_id + 0] = pos[0];
+            position_data[3 * vertex_id + 1] = pos[1];
+            position_data[3 * vertex_id + 2] = pos[2];
+            normal_data[3 * vertex_id + 0] = normal[0];
+            normal_data[3 * vertex_id + 1] = normal[1];
+            normal_data[3 * vertex_id + 2] = normal[2];
         }
 
         int32_t face_id = 0;
@@ -58,13 +62,17 @@ public:
         }
 
         vao = std::make_shared<atcg::VertexArray>();
-        vbo = std::make_shared<atcg::VertexBuffer>(vertex_data.data(), static_cast<uint32_t>(sizeof(float) * vertex_data.size()));
-        vbo->setLayout({
-            {atcg::ShaderDataType::Float3, "aPosition"},
+        std::shared_ptr<atcg::VertexBuffer> vbo_pos = std::make_shared<atcg::VertexBuffer>(position_data.data(), static_cast<uint32_t>(sizeof(float) * position_data.size()));
+        vbo_pos->setLayout({
+            {atcg::ShaderDataType::Float3, "aPosition"}
+        });
+        vao->addVertexBuffer(vbo_pos);
+
+        std::shared_ptr<atcg::VertexBuffer> vbo_normal = std::make_shared<atcg::VertexBuffer>(normal_data.data(), static_cast<uint32_t>(sizeof(float) * normal_data.size()));
+        vbo_normal->setLayout({
             {atcg::ShaderDataType::Float3, "aNormal"}
         });
-
-        vao->addVertexBuffer(vbo);
+        vao->addVertexBuffer(vbo_normal);
 
         std::shared_ptr<atcg::IndexBuffer> ibo = std::make_shared<atcg::IndexBuffer>(indices_data.data(), static_cast<uint32_t>(indices_data.size()));
         vao->setIndexBuffer(ibo);
@@ -116,7 +124,6 @@ public:
 
 private:
     std::shared_ptr<atcg::VertexArray> vao;
-    std::shared_ptr<atcg::VertexBuffer> vbo;
     std::shared_ptr<atcg::CameraController> camera_controller;
     bool show_test_window = false;
 };
