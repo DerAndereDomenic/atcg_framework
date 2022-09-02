@@ -62,6 +62,33 @@ namespace atcg
                                 const std::shared_ptr<Camera>& camera = {}) {s_renderer->drawImpl(mesh, shader, camera);}
 
         /**
+         * @brief Render a vao as points
+         * NEEDS to have an index buffer
+         * 
+         * @param vao The vertex array
+         * @param color The color
+         * @param shader The shader
+         * @param camera The camera
+         */
+        inline static void drawPoints(const std::shared_ptr<VertexArray>& vao,
+                                      const glm::vec3& color,
+                                      const std::shared_ptr<Shader>& shader,
+                                      const std::shared_ptr<Camera>& camera = {}) {s_renderer->drawPointsImpl(vao, color, shader, camera);}
+
+        /**
+         * @brief Render a mesh as points
+         * 
+         * @param mesh The mesh
+         * @param color The color
+         * @param shader The shader
+         * @param camera The camera
+         */
+        inline static void drawPoints(const std::shared_ptr<RenderMesh>& mesh,
+                                      const glm::vec3& color,
+                                      const std::shared_ptr<Shader>& shader,
+                                      const std::shared_ptr<Camera>& camera = {}) {s_renderer->drawPointsImpl(mesh, color, shader, camera);}
+
+        /**
          * @brief Clear the currently bound framebuffer
          */
         inline static void clear() {return s_renderer->clearImpl();}
@@ -77,6 +104,8 @@ namespace atcg
         void setViewportImpl(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height);
         void drawImpl(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
         void drawImpl(const std::shared_ptr<RenderMesh>& mesh, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
+        void drawPointsImpl(const std::shared_ptr<RenderMesh>& mesh, const glm::vec3& color, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
+        void drawPointsImpl(const std::shared_ptr<VertexArray>& vao, const glm::vec3& color, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
         void clearImpl();
 
         static Renderer* s_renderer;

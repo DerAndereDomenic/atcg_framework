@@ -73,4 +73,51 @@ namespace atcg
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
+
+    void Renderer::drawPointsImpl(const std::shared_ptr<VertexArray>& vao, 
+                                  const glm::vec3& color, 
+                                  const std::shared_ptr<Shader>& shader, 
+                                  const std::shared_ptr<Camera>& camera)
+    {
+        vao->use();
+        shader->use();
+        if(camera)
+        {
+            shader->setVec3("flat_color", color);
+            shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+        }
+
+        const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
+
+        glPointSize(4);
+
+        if(ibo)
+            glDrawElements(GL_POINTS, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+        else
+            std::cerr << "Missing IndexBuffer!\n";
+    }
+
+    void Renderer::drawPointsImpl(const std::shared_ptr<RenderMesh>& mesh, 
+                                  const glm::vec3& color, 
+                                  const std::shared_ptr<Shader>& shader, 
+                                  const std::shared_ptr<Camera>& camera)
+    {
+        std::shared_ptr<VertexArray> vao = mesh->getVertexArray();
+        vao->use();
+        shader->use();
+        if(camera)
+        {
+            shader->setVec3("flat_color", color);
+            shader->setMVP(mesh->getModel(), camera->getView(), camera->getProjection());
+        }
+
+        const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
+
+        glPointSize(8);
+
+        if(ibo)
+            glDrawElements(GL_POINTS, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+        else
+            std::cerr << "Missing IndexBuffer!\n";
+    }
 }

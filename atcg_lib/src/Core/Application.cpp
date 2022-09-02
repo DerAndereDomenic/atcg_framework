@@ -18,6 +18,7 @@ namespace atcg
         Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 
         ShaderManager::addShaderFromName("base");
+        ShaderManager::addShaderFromName("flat");
 
         s_instance = this;
 

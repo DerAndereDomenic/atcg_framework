@@ -39,6 +39,7 @@ public:
         atcg::Renderer::clear();
 
         atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+        atcg::Renderer::drawPoints(render_mesh, glm::vec3(1,0,0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
 
         if(atcg::Input::isKeyPressed(GLFW_KEY_SPACE))
         {
