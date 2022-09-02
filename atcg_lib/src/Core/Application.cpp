@@ -1,6 +1,7 @@
 #include <Core/Application.h>
 #include <Core/API.h>
 #include <Renderer/Renderer.h>
+#include <chrono>
 
 namespace atcg
 {
@@ -49,11 +50,16 @@ namespace atcg
     void Application::run()
     {
         _running = true;
+        auto last_time = std::chrono::high_resolution_clock::now();
+        auto current_time = std::chrono::high_resolution_clock::now();
+        float delta_time = 1.0f/60.0f; //Only for first frame
         while(_running)
         {
+            last_time = current_time;
+
             for(Layer* layer : _layer_stack)
             {
-                layer->onUpdate(0);
+                layer->onUpdate(delta_time);
             }
 
             //First finish the main content of all layers before doing any imgui stuff
@@ -63,6 +69,10 @@ namespace atcg
             }
 
             _window->onUpdate();
+
+            current_time = std::chrono::high_resolution_clock::now();
+
+            delta_time = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - last_time).count() / 1000.0f;
         }
     }
 
