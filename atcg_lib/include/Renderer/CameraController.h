@@ -9,15 +9,40 @@
 
 namespace atcg
 {
+    /**
+     * @brief A class to model camera movement
+     * Scroll to zoom
+     * Drag to rotate
+     */
     class CameraController
     {
     public:
+        /**
+         * @brief Construct a new Camera Controller object
+         * 
+         * @param aspect_ratio The aspect ratio of the camera
+         */
         CameraController(const float& aspect_ratio);
 
+        /**
+         * @brief Gets called every frame
+         * 
+         * @param delta_time Time since last frame
+         */
         void onUpdate(float delta_time);
 
+        /**
+         * @brief Handles events
+         * 
+         * @param e The event
+         */
         void onEvent(Event& e);
 
+        /**
+         * @brief Get the Camera object
+         * 
+         * @return const std::unique_ptr<Camera>& The camera
+         */
         inline const std::unique_ptr<Camera>& getCamera() const {return _camera;}
 
     private:
