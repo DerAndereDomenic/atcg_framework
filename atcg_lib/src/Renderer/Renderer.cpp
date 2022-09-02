@@ -38,7 +38,10 @@ namespace atcg
         vao->use();
         shader->use();
         if(camera)
+        {
+            shader->setVec3("camera_pos", camera->getPosition());
             shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+        }
 
         const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
