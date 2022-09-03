@@ -17,6 +17,9 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
+        //This data is used for rendering
+        //The vbo holds the actual points to render
+        //The vao holds information about the buffer structure. Here we only have a float3 for the position
         vao = std::make_shared<atcg::VertexArray>();
 
         vbo = std::make_shared<atcg::VertexBuffer>(static_cast<uint32_t>(max_num_points * sizeof(float) * 3));
@@ -26,12 +29,12 @@ public:
         ibo = std::make_shared<atcg::IndexBuffer>(max_num_points);
         vao->setIndexBuffer(ibo);
 
-        float aspect_ratio = (float)atcg::Application::get()->getWindow()->getWidth() / (float)atcg::Application::get()->getWindow()->getHeight();
-
+        //Add custom shader for bezier and hermite curves
         atcg::ShaderManager::addShaderFromName("bezier");
         atcg::ShaderManager::addShaderFromName("hermite");
     }
 
+    //This function renders the curves by passing the points as uniform data and using the supplied shader
     void drawCurve(const std::shared_ptr<atcg::Shader>& shader, const glm::vec3& color)
     {
         shader->use();
@@ -56,6 +59,7 @@ public:
                 ++index;
             }
 
+            //Fill the last point into the uniforms if there were not enough points
             if(index != 1)
             {
                 for(uint32_t i = index; i < 4; ++i)
@@ -70,6 +74,7 @@ public:
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
+        //Renders points and curves
         atcg::Renderer::clear();
 
         if(render_points && points.size() > 0)
@@ -148,19 +153,24 @@ public:
 
         points.push_back(world_pos);
 
-
+        //We consider curves of degree 3. Therefore, to get a continuous spline we have to add
+        //new points when we placed the third point. This happens hiere
         if(continuity_index == 3)
         {
+            //TODO: Generate a new point to achieve C1-continuity
+            //<solution>
             glm::vec3 second_last = points[points.size() - 2];
 
             glm::vec3 deriv = second_last - world_pos;
 
             points.push_back(world_pos - deriv);
+            //</solution>
 
             continuity_index = 1;
         }
         ++continuity_index;
 
+        //Update the rendering data
         vbo->setData(reinterpret_cast<float*>(points.data()), static_cast<uint32_t>(points.size() * 3 * sizeof(float)));
         size_t old_size = indices.size();
         indices.resize(points.size());

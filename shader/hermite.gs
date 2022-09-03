@@ -11,12 +11,15 @@ in VS_OUT
 
 vec3 hermite(float u, vec3 p0, vec3 p1, vec3 t0, vec3 t1)
 {
+    vec3 p;
+    //<solution>
     float F1 = 2.0*u*u*u - 3.0*u*u + 1.0;
     float F2 = -2.0*u*u*u + 3.0*u*u;
     float F3 = u*u*u - 2.0*u*u + u;
     float F4 = u*u*u - u*u;
 
-    vec3 p = F1*p0 + F2*p1 + F3*t0 + F4*t1;
+    p = F1*p0 + F2*p1 + F3*t0 + F4*t1;
+    //</solution>
     return p;
 }
 

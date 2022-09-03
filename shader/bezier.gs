@@ -11,12 +11,16 @@ in VS_OUT
 
 vec3 bezier(float u, vec3 p0, vec3 p1, vec3 p2, vec3 p3)
 {
+    vec3 p;
+    //<solution>
     float B0 = (1.-u)*(1.-u)*(1.-u);
     float B1 = 3.*u*(1.-u)*(1.-u);
     float B2 = 3.*u*u*(1.-u);
     float B3 = u*u*u;
 
-    return B0*p0 + B1*p1 + B2*p2 + B3*p3;
+    p =  B0*p0 + B1*p1 + B2*p2 + B3*p3;
+    //</solution>
+    return p;
 }
 
 uniform int discretization;
