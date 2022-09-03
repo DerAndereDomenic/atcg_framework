@@ -124,7 +124,6 @@ public:
 		glm::vec3 world_pos(x_ndc, y_ndc, 0.0f);
 
         points.push_back(world_pos);
-        indices.push_back(static_cast<uint32_t>(indices.size()));
 
 
         if(continuity_index == 3)
@@ -134,13 +133,16 @@ public:
             glm::vec3 deriv = second_last - world_pos;
 
             points.push_back(world_pos - deriv);
-            indices.push_back(static_cast<uint32_t>(indices.size()));
 
             continuity_index = 1;
         }
         ++continuity_index;
 
         vbo->setData(reinterpret_cast<float*>(points.data()), static_cast<uint32_t>(points.size() * 3 * sizeof(float)));
+        size_t old_size = indices.size();
+        indices.resize(points.size());
+        std::iota(indices.begin() + old_size, indices.end(), old_size);
+
         ibo->setData(indices.data(), static_cast<uint32_t>(indices.size()));
         return true;
     }
