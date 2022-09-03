@@ -136,4 +136,31 @@ namespace atcg
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
+
+    void Renderer::drawLinesImpl(const std::shared_ptr<VertexArray>& vao, 
+                                 const glm::vec3& color, 
+                                 const std::shared_ptr<Shader>& shader, 
+                                 const std::shared_ptr<Camera>& camera)
+    {
+        vao->use();
+        shader->use();
+        shader->setVec3("flat_color", color);
+        if(camera)
+        {
+            shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+        }
+        else
+        {
+            shader->setMVP();
+        }
+
+        const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
+
+        glPointSize(4);
+
+        if(ibo)
+            glDrawElements(GL_LINE_STRIP, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+        else
+            std::cerr << "Missing IndexBuffer!\n";
+    }
 }

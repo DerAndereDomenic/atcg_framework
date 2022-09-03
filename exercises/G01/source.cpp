@@ -75,6 +75,9 @@ public:
         if(render_points && points.size() > 0)
             atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
 
+        if(render_polygon && points.size() > 0)
+            atcg::Renderer::drawLines(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
+
         if(render_bezier)
             drawCurve(atcg::ShaderManager::getShader("bezier"), glm::vec3(1,0,0));
 
@@ -105,6 +108,7 @@ public:
             }
 
             ImGui::Checkbox("Render Points", &render_points);
+            ImGui::Checkbox("Render Polygon", &render_polygon);
             ImGui::Checkbox("Render bezier", &render_bezier);
             ImGui::Checkbox("Render hermite", &render_hermite);
             ImGui::InputInt("Discretization", &discretization);
@@ -178,6 +182,7 @@ private:
     bool render_bezier = true;
     bool render_hermite = true;
     bool render_points = true;
+    bool render_polygon = true;
     int discretization = 20;
 };
 
