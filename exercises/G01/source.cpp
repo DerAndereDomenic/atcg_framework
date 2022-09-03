@@ -34,7 +34,6 @@ public:
 
     void drawCurve(const std::shared_ptr<atcg::Shader>& shader, const glm::vec3& color)
     {
-        int discretization = 20;
         shader->use();
         vao->use();
         shader->setInt("discretization", discretization);
@@ -73,7 +72,7 @@ public:
     {
         atcg::Renderer::clear();
 
-        if(points.size() > 0)
+        if(render_points && points.size() > 0)
             atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
 
         if(render_bezier)
@@ -105,8 +104,10 @@ public:
                 continuity_index = 0;
             }
 
+            ImGui::Checkbox("Render Points", &render_points);
             ImGui::Checkbox("Render bezier", &render_bezier);
             ImGui::Checkbox("Render hermite", &render_hermite);
+            ImGui::InputInt("Discretization", &discretization);
             ImGui::End();
         }
 
@@ -144,7 +145,7 @@ public:
         points.push_back(world_pos);
 
 
-        /*if(continuity_index == 3)
+        if(continuity_index == 3)
         {
             glm::vec3 second_last = points[points.size() - 2];
 
@@ -154,7 +155,7 @@ public:
 
             continuity_index = 1;
         }
-        ++continuity_index;*/
+        ++continuity_index;
 
         vbo->setData(reinterpret_cast<float*>(points.data()), static_cast<uint32_t>(points.size() * 3 * sizeof(float)));
         size_t old_size = indices.size();
@@ -176,6 +177,8 @@ private:
     uint32_t continuity_index = 0;
     bool render_bezier = true;
     bool render_hermite = true;
+    bool render_points = true;
+    int discretization = 20;
 };
 
 class G01 : public atcg::Application
