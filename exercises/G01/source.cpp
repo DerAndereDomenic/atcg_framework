@@ -19,11 +19,11 @@ public:
     {
         vao = std::make_shared<atcg::VertexArray>();
 
-        vbo = std::make_shared<atcg::VertexBuffer>(static_cast<uint32_t>(100 * sizeof(float) * 3));
+        vbo = std::make_shared<atcg::VertexBuffer>(static_cast<uint32_t>(max_num_points * sizeof(float) * 3));
         vbo->setLayout({{atcg::ShaderDataType::Float3, "aPosition"}});
         vao->addVertexBuffer(vbo);
 
-        ibo = std::make_shared<atcg::IndexBuffer>(100);
+        ibo = std::make_shared<atcg::IndexBuffer>(max_num_points);
         vao->setIndexBuffer(ibo);
 
         float aspect_ratio = (float)atcg::Application::get()->getWindow()->getWidth() / (float)atcg::Application::get()->getWindow()->getHeight();
@@ -39,34 +39,39 @@ public:
         atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
 
         int discretization = 20;
-        uint32_t point_index = 0;
 
         const auto& shader = atcg::ShaderManager::getShader("bezier");
         shader->use();
         vao->use();
         shader->setInt("discretization", discretization);
         shader->setVec3("flat_color", glm::vec3(1,0,0));
-        if(points.size() >= 4)
+
+        if(points.size() > 0)
         {
             shader->setVec3("points[0]", points[0]);
-            shader->setVec3("points[1]", points[1]);
-            shader->setVec3("points[2]", points[2]);
-            shader->setVec3("points[3]", points[3]);
-            glDrawArraysInstanced(GL_POINTS, 0, 1, discretization);
-
-            glm::vec3 last_point = points[3];
-
-            for(uint32_t i = 0; i < (points.size() - 4)/3; ++i)
+            int32_t index = 1;
+            for(uint32_t i = 1; i < points.size(); ++i)
             {
-                shader->setVec3("points[0]", last_point);
-                shader->setVec3("points[1]", points[3*(i+1)+1]);
-                shader->setVec3("points[2]", points[3*(i+1)+2]);
-                shader->setVec3("points[3]", points[3*(i+1)+3]);
-                last_point = points[3*(i+1)+3];
+                shader->setVec3("points[" + std::to_string(index) + "]", points[i]);
+
+                if(index == 3)
+                {
+                    glDrawArraysInstanced(GL_POINTS, 0, 1, discretization);
+                    shader->setVec3("points[0]", points[i]);
+                    index = 0;
+                }
+                ++index;
+            }
+
+            if(index != 1)
+            {
+                for(uint32_t i = index; i < 4; ++i)
+                {
+                    shader->setVec3("points["+ std::to_string(i) + "]", points.back());
+                }
                 glDrawArraysInstanced(GL_POINTS, 0, 1, discretization);
             }
         }
-
     }
 
     virtual void onImGuiRender() override
@@ -101,7 +106,7 @@ public:
 
     bool onMousePressed(atcg::MouseButtonPressedEvent& e)
     {
-        if(points.size() >= 100)
+        if(points.size() >= max_num_points)
         {
             printf("Max numbers of points reached\n");
             return false;
@@ -133,6 +138,7 @@ private:
     std::shared_ptr<atcg::VertexBuffer> vbo;
     std::shared_ptr<atcg::IndexBuffer> ibo;
     bool show_test_window = false;
+    uint32_t max_num_points = 100;
 };
 
 class G01 : public atcg::Application
