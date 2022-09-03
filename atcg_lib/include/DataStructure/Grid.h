@@ -239,7 +239,7 @@ namespace atcg
         int32_t y = (index / _num_voxels) % _num_voxels - voxel_half;
         int32_t z = index / (_num_voxels * _num_voxels) - voxel_half;
 
-        return make_int3(x,y,z);
+        return glm::ivec3(x,y,z);
     }
 
     template<class VoxelT>
@@ -273,7 +273,7 @@ namespace atcg
         int32_t y = static_cast<int32_t>(floor(center.y / _voxel_length + 0.5f));
         int32_t z = static_cast<int32_t>(floor(center.z / _voxel_length + 0.5f));
 
-        return make_int3(x,y,z);
+        return glm::ivec3(x,y,z);
     }
 
     template<class VoxelT>
