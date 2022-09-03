@@ -8,6 +8,8 @@
 #include <glfw/glfw3.h>
 #include <imgui.h>
 
+#include "MarchingCubesTable.h"
+
 class G02Layer : public atcg::Layer
 {
 public:
