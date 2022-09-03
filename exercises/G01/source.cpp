@@ -29,15 +29,16 @@ public:
         float aspect_ratio = (float)atcg::Application::get()->getWindow()->getWidth() / (float)atcg::Application::get()->getWindow()->getHeight();
 
         atcg::ShaderManager::addShaderFromName("bezier");
+        atcg::ShaderManager::addShaderFromName("hermite");
     }
 
-    void drawCurve(const std::shared_ptr<atcg::Shader>& shader)
+    void drawCurve(const std::shared_ptr<atcg::Shader>& shader, const glm::vec3& color)
     {
         int discretization = 20;
         shader->use();
         vao->use();
         shader->setInt("discretization", discretization);
-        shader->setVec3("flat_color", glm::vec3(1,0,0));
+        shader->setVec3("flat_color", color);
 
         if(points.size() > 0)
         {
@@ -74,8 +75,8 @@ public:
 
         atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
 
-        const auto& shader = atcg::ShaderManager::getShader("bezier");
-        drawCurve(shader);
+        drawCurve(atcg::ShaderManager::getShader("bezier"), glm::vec3(1,0,0));
+        drawCurve(atcg::ShaderManager::getShader("hermite"), glm::vec3(0,1,0));
     }
 
     virtual void onImGuiRender() override
