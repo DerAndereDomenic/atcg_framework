@@ -126,6 +126,20 @@ public:
         points.push_back(world_pos);
         indices.push_back(static_cast<uint32_t>(indices.size()));
 
+
+        if(continuity_index == 3)
+        {
+            glm::vec3 second_last = points[points.size() - 2];
+
+            glm::vec3 deriv = second_last - world_pos;
+
+            points.push_back(world_pos - deriv);
+            indices.push_back(static_cast<uint32_t>(indices.size()));
+
+            continuity_index = 1;
+        }
+        ++continuity_index;
+
         vbo->setData(reinterpret_cast<float*>(points.data()), static_cast<uint32_t>(points.size() * 3 * sizeof(float)));
         ibo->setData(indices.data(), static_cast<uint32_t>(indices.size()));
         return true;
@@ -139,6 +153,7 @@ private:
     std::shared_ptr<atcg::IndexBuffer> ibo;
     bool show_test_window = false;
     uint32_t max_num_points = 100;
+    uint32_t continuity_index = 0;
 };
 
 class G01 : public atcg::Application
