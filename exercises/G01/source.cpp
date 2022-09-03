@@ -31,16 +31,9 @@ public:
         atcg::ShaderManager::addShaderFromName("bezier");
     }
 
-    // This gets called each frame
-    virtual void onUpdate(float delta_time) override
+    void drawCurve(const std::shared_ptr<atcg::Shader>& shader)
     {
-        atcg::Renderer::clear();
-
-        atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
-
         int discretization = 20;
-
-        const auto& shader = atcg::ShaderManager::getShader("bezier");
         shader->use();
         vao->use();
         shader->setInt("discretization", discretization);
@@ -72,6 +65,17 @@ public:
                 glDrawArraysInstanced(GL_POINTS, 0, 1, discretization);
             }
         }
+    }
+
+    // This gets called each frame
+    virtual void onUpdate(float delta_time) override
+    {
+        atcg::Renderer::clear();
+
+        atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
+
+        const auto& shader = atcg::ShaderManager::getShader("bezier");
+        drawCurve(shader);
     }
 
     virtual void onImGuiRender() override
@@ -126,7 +130,7 @@ public:
         points.push_back(world_pos);
 
 
-        if(continuity_index == 3)
+        /*if(continuity_index == 3)
         {
             glm::vec3 second_last = points[points.size() - 2];
 
@@ -136,7 +140,7 @@ public:
 
             continuity_index = 1;
         }
-        ++continuity_index;
+        ++continuity_index;*/
 
         vbo->setData(reinterpret_cast<float*>(points.data()), static_cast<uint32_t>(points.size() * 3 * sizeof(float)));
         size_t old_size = indices.size();
