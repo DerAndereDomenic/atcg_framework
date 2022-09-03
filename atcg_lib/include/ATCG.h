@@ -28,3 +28,4 @@
 
 //-------- DataStructure --
 #include <DataStructure/RenderMesh.h>
+#include <DataStructure/Grid.h>

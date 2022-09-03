@@ -1,0 +1,311 @@
+#pragma once
+
+#include <glm/glm.hpp>
+#include <string>
+
+namespace atcg
+{
+    template<class VoxelT> 
+    class Grid
+    {
+    public:
+
+        Grid() = default;
+
+        /**
+         * @brief Construct a new Grid object.
+         * This creates an "empty" grid that only stores information about voxel sizes and arangement
+         * 
+         * @param origin The origin of the grid
+         * @param num_voxels The number of voxels in each direction
+         * @param voxel_length The side length of a voxel
+         */
+        Grid(const glm::vec3& origin, const uint32_t& num_voxels, const float& voxel_length);
+
+        /**
+         * @brief Destroy the Grid object
+         */
+        ~Grid();
+
+        /**
+         * @brief  Get the side length of the volume in number of voxels
+         * @return The number of voxels in each side
+         */
+        uint32_t num_voxels() const;
+
+        /**
+         * @brief The number of voxels in the volume
+         * @return The number of voxels in the volume
+         */
+        uint32_t voxels_per_volume() const;
+
+        /**
+         * @brief Get the side length of a single voxel
+         * @return Voxel side length
+         */
+        float voxel_side_length() const;
+
+        /**
+         * @brief Get the grid origin
+         * @return The origin
+         */
+        glm::vec3 origin() const;
+
+        /**
+         * @brief Get the voxel according to the index inside the volume
+         * @param index The index of the voxel
+         * @return Reference to the voxel
+         */
+        VoxelT&
+        operator[](const uint32_t& index);
+
+        /**
+         * @brief Get the voxel according to the 3D position
+         * @param position The 3D position
+         * @return Reference to the voxel
+         */
+        VoxelT&
+        operator()(const glm::vec3& position);
+
+        /**
+         * @brief Get the voxel corresponding to a given index
+         * @param index The index
+         * @return The 3D grid position
+         */
+        glm::ivec3 index2voxel(const int32_t& index);
+
+        /**
+         * @brief Get the index of a specific voxel
+         * @param voxel The voxel
+         * @return The corresponding index
+         */
+        int32_t voxel2index(const glm::ivec3& voxel);
+
+        /**
+         * @brief Compute the 3D position associated with a voxel (center)
+         * @param voxel The voxel
+         * @return The 3D position of the voxel center 
+         */
+        glm::vec3 voxel2position(const glm::ivec3& voxel);
+
+        /**
+         * @brief Compute the voxel coordinates from a given point
+         * @param position The 3D position
+         * @return The grid coordinates
+         */
+        glm::ivec3 position2voxel(const glm::vec3& position);
+
+        /**
+         * @brief Get the voxel center of the current position
+         * @param position The position
+         * @return The voxel center
+         */
+        glm::vec3 voxel_center(const glm::vec3& position);
+
+        /**
+         * @brief Check if a point is inside the volume
+         * @param position The position to check
+         * @return True if the point is inside the bounding volume
+         */
+        bool insideVolume(const glm::vec3& position);
+
+        /**
+         * @brief Get the internal data pointer
+         * @return Pointer to the start of the data 
+         */
+        VoxelT* data();
+
+    private:
+        uint32_t _num_voxels = 0;
+        glm::vec3 _origin = glm::vec3(0); 
+        float _voxel_length = 0.0f;
+        VoxelT* _voxel_pool = nullptr;
+    };
+
+
+    ///
+    /// IMPLEMENTATION
+    ///
+    template<class VoxelT>
+    Grid<VoxelT>::Grid(const glm::vec3& origin, const uint32_t& num_voxels, const float& voxel_length) :
+        _origin(origin),
+        _num_voxels(num_voxels),
+        _voxel_length(voxel_length)
+    {
+        _voxel_pool = new VoxelT[num_voxels * num_voxels * num_voxels];
+    }
+
+    template<class VoxelT>
+    Grid<VoxelT>::~Grid()
+    {
+        delete[] _voxel_pool;
+        _voxel_pool = nullptr;
+    }
+
+    template<class VoxelT>
+    uint32_t 
+    Grid<VoxelT>::num_voxels() const
+    {
+        return _num_voxels;
+    }
+
+    template<class VoxelT>
+    uint32_t 
+    Grid<VoxelT>::voxels_per_volume() const
+    {
+        return _num_voxels * _num_voxels * _num_voxels;
+    }
+
+    template<class VoxelT>
+    float 
+    Grid<VoxelT>::voxel_side_length() const
+    {
+        return _voxel_length;
+    }
+
+    template<class VoxelT>
+    glm::vec3 
+    Grid<VoxelT>::origin() const
+    {
+        return _origin;
+    }
+
+    template<class VoxelT>
+    VoxelT&
+    Grid<VoxelT>::operator[](const uint32_t& index)
+    {
+        return _voxel_pool[index];
+    }
+
+    template<class VoxelT>
+    VoxelT&
+    Grid<VoxelT>::operator()(const glm::vec3& position)
+    {
+        return _voxel_pool[voxel2index(position2voxel(position))];
+    }
+
+    /*template<class VoxelT>
+    template<class SelectionFunctor>
+    typename SelectionFunctor::value_type
+    Grid<VoxelT>::readInterpolated(const glm::vec3& position, const SelectionFunctor& selector)
+    {
+        const float O = -0.5f * _voxel_length;
+        const float I = -O;
+
+        glm::vec3 lookups[8] = 
+        {
+            glm::vec3(position.x + O, position.y + O, position.z + O),
+            glm::vec3(position.x + I, position.y + O, position.z + O),
+            glm::vec3(position.x + O, position.y + I, position.z + O),
+            glm::vec3(position.x + O, position.y + O, position.z + I),
+            glm::vec3(position.x + I, position.y + I, position.z + O),
+            glm::vec3(position.x + I, position.y + O, position.z + I),
+            glm::vec3(position.x + O, position.y + I, position.z + I),
+            glm::vec3(position.x + I, position.y + I, position.z + I),
+        };
+
+        typename SelectionFunctor::value_type values[8];
+        for(uint32_t i = 0; i < 8; ++i)
+        {
+            if(insideVolume(lookups[i]))
+                values[i] = selector.select(operator()(lookups[i]));
+        }
+
+        glm::vec3 corner_voxel = voxel_center(lookups[0]);
+
+        glm::vec3 deltaXYZ = glm::vec3((position.x - corner_voxel.x) / _voxel_length,
+                                    (position.y - corner_voxel.y) / _voxel_length,
+                                    (position.z - corner_voxel.z) / _voxel_length);
+
+        return Math::trilerp(values[0],
+                            values[1],
+                            values[2],
+                            values[3],
+                            values[4],
+                            values[5],
+                            values[6],
+                            values[7],
+                            deltaXYZ.x,
+                            deltaXYZ.y,
+                            deltaXYZ.z);
+    }*/
+
+    template<class VoxelT>
+    glm::ivec3 
+    Grid<VoxelT>::index2voxel(const int32_t& index)
+    {
+        int32_t voxel_half = _num_voxels / 2;
+        int32_t x = index % _num_voxels - voxel_half;
+        int32_t y = (index / _num_voxels) % _num_voxels - voxel_half;
+        int32_t z = index / (_num_voxels * _num_voxels) - voxel_half;
+
+        return make_int3(x,y,z);
+    }
+
+    template<class VoxelT>
+    int32_t 
+    Grid<VoxelT>::voxel2index(const glm::ivec3& voxel)
+    {
+        int32_t voxel_half = _num_voxels / 2;
+
+        int32_t x = voxel.x + voxel_half;
+        int32_t y = voxel.y + voxel_half;
+        int32_t z = voxel.z + voxel_half;
+
+        return x + y * _num_voxels + z * _num_voxels * _num_voxels;
+    }
+
+    template<class VoxelT>
+    glm::vec3 
+    Grid<VoxelT>::voxel2position(const glm::ivec3& voxel)
+    {
+        glm::vec3 center = glm::vec3(voxel.x,voxel.y,voxel.z) * _voxel_length;
+        return center + _origin;
+    }
+
+    template<class VoxelT>
+    glm::ivec3 
+    Grid<VoxelT>::position2voxel(const glm::vec3& position)
+    {
+        glm::vec3 center = position - _origin;
+
+        int32_t x = static_cast<int32_t>(floor(center.x / _voxel_length + 0.5f));
+        int32_t y = static_cast<int32_t>(floor(center.y / _voxel_length + 0.5f));
+        int32_t z = static_cast<int32_t>(floor(center.z / _voxel_length + 0.5f));
+
+        return make_int3(x,y,z);
+    }
+
+    template<class VoxelT>
+    glm::vec3 
+    Grid<VoxelT>::voxel_center(const glm::vec3& position)
+    {
+        glm::ivec3 voxel = position2voxel(position);
+        return glm::vec3(
+            _voxel_length * voxel.x,
+            _voxel_length * voxel.y,
+            _voxel_length * voxel.z
+        ) + _origin;
+    }
+
+    template<class VoxelT>
+    bool 
+    Grid<VoxelT>::insideVolume(const glm::vec3& position)
+    {
+        glm::ivec3 voxel = position2voxel(position);
+
+        return (
+                abs(voxel.x) <= _num_voxels/2 &&
+                abs(voxel.y) <= _num_voxels/2 &&
+                abs(voxel.z) <= _num_voxels/2
+            );
+
+    }
+
+    template<class VoxelT>
+    VoxelT* 
+    Grid<VoxelT>::data()
+    {
+        return _voxel_pool;
+    }
+}
