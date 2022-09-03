@@ -73,10 +73,14 @@ public:
     {
         atcg::Renderer::clear();
 
-        atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
+        if(points.size() > 0)
+            atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
 
-        drawCurve(atcg::ShaderManager::getShader("bezier"), glm::vec3(1,0,0));
-        drawCurve(atcg::ShaderManager::getShader("hermite"), glm::vec3(0,1,0));
+        if(render_bezier)
+            drawCurve(atcg::ShaderManager::getShader("bezier"), glm::vec3(1,0,0));
+
+        if(render_hermite)
+            drawCurve(atcg::ShaderManager::getShader("hermite"), glm::vec3(0,1,0));
     }
 
     virtual void onImGuiRender() override
@@ -94,6 +98,15 @@ public:
         if(show_test_window)
         {
             ImGui::Begin("Settings", &show_test_window);
+            if(ImGui::Button("Clear all"))
+            {
+                points.clear();
+                indices.clear();
+                continuity_index = 0;
+            }
+
+            ImGui::Checkbox("Render bezier", &render_bezier);
+            ImGui::Checkbox("Render hermite", &render_hermite);
             ImGui::End();
         }
 
@@ -161,6 +174,8 @@ private:
     bool show_test_window = false;
     uint32_t max_num_points = 100;
     uint32_t continuity_index = 0;
+    bool render_bezier = true;
+    bool render_hermite = true;
 };
 
 class G01 : public atcg::Application
