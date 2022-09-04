@@ -8,7 +8,6 @@ namespace atcg
     {
         mesh->request_vertex_normals();
         mesh->request_face_normals();
-        mesh->request_vertex_colors();
         mesh->update_normals();
 
         std::vector<float> vertex_data;
@@ -16,6 +15,8 @@ namespace atcg
 
         std::vector<uint32_t> indices_data;
         indices_data.resize(mesh->n_faces() * 3);
+
+        bool has_color = mesh->has_vertex_colors();
 
         for(auto vertex = mesh->vertices_begin(); vertex != mesh->vertices_end(); ++vertex)
         {
@@ -29,9 +30,9 @@ namespace atcg
             vertex_data[9 * vertex_id + 3] = normal[0];
             vertex_data[9 * vertex_id + 4] = normal[1];
             vertex_data[9 * vertex_id + 5] = normal[2];
-            vertex_data[9 * vertex_id + 6] = static_cast<float>(color[0])/255.0f;
-            vertex_data[9 * vertex_id + 7] = static_cast<float>(color[1])/255.0f;
-            vertex_data[9 * vertex_id + 8] = static_cast<float>(color[2])/255.0f;
+            vertex_data[9 * vertex_id + 6] = has_color ? static_cast<float>(color[0])/255.0f : 1.0f;
+            vertex_data[9 * vertex_id + 7] = has_color ? static_cast<float>(color[1])/255.0f : 1.0f;
+            vertex_data[9 * vertex_id + 8] = has_color ? static_cast<float>(color[2])/255.0f : 1.0f;
         }
 
         int32_t face_id = 0;
