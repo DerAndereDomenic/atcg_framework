@@ -226,6 +226,25 @@ public:
     virtual void onEvent(atcg::Event& event) override
     {
         camera_controller->onEvent(event);
+
+        atcg::EventDispatcher dispatcher(event);
+        dispatcher.dispatch<atcg::FileDroppedEvent>(ATCG_BIND_EVENT_FN(G02Layer::onFileDropped));
+    }
+
+    bool onFileDropped(atcg::FileDroppedEvent& event)
+    {
+        mesh = std::make_shared<atcg::TriMesh>();
+        OpenMesh::IO::read_mesh(*mesh.get(), event.getPath());
+
+        render_mesh = std::make_shared<atcg::RenderMesh>();
+        render_mesh->uploadData(mesh);
+
+        //Also reset camera
+        const auto& window = atcg::Application::get()->getWindow();
+        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
+        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+
+        return true;
     }
 
 private:

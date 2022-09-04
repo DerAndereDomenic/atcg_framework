@@ -23,7 +23,7 @@ namespace atcg
             int32_t vertex_id = vertex->idx();
             OpenMesh::Vec3f pos = mesh->point(*vertex);
             OpenMesh::Vec3f normal = mesh->calc_vertex_normal(*vertex);
-            OpenMesh::Vec3uc color = mesh->color(*vertex);
+            OpenMesh::Vec3uc color = has_color ? mesh->color(*vertex) : OpenMesh::Vec3uc();
             vertex_data[9 * vertex_id + 0] = pos[0];
             vertex_data[9 * vertex_id + 1] = pos[1];
             vertex_data[9 * vertex_id + 2] = pos[2];
