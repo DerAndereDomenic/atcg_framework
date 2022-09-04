@@ -157,22 +157,13 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        mesh = std::make_shared<atcg::TriMesh>();
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         //Create a grid at the origin with 10 voxels per side length with a size of 0.1
-        grid = std::make_shared<SDFGrid>(glm::vec3(0), 100, 0.05f);
-
-        //Fill the grid with the sdf
-        fillGrid(grid);
-
-        marching_cubes(grid, mesh);
-
-        render_mesh = std::make_shared<atcg::RenderMesh>();
-        render_mesh->uploadData(mesh);
+        grid = std::make_shared<SDFGrid>(glm::vec3(0), 70, 0.05f);
     }
 
     // This gets called each frame
@@ -182,7 +173,8 @@ public:
 
         atcg::Renderer::clear();
 
-        atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+        if(render_mesh)
+            atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -191,10 +183,35 @@ public:
 
         if(ImGui::BeginMenu("Exercise"))
         {
+            ImGui::MenuItem("Marching Cubes", nullptr, &show_marching_cubes);
             ImGui::EndMenu();
         }
 
         ImGui::EndMainMenuBar();
+
+        if(show_marching_cubes)
+        {
+            ImGui::Begin("Settings MC", &show_marching_cubes);
+            if(ImGui::SliderFloat("Voxel Size", &voxel_size, 0.01f, 0.2f))
+            {
+                grid = std::make_shared<SDFGrid>(glm::vec3(0), static_cast<uint32_t>(70.0f/voxel_size * 0.05f) , voxel_size);
+            }
+
+            if(ImGui::Button("Run"))
+            {
+                //Fill the grid with the sdf
+                mesh = std::make_shared<atcg::TriMesh>();
+                fillGrid(grid);
+
+                marching_cubes(grid, mesh);
+
+                render_mesh = std::make_shared<atcg::RenderMesh>();
+                render_mesh->uploadData(mesh);
+            }
+
+            ImGui::End();
+        }
+
 
     }
 
@@ -209,6 +226,9 @@ private:
     std::shared_ptr<atcg::RenderMesh> render_mesh;
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<SDFGrid> grid;
+
+    bool show_marching_cubes = true;
+    float voxel_size = 0.05f;
 };
 
 class G02 : public atcg::Application
