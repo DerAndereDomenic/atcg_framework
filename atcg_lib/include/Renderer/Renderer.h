@@ -103,6 +103,18 @@ namespace atcg
                                      const std::shared_ptr<Camera>& camera = {}) {s_renderer->drawLinesImpl(vao, color, shader, camera);}
 
         /**
+         * @brief Render a vao as lines
+         * NEEDS to have an index buffer
+         * 
+         * @param mesh The mesh
+         * @param color The color
+         * @param camera The camera
+         */
+        inline static void drawLines(const std::shared_ptr<RenderMesh>& mesh,
+                                     const glm::vec3& color,
+                                     const std::shared_ptr<Camera>& camera = {}) {s_renderer->drawLinesImpl(mesh, color, camera);}
+
+        /**
          * @brief Clear the currently bound framebuffer
          */
         inline static void clear() {return s_renderer->clearImpl();}
@@ -121,6 +133,7 @@ namespace atcg
         void drawPointsImpl(const std::shared_ptr<RenderMesh>& mesh, const glm::vec3& color, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
         void drawPointsImpl(const std::shared_ptr<VertexArray>& vao, const glm::vec3& color, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
         void drawLinesImpl(const std::shared_ptr<VertexArray>& vao, const glm::vec3& color, const std::shared_ptr<Shader>& shader, const std::shared_ptr<Camera>& camera);
+        void drawLinesImpl(const std::shared_ptr<RenderMesh>& mesh, const glm::vec3& color, const std::shared_ptr<Camera>& camera);
         void clearImpl();
 
         static Renderer* s_renderer;

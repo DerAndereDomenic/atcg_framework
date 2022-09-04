@@ -185,6 +185,9 @@ public:
 
         if(render_mesh && render_points)
             atcg::Renderer::drawPoints(render_mesh, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+
+        if(render_mesh && render_edges)
+            atcg::Renderer::drawLines(render_mesh, glm::vec3(0), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -233,6 +236,7 @@ public:
             ImGui::Begin("Settings", &show_render_settings);
 
             ImGui::Checkbox("Render Vertices", &render_points);
+            ImGui::Checkbox("Render Edges", &render_edges);
             ImGui::Checkbox("Render Mesh", &render_faces);
             ImGui::End();
         }
@@ -275,6 +279,7 @@ private:
     bool show_render_settings = false;
     bool render_faces = true;
     bool render_points = false;
+    bool render_edges = false;
     float voxel_size = 0.05f;
 };
 

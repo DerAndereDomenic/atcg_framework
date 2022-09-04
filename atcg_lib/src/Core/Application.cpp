@@ -19,6 +19,7 @@ namespace atcg
 
         ShaderManager::addShaderFromName("base");
         ShaderManager::addShaderFromName("flat");
+        ShaderManager::addShaderFromName("edge");
 
         s_instance = this;
 

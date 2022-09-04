@@ -2,6 +2,8 @@
 #include <glad/glad.h>
 #include <iostream>
 
+#include <Renderer/ShaderManager.h>
+
 namespace atcg
 {
     Renderer* Renderer::s_renderer = new Renderer;
@@ -160,6 +162,34 @@ namespace atcg
 
         if(ibo)
             glDrawElements(GL_LINE_STRIP, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+        else
+            std::cerr << "Missing IndexBuffer!\n";
+    }
+
+    void Renderer::drawLinesImpl(const std::shared_ptr<RenderMesh>& mesh, 
+                                 const glm::vec3& color, 
+                                 const std::shared_ptr<Camera>& camera)
+    {
+        std::shared_ptr<VertexArray> vao = mesh->getVertexArray();
+        vao->use();
+        const auto& shader = ShaderManager::getShader("edge");
+        shader->use();
+        shader->setVec3("flat_color", color);
+        if(camera)
+        {
+            shader->setMVP(mesh->getModel(), camera->getView(), camera->getProjection());
+        }
+        else
+        {
+            shader->setMVP();
+        }
+
+        const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
+
+        glPointSize(4);
+
+        if(ibo)
+            glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
