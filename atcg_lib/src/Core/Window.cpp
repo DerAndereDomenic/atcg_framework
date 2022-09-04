@@ -126,6 +126,14 @@ namespace atcg
 			data.on_event(event);
 		});
 
+		glfwSetDropCallback(_window, [](GLFWwindow* window, int path_count, const char* paths[])
+		{
+			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+			FileDroppedEvent event(paths[0]);
+			data.on_event(event);
+		});
+
         glfwMakeContextCurrent(_window);
     }
 

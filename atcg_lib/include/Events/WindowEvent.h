@@ -35,4 +35,29 @@ namespace atcg {
 		EVENT_CLASS_TYPE(WindowClose)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	};
+
+	class FileDroppedEvent : public Event
+	{
+	public:
+		FileDroppedEvent(const std::string& path)
+			:_path(path)
+		{}
+
+		std::string toString() const override
+		{
+			std::stringstream ss;
+			ss << "FileDroppedEvent: " << _path;
+			return ss.str();
+		}
+
+		const std::string& getPath() const
+		{
+			return _path;
+		}
+
+		EVENT_CLASS_TYPE(FileDropped)
+		EVENT_CLASS_CATEGORY(EventCategoryApplication)
+	private:
+		std::string _path;
+	};
 }
