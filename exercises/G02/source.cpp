@@ -161,6 +161,86 @@ public:
         }
     }
 
+    void subdivide_mesh(const std::shared_ptr<atcg::TriMesh>& mesh)
+    {
+        //TODO: sqrt(3) subdivision
+        mesh->request_edge_status();
+        uint32_t num_features = mesh->find_feature_edges();
+        std::cout << "Found " << num_features << " feature edges\n";
+        
+        uint32_t nv = mesh->n_vertices();
+        uint32_t ne = mesh->n_edges();
+        uint32_t nf = mesh->n_faces();
+
+        auto eend = mesh->edges_end();
+
+        auto new_pos_property = OpenMesh::makeTemporaryProperty<OpenMesh::VertexHandle, atcg::TriMesh::Point>(*mesh.get());
+
+        //Calculate new position of old vertices
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            uint32_t n = (*v_it).valence();
+            float beta = (4.0f - 2.0f * cosf(2.0f * static_cast<float>(M_PI) / static_cast<float>(n))) / 9.0f;
+            new_pos_property[*v_it] = {0,0,0};
+
+            for(auto vv_it = v_it->vertices().begin(); vv_it != v_it->vertices().end(); ++vv_it)
+            {
+                new_pos_property[*v_it] += mesh->point(*vv_it);
+            }
+
+            new_pos_property[*v_it] = (1.0f - beta) * mesh->point(*v_it) + beta/static_cast<float>(n) * new_pos_property[*v_it];
+
+            if(mesh->is_boundary(*v_it) /*|| v_it->feature()*/)
+            {
+                new_pos_property[*v_it] = mesh->point(*v_it);
+            }
+        }
+
+        //Split faces
+        std::vector<atcg::TriMesh::FaceHandle> faces;
+        std::vector<atcg::TriMesh::VertexHandle> centroids;
+        for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
+        {
+            atcg::TriMesh::Point center = {0,0,0};
+            for(auto v_it = f_it->vertices().begin(); v_it != f_it->vertices().end(); ++v_it)
+            {
+                center += mesh->point(*v_it);
+            }
+
+            center /= 3.0f;
+            auto handle = mesh->new_vertex(center);
+            faces.push_back(*f_it);
+            centroids.push_back(handle);
+            new_pos_property[handle] = center;
+            //mesh->split(f_it, handle);
+        }
+
+        for(uint32_t i = 0; i < faces.size(); ++i)
+        {
+            mesh->split(faces[i], centroids[i]);
+        }
+
+        //Set new vertex positions
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            if(mesh->is_boundary(*v_it) /* || v_it->feature*/)continue;
+            mesh->point(*v_it) = new_pos_property[*v_it];
+        }
+
+        //Flip old edges
+        for(auto e_it = mesh->edges_begin(); e_it != eend; ++e_it)
+        {
+            atcg::TriMesh::EdgeHandle e = *e_it;
+
+            if(!mesh->is_flip_ok(e) || e_it->feature()) continue;
+            mesh->flip(e);
+        }
+
+        //Update rendering
+        render_mesh = std::make_shared<atcg::RenderMesh>();
+        render_mesh->uploadData(mesh);
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -203,6 +283,7 @@ public:
         if(ImGui::BeginMenu("Exercise"))
         {
             ImGui::MenuItem("Marching Cubes", nullptr, &show_marching_cubes);
+            ImGui::MenuItem("Subdivision", nullptr, &show_subdivision);
             ImGui::EndMenu();
         }
 
@@ -226,6 +307,18 @@ public:
 
                 render_mesh = std::make_shared<atcg::RenderMesh>();
                 render_mesh->uploadData(mesh);
+            }
+
+            ImGui::End();
+        }
+
+        if(show_subdivision)
+        {
+            ImGui::Begin("Settings SD", &show_subdivision);
+
+            if(ImGui::Button("Subdivide"))
+            {
+                subdivide_mesh(mesh);
             }
 
             ImGui::End();
@@ -281,6 +374,8 @@ private:
     bool render_points = false;
     bool render_edges = false;
     float voxel_size = 0.05f;
+
+    bool show_subdivision = true;
 };
 
 class G02 : public atcg::Application
