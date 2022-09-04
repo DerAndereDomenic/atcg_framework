@@ -295,9 +295,9 @@ namespace atcg
         glm::ivec3 voxel = position2voxel(position);
 
         return (
-                abs(voxel.x) <= _num_voxels/2 &&
-                abs(voxel.y) <= _num_voxels/2 &&
-                abs(voxel.z) <= _num_voxels/2
+                abs(voxel.x) < _num_voxels/2 &&
+                abs(voxel.y) < _num_voxels/2 &&
+                abs(voxel.z) < _num_voxels/2
             );
 
     }
