@@ -180,13 +180,22 @@ public:
 
         atcg::Renderer::clear();
 
-        if(render_mesh)
+        if(render_mesh && render_faces)
             atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+
+        if(render_mesh && render_points)
+            atcg::Renderer::drawPoints(render_mesh, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
+
+        if(ImGui::BeginMenu("Rendering"))
+        {
+            ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+            ImGui::EndMenu();
+        }
 
         if(ImGui::BeginMenu("Exercise"))
         {
@@ -216,6 +225,15 @@ public:
                 render_mesh->uploadData(mesh);
             }
 
+            ImGui::End();
+        }
+
+        if(show_render_settings)
+        {
+            ImGui::Begin("Settings", &show_render_settings);
+
+            ImGui::Checkbox("Render Vertices", &render_points);
+            ImGui::Checkbox("Render Mesh", &render_faces);
             ImGui::End();
         }
 
@@ -254,6 +272,9 @@ private:
     std::shared_ptr<SDFGrid> grid;
 
     bool show_marching_cubes = true;
+    bool show_render_settings = false;
+    bool render_faces = true;
+    bool render_points = false;
     float voxel_size = 0.05f;
 };
 
