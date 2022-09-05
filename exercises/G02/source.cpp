@@ -173,6 +173,7 @@ public:
         uint32_t nf = mesh->n_faces();
 
         auto eend = mesh->edges_end();
+        auto fend = mesh->faces_end();
 
         auto new_pos_property = OpenMesh::makeTemporaryProperty<OpenMesh::VertexHandle, atcg::TriMesh::Point>(*mesh.get());
 
@@ -199,7 +200,7 @@ public:
         //Split faces
         std::vector<atcg::TriMesh::FaceHandle> faces;
         std::vector<atcg::TriMesh::VertexHandle> centroids;
-        for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
+        for(auto f_it = mesh->faces_begin(); f_it != fend; ++f_it)
         {
             atcg::TriMesh::Point center = {0,0,0};
             for(auto v_it = f_it->vertices().begin(); v_it != f_it->vertices().end(); ++v_it)
@@ -209,15 +210,8 @@ public:
 
             center /= 3.0f;
             auto handle = mesh->new_vertex(center);
-            faces.push_back(*f_it);
-            centroids.push_back(handle);
             new_pos_property[handle] = center;
-            //mesh->split(f_it, handle);
-        }
-
-        for(uint32_t i = 0; i < faces.size(); ++i)
-        {
-            mesh->split(faces[i], centroids[i]);
+            mesh->split(*f_it, handle);
         }
 
         //Set new vertex positions
