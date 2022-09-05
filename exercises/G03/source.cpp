@@ -71,6 +71,9 @@ public:
         vao_cc->setIndexBuffer(ibo_cc);
 
         barys = new float[3]{0,0,0};
+
+        const auto& window = atcg::Application::get()->getWindow();
+        camera = std::make_shared<atcg::OrthographicCamera>(0, static_cast<float>(window->getWidth()), 0, static_cast<float>(window->getHeight()));
     }
 
     // This gets called each frame
@@ -79,21 +82,21 @@ public:
         atcg::Renderer::clear();
 
         if(points.size() > 0)
-            atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
+            atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera);
 
         if(points.size() > 0)
         {
             atcg::ShaderManager::getShader("flat")->setVec3("flat_color", glm::vec3(0.8));
-            atcg::Renderer::draw(vao, atcg::ShaderManager::getShader("flat"));
+            atcg::Renderer::draw(vao, atcg::ShaderManager::getShader("flat"), camera);
         }
 
         if(bary_set)
-            atcg::Renderer::drawPoints(vao_bary, glm::vec3(1, 0, 0), atcg::ShaderManager::getShader("flat"));
+            atcg::Renderer::drawPoints(vao_bary, glm::vec3(1, 0, 0), atcg::ShaderManager::getShader("flat"), camera);
 
         if(cc_set)
         {
-            atcg::Renderer::drawPoints(vao_cc, glm::vec3(0, 1, 0), atcg::ShaderManager::getShader("flat"));
-            atcg::Renderer::drawCircle(circum_center, glm::length(circum_center - points[0]), glm::vec3(0,1,0));
+            atcg::Renderer::drawPoints(vao_cc, glm::vec3(0, 1, 0), atcg::ShaderManager::getShader("flat"), camera);
+            atcg::Renderer::drawCircle(circum_center, glm::length(circum_center - points[0]), glm::vec3(0,1,0), camera);
         }
     }
 
@@ -139,7 +142,7 @@ public:
                 if(points.size() == 3)
                 {
                     glm::vec3 p = from_barycentric_cooridnates(points[0], points[1], points[2], barys);
-                    p.z -= 0.01f;
+                    p.z += 0.01f;
                     vbo_bary->setData(reinterpret_cast<float*>(&p), 3*sizeof(float));
                     bary_set = true;
                 }
@@ -148,7 +151,7 @@ public:
             if(ImGui::Button("Calculate circumcenter"))
             {
                 glm::vec3 p = circumcenter(points[0], points[1], points[2]);
-                p.z -= 0.01f;
+                p.z += 0.01f;
                 vbo_cc->setData(reinterpret_cast<float*>(&p), 3*sizeof(float));
                 circum_center = p;
                 cc_set = true;
@@ -168,6 +171,7 @@ public:
         {
             distpatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(G03Layer::onMousePressed));
         }
+        distpatcher.dispatch<atcg::WindowResizeEvent>(ATCG_BIND_EVENT_FN(G03Layer::onWindowResized));
     }
 
     bool onMousePressed(atcg::MouseButtonPressedEvent& e)
@@ -187,7 +191,10 @@ public:
         float x_ndc = (static_cast<float>(mouse_pos.x)) / (static_cast<float>(width) / 2.0f) - 1.0f;
 		float y_ndc = (static_cast<float>(height) - static_cast<float>(mouse_pos.y)) / (static_cast<float>(height) / 2.0f) - 1.0f;
 
-		glm::vec3 world_pos(x_ndc, y_ndc, 0.0f);
+		glm::vec4 world_pos(x_ndc, y_ndc, 0.0f, 1.0f);
+
+        world_pos = glm::inverse(camera->getViewProjection()) * world_pos;
+        world_pos /= world_pos.w;
 
         points.push_back(world_pos);
 
@@ -201,6 +208,12 @@ public:
         return true;
     }
 
+    bool onWindowResized(atcg::WindowResizeEvent& event)
+    {
+        camera->setProjection(0, static_cast<float>(event.getWidth()) , 0, static_cast<float>(event.getHeight()));
+        return false;
+    }
+
 private:
     bool show_render_settings = false;
 
@@ -209,6 +222,8 @@ private:
     bool cc_set = false;
     glm::vec3 circum_center;
     float* barys;
+
+    std::shared_ptr<atcg::OrthographicCamera> camera;
 
     std::vector<glm::vec3> points;
     std::vector<uint32_t> indices;

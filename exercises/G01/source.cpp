@@ -32,15 +32,19 @@ public:
         //Add custom shader for bezier and hermite curves
         atcg::ShaderManager::addShaderFromName("bezier");
         atcg::ShaderManager::addShaderFromName("hermite");
+
+        const auto& window = atcg::Application::get()->getWindow();
+        camera = std::make_shared<atcg::OrthographicCamera>(0, static_cast<float>(window->getWidth()), 0, static_cast<float>(window->getHeight()));
     }
 
     //This function renders the curves by passing the points as uniform data and using the supplied shader
-    void drawCurve(const std::shared_ptr<atcg::Shader>& shader, const glm::vec3& color)
+    void drawCurve(const std::shared_ptr<atcg::Shader>& shader, const glm::vec3& color, const std::shared_ptr<atcg::Camera>& camera)
     {
         shader->use();
         vao->use();
         shader->setInt("discretization", discretization);
         shader->setVec3("flat_color", color);
+        shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
 
         if(points.size() > 0)
         {
@@ -78,16 +82,16 @@ public:
         atcg::Renderer::clear();
 
         if(render_points && points.size() > 0)
-            atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
+            atcg::Renderer::drawPoints(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera);
 
         if(render_polygon && points.size() > 0)
-            atcg::Renderer::drawLines(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"));
+            atcg::Renderer::drawLines(vao, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera);
 
         if(render_bezier)
-            drawCurve(atcg::ShaderManager::getShader("bezier"), glm::vec3(1,0,0));
+            drawCurve(atcg::ShaderManager::getShader("bezier"), glm::vec3(1,0,0), camera);
 
         if(render_hermite)
-            drawCurve(atcg::ShaderManager::getShader("hermite"), glm::vec3(0,1,0));
+            drawCurve(atcg::ShaderManager::getShader("hermite"), glm::vec3(0,1,0), camera);
     }
 
     virtual void onImGuiRender() override
@@ -130,6 +134,7 @@ public:
         {
             distpatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(G01Layer::onMousePressed));
         }
+        distpatcher.dispatch<atcg::WindowResizeEvent>(ATCG_BIND_EVENT_FN(G01Layer::onWindowResized));
     }
 
     bool onMousePressed(atcg::MouseButtonPressedEvent& e)
@@ -149,7 +154,10 @@ public:
         float x_ndc = (static_cast<float>(mouse_pos.x)) / (static_cast<float>(width) / 2.0f) - 1.0f;
 		float y_ndc = (static_cast<float>(height) - static_cast<float>(mouse_pos.y)) / (static_cast<float>(height) / 2.0f) - 1.0f;
 
-		glm::vec3 world_pos(x_ndc, y_ndc, 0.0f);
+		glm::vec4 world_pos(x_ndc, y_ndc, 0.0f, 1.0f);
+
+        world_pos = glm::inverse(camera->getViewProjection()) * world_pos;
+        world_pos /= world_pos.w;
 
         points.push_back(world_pos);
 
@@ -161,9 +169,9 @@ public:
             //<solution>
             glm::vec3 second_last = points[points.size() - 2];
 
-            glm::vec3 deriv = second_last - world_pos;
+            glm::vec3 deriv = second_last - glm::vec3(world_pos);
 
-            points.push_back(world_pos - deriv);
+            points.push_back(glm::vec3(world_pos) - deriv);
             //</solution>
 
             continuity_index = 1;
@@ -180,12 +188,19 @@ public:
         return true;
     }
 
+    bool onWindowResized(atcg::WindowResizeEvent& event)
+    {
+        camera->setProjection(0, static_cast<float>(event.getWidth()) , 0, static_cast<float>(event.getHeight()));
+        return false;
+    }
+
 private:
     std::vector<glm::vec3> points;
     std::vector<uint32_t> indices;
     std::shared_ptr<atcg::VertexArray> vao;
     std::shared_ptr<atcg::VertexBuffer> vbo;
     std::shared_ptr<atcg::IndexBuffer> ibo;
+    std::shared_ptr<atcg::OrthographicCamera> camera;
     bool show_test_window = false;
     uint32_t max_num_points = 100;
     uint32_t continuity_index = 0;

@@ -24,6 +24,7 @@ vec3 bezier(float u, vec3 p0, vec3 p1, vec3 p2, vec3 p3)
 }
 
 uniform int discretization;
+uniform mat4 P;
 
 void main()
 {
@@ -31,9 +32,9 @@ void main()
     vec3 p1 = gs_in[0].points[1];
     vec3 p2 = gs_in[0].points[2];
     vec3 p3 = gs_in[0].points[3];
-    gl_Position = vec4(bezier(gs_in[0].instance/float(discretization), p0, p1, p2, p3),1);
+    gl_Position = P * vec4(bezier(gs_in[0].instance/float(discretization), p0, p1, p2, p3),1);
     EmitVertex();
-    gl_Position = vec4(bezier((gs_in[0].instance+1)/float(discretization), p0, p1, p2, p3),1);
+    gl_Position = P * vec4(bezier((gs_in[0].instance+1)/float(discretization), p0, p1, p2, p3),1);
     EmitVertex();
     EndPrimitive();
     
