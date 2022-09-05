@@ -3,7 +3,7 @@
 #include <Renderer/Buffer.h>
 #include <Renderer/VertexArray.h>
 #include <Renderer/Shader.h>
-#include <Renderer/Camera.h>
+#include <Renderer/PerspectiveCamera.h>
 #include <DataStructure/RenderMesh.h>
 
 #include <memory>

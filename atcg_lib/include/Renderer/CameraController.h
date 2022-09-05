@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Renderer/Camera.h>
+#include <Renderer/PerspectiveCamera.h>
 #include <Events/Event.h>
 #include <Events/MouseEvent.h>
 #include <Events/WindowEvent.h>
@@ -10,7 +10,7 @@
 namespace atcg
 {
     /**
-     * @brief A class to model camera movement
+     * @brief A class to model camera movement (only for perspective camera for now)
      * Scroll to zoom
      * Drag to rotate
      */
@@ -43,7 +43,7 @@ namespace atcg
          * 
          * @return const std::unique_ptr<Camera>& The camera
          */
-        inline const std::shared_ptr<Camera>& getCamera() const {return _camera;}
+        inline const std::shared_ptr<PerspectiveCamera>& getCamera() const {return _camera;}
 
     private:
         bool onMouseZoom(MouseScrolledEvent& event);
@@ -59,7 +59,7 @@ namespace atcg
 
         float _distance;
         CameraParameters _parameters;
-        std::shared_ptr<Camera> _camera;
+        std::shared_ptr<PerspectiveCamera> _camera;
         float _lastX = 0, _lastY = 0;
         float _currentX = 0, _currentY = 0;
     };

@@ -94,7 +94,7 @@ namespace atcg
         if(camera)
         {
             shader->setVec3("camera_pos", camera->getPosition());
-            shader->setVec3("camera_dir", glm::normalize(camera->getPosition() - camera->getLookAt()));
+            shader->setVec3("camera_dir", camera->getDirection());
             shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
         }
         else
@@ -120,7 +120,7 @@ namespace atcg
         if(camera)
         {
             shader->setVec3("camera_pos", camera->getPosition());
-            shader->setVec3("camera_dir", glm::normalize(camera->getPosition() - camera->getLookAt()));
+            shader->setVec3("camera_dir", camera->getDirection());
             shader->setMVP(mesh->getModel(), camera->getView(), camera->getProjection());
         }
         else

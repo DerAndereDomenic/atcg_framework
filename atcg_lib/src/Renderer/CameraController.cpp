@@ -14,7 +14,7 @@ namespace atcg
 {
     CameraController::CameraController(const float& aspect_ratio)
     {
-        _camera = std::make_shared<Camera>(aspect_ratio, glm::vec3(0,0,-1));
+        _camera = std::make_shared<PerspectiveCamera>(aspect_ratio, glm::vec3(0,0,-1));
         _distance = 1;
     }
 
