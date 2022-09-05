@@ -20,6 +20,22 @@ public:
         return p1 * barys[0] + p2 * barys[1] + p3 * barys[2];
     }
 
+    glm::vec3 circumcenter(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3)
+    {
+        float a = glm::length(p2 - p3);
+        float b = glm::length(p3 - p1);
+        float c = glm::length(p1 - p2);
+        float bary[3];
+        bary[0] = a*a * (b*b + c*c - a*a);
+        bary[1] = b*b * (c*c + a*a - b*b);
+        bary[2] = c*c * (a*a + b*b - c*c);
+        float sum = bary[0]+ bary[1] + bary[2];
+        bary[0] /= sum;
+        bary[1] /= sum;
+        bary[2] /= sum;
+        return from_barycentric_cooridnates(p1, p2, p3, bary);
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -73,6 +89,9 @@ public:
 
         if(bary_set)
             atcg::Renderer::drawPoints(vao_bary, glm::vec3(1, 0, 0), atcg::ShaderManager::getShader("flat"));
+
+        if(cc_set)
+            atcg::Renderer::drawPoints(vao_cc, glm::vec3(0, 1, 0), atcg::ShaderManager::getShader("flat"));
     }
 
     virtual void onImGuiRender() override
@@ -102,6 +121,7 @@ public:
                 points.clear();
                 indices.clear();
                 bary_set = false;
+                cc_set = false;
             }
 
             ImGui::End();
@@ -120,6 +140,14 @@ public:
                     vbo_bary->setData(reinterpret_cast<float*>(&p), 3*sizeof(float));
                     bary_set = true;
                 }
+            }
+
+            if(ImGui::Button("Calculate circumcenter"))
+            {
+                glm::vec3 p = circumcenter(points[0], points[1], points[2]);
+                p.z -= 0.01f;
+                vbo_cc->setData(reinterpret_cast<float*>(&p), 3*sizeof(float));
+                cc_set = true;
             }
 
             ImGui::End();
@@ -174,6 +202,7 @@ private:
 
     bool show_center_settings = true;
     bool bary_set = false;
+    bool cc_set = false;
     float* barys;
 
     std::vector<glm::vec3> points;
