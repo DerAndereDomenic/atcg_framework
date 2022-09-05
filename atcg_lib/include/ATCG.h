@@ -19,6 +19,7 @@
 #include <Renderer/Shader.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/PerspectiveCamera.h>
+#include <Renderer/OrthographicCamera.h>
 #include <Renderer/CameraController.h>
 #include <Renderer/Buffer.h>
 #include <Renderer/VertexArray.h>

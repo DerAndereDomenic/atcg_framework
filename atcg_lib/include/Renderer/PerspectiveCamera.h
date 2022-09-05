@@ -99,9 +99,9 @@ namespace atcg
          */
         inline void setAspectRatio(const float& aspect_ratio) {_aspect_ratio = aspect_ratio; recalculateProjection();}
 
-    private:
-        void recalculateView();
-        void recalculateProjection();
+    protected:
+        virtual void recalculateView() override;
+        virtual void recalculateProjection() override;
 
     private:
         glm::vec3 _position;
