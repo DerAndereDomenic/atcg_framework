@@ -117,6 +117,19 @@ namespace atcg
                                      const std::shared_ptr<Camera>& camera = {});
 
         /**
+         * @brief Draw Circle
+         * 
+         * @param position The position
+         * @param radius The radius
+         * @param color The color
+         * @param camera The camera
+         */
+        static void drawCircle(const glm::vec3& position,
+                               const float& radius,
+                               const glm::vec3& color,
+                               const std::shared_ptr<Camera>& camera = {});
+
+        /**
          * @brief Clear the currently bound framebuffer
          */
         static void clear();

@@ -91,7 +91,10 @@ public:
             atcg::Renderer::drawPoints(vao_bary, glm::vec3(1, 0, 0), atcg::ShaderManager::getShader("flat"));
 
         if(cc_set)
+        {
             atcg::Renderer::drawPoints(vao_cc, glm::vec3(0, 1, 0), atcg::ShaderManager::getShader("flat"));
+            atcg::Renderer::drawCircle(circum_center, glm::length(circum_center - points[0]), glm::vec3(0,1,0));
+        }
     }
 
     virtual void onImGuiRender() override
@@ -147,6 +150,7 @@ public:
                 glm::vec3 p = circumcenter(points[0], points[1], points[2]);
                 p.z -= 0.01f;
                 vbo_cc->setData(reinterpret_cast<float*>(&p), 3*sizeof(float));
+                circum_center = p;
                 cc_set = true;
             }
 
@@ -203,6 +207,7 @@ private:
     bool show_center_settings = true;
     bool bary_set = false;
     bool cc_set = false;
+    glm::vec3 circum_center;
     float* barys;
 
     std::vector<glm::vec3> points;
