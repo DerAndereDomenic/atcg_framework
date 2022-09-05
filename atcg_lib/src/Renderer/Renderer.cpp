@@ -8,32 +8,46 @@ namespace atcg
 {
     Renderer* Renderer::s_renderer = new Renderer;
 
-    void Renderer::initImpl()
+    class Renderer::Impl
+    {
+    public:
+        Impl() = default;
+
+        ~Impl() = default;
+    };
+
+    Renderer::Renderer() {}
+
+    Renderer::~Renderer() {}
+
+    void Renderer::init()
     {
         if(!gladLoadGL())
         {
             std::cerr << "Error loading glad!\n";
         }
 
+        s_renderer->impl = std::make_unique<Impl>();
+
         glEnable(GL_DEPTH_TEST);
     }
 
-    void Renderer::clearColorImpl(const glm::vec4& color)
+    void Renderer::setClearColor(const glm::vec4& color)
     {
         glClearColor(color.r, color.g, color.b, color.a);
     }
 
-    void Renderer::setViewportImpl(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
+    void Renderer::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
     {
         glViewport(x, y, width, height);
     }
 
-    void Renderer::clearImpl()
+    void Renderer::clear()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    void Renderer::drawImpl(const std::shared_ptr<VertexArray>& vao, 
+    void Renderer::draw(const std::shared_ptr<VertexArray>& vao, 
                             const std::shared_ptr<Shader>& shader, 
                             const std::shared_ptr<Camera>& camera)
     {
@@ -58,7 +72,7 @@ namespace atcg
             std::cerr << "Missing IndexBuffer!\n";
     }
 
-    void Renderer::drawImpl(const std::shared_ptr<RenderMesh>& mesh, 
+    void Renderer::draw(const std::shared_ptr<RenderMesh>& mesh, 
                             const std::shared_ptr<Shader>& shader, 
                             const std::shared_ptr<Camera>& camera)
     {
@@ -84,7 +98,7 @@ namespace atcg
             std::cerr << "Missing IndexBuffer!\n";
     }
 
-    void Renderer::drawPointsImpl(const std::shared_ptr<VertexArray>& vao, 
+    void Renderer::drawPoints(const std::shared_ptr<VertexArray>& vao, 
                                   const glm::vec3& color, 
                                   const std::shared_ptr<Shader>& shader, 
                                   const std::shared_ptr<Camera>& camera)
@@ -111,7 +125,7 @@ namespace atcg
             std::cerr << "Missing IndexBuffer!\n";
     }
 
-    void Renderer::drawPointsImpl(const std::shared_ptr<RenderMesh>& mesh, 
+    void Renderer::drawPoints(const std::shared_ptr<RenderMesh>& mesh, 
                                   const glm::vec3& color, 
                                   const std::shared_ptr<Shader>& shader, 
                                   const std::shared_ptr<Camera>& camera)
@@ -139,7 +153,7 @@ namespace atcg
             std::cerr << "Missing IndexBuffer!\n";
     }
 
-    void Renderer::drawLinesImpl(const std::shared_ptr<VertexArray>& vao, 
+    void Renderer::drawLines(const std::shared_ptr<VertexArray>& vao, 
                                  const glm::vec3& color, 
                                  const std::shared_ptr<Shader>& shader, 
                                  const std::shared_ptr<Camera>& camera)
@@ -166,7 +180,7 @@ namespace atcg
             std::cerr << "Missing IndexBuffer!\n";
     }
 
-    void Renderer::drawLinesImpl(const std::shared_ptr<RenderMesh>& mesh, 
+    void Renderer::drawLines(const std::shared_ptr<RenderMesh>& mesh, 
                                  const glm::vec3& color, 
                                  const std::shared_ptr<Camera>& camera)
     {
