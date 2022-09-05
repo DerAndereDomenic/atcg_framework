@@ -88,6 +88,40 @@ public:
         return distance;
     }
 
+    //// Excercise 3: Use the distance values to trace a path from the target vertex back to the source vertex ////
+    std::vector<VertexHandle> trace_back(const std::shared_ptr<atcg::TriMesh>& mesh, const VertexHandle target_vh) {
+        // Attention: This function only works after distance_on_mesh was executed with the same target_vh.
+
+        std::vector<VertexHandle> result_path;
+        VertexHandle current_vh = target_vh;
+        result_path.push_back(target_vh);
+
+        // TODO: Implement this
+        // Hints:
+        // - Each vertex on the path has a property with its distance to the source.
+        // - Each vertex in an optimal path from the target to the source has a smaller distance than the vertex before.
+        // - The source vertex has distance 0.
+        ////////////////////////////////////////////////// Example solution
+        while(mesh->property(property_distance, current_vh) > 0) {
+            double min_distance = std::numeric_limits<double>::infinity();
+            VertexHandle min_vh;
+            for(auto vit = mesh->cvv_ccwbegin(current_vh); vit != mesh->cvv_ccwend(current_vh); vit++) {
+                double my_distance = mesh->property(property_distance, *vit);
+                if(my_distance < min_distance) {
+                    min_distance = my_distance;
+                    min_vh = *vit;
+                }
+            }
+            current_vh = min_vh;
+            result_path.push_back(current_vh);
+        }
+        ////////////////////////////////////////////////// End example solution
+        assert(mesh->property(property_distance, result_path.back()) == 0);
+
+        std::reverse(result_path.begin(), result_path.end());
+        return result_path;
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -104,7 +138,7 @@ public:
         mesh->request_vertex_colors();
         for(auto v_it : mesh->vertices())
         {
-            mesh->set_color(v_it, atcg::TriMesh::Color{0,0,0});
+            mesh->set_color(v_it, atcg::TriMesh::Color{255,255,255});
         }
 
         source_vh = mesh->vertex_handle(0);
@@ -156,10 +190,31 @@ public:
             if(ImGui::Button("Calculate distance"))
             {
                 final_distance = distance_on_mesh(mesh, source_vh, target_vh);
-                clicked = true;
+                clicked_distance = true;
             }
 
-            if(clicked)
+            if(ImGui::Button("Dijkstra"))
+            {
+                distance_on_mesh(mesh, source_vh, target_vh);
+                path = trace_back(mesh, target_vh);
+                clicked_dijkstra = true;
+
+                if(path.size() != 113)
+                    error_msg << "Wrong path length";
+                else if(path.front() != source_vh || path.back() != target_vh)
+                    error_msg << "Wrong source or target";
+                //else
+                {
+                    //Color in vertices
+                    for(auto vh : path)
+                    {
+                        mesh->set_color(vh, atcg::TriMesh::Color{255, 0, 0});
+                    }
+                    render_mesh->uploadData(mesh);
+                }
+            }
+
+            if(clicked_distance)
             {
                 ImGui::Text(("Distance between vertices: " + std::to_string(final_distance)).c_str());
 
@@ -169,6 +224,13 @@ public:
                     ImGui::Text("Wrong distance!");
                     ImGui::PopStyleColor();
                 }
+            }
+
+            if(clicked_dijkstra)
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1,0,0,1));
+                ImGui::Text(error_msg.str().c_str());
+                ImGui::PopStyleColor();
             }
 
             ImGui::End();
@@ -207,7 +269,7 @@ public:
         mesh->request_vertex_colors();
         for(auto v_it : mesh->vertices())
         {
-            mesh->set_color(v_it, atcg::TriMesh::Color{0,0,0});
+            mesh->set_color(v_it, atcg::TriMesh::Color{255,255,255});
         }
 
         source_vh = mesh->vertex_handle(0);
@@ -234,7 +296,10 @@ private:
     bool render_points = false;
     bool render_edges = false;
     double final_distance;
-    bool clicked = false;
+    bool clicked_distance = false;
+    bool clicked_dijkstra = false;
+    std::vector<VertexHandle> path;
+    std::stringstream error_msg;
 
     VertexHandle source_vh;
     VertexHandle target_vh;
