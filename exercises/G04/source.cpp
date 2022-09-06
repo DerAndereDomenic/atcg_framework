@@ -159,7 +159,7 @@ public:
             atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(render_mesh && render_points)
-            atcg::Renderer::drawPoints(render_mesh, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(render_mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(render_mesh && render_edges)
             atcg::Renderer::drawLines(render_mesh, glm::vec3(0), camera_controller->getCamera());
