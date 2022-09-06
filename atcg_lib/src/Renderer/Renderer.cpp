@@ -110,7 +110,7 @@ namespace atcg
             std::cerr << "Missing IndexBuffer!\n";
     }
 
-    void Renderer::draw(const std::shared_ptr<RenderMesh>& mesh, 
+    void Renderer::draw(const std::shared_ptr<Mesh>& mesh, 
                             const std::shared_ptr<Shader>& shader, 
                             const std::shared_ptr<Camera>& camera)
     {
@@ -163,7 +163,7 @@ namespace atcg
             std::cerr << "Missing IndexBuffer!\n";
     }
 
-    void Renderer::drawPoints(const std::shared_ptr<RenderMesh>& mesh, 
+    void Renderer::drawPoints(const std::shared_ptr<Mesh>& mesh, 
                                   const glm::vec3& color, 
                                   const std::shared_ptr<Shader>& shader, 
                                   const std::shared_ptr<Camera>& camera)
@@ -216,7 +216,7 @@ namespace atcg
             std::cerr << "Missing IndexBuffer!\n";
     }
 
-    void Renderer::drawLines(const std::shared_ptr<RenderMesh>& mesh, 
+    void Renderer::drawLines(const std::shared_ptr<Mesh>& mesh, 
                                  const glm::vec3& color, 
                                  const std::shared_ptr<Camera>& camera)
     {

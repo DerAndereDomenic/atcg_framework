@@ -16,25 +16,23 @@ namespace atcg
      * aVertexColor - Float3
      * You can add custom properties via the addBuffer() function
      */
-    class RenderMesh
+    class Mesh : public TriMesh
     {
     public:
         /**
          * @brief Construct a new Render Mesh object
          */
-        RenderMesh() = default;
+        Mesh() = default;
 
         /**
          * @brief Destroy the Render Mesh object
          */
-        ~RenderMesh() = default;
+        ~Mesh() = default;
 
         /**
          * @brief Upload the data from a TriMesh onto the GPU for rendering
-         * 
-         * @param mesh The mesh to render
          */
-        void uploadData(const std::shared_ptr<TriMesh>& mesh);
+        void uploadData();
 
         /**
          * @brief Add a custom vertex buffer

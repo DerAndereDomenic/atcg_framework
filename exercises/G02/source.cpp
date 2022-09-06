@@ -57,7 +57,7 @@ public:
         //return (vector_1 + vector_2)/2.0f;
     }
 
-    void marching_cubes(const std::shared_ptr<SDFGrid>& grid, const std::shared_ptr<atcg::TriMesh>& mesh)
+    void marching_cubes(const std::shared_ptr<SDFGrid>& grid, const std::shared_ptr<atcg::Mesh>& mesh)
     {
         mesh->request_vertex_colors();
         for(uint32_t index = 0; index < grid->voxels_per_volume(); ++index)
@@ -119,9 +119,9 @@ public:
                 continue;
 
             glm::vec3 vertex_list[12];
-            atcg::TriMesh::VertexHandle v_handles[12];
+            atcg::Mesh::VertexHandle v_handles[12];
 
-            atcg::TriMesh::Color clr;
+            atcg::Mesh::Color clr;
             clr[0] = 255;
             clr[1] = 0;
             clr[2] = 0;
@@ -130,8 +130,8 @@ public:
                 if(edge_table[cubeindex] & (1 << n)) \
                 {\
                     vertex_list[n] = interpolate_point(ISOVALUE, voxel_positions[corner_i], sdf_values[corner_i], voxel_positions[corner_j], sdf_values[corner_j]);\
-                    v_handles[n] = mesh->add_vertex(atcg::TriMesh::Point(vertex_list[n].x, vertex_list[n].y, vertex_list[n].z)); \
-                    mesh->set_color(v_handles[n], atcg::TriMesh::Color(clr)); \
+                    v_handles[n] = mesh->add_vertex(atcg::Mesh::Point(vertex_list[n].x, vertex_list[n].y, vertex_list[n].z)); \
+                    mesh->set_color(v_handles[n], atcg::Mesh::Color(clr)); \
                 }
 
             CREATE_VERTEX_ON_EDGE( 0, 0, 1);
@@ -151,7 +151,7 @@ public:
 
             for(uint32_t i = 0; triangle_table[cubeindex][i] != -1; i += 3)
             {
-                atcg::TriMesh::VertexHandle face_vhandles[3];
+                atcg::Mesh::VertexHandle face_vhandles[3];
 
                 face_vhandles[0] = v_handles[triangle_table[cubeindex][i + 0]];
                 face_vhandles[1] = v_handles[triangle_table[cubeindex][i + 1]];
@@ -161,7 +161,7 @@ public:
         }
     }
 
-    void subdivide_mesh(const std::shared_ptr<atcg::TriMesh>& mesh)
+    void subdivide_mesh(const std::shared_ptr<atcg::Mesh>& mesh)
     {
         //TODO: sqrt(3) subdivision
         mesh->request_edge_status();
@@ -175,7 +175,7 @@ public:
         auto eend = mesh->edges_end();
         auto fend = mesh->faces_end();
 
-        auto new_pos_property = OpenMesh::makeTemporaryProperty<OpenMesh::VertexHandle, atcg::TriMesh::Point>(*mesh.get());
+        auto new_pos_property = OpenMesh::makeTemporaryProperty<OpenMesh::VertexHandle, atcg::Mesh::Point>(*mesh.get());
 
         //Calculate new position of old vertices
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
@@ -198,11 +198,11 @@ public:
         }
 
         //Split faces
-        std::vector<atcg::TriMesh::FaceHandle> faces;
-        std::vector<atcg::TriMesh::VertexHandle> centroids;
+        std::vector<atcg::Mesh::FaceHandle> faces;
+        std::vector<atcg::Mesh::VertexHandle> centroids;
         for(auto f_it = mesh->faces_begin(); f_it != fend; ++f_it)
         {
-            atcg::TriMesh::Point center = {0,0,0};
+            atcg::Mesh::Point center = {0,0,0};
             for(auto v_it = f_it->vertices().begin(); v_it != f_it->vertices().end(); ++v_it)
             {
                 center += mesh->point(*v_it);
@@ -224,15 +224,14 @@ public:
         //Flip old edges
         for(auto e_it = mesh->edges_begin(); e_it != eend; ++e_it)
         {
-            atcg::TriMesh::EdgeHandle e = *e_it;
+            atcg::Mesh::EdgeHandle e = *e_it;
 
             if(!mesh->is_flip_ok(e) || e_it->feature()) continue;
             mesh->flip(e);
         }
 
         //Update rendering
-        render_mesh = std::make_shared<atcg::RenderMesh>();
-        render_mesh->uploadData(mesh);
+        mesh->uploadData();
     }
 
     // This is run at the start of the program
@@ -254,14 +253,14 @@ public:
 
         atcg::Renderer::clear();
 
-        if(render_mesh && render_faces)
-            atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+        if(mesh && render_faces)
+            atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
-        if(render_mesh && render_points)
-            atcg::Renderer::drawPoints(render_mesh, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+        if(mesh && render_points)
+            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
 
-        if(render_mesh && render_edges)
-            atcg::Renderer::drawLines(render_mesh, glm::vec3(0), camera_controller->getCamera());
+        if(mesh && render_edges)
+            atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -294,13 +293,12 @@ public:
             if(ImGui::Button("Run"))
             {
                 //Fill the grid with the sdf
-                mesh = std::make_shared<atcg::TriMesh>();
+                mesh = std::make_shared<atcg::Mesh>();
                 fillGrid(grid);
 
                 marching_cubes(grid, mesh);
 
-                render_mesh = std::make_shared<atcg::RenderMesh>();
-                render_mesh->uploadData(mesh);
+                mesh->uploadData();
             }
 
             ImGui::End();
@@ -342,11 +340,10 @@ public:
 
     bool onFileDropped(atcg::FileDroppedEvent& event)
     {
-        mesh = std::make_shared<atcg::TriMesh>();
+        mesh = std::make_shared<atcg::Mesh>();
         OpenMesh::IO::read_mesh(*mesh.get(), event.getPath());
 
-        render_mesh = std::make_shared<atcg::RenderMesh>();
-        render_mesh->uploadData(mesh);
+        mesh->uploadData();
 
         //Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
@@ -357,8 +354,7 @@ public:
     }
 
 private:
-    std::shared_ptr<atcg::TriMesh> mesh;
-    std::shared_ptr<atcg::RenderMesh> render_mesh;
+    std::shared_ptr<atcg::Mesh> mesh;
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<SDFGrid> grid;
 

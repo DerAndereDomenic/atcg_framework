@@ -4,7 +4,7 @@
 #include <Renderer/VertexArray.h>
 #include <Renderer/Shader.h>
 #include <Renderer/PerspectiveCamera.h>
-#include <DataStructure/RenderMesh.h>
+#include <DataStructure/Mesh.h>
 
 #include <memory>
 
@@ -59,7 +59,7 @@ namespace atcg
          * @param shader The shader
          * @param camera The camera
          */
-        static void draw(const std::shared_ptr<RenderMesh>& mesh,
+        static void draw(const std::shared_ptr<Mesh>& mesh,
                                 const std::shared_ptr<Shader>& shader,
                                 const std::shared_ptr<Camera>& camera = {});
 
@@ -85,7 +85,7 @@ namespace atcg
          * @param shader The shader
          * @param camera The camera
          */
-        static void drawPoints(const std::shared_ptr<RenderMesh>& mesh,
+        static void drawPoints(const std::shared_ptr<Mesh>& mesh,
                                       const glm::vec3& color,
                                       const std::shared_ptr<Shader>& shader,
                                       const std::shared_ptr<Camera>& camera = {});
@@ -112,7 +112,7 @@ namespace atcg
          * @param color The color
          * @param camera The camera
          */
-        static void drawLines(const std::shared_ptr<RenderMesh>& mesh,
+        static void drawLines(const std::shared_ptr<Mesh>& mesh,
                                      const glm::vec3& color,
                                      const std::shared_ptr<Camera>& camera = {});
 

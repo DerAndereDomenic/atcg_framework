@@ -25,8 +25,8 @@
 #include <Renderer/VertexArray.h>
 
 //-------- OpenMesh -------
-#include <OpenMesh/OpenMesh.h>
+//#include <OpenMesh/OpenMesh.h>
 
 //-------- DataStructure --
-#include <DataStructure/RenderMesh.h>
+#include <DataStructure/Mesh.h>
 #include <DataStructure/Grid.h>

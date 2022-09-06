@@ -12,10 +12,10 @@
 
 #include <numeric>
 
-using VertexHandle = atcg::TriMesh::VertexHandle;
+using VertexHandle = atcg::Mesh::VertexHandle;
 
 //Global mesh variable because we need it for the comparator
-std::shared_ptr<atcg::TriMesh> mesh;
+std::shared_ptr<atcg::Mesh> mesh;
 OpenMesh::VPropHandleT<double> property_distance;
 
 class DistanceComparator {
@@ -37,7 +37,7 @@ public:
 	    return std::isfinite(mesh->property(property_distance, vh));
     }
 
-    double distance_on_mesh(const std::shared_ptr<atcg::TriMesh>& mesh, const VertexHandle& vh_start, const VertexHandle& vh_target)
+    double distance_on_mesh(const std::shared_ptr<atcg::Mesh>& mesh, const VertexHandle& vh_start, const VertexHandle& vh_target)
     {
         double distance = std::numeric_limits<double>::infinity();
 
@@ -89,7 +89,7 @@ public:
     }
 
     //// Excercise 3: Use the distance values to trace a path from the target vertex back to the source vertex ////
-    std::vector<VertexHandle> trace_back(const std::shared_ptr<atcg::TriMesh>& mesh, const VertexHandle target_vh) {
+    std::vector<VertexHandle> trace_back(const std::shared_ptr<atcg::Mesh>& mesh, const VertexHandle target_vh) {
         // Attention: This function only works after distance_on_mesh was executed with the same target_vh.
 
         std::vector<VertexHandle> result_path;
@@ -129,7 +129,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = std::make_shared<atcg::TriMesh>();
+        mesh = std::make_shared<atcg::Mesh>();
         OpenMesh::IO::read_mesh(*mesh.get(), "res/bunny.obj");
 
         //Each vertex now holds a distance property (double)
@@ -138,14 +138,13 @@ public:
         mesh->request_vertex_colors();
         for(auto v_it : mesh->vertices())
         {
-            mesh->set_color(v_it, atcg::TriMesh::Color{255,255,255});
+            mesh->set_color(v_it, atcg::Mesh::Color{255,255,255});
         }
 
         source_vh = mesh->vertex_handle(0);
         target_vh = mesh->vertex_handle(4200);
 
-        render_mesh = std::make_shared<atcg::RenderMesh>();
-        render_mesh->uploadData(mesh);
+        mesh->uploadData();
     }
 
     // This gets called each frame
@@ -155,14 +154,14 @@ public:
 
         atcg::Renderer::clear();
 
-        if(render_mesh && render_faces)
-            atcg::Renderer::draw(render_mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+        if(mesh && render_faces)
+            atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
-        if(render_mesh && render_points)
-            atcg::Renderer::drawPoints(render_mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+        if(mesh && render_points)
+            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
-        if(render_mesh && render_edges)
-            atcg::Renderer::drawLines(render_mesh, glm::vec3(0), camera_controller->getCamera());
+        if(mesh && render_edges)
+            atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -208,9 +207,9 @@ public:
                     //Color in vertices
                     for(auto vh : path)
                     {
-                        mesh->set_color(vh, atcg::TriMesh::Color{255, 0, 0});
+                        mesh->set_color(vh, atcg::Mesh::Color{255, 0, 0});
                     }
-                    render_mesh->uploadData(mesh);
+                    mesh->uploadData();
                 }
             }
 
@@ -260,7 +259,7 @@ public:
 
     bool onFileDropped(atcg::FileDroppedEvent& event)
     {
-        mesh = std::make_shared<atcg::TriMesh>();
+        mesh = std::make_shared<atcg::Mesh>();
         OpenMesh::IO::read_mesh(*mesh.get(), event.getPath());
 
         //Each vertex now holds a distance property (double)
@@ -269,14 +268,13 @@ public:
         mesh->request_vertex_colors();
         for(auto v_it : mesh->vertices())
         {
-            mesh->set_color(v_it, atcg::TriMesh::Color{255,255,255});
+            mesh->set_color(v_it, atcg::Mesh::Color{255,255,255});
         }
 
         source_vh = mesh->vertex_handle(0);
         target_vh = mesh->vertex_handle(4200);
 
-        render_mesh = std::make_shared<atcg::RenderMesh>();
-        render_mesh->uploadData(mesh);
+        mesh->uploadData();
 
         //Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
@@ -287,7 +285,6 @@ public:
     }
 
 private:
-    std::shared_ptr<atcg::RenderMesh> render_mesh;
     std::shared_ptr<atcg::CameraController> camera_controller;
 
     bool show_dijkstra_settings = true;
