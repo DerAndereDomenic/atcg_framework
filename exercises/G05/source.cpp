@@ -12,12 +12,83 @@
 
 #include <numeric>
 
+using VertexHandle = atcg::Mesh::VertexHandle;
 
 class G05Layer : public atcg::Layer
 {
 public:
 
     G05Layer(const std::string& name) : atcg::Layer(name) {}
+
+    //We template this function because it may happen, that floats are not numerically stable
+    template<typename T>
+    atcg::Laplacian<T> calculateLaplacianUniform(const std::shared_ptr<atcg::Mesh>& mesh)
+    {
+        std::vector<Eigen::Triplet<T>> edge_weights;
+
+        for(auto e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
+        {
+            uint32_t i = e_it->v0().idx();
+            uint32_t j = e_it->v1().idx();
+
+            edge_weights.emplace_back(i, j, 1.0);
+            edge_weights.emplace_back(j, i, 1.0);
+            edge_weights.emplace_back(i, i, -1.0);
+            edge_weights.emplace_back(j, j, -1.0);
+        }
+
+        std::vector<Eigen::Triplet<T>> vertex_weights;
+
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            vertex_weights.emplace_back(v_it->idx(), v_it->idx(), v_it->valence());
+        }
+
+        size_t N = mesh->n_vertices();
+
+        atcg::Laplacian<T> laplace;
+        laplace.S.resize(N, N);
+        laplace.M.resize(N, N);
+
+        laplace.S.setFromTriplets(edge_weights.begin(), edge_weights.end());
+        laplace.M.setFromTriplets(vertex_weights.begin(), vertex_weights.end());
+
+        return laplace;
+    }
+
+    template<typename T>
+    void taubin_smoothing_uniform(const std::shared_ptr<atcg::Mesh>& mesh)
+    {
+        T lambda = 0.1f;
+        T mu = -0.15f; 
+
+        atcg::Laplacian<T> laplacian = calculateLaplacianUniform<T>(mesh);
+        Eigen::SparseMatrix<T> Id(mesh->n_vertices(), mesh->n_vertices());
+        Id.setIdentity();
+        auto K = Id - laplacian.M.cwiseInverse() * laplacian.S;
+        auto taubin_operator = (Id - mu * K) * (Id - lambda * K);
+
+        Eigen::Matrix<T, -1, -1> v(mesh->n_vertices(), 3);
+
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            atcg::Mesh::Point p = mesh->point(*v_it);
+            v(v_it->idx(),0) = p[0];
+            v(v_it->idx(),1) = p[1];
+            v(v_it->idx(),2) = p[2];
+        }
+
+        v = taubin_operator * v;
+
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            mesh->set_point(*v_it, atcg::Mesh::Point{v(v_it->idx(),0),
+                                                     v(v_it->idx(),1),
+                                                     v(v_it->idx(),2)});
+        }
+
+        mesh->uploadData();
+    }
 
     // This is run at the start of the program
     virtual void onAttach() override
@@ -57,6 +128,9 @@ public:
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+
+            ImGui::MenuItem("Show Taubin Smoothing", nullptr, &show_taubin);
+
             ImGui::EndMenu();
         }
 
@@ -72,6 +146,17 @@ public:
             ImGui::End();
         }
 
+        if(show_taubin)
+        {
+            ImGui::Begin("Taubin Smoothing", &show_taubin);
+
+            if(ImGui::Button("Smooth"))
+            {
+                taubin_smoothing_uniform<float>(mesh);
+            }
+
+            ImGui::End();
+        }
 
     }
 
@@ -107,6 +192,7 @@ private:
     bool render_faces = true;
     bool render_points = false;
     bool render_edges = false;
+    bool show_taubin = true;
 };
 
 class G05 : public atcg::Application
