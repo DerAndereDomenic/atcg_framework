@@ -127,6 +127,18 @@ public:
 
     G06Layer(const std::string& name) : atcg::Layer(name) {}
 
+    void color_mesh(const std::shared_ptr<atcg::Mesh>& p_mesh, const Eigen::VectorXf& u)
+    {
+        float max_abs_value = std::max(u.maxCoeff(), -u.minCoeff());
+        for(auto vh : p_mesh->vertices())
+        {
+            if(u[vh.idx()] > 0)
+                p_mesh->set_color(vh, { u[vh.idx()] / max_abs_value * 255, 0, 0});
+            else
+                p_mesh->set_color(vh, { 0, 0, - u[vh.idx()] / max_abs_value * 255});
+        }
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -135,12 +147,105 @@ public:
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), "res/suzanne_blender.obj");
-        mesh->uploadData();
+        OpenMesh::IO::read_mesh(*mesh.get(), "res/plane.obj");
+        mesh->request_vertex_colors();
 
-        default_mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*default_mesh.get(), "res/suzanne_blender.obj");
-        default_mesh->uploadData();
+        mesh_explicit_large = std::make_shared<atcg::Mesh>();
+        OpenMesh::IO::read_mesh(*mesh_explicit_large.get(), "res/plane.obj");
+        mesh_explicit_large->request_vertex_colors();
+
+        mesh_explicit_small = std::make_shared<atcg::Mesh>();
+        OpenMesh::IO::read_mesh(*mesh_explicit_small.get(), "res/plane.obj");
+        mesh_explicit_small->request_vertex_colors();
+
+        mesh_implicit_large = std::make_shared<atcg::Mesh>();
+        OpenMesh::IO::read_mesh(*mesh_implicit_large.get(), "res/plane.obj");
+        mesh_implicit_large->request_vertex_colors();
+
+        int start_idx = 0;
+        float min_dist = std::numeric_limits<float>::infinity();
+        for(auto vh : mesh->vertices())
+        {
+            float dist = mesh->point(vh).norm();
+            if(dist < min_dist)
+            {
+                start_idx = vh.idx();
+                min_dist = dist;
+            }
+        }
+
+        int end_idx = 0;
+        float max_dist = -std::numeric_limits<float>::infinity();
+        for(auto vh : mesh->vertices())
+        {
+            float dist = mesh->point(vh).norm();
+            if(dist > max_dist)
+            {
+                end_idx = vh.idx();
+                max_dist = dist;
+            }
+        }
+
+        laplacian = LaplaceCotan<float>().calculate(mesh);
+
+        Eigen::SparseMatrix<float> L = laplacian.M.cwiseInverse() * laplacian.S;
+
+        Eigen::VectorXf u0(mesh->n_vertices());
+        u0.setZero();
+        u0[start_idx] = 1.0f;
+        u0[end_idx] = -1.0f;
+
+        float cfl_timestep = std::numeric_limits<float>::infinity();
+        for(auto e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
+        {
+            float length = mesh->calc_edge_length(*e_it);
+            if(length < cfl_timestep)
+            {
+                cfl_timestep = length;
+            }
+        }
+
+        float delta_small = 0.9f * cfl_timestep;
+        float delta_large = 10.0f * cfl_timestep;
+        float time = 500.0f;
+
+        int steps_small = time/delta_small;
+        int steps_large = time/delta_large;
+
+        Eigen::VectorXf u_explicit_small = u0;
+        Eigen::VectorXf u_explicit_large = u0;
+        Eigen::VectorXf u_implict_large = u0;
+
+        for(uint32_t i = 0; i <= steps_large; ++i)
+        {
+            u_explicit_large += delta_large * L * u_explicit_large;
+        }
+
+        for(uint32_t i = 0; i <= steps_small; ++i)
+        {
+            u_explicit_small += delta_small * L * u_explicit_small;
+        }
+
+        Eigen::SparseMatrix<float> identity(L.cols(), L.rows());
+        identity.setIdentity();
+
+        Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
+        solver.compute(identity - delta_large * L);
+
+        for(uint32_t i = 0; i <= steps_large; ++i)
+        {
+            u_implict_large = solver.solve(u_implict_large);
+        }
+
+        color_mesh(mesh_explicit_large, u_explicit_large);
+        color_mesh(mesh_explicit_small, u_explicit_small);
+        color_mesh(mesh_implicit_large, u_implict_large);
+
+        mesh_explicit_large->uploadData();
+        mesh_explicit_small->uploadData();
+        mesh_implicit_large->uploadData();
+
+        mesh = mesh_explicit_large;
     }
 
     // This gets called each frame
@@ -154,7 +259,7 @@ public:
             atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_points)
-            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_edges)
             atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
@@ -171,6 +276,13 @@ public:
             ImGui::EndMenu();
         }
 
+        if(ImGui::BeginMenu("Exercise"))
+        {
+            ImGui::MenuItem("Show Diffusion Settings", nullptr, &show_diffusion);
+
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
 
         if(show_render_settings)
@@ -183,6 +295,28 @@ public:
             ImGui::End();
         }
 
+        if(show_diffusion)
+        {
+            ImGui::Begin("Show Diffusion", &show_diffusion);
+            
+            if(ImGui::Button("Explicit large"))
+            {
+                mesh = mesh_explicit_large;
+            }
+
+            if(ImGui::Button("Explicit small"))
+            {
+                mesh = mesh_explicit_small;
+            }
+
+            if(ImGui::Button("Implicit large"))
+            {
+                mesh = mesh_implicit_large;
+            }
+
+            ImGui::End();
+        }
+
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -191,33 +325,20 @@ public:
         camera_controller->onEvent(event);
 
         atcg::EventDispatcher dispatcher(event);
-        dispatcher.dispatch<atcg::FileDroppedEvent>(ATCG_BIND_EVENT_FN(G06Layer::onFileDropped));
-    }
-
-    bool onFileDropped(atcg::FileDroppedEvent& event)
-    {
-        mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), event.getPath());
-        mesh->uploadData();
-
-        default_mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*default_mesh.get(), event.getPath());
-        default_mesh->uploadData();
-
-        //Also reset camera
-        const auto& window = atcg::Application::get()->getWindow();
-        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
-
-        return true;
     }
 
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
-    std::shared_ptr<atcg::Mesh> default_mesh;
+
+    std::shared_ptr<atcg::Mesh> mesh_explicit_large;
+    std::shared_ptr<atcg::Mesh> mesh_explicit_small;
+    std::shared_ptr<atcg::Mesh> mesh_implicit_large;
+
+    atcg::Laplacian<float> laplacian;
 
     bool show_render_settings = false;
+    bool show_diffusion = true;
     bool render_faces = true;
     bool render_points = false;
     bool render_edges = false;
