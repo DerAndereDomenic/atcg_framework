@@ -208,9 +208,11 @@ public:
 
         mesh = std::make_shared<atcg::Mesh>();
         OpenMesh::IO::read_mesh(*mesh.get(), "res/suzanne_blender.obj");
-
-
         mesh->uploadData();
+
+        default_mesh = std::make_shared<atcg::Mesh>();
+        OpenMesh::IO::read_mesh(*default_mesh.get(), "res/suzanne_blender.obj");
+        default_mesh->uploadData();
     }
 
     // This gets called each frame
@@ -259,14 +261,23 @@ public:
         {
             ImGui::Begin("Taubin Smoothing", &show_taubin);
 
-            if(ImGui::Button("Smooth Uniform"))
-            {
-                taubin_smoothing<float, LaplaceUniform<float>>(mesh, LaplaceUniform<float>());
-            }
+            bool update = ImGui::Checkbox("Use Cotan weights", &use_cotan);
+            update = ImGui::InputInt("Number iterations", &num_iterations) || update;
 
-            if(ImGui::Button("Smooth Cotan"))
+            if(update)
             {
-                taubin_smoothing<float, LaplaceCotan<float>>(mesh, LaplaceCotan<float>());
+                mesh->copy_all_kernel_properties(*default_mesh.get());
+                for(uint32_t n = 0; n < num_iterations; ++n)
+                {
+                    if(use_cotan)
+                    {
+                        taubin_smoothing<float, LaplaceCotan<float>>(mesh, LaplaceCotan<float>());
+                    }
+                    else
+                    {
+                        taubin_smoothing<float, LaplaceUniform<float>>(mesh, LaplaceUniform<float>());
+                    }
+                }
             }
 
             ImGui::End();
@@ -287,8 +298,11 @@ public:
     {
         mesh = std::make_shared<atcg::Mesh>();
         OpenMesh::IO::read_mesh(*mesh.get(), event.getPath());
-
         mesh->uploadData();
+
+        default_mesh = std::make_shared<atcg::Mesh>();
+        OpenMesh::IO::read_mesh(*default_mesh.get(), event.getPath());
+        default_mesh->uploadData();
 
         //Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
@@ -301,12 +315,16 @@ public:
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
+    std::shared_ptr<atcg::Mesh> default_mesh;
 
     bool show_render_settings = false;
     bool render_faces = true;
     bool render_points = false;
     bool render_edges = false;
     bool show_taubin = true;
+    bool use_cotan = false;
+
+    int num_iterations = 10;
 };
 
 class G05 : public atcg::Application
