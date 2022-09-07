@@ -15,15 +15,10 @@
 using VertexHandle = atcg::Mesh::VertexHandle;
 using EdgeHandle = atcg::Mesh::EdgeHandle;
 
-class G05Layer : public atcg::Layer
+template<typename T>
+struct LaplaceUniform
 {
-public:
-
-    G05Layer(const std::string& name) : atcg::Layer(name) {}
-
-    //We template this function because it may happen, that floats are not numerically stable
-    template<typename T>
-    atcg::Laplacian<T> calculateLaplacianUniform(const std::shared_ptr<atcg::Mesh>& mesh)
+    atcg::Laplacian<T> calculate(const std::shared_ptr<atcg::Mesh>& mesh)
     {
         std::vector<Eigen::Triplet<T>> edge_weights;
 
@@ -56,49 +51,17 @@ public:
 
         return laplace;
     }
+};
 
-    template<typename T>
-    void taubin_smoothing_uniform(const std::shared_ptr<atcg::Mesh>& mesh)
-    {
-        T lambda = 0.1f;
-        T mu = -0.11f; 
-
-        atcg::Laplacian<T> laplacian = calculateLaplacianUniform<T>(mesh);
-        Eigen::SparseMatrix<T> Id(mesh->n_vertices(), mesh->n_vertices());
-        Id.setIdentity();
-        auto K = Id - laplacian.M.cwiseInverse() * laplacian.S;
-        auto taubin_operator = (Id - mu * K) * (Id - lambda * K);
-
-        Eigen::Matrix<T, -1, -1> v(mesh->n_vertices(), 3);
-
-        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
-        {
-            atcg::Mesh::Point p = mesh->point(*v_it);
-            v(v_it->idx(),0) = p[0];
-            v(v_it->idx(),1) = p[1];
-            v(v_it->idx(),2) = p[2];
-        }
-
-        v = taubin_operator * v;
-
-        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
-        {
-            mesh->set_point(*v_it, atcg::Mesh::Point{v(v_it->idx(),0),
-                                                     v(v_it->idx(),1),
-                                                     v(v_it->idx(),2)});
-        }
-
-        mesh->uploadData();
-    }
-
-    template<typename T>
+template<typename T>
+struct LaplaceCotan
+{
     T clampCotan(T v)
     {
         const T bound = 19.1;
         return (v < -bound ? -bound : (v > bound ? bound : v));
     }
 
-    template<typename T>
     T areaFromMetric(T a, T b, T c) {
         //Numerically stable herons formula for area of triangle with side lengths a, b and c.
         if (a < b) std::swap(a, b);
@@ -109,20 +72,18 @@ public:
         return p;
     }
 
-    template<typename T>
     T triangleCotan(const atcg::TriMesh::Point& v0, const atcg::TriMesh::Point& v1, const atcg::TriMesh::Point& v2)
     {
         const auto d0 = v0 - v2;
         const auto d1 = v1 - v2;
         const auto d2 = v1 - v0;
-        const auto area = areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
+        const auto area = areaFromMetric(d0.norm(), d1.norm(), d2.norm());
         if(area > 1e-5)
             return clampCotan(d0.dot(d1) / area);
         return 1e-5;
     }
 
-    template<typename T>
-    atcg::Laplacian<T> calculateLaplacianCotan(const std::shared_ptr<atcg::Mesh>& mesh)
+    atcg::Laplacian<T> calculate(const std::shared_ptr<atcg::Mesh>& mesh)
     {
         std::vector<Eigen::Triplet<T>> edge_weights;
 
@@ -141,13 +102,13 @@ public:
             if(!mesh->is_boundary(h0))
             {
                 const auto p2 = h0.next().to();
-                weight += triangleCotan<T>(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
             }
 
             if(!mesh->is_boundary(h1))
             {
                 const auto p2 = h1.next().to();
-                weight += triangleCotan<T>(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
             }
 
             edge_weights.emplace_back(i, j, weight);
@@ -173,13 +134,13 @@ public:
                 if(!mesh->is_boundary(h0))
                 {
                     const auto p2 = h0.next().to();
-                    weight += triangleCotan<T>(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
                 }
 
                 if(!mesh->is_boundary(h1))
                 {
                     const auto p2 = h1.next().to();
-                    weight += triangleCotan<T>(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
                 }
             }
             vertex_weights.emplace_back(v_it->idx(), v_it->idx(), weight);
@@ -196,14 +157,21 @@ public:
 
         return laplace;
     }
+};
 
-    template<typename T>
-    void taubin_smoothing_cotan(const std::shared_ptr<atcg::Mesh>& mesh)
+class G05Layer : public atcg::Layer
+{
+public:
+
+    G05Layer(const std::string& name) : atcg::Layer(name) {}
+
+    template<typename T, class LaplaceCalculator>
+    void taubin_smoothing(const std::shared_ptr<atcg::Mesh>& mesh, LaplaceCalculator calculator)
     {
         T lambda = 0.1f;
         T mu = -0.11f; 
 
-        atcg::Laplacian<T> laplacian = calculateLaplacianCotan<T>(mesh);
+        atcg::Laplacian<T> laplacian = calculator.calculate(mesh);
         Eigen::SparseMatrix<T> Id(mesh->n_vertices(), mesh->n_vertices());
         Id.setIdentity();
         auto K = Id - laplacian.M.cwiseInverse() * laplacian.S;
@@ -291,9 +259,14 @@ public:
         {
             ImGui::Begin("Taubin Smoothing", &show_taubin);
 
-            if(ImGui::Button("Smooth"))
+            if(ImGui::Button("Smooth Uniform"))
             {
-                taubin_smoothing_uniform<float>(mesh);
+                taubin_smoothing<float, LaplaceUniform<float>>(mesh, LaplaceUniform<float>());
+            }
+
+            if(ImGui::Button("Smooth Cotan"))
+            {
+                taubin_smoothing<float, LaplaceCotan<float>>(mesh, LaplaceCotan<float>());
             }
 
             ImGui::End();
