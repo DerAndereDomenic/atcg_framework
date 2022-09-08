@@ -53,7 +53,7 @@ namespace atcg
 
                 glm::vec3 forward = glm::normalize(_camera->getPosition() - _camera->getLookAt());
 
-                glm::vec3 up_local = glm::vec3(_camera->getView()[1]);
+                glm::vec3 up_local = glm::vec3(glm::inverse(_camera->getView())[1]);
                 glm::vec3 rightDirection = glm::cross(forward, up_local);
 
                 glm::vec3 tangent = xDelta * rightDirection + yDelta * up_local;
