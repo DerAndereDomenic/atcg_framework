@@ -27,8 +27,29 @@ public:
 
         mesh = std::make_shared<atcg::Mesh>();
         OpenMesh::IO::read_mesh(*mesh.get(), "res/maxear.obj");
-        mesh->uploadData();
 
+        float max_scale = -std::numeric_limits<float>::infinity();
+        atcg::TriMesh::Point mean_point{0,0,0};
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            for(uint32_t i = 0; i < 3; ++i)
+            {
+                if(mesh->point(*v_it)[i] > max_scale)
+                {
+                    max_scale = mesh->point(*v_it)[i];
+                }
+            }
+
+            mean_point += mesh->point(*v_it);
+        }
+        mean_point /= static_cast<float>(mesh->n_vertices());
+
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            mesh->set_point(*v_it, (mesh->point(*v_it) - mean_point) / max_scale);
+        }
+
+        mesh->uploadData();
     }
 
     // This gets called each frame
