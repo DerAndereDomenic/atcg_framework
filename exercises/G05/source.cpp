@@ -168,9 +168,6 @@ public:
     template<typename T, class LaplaceCalculator>
     void taubin_smoothing(const std::shared_ptr<atcg::Mesh>& mesh, LaplaceCalculator calculator)
     {
-        T lambda = 0.1f;
-        T mu = -0.11f; 
-
         atcg::Laplacian<T> laplacian = calculator.calculate(mesh);
         Eigen::SparseMatrix<T> Id(mesh->n_vertices(), mesh->n_vertices());
         Id.setIdentity();
@@ -263,6 +260,8 @@ public:
 
             bool update = ImGui::Checkbox("Use Cotan weights", &use_cotan);
             update = ImGui::InputInt("Number iterations", &num_iterations) || update;
+            update = ImGui::InputFloat("Lambda", &lambda) || update;
+            update = ImGui::InputFloat("Mu", &mu) || update;
 
             if(update)
             {
@@ -323,6 +322,9 @@ private:
     bool render_edges = false;
     bool show_taubin = true;
     bool use_cotan = false;
+
+    float mu = -0.11f;
+    float lambda = 0.1f;
 
     int num_iterations = 10;
 };
