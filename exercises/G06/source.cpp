@@ -216,25 +216,43 @@ public:
         Eigen::VectorXf u_explicit_large = u0;
         Eigen::VectorXf u_implict_large = u0;
 
-        for(uint32_t i = 0; i <= steps_large; ++i)
         {
-            u_explicit_large += delta_large * L * u_explicit_large;
+            atcg::Timer timer;
+
+            for(uint32_t i = 0; i <= steps_large; ++i)
+            {
+                u_explicit_large += delta_large * L * u_explicit_large;
+            }
+
+            std::cout << "Time: " << timer.elapsedSeconds() << "s\n"; 
         }
 
-        for(uint32_t i = 0; i <= steps_small; ++i)
         {
-            u_explicit_small += delta_small * L * u_explicit_small;
+            atcg::Timer timer;
+
+            for(uint32_t i = 0; i <= steps_small; ++i)
+            {
+                u_explicit_small += delta_small * L * u_explicit_small;
+            }
+
+            std::cout << "Time: " << timer.elapsedSeconds() << "s\n"; 
         }
 
         Eigen::SparseMatrix<float> identity(L.cols(), L.rows());
         identity.setIdentity();
 
-        Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
-        solver.compute(identity - delta_large * L);
-
-        for(uint32_t i = 0; i <= steps_large; ++i)
         {
-            u_implict_large = solver.solve(u_implict_large);
+            atcg::Timer timer;
+
+            Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
+            solver.compute(identity - delta_large * L);
+
+            for(uint32_t i = 0; i <= steps_large; ++i)
+            {
+                u_implict_large = solver.solve(u_implict_large);
+            }
+
+            std::cout << "Time: " << timer.elapsedSeconds() << "s\n"; 
         }
 
         color_mesh(mesh_explicit_large, u_explicit_large);
