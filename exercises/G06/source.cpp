@@ -280,7 +280,7 @@ public:
             atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_edges)
-            atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
+            atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
