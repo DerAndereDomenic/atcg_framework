@@ -24,22 +24,12 @@ struct LaplaceCotan
         return (v < -bound ? -bound : (v > bound ? bound : v));
     }
 
-    T areaFromMetric(T a, T b, T c) {
-        //Numerically stable herons formula for area of triangle with side lengths a, b and c.
-        if (a < b) std::swap(a, b);
-        if (a < c) std::swap(a, c);
-        if (b < c) std::swap(b, c);
-
-        double p = std::sqrt(std::abs((a + (b + c)) * (c - (a - b)) * (c + (a - b)) * (a + (b - c)))) / 4;
-        return p;
-    }
-
     T triangleCotan(const atcg::TriMesh::Point& v0, const atcg::TriMesh::Point& v1, const atcg::TriMesh::Point& v2)
     {
         const auto d0 = v0 - v2;
         const auto d1 = v1 - v2;
         const auto d2 = v1 - v0;
-        const auto area = areaFromMetric(d0.norm(), d1.norm(), d2.norm());
+        const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
         if(area > 1e-5)
             return clampCotan(d0.dot(d1) / area);
         return 1e-5;

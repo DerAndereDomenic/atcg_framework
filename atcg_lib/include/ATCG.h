@@ -32,3 +32,6 @@
 #include <DataStructure/Grid.h>
 #include <DataStructure/Laplacian.h>
 #include <DataStructure/Timer.h>
+
+//-------- Math -----------
+#include <Math/Functions.h>
