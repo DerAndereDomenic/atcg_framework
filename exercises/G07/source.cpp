@@ -21,8 +21,10 @@ public:
 
     G07Layer(const std::string& name) : atcg::Layer(name) {}
 
-    void detect_boundary_edges(const std::shared_ptr<atcg::Mesh>& mesh, std::vector<EdgeHandle>& boundary_edges)
+    std::vector<EdgeHandle> detect_boundary_edges(const std::shared_ptr<atcg::Mesh>& mesh)
     {
+        std::vector<EdgeHandle> boundary_edges;
+
         for(auto e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
         {
             if(mesh->is_boundary(*e_it))
@@ -30,6 +32,8 @@ public:
                 boundary_edges.push_back(*e_it);
             }
         }
+
+        return boundary_edges;
     }
 
     std::vector<VertexHandle> detect_boundary_path(const std::shared_ptr<atcg::Mesh>& mesh, const std::vector<EdgeHandle>& boundary_edges)
@@ -56,6 +60,20 @@ public:
         }
 
         return boundary_path;
+    }
+
+    std::vector<float> path_length(const std::shared_ptr<atcg::Mesh>& mesh, const std::vector<VertexHandle>& path)
+    {
+        std::vector<float> path_lengths;
+
+        for(uint32_t i = 0; i < path.size(); ++i)
+        {
+            atcg::TriMesh::Point p0 = mesh->point(path[i]);
+            atcg::TriMesh::Point p1 = mesh->point(path[(i+1)%path.size()]);
+            path_lengths.push_back((p0-p1).norm());
+        }
+
+        return path_lengths;
     }
 
     // This is run at the start of the program
@@ -90,9 +108,9 @@ public:
             mesh->set_point(*v_it, (mesh->point(*v_it) - mean_point) / max_scale);
         }
 
-        std::vector<EdgeHandle> boundary_edges;
-        detect_boundary_edges(mesh, boundary_edges);
+        std::vector<EdgeHandle> boundary_edges = detect_boundary_edges(mesh);
         std::vector<VertexHandle> boundary_path = detect_boundary_path(mesh, boundary_edges);
+        std::vector<float> edge_lengths = path_length(mesh, boundary_path);
 
         int index = 0;
         for(auto v : boundary_path)
