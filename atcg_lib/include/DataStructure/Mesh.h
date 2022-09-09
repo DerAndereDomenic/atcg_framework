@@ -42,6 +42,28 @@ namespace atcg
         void addBuffer(const std::shared_ptr<VertexBuffer>& buffer);
 
         /**
+         * @brief Calcualte the area of a triangle
+         * 
+         * @return float The area
+         */
+        float area(const Mesh::FaceHandle& f_handle) const;
+
+        /**
+         * @brief Get the area of the triangles adjacent to the vertex
+         * 
+         * @param v_handle The vertex handle
+         * @return float The area
+         */
+        float area(const Mesh::VertexHandle& v_handle) const;
+
+        /**
+         * @brief Get the total area of the mesh
+         * 
+         * @return float The total area
+         */
+        float total_area() const;
+
+        /**
          * @brief Get the Position
          * 
          * @return glm::vec3 The position
@@ -103,4 +125,8 @@ namespace atcg
 
         std::shared_ptr<VertexArray> _vao;
     };
+
+    using VertexHandle = Mesh::VertexHandle;
+    using FaceHandle = Mesh::FaceHandle;
+    using EdgeHandle = Mesh::EdgeHandle;
 }

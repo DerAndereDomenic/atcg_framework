@@ -73,4 +73,33 @@ namespace atcg
 
         _model = translate * rotation * scale;
     }
+
+    float Mesh::area(const Mesh::FaceHandle& f_handle) const
+    {
+        return calc_face_area(f_handle);
+    }
+
+    float Mesh::area(const Mesh::VertexHandle& v_handle) const
+    {
+        float total_area = 0.0f;
+        VertexIter v_itter(*this, v_handle);
+        for(auto f_it = v_itter->faces().begin(); f_it != v_itter->faces().end(); ++f_it)
+        {
+            total_area += area(*f_it);
+        }
+        return total_area;
+    }
+
+    float Mesh::total_area() const
+    {
+        float total_area = 0.0f;
+
+        for(auto f_it = faces_begin(); f_it != faces_end(); ++f_it)
+        {
+            total_area += area(*f_it);
+        }
+
+        return total_area;
+    }
+
 }
