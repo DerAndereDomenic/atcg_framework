@@ -293,7 +293,7 @@ public:
         return solver.solve(rhs).eval();
     }
 
-    void reparameterize(const std::shared_ptr<atcg::Mesh>& mesh, 
+    Eigen::MatrixXf reparameterize(const std::shared_ptr<atcg::Mesh>& mesh, 
                         const std::vector<VertexHandle>& path, 
                         const std::vector<atcg::Mesh::Point>& constraints, 
                         const WeightType& method)
@@ -306,6 +306,11 @@ public:
 
         Eigen::MatrixXf uv = solve(op, rhs);
 
+        return uv;
+    }
+
+    void apply_parameterization(const std::shared_ptr<atcg::Mesh>& mesh, const Eigen::MatrixXf& uv)
+    {
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
             atcg::Mesh::Point p{uv(v_it->idx(), 0), uv(v_it->idx(), 1), 0.0f};
@@ -320,9 +325,11 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), "res/maxear.obj");
-        mesh->request_vertex_colors();
+        mesh_original = std::make_shared<atcg::Mesh>();
+        OpenMesh::IO::read_mesh(*mesh_original.get(), "res/maxear.obj");
+        mesh_original->request_vertex_colors();
+
+        mesh = std::make_shared<atcg::Mesh>(*mesh_original.get());
 
         float max_scale = -std::numeric_limits<float>::infinity();
         atcg::TriMesh::Point mean_point{0,0,0};
@@ -345,12 +352,14 @@ public:
             mesh->set_point(*v_it, (mesh->point(*v_it) - mean_point) / max_scale);
         }
 
-        std::vector<EdgeHandle> boundary_edges = detect_boundary_edges(mesh);
-        std::vector<VertexHandle> boundary_path = detect_boundary_path(mesh, boundary_edges);
-        std::vector<float> edge_lengths = path_length(mesh, boundary_path);
-        std::vector<atcg::Mesh::Point> circle = map_boundary_edges_to_circle(edge_lengths);
+        boundary_edges = detect_boundary_edges(mesh_original);
+        boundary_path = detect_boundary_path(mesh_original, boundary_edges);
+        edge_lengths = path_length(mesh_original, boundary_path);
+        circle = map_boundary_edges_to_circle(edge_lengths);
 
-        reparameterize(mesh, boundary_path, circle, WeightType::WACHSPRESS);
+        Eigen::MatrixXf uv = reparameterize(mesh_original, boundary_path, circle, WeightType::UNIFORM_SPRING);
+
+        apply_parameterization(mesh, uv);
 
         mesh->uploadData();
     }
@@ -414,6 +423,12 @@ public:
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
+    std::shared_ptr<atcg::Mesh> mesh_original;
+
+    std::vector<EdgeHandle> boundary_edges;
+    std::vector<VertexHandle> boundary_path;
+    std::vector<float> edge_lengths;
+    std::vector<atcg::Mesh::Point> circle;
 
     bool show_render_settings = false;
     bool render_faces = false;
