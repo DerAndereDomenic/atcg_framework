@@ -71,9 +71,9 @@ public:
         return boundary_path;
     }
 
-    std::vector<float> path_length(const std::shared_ptr<atcg::Mesh>& mesh, const std::vector<VertexHandle>& path)
+    std::vector<double> path_length(const std::shared_ptr<atcg::Mesh>& mesh, const std::vector<VertexHandle>& path)
     {
-        std::vector<float> path_lengths;
+        std::vector<double> path_lengths;
 
         for(uint32_t i = 0; i < path.size() - 1; ++i)
         {
@@ -85,28 +85,28 @@ public:
         return path_lengths;
     }
 
-    std::vector<atcg::Mesh::Point> map_boundary_edges_to_circle(const std::vector<float>& edge_lengths)
+    std::vector<atcg::Mesh::Point> map_boundary_edges_to_circle(const std::vector<double>& edge_lengths)
     {
-        float total_length = std::accumulate(edge_lengths.begin(), edge_lengths.end(), 0.0f);
+        double total_length = std::accumulate(edge_lengths.begin(), edge_lengths.end(), 0.0f);
 
         std::vector<atcg::Mesh::Point> circle;
         circle.push_back({1.0f, 0.0f, 0.0f});
-        float angle = 0;
+        double angle = 0;
         for(uint32_t i = 0; i < edge_lengths.size(); ++i)
         {
-            angle += edge_lengths[i] / total_length * 2.0f * static_cast<float>(M_PI);
+            angle += edge_lengths[i] / total_length * 2.0f * static_cast<double>(M_PI);
             circle.push_back(atcg::Mesh::Point{std::cos(angle), std::sin(angle), 0.0f});
         }
         return circle;
     }
 
-    inline float angle_from_metric(float a, float b, float c)
+    inline double angle_from_metric(double a, double b, double c)
     {
         /* numerically stable version of law of cosines
         * angle between a and b, opposite to edge c
         */
 
-        float alpha = acos((a*a + b*b - c*c) / (2.0 * a * b));
+        double alpha = acos((a*a + b*b - c*c) / (2.0 * a * b));
 
         if (alpha < 1e-8f)
         {
@@ -116,9 +116,9 @@ public:
         return alpha;
     }
 
-    std::vector<Eigen::Triplet<float>> method_switcher(const std::shared_ptr<atcg::Mesh>& mesh, const WeightType& method)
+    std::vector<Eigen::Triplet<double>> method_switcher(const std::shared_ptr<atcg::Mesh>& mesh, const WeightType& method)
     {
-        std::vector<Eigen::Triplet<float>> coefficients;
+        std::vector<Eigen::Triplet<double>> coefficients;
 
         uint32_t n_faces = mesh->n_faces();
 
@@ -139,16 +139,16 @@ public:
             int j = v[1].idx();
             int k = v[2].idx();
 
-            float rij = (vj - vi).norm();
-            float rjk = (vk - vj).norm();
-            float rki = (vi - vk).norm();
+            double rij = (vj - vi).norm();
+            double rjk = (vk - vj).norm();
+            double rki = (vi - vk).norm();
 
-            float alphai = angle_from_metric(rij, rki, rjk);
-            float alphaj = angle_from_metric(rjk, rij, rki);
-            float alphak = angle_from_metric(rjk, rki, rij);
+            double alphai = angle_from_metric(rij, rki, rjk);
+            double alphaj = angle_from_metric(rjk, rij, rki);
+            double alphak = angle_from_metric(rjk, rki, rij);
 
-            float wij = 0, wjk = 0, wki = 0;
-            float wji = 0, wkj = 0, wik = 0;
+            double wij = 0, wjk = 0, wki = 0;
+            double wji = 0, wkj = 0, wik = 0;
 
             switch(method)
             {
@@ -238,25 +238,25 @@ public:
         return coefficients;
     }
 
-    Eigen::SparseMatrix<float> construct_operator(const std::shared_ptr<atcg::Mesh>& mesh, 
-                                                  const std::vector<Eigen::Triplet<float>>& coefficients,
+    Eigen::SparseMatrix<double> construct_operator(const std::shared_ptr<atcg::Mesh>& mesh, 
+                                                  const std::vector<Eigen::Triplet<double>>& coefficients,
                                                   const std::vector<VertexHandle>& path)
     {
-        Eigen::SparseMatrix<float> op(mesh->n_vertices(), mesh->n_vertices());
+        Eigen::SparseMatrix<double> op(mesh->n_vertices(), mesh->n_vertices());
         op.setFromTriplets(coefficients.begin(), coefficients.end());
 
-        Eigen::VectorXf row_sum = op * Eigen::VectorXf::Ones(op.cols());
+        Eigen::VectorXd row_sum = op * Eigen::VectorXd::Ones(op.cols());
 
-        Eigen::SparseMatrix<float> Id(mesh->n_vertices(), mesh->n_vertices());
+        Eigen::SparseMatrix<double> Id(mesh->n_vertices(), mesh->n_vertices());
         Id.setIdentity();
 
-        Eigen::SparseMatrix<float> W = Id * row_sum.asDiagonal();
+        Eigen::SparseMatrix<double> W = Id * row_sum.asDiagonal();
         op = (W - op).eval();
 
         op = (W.cwiseInverse() * op).eval();
 
-        Eigen::VectorXf ones = Eigen::VectorXf::Ones(mesh->n_vertices());
-        Eigen::VectorXf zeros = Eigen::VectorXf::Zero(mesh->n_vertices());
+        Eigen::VectorXd ones = Eigen::VectorXd::Ones(mesh->n_vertices());
+        Eigen::VectorXd zeros = Eigen::VectorXd::Zero(mesh->n_vertices());
 
         for(uint32_t i = 0; i < path.size(); ++i)
         {
@@ -270,11 +270,11 @@ public:
         return op;
     }
 
-    Eigen::MatrixXf construct_rhs(const std::shared_ptr<atcg::Mesh>& mesh, 
+    Eigen::MatrixXd construct_rhs(const std::shared_ptr<atcg::Mesh>& mesh, 
                                   const std::vector<VertexHandle>& path, 
                                   const std::vector<atcg::Mesh::Point>& boundary_constraints)
     {
-        Eigen::MatrixXf rhs = Eigen::MatrixXf::Zero(mesh->n_vertices(), 3);
+        Eigen::MatrixXd rhs = Eigen::MatrixXd::Zero(mesh->n_vertices(), 3);
 
         for(uint32_t i = 0; i < boundary_constraints.size(); ++i)
         {
@@ -286,30 +286,30 @@ public:
         return rhs;
     }
 
-    Eigen::MatrixXf solve(const Eigen::SparseMatrix<float>& op, const Eigen::MatrixXf& rhs)
+    Eigen::MatrixXd solve(const Eigen::SparseMatrix<double>& op, const Eigen::MatrixXd& rhs)
     {
-        Eigen::BiCGSTAB<Eigen::SparseMatrix<float>> solver;
+        Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
         solver.compute(op);
         return solver.solve(rhs).eval();
     }
 
-    Eigen::MatrixXf reparameterize(const std::shared_ptr<atcg::Mesh>& mesh, 
+    Eigen::MatrixXd reparameterize(const std::shared_ptr<atcg::Mesh>& mesh, 
                         const std::vector<VertexHandle>& path, 
                         const std::vector<atcg::Mesh::Point>& constraints, 
                         const WeightType& method)
     {
-        std::vector<Eigen::Triplet<float>> coefficients = method_switcher(mesh, method);
+        std::vector<Eigen::Triplet<double>> coefficients = method_switcher(mesh, method);
 
-        Eigen::SparseMatrix<float> op = construct_operator(mesh, coefficients, path);
+        Eigen::SparseMatrix<double> op = construct_operator(mesh, coefficients, path);
 
-        Eigen::MatrixXf rhs = construct_rhs(mesh, path, constraints);
+        Eigen::MatrixXd rhs = construct_rhs(mesh, path, constraints);
 
-        Eigen::MatrixXf uv = solve(op, rhs);
+        Eigen::MatrixXd uv = solve(op, rhs);
 
         return uv;
     }
 
-    void apply_parameterization(const std::shared_ptr<atcg::Mesh>& mesh, const Eigen::MatrixXf& uv)
+    void apply_parameterization(const std::shared_ptr<atcg::Mesh>& mesh, const Eigen::MatrixXd& uv)
     {
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
@@ -322,7 +322,7 @@ public:
     virtual void onAttach() override
     {
         const auto& window = atcg::Application::get()->getWindow();
-        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
+        double aspect_ratio = (double)window->getWidth() / (double)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         mesh_original = std::make_shared<atcg::Mesh>();
@@ -331,7 +331,7 @@ public:
 
         mesh = std::make_shared<atcg::Mesh>(*mesh_original.get());
 
-        float max_scale = -std::numeric_limits<float>::infinity();
+        double max_scale = -std::numeric_limits<double>::infinity();
         atcg::TriMesh::Point mean_point{0,0,0};
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
@@ -345,7 +345,7 @@ public:
 
             mean_point += mesh->point(*v_it);
         }
-        mean_point /= static_cast<float>(mesh->n_vertices());
+        mean_point /= static_cast<double>(mesh->n_vertices());
 
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
@@ -466,7 +466,7 @@ private:
 
     std::vector<EdgeHandle> boundary_edges;
     std::vector<VertexHandle> boundary_path;
-    std::vector<float> edge_lengths;
+    std::vector<double> edge_lengths;
     std::vector<atcg::Mesh::Point> circle;
 
     bool show_render_settings = false;
