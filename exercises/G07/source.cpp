@@ -66,14 +66,30 @@ public:
     {
         std::vector<float> path_lengths;
 
-        for(uint32_t i = 0; i < path.size(); ++i)
+        for(uint32_t i = 0; i < path.size() - 1; ++i)
         {
             atcg::TriMesh::Point p0 = mesh->point(path[i]);
-            atcg::TriMesh::Point p1 = mesh->point(path[(i+1)%path.size()]);
+            atcg::TriMesh::Point p1 = mesh->point(path[i+1]);
             path_lengths.push_back((p0-p1).norm());
         }
 
         return path_lengths;
+    }
+
+    std::vector<atcg::Mesh::Point> map_boundary_edges_to_circle(const std::vector<float>& edge_lengths)
+    {
+        float total_length = std::accumulate(edge_lengths.begin(), edge_lengths.end(), 0.0f);
+        std::cout << total_length << "\n";
+
+        std::vector<atcg::Mesh::Point> circle;
+        circle.push_back({1.0f, 0.0f, 0.0f});
+        float angle = 0;
+        for(uint32_t i = 0; i < edge_lengths.size(); ++i)
+        {
+            angle += edge_lengths[i] / total_length * 2.0f * static_cast<float>(M_PI);
+            circle.push_back(atcg::Mesh::Point{std::cos(angle), std::sin(angle), 0.0f});
+        }
+        return circle;
     }
 
     // This is run at the start of the program
@@ -111,14 +127,11 @@ public:
         std::vector<EdgeHandle> boundary_edges = detect_boundary_edges(mesh);
         std::vector<VertexHandle> boundary_path = detect_boundary_path(mesh, boundary_edges);
         std::vector<float> edge_lengths = path_length(mesh, boundary_path);
+        std::vector<atcg::Mesh::Point> circle = map_boundary_edges_to_circle(edge_lengths);
 
-        int index = 0;
-        for(auto v : boundary_path)
+        for(uint32_t i = 0; i < boundary_path.size(); ++i)
         {
-            std::cout << v.idx() << std::endl;
-            uint8_t color = static_cast<uint8_t>(static_cast<float>(index)/static_cast<float>(boundary_path.size()) * 255.0f);
-            mesh->set_color(v, atcg::Mesh::Color{color,0,0});
-            ++index;
+            mesh->set_point(boundary_path[i], circle[i]);
         }
 
         mesh->uploadData();
