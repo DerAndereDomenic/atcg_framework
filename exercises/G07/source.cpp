@@ -152,16 +152,77 @@ public:
 
             switch(method)
             {
-                case WeightType::UNIFORM_SPRING:
+                case WeightType::UNIFORM_SPRING :
                 {
-                    wij = 1.0f;
-                    wjk = 1.0f;
-                    wki = 1.0f;
-                    wji = 1.0f;
-                    wkj = 1.0f;
-                    wik = 1.0f;
-                }
-                break;
+                    // implement here uniform weights
+                    //<solution>
+                    wij = 1.0f / 2.0f;
+                    wjk = 1.0f / 2.0f;
+                    wki = 1.0f / 2.0f;
+
+                    wji = wij;
+                    wkj = wjk;
+                    wik = wki;
+                    //</solution>
+                }break;
+
+                case WeightType::CHORDAL_SPRING :
+                {
+                    //implement here chordal spring weitghts: w = 1.0 / r^2
+                    //<solution>
+                    wij = 1.0f / 2.0f * rij * rij;
+                    wjk = 1.0f / 2.0f * rjk * rjk;
+                    wki = 1.0f / 2.0f * rki * rki;
+
+                    wji = wij;
+                    wkj = wjk;
+                    wik = wki;
+                    //</solution>
+                }break;
+
+                case WeightType::WACHSPRESS :
+                {
+                    //implement here the wachspress weights
+                    //<solution>
+                    wij = 1.0f / std::tan(alphaj) / (rij * rij);
+                    wkj = 1.0f / std::tan(alphaj) / (rjk * rjk);
+
+                    wjk = 1.0f / std::tan(alphak) / (rjk * rjk);
+                    wik = 1.0f / std::tan(alphak) / (rki * rki);
+
+                    wki = 1.0f / std::tan(alphai) / (rki * rki);
+                    wji = 1.0f / std::tan(alphai) / (rij * rij);
+                    //</solution>
+                }break;
+
+                case WeightType::DISCRETE_HARMONIC :
+                {
+                    //implement here the discrete harmonic weights
+                    //<solution>
+                    wij = 1.0f / std::tan(alphak);
+                    wjk = 1.0f / std::tan(alphai);
+                    wki = 1.0f / std::tan(alphaj);
+
+                    wji = wij;
+                    wkj = wjk;
+                    wik = wki;
+                    //</solution>
+                }break;
+
+                case WeightType::MEAN_VALUE :
+                {
+                    //implement here the mean value weights
+                    //<solution>
+                    wij = std::tan(alphai / 2.0f) / rij;
+                    wji = std::tan(alphaj / 2.0f) / rij;
+
+                    wjk = std::tan(alphaj / 2.0f) / rjk;
+                    wkj = std::tan(alphak / 2.0f) / rjk;
+
+                    wki = std::tan(alphak / 2.0f) / rki;
+                    wik = std::tan(alphai / 2.0f) / rki;
+                    //</solution>
+                }break;
             }
 
             coefficients.emplace_back(i, j, wij);
@@ -289,12 +350,7 @@ public:
         std::vector<float> edge_lengths = path_length(mesh, boundary_path);
         std::vector<atcg::Mesh::Point> circle = map_boundary_edges_to_circle(edge_lengths);
 
-        reparameterize(mesh, boundary_path, circle, WeightType::UNIFORM_SPRING);
-
-        /*for(uint32_t i = 0; i < boundary_path.size(); ++i)
-        {
-            mesh->set_point(boundary_path[i], circle[i]);
-        }*/
+        reparameterize(mesh, boundary_path, circle, WeightType::WACHSPRESS);
 
         mesh->uploadData();
     }
@@ -360,9 +416,9 @@ private:
     std::shared_ptr<atcg::Mesh> mesh;
 
     bool show_render_settings = false;
-    bool render_faces = true;
+    bool render_faces = false;
     bool render_points = false;
-    bool render_edges = false;
+    bool render_edges = true;
 };
 
 class G07 : public atcg::Application
