@@ -357,10 +357,6 @@ public:
         edge_lengths = path_length(mesh_original, boundary_path);
         circle = map_boundary_edges_to_circle(edge_lengths);
 
-        Eigen::MatrixXf uv = reparameterize(mesh_original, boundary_path, circle, WeightType::UNIFORM_SPRING);
-
-        apply_parameterization(mesh, uv);
-
         mesh->uploadData();
     }
 
@@ -394,7 +390,7 @@ public:
 
         if(ImGui::BeginMenu("Exercise"))
         {
-
+            ImGui::MenuItem("Show Reparameterization Settings", nullptr, &show_rep_settings);
             ImGui::EndMenu();
         }
 
@@ -407,6 +403,49 @@ public:
             ImGui::Checkbox("Render Vertices", &render_points);
             ImGui::Checkbox("Render Edges", &render_edges);
             ImGui::Checkbox("Render Mesh", &render_faces);
+            ImGui::End();
+        }
+
+        if(show_rep_settings)
+        {
+            ImGui::Begin("Reparameterization Settings", &show_rep_settings);
+
+            ImGui::Text("Weighting scheme:");
+            if(ImGui::Button("Uniform Spring"))
+            {
+                auto uv = reparameterize(mesh_original, boundary_path, circle, WeightType::UNIFORM_SPRING);
+                apply_parameterization(mesh, uv);
+                mesh->uploadData();
+            }
+
+            if(ImGui::Button("Chordal Spring"))
+            {
+                auto uv = reparameterize(mesh_original, boundary_path, circle, WeightType::CHORDAL_SPRING);
+                apply_parameterization(mesh, uv);
+                mesh->uploadData();
+            }
+
+            if(ImGui::Button("Wachspress"))
+            {
+                auto uv = reparameterize(mesh_original, boundary_path, circle, WeightType::WACHSPRESS);
+                apply_parameterization(mesh, uv);
+                mesh->uploadData();
+            }
+
+            if(ImGui::Button("Discrete Harmonic"))
+            {
+                auto uv = reparameterize(mesh_original, boundary_path, circle, WeightType::DISCRETE_HARMONIC);
+                apply_parameterization(mesh, uv);
+                mesh->uploadData();
+            }
+
+            if(ImGui::Button("Mean Value"))
+            {
+                auto uv = reparameterize(mesh_original, boundary_path, circle, WeightType::MEAN_VALUE);
+                apply_parameterization(mesh, uv);
+                mesh->uploadData();
+            }
+
             ImGui::End();
         }
 
@@ -431,6 +470,7 @@ private:
     std::vector<atcg::Mesh::Point> circle;
 
     bool show_render_settings = false;
+    bool show_rep_settings = true;
     bool render_faces = false;
     bool render_points = false;
     bool render_edges = true;
