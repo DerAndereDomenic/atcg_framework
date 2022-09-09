@@ -1,5 +1,3 @@
-#pragma once
-
 #include <Renderer/PerspectiveCamera.h>
 #include <glm/gtx/transform.hpp>
 

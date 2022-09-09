@@ -1,4 +1,5 @@
 #include <Core/LayerStack.h>
+#include <algorithm>
 
 namespace atcg {
 
