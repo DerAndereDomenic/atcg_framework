@@ -12,11 +12,51 @@
 
 #include <numeric>
 
+using VertexHandle = atcg::Mesh::VertexHandle;
+using EdgeHandle = atcg::Mesh::EdgeHandle;
+
 class G07Layer : public atcg::Layer
 {
 public:
 
     G07Layer(const std::string& name) : atcg::Layer(name) {}
+
+    void detect_boundary_edges(const std::shared_ptr<atcg::Mesh>& mesh, std::vector<EdgeHandle>& boundary_edges)
+    {
+        for(auto e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
+        {
+            if(mesh->is_boundary(*e_it))
+            {
+                boundary_edges.push_back(*e_it);
+            }
+        }
+    }
+
+    std::vector<VertexHandle> detect_boundary_path(const std::shared_ptr<atcg::Mesh>& mesh, const std::vector<EdgeHandle>& boundary_edges)
+    {
+        std::vector<VertexHandle> boundary_path;
+        
+        VertexHandle start = mesh->from_vertex_handle(mesh->halfedge_handle(boundary_edges[0], 0));
+        VertexHandle current_to = mesh->to_vertex_handle(mesh->halfedge_handle(boundary_edges[0], 0));
+        boundary_path.push_back(start);
+        boundary_path.push_back(current_to);
+
+        for(uint32_t i = 1; i < boundary_edges.size(); ++i)
+        {
+            for(uint32_t j = 1; j < boundary_edges.size(); ++j)
+            {
+                VertexHandle from = mesh->from_vertex_handle(mesh->halfedge_handle(boundary_edges[j], 0));
+                if(from.idx() == current_to.idx())
+                {
+                    current_to = mesh->to_vertex_handle(mesh->halfedge_handle(boundary_edges[j], 0));
+                    boundary_path.push_back(current_to);
+                    break;
+                }
+            }
+        }
+
+        return boundary_path;
+    }
 
     // This is run at the start of the program
     virtual void onAttach() override
@@ -27,6 +67,7 @@ public:
 
         mesh = std::make_shared<atcg::Mesh>();
         OpenMesh::IO::read_mesh(*mesh.get(), "res/maxear.obj");
+        mesh->request_vertex_colors();
 
         float max_scale = -std::numeric_limits<float>::infinity();
         atcg::TriMesh::Point mean_point{0,0,0};
@@ -47,6 +88,19 @@ public:
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
             mesh->set_point(*v_it, (mesh->point(*v_it) - mean_point) / max_scale);
+        }
+
+        std::vector<EdgeHandle> boundary_edges;
+        detect_boundary_edges(mesh, boundary_edges);
+        std::vector<VertexHandle> boundary_path = detect_boundary_path(mesh, boundary_edges);
+
+        int index = 0;
+        for(auto v : boundary_path)
+        {
+            std::cout << v.idx() << std::endl;
+            uint8_t color = static_cast<uint8_t>(static_cast<float>(index)/static_cast<float>(boundary_path.size()) * 255.0f);
+            mesh->set_color(v, atcg::Mesh::Color{color,0,0});
+            ++index;
         }
 
         mesh->uploadData();
