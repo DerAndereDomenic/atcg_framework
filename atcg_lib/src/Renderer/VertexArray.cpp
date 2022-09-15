@@ -113,4 +113,14 @@ namespace atcg
         ibo->use();
         _ibo = ibo;
     }
+
+	void VertexArray::addInstanceBuffer(const std::shared_ptr<VertexBuffer>& vbo)
+	{
+		addVertexBuffer(vbo);
+		const auto& layout = vbo->getLayout();
+		for (uint32_t i = 0; i < layout.getElements().size(); ++i)
+		{
+			glVertexAttribDivisor(_vertex_buffer_index - 1 - i, 1);
+		}
+	}
 }

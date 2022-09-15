@@ -41,6 +41,13 @@ namespace atcg
         void setIndexBuffer(const std::shared_ptr<IndexBuffer>& ibo);
 
         /**
+         * @brief Set an instance buffer used for instance rendering
+         * 
+         * @param buffer The buffer
+         */
+        void addInstanceBuffer(const std::shared_ptr<VertexBuffer>& vbo);
+
+        /**
          * @brief Get the Vertex Buffers object
          * 
          * @return const std::vector<std::shared_ptr<VertexBuffer>>& The vertex buffers
