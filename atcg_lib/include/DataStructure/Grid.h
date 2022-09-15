@@ -5,6 +5,13 @@
 
 namespace atcg
 {
+    struct GridDimension
+    {
+        glm::vec3 origin = glm::vec3(0);
+        uint32_t num_voxels = 0;
+        float voxel_length = 0.0f;
+    };
+
     template<class VoxelT> 
     class Grid
     {
@@ -115,10 +122,15 @@ namespace atcg
          */
         VoxelT* data();
 
+        /**
+         * @brief Get positional information about the grid
+         * 
+         * @return The grid dimension
+         */
+        inline GridDimension getGridDimensions() const {return _dim;}
+
     private:
-        uint32_t _num_voxels = 0;
-        glm::vec3 _origin = glm::vec3(0); 
-        float _voxel_length = 0.0f;
+        GridDimension _dim = {};
         VoxelT* _voxel_pool = nullptr;
     };
 
@@ -128,9 +140,7 @@ namespace atcg
     ///
     template<class VoxelT>
     Grid<VoxelT>::Grid(const glm::vec3& origin, const uint32_t& num_voxels, const float& voxel_length) :
-        _origin(origin),
-        _num_voxels(num_voxels),
-        _voxel_length(voxel_length)
+        _dim({origin, num_voxels, voxel_length})
     {
         _voxel_pool = new VoxelT[num_voxels * num_voxels * num_voxels];
     }
@@ -146,28 +156,28 @@ namespace atcg
     uint32_t 
     Grid<VoxelT>::num_voxels() const
     {
-        return _num_voxels;
+        return _dim.num_voxels;
     }
 
     template<class VoxelT>
     uint32_t 
     Grid<VoxelT>::voxels_per_volume() const
     {
-        return _num_voxels * _num_voxels * _num_voxels;
+        return _dim.num_voxels * _dim.num_voxels * _dim.num_voxels;
     }
 
     template<class VoxelT>
     float 
     Grid<VoxelT>::voxel_side_length() const
     {
-        return _voxel_length;
+        return _dim.voxel_length;
     }
 
     template<class VoxelT>
     glm::vec3 
     Grid<VoxelT>::origin() const
     {
-        return _origin;
+        return _dim.origin;
     }
 
     template<class VoxelT>
@@ -189,7 +199,7 @@ namespace atcg
     typename SelectionFunctor::value_type
     Grid<VoxelT>::readInterpolated(const glm::vec3& position, const SelectionFunctor& selector)
     {
-        const float O = -0.5f * _voxel_length;
+        const float O = -0.5f * _dim.voxel_length;
         const float I = -O;
 
         glm::vec3 lookups[8] = 
@@ -213,9 +223,9 @@ namespace atcg
 
         glm::vec3 corner_voxel = voxel_center(lookups[0]);
 
-        glm::vec3 deltaXYZ = glm::vec3((position.x - corner_voxel.x) / _voxel_length,
-                                    (position.y - corner_voxel.y) / _voxel_length,
-                                    (position.z - corner_voxel.z) / _voxel_length);
+        glm::vec3 deltaXYZ = glm::vec3((position.x - corner_voxel.x) / _dim.voxel_length,
+                                    (position.y - corner_voxel.y) / _dim.voxel_length,
+                                    (position.z - corner_voxel.z) / _dim.voxel_length);
 
         return Math::trilerp(values[0],
                             values[1],
@@ -234,10 +244,10 @@ namespace atcg
     glm::ivec3 
     Grid<VoxelT>::index2voxel(const int32_t& index)
     {
-        int32_t voxel_half = _num_voxels / 2;
-        int32_t x = index % _num_voxels - voxel_half;
-        int32_t y = (index / _num_voxels) % _num_voxels - voxel_half;
-        int32_t z = index / (_num_voxels * _num_voxels) - voxel_half;
+        int32_t voxel_half = _dim.num_voxels / 2;
+        int32_t x = index % _dim.num_voxels - voxel_half;
+        int32_t y = (index / _dim.num_voxels) % _dim.num_voxels - voxel_half;
+        int32_t z = index / (_dim.num_voxels * _dim.num_voxels) - voxel_half;
 
         return glm::ivec3(x,y,z);
     }
@@ -246,32 +256,32 @@ namespace atcg
     int32_t 
     Grid<VoxelT>::voxel2index(const glm::ivec3& voxel)
     {
-        int32_t voxel_half = _num_voxels / 2;
+        int32_t voxel_half = _dim.num_voxels / 2;
 
         int32_t x = voxel.x + voxel_half;
         int32_t y = voxel.y + voxel_half;
         int32_t z = voxel.z + voxel_half;
 
-        return x + y * _num_voxels + z * _num_voxels * _num_voxels;
+        return x + y * _dim.num_voxels + z * _dim.num_voxels * _dim.num_voxels;
     }
 
     template<class VoxelT>
     glm::vec3 
     Grid<VoxelT>::voxel2position(const glm::ivec3& voxel)
     {
-        glm::vec3 center = glm::vec3(voxel.x,voxel.y,voxel.z) * _voxel_length;
-        return center + _origin;
+        glm::vec3 center = glm::vec3(voxel.x,voxel.y,voxel.z) * _dim.voxel_length;
+        return center + _dim.origin;
     }
 
     template<class VoxelT>
     glm::ivec3 
     Grid<VoxelT>::position2voxel(const glm::vec3& position)
     {
-        glm::vec3 center = position - _origin;
+        glm::vec3 center = position - _dim.origin;
 
-        int32_t x = static_cast<int32_t>(floor(center.x / _voxel_length + 0.5f));
-        int32_t y = static_cast<int32_t>(floor(center.y / _voxel_length + 0.5f));
-        int32_t z = static_cast<int32_t>(floor(center.z / _voxel_length + 0.5f));
+        int32_t x = static_cast<int32_t>(floor(center.x / _dim.voxel_length + 0.5f));
+        int32_t y = static_cast<int32_t>(floor(center.y / _dim.voxel_length + 0.5f));
+        int32_t z = static_cast<int32_t>(floor(center.z / _dim.voxel_length + 0.5f));
 
         return glm::ivec3(x,y,z);
     }
@@ -282,10 +292,10 @@ namespace atcg
     {
         glm::ivec3 voxel = position2voxel(position);
         return glm::vec3(
-            _voxel_length * voxel.x,
-            _voxel_length * voxel.y,
-            _voxel_length * voxel.z
-        ) + _origin;
+            _dim.voxel_length * voxel.x,
+            _dim.voxel_length * voxel.y,
+            _dim.voxel_length * voxel.z
+        ) + _dim.origin;
     }
 
     template<class VoxelT>
@@ -295,9 +305,9 @@ namespace atcg
         glm::ivec3 voxel = position2voxel(position);
 
         return (
-                abs(voxel.x) < _num_voxels/2 &&
-                abs(voxel.y) < _num_voxels/2 &&
-                abs(voxel.z) < _num_voxels/2
+                abs(voxel.x) < _dim.num_voxels/2 &&
+                abs(voxel.y) < _dim.num_voxels/2 &&
+                abs(voxel.z) < _dim.num_voxels/2
             );
 
     }
