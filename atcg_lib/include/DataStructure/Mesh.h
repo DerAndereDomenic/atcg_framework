@@ -64,6 +64,16 @@ namespace atcg
         float total_area() const;
 
         /**
+         * @brief Get the handle to the opposite vertex on the face
+         * 
+         * @param fh The face handle
+         * @param vh The vertex handle
+         * 
+         * @return The halfedge handle
+         */
+        Mesh::HalfedgeHandle opposite_halfedge_handle(const Mesh::FaceHandle& fh, const Mesh::VertexHandle& vh);
+
+        /**
          * @brief Get the Position
          * 
          * @return glm::vec3 The position

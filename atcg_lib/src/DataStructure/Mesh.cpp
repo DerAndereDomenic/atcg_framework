@@ -102,4 +102,16 @@ namespace atcg
         return total_area;
     }
 
+    Mesh::HalfedgeHandle 
+    Mesh::opposite_halfedge_handle(const Mesh::FaceHandle& fh, const Mesh::VertexHandle& vh)
+    {
+        for(auto he_it = cfh_ccwbegin(fh); he_it != cfh_ccwend(fh); ++he_it)
+        {
+            if(from_vertex_handle(*he_it) != vh && to_vertex_handle(*he_it) != vh)
+            {
+                return *he_it;
+            }
+        }
+    }
+
 }
