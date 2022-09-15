@@ -53,7 +53,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
         OpenGL::GL
         OpenMeshCore
         OpenMeshTools
-        stdc++
+        #stdc++
     )
 
     target_compile_definitions(${target_name} PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
