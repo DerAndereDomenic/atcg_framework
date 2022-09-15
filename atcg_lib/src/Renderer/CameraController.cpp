@@ -27,8 +27,8 @@ namespace atcg
 
             if(offsetX != 0 || offsetY != 0)
             {
-                float pitchDelta = offsetY * delta_time * _parameters.rotation_speed * _camera->getAspectRatio();
-                float yawDelta = - offsetX * delta_time * _parameters.rotation_speed;
+                float pitchDelta = offsetY * /*delta_time */ _parameters.rotation_speed * _camera->getAspectRatio();
+                float yawDelta = - offsetX * /*delta_time */ _parameters.rotation_speed;
 
                 glm::vec3 forward = glm::normalize(_camera->getPosition() - _camera->getLookAt());
 
@@ -48,8 +48,8 @@ namespace atcg
 
             if(offsetX != 0 || offsetY != 0)
             {
-                float yDelta = -offsetY * delta_time * _parameters.rotation_speed * _camera->getAspectRatio();
-                float xDelta = -offsetX * delta_time * _parameters.rotation_speed;
+                float yDelta = -offsetY * /*delta_time */ _parameters.rotation_speed * _camera->getAspectRatio();
+                float xDelta = -offsetX * /*delta_time */ _parameters.rotation_speed;
 
                 glm::vec3 forward = glm::normalize(_camera->getPosition() - _camera->getLookAt());
 

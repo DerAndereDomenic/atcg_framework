@@ -54,7 +54,7 @@ namespace atcg
         struct CameraParameters
         {
             float zoom_speed = 0.25f;
-            float rotation_speed = 0.2f;
+            float rotation_speed = 0.005f;
         };
 
         float _distance;
