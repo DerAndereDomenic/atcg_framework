@@ -261,10 +261,13 @@ public:
 
         if(mesh && render_edges)
             atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
+
+        atcg::Renderer::drawGrid(grid->getGridDimensions(), camera_controller->getCamera(), update_grid);
     }
 
     virtual void onImGuiRender() override
     {
+        update_grid = false;
         ImGui::BeginMainMenuBar();
 
         if(ImGui::BeginMenu("Rendering"))
@@ -287,7 +290,10 @@ public:
             ImGui::Begin("Settings MC", &show_marching_cubes);
             if(ImGui::SliderFloat("Voxel Size", &voxel_size, 0.01f, 0.2f))
             {
+                uint32_t num_voxels = static_cast<uint32_t>(70.0f/voxel_size * 0.05f);
+                num_voxels += (1 - num_voxels%2);
                 grid = std::make_shared<SDFGrid>(glm::vec3(0), static_cast<uint32_t>(70.0f/voxel_size * 0.05f) , voxel_size);
+                update_grid = true;
             }
 
             if(ImGui::Button("Run"))
@@ -297,6 +303,15 @@ public:
                 fillGrid(grid);
 
                 marching_cubes(grid, mesh);
+
+                float max_n = -std::numeric_limits<float>::infinity();
+                for(auto vh : mesh->vertices())
+                {
+                    float n = mesh->point(vh).norm();
+                    max_n = std::max(n, max_n);
+                }
+
+                std::cout << max_n << std::endl;
 
                 mesh->uploadData();
             }
@@ -363,6 +378,7 @@ private:
     bool render_faces = true;
     bool render_points = false;
     bool render_edges = false;
+    bool update_grid = false;
     float voxel_size = 0.05f;
 
     bool show_subdivision = true;

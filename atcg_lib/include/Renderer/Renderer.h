@@ -5,6 +5,7 @@
 #include <Renderer/Shader.h>
 #include <Renderer/PerspectiveCamera.h>
 #include <DataStructure/Mesh.h>
+#include <DataStructure/Grid.h>
 
 #include <memory>
 
@@ -128,6 +129,17 @@ namespace atcg
                                const float& radius,
                                const glm::vec3& color,
                                const std::shared_ptr<Camera>& camera = {});
+
+        /**
+         * @brief Draw a grid
+         * WARNING: CURRENTLY ONLY ONE GRID PER APPLICATION CAN BE RENDERED.
+         * THE UNDERLYING GPU DATA WILL ALWAYS REPRESENT THE FIRST GRID THAT IS CALLED BY THIS FUNCTION EXCEPT IF reset = true
+         * 
+         * @param grid_dimension The spatial information about the grid
+         * @param camera The camera
+         * @param reset If the GPU data should be updated
+         */ 
+        static void drawGrid(const GridDimension& grid_dimension, const std::shared_ptr<Camera>& camera = {}, bool reset = false);
 
         /**
          * @brief Clear the currently bound framebuffer

@@ -21,6 +21,12 @@ namespace atcg
         std::shared_ptr<VertexArray> quad_vao;
         std::shared_ptr<VertexBuffer> quad_vbo;
         std::shared_ptr<IndexBuffer> quad_ibo;
+
+        void initCube();
+        std::shared_ptr<VertexArray> cube_vao;
+        std::shared_ptr<VertexBuffer> cube_vbo;
+
+        std::shared_ptr<VertexBuffer> grid_vbo;
     };
 
     Renderer::Renderer() {}
@@ -29,31 +35,94 @@ namespace atcg
 
     Renderer::Impl::Impl()
     {
-        quad_vao = std::make_shared<VertexArray>();
-
-        float vertices[] =
+        //Generate quad
         {
-            -1, -1, 0,
-            1, -1, 0,
-            -1, 1, 0,
-            1, 1, 0
+            quad_vao = std::make_shared<VertexArray>();
+
+            float vertices[] =
+            {
+                -1, -1, 0,
+                1, -1, 0,
+                -1, 1, 0,
+                1, 1, 0
+            };
+
+            quad_vbo = std::make_shared<VertexBuffer>(vertices, sizeof(vertices));
+            quad_vbo->setLayout({
+                {ShaderDataType::Float3, "aPosition"}
+            });
+
+            quad_vao->addVertexBuffer(quad_vbo);
+
+            uint32_t indices[] = 
+            {
+                0, 1, 2,
+                1, 3, 2
+            };
+
+            quad_ibo = std::make_shared<IndexBuffer>(indices, 6);
+            quad_vao->setIndexBuffer(quad_ibo);
+        }
+
+        //Generate cube
+        initCube();
+        
+    }
+
+    void Renderer::Impl::initCube()
+    {
+        cube_vao = std::make_shared<VertexArray>();
+
+        float vertices[] = {
+            -0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+
+            -0.5f, -0.5f,  0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
+
+            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+
+            -0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f, -0.5f,
+            0.5f, -0.5f,  0.5f,
+            0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f,  0.5f,
+            -0.5f, -0.5f, -0.5f,
+
+            -0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f, -0.5f,
+            0.5f,  0.5f,  0.5f,
+            0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f,  0.5f,
+            -0.5f,  0.5f, -0.5f,
         };
 
-        quad_vbo = std::make_shared<VertexBuffer>(vertices, sizeof(vertices));
-        quad_vbo->setLayout({
+        cube_vbo = std::make_shared<VertexBuffer>(vertices, sizeof(vertices));
+        cube_vbo->setLayout({
             {ShaderDataType::Float3, "aPosition"}
         });
 
-        quad_vao->addVertexBuffer(quad_vbo);
-
-        uint32_t indices[] = 
-        {
-            0, 1, 2,
-            1, 3, 2
-        };
-
-        quad_ibo = std::make_shared<IndexBuffer>(indices, 6);
-        quad_vao->setIndexBuffer(quad_ibo);
+        cube_vao->addVertexBuffer(cube_vbo);
     }
 
     void Renderer::init()
@@ -267,5 +336,46 @@ namespace atcg
             glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
         else
             std::cerr << "Missing IndexBuffer!\n";
+    }
+
+    void 
+    Renderer::drawGrid(const GridDimension& grid_dimension, const std::shared_ptr<Camera>& camera, bool reset)
+    {
+        s_renderer->impl->cube_vao->use();
+        const auto& shader = ShaderManager::getShader("grid");
+
+        if(!s_renderer->impl->grid_vbo || reset)
+        {
+            s_renderer->impl->initCube();
+            std::vector<glm::vec3> positions;
+
+            Grid<int> dummy(grid_dimension.origin, grid_dimension.num_voxels, grid_dimension.voxel_length, false);
+
+            for(uint32_t i = 0; i < dummy.voxels_per_volume(); ++i)
+            {
+                glm::vec3 pos = dummy.origin();
+                pos += dummy.voxel2position( dummy.index2voxel(i) );
+                positions.push_back(pos);
+            }
+
+            s_renderer->impl->grid_vbo = std::make_shared<VertexBuffer>(positions.data(), positions.size() * sizeof(glm::vec3));
+            s_renderer->impl->grid_vbo->setLayout({{ShaderDataType::Float3, "aPosition"}});
+
+            s_renderer->impl->cube_vao->addInstanceBuffer(s_renderer->impl->grid_vbo);
+        }
+
+        shader->use();
+        shader->setVec3("flat_color", glm::vec3(0));
+        glm::mat4 model = glm::scale(glm::vec3(grid_dimension.voxel_length));
+        if(camera)
+        {
+            shader->setMVP(model, camera->getView(), camera->getProjection());
+        }
+        else
+        {
+            shader->setMVP(model);
+        }
+
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 36, grid_dimension.num_voxels*grid_dimension.num_voxels*grid_dimension.num_voxels);
     }
 }

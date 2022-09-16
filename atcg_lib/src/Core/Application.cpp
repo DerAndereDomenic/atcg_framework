@@ -21,6 +21,7 @@ namespace atcg
         ShaderManager::addShaderFromName("flat");
         ShaderManager::addShaderFromName("edge");
         ShaderManager::addShaderFromName("circle");
+        ShaderManager::addShaderFromName("grid");
 
         s_instance = this;
 

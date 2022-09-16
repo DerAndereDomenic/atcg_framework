@@ -26,8 +26,9 @@ namespace atcg
          * @param origin The origin of the grid
          * @param num_voxels The number of voxels in each direction
          * @param voxel_length The side length of a voxel
+         * @param allocate If the memory should be allocated if we only want to store the spatial information
          */
-        Grid(const glm::vec3& origin, const uint32_t& num_voxels, const float& voxel_length);
+        Grid(const glm::vec3& origin, const uint32_t& num_voxels, const float& voxel_length, bool allocate = true);
 
         /**
          * @brief Destroy the Grid object
@@ -139,10 +140,11 @@ namespace atcg
     /// IMPLEMENTATION
     ///
     template<class VoxelT>
-    Grid<VoxelT>::Grid(const glm::vec3& origin, const uint32_t& num_voxels, const float& voxel_length) :
+    Grid<VoxelT>::Grid(const glm::vec3& origin, const uint32_t& num_voxels, const float& voxel_length, bool allocate) :
         _dim({origin, num_voxels, voxel_length})
     {
-        _voxel_pool = new VoxelT[num_voxels * num_voxels * num_voxels];
+        if(allocate)
+            _voxel_pool = new VoxelT[num_voxels * num_voxels * num_voxels];
     }
 
     template<class VoxelT>
