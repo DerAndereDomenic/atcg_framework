@@ -262,7 +262,8 @@ public:
         if(mesh && render_edges)
             atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
 
-        atcg::Renderer::drawGrid(grid->getGridDimensions(), camera_controller->getCamera(), update_grid);
+        if(render_grid)
+            atcg::Renderer::drawGrid(grid->getGridDimensions(), camera_controller->getCamera(), update_grid);
     }
 
     virtual void onImGuiRender() override
@@ -338,6 +339,7 @@ public:
             ImGui::Checkbox("Render Vertices", &render_points);
             ImGui::Checkbox("Render Edges", &render_edges);
             ImGui::Checkbox("Render Mesh", &render_faces);
+            ImGui::Checkbox("Render Grid", &render_grid);
             ImGui::End();
         }
 
@@ -379,6 +381,7 @@ private:
     bool render_points = false;
     bool render_edges = false;
     bool update_grid = false;
+    bool render_grid = true;
     float voxel_size = 0.05f;
 
     bool show_subdivision = true;
