@@ -127,7 +127,7 @@ public:
         for(auto vh : mesh->vertices()) 
         {
             double value = mesh->property(vertexProperty, vh);
-            if(!isfinite(value)) continue;
+            if(!std::isfinite(value)) continue;
             max_value = std::max(max_value, value);
             min_value = std::min(min_value, value);
         }
@@ -135,7 +135,7 @@ public:
         for(auto vh : mesh->vertices()) 
         {
             double value = mesh->property(vertexProperty, vh);
-            if(isfinite(value)) 
+            if(std::isfinite(value)) 
             {
                 mesh->set_color(vh, {255 * (value - min_value) / (max_value - min_value), 0, 0});
             } 
@@ -154,7 +154,7 @@ public:
         for(auto vh : mesh->vertices()) 
         {
             double value = mesh->property(vertexProperty, vh);
-            if(!isfinite(value)) continue;
+            if(!std::isfinite(value)) continue;
             max_value = std::max(max_value, value);
             min_value = std::min(min_value, value);
         }
@@ -162,7 +162,7 @@ public:
         for(auto vh : mesh->vertices()) 
         {
             double value = ((mesh->property(vertexProperty, vh) - min_value) / (max_value - min_value)) * 2 * M_PI * periods;
-            if(isfinite(value)) 
+            if(std::isfinite(value)) 
             {
                 mesh->set_color(vh, {static_cast<unsigned char>(value / (2 * M_PI * periods) * 255 * (1.0 + cos(value)) / 2.0), 0, 0});
             }
