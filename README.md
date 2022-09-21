@@ -2,7 +2,7 @@
 This repository contains the practical exercises for the module "Advanced topics in Computer Graphics II".
 
 ## Building
-First, you need to install a C++ compiler. Tested compilers that should work are MSVC for Windows and gcc for Linux. Clang or any Mac build is currently untested. Additionally, you need to install [CMake](https://cmake.org) to build the project.
+First, you need to install a C++ compiler. Tested compilers that should work are MSVC for Windows and gcc for Linux. MacOS is only tested via github actions. Additionally, you need to install [CMake](https://cmake.org) to build the project.
 
 To build the project clone the repository recursively (to include submodules)
 ```
