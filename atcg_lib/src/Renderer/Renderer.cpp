@@ -344,17 +344,15 @@ namespace atcg
         s_renderer->impl->cube_vao->use();
         const auto& shader = ShaderManager::getShader("grid");
 
+        Grid<int> dummy(grid_dimension.origin, grid_dimension.num_voxels, grid_dimension.voxel_length, false);
         if(!s_renderer->impl->grid_vbo || reset)
         {
             s_renderer->impl->initCube();
             std::vector<glm::vec3> positions;
 
-            Grid<int> dummy(grid_dimension.origin, grid_dimension.num_voxels, grid_dimension.voxel_length, false);
-
             for(uint32_t i = 0; i < dummy.voxels_per_volume(); ++i)
             {
-                glm::vec3 pos = dummy.origin();
-                pos += dummy.voxel2position( dummy.index2voxel(i) );
+                glm::vec3 pos = dummy.voxel2position( dummy.index2voxel(i) );
                 positions.push_back(pos);
             }
 
@@ -376,6 +374,6 @@ namespace atcg
             shader->setMVP(model);
         }
 
-        glDrawArraysInstanced(GL_TRIANGLES, 0, 36, grid_dimension.num_voxels*grid_dimension.num_voxels*grid_dimension.num_voxels);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 36, dummy.voxels_per_volume());
     }
 }

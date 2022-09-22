@@ -305,14 +305,7 @@ public:
 
                 marching_cubes(grid, mesh);
 
-                float max_n = -std::numeric_limits<float>::infinity();
-                for(auto vh : mesh->vertices())
-                {
-                    float n = mesh->point(vh).norm();
-                    max_n = std::max(n, max_n);
-                }
-
-                std::cout << max_n << std::endl;
+                render_grid = false;
 
                 mesh->uploadData();
             }
