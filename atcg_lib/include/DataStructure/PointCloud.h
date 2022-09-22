@@ -138,7 +138,7 @@ namespace atcg
     }
 
     template<class Traits>
-    void PointCloudT<Traits>::set_point(const PointCloudT<Traits>::VertexHandle& handle, const PointCloudT<Traits>::Point& p)
+    void PointCloudT<Traits>::set_point(const PointCloudT<Traits>::VertexHandle& vh, const PointCloudT<Traits>::Point& p)
     {
         _points[vh.idx()] = p;
     }
