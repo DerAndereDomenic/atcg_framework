@@ -32,6 +32,13 @@ namespace atcg
         static void setClearColor(const glm::vec4& color);
 
         /**
+         * @brief Set the size of rendered points
+         * 
+         * @param size The size 
+         */
+        static void setPointSize(const uint32_t& size);
+
+        /**
          * @brief Change the viewport of the renderer
          * 
          * @param x The viewport x location

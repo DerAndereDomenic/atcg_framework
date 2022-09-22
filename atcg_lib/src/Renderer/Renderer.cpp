@@ -27,6 +27,8 @@ namespace atcg
         std::shared_ptr<VertexBuffer> cube_vbo;
 
         std::shared_ptr<VertexBuffer> grid_vbo;
+
+        int point_size = 8;
     };
 
     Renderer::Renderer() {}
@@ -144,6 +146,11 @@ namespace atcg
         glClearColor(color.r, color.g, color.b, color.a);
     }
 
+    void Renderer::setPointSize(const uint32_t& size)
+    {
+        s_renderer->impl->point_size = size;
+    }
+
     void Renderer::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
     {
         glViewport(x, y, width, height);
@@ -224,7 +231,7 @@ namespace atcg
 
         const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
-        glPointSize(8);
+        glPointSize(s_renderer->impl->point_size);
 
         if(ibo)
             glDrawElements(GL_POINTS, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
@@ -252,7 +259,7 @@ namespace atcg
 
         const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
-        glPointSize(8);
+        glPointSize(s_renderer->impl->point_size);
 
         if(ibo)
             glDrawElements(GL_POINTS, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
