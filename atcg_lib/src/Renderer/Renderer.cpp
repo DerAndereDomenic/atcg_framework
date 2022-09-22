@@ -212,6 +212,29 @@ namespace atcg
             std::cerr << "Missing IndexBuffer!\n";
     }
 
+    void Renderer::draw(const std::shared_ptr<PointCloud>& cloud, 
+                            const std::shared_ptr<Shader>& shader, 
+                            const std::shared_ptr<Camera>& camera)
+    {
+        std::shared_ptr<VertexArray> vao = cloud->getVertexArray();
+        vao->use();
+        shader->use();
+        if(camera)
+        {
+            shader->setVec3("camera_pos", camera->getPosition());
+            shader->setVec3("camera_dir", camera->getDirection());
+            shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+        }
+        else
+        {
+            shader->setMVP();
+        }
+
+        glPointSize(s_renderer->impl->point_size);
+
+        glDrawArrays(GL_POINTS, 0, cloud->n_vertices());
+    }
+
     void Renderer::drawPoints(const std::shared_ptr<VertexArray>& vao, 
                                   const glm::vec3& color, 
                                   const std::shared_ptr<Shader>& shader, 

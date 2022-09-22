@@ -96,6 +96,13 @@ namespace atcg
          * @return std::shared_ptr<VertexArray> The vao
          */
         inline std::shared_ptr<VertexArray> getVertexArray() const {return _vao;}
+
+        /**
+         * @brief Get the number of vertices
+         * 
+         * @returns The number of vertices
+         */
+        inline uint32_t n_vertices() const { return _vertices.size(); }
         
         //Iterators
         std::vector<VertexHandle>::iterator vertices_begin() { return _vertices.begin(); }
@@ -125,6 +132,7 @@ namespace atcg
         _vertices.push_back(vh);
         _normals.push_back(typename PointCloudT<Traits>::Normal{1,0,0});
         _colors.push_back(typename PointCloudT<Traits>::Color{0,0,0});
+        _points.push_back(p);
 
         return vh;
     }
@@ -174,15 +182,15 @@ namespace atcg
         for(auto vertex : _vertices)
         {
             int32_t vertex_id = vertex.idx();
-            OpenMesh::Vec3f pos = point(vh);
-            OpenMesh::Vec3f normal = normal(vh);
-            OpenMesh::Vec3uc col = color(vh);
+            OpenMesh::Vec3f pos = point(vertex);
+            OpenMesh::Vec3f norm = normal(vertex);
+            OpenMesh::Vec3uc col = color(vertex);
             vertex_data[9 * vertex_id + 0] = pos[0];
             vertex_data[9 * vertex_id + 1] = pos[1];
             vertex_data[9 * vertex_id + 2] = pos[2];
-            vertex_data[9 * vertex_id + 3] = normal[0];
-            vertex_data[9 * vertex_id + 4] = normal[1];
-            vertex_data[9 * vertex_id + 5] = normal[2];
+            vertex_data[9 * vertex_id + 3] = norm[0];
+            vertex_data[9 * vertex_id + 4] = norm[1];
+            vertex_data[9 * vertex_id + 5] = norm[2];
             vertex_data[9 * vertex_id + 6] = static_cast<float>(col[0])/255.0f;
             vertex_data[9 * vertex_id + 7] = static_cast<float>(col[1])/255.0f;
             vertex_data[9 * vertex_id + 8] = static_cast<float>(col[2])/255.0f;

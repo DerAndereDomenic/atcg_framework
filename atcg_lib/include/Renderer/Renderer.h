@@ -6,6 +6,7 @@
 #include <Renderer/PerspectiveCamera.h>
 #include <DataStructure/Mesh.h>
 #include <DataStructure/Grid.h>
+#include <DataStructure/PointCloud.h>
 
 #include <memory>
 
@@ -70,6 +71,17 @@ namespace atcg
         static void draw(const std::shared_ptr<Mesh>& mesh,
                                 const std::shared_ptr<Shader>& shader,
                                 const std::shared_ptr<Camera>& camera = {});
+
+        /**
+         * @brief Draw a pointcloud
+         * 
+         * @param cloud The pointcloud
+         * @param shader The shader
+         * @param camera The camera
+         */
+        static void draw(const std::shared_ptr<PointCloud>& cloud, 
+                         const std::shared_ptr<Shader>& shader, 
+                         const std::shared_ptr<Camera>& camera = {});
 
         /**
          * @brief Render a vao as points
