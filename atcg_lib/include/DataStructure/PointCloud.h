@@ -14,7 +14,7 @@ namespace atcg
 
         typedef typename Traits::Point Point;
         typedef typename Traits::Normal Normal;
-        typedef typename Traits::Scalar Scalar;
+        typedef float Scalar;
         typedef typename Traits::Color Color;
         typedef OpenMesh::VertexHandle VertexHandle;
 
@@ -91,49 +91,6 @@ namespace atcg
         void uploadData();
 
         /**
-         * @brief Get the Position
-         * 
-         * @return glm::vec3 The position
-         */
-        inline glm::vec3 getPosition() const {return _position;}
-
-        /**
-         * @brief Get the Scale
-         * 
-         * @return glm::vec3 The scale
-         */
-        inline glm::vec3 getScale() const {return _scale;}
-
-        /**
-         * @brief Get the Model
-         * 
-         * @return glm::mat4 The model
-         */
-        inline glm::mat4 getModel() const {return _model;}
-
-        /**
-         * @brief Set the Position
-         * 
-         * @param position The position
-         */
-        inline void setPosition(const glm::vec3& position) {_position = position; calculateModelMatrix();}
-
-        /**
-         * @brief Set the Scale
-         * 
-         * @param scale The scale
-         */
-        inline void setScale(const glm::vec3& scale) {_scale = scale; calculateModelMatrix();}
-
-        /**
-         * @brief Set the Rotation
-         * 
-         * @param axis The rotation axis
-         * @param angle The rotation angle
-         */
-        inline void setRotation(const glm::vec3& axis, const float& angle) {_rotation_axis = axis; _rotation_angle = angle; calculateModelMatrix();}
-
-        /**
          * @brief Get the Vertex Array object
          * 
          * @return std::shared_ptr<VertexArray> The vao
@@ -148,20 +105,11 @@ namespace atcg
 		std::vector<VertexHandle>::const_iterator vertices_end()	const { return _vertices.end(); }
 
     private:
-        void calculateModelMatrix();
-
         std::vector<VertexHandle> _vertices;
 
         std::vector<Point> _points;
         std::vector<Normal> _normals;
         std::vector<Color> _colors;
-
-        glm::vec3 _position = glm::vec3(0);
-        glm::vec3 _scale = glm::vec3(1);
-        glm::mat4 _model = glm::mat4(1);
-
-        glm::vec3 _rotation_axis = glm::vec3(0,1,0);
-        float _rotation_angle = 0;
         
         std::shared_ptr<VertexArray> _vao;
     };
@@ -252,4 +200,15 @@ namespace atcg
     }
 
     using PointCloud = PointCloudT<>;
+
+    namespace IO
+    {
+        /**
+         * @brief Load a pointcloud
+         * 
+         * @param path The path
+         * @returns The pointcloud
+         */
+        std::shared_ptr<PointCloud> read_pointcloud(const char* path);
+    }
 }
