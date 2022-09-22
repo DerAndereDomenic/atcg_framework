@@ -193,12 +193,10 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), "res/suzanne_blender.obj");
+        mesh = atcg::IO::read_mesh("res/suzanne_blender.obj");
         mesh->uploadData();
 
-        default_mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*default_mesh.get(), "res/suzanne_blender.obj");
+        default_mesh = atcg::IO::read_mesh("res/suzanne_blender.obj");
         default_mesh->uploadData();
     }
 
@@ -285,12 +283,10 @@ public:
 
     bool onFileDropped(atcg::FileDroppedEvent& event)
     {
-        mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), event.getPath());
+        mesh = atcg::IO::read_mesh(event.getPath().c_str());
         mesh->uploadData();
 
-        default_mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*default_mesh.get(), event.getPath());
+        default_mesh = atcg::IO::read_mesh(event.getPath().c_str());
         default_mesh->uploadData();
 
         //Also reset camera

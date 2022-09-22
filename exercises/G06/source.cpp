@@ -136,20 +136,16 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), "res/plane.obj");
+        mesh = atcg::IO::read_mesh("res/plane.obj");
         mesh->request_vertex_colors();
 
-        mesh_explicit_large = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh_explicit_large.get(), "res/plane.obj");
+        mesh_explicit_large = atcg::IO::read_mesh("res/plane.obj");
         mesh_explicit_large->request_vertex_colors();
 
-        mesh_explicit_small = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh_explicit_small.get(), "res/plane.obj");
+        mesh_explicit_small = atcg::IO::read_mesh("res/plane.obj");
         mesh_explicit_small->request_vertex_colors();
 
-        mesh_implicit_large = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh_implicit_large.get(), "res/plane.obj");
+        mesh_implicit_large = atcg::IO::read_mesh("res/plane.obj");
         mesh_implicit_large->request_vertex_colors();
 
         int start_idx = 0;

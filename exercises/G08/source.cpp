@@ -329,8 +329,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), "res/bunny.obj");
+        mesh = atcg::IO::read_mesh("res/bunny.obj");
         mesh->request_vertex_colors();
 
         GeodesicDistanceProperty distance_property;

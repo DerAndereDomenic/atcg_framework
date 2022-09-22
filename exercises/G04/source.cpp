@@ -129,8 +129,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), "res/bunny.obj");
+        mesh = atcg::IO::read_mesh("res/bunny.obj");
 
         //Each vertex now holds a distance property (double)
         mesh->add_property(property_distance);
@@ -259,8 +258,7 @@ public:
 
     bool onFileDropped(atcg::FileDroppedEvent& event)
     {
-        mesh = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh.get(), event.getPath());
+        mesh = atcg::IO::read_mesh(event.getPath().c_str());
 
         //Each vertex now holds a distance property (double)
         mesh->add_property(property_distance);

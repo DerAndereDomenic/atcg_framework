@@ -325,8 +325,7 @@ public:
         double aspect_ratio = (double)window->getWidth() / (double)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh_original = std::make_shared<atcg::Mesh>();
-        OpenMesh::IO::read_mesh(*mesh_original.get(), "res/maxear.obj");
+        mesh_original = atcg::IO::read_mesh("res/maxear.obj");
         mesh_original->request_vertex_colors();
 
         mesh = std::make_shared<atcg::Mesh>(*mesh_original.get());

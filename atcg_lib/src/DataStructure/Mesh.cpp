@@ -114,4 +114,14 @@ namespace atcg
         }
     }
 
+    namespace IO
+    {
+        std::shared_ptr<Mesh> read_mesh(const char* path)
+        {
+            std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+            OpenMesh::IO::read_mesh(*mesh.get(), path);
+            return mesh;
+        }
+    }
+
 }

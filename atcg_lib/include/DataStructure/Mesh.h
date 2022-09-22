@@ -139,4 +139,15 @@ namespace atcg
     using VertexHandle = Mesh::VertexHandle;
     using FaceHandle = Mesh::FaceHandle;
     using EdgeHandle = Mesh::EdgeHandle;
+
+    namespace IO
+    {
+        /**
+         * @brief Load a mesh
+         * 
+         * @param path The path
+         * @returns The mesh
+         */
+        std::shared_ptr<Mesh> read_mesh(const char* path);
+    }
 }
