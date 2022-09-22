@@ -86,6 +86,7 @@ namespace atcg
 				case ShaderDataType::Int3:    return 3;
 				case ShaderDataType::Int4:    return 4;
 				case ShaderDataType::Bool:    return 1;
+                default:                      return 0;
             }
 
             return 0;
