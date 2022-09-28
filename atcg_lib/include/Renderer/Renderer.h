@@ -37,7 +37,7 @@ namespace atcg
          * 
          * @param size The size 
          */
-        static void setPointSize(const uint32_t& size);
+        static void setPointSize(const float& size);
 
         /**
          * @brief Change the viewport of the renderer
