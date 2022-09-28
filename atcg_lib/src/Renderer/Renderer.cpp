@@ -28,7 +28,7 @@ namespace atcg
 
         std::shared_ptr<VertexBuffer> grid_vbo;
 
-        int point_size = 8;
+        float point_size = 8;
     };
 
     Renderer::Renderer() {}
@@ -146,9 +146,10 @@ namespace atcg
         glClearColor(color.r, color.g, color.b, color.a);
     }
 
-    void Renderer::setPointSize(const uint32_t& size)
+    void Renderer::setPointSize(const float& size)
     {
         s_renderer->impl->point_size = size;
+        glPointSize(size);
     }
 
     void Renderer::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
