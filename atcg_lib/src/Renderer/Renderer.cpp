@@ -220,6 +220,7 @@ namespace atcg
         std::shared_ptr<VertexArray> vao = cloud->getVertexArray();
         vao->use();
         shader->use();
+        shader->setVec3("flat_color", glm::vec3(1));
         if(camera)
         {
             shader->setVec3("camera_pos", camera->getPosition());
