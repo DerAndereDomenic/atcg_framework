@@ -330,26 +330,7 @@ public:
 
         mesh = std::make_shared<atcg::Mesh>(*mesh_original.get());
 
-        double max_scale = -std::numeric_limits<double>::infinity();
-        atcg::TriMesh::Point mean_point{0,0,0};
-        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
-        {
-            for(uint32_t i = 0; i < 3; ++i)
-            {
-                if(mesh->point(*v_it)[i] > max_scale)
-                {
-                    max_scale = mesh->point(*v_it)[i];
-                }
-            }
-
-            mean_point += mesh->point(*v_it);
-        }
-        mean_point /= static_cast<double>(mesh->n_vertices());
-
-        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
-        {
-            mesh->set_point(*v_it, (mesh->point(*v_it) - mean_point) / max_scale);
-        }
+        atcg::normalize(mesh);
 
         boundary_edges = detect_boundary_edges(mesh_original);
         boundary_path = detect_boundary_path(mesh_original, boundary_edges);

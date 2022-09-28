@@ -18,7 +18,7 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        atcg::Renderer::setPointSize(1.0f);
+        atcg::Renderer::setPointSize(2.0f);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
@@ -68,6 +68,7 @@ public:
     bool onFileDropped(atcg::FileDroppedEvent& event)
     {
         point_cloud = atcg::IO::read_pointcloud(event.getPath().c_str());
+        atcg::normalize(point_cloud);
         point_cloud->uploadData();
 
         //Also reset camera
