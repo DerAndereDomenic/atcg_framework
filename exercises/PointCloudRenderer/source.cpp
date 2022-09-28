@@ -18,6 +18,7 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
+        atcg::Renderer::setClearColor(glm::vec4(1));
         atcg::Renderer::setPointSize(2.0f);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -31,8 +32,11 @@ public:
 
         atcg::Renderer::clear();
 
-        if(point_cloud)
-            atcg::Renderer::draw(point_cloud, atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+        for(auto it = clouds.begin(); it != clouds.end(); ++it)
+        {
+            if(it->second)
+                atcg::Renderer::draw(it->first, atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+        }
     }
 
     virtual void onImGuiRender() override
@@ -50,6 +54,16 @@ public:
         if(show_render_settings)
         {
             ImGui::Begin("Settings", &show_render_settings);
+
+            int32_t id = 0;
+            for(auto it = clouds.begin(); it != clouds.end(); ++it)
+            {
+                ImGui::PushID(id);
+                ImGui::Checkbox("Render Cloud:", &(it->second));
+                ImGui::PopID();
+                ++id;
+            }
+
             ImGui::End();
         }
 
@@ -67,9 +81,10 @@ public:
 
     bool onFileDropped(atcg::FileDroppedEvent& event)
     {
-        point_cloud = atcg::IO::read_pointcloud(event.getPath().c_str());
+        auto point_cloud = atcg::IO::read_pointcloud(event.getPath().c_str());
         atcg::normalize(point_cloud);
         point_cloud->uploadData();
+        clouds.push_back(std::make_pair(point_cloud, true));
 
         //Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
@@ -80,7 +95,9 @@ public:
     }
 
 private:
-    std::shared_ptr<atcg::PointCloud> point_cloud;
+    using CloudList = std::vector<std::pair<std::shared_ptr<atcg::PointCloud>,bool>>;
+
+    CloudList clouds;
     std::shared_ptr<atcg::CameraController> camera_controller;
 
     bool show_render_settings = false;
