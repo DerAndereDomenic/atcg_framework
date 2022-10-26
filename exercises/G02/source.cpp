@@ -165,6 +165,7 @@ public:
     {
         //TODO: sqrt(3) subdivision
         mesh->request_edge_status();
+        mesh->request_vertex_status();
         uint32_t num_features = mesh->find_feature_edges();
         std::cout << "Found " << num_features << " feature edges\n";
         
@@ -191,7 +192,7 @@ public:
 
             new_pos_property[*v_it] = (1.0f - beta) * mesh->point(*v_it) + beta/static_cast<float>(n) * new_pos_property[*v_it];
 
-            if(mesh->is_boundary(*v_it) /*|| v_it->feature()*/)
+            if(mesh->is_boundary(*v_it) || v_it->feature())
             {
                 new_pos_property[*v_it] = mesh->point(*v_it);
             }
@@ -217,7 +218,7 @@ public:
         //Set new vertex positions
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            if(mesh->is_boundary(*v_it) /* || v_it->feature*/)continue;
+            if(mesh->is_boundary(*v_it)  || v_it->feature())continue;
             mesh->point(*v_it) = new_pos_property[*v_it];
         }
 
