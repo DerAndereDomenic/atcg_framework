@@ -18,6 +18,48 @@ public:
 
     G09Layer(const std::string& name) : atcg::Layer(name) {}
 
+    std::vector<float> linspace(float a, float b, float steps)
+    {
+        float step_size = (b-a) / (steps - 1);
+
+        std::vector<float> space(steps);
+
+        for(uint32_t i = 0; i < steps; ++i)
+        {
+            space[i] = (a + i * step_size);
+        }
+
+        return space;
+    }
+
+    std::shared_ptr<atcg::Mesh> triangulate(const std::vector<atcg::Mesh::Point>& points)
+    {
+        std::shared_ptr<atcg::Mesh> mesh = std::make_shared<atcg::Mesh>();
+        
+        std::vector<atcg::Mesh::VertexHandle> v_handles(points.size());
+
+        for(uint32_t i = 0; i < points.size(); ++i)
+            v_handles[i] = mesh->add_vertex({points[i][0], points[i][2], points[i][1]});
+
+        uint32_t grid_size = static_cast<uint32_t>(std::sqrt(points.size())) - 1;
+
+        for(uint32_t grid_x = 0; grid_x < grid_size; ++grid_x)
+        {
+            for(uint32_t grid_y = 0; grid_y < grid_size; ++grid_y)
+            {
+                auto v00 = v_handles[grid_x + (grid_size+1) * grid_y];
+                auto v10 = v_handles[grid_x + 1 + (grid_size+1) * grid_y];
+                auto v01 = v_handles[grid_x + (grid_size+1) * (grid_y + 1)];
+                auto v11 = v_handles[grid_x + 1 + (grid_size+1) * (grid_y + 1)];
+
+                mesh->add_face(v00, v10, v01);
+                mesh->add_face(v10, v11, v01);
+            }
+        }
+
+        return mesh;
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -25,6 +67,21 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
+        std::vector<float> X = linspace(0,1,4);
+        std::vector<float> Y = linspace(0,1,4);
+        std::vector<float> Z = {0.1f, 0.4f, -0.1f, 0.3f, 0.3f, 0.3f, 0.8f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.2f, 0.4f, 1.0f, 0.1f};
+
+        std::vector<atcg::Mesh::Point> control_polygon;
+        for(uint32_t i = 0; i < Y.size(); ++i)
+        {
+            for(uint32_t j = 0; j < X.size(); ++j)
+            {
+                control_polygon.push_back({X[j], Y[i], Z[j + X.size() * i]});
+            }
+        }
+
+        mesh = triangulate(control_polygon);
+        mesh->uploadData();
     }
 
     // This gets called each frame
