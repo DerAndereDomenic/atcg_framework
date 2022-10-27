@@ -52,12 +52,58 @@ public:
                 auto v01 = v_handles[grid_x + (grid_size+1) * (grid_y + 1)];
                 auto v11 = v_handles[grid_x + 1 + (grid_size+1) * (grid_y + 1)];
 
-                mesh->add_face(v00, v10, v01);
-                mesh->add_face(v10, v11, v01);
+                mesh->add_face(v00, v01, v10);
+                mesh->add_face(v10, v01, v11);
             }
         }
 
         return mesh;
+    }
+
+    struct BezierBase
+    {
+        float coefficients[4];
+    };
+
+    BezierBase getBezierCoefficients(float t)
+    {
+        BezierBase base;
+
+        base.coefficients[0] = (1 - t) * (1 - t) * (1 - t);
+        base.coefficients[1] = 3 * t * (1 - t) * (1 - t);
+        base.coefficients[2] = 3 * t * t * (1 - t);
+        base.coefficients[3] = t * t * t;
+
+        return base;
+    }
+
+    std::vector<atcg::Mesh::Point> calculate_surface(const std::vector<atcg::Mesh::Point>& control_points, const std::vector<float>& samples)
+    {
+        std::vector<atcg::Mesh::Point> points;
+        uint32_t m = 4, n = 4;
+
+        for(float u : samples)
+        {
+            for(float v : samples)
+            {
+                BezierBase F = getBezierCoefficients(u);
+                BezierBase G = getBezierCoefficients(v);
+
+                atcg::Mesh::Point p{0,0,0};
+
+                for(uint32_t i = 0; i < n; ++i)
+                {
+                    for(uint32_t j = 0; j < m; ++j)
+                    {
+                        p += control_points[j + m * i] * F.coefficients[i] * G.coefficients[j]; 
+                    }
+                }
+
+                points.push_back(p);
+            }
+        }
+
+        return points;
     }
 
     // This is run at the start of the program
@@ -82,6 +128,12 @@ public:
 
         control_polygon_mesh = triangulate(control_polygon);
         control_polygon_mesh->uploadData();
+
+        std::vector<float> sample_points = linspace(0,1, 100);
+
+        std::vector<atcg::Mesh::Point> surface = calculate_surface(control_polygon, sample_points);
+        mesh = triangulate(surface);
+        mesh->uploadData();
     }
 
     // This gets called each frame
