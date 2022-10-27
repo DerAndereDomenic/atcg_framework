@@ -67,8 +67,8 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        std::vector<float> X = linspace(0,1,4);
-        std::vector<float> Y = linspace(0,1,4);
+        std::vector<float> X = linspace(-1,1,4);
+        std::vector<float> Y = linspace(-1,1,4);
         std::vector<float> Z = {0.1f, 0.4f, -0.1f, 0.3f, 0.3f, 0.3f, 0.8f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.2f, 0.4f, 1.0f, 0.1f};
 
         std::vector<atcg::Mesh::Point> control_polygon;
@@ -80,8 +80,8 @@ public:
             }
         }
 
-        mesh = triangulate(control_polygon);
-        mesh->uploadData();
+        control_polygon_mesh = triangulate(control_polygon);
+        control_polygon_mesh->uploadData();
     }
 
     // This gets called each frame
@@ -99,6 +99,9 @@ public:
 
         if(mesh && render_edges)
             atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
+
+        if(control_polygon_mesh && render_control_polygon)
+            atcg::Renderer::drawLines(control_polygon_mesh, glm::vec3(1,0,0), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -121,6 +124,7 @@ public:
             ImGui::Checkbox("Render Vertices", &render_points);
             ImGui::Checkbox("Render Edges", &render_edges);
             ImGui::Checkbox("Render Mesh", &render_faces);
+            ImGui::Checkbox("Render Control Polygon", &render_control_polygon);
             ImGui::End();
         }
 
@@ -137,11 +141,14 @@ public:
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
+    std::shared_ptr<atcg::Mesh> control_polygon_mesh;
 
-    bool show_render_settings = false;
+    bool show_render_settings = true;
     bool render_faces = true;
     bool render_points = false;
     bool render_edges = false;
+
+    bool render_control_polygon = true;
 };
 
 class G09 : public atcg::Application
