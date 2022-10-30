@@ -116,8 +116,8 @@ public:
         std::vector<float> X = linspace(-1,1,4);
         std::vector<float> Y = linspace(-1,1,4);
         std::vector<float> Z = {0.1f, 0.4f, -0.1f, 0.3f, 0.3f, 0.3f, 0.8f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.2f, 0.4f, 1.0f, 0.1f};
+        frequencies = {0.10,0.2,0.3,0.12,0.1,0.5,0.5,0.25,0.13,0.15,0.2,0.20,0.9,0.11,0.8,0.7};
 
-        std::vector<atcg::Mesh::Point> control_polygon;
         for(uint32_t i = 0; i < Y.size(); ++i)
         {
             for(uint32_t j = 0; j < X.size(); ++j)
@@ -139,6 +139,20 @@ public:
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
+        t += delta_time;
+
+        for(uint32_t i = 0; i < control_polygon.size(); ++i)
+        {
+            control_polygon[i][2] = std::sin(2.0f * M_PI * frequencies[i] * t);
+        }
+
+        control_polygon_mesh = triangulate(control_polygon);
+        std::vector<atcg::Mesh::Point> surface = calculate_surface(control_polygon, linspace(0,1,100));
+        mesh = triangulate(surface);
+
+        control_polygon_mesh->uploadData();
+        mesh->uploadData();
+
         camera_controller->onUpdate(delta_time);
 
         atcg::Renderer::clear();
@@ -163,6 +177,7 @@ public:
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+            ImGui::MenuItem("Show Render Settings", nullptr, &show_surface_settings);
 
             ImGui::EndMenu();
         }
@@ -180,6 +195,17 @@ public:
             ImGui::End();
         }
 
+        if(show_surface_settings)
+        {
+            ImGui::Begin("Surface Settings", &show_surface_settings);
+            for(uint32_t i = 0; i < frequencies.size(); ++i)
+            {
+                float& fr = frequencies[i];
+                ImGui::SliderFloat(("Point " + std::to_string(i)).c_str(), &fr, 0, 1.0f);
+            }
+            ImGui::End();
+        }
+
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -193,14 +219,19 @@ public:
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
+    std::vector<atcg::Mesh::Point> control_polygon;
+    std::vector<float> frequencies;
     std::shared_ptr<atcg::Mesh> control_polygon_mesh;
 
     bool show_render_settings = true;
+    bool show_surface_settings = true;
     bool render_faces = true;
     bool render_points = false;
     bool render_edges = false;
 
     bool render_control_polygon = true;
+
+    float t = 0.0f;
 };
 
 class G09 : public atcg::Application
