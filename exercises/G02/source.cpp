@@ -220,6 +220,7 @@ public:
 
             //Get voxel information
             float sdf_values[8];
+            glm::vec3 color_values[8];
             bool all_valid = true;
             for(uint32_t i = 0; i < 8; ++i)
             {
@@ -231,6 +232,7 @@ public:
                 }
 
                 sdf_values[i] = (*grid)(voxel_positions[i]).sdf;
+                color_values[i] = (*grid)(voxel_positions[i]).color;
             }
 
             if(!all_valid)
@@ -259,17 +261,17 @@ public:
             glm::vec3 vertex_list[12];
             atcg::Mesh::VertexHandle v_handles[12];
 
-            atcg::Mesh::Color clr;
-            clr[0] = 255;
-            clr[1] = 0;
-            clr[2] = 0;
-
             #define CREATE_VERTEX_ON_EDGE(n, corner_i, corner_j) \
                 if(edge_table[cubeindex] & (1 << n)) \
                 {\
                     vertex_list[n] = interpolate_point(ISOVALUE, voxel_positions[corner_i], sdf_values[corner_i], voxel_positions[corner_j], sdf_values[corner_j]);\
                     v_handles[n] = mesh->add_vertex(atcg::Mesh::Point(vertex_list[n].x, vertex_list[n].y, vertex_list[n].z)); \
-                    mesh->set_color(v_handles[n], atcg::Mesh::Color(clr)); \
+                    glm::vec3 c = interpolate_point(ISOVALUE, color_values[corner_i], sdf_values[corner_i], color_values[corner_j], sdf_values[corner_j]);\
+                    atcg::Mesh::Color clr;\
+                    clr[0] = static_cast<uint8_t>(c.x*255.0f);\
+                    clr[1] = static_cast<uint8_t>(c.y*255.0f);\
+                    clr[2] = static_cast<uint8_t>(c.z*255.0f);\
+                    mesh->set_color(v_handles[n], clr); \
                 }
 
             CREATE_VERTEX_ON_EDGE( 0, 0, 1);
