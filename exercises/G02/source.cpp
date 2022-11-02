@@ -142,15 +142,14 @@ public:
         }
     };
 
-    void fillGrid(const std::shared_ptr<SDFGrid>& grid)
+    void fillGrid(const std::shared_ptr<SDFGrid>& grid, SDF* sdf)
     {
-        SDFCylinder sdf(glm::vec3(0), 1, 1);
         for(uint32_t i = 0; i < grid->voxels_per_volume(); ++i)
         {
             glm::ivec3 voxel = grid->index2voxel(i);
             glm::vec3 p = grid->voxel2position(voxel);
 
-            (*grid)[i].sdf = sdf(p);
+            (*grid)[i].sdf = (*sdf)(p);
         }
     }
 
@@ -413,7 +412,10 @@ public:
             {
                 //Fill the grid with the sdf
                 mesh = std::make_shared<atcg::Mesh>();
-                fillGrid(grid);
+                
+                SDFSphere sdf(glm::vec3(0), 1);
+
+                fillGrid(grid, &sdf);
 
                 marching_cubes(grid, mesh);
 
