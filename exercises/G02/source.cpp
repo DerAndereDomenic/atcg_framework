@@ -40,10 +40,27 @@ public:
         }
     };
 
+    struct SDFSphere : public SDF
+    {
+        glm::vec3 position;
+        float radius;
+
+        SDFSphere(const glm::vec3& position, float radius)
+            :position(position),
+             radius(radius)
+        {
+        }
+
+        virtual float operator()(const glm::vec3& p) override
+        {
+            return glm::length(p-position) - radius;
+        }
+    };
+
 
     void fillGrid(const std::shared_ptr<SDFGrid>& grid)
     {
-        SDFHeart sdf;
+        SDFSphere sdf(glm::vec3(0), 1);
         for(uint32_t i = 0; i < grid->voxels_per_volume(); ++i)
         {
             glm::ivec3 voxel = grid->index2voxel(i);
