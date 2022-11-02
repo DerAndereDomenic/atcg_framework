@@ -413,7 +413,19 @@ public:
                 //Fill the grid with the sdf
                 mesh = std::make_shared<atcg::Mesh>();
                 
-                SDFSphere sdf(glm::vec3(0), 1);
+                SDFCylinder c1(glm::vec3(0), 0.5f, 0);
+                SDFCylinder c2(glm::vec3(0), 0.5f, 1);
+                SDFCylinder c3(glm::vec3(0), 0.5f, 2);
+
+                SDFUnion c1uc2(&c1, &c2);
+                SDFUnion c1uc2uc3(&c1uc2, &c3);
+
+                SDFSphere s(glm::vec3(0), 1);
+                SDFBox b(glm::vec3(0), glm::vec3(0.8));
+
+                SDFIntersection sib(&b, &s);
+
+                SDFDifference sdf(&sib, &c1uc2uc3);
 
                 fillGrid(grid, &sdf);
 
