@@ -57,10 +57,31 @@ public:
         }
     };
 
+    struct SDFBox : public SDF
+    {
+        glm::vec3 position;
+        glm::vec3 bound;
+
+        SDFBox(const glm::vec3& position, const glm::vec3& bound)
+            :position(position),
+             bound(bound)
+        {
+        }
+
+        float vmax(const glm::vec3& p)
+        {
+            return std::max(std::max(p.x, p.y), p.z);
+        }
+
+        virtual float operator()(const glm::vec3& p) override
+        {
+            return vmax(glm::abs(p-position) - bound);
+        }
+    };
 
     void fillGrid(const std::shared_ptr<SDFGrid>& grid)
     {
-        SDFSphere sdf(glm::vec3(0), 1);
+        SDFBox sdf(glm::vec3(0), glm::vec3(1));
         for(uint32_t i = 0; i < grid->voxels_per_volume(); ++i)
         {
             glm::ivec3 voxel = grid->index2voxel(i);
