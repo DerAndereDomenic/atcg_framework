@@ -100,6 +100,48 @@ public:
         }
     };
 
+    struct SDFUnion : public SDF
+    {
+        SDF* sdf1,* sdf2;
+        SDFUnion(SDF* sdf1, SDF* sdf2)
+            :sdf1(sdf1), sdf2(sdf2)
+        {
+        }
+
+        virtual float operator()(const glm::vec3& p) override
+        {
+            return std::min((*sdf1)(p), (*sdf2)(p));
+        }
+    };
+
+    struct SDFIntersection : public SDF
+    {
+        SDF* sdf1,* sdf2;
+        SDFIntersection(SDF* sdf1, SDF* sdf2)
+            :sdf1(sdf1), sdf2(sdf2)
+        {
+        }
+
+        virtual float operator()(const glm::vec3& p) override
+        {
+            return std::max((*sdf1)(p), (*sdf2)(p));
+        }
+    };
+
+    struct SDFDifference : public SDF
+    {
+        SDF* sdf1,* sdf2;
+        SDFDifference(SDF* sdf1, SDF* sdf2)
+            :sdf1(sdf1), sdf2(sdf2)
+        {
+        }
+
+        virtual float operator()(const glm::vec3& p) override
+        {
+            return std::max((*sdf1)(p), -(*sdf2)(p));
+        }
+    };
+
     void fillGrid(const std::shared_ptr<SDFGrid>& grid)
     {
         SDFCylinder sdf(glm::vec3(0), 1, 1);
