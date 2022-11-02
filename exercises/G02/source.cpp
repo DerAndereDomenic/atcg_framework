@@ -79,9 +79,30 @@ public:
         }
     };
 
+    struct SDFCylinder : public SDF
+    {
+        glm::vec3 position;
+        float radius;
+        uint32_t axis;
+
+        SDFCylinder(const glm::vec3& position, float radius, uint32_t axis)
+            :position(position),
+             radius(radius),
+             axis(axis)
+        {
+        }
+
+        virtual float operator()(const glm::vec3& p) override
+        {
+            auto offset = p-position;
+            offset[axis] = 0;
+            return glm::length(offset) - radius;
+        }
+    };
+
     void fillGrid(const std::shared_ptr<SDFGrid>& grid)
     {
-        SDFBox sdf(glm::vec3(0), glm::vec3(1));
+        SDFCylinder sdf(glm::vec3(0), 1, 1);
         for(uint32_t i = 0; i < grid->voxels_per_volume(); ++i)
         {
             glm::ivec3 voxel = grid->index2voxel(i);
