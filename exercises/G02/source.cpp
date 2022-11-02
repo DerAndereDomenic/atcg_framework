@@ -24,22 +24,32 @@ public:
 
     G02Layer(const std::string& name) : atcg::Layer(name) {}
 
-    float sdf_heart(const glm::vec3& p)
+    struct SDF
     {
-        float x = p.x;
-        float y = p.y;
-        float z = p.z;
-        return std::pow(x * x + 9. / 4. * y * y + z * z - 1, 3) - x * x * z * z * z - 9. / 80. * y * y * z * z * z; 
-    }
+        virtual float operator()(const glm::vec3& p) = 0;
+    };
+
+    struct SDFHeart : public SDF
+    {
+        virtual float operator()(const glm::vec3& p) override
+        {
+            float x = p.x;
+            float y = p.y;
+            float z = p.z;
+            return std::pow(x * x + 9. / 4. * y * y + z * z - 1, 3) - x * x * z * z * z - 9. / 80. * y * y * z * z * z; 
+        }
+    };
+
 
     void fillGrid(const std::shared_ptr<SDFGrid>& grid)
     {
+        SDFHeart sdf;
         for(uint32_t i = 0; i < grid->voxels_per_volume(); ++i)
         {
             glm::ivec3 voxel = grid->index2voxel(i);
             glm::vec3 p = grid->voxel2position(voxel);
 
-            (*grid)[i].sdf = sdf_heart(p);
+            (*grid)[i].sdf = sdf(p);
         }
     }
 
