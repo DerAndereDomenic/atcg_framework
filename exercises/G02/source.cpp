@@ -14,6 +14,7 @@
 struct SDFVoxel
 {
     float sdf;
+    glm::vec3 color;
 };
 
 using SDFGrid = atcg::Grid<SDFVoxel>;
@@ -24,19 +25,25 @@ public:
 
     G02Layer(const std::string& name) : atcg::Layer(name) {}
 
+    struct SDFResult
+    {
+        float sdf;
+        glm::vec3 color; 
+    };
+
     struct SDF
     {
-        virtual float operator()(const glm::vec3& p) = 0;
+        virtual SDFResult operator()(const glm::vec3& p) = 0;
     };
 
     struct SDFHeart : public SDF
     {
-        virtual float operator()(const glm::vec3& p) override
+        virtual SDFResult operator()(const glm::vec3& p) override
         {
             float x = p.x;
             float y = p.y;
             float z = p.z;
-            return std::pow(x * x + 9. / 4. * y * y + z * z - 1, 3) - x * x * z * z * z - 9. / 80. * y * y * z * z * z; 
+            return {std::pow(x * x + 9.f / 4.f * y * y + z * z - 1.f, 3.f) - x * x * z * z * z - 9.f / 80.f * y * y * z * z * z, glm::vec3(0,1,0)}; 
         }
     };
 
@@ -44,16 +51,18 @@ public:
     {
         glm::vec3 position;
         float radius;
+        glm::vec3 color;
 
-        SDFSphere(const glm::vec3& position, float radius)
+        SDFSphere(const glm::vec3& position, float radius, const glm::vec3& color=glm::vec3(1))
             :position(position),
-             radius(radius)
+             radius(radius),
+             color(color)
         {
         }
 
-        virtual float operator()(const glm::vec3& p) override
+        virtual SDFResult operator()(const glm::vec3& p) override
         {
-            return glm::length(p-position) - radius;
+            return {glm::length(p-position) - radius, color};
         }
     };
 
@@ -61,10 +70,12 @@ public:
     {
         glm::vec3 position;
         glm::vec3 bound;
+        glm::vec3 color;
 
-        SDFBox(const glm::vec3& position, const glm::vec3& bound)
+        SDFBox(const glm::vec3& position, const glm::vec3& bound, const glm::vec3& color=glm::vec3(1))
             :position(position),
-             bound(bound)
+             bound(bound),
+             color(color)
         {
         }
 
@@ -73,9 +84,9 @@ public:
             return std::max(std::max(p.x, p.y), p.z);
         }
 
-        virtual float operator()(const glm::vec3& p) override
+        virtual SDFResult operator()(const glm::vec3& p) override
         {
-            return vmax(glm::abs(p-position) - bound);
+            return {vmax(glm::abs(p-position) - bound), color};
         }
     };
 
@@ -84,19 +95,21 @@ public:
         glm::vec3 position;
         float radius;
         uint32_t axis;
+        glm::vec3 color;
 
-        SDFCylinder(const glm::vec3& position, float radius, uint32_t axis)
+        SDFCylinder(const glm::vec3& position, float radius, uint32_t axis, const glm::vec3& color=glm::vec3(1))
             :position(position),
              radius(radius),
-             axis(axis)
+             axis(axis),
+             color(color)
         {
         }
 
-        virtual float operator()(const glm::vec3& p) override
+        virtual SDFResult operator()(const glm::vec3& p) override
         {
             auto offset = p-position;
             offset[axis] = 0;
-            return glm::length(offset) - radius;
+            return {glm::length(offset) - radius, color};
         }
     };
 
@@ -108,9 +121,13 @@ public:
         {
         }
 
-        virtual float operator()(const glm::vec3& p) override
+        virtual SDFResult operator()(const glm::vec3& p) override
         {
-            return std::min((*sdf1)(p), (*sdf2)(p));
+            SDFResult res1 = (*sdf1)(p);
+            SDFResult res2 = (*sdf2)(p);
+            if(res1.sdf < res2.sdf)
+                return res1;
+            return res2;
         }
     };
 
@@ -122,9 +139,13 @@ public:
         {
         }
 
-        virtual float operator()(const glm::vec3& p) override
+        virtual SDFResult operator()(const glm::vec3& p) override
         {
-            return std::max((*sdf1)(p), (*sdf2)(p));
+            SDFResult res1 = (*sdf1)(p);
+            SDFResult res2 = (*sdf2)(p);
+            if(res1.sdf > res2.sdf)
+                return res1;
+            return res2;
         }
     };
 
@@ -136,9 +157,14 @@ public:
         {
         }
 
-        virtual float operator()(const glm::vec3& p) override
+        virtual SDFResult operator()(const glm::vec3& p) override
         {
-            return std::max((*sdf1)(p), -(*sdf2)(p));
+            SDFResult res1 = (*sdf1)(p);
+            SDFResult res2 = (*sdf2)(p);
+            res2.sdf *= -1;
+            if(res1.sdf > res2.sdf)
+                return res1;
+            return res2;
         }
     };
 
@@ -149,7 +175,9 @@ public:
             glm::ivec3 voxel = grid->index2voxel(i);
             glm::vec3 p = grid->voxel2position(voxel);
 
-            (*grid)[i].sdf = (*sdf)(p);
+            SDFResult res = (*sdf)(p);
+            (*grid)[i].sdf = res.sdf;
+            (*grid)[i].color = res.color;
         }
     }
 
