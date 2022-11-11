@@ -61,12 +61,9 @@ namespace atcg
          * @return The depth texture 
          */
         inline std::shared_ptr<Texture2D> getDepthAttachement() const {return _depth_attachement;}
-
-        /**
-         * @brief Use the default framebuffer 
-         */
-        static void useDefault();
     private:
+        friend class Renderer;
+        static void useDefault();
         uint32_t _ID;
         uint32_t _width, _height;
         std::vector<std::shared_ptr<Texture2D>> _color_attachements;

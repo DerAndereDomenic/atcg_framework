@@ -164,6 +164,11 @@ namespace atcg
         glViewport(x, y, width, height);
     }
 
+    void Renderer::useScreenBuffer()
+    {
+        s_renderer->impl->screen_fbo->use();
+    }
+
     void Renderer::clear()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
