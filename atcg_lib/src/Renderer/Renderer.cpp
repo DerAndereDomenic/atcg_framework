@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <Renderer/ShaderManager.h>
+#include <Renderer/Framebuffer.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
@@ -14,7 +15,7 @@ namespace atcg
     class Renderer::Impl
     {
     public:
-        Impl();
+        Impl(uint32_t width, uint32_t height);
 
         ~Impl() = default;
 
@@ -28,6 +29,8 @@ namespace atcg
 
         std::shared_ptr<VertexBuffer> grid_vbo;
 
+        std::shared_ptr<Framebuffer> screen_fbo;
+
         float point_size = 8;
     };
 
@@ -35,7 +38,7 @@ namespace atcg
 
     Renderer::~Renderer() {}
 
-    Renderer::Impl::Impl()
+    Renderer::Impl::Impl(uint32_t width, uint32_t height)
     {
         //Generate quad
         {
@@ -69,6 +72,10 @@ namespace atcg
         //Generate cube
         initCube();
         
+        screen_fbo = std::make_shared<Framebuffer>(width, height);
+        screen_fbo->attachColor();
+        screen_fbo->attachDepth();
+        screen_fbo->verify();
     }
 
     void Renderer::Impl::initCube()
@@ -127,14 +134,14 @@ namespace atcg
         cube_vao->addVertexBuffer(cube_vbo);
     }
 
-    void Renderer::init()
+    void Renderer::init(uint32_t width, uint32_t height)
     {
         if(!gladLoadGL())
         {
             std::cerr << "Error loading glad!\n";
         }
 
-        s_renderer->impl = std::make_unique<Impl>();
+        s_renderer->impl = std::make_unique<Impl>(width, height);
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);

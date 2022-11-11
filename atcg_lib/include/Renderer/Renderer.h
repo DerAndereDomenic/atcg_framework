@@ -22,8 +22,11 @@ namespace atcg
     public:
         /**
          * @brief Initializes the renderer (should not be called by the client!)
+         * 
+         * @param width The width
+         * @param height The height
          */
-        static void init();
+        static void init(uint32_t width, uint32_t height);
 
         /**
          * @brief Set the clear color

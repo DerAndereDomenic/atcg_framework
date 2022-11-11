@@ -13,7 +13,7 @@ namespace atcg
         _window = std::make_unique<Window>(WindowProps());
         _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
-        Renderer::init();
+        Renderer::init(_window->getWidth(), _window->getHeight());
 
         Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 
