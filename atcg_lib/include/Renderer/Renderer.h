@@ -58,6 +58,14 @@ namespace atcg
         static void setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height);
 
         /**
+         * @brief Change the size of the renderer
+         * 
+         * @param width The width
+         * @param height The height
+         */
+        static void resize(const uint32_t& width, const uint32_t& height);
+
+        /**
          * @brief Use the default screen fbo 
          */
         static void useScreenBuffer();

@@ -180,6 +180,15 @@ namespace atcg
         glViewport(x, y, width, height);
     }
 
+    void Renderer::resize(const uint32_t& width, const uint32_t& height)
+    {
+        setViewport(0, 0, width, height);
+        s_renderer->impl->screen_fbo = std::make_shared<Framebuffer>(width, height);
+        s_renderer->impl->screen_fbo->attachColor();
+        s_renderer->impl->screen_fbo->attachDepth();
+        s_renderer->impl->screen_fbo->verify();
+    }
+
     void Renderer::useScreenBuffer()
     {
         s_renderer->impl->screen_fbo->use();
