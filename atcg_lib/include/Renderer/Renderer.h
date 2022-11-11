@@ -29,6 +29,11 @@ namespace atcg
         static void init(uint32_t width, uint32_t height);
 
         /**
+         * @brief Finished the currently drawn frame (should not be called by client!) 
+         */
+        static void finishFrame();
+
+        /**
          * @brief Set the clear color
          * 
          * @param color The clear color

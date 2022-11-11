@@ -71,10 +71,12 @@ namespace atcg
         {
             last_time = current_time;
 
+            Renderer::useScreenBuffer();
             for(Layer* layer : _layer_stack)
             {
                 layer->onUpdate(delta_time);
             }
+            Renderer::finishFrame();
 
             //First finish the main content of all layers before doing any imgui stuff
             _imgui_layer->begin();

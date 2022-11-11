@@ -148,6 +148,22 @@ namespace atcg
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
     }
 
+    void Renderer::finishFrame()
+    {
+        s_renderer->impl->quad_vao->use();
+        auto shader = ShaderManager::getShader("screen");
+        shader->use();
+        shader->setInt("screen_texture", 0);
+
+        s_renderer->impl->screen_fbo->getColorAttachement()->use();
+
+        const std::shared_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
+        glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+
+        Framebuffer::useDefault();
+        clear();
+    }
+
     void Renderer::setClearColor(const glm::vec4& color)
     {
         glClearColor(color.r, color.g, color.b, color.a);
