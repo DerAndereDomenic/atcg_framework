@@ -47,7 +47,7 @@ namespace atcg
     void Framebuffer::attachDepth()
     {
         use();
-        _depth_attachement = Texture2D::createColorTexture(_width, _height);
+        _depth_attachement = Texture2D::createDepthTexture(_width, _height);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depth_attachement->getID(), 0);
         useDefault();
     }
