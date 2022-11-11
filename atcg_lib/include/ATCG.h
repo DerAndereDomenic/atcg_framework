@@ -23,6 +23,7 @@
 #include <Renderer/CameraController.h>
 #include <Renderer/Buffer.h>
 #include <Renderer/VertexArray.h>
+#include <Renderer/Texture.h>
 
 //-------- OpenMesh -------
 //#include <OpenMesh/OpenMesh.h>
