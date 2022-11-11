@@ -46,15 +46,16 @@ namespace atcg
 
             float vertices[] =
             {
-                -1, -1, 0,
-                1, -1, 0,
-                -1, 1, 0,
-                1, 1, 0
+                -1, -1, 0, 0, 0,
+                1, -1, 0, 1, 0,
+                -1, 1, 0, 0, 1,
+                1, 1, 0, 1, 1
             };
 
             quad_vbo = std::make_shared<VertexBuffer>(vertices, sizeof(vertices));
             quad_vbo->setLayout({
-                {ShaderDataType::Float3, "aPosition"}
+                {ShaderDataType::Float3, "aPosition"},
+                {ShaderDataType::Float2, "aUV"}
             });
 
             quad_vao->addVertexBuffer(quad_vbo);
@@ -150,6 +151,8 @@ namespace atcg
 
     void Renderer::finishFrame()
     {
+        Framebuffer::useDefault();
+        clear();
         s_renderer->impl->quad_vao->use();
         auto shader = ShaderManager::getShader("screen");
         shader->use();
@@ -159,9 +162,6 @@ namespace atcg
 
         const std::shared_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
         glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
-
-        Framebuffer::useDefault();
-        clear();
     }
 
     void Renderer::setClearColor(const glm::vec4& color)
