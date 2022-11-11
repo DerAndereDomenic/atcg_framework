@@ -24,6 +24,7 @@
 #include <Renderer/Buffer.h>
 #include <Renderer/VertexArray.h>
 #include <Renderer/Texture.h>
+#include <Renderer/Framebuffer.h>
 
 //-------- OpenMesh -------
 //#include <OpenMesh/OpenMesh.h>
