@@ -39,3 +39,6 @@
 //-------- Math -----------
 #include <Math/Functions.h>
 #include <Math/Utils.h>
+
+//-------- Registration -----------
+#include <Math/CPD.h>
