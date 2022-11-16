@@ -41,4 +41,4 @@
 #include <Math/Utils.h>
 
 //-------- Registration -----------
-#include <Math/CPD.h>
+#include <Registration/CPD.h>

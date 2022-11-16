@@ -14,5 +14,6 @@ namespace atcg
         virtual void solve(const uint32_t& maxN, const float& tol = 0.01f) = 0;
     protected:
         RowMatrix X, Y;
+        uint32_t N,M;
     };
 }
