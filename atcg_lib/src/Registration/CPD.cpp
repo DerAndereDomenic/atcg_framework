@@ -26,7 +26,7 @@ namespace atcg
         while(n < maxN && std::abs(old_var - var) > tol)
         {
             ++n;
-            std::cout << "Iteration: " + n << "\n";
+            std::cout << "Iteration: " << n << "\n";
 
             P = RowMatrix::Zero(M,N);
             Eigen::VectorXd PX = Eigen::VectorXd::Zero(N);
