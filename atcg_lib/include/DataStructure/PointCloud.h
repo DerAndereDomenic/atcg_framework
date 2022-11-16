@@ -4,6 +4,7 @@
 #include <OpenMesh/OpenMesh.h>
 #include <OpenMesh/Core/Mesh/Traits.hh>
 #include <Renderer/VertexArray.h>
+#include <Math/Utils.h>
 
 namespace atcg
 {
@@ -89,6 +90,13 @@ namespace atcg
          * @brief Uploads the data onto the gpu
          */
         void uploadData();
+
+        /**
+         * @brief Get the point cloud as Nx3 row matrix
+         * 
+         * @return The data points as matrix
+         */
+        RowMatrix asMatrix();
 
         /**
          * @brief Get the Vertex Array object
@@ -205,6 +213,21 @@ namespace atcg
         });
 
         _vao->addVertexBuffer(vbo);
+    }
+
+    template<class Traits>
+    RowMatrix PointCloudT<Traits>::asMatrix()
+    {
+        RowMatrix S(n_vertices(), 3);
+        for(auto vertex : _vertices)
+        {
+            OpenMesh::Vec3f pos = point(vertex);
+            S(i, 0) = static_cast<double>(pos[0]);
+            S(i, 1) = static_cast<double>(pos[1]);
+            S(i, 2) = static_cast<double>(pos[2]);
+        }
+
+        return S;
     }
 
     using PointCloud = PointCloudT<>;

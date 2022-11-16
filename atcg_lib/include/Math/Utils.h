@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <numeric>
+#include <Eigen/Dense>
 
 namespace atcg
 {
@@ -33,3 +34,5 @@ namespace atcg
         }
     }
 }
+
+using RowMatrix = Eigen::Matrix<double, -1, -1, Eigen::RowMajor>;
