@@ -51,9 +51,9 @@ namespace atcg
                     if(substrings[i] == "X")
                         x = i;
                     else if(substrings[i] == "Y") //Convert between xyz and opengl coordinate system -> swap y and z
-                        z = i;
-                    else if(substrings[i] == "Z")
                         y = i;
+                    else if(substrings[i] == "Z")
+                        z = i;
                     else if(substrings[i] == "R")
                         r = i;
                     else if(substrings[i] == "G")
@@ -75,7 +75,7 @@ namespace atcg
                     auto data = split_string(line, ' ');
 
                     float x_ = std::stof(data[x]);
-                    float y_ = std::stof(data[y]);
+                    float y_ = -std::stof(data[y]);
                     float z_ = std::stof(data[z]);
                     auto vh = cloud->add_vertex(PointCloud::Point{x_,y_,z_});
 
