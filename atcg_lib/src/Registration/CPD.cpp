@@ -118,4 +118,18 @@ namespace atcg
 
         return var;
     }
+
+    void CoherentPointDrift::applyTransform(const std::shared_ptr<PointCloud>& cloud)
+    {
+        for(auto v_it = cloud->vertices_begin(); v_it != cloud->vertices_end(); ++v_it)
+        {
+            PointCloud::Point p_ = cloud->point(*v_it);
+            Eigen::Vector3d p;
+            p(0) = p_[0];
+            p(1) = p_[1];
+            p(2) = p_[2];
+            p = s * R * p + t;
+            cloud->set_point(*v_it, PointCloud::Point{p(0), p(1), p(2)}); 
+        }
+    }
 }

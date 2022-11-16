@@ -13,6 +13,8 @@ namespace atcg
         virtual ~CoherentPointDrift();
 
         virtual void solve(const uint32_t& maxN, const float& tol = 0.01f) override;
+
+        virtual void applyTransform(const std::shared_ptr<PointCloud>& cloud) override;
     private:
         double initialize();
         void estimate(Eigen::Vector3d& PX, Eigen::Vector3d& PY, double var);
