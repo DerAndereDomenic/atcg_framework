@@ -17,10 +17,10 @@ namespace atcg
         virtual void applyTransform(const std::shared_ptr<PointCloud>& cloud) override;
     private:
         double initialize();
-        void estimate(Eigen::Vector3d& PX, Eigen::Vector3d& PY, double var);
-        double maximize(Eigen::Vector3d& PX, Eigen::Vector3d& PY);
+        void estimate(Eigen::VectorXd& PX, Eigen::VectorXd& PY, double var);
+        double maximize(Eigen::VectorXd& PX, Eigen::VectorXd& PY);
 
-        void direct_optimization(Eigen::Vector3d& PX, Eigen::Vector3d& PY, double bias, double var);
+        void direct_optimization(Eigen::VectorXd& PX, Eigen::VectorXd& PY, double bias, double var);
         double Pmn(const Eigen::Vector3d& x, const Eigen::Vector3d& y, double var);
         double Pmn(const double& L2S, double var);
 

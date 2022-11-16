@@ -219,12 +219,14 @@ namespace atcg
     RowMatrix PointCloudT<Traits>::asMatrix()
     {
         RowMatrix S(n_vertices(), 3);
+        uint32_t i = 0;
         for(auto vertex : _vertices)
         {
             OpenMesh::Vec3f pos = point(vertex);
             S(i, 0) = static_cast<double>(pos[0]);
             S(i, 1) = static_cast<double>(pos[1]);
             S(i, 2) = static_cast<double>(pos[2]);
+            ++i;
         }
 
         return S;

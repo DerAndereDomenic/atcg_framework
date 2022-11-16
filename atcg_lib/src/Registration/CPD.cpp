@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include <glm/ext/scalar_constants.hpp>
 
+#include <iostream>
+
 namespace atcg
 {
     CoherentPointDrift::CoherentPointDrift(const std::shared_ptr<PointCloud>& source, const std::shared_ptr<PointCloud>& target, const double& w)
@@ -16,18 +18,19 @@ namespace atcg
 
     }
 
-    void CoherentPointDrift::solve(const uint32_t& maxN, const float& tol = 0.01f)
+    void CoherentPointDrift::solve(const uint32_t& maxN, const float& tol)
     {
         double var = initialize();
         double old_var = 0.0;
-        uint32_t n;
-        while(n <= maxN && std::abs(old_var - var) > tol)
+        uint32_t n = 0;
+        while(n < maxN && std::abs(old_var - var) > tol)
         {
             ++n;
+            std::cout << "Iteration: " + n << "\n";
 
             P = RowMatrix::Zero(M,N);
-            Eigen::Vector3d PX = Eigen::Vector3d::Zero(N);
-            Eigen::Vector3d PY = Eigen::Vector3d::Zero(M);
+            Eigen::VectorXd PX = Eigen::VectorXd::Zero(N);
+            Eigen::VectorXd PY = Eigen::VectorXd::Zero(M);
 
             estimate(PX, PY, var);
 
@@ -50,16 +53,16 @@ namespace atcg
         return var;
     }
 
-    void CoherentPointDrift::estimate(Eigen::Vector3d& PX, Eigen::Vector3d& PY, double var)
+    void CoherentPointDrift::estimate(Eigen::VectorXd& PX, Eigen::VectorXd& PY, double var)
     {
-        double bias = std::pow(2.0 * glm::pi<double>(), 3.0/2.0) * w / (1.0 - w) * static_cast<double>(M) / static_cast<double>(N);
+        double bias = std::pow(2.0 * glm::pi<double>() * var, 3.0/2.0) * w / (1.0 - w) * static_cast<double>(M) / static_cast<double>(N);
 
         direct_optimization(PX, PY, bias, var);
     }
 
-    void CoherentPointDrift::direct_optimization(Eigen::Vector3d& PX, Eigen::Vector3d& PY, double bias, double var)
+    void CoherentPointDrift::direct_optimization(Eigen::VectorXd& PX, Eigen::VectorXd& PY, double bias, double var)
     {
-        for(size_t m = 0; m < M; ++m)
+        /*for(size_t m = 0; m < M; ++m)
         {
             double Z = bias;
 
@@ -76,7 +79,27 @@ namespace atcg
             {
                 P(m,n) /= Z;
                 PX(n) += P(m,n);
-                PY(n) += P(m,n);
+                PY(m) += P(m,n);
+            }
+        }*/
+
+        for(size_t n = 0; n < N; ++n)
+        {
+            double Z = bias;
+            for(size_t m = 0; m < M; ++m)
+            {
+                Eigen::Vector3d YV = Y.block<1,3>(m, 0);
+                YV = s * R * YV + t;
+
+                P(m,n) = Pmn(X.block<1,3>(n,0), YV, var);
+                Z += P(m,n);
+            }
+
+            for(size_t m = 0; m < M; ++m)
+            {
+                P(m,n) /= Z;
+                PX(n) += P(m,n);
+                PY(m) += P(m,n);
             }
         }
     }
@@ -91,7 +114,7 @@ namespace atcg
         return std::exp(-0.5f/var*L2S);
     }
 
-    double CoherentPointDrift::maximize(Eigen::Vector3d& PX, Eigen::Vector3d& PY)
+    double CoherentPointDrift::maximize(Eigen::VectorXd& PX, Eigen::VectorXd& PY)
     {
         double Np = 1.0/P.sum();
         Eigen::Vector3d uX = X.transpose()*PX*Np;
