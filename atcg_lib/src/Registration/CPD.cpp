@@ -98,8 +98,8 @@ namespace atcg
             for(size_t m = 0; m < M; ++m)
             {
                 P(m,n) /= Z;
-                PX(n) += P(m,n);
-                PY(m) += P(m,n);
+                PX(n) += P(m,n); //PT1
+                PY(m) += P(m,n); //P1
             }
         }
     }

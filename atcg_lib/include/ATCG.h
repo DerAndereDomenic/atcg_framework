@@ -42,3 +42,4 @@
 
 //-------- Registration -----------
 #include <Registration/CPD.h>
+#include <Registration/NonRigidCPD.h>

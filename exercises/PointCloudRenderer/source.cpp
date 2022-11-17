@@ -45,7 +45,7 @@ public:
             clouds.push_back(std::make_pair(point_cloud, true));
         }
 
-        registrator = std::make_unique<atcg::CoherentPointDrift>(clouds[1].first, clouds[0].first, 0);
+        registrator = std::make_unique<atcg::NonRigidCoherentPointDrift>(clouds[1].first, clouds[0].first, 0);
 
     }
 
@@ -143,6 +143,7 @@ public:
             if(ImGui::Button("Register"))
             {
                 registrator->solve(10, 0);
+                std::cout << "Done!\n";
                 registrator->applyTransform(clouds[0].first);
                 clouds[0].first->uploadData();
             }
