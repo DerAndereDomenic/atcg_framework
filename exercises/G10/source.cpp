@@ -18,6 +18,11 @@ public:
 
     G10Layer(const std::string& name) : atcg::Layer(name) {}
 
+    struct PrincipalCurvature
+    {
+        double k1, k2;
+    };
+
     struct FundamentalFormFace
     {
         double e,f,g;
@@ -68,7 +73,7 @@ public:
         return {x_new, y_new, target.z};
     }
 
-    void computeCurvature(const std::shared_ptr<atcg::Mesh>& mesh, const OpenMesh::VPropHandleT<double>& curvature)
+    void computeCurvature(const std::shared_ptr<atcg::Mesh>& mesh, const OpenMesh::VPropHandleT<PrincipalCurvature>& curvature)
     {
         auto form_property = OpenMesh::makeTemporaryProperty<atcg::Mesh::FaceHandle, FundamentalFormFace>(*mesh.get());
 
@@ -163,8 +168,8 @@ public:
 
             double ev1 = (ep + gp)/2.0f + std::sqrt(((ep + gp)/2.0f) * ((ep + gp)/2.0f) - ep * gp + fp*fp);
             double ev2 = (ep + gp)/2.0f - std::sqrt(((ep + gp)/2.0f) * ((ep + gp)/2.0f) - ep * gp + fp*fp);
-            double mean_curvature = (ev1 + ev2) / 2.0f;
-            mesh->property(curvature, *v_it) = mean_curvature;
+            //double mean_curvature = (ev1 + ev2) / 2.0f;
+            mesh->property(curvature, *v_it) = {ev1, ev2};
         }
     }
 
@@ -181,7 +186,7 @@ public:
         mesh->update_normals();
         mesh->request_vertex_colors();
 
-        OpenMesh::VPropHandleT<double> property_curvature;
+        OpenMesh::VPropHandleT<PrincipalCurvature> property_curvature;
         mesh->add_property(property_curvature);
 
         computeCurvature(mesh, property_curvature);
@@ -191,7 +196,7 @@ public:
 
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            double curvature = mesh->property(property_curvature, *v_it);
+            double curvature = mesh->property(property_curvature, *v_it).k2;
             min_curvature = std::min(min_curvature, curvature);
             max_curvature = std::max(max_curvature, curvature);
         }
@@ -202,7 +207,7 @@ public:
         double max_abs_value = std::max(max_curvature, -min_curvature);
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            double curvature = mesh->property(property_curvature, *v_it);
+            double curvature = mesh->property(property_curvature, *v_it).k2;
             if(curvature > 0)
                 mesh->set_color(*v_it, { curvature / max_abs_value * 255, 0, 0});
             else
