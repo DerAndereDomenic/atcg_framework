@@ -196,7 +196,7 @@ public:
 
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            double curvature = mesh->property(property_curvature, *v_it).k2;
+            double curvature = (mesh->property(property_curvature, *v_it).k1 + mesh->property(property_curvature, *v_it).k2)/2.0f;
             min_curvature = std::min(min_curvature, curvature);
             max_curvature = std::max(max_curvature, curvature);
         }
@@ -207,7 +207,7 @@ public:
         double max_abs_value = std::max(max_curvature, -min_curvature);
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            double curvature = mesh->property(property_curvature, *v_it).k2;
+            double curvature = (mesh->property(property_curvature, *v_it).k1 + mesh->property(property_curvature, *v_it).k2)/2.0f;
             if(curvature > 0)
                 mesh->set_color(*v_it, { curvature / max_abs_value * 255, 0, 0});
             else
