@@ -3,10 +3,17 @@
 #include <glm/glm.hpp>
 #include <glm/ext/scalar_constants.hpp>
 
+#include <DataStructure/Statistics.h>
+#include <DataStructure/Timer.h>
+
 #include <iostream>
+
 
 namespace atcg
 {
+    Statistic<float> statistic_estimate("estimate");
+    Statistic<float> statistic_maximize("maximize");
+
     CoherentPointDrift::CoherentPointDrift(const std::shared_ptr<PointCloud>& source, const std::shared_ptr<PointCloud>& target, const double& w)
         :Registration::Registration(source, target), w(w)
     {
@@ -32,11 +39,22 @@ namespace atcg
             Eigen::VectorXd PX = Eigen::VectorXd::Zero(N);
             Eigen::VectorXd PY = Eigen::VectorXd::Zero(M);
 
-            estimate(PX, PY, var);
+            {
+                Timer timer;
+                estimate(PX, PY, var);
+                statistic_estimate.addSample(timer.elapsedMillis());
+            }
 
             old_var = var;
-            var = maximize(PY, PY);
+            {
+                Timer timer;
+                var = maximize(PY, PY);
+                statistic_maximize.addSample(timer.elapsedMillis());
+            }
         }
+
+        std::cout << statistic_estimate;
+        std::cout << statistic_maximize;
     }
 
     double CoherentPointDrift::initialize()
