@@ -47,16 +47,30 @@ namespace atcg
         T var() const;
 
         /**
-         * @brief Prints the mean and standard deviation of the underlying data 
+         * @brief Get the name 
          * 
-         * @param os The ostream
-         * @return The ostream
+         * @return The name
          */
-        std::ostream& operator<<(std::ostream& os);
+        std::string name() const;
     private:
         std::vector<T> _samples;
         std::string _name;
     };
+
+    /**
+     * @brief Prints the mean and standard deviation of the underlying data 
+     * 
+     * @param os The ostream
+     * @return The ostream
+     */
+    template<typename T>
+    std::ostream& operator<<(std::ostream& os, const Statistic<T>& statistic)
+    {
+        os << "Statistic for " << statistic.name() << ":\t";
+        os << statistic.mean() << "\t";
+        os << "( " << std::sqrt(statistic.var()) << " )\n";
+        return os;
+    }
 
     template<typename T>
     void Statistic<T>::addSample(const T& sample)
@@ -85,18 +99,16 @@ namespace atcg
         T m = mean();
         for(const T& sample : _samples)
         {
-            m += (sample - m) * (sample - m);
+            v += (sample - m) * (sample - m);
         }
 
         return v/static_cast<T>(_samples.size() - 1);
     }
 
     template<typename T>
-    std::ostream& Statistic<T>::operator<<(std::ostream& os)
+    std::string Statistic<T>::name() const
     {
-        os << "Statistic for " << _name << ":\t";
-        os << mean() << "\t";
-        os << "( " << std::sqrt(var()) << " )\n";
-        return os;
+        return _name;
     }
+    
 }
