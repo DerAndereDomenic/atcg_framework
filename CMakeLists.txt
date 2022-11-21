@@ -35,7 +35,8 @@ include_directories(atcg_lib/include
                     external/imgui
                     external/eigen
                     external/glm
-                    external/openmesh/src)
+                    external/openmesh/src
+                    external/nanoflann/include)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
