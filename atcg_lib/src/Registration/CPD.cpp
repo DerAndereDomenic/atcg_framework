@@ -101,7 +101,7 @@ namespace atcg
             }
         }*/
 
-        for(size_t n = 0; n < N; ++n)
+        /*for(size_t n = 0; n < N; ++n)
         {
             double Z = bias;
             for(size_t m = 0; m < M; ++m)
@@ -119,7 +119,35 @@ namespace atcg
                 PX(n) += P(m,n); //PT1
                 PY(m) += P(m,n); //P1
             }
+        }*/
+
+        Eigen::VectorXd Z = Eigen::VectorXd::Constant(N, bias);
+        for(size_t m = 0; m < M; ++m)
+        {
+            Eigen::Vector3d YV = Y.block<1,3>(m, 0);
+            YV = s*R*YV+t;
+
+            for(size_t n = 0; n < N; ++n)
+            {
+                P(m,n) = Pmn(X.block<1,3>(n,0), YV, var);
+                Z(n) += P(m,n);
+            }
         }
+
+        for(size_t m = 0; m < M; ++m)
+        {
+            for(size_t n = 0; n < N; ++n)
+            {
+                P(m,n) /= Z(n);
+                PX(n) += P(m,n); //PT1
+                PY(m) += P(m,n); //P1
+            }
+        }
+
+        //P.array().rowwise() /= Z.transpose().array();
+        //PX = P.rowwise().sum();
+        //PY = P.colwise().sum();
+
     }
 
     double CoherentPointDrift::Pmn(const Eigen::Vector3d& x, const Eigen::Vector3d& y, double var)
