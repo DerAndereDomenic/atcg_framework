@@ -35,6 +35,7 @@
 #include <DataStructure/Laplacian.h>
 #include <DataStructure/Timer.h>
 #include <DataStructure/PointCloud.h>
+#include <DataStructure/Statistics.h>
 
 //-------- Math -----------
 #include <Math/Functions.h>
