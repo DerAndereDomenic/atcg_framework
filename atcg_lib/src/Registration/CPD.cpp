@@ -80,47 +80,6 @@ namespace atcg
 
     void CoherentPointDrift::direct_optimization(Eigen::VectorXd& PX, Eigen::VectorXd& PY, double bias, double var)
     {
-        /*for(size_t m = 0; m < M; ++m)
-        {
-            double Z = bias;
-
-            Eigen::Vector3d YV = Y.block<1,3>(m, 0);
-            YV = s * R * YV + t;
-
-            for(size_t n = 0; n < N; ++n)
-            {
-                P(m,n) = Pmn(X.block<1,3>(n, 0), YV, var);
-                Z += P(m, n);
-            }
-
-            for(size_t n = 0; n < N; ++n)
-            {
-                P(m,n) /= Z;
-                PX(n) += P(m,n);
-                PY(m) += P(m,n);
-            }
-        }*/
-
-        /*for(size_t n = 0; n < N; ++n)
-        {
-            double Z = bias;
-            for(size_t m = 0; m < M; ++m)
-            {
-                Eigen::Vector3d YV = Y.block<1,3>(m, 0);
-                YV = s * R * YV + t;
-
-                P(m,n) = Pmn(X.block<1,3>(n,0), YV, var);
-                Z += P(m,n);
-            }
-
-            for(size_t m = 0; m < M; ++m)
-            {
-                P(m,n) /= Z;
-                PX(n) += P(m,n); //PT1
-                PY(m) += P(m,n); //P1
-            }
-        }*/
-
         Eigen::VectorXd Z = Eigen::VectorXd::Constant(N, bias);
         for(size_t m = 0; m < M; ++m)
         {
