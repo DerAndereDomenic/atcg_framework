@@ -271,7 +271,7 @@ namespace atcg
 
         glPointSize(s_renderer->impl->point_size);
 
-        glDrawArrays(GL_POINTS, 0, cloud->n_vertices());
+        glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(cloud->n_vertices()));
     }
 
     void Renderer::drawPoints(const std::shared_ptr<VertexArray>& vao, 

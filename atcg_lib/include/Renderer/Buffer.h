@@ -150,7 +150,7 @@ namespace atcg
          * 
          * @param size The size of be allocated on the GPU
          */
-        VertexBuffer(uint32_t size);
+        VertexBuffer(size_t size);
 
         /**
          * @brief Construct a new Vertex Buffer object
@@ -158,7 +158,7 @@ namespace atcg
          * @param data The data to fill the buffer with
          * @param size The size
          */
-        VertexBuffer(const void* data, uint32_t size);
+        VertexBuffer(const void* data, size_t size);
 
         /**
          * @brief Destroy the Vertex Buffer object

@@ -17,8 +17,8 @@ namespace atcg
             std::vector<std::string> split_string(const std::string& str, const char delimiter)
             {
                 std::vector<std::string> res;
-                auto start = 0u;
-                auto end = str.find(delimiter);
+                size_t start = 0u;
+                size_t end = str.find(delimiter);
                 while(end != std::string::npos)
                 {
                     res.push_back(str.substr(start, end - start));

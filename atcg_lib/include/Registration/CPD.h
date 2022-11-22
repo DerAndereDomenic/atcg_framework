@@ -31,6 +31,6 @@ namespace atcg
         double w = 0.0;
 
         RowMatrix P;
-        Eigen::JacobiSVD<RowMatrix> svd;
+        Eigen::JacobiSVD<RowMatrix, Eigen::ComputeFullU | Eigen::ComputeFullV> svd;
     };
 }

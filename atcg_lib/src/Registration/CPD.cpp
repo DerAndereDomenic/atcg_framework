@@ -130,7 +130,7 @@ namespace atcg
 
         RowMatrix A = XC.transpose() * P.transpose() * YC;
 
-        svd.compute(A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+        svd.compute(A);
         RowMatrix U = svd.matrixU();
         RowMatrix V = svd.matrixV();
 

@@ -110,7 +110,7 @@ namespace atcg
          * 
          * @returns The number of vertices
          */
-        inline uint32_t n_vertices() const { return _vertices.size(); }
+        inline size_t n_vertices() const { return _vertices.size(); }
         
         //Iterators
         std::vector<VertexHandle>::iterator vertices_begin() { return _vertices.begin(); }
@@ -136,7 +136,7 @@ namespace atcg
     template<class Traits>
     typename PointCloudT<Traits>::VertexHandle PointCloudT<Traits>::add_vertex(const PointCloudT<Traits>::Point& p)
     {
-        typename PointCloudT<Traits>::VertexHandle vh(_vertices.size());
+        typename PointCloudT<Traits>::VertexHandle vh(static_cast<int>(_vertices.size()));
         _vertices.push_back(vh);
         _normals.push_back(typename PointCloudT<Traits>::Normal{1,0,0});
         _colors.push_back(typename PointCloudT<Traits>::Color{0,0,0});

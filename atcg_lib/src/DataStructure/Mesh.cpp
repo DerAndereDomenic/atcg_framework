@@ -112,6 +112,9 @@ namespace atcg
                 return *he_it;
             }
         }
+
+        //This can not happen but compiler wants a return value for every code path.
+        return Mesh::HalfedgeHandle();
     }
 
     namespace IO
