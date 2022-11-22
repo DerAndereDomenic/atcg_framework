@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include <Registration/CPDBackendCPU.h>
+
 
 namespace atcg
 {
@@ -17,7 +19,7 @@ namespace atcg
     CoherentPointDrift::CoherentPointDrift(const std::shared_ptr<PointCloud>& source, const std::shared_ptr<PointCloud>& target, const double& w)
         :Registration::Registration(source, target), w(w)
     {
-
+        _backend = std::make_unique<CPDBackendCPU>(X,Y);
     }
 
     CoherentPointDrift::~CoherentPointDrift()
@@ -75,48 +77,7 @@ namespace atcg
     {
         double bias = std::pow(2.0 * glm::pi<double>() * var, 3.0/2.0) * w / (1.0 - w) * static_cast<double>(M) / static_cast<double>(N);
 
-        direct_optimization(PX, PY, bias, var);
-    }
-
-    void CoherentPointDrift::direct_optimization(Eigen::VectorXd& PX, Eigen::VectorXd& PY, double bias, double var)
-    {
-        Eigen::VectorXd Z = Eigen::VectorXd::Constant(N, bias);
-        for(size_t m = 0; m < M; ++m)
-        {
-            Eigen::Vector3d YV = Y.block<1,3>(m, 0);
-            YV = s*R*YV+t;
-
-            for(size_t n = 0; n < N; ++n)
-            {
-                P(m,n) = Pmn(X.block<1,3>(n,0), YV, var);
-                Z(n) += P(m,n);
-            }
-        }
-
-        for(size_t m = 0; m < M; ++m)
-        {
-            for(size_t n = 0; n < N; ++n)
-            {
-                P(m,n) /= Z(n);
-                PX(n) += P(m,n); //PT1
-                PY(m) += P(m,n); //P1
-            }
-        }
-
-        //P.array().rowwise() /= Z.transpose().array();
-        //PX = P.rowwise().sum();
-        //PY = P.colwise().sum();
-
-    }
-
-    double CoherentPointDrift::Pmn(const Eigen::Vector3d& x, const Eigen::Vector3d& y, double var)
-    {
-        return std::exp(-0.5f/var*(x-y).dot(x-y));
-    }
-
-    double CoherentPointDrift::Pmn(const double& L2S, double var)
-    {
-        return std::exp(-0.5f/var*L2S);
+        _backend->estimate(T, P, PX, PY, bias, var);
     }
 
     double CoherentPointDrift::maximize(Eigen::VectorXd& PX, Eigen::VectorXd& PY)
@@ -137,12 +98,12 @@ namespace atcg
         RowMatrix C = RowMatrix::Identity(3, 3);
         C(2, 2) = (U*V.transpose()).determinant();
 
-        R = U*C*V.transpose();
-        s = (A.transpose()*R).trace()/(YC.transpose()*PY.asDiagonal()*YC).trace();
+        T.R = U*C*V.transpose();
+        T.s = (A.transpose()*T.R).trace()/(YC.transpose()*PY.asDiagonal()*YC).trace();
 
-        double var = Np/3*((XC.transpose()*PX.asDiagonal()*XC).trace() - s*(A.transpose()*R).trace());
+        double var = Np/3*((XC.transpose()*PX.asDiagonal()*XC).trace() - T.s*(A.transpose()*T.R).trace());
 
-        t = uX - s*R*uY;
+        T.t = uX - T.s*T.R*uY;
 
         return var;
     }
@@ -156,7 +117,7 @@ namespace atcg
             p(0) = p_[0];
             p(1) = p_[1];
             p(2) = p_[2];
-            p = s * R * p + t;
+            p = T.s * T.R * p + T.t;
             cloud->set_point(*v_it, PointCloud::Point{p(0), p(1), p(2)}); 
         }
     }
