@@ -307,9 +307,9 @@ namespace atcg
         glm::ivec3 voxel = position2voxel(position);
 
         return (
-                abs(voxel.x) < _dim.num_voxels/2 &&
-                abs(voxel.y) < _dim.num_voxels/2 &&
-                abs(voxel.z) < _dim.num_voxels/2
+                static_cast<uint32_t>(std::abs(voxel.x)) < _dim.num_voxels/2 &&
+                static_cast<uint32_t>(std::abs(voxel.y)) < _dim.num_voxels/2 &&
+                static_cast<uint32_t>(std::abs(voxel.z)) < _dim.num_voxels/2
             );
 
     }

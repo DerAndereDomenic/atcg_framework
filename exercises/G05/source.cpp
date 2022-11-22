@@ -27,17 +27,17 @@ struct LaplaceUniform
             uint32_t i = e_it->v0().idx();
             uint32_t j = e_it->v1().idx();
 
-            edge_weights.emplace_back(i, j, 1.0);
-            edge_weights.emplace_back(j, i, 1.0);
-            edge_weights.emplace_back(i, i, -1.0);
-            edge_weights.emplace_back(j, j, -1.0);
+            edge_weights.emplace_back(i, j, T(1.0));
+            edge_weights.emplace_back(j, i, T(1.0));
+            edge_weights.emplace_back(i, i, T(-1.0));
+            edge_weights.emplace_back(j, j, T(-1.0));
         }
 
         std::vector<Eigen::Triplet<T>> vertex_weights;
 
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            vertex_weights.emplace_back(v_it->idx(), v_it->idx(), v_it->valence());
+            vertex_weights.emplace_back(v_it->idx(), v_it->idx(), T(v_it->valence()));
         }
 
         size_t N = mesh->n_vertices();
@@ -58,7 +58,7 @@ struct LaplaceCotan
 {
     T clampCotan(T v)
     {
-        const T bound = 19.1;
+        const T bound = T(19.1);
         return (v < -bound ? -bound : (v > bound ? bound : v));
     }
 
@@ -70,7 +70,7 @@ struct LaplaceCotan
         const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
         if(area > 1e-5)
             return clampCotan(d0.dot(d1) / area);
-        return 1e-5;
+        return T(1e-5);
     }
 
     atcg::Laplacian<T> calculate(const std::shared_ptr<atcg::Mesh>& mesh)
@@ -254,7 +254,7 @@ public:
             if(update)
             {
                 mesh->copy_all_kernel_properties(*default_mesh.get());
-                for(uint32_t n = 0; n < num_iterations; ++n)
+                for(int32_t n = 0; n < num_iterations; ++n)
                 {
                     if(use_cotan)
                     {

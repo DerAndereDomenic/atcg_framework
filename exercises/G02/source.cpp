@@ -309,9 +309,9 @@ public:
         uint32_t num_features = mesh->find_feature_edges();
         std::cout << "Found " << num_features << " feature edges\n";
         
-        uint32_t nv = mesh->n_vertices();
-        uint32_t ne = mesh->n_edges();
-        uint32_t nf = mesh->n_faces();
+        size_t nv = mesh->n_vertices();
+        size_t ne = mesh->n_edges();
+        size_t nf = mesh->n_faces();
 
         auto eend = mesh->edges_end();
         auto fend = mesh->faces_end();
@@ -451,7 +451,7 @@ public:
                 SDFUnion c1uc2uc3(&c1uc2, &c3);
 
                 SDFSphere s(glm::vec3(0), 1, glm::vec3(0,0,1));
-                SDFBox b(glm::vec3(0), glm::vec3(0.8), glm::vec3(1,0,0));
+                SDFBox b(glm::vec3(0), glm::vec3(0.8f), glm::vec3(1,0,0));
 
                 SDFIntersection sib(&b, &s);
 

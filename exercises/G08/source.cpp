@@ -271,7 +271,7 @@ public:
                 auto vh = *v_it;
                 auto heh = mesh->opposite_halfedge_handle(fh, vh);
                 atcg::Mesh::Point ei = mesh->point(mesh->to_vertex_handle(heh)) - mesh->point(mesh->from_vertex_handle(heh));
-                x += u[v_it->idx()] * (N % ei);
+                x += static_cast<float>(u[v_it->idx()]) * (N % ei);
             }
             x /= 2.0 * mesh->area(fh);
         }

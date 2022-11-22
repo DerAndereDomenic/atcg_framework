@@ -17,7 +17,7 @@ namespace atcg
         if (a < c) std::swap(a, c);
         if (b < c) std::swap(b, c);
 
-        double p = std::sqrt(std::abs((a + (b + c)) * (c - (a - b)) * (c + (a - b)) * (a + (b - c)))) / 4;
+        T p = std::sqrt(std::abs((a + (b + c)) * (c - (a - b)) * (c + (a - b)) * (a + (b - c)))) / 4;
         return p;
     }
 

@@ -20,7 +20,7 @@ struct LaplaceCotan
 {
     T clampCotan(T v)
     {
-        const T bound = 19.1;
+        const T bound = T(19.1);
         return (v < -bound ? -bound : (v > bound ? bound : v));
     }
 
@@ -32,7 +32,7 @@ struct LaplaceCotan
         const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
         if(area > 1e-5)
             return clampCotan(d0.dot(d1) / area);
-        return 1e-5;
+        return T(1e-5);
     }
 
     atcg::Laplacian<T> calculate(const std::shared_ptr<atcg::Mesh>& mesh)
@@ -195,8 +195,8 @@ public:
         float delta_large = 10.0f * cfl_timestep;
         float time = 500.0f;
 
-        int steps_small = time/delta_small;
-        int steps_large = time/delta_large;
+        int steps_small = static_cast<int>(time/delta_small);
+        int steps_large = static_cast<int>(time/delta_large);
 
         Eigen::VectorXf u_explicit_small = u0;
         Eigen::VectorXf u_explicit_large = u0;
@@ -205,7 +205,7 @@ public:
         {
             atcg::Timer timer;
 
-            for(uint32_t i = 0; i <= steps_large; ++i)
+            for(int32_t i = 0; i <= steps_large; ++i)
             {
                 u_explicit_large += delta_large * L * u_explicit_large;
             }
@@ -216,7 +216,7 @@ public:
         {
             atcg::Timer timer;
 
-            for(uint32_t i = 0; i <= steps_small; ++i)
+            for(int32_t i = 0; i <= steps_small; ++i)
             {
                 u_explicit_small += delta_small * L * u_explicit_small;
             }
@@ -233,7 +233,7 @@ public:
             Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
             solver.compute(identity - delta_large * L);
 
-            for(uint32_t i = 0; i <= steps_large; ++i)
+            for(int32_t i = 0; i <= steps_large; ++i)
             {
                 u_implict_large = solver.solve(u_implict_large);
             }

@@ -62,7 +62,7 @@ public:
                 atcg::Renderer::draw(it->first, atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
         }
 
-        glReadPixels(mouse_pos.x - search_radius / 2, mouse_pos.y - search_radius / 2, search_radius, search_radius, GL_DEPTH_COMPONENT, GL_FLOAT, depth_values.data());
+        glReadPixels(static_cast<int>(mouse_pos.x - search_radius / 2), static_cast<int>(mouse_pos.y - search_radius / 2), search_radius, search_radius, GL_DEPTH_COMPONENT, GL_FLOAT, depth_values.data());
         float min = 1.0f;
 
         for(float depth : depth_values)

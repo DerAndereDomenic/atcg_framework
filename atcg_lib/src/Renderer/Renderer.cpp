@@ -161,7 +161,7 @@ namespace atcg
         s_renderer->impl->screen_fbo->getColorAttachement()->use();
 
         const std::shared_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
-        glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
     }
 
     void Renderer::setClearColor(const glm::vec4& color)
@@ -219,7 +219,7 @@ namespace atcg
         const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
         if(ibo)
-            glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
@@ -245,7 +245,7 @@ namespace atcg
         const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
         if(ibo)
-            glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
@@ -296,7 +296,7 @@ namespace atcg
         glPointSize(s_renderer->impl->point_size);
 
         if(ibo)
-            glDrawElements(GL_POINTS, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+            glDrawElements(GL_POINTS, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
@@ -324,7 +324,7 @@ namespace atcg
         glPointSize(s_renderer->impl->point_size);
 
         if(ibo)
-            glDrawElements(GL_POINTS, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+            glDrawElements(GL_POINTS, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
@@ -349,7 +349,7 @@ namespace atcg
         const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
         if(ibo)
-            glDrawElements(GL_LINE_STRIP, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+            glDrawElements(GL_LINE_STRIP, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
@@ -375,7 +375,7 @@ namespace atcg
         const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
         if(ibo)
-            glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
         else
             std::cerr << "Missing IndexBuffer!\n";
     }
@@ -402,7 +402,7 @@ namespace atcg
         const std::shared_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
 
         if(ibo)
-            glDrawElements(GL_TRIANGLES, ibo->getCount(), GL_UNSIGNED_INT, (void*)0);
+            glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
         else
             std::cerr << "Missing IndexBuffer!\n";
     }

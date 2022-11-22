@@ -18,7 +18,7 @@ public:
 
     G09Layer(const std::string& name) : atcg::Layer(name) {}
 
-    std::vector<float> linspace(float a, float b, float steps)
+    std::vector<float> linspace(float a, float b, uint32_t steps)
     {
         float step_size = (b-a) / (steps - 1);
 
@@ -116,7 +116,7 @@ public:
         std::vector<float> X = linspace(-1,1,4);
         std::vector<float> Y = linspace(-1,1,4);
         std::vector<float> Z = {0.1f, 0.4f, -0.1f, 0.3f, 0.3f, 0.3f, 0.8f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.2f, 0.4f, 1.0f, 0.1f};
-        frequencies = {0.10,0.2,0.3,0.12,0.1,0.5,0.5,0.25,0.13,0.15,0.2,0.20,0.9,0.11,0.8,0.7};
+        frequencies = {0.10f,0.2f,0.3f,0.12f,0.1f,0.5f,0.5f,0.25f,0.13f,0.15f,0.2f,0.20f,0.9f,0.11f,0.8f,0.7f};
 
         for(uint32_t i = 0; i < Y.size(); ++i)
         {
@@ -143,7 +143,7 @@ public:
 
         for(uint32_t i = 0; i < control_polygon.size(); ++i)
         {
-            control_polygon[i][2] = std::sin(2.0f * M_PI * frequencies[i] * t);
+            control_polygon[i][2] = std::sin(2.0f * static_cast<float>(M_PI) * frequencies[i] * t);
         }
 
         control_polygon_mesh = triangulate(control_polygon);
