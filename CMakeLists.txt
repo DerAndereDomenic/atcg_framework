@@ -1,6 +1,8 @@
-cmake_minimum_required(VERSION "3.8")
+cmake_minimum_required(VERSION "3.18")
 
 project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
+
+option(ATCG_CUDA_BACKEND "Compile cuda backend" ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_C_STANDARD 99)
@@ -20,14 +22,26 @@ add_library(imgui STATIC "external/imgui/imgui.cpp"
                          "external/imgui/backends/imgui_impl_glfw.cpp"
                          "external/imgui/backends/imgui_impl_opengl3.cpp")
 
-file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "atcg_lib/**.c*"
-                                                         "atcg_lib/**.h*")
+if(ATCG_CUDA_BACKEND)
+    enable_language(CUDA)
+    file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "atcg_lib/**.c*"
+                                                             "atcg_lib/**.h*")
+else()
+    #Dont include .cu files
+    file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "atcg_lib/**.cpp"
+                                                             "atcg_lib/**.h")
+endif()
 
 add_library(atcg_lib STATIC "${atcg_lib_files}")
 
 target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
 target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
 target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
+
+if(ATCG_CUDA_BACKEND)
+    include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+    target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
+endif()
 
 include_directories(atcg_lib/include
                     external/glad/include
