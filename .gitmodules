@@ -13,3 +13,6 @@
 [submodule "external/nanoflann"]
 	path = external/nanoflann
 	url = git@github.com:jlblancoc/nanoflann.git
+[submodule "external/cutil"]
+	path = external/cutil
+	url = git@github.com:DerAndereDomenic/cutil.git
