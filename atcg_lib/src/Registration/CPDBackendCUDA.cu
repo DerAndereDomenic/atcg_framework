@@ -6,11 +6,6 @@ namespace atcg
 {
     namespace detail
     {
-        double Pmn(const Eigen::Vector3d& x, const Eigen::Vector3d& y, double var)
-        {
-            return std::exp(-0.5f/var*(x-y).dot(x-y));
-        }
-
         __global__ void fillP(double* X, double* Y, double* P, double* R, double* t, double* Z, double s, double var, uint32_t N, uint32_t M)
         {
             const size_t tid = cutil::globalThreadIndex();
@@ -63,7 +58,6 @@ namespace atcg
 
             auto [n,m] = cutil::index1Dto2D(tid, N);
 
-            //TODO: Normalize P
             atomicMul(&P[tid], 1.0/Z[n]);
             atomicAdd(&PX[n], P[tid]);
             atomicAdd(&PY[m], P[tid]);
@@ -154,25 +148,5 @@ namespace atcg
         cudaSafeCall(cudaMemcpy((void*)&P(0), (void*)(impl->devP), sizeof(double) * impl->N * impl->M, cudaMemcpyDeviceToHost));
         cudaSafeCall(cudaMemcpy((void*)&PX(0), (void*)(impl->devPX), sizeof(double) * impl->N, cudaMemcpyDeviceToHost));
         cudaSafeCall(cudaMemcpy((void*)&PY(0), (void*)(impl->devPY), sizeof(double) * impl->M, cudaMemcpyDeviceToHost));
-
-        //Eigen::VectorXd Z = Eigen::VectorXd::Zero(impl->N);
-        //cudaSafeCall(cudaMemcpy((void*)&Z(0), (void*)(impl->devZ), sizeof(double) * impl->N, cudaMemcpyDeviceToHost));
-        /*for(size_t m = 0; m < impl->M; ++m)
-        {
-            for(size_t n = 0; n < impl->N; ++n)
-            {
-                Z(n) += P(m,n);
-            }
-        }*/
-
-        /*for(size_t m = 0; m < impl->M; ++m)
-        {
-            for(size_t n = 0; n < impl->N; ++n)
-            {
-                P(m,n) = P(m,n)/Z(n);
-                PX(n) += P(m,n); //PT1
-                PY(m) += P(m,n); //P1
-            }
-        }*/
     }
 }
