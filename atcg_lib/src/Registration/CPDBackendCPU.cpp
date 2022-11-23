@@ -55,7 +55,7 @@ namespace atcg
         {
             for(size_t n = 0; n < impl->N; ++n)
             {
-                P(m,n) /= Z(n);
+                P(m,n) = P(m,n)/(Z(n) + 1e-12);
                 PX(n) += P(m,n); //PT1
                 PY(m) += P(m,n); //P1
             }

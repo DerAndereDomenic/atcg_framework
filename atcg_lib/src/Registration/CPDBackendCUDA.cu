@@ -29,24 +29,6 @@ namespace atcg
             atomicAdd(&Z[n], P[tid]);
         }
 
-        __device__ double atomicMul(double* address, double val)
-        {
-            unsigned long long int* address_as_ull =
-                                    (unsigned long long int*)address;
-            unsigned long long int old = *address_as_ull, assumed;
-
-            do {
-                assumed = old;
-                old = atomicCAS(address_as_ull, assumed,
-                                __double_as_longlong(val *
-                                    __longlong_as_double(assumed)));
-
-            // Note: uses integer comparison to avoid hang in case of NaN (since NaN != NaN)
-            } while (assumed != old);
-
-            return __longlong_as_double(old);
-        }
-
         __global__ void normalize(double* P, double* PX, double* PY, double* Z, uint32_t N, uint32_t M)
         {
             const size_t tid = cutil::globalThreadIndex();
@@ -58,7 +40,7 @@ namespace atcg
 
             auto [n,m] = cutil::index1Dto2D(tid, N);
 
-            atomicMul(&P[tid], 1.0/Z[n]);
+            P[tid] = P[tid]/(Z[n] + 1e-12);
             atomicAdd(&PX[n], P[tid]);
             atomicAdd(&PY[m], P[tid]);
         }

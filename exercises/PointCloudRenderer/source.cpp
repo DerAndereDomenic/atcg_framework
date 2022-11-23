@@ -142,7 +142,7 @@ public:
 
             if(ImGui::Button("Register"))
             {
-                registrator->solve(10, 0);
+                registrator->solve(30, 0);
                 std::cout << "Done!\n";
                 registrator->applyTransform(clouds[0].first);
                 clouds[0].first->uploadData();
