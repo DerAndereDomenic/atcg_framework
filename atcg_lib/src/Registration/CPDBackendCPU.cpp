@@ -21,7 +21,7 @@ namespace atcg
         return std::exp(-0.5f/var*(x-y).dot(x-y));
     }
 
-    CPDBackendCPU::CPDBackendCPU(const RowMatrix& X, const RowMatrix& Y)
+    CPDBackendCPU::CPDBackendCPU( RowMatrix& X,  RowMatrix& Y)
         :CPDBackend(X,Y)
     {
         impl = std::make_unique<Impl>();

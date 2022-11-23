@@ -5,10 +5,10 @@
 
 namespace atcg
 {
-    class CPDBackendCPU : public CPDBackend
+    class CPDBackendCUDA : public CPDBackend
     {
     public:
-        CPDBackendCPU( RowMatrix& X,  RowMatrix& Y);
+        CPDBackendCUDA( RowMatrix& X,  RowMatrix& Y);
 
         virtual void estimate(const Transformation& transform,
                               RowMatrix& P, 

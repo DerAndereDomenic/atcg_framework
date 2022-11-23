@@ -8,7 +8,7 @@ namespace atcg
     class CPDBackend
     {
     public:
-        CPDBackend(const RowMatrix& X, const RowMatrix& Y){}
+        CPDBackend( RowMatrix& X,  RowMatrix& Y){}
 
         virtual ~CPDBackend() {}
 
