@@ -46,6 +46,7 @@ if(ATCG_CUDA_BACKEND)
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     target_link_libraries(atcg_lib
                           cutil)
+    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
 endif()
 
 include_directories(atcg_lib/include
