@@ -31,16 +31,16 @@ public:
         sphere->uploadData();
 
         {
-            auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/cloud1.xyz");
-            //auto point_cloud = atcg::IO::read_pointcloud("res/suzanne_blender.obj");
+            //auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/cloud1.xyz");
+            auto point_cloud = atcg::IO::read_pointcloud("res/bunny.obj");
             point_cloud->uploadData();
             clouds.push_back(std::make_pair(point_cloud, true));
         }
 
         {
-            auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/cloud2.xyz");
-            //auto point_cloud = atcg::IO::read_pointcloud("res/suzanne_blender.obj");
-            //atcg::normalize(point_cloud);
+            //auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/cloud2.xyz");
+            auto point_cloud = atcg::IO::read_pointcloud("res/bunny.obj");
+            atcg::normalize(point_cloud);
             point_cloud->uploadData();
             clouds.push_back(std::make_pair(point_cloud, true));
         }

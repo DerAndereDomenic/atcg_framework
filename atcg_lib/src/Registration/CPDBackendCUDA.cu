@@ -2,6 +2,9 @@
 #include <Registration/CPDBackendCUDA.h>
 #include <cutil.h>
 
+#include <thrust/reduce.h>
+#include <thrust/transform_reduce.h>
+
 namespace atcg
 {
     namespace detail
@@ -130,5 +133,10 @@ namespace atcg
         cudaSafeCall(cudaMemcpy((void*)&P(0), (void*)(impl->devP), sizeof(double) * impl->N * impl->M, cudaMemcpyDeviceToHost));
         cudaSafeCall(cudaMemcpy((void*)&PX(0), (void*)(impl->devPX), sizeof(double) * impl->N, cudaMemcpyDeviceToHost));
         cudaSafeCall(cudaMemcpy((void*)&PY(0), (void*)(impl->devPY), sizeof(double) * impl->M, cudaMemcpyDeviceToHost));
+
+        //for(m -> M)
+        //double result = thrust::reduce(impl->devP, impl->devP + impl->N*impl->M, 0, thrust::plus());
+        //int m = 0;
+        //thrust::transform_reduce(thrust::device, thrust::counting_iterator<int>(0), thrust::constant_iterator<int>(impl->N), [&](int n){return impl->devP[m + n*impl->N];}, 0, thrust::plus());
     }
 }
