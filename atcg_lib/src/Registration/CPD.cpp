@@ -42,7 +42,6 @@ namespace atcg
             ++n;
             std::cout << "Iteration: " << n << "\n";
 
-            P = RowMatrix::Zero(M,N);
             Eigen::VectorXd PX = Eigen::VectorXd::Zero(N);
             Eigen::VectorXd PY = Eigen::VectorXd::Zero(M);
 
@@ -82,19 +81,20 @@ namespace atcg
     {
         double bias = std::pow(2.0 * glm::pi<double>() * var, 3.0/2.0) * w / (1.0 - w) * static_cast<double>(M) / static_cast<double>(N);
 
-        _backend->estimate(T, P, PX, PY, bias, var);
+        _backend->estimate(T, PX, PY, Np, bias, var);
     }
 
     double CoherentPointDrift::maximize(Eigen::VectorXd& PX, Eigen::VectorXd& PY)
     {
-        double Np = 1.0/P.sum();
         Eigen::Vector3d uX = X.transpose()*PX*Np;
         Eigen::Vector3d uY = Y.transpose()*PY*Np;
 
         RowMatrix XC = X.rowwise() - uX.transpose();
         RowMatrix YC = Y.rowwise() - uY.transpose();
 
-        RowMatrix A = XC.transpose() * P.transpose() * YC;
+        //RowMatrix A = XC.transpose() * P.transpose() * YC;
+        RowMatrix A;
+        _backend->maximize(XC, YC, A);
 
         svd.compute(A);
         RowMatrix U = svd.matrixU();

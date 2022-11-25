@@ -32,7 +32,7 @@ namespace atcg
             atomicAdd(&Z[n], P[tid]);
         }
 
-        __global__ void normalize(double* P, double* PX, double* PY, double* Z, uint32_t N, uint32_t M)
+        __global__ void normalize(double* P, double* PX, double* PY, double* Z, double* Np, uint32_t N, uint32_t M)
         {
             const size_t tid = cutil::globalThreadIndex();
 
@@ -46,6 +46,7 @@ namespace atcg
             P[tid] = P[tid]/(Z[n] + 1e-12);
             atomicAdd(&PX[n], P[tid]);
             atomicAdd(&PY[m], P[tid]);
+            atomicAdd(Np, P[tid]);
         }
     }
 
@@ -60,7 +61,10 @@ namespace atcg
         double* devX,* devY,* devP,* devZ;
         double* devR, * devT;
         double* devPX,* devPY;
+        double* devNp;
         uint32_t N,M;
+
+        RowMatrix P;
     };
 
     CPDBackendCUDA::Impl::~Impl()
@@ -73,6 +77,7 @@ namespace atcg
         cudaSafeCall(cudaFree(devZ));
         cudaSafeCall(cudaFree(devPX));
         cudaSafeCall(cudaFree(devPY));
+        cudaSafeCall(cudaFree(devNp));
     }
     
     CPDBackendCUDA::CPDBackendCUDA( RowMatrix& X,  RowMatrix& Y)
@@ -81,12 +86,14 @@ namespace atcg
         impl = std::make_unique<Impl>();
         impl->N = X.rows();
         impl->M = Y.rows();
+        impl->P = RowMatrix::Zero(impl->M, impl->N);
         cudaSafeCall(cudaMalloc((void**)&(impl->devX), sizeof(double) * impl->N * 3));
         cudaSafeCall(cudaMalloc((void**)&(impl->devY), sizeof(double) * impl->M * 3));
         cudaSafeCall(cudaMalloc((void**)&(impl->devP), sizeof(double) * impl->M * impl->N));
         cudaSafeCall(cudaMalloc((void**)&(impl->devZ), sizeof(double) * impl->N));
         cudaSafeCall(cudaMalloc((void**)&(impl->devPX), sizeof(double) * impl->N));
         cudaSafeCall(cudaMalloc((void**)&(impl->devPY), sizeof(double) * impl->M));
+        cudaSafeCall(cudaMalloc((void**)&(impl->devNp), sizeof(double)));
         
 
         cudaSafeCall(cudaMalloc((void**)&(impl->devR), sizeof(double) * 3 * 3));
@@ -97,9 +104,9 @@ namespace atcg
     }
 
     void CPDBackendCUDA::estimate(const Transformation& transform,
-                                 RowMatrix& P, 
                                  Eigen::VectorXd& PX, 
                                  Eigen::VectorXd& PY, 
+                                 double& Np,
                                  double bias, 
                                  double var)
     {
@@ -108,6 +115,7 @@ namespace atcg
         cudaSafeCall(cudaMemset((void*)impl->devZ, bias, sizeof(double) * impl->N));
         cudaSafeCall(cudaMemset((void*)impl->devPX, 0, sizeof(double) * impl->N));
         cudaSafeCall(cudaMemset((void*)impl->devPY, 0, sizeof(double) * impl->M));
+        cudaSafeCall(cudaMemset((void*)impl->devNp, 0, sizeof(double)));
 
         cutil::KernelSize config = cutil::configureKernel(impl->N * impl->M);
         detail::fillP<<<config.blocks, config.threads>>>(impl->devX,
@@ -126,17 +134,28 @@ namespace atcg
                                                              impl->devPX,
                                                              impl->devPY,
                                                              impl->devZ,
+                                                             impl->devNp,
                                                              impl->N,
                                                              impl->M);
         cutil::syncStream();
 
-        cudaSafeCall(cudaMemcpy((void*)&P(0), (void*)(impl->devP), sizeof(double) * impl->N * impl->M, cudaMemcpyDeviceToHost));
+        cudaSafeCall(cudaMemcpy((void*)&impl->P(0), (void*)(impl->devP), sizeof(double) * impl->N * impl->M, cudaMemcpyDeviceToHost));
         cudaSafeCall(cudaMemcpy((void*)&PX(0), (void*)(impl->devPX), sizeof(double) * impl->N, cudaMemcpyDeviceToHost));
         cudaSafeCall(cudaMemcpy((void*)&PY(0), (void*)(impl->devPY), sizeof(double) * impl->M, cudaMemcpyDeviceToHost));
+        cudaSafeCall(cudaMemcpy((void*)&Np, (void*)(impl->devNp), sizeof(double), cudaMemcpyDeviceToHost));
+
+        Np = 1.0/Np;
 
         //for(m -> M)
         //double result = thrust::reduce(impl->devP, impl->devP + impl->N*impl->M, 0, thrust::plus());
         //int m = 0;
         //thrust::transform_reduce(thrust::device, thrust::counting_iterator<int>(0), thrust::constant_iterator<int>(impl->N), [&](int n){return impl->devP[m + n*impl->N];}, 0, thrust::plus());
+    }
+
+    void CPDBackendCUDA::maximize(const RowMatrix& XC,
+                                  const RowMatrix& YC,
+                                  RowMatrix& A)
+    {
+        A = XC.transpose() * impl->P.transpose() * YC;
     }
 }

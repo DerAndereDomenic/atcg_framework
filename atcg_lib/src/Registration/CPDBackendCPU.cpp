@@ -11,6 +11,7 @@ namespace atcg
         ~Impl() {};
 
         RowMatrix X,Y;
+        RowMatrix P;
         uint32_t N,M;
 
         double Pmn(const Eigen::Vector3d& x, const Eigen::Vector3d& y, double var);
@@ -29,12 +30,13 @@ namespace atcg
         impl->Y = Y;
         impl->N = X.rows();
         impl->M = Y.rows();
+        impl->P = RowMatrix::Zero(impl->M,impl->N);
     }
 
     void CPDBackendCPU::estimate(const Transformation& transform,
-                                 RowMatrix& P, 
                                  Eigen::VectorXd& PX, 
                                  Eigen::VectorXd& PY, 
+                                 double& Np,
                                  double bias, 
                                  double var)
     {
@@ -46,8 +48,8 @@ namespace atcg
 
             for(size_t n = 0; n < impl->N; ++n)
             {
-                P(m,n) = impl->Pmn(impl->X.block<1,3>(n,0), YV, var);
-                Z(n) += P(m,n);
+                impl->P(m,n) = impl->Pmn(impl->X.block<1,3>(n,0), YV, var);
+                Z(n) += impl->P(m,n);
             }
         }
 
@@ -55,10 +57,19 @@ namespace atcg
         {
             for(size_t n = 0; n < impl->N; ++n)
             {
-                P(m,n) = P(m,n)/(Z(n) + 1e-12);
-                PX(n) += P(m,n); //PT1
-                PY(m) += P(m,n); //P1
+                impl->P(m,n) = impl->P(m,n)/(Z(n) + 1e-12);
+                PX(n) += impl->P(m,n); //PT1
+                PY(m) += impl->P(m,n); //P1
             }
         }
+
+        Np = 1.0/impl->P.sum();
+    }
+
+    void CPDBackendCPU::maximize(const RowMatrix& XC,
+                                 const RowMatrix& YC,
+                                RowMatrix& A)
+    {
+        A = XC.transpose() * impl->P.transpose() * YC;
     }
 }

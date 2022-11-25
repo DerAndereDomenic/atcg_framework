@@ -24,8 +24,8 @@ namespace atcg
         Transformation T;
         
         double w = 0.0;
+        double Np = 0.0;
 
-        RowMatrix P;
         Eigen::JacobiSVD<RowMatrix, Eigen::ComputeFullU | Eigen::ComputeFullV> svd;
 
         std::unique_ptr<CPDBackend> _backend;
