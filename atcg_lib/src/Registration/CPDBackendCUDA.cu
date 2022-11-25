@@ -1,14 +1,47 @@
-//#define EIGEN_NO_CUDA
+#define EIGEN_NO_CUDA
 #include <Registration/CPDBackendCUDA.h>
 #include <cutil.h>
 
 #include <thrust/reduce.h>
 #include <thrust/transform_reduce.h>
 
+#include <DataStructure/Timer.h>
+#include <DataStructure/Statistics.h>
+
 namespace atcg
 {
     namespace detail
     {
+        struct Pmn
+        {
+            double* X;
+            double* Y;
+            double* R;
+            double* t;
+            double s;
+            double var;
+            uint32_t n;
+
+            Pmn(double* X, double* Y, double* R, double* t, double s, double var, uint32_t n)
+                :X(X),Y(Y),R(R),t(t),s(s),var(var), n(n)
+            {}
+
+            __device__
+            inline double operator()(uint32_t m)
+            {
+                double* x = X + 3*n;
+                double* y = Y + 3*m;
+
+                double d[3];
+
+                d[0] = s*(R[0 + 0*3] * y[0] + R[0 + 1*3] * y[1] + R[0 + 2*3] * y[2]) + t[0] - x[0];
+                d[1] = s*(R[1 + 0*3] * y[0] + R[1 + 1*3] * y[1] + R[1 + 2*3] * y[2]) + t[1] - x[1];
+                d[2] = s*(R[2 + 0*3] * y[0] + R[2 + 1*3] * y[1] + R[2 + 2*3] * y[2]) + t[2] - x[2];
+
+                return std::exp(-0.5f/var * (d[0]*d[0] + d[1]*d[1] + d[2]*d[2]));
+            }
+        };
+
         __global__ void fillP(double* X, double* Y, double* P, double* R, double* t, double* Z, double s, double var, uint32_t N, uint32_t M)
         {
             const size_t tid = cutil::globalThreadIndex();
@@ -146,6 +179,19 @@ namespace atcg
 
         Np = 1.0/Np;
 
+        /*Eigen::VectorXd Z(impl->N);
+        Statistic<float> stats("thrust");
+        for(uint32_t n = 0; n < impl->N; ++n)
+        {
+            Timer t;
+            Z[n] = thrust::transform_reduce(thrust::device,
+                                            thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(impl->M),
+                                            detail::Pmn(impl->devX, impl->devY, impl->devR, impl->devT, transform.s, var, n),
+                                            0,
+                                            thrust::plus());
+            stats.addSample(t.elapsedMillis());
+        }
+        std::cout << stats;*/
         //for(m -> M)
         //double result = thrust::reduce(impl->devP, impl->devP + impl->N*impl->M, 0, thrust::plus());
         //int m = 0;
