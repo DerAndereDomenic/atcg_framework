@@ -129,6 +129,43 @@ public:
         }
     }
 
+    void circumcenter(const atcg::Mesh::Point& p1, const atcg::Mesh::Point& p2, const atcg::Mesh::Point& p3, double* barys)
+    {
+        double a = (p2 - p3).norm();
+        double b = (p3 - p1).norm();
+        double c = (p1 - p2).norm();
+        barys[0] = a*a * (b*b + c*c - a*a);
+        barys[1] = b*b * (c*c + a*a - b*b);
+        barys[2] = c*c * (a*a + b*b - c*c);
+        double sum = barys[0]+ barys[1] + barys[2];
+        barys[0] /= sum;
+        barys[1] /= sum;
+        barys[2] /= sum;
+    }
+
+    void computeVoronoiArea(const std::shared_ptr<atcg::Mesh>& mesh, const OpenMesh::VPropHandleT<double>& property_area)
+    {
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            double area = 0.0;
+            for(auto f_it = v_it->faces_ccw().begin(); f_it != v_it->faces_ccw().end(); ++f_it)
+            {
+                double face_area = mesh->calc_face_area(*f_it);
+
+                auto vf_it = f_it->vertices().begin();
+                atcg::Mesh::VertexHandle face_vertices[3] = {*(vf_it++), *(vf_it++), *(vf_it++)};
+                
+                double barys[3];
+                circumcenter(mesh->point(face_vertices[0]), mesh->point(face_vertices[1]), mesh->point(face_vertices[2]), barys);
+
+                area += v_it->idx() == face_vertices[0].idx() ? 0 : barys[0] * face_area / 2.0;
+                area += v_it->idx() == face_vertices[1].idx() ? 0 : barys[1] * face_area / 2.0;
+                area += v_it->idx() == face_vertices[2].idx() ? 0 : barys[2] * face_area / 2.0;
+            }
+            mesh->property(property_area, *v_it) = area;
+        }
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -138,6 +175,27 @@ public:
 
         mesh = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh->request_vertex_colors();
+
+        OpenMesh::VPropHandleT<double> property_area;
+        mesh->add_property(property_area);
+
+        computeVoronoiArea(mesh, property_area);
+
+        double total_area = 0.;
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            total_area += mesh->property(property_area, *v_it);
+        }
+
+        std::cout << total_area << "\n";
+
+        total_area = 0.;
+        for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
+        {
+            total_area += mesh->calc_face_area(*f_it);
+        }
+
+        std::cout << total_area << "\n";
 
         mesh_explicit_large = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh_explicit_large->request_vertex_colors();
