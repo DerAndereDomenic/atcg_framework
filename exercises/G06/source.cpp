@@ -26,6 +26,9 @@ struct LaplaceCotan
 
     T triangleCotan(const atcg::TriMesh::Point& v0, const atcg::TriMesh::Point& v1, const atcg::TriMesh::Point& v2)
     {
+        /// Exercise: Compute the cotan values for a triangle
+        ///           Hint: cotan = <edge0,edge1>/Area(Triangle)
+        ///           You can use atcg::areaFromMetric<T> to compute the triangle area
         const auto d0 = v0 - v2;
         const auto d1 = v1 - v2;
         const auto d2 = v1 - v0;
@@ -41,6 +44,8 @@ struct LaplaceCotan
 
         for(auto e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
         {
+            /// Exercise: Compute the edge weights using cotan weights
+            ///           Remember to check for boundary edges and handle them accordingly
             uint32_t i = e_it->v0().idx();
             uint32_t j = e_it->v1().idx();
 
@@ -69,35 +74,6 @@ struct LaplaceCotan
             edge_weights.emplace_back(j, j, -weight);
         }
 
-        std::vector<Eigen::Triplet<T>> vertex_weights;
-
-        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
-        {
-            T weight = 0;
-
-            for(const auto& e : v_it->edges())
-            {
-                const auto h0 = e.h0();
-                const auto h1 = e.h1();
-
-                const auto p0 = h0.to();
-                const auto p1 = h1.to();
-
-                if(!mesh->is_boundary(h0))
-                {
-                    const auto p2 = h0.next().to();
-                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
-                }
-
-                if(!mesh->is_boundary(h1))
-                {
-                    const auto p2 = h1.next().to();
-                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
-                }
-            }
-            vertex_weights.emplace_back(v_it->idx(), v_it->idx(), weight);
-        }
-
         size_t N = mesh->n_vertices();
 
         atcg::Laplacian<T> laplace;
@@ -105,7 +81,8 @@ struct LaplaceCotan
         laplace.M.resize(N, N);
 
         laplace.S.setFromTriplets(edge_weights.begin(), edge_weights.end());
-        laplace.M.setFromTriplets(vertex_weights.begin(), vertex_weights.end());
+        /// Exercise: Set M = |diagonal(S)|
+        laplace.M = laplace.S.diagonal().cwiseAbs().asDiagonal();
 
         return laplace;
     }
@@ -129,43 +106,6 @@ public:
         }
     }
 
-    void circumcenter(const atcg::Mesh::Point& p1, const atcg::Mesh::Point& p2, const atcg::Mesh::Point& p3, double* barys)
-    {
-        double a = (p2 - p3).norm();
-        double b = (p3 - p1).norm();
-        double c = (p1 - p2).norm();
-        barys[0] = a*a * (b*b + c*c - a*a);
-        barys[1] = b*b * (c*c + a*a - b*b);
-        barys[2] = c*c * (a*a + b*b - c*c);
-        double sum = barys[0]+ barys[1] + barys[2];
-        barys[0] /= sum;
-        barys[1] /= sum;
-        barys[2] /= sum;
-    }
-
-    void computeVoronoiArea(const std::shared_ptr<atcg::Mesh>& mesh, const OpenMesh::VPropHandleT<double>& property_area)
-    {
-        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
-        {
-            double area = 0.0;
-            for(auto f_it = v_it->faces_ccw().begin(); f_it != v_it->faces_ccw().end(); ++f_it)
-            {
-                double face_area = mesh->calc_face_area(*f_it);
-
-                auto vf_it = f_it->vertices().begin();
-                atcg::Mesh::VertexHandle face_vertices[3] = {*(vf_it++), *(vf_it++), *(vf_it++)};
-                
-                double barys[3];
-                circumcenter(mesh->point(face_vertices[0]), mesh->point(face_vertices[1]), mesh->point(face_vertices[2]), barys);
-
-                area += v_it->idx() == face_vertices[0].idx() ? 0 : barys[0] * face_area / 2.0;
-                area += v_it->idx() == face_vertices[1].idx() ? 0 : barys[1] * face_area / 2.0;
-                area += v_it->idx() == face_vertices[2].idx() ? 0 : barys[2] * face_area / 2.0;
-            }
-            mesh->property(property_area, *v_it) = area;
-        }
-    }
-
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -176,27 +116,6 @@ public:
         mesh = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh->request_vertex_colors();
 
-        OpenMesh::VPropHandleT<double> property_area;
-        mesh->add_property(property_area);
-
-        computeVoronoiArea(mesh, property_area);
-
-        double total_area = 0.;
-        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
-        {
-            total_area += mesh->property(property_area, *v_it);
-        }
-
-        std::cout << total_area << "\n";
-
-        total_area = 0.;
-        for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
-        {
-            total_area += mesh->calc_face_area(*f_it);
-        }
-
-        std::cout << total_area << "\n";
-
         mesh_explicit_large = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh_explicit_large->request_vertex_colors();
 
@@ -206,36 +125,22 @@ public:
         mesh_implicit_large = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh_implicit_large->request_vertex_colors();
 
-        int start_idx = 0;
-        double min_dist = std::numeric_limits<double>::infinity();
-        for(auto vh : mesh->vertices())
-        {
-            double dist = mesh->point(vh).norm();
-            if(dist < min_dist)
-            {
-                start_idx = vh.idx();
-                min_dist = dist;
-            }
-        }
-
-        int end_idx = 0;
-        double max_dist = -std::numeric_limits<double>::infinity();
-        for(auto vh : mesh->vertices())
-        {
-            double dist = mesh->point(vh)[1];
-            if(dist > max_dist)
-            {
-                end_idx = vh.idx();
-                max_dist = dist;
-            }
-        }
-
         laplacian = LaplaceCotan<double>().calculate(mesh);
 
         Eigen::SparseMatrix<double> L = laplacian.M.cwiseInverse() * laplacian.S;
 
+        std::cout << "If S is correct, this number should be near zero\n";
+        Eigen::SparseMatrix<double> St = laplacian.S.transpose();
+        double error = (St-laplacian.S).norm();
+        std::cout << error << "\n";
+
+        std::cout << "If your laplacian is correct, this number should be near zero\n";
+        std::cout << (L*Eigen::VectorXd::Ones(mesh->n_vertices())).sum() << "\n";
+
         Eigen::VectorXd u0(mesh->n_vertices());
         u0.setZero();
+        int start_idx = 1892;
+        int end_idx = 1108;
         u0[start_idx] = 1.0;
         u0[end_idx] = -1.0;
 
@@ -263,6 +168,7 @@ public:
         {
             atcg::Timer timer;
 
+            ///Exercise: Compute explicit euler with large steps
             for(int32_t i = 0; i <= steps_large; ++i)
             {
                 u_explicit_large += delta_large * L * u_explicit_large;
@@ -274,6 +180,7 @@ public:
         {
             atcg::Timer timer;
 
+            ///Exercise: Compute explicit euler with large steps
             for(int32_t i = 0; i <= steps_small; ++i)
             {
                 u_explicit_small += delta_small * L * u_explicit_small;
@@ -288,6 +195,8 @@ public:
         {
             atcg::Timer timer;
 
+            ///Exercise: Compute implicit euler with large steps
+            ///          You can use Eigen::SparseLU<...> to compute the LU decompostion of L
             Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
             solver.compute(identity - delta_large * L);
 
