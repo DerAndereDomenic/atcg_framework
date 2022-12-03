@@ -87,7 +87,7 @@ public:
 
     std::vector<atcg::Mesh::Point> map_boundary_edges_to_circle(const std::vector<double>& edge_lengths)
     {
-        double total_length = std::accumulate(edge_lengths.begin(), edge_lengths.end(), 0.0f);
+        double total_length = std::accumulate(edge_lengths.begin(), edge_lengths.end(), 0.0);
 
         std::vector<atcg::Mesh::Point> circle;
         circle.push_back({1.0f, 0.0f, 0.0f});
@@ -120,7 +120,7 @@ public:
     {
         std::vector<Eigen::Triplet<double>> coefficients;
 
-        uint32_t n_faces = mesh->n_faces();
+        size_t n_faces = mesh->n_faces();
 
         for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
         {
@@ -322,7 +322,7 @@ public:
     virtual void onAttach() override
     {
         const auto& window = atcg::Application::get()->getWindow();
-        double aspect_ratio = (double)window->getWidth() / (double)window->getHeight();
+        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         mesh_original = atcg::IO::read_mesh("res/maxear.obj");

@@ -73,7 +73,7 @@ public:
         barys = new float[3]{0,0,0};
 
         const auto& window = atcg::Application::get()->getWindow();
-        camera = std::make_shared<atcg::OrthographicCamera>(0, static_cast<float>(window->getWidth()), 0, static_cast<float>(window->getHeight()));
+        camera = std::make_shared<atcg::OrthographicCamera>(0.f, static_cast<float>(window->getWidth()), 0.f, static_cast<float>(window->getHeight()));
     }
 
     // This gets called each frame
@@ -86,7 +86,7 @@ public:
 
         if(points.size() > 0)
         {
-            atcg::ShaderManager::getShader("flat")->setVec3("flat_color", glm::vec3(0.8));
+            atcg::ShaderManager::getShader("flat")->setVec3("flat_color", glm::vec3(0.8f));
             atcg::Renderer::draw(vao, atcg::ShaderManager::getShader("flat"), camera);
         }
 
@@ -202,7 +202,7 @@ public:
         vbo->setData(reinterpret_cast<float*>(points.data()), static_cast<uint32_t>(points.size() * 3 * sizeof(float)));
         size_t old_size = indices.size();
         indices.resize(points.size());
-        std::iota(indices.begin() + old_size, indices.end(), old_size);
+        std::iota(indices.begin() + old_size, indices.end(), static_cast<uint32_t>(old_size));
 
         ibo->setData(indices.data(), static_cast<uint32_t>(indices.size()));
         return true;

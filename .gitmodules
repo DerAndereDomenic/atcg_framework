@@ -10,3 +10,6 @@
 [submodule "external/glm"]
 	path = external/glm
 	url = git@github.com:g-truc/glm.git
+[submodule "external/nanoflann"]
+	path = external/nanoflann
+	url = git@github.com:jlblancoc/nanoflann.git

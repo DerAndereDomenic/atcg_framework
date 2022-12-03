@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <numeric>
+#include <Eigen/Dense>
 
 namespace atcg
 {
@@ -11,7 +12,7 @@ namespace atcg
     template<class Geometry>
     void normalize(const std::shared_ptr<Geometry>& geom)
     {
-        double max_scale = -std::numeric_limits<double>::infinity();
+        float max_scale = -std::numeric_limits<float>::infinity();
         typename Geometry::Point mean_point{0,0,0};
         for(auto v_it = geom->vertices_begin(); v_it != geom->vertices_end(); ++v_it)
         {
@@ -25,7 +26,7 @@ namespace atcg
 
             mean_point += geom->point(*v_it);
         }
-        mean_point /= static_cast<double>(geom->n_vertices());
+        mean_point /= static_cast<float>(geom->n_vertices());
 
         for(auto v_it = geom->vertices_begin(); v_it != geom->vertices_end(); ++v_it)
         {
@@ -33,3 +34,5 @@ namespace atcg
         }
     }
 }
+
+using RowMatrix = Eigen::Matrix<double, -1, -1, Eigen::RowMajor>;

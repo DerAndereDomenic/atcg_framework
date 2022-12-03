@@ -34,7 +34,7 @@ public:
         atcg::ShaderManager::addShaderFromName("hermite");
 
         const auto& window = atcg::Application::get()->getWindow();
-        camera = std::make_shared<atcg::OrthographicCamera>(0, static_cast<float>(window->getWidth()), 0, static_cast<float>(window->getHeight()));
+        camera = std::make_shared<atcg::OrthographicCamera>(0.0f, static_cast<float>(window->getWidth()), 0.0f, static_cast<float>(window->getHeight()));
     }
 
     //This function renders the curves by passing the points as uniform data and using the supplied shader
@@ -182,9 +182,9 @@ public:
         vbo->setData(reinterpret_cast<float*>(points.data()), static_cast<uint32_t>(points.size() * 3 * sizeof(float)));
         size_t old_size = indices.size();
         indices.resize(points.size());
-        std::iota(indices.begin() + old_size, indices.end(), old_size);
+        std::iota(indices.begin() + old_size, indices.end(), static_cast<uint32_t>(old_size));
 
-        ibo->setData(indices.data(), static_cast<uint32_t>(indices.size()));
+        ibo->setData(indices.data(), indices.size());
         return true;
     }
 

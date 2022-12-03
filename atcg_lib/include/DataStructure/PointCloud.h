@@ -4,6 +4,7 @@
 #include <OpenMesh/OpenMesh.h>
 #include <OpenMesh/Core/Mesh/Traits.hh>
 #include <Renderer/VertexArray.h>
+#include <Math/Utils.h>
 
 namespace atcg
 {
@@ -91,6 +92,13 @@ namespace atcg
         void uploadData();
 
         /**
+         * @brief Get the point cloud as Nx3 row matrix
+         * 
+         * @return The data points as matrix
+         */
+        RowMatrix asMatrix();
+
+        /**
          * @brief Get the Vertex Array object
          * 
          * @return std::shared_ptr<VertexArray> The vao
@@ -102,7 +110,7 @@ namespace atcg
          * 
          * @returns The number of vertices
          */
-        inline uint32_t n_vertices() const { return _vertices.size(); }
+        inline size_t n_vertices() const { return _vertices.size(); }
         
         //Iterators
         std::vector<VertexHandle>::iterator vertices_begin() { return _vertices.begin(); }
@@ -128,7 +136,7 @@ namespace atcg
     template<class Traits>
     typename PointCloudT<Traits>::VertexHandle PointCloudT<Traits>::add_vertex(const PointCloudT<Traits>::Point& p)
     {
-        typename PointCloudT<Traits>::VertexHandle vh(_vertices.size());
+        typename PointCloudT<Traits>::VertexHandle vh(static_cast<int>(_vertices.size()));
         _vertices.push_back(vh);
         _normals.push_back(typename PointCloudT<Traits>::Normal{1,0,0});
         _colors.push_back(typename PointCloudT<Traits>::Color{0,0,0});
@@ -205,6 +213,23 @@ namespace atcg
         });
 
         _vao->addVertexBuffer(vbo);
+    }
+
+    template<class Traits>
+    RowMatrix PointCloudT<Traits>::asMatrix()
+    {
+        RowMatrix S(n_vertices(), 3);
+        uint32_t i = 0;
+        for(auto vertex : _vertices)
+        {
+            OpenMesh::Vec3f pos = point(vertex);
+            S(i, 0) = static_cast<double>(pos[0]);
+            S(i, 1) = static_cast<double>(pos[1]);
+            S(i, 2) = static_cast<double>(pos[2]);
+            ++i;
+        }
+
+        return S;
     }
 
     using PointCloud = PointCloudT<>;

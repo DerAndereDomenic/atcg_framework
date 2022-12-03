@@ -150,7 +150,7 @@ namespace atcg
          * 
          * @param size The size of be allocated on the GPU
          */
-        VertexBuffer(uint32_t size);
+        VertexBuffer(size_t size);
 
         /**
          * @brief Construct a new Vertex Buffer object
@@ -158,7 +158,7 @@ namespace atcg
          * @param data The data to fill the buffer with
          * @param size The size
          */
-        VertexBuffer(const void* data, uint32_t size);
+        VertexBuffer(const void* data, size_t size);
 
         /**
          * @brief Destroy the Vertex Buffer object
@@ -176,7 +176,7 @@ namespace atcg
          * @param data The data
          * @param size The size
          */
-        void setData(const void* data, uint32_t size);
+        void setData(const void* data, size_t size);
 
         /**
          * @brief Get the Layout
@@ -213,14 +213,14 @@ namespace atcg
          * @param data The data
          * @param count The size
          */
-        IndexBuffer(const uint32_t* indices, uint32_t count);
+        IndexBuffer(const uint32_t* indices, size_t count);
 
         /**
          * @brief Construct a new Index Buffer object
          * 
          * @param count The size
          */
-        IndexBuffer(uint32_t count);
+        IndexBuffer(size_t count);
 
         /**
          * @brief Destroy the Index Buffer object
@@ -238,16 +238,16 @@ namespace atcg
          * @param data The data
          * @param size The count
          */
-        void setData(const uint32_t* data, uint32_t count);
+        void setData(const uint32_t* data, size_t count);
 
         /**
          * @brief Get the Count of objects
          * 
          * @return uint32_t The count
          */
-        inline uint32_t getCount() const {return _count;}
+        inline size_t getCount() const {return _count;}
     private:
         uint32_t _ID;
-        uint32_t _count;
+        size_t _count;
     };
 }

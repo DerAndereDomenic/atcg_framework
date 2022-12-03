@@ -23,6 +23,8 @@
 #include <Renderer/CameraController.h>
 #include <Renderer/Buffer.h>
 #include <Renderer/VertexArray.h>
+#include <Renderer/Texture.h>
+#include <Renderer/Framebuffer.h>
 
 //-------- OpenMesh -------
 //#include <OpenMesh/OpenMesh.h>
@@ -33,7 +35,12 @@
 #include <DataStructure/Laplacian.h>
 #include <DataStructure/Timer.h>
 #include <DataStructure/PointCloud.h>
+#include <DataStructure/Statistics.h>
 
 //-------- Math -----------
 #include <Math/Functions.h>
 #include <Math/Utils.h>
+
+//-------- Registration -----------
+#include <Registration/CPD.h>
+#include <Registration/NonRigidCPD.h>

@@ -13,7 +13,7 @@ namespace atcg
         _window = std::make_unique<Window>(WindowProps());
         _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
-        Renderer::init();
+        Renderer::init(_window->getWidth(), _window->getHeight());
 
         Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 
@@ -22,6 +22,7 @@ namespace atcg
         ShaderManager::addShaderFromName("edge");
         ShaderManager::addShaderFromName("circle");
         ShaderManager::addShaderFromName("grid");
+        ShaderManager::addShaderFromName("screen");
 
         s_instance = this;
 
@@ -71,10 +72,12 @@ namespace atcg
         {
             last_time = current_time;
 
+            Renderer::useScreenBuffer();
             for(Layer* layer : _layer_stack)
             {
                 layer->onUpdate(delta_time);
             }
+            Renderer::finishFrame();
 
             //First finish the main content of all layers before doing any imgui stuff
             _imgui_layer->begin();
@@ -109,7 +112,7 @@ namespace atcg
 
     bool Application::onWindowResize(WindowResizeEvent& e)
     {
-        Renderer::setViewport(0, 0, e.getWidth(), e.getHeight());
+        Renderer::resize(e.getWidth(), e.getHeight());
         return false;
     }
 }

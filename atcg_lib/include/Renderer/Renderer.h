@@ -22,8 +22,16 @@ namespace atcg
     public:
         /**
          * @brief Initializes the renderer (should not be called by the client!)
+         * 
+         * @param width The width
+         * @param height The height
          */
-        static void init();
+        static void init(uint32_t width, uint32_t height);
+
+        /**
+         * @brief Finished the currently drawn frame (should not be called by client!) 
+         */
+        static void finishFrame();
 
         /**
          * @brief Set the clear color
@@ -48,6 +56,19 @@ namespace atcg
          * @param height The height
          */
         static void setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height);
+
+        /**
+         * @brief Change the size of the renderer
+         * 
+         * @param width The width
+         * @param height The height
+         */
+        static void resize(const uint32_t& width, const uint32_t& height);
+
+        /**
+         * @brief Use the default screen fbo 
+         */
+        static void useScreenBuffer();
 
         /**
          * @brief Render a vao

@@ -14,6 +14,7 @@
 struct SDFVoxel
 {
     float sdf;
+    glm::vec3 color;
 };
 
 using SDFGrid = atcg::Grid<SDFVoxel>;
@@ -24,22 +25,159 @@ public:
 
     G02Layer(const std::string& name) : atcg::Layer(name) {}
 
-    float sdf_heart(const glm::vec3& p)
+    struct SDFResult
     {
-        float x = p.x;
-        float y = p.y;
-        float z = p.z;
-        return std::pow(x * x + 9. / 4. * y * y + z * z - 1, 3) - x * x * z * z * z - 9. / 80. * y * y * z * z * z; 
-    }
+        float sdf;
+        glm::vec3 color; 
+    };
 
-    void fillGrid(const std::shared_ptr<SDFGrid>& grid)
+    struct SDF
+    {
+        virtual SDFResult operator()(const glm::vec3& p) = 0;
+    };
+
+    struct SDFHeart : public SDF
+    {
+        virtual SDFResult operator()(const glm::vec3& p) override
+        {
+            float x = p.x;
+            float y = p.y;
+            float z = p.z;
+            return {std::pow(x * x + 9.f / 4.f * y * y + z * z - 1.f, 3.f) - x * x * z * z * z - 9.f / 80.f * y * y * z * z * z, glm::vec3(0,1,0)}; 
+        }
+    };
+
+    struct SDFSphere : public SDF
+    {
+        glm::vec3 position;
+        float radius;
+        glm::vec3 color;
+
+        SDFSphere(const glm::vec3& position, float radius, const glm::vec3& color=glm::vec3(1))
+            :position(position),
+             radius(radius),
+             color(color)
+        {
+        }
+
+        virtual SDFResult operator()(const glm::vec3& p) override
+        {
+            return {glm::length(p-position) - radius, color};
+        }
+    };
+
+    struct SDFBox : public SDF
+    {
+        glm::vec3 position;
+        glm::vec3 bound;
+        glm::vec3 color;
+
+        SDFBox(const glm::vec3& position, const glm::vec3& bound, const glm::vec3& color=glm::vec3(1))
+            :position(position),
+             bound(bound),
+             color(color)
+        {
+        }
+
+        float vmax(const glm::vec3& p)
+        {
+            return std::max(std::max(p.x, p.y), p.z);
+        }
+
+        virtual SDFResult operator()(const glm::vec3& p) override
+        {
+            return {vmax(glm::abs(p-position) - bound), color};
+        }
+    };
+
+    struct SDFCylinder : public SDF
+    {
+        glm::vec3 position;
+        float radius;
+        uint32_t axis;
+        glm::vec3 color;
+
+        SDFCylinder(const glm::vec3& position, float radius, uint32_t axis, const glm::vec3& color=glm::vec3(1))
+            :position(position),
+             radius(radius),
+             axis(axis),
+             color(color)
+        {
+        }
+
+        virtual SDFResult operator()(const glm::vec3& p) override
+        {
+            auto offset = p-position;
+            offset[axis] = 0;
+            return {glm::length(offset) - radius, color};
+        }
+    };
+
+    struct SDFUnion : public SDF
+    {
+        SDF* sdf1,* sdf2;
+        SDFUnion(SDF* sdf1, SDF* sdf2)
+            :sdf1(sdf1), sdf2(sdf2)
+        {
+        }
+
+        virtual SDFResult operator()(const glm::vec3& p) override
+        {
+            SDFResult res1 = (*sdf1)(p);
+            SDFResult res2 = (*sdf2)(p);
+            if(res1.sdf < res2.sdf)
+                return res1;
+            return res2;
+        }
+    };
+
+    struct SDFIntersection : public SDF
+    {
+        SDF* sdf1,* sdf2;
+        SDFIntersection(SDF* sdf1, SDF* sdf2)
+            :sdf1(sdf1), sdf2(sdf2)
+        {
+        }
+
+        virtual SDFResult operator()(const glm::vec3& p) override
+        {
+            SDFResult res1 = (*sdf1)(p);
+            SDFResult res2 = (*sdf2)(p);
+            if(res1.sdf > res2.sdf)
+                return res1;
+            return res2;
+        }
+    };
+
+    struct SDFDifference : public SDF
+    {
+        SDF* sdf1,* sdf2;
+        SDFDifference(SDF* sdf1, SDF* sdf2)
+            :sdf1(sdf1), sdf2(sdf2)
+        {
+        }
+
+        virtual SDFResult operator()(const glm::vec3& p) override
+        {
+            SDFResult res1 = (*sdf1)(p);
+            SDFResult res2 = (*sdf2)(p);
+            res2.sdf *= -1;
+            if(res1.sdf > res2.sdf)
+                return res1;
+            return res2;
+        }
+    };
+
+    void fillGrid(const std::shared_ptr<SDFGrid>& grid, SDF* sdf)
     {
         for(uint32_t i = 0; i < grid->voxels_per_volume(); ++i)
         {
             glm::ivec3 voxel = grid->index2voxel(i);
             glm::vec3 p = grid->voxel2position(voxel);
 
-            (*grid)[i].sdf = sdf_heart(p);
+            SDFResult res = (*sdf)(p);
+            (*grid)[i].sdf = res.sdf;
+            (*grid)[i].color = res.color;
         }
     }
 
@@ -82,6 +220,7 @@ public:
 
             //Get voxel information
             float sdf_values[8];
+            glm::vec3 color_values[8];
             bool all_valid = true;
             for(uint32_t i = 0; i < 8; ++i)
             {
@@ -93,6 +232,7 @@ public:
                 }
 
                 sdf_values[i] = (*grid)(voxel_positions[i]).sdf;
+                color_values[i] = (*grid)(voxel_positions[i]).color;
             }
 
             if(!all_valid)
@@ -121,17 +261,17 @@ public:
             glm::vec3 vertex_list[12];
             atcg::Mesh::VertexHandle v_handles[12];
 
-            atcg::Mesh::Color clr;
-            clr[0] = 255;
-            clr[1] = 0;
-            clr[2] = 0;
-
             #define CREATE_VERTEX_ON_EDGE(n, corner_i, corner_j) \
                 if(edge_table[cubeindex] & (1 << n)) \
                 {\
                     vertex_list[n] = interpolate_point(ISOVALUE, voxel_positions[corner_i], sdf_values[corner_i], voxel_positions[corner_j], sdf_values[corner_j]);\
                     v_handles[n] = mesh->add_vertex(atcg::Mesh::Point(vertex_list[n].x, vertex_list[n].y, vertex_list[n].z)); \
-                    mesh->set_color(v_handles[n], atcg::Mesh::Color(clr)); \
+                    glm::vec3 c = interpolate_point(ISOVALUE, color_values[corner_i], sdf_values[corner_i], color_values[corner_j], sdf_values[corner_j]);\
+                    atcg::Mesh::Color clr;\
+                    clr[0] = static_cast<uint8_t>(c.x*255.0f);\
+                    clr[1] = static_cast<uint8_t>(c.y*255.0f);\
+                    clr[2] = static_cast<uint8_t>(c.z*255.0f);\
+                    mesh->set_color(v_handles[n], clr); \
                 }
 
             CREATE_VERTEX_ON_EDGE( 0, 0, 1);
@@ -169,9 +309,9 @@ public:
         uint32_t num_features = mesh->find_feature_edges();
         std::cout << "Found " << num_features << " feature edges\n";
         
-        uint32_t nv = mesh->n_vertices();
-        uint32_t ne = mesh->n_edges();
-        uint32_t nf = mesh->n_faces();
+        size_t nv = mesh->n_vertices();
+        size_t ne = mesh->n_edges();
+        size_t nf = mesh->n_faces();
 
         auto eend = mesh->edges_end();
         auto fend = mesh->faces_end();
@@ -302,7 +442,22 @@ public:
             {
                 //Fill the grid with the sdf
                 mesh = std::make_shared<atcg::Mesh>();
-                fillGrid(grid);
+                
+                SDFCylinder c1(glm::vec3(0), 0.5f, 0, glm::vec3(0,1,0));
+                SDFCylinder c2(glm::vec3(0), 0.5f, 1, glm::vec3(0,1,0));
+                SDFCylinder c3(glm::vec3(0), 0.5f, 2, glm::vec3(0,1,0));
+
+                SDFUnion c1uc2(&c1, &c2);
+                SDFUnion c1uc2uc3(&c1uc2, &c3);
+
+                SDFSphere s(glm::vec3(0), 1, glm::vec3(0,0,1));
+                SDFBox b(glm::vec3(0), glm::vec3(0.8f), glm::vec3(1,0,0));
+
+                SDFIntersection sib(&b, &s);
+
+                SDFDifference sdf(&sib, &c1uc2uc3);
+
+                fillGrid(grid, &sdf);
 
                 marching_cubes(grid, mesh);
 

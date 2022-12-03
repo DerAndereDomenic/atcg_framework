@@ -17,8 +17,8 @@ namespace atcg
             std::vector<std::string> split_string(const std::string& str, const char delimiter)
             {
                 std::vector<std::string> res;
-                auto start = 0u;
-                auto end = str.find(delimiter);
+                size_t start = 0u;
+                size_t end = str.find(delimiter);
                 while(end != std::string::npos)
                 {
                     res.push_back(str.substr(start, end - start));
@@ -51,9 +51,9 @@ namespace atcg
                     if(substrings[i] == "X")
                         x = i;
                     else if(substrings[i] == "Y") //Convert between xyz and opengl coordinate system -> swap y and z
-                        z = i;
-                    else if(substrings[i] == "Z")
                         y = i;
+                    else if(substrings[i] == "Z")
+                        z = i;
                     else if(substrings[i] == "R")
                         r = i;
                     else if(substrings[i] == "G")
@@ -75,7 +75,7 @@ namespace atcg
                     auto data = split_string(line, ' ');
 
                     float x_ = std::stof(data[x]);
-                    float y_ = std::stof(data[y]);
+                    float y_ = -std::stof(data[y]);
                     float z_ = std::stof(data[z]);
                     auto vh = cloud->add_vertex(PointCloud::Point{x_,y_,z_});
 

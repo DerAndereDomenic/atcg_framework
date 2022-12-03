@@ -35,7 +35,8 @@ include_directories(atcg_lib/include
                     external/imgui
                     external/eigen
                     external/glm
-                    external/openmesh/src)
+                    external/openmesh/src
+                    external/nanoflann/include)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
@@ -56,6 +57,9 @@ function(ATCG_add_executable target_name_base target_name_var source)
         #stdc++
     )
 
+	if(MSVC)
+		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+	endif()
     target_compile_definitions(${target_name} PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
 endfunction()
 
