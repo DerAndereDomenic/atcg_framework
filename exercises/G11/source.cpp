@@ -169,7 +169,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        std::vector<float> U = linspace(-1,1,20);
+        std::vector<float> U = linspace(-1,1,100);
         std::vector<atcg::Mesh::Point> grid;
 
         for(float u : U)
@@ -206,8 +206,15 @@ public:
 
         Eigen::MatrixXf zb = z(boundary, Eigen::placeholders::all);
 
-        for (int i = 0; i < 20; ++i)
-            zb(i,2) = 1;
+        for(int i = 0; i < zb.rows(); ++i)
+        {
+            float u = zb(i,0);
+            float v = M_PI * zb(i,1);
+
+            zb(i,0) = u * std::cos(v);
+            zb(i,1) = u * std::sin(v);
+            zb(i,2) = v;
+        }
 
         Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
         solver.compute(Linin);
