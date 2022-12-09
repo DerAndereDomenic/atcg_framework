@@ -98,6 +98,9 @@ public:
         return mesh;
     }
 
+    /**
+     *  @brief Get the rows of a sparse matrx corresponding to the index vector
+     */
     Eigen::SparseMatrix<float> slice_rows(const Eigen::SparseMatrix<float>& M, const std::vector<int>& indices)
     {
         std::vector<Eigen::Triplet<float, int>> vals;
@@ -120,6 +123,9 @@ public:
         return res;
     }
 
+    /**
+     *  @brief Get the columns of a sparse matrx corresponding to the index vector
+     */
     Eigen::SparseMatrix<float> slice_cols(const Eigen::SparseMatrix<float>& M, const std::vector<int>& indices)
     {
         std::vector<Eigen::Triplet<float, int>> vals;
