@@ -100,14 +100,14 @@ public:
 
     Eigen::SparseMatrix<float> slice_rows(const Eigen::SparseMatrix<float>& M, const std::vector<int>& indices)
     {
-        std::vector<Eigen::Triplet<float>> vals;
+        std::vector<Eigen::Triplet<float, int>> vals;
         Eigen::SparseMatrix<float> Mt = M.transpose();
         int slice = 0;
         for(int index : indices)
         {
             for(Eigen::InnerIterator<Eigen::SparseMatrix<float>> it = Eigen::InnerIterator(Mt, index); it; ++it)
             {
-                vals.emplace_back(slice, it.row(), it.value());
+                vals.emplace_back(slice, (int)it.row(), it.value());
             }
             ++slice;
         }
@@ -122,13 +122,13 @@ public:
 
     Eigen::SparseMatrix<float> slice_cols(const Eigen::SparseMatrix<float>& M, const std::vector<int>& indices)
     {
-        std::vector<Eigen::Triplet<float>> vals;
+        std::vector<Eigen::Triplet<float, int>> vals;
         int slice = 0;
         for(int index : indices)
         {
             for(Eigen::InnerIterator<Eigen::SparseMatrix<float>> it = Eigen::InnerIterator(M, index); it; ++it)
             {
-                vals.emplace_back(it.row(), slice, it.value());
+                vals.emplace_back((int)it.row(), slice, it.value());
             }
             ++slice;
         }
