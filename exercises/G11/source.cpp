@@ -162,6 +162,45 @@ public:
         }
     }
 
+    void detect_boundary(const std::shared_ptr<atcg::Mesh>& mesh, std::vector<int>& boundary, std::vector<int>& interior)
+    {
+        for(auto v : mesh->vertices())
+        {
+            if(mesh->is_boundary(v))
+            {
+                boundary.push_back(v.idx());
+            }
+            else
+            {
+                interior.push_back(v.idx());
+            }
+        }
+    }
+
+    Eigen::MatrixXf solve_boundary_problem(const std::shared_ptr<atcg::Mesh>& mesh, 
+                                           const Eigen::MatrixXf& boundary_constraints, 
+                                           const std::vector<int>& boundary, 
+                                           const std::vector<int>& interior)
+    {
+        Eigen::MatrixXf z(mesh->n_vertices(), 3);
+
+        atcg::Laplacian<float> laplacian = LaplaceUniform<float>().calculate(mesh);
+        Eigen::SparseMatrix<float> L = laplacian.M.cwiseInverse() * laplacian.S;
+
+        Eigen::SparseMatrix<float> Lin = slice_rows(L, interior);
+        Eigen::SparseMatrix<float> Linin = slice_cols(Lin, interior);
+        Eigen::SparseMatrix<float> Linb = slice_cols(Lin, boundary);
+
+        Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
+        solver.compute(Linin);
+        Eigen::MatrixXf zi = solver.solve(-Linb*boundary_constraints);
+
+        z(interior, Eigen::placeholders::all) = zi;
+        z(boundary, Eigen::placeholders::all) = boundary_constraints;
+
+        return z;
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -181,31 +220,14 @@ public:
         }
 
         mesh = triangulate(grid);
-        atcg::Laplacian<float> laplacian = LaplaceUniform<float>().calculate(mesh);
-        Eigen::SparseMatrix<float> L = laplacian.M.cwiseInverse() * laplacian.S;
 
         std::vector<int> boundary;
         std::vector<int> interior;
-        for(auto v : mesh->vertices())
-        {
-            if(mesh->is_boundary(v))
-            {
-                boundary.push_back(v.idx());
-            }
-            else
-            {
-                interior.push_back(v.idx());
-            }
-        }
+        detect_boundary(mesh, boundary, interior);
 
-        Eigen::SparseMatrix<float> Lin = slice_rows(L, interior);
-        Eigen::SparseMatrix<float> Linin = slice_cols(Lin, interior);
-        Eigen::SparseMatrix<float> Linb = slice_cols(Lin, boundary);
-
+        //Create some boundary constraints
         Eigen::MatrixXf z = openmesh2eigen(grid);
-
         Eigen::MatrixXf zb = z(boundary, Eigen::placeholders::all);
-
         for(int i = 0; i < zb.rows(); ++i)
         {
             float u = zb(i,0);
@@ -216,12 +238,7 @@ public:
             zb(i,2) = v;
         }
 
-        Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
-        solver.compute(Linin);
-        Eigen::MatrixXf zi = solver.solve(-Linb*zb);
-
-        z(interior, Eigen::placeholders::all) = zi;
-        z(boundary, Eigen::placeholders::all) = zb;
+        z = solve_boundary_problem(mesh, zb, boundary, interior);
 
         updatePositions(mesh, z);
 
