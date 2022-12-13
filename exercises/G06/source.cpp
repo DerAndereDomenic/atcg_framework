@@ -34,7 +34,7 @@ struct LaplaceCotan
         const auto d2 = v1 - v0;
         const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
         if(area > 1e-5)
-            return clampCotan(d0.dot(d1) / area);
+            return clampCotan(d0.dot(d1) / area)/2.f;
         return T(1e-5);
     }
 
@@ -59,13 +59,13 @@ struct LaplaceCotan
             if(!mesh->is_boundary(h0))
             {
                 const auto p2 = h0.next().to();
-                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / 2.f;
             }
 
             if(!mesh->is_boundary(h1))
             {
                 const auto p2 = h1.next().to();
-                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / 2.f;
             }
 
             edge_weights.emplace_back(i, j, weight);
