@@ -33,7 +33,7 @@ struct LaplaceCotan
         const auto d2 = v1 - v0;
         const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
         if(area > 1e-5)
-            return clampCotan(d0.dot(d1) / area);
+            return clampCotan(d0.dot(d1) / area) / T(2.);
         return 1e-5;
     }
 
@@ -56,13 +56,13 @@ struct LaplaceCotan
             if(!mesh->is_boundary(h0))
             {
                 const auto p2 = h0.next().to();
-                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / T(2.);
             }
 
             if(!mesh->is_boundary(h1))
             {
                 const auto p2 = h1.next().to();
-                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / T(2.);
             }
 
             edge_weights.emplace_back(i, j, weight);
@@ -75,28 +75,7 @@ struct LaplaceCotan
 
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            T weight = 0;
-
-            for(const auto& e : v_it->edges())
-            {
-                const auto h0 = e.h0();
-                const auto h1 = e.h1();
-
-                const auto p0 = h0.to();
-                const auto p1 = h1.to();
-
-                if(!mesh->is_boundary(h0))
-                {
-                    const auto p2 = h0.next().to();
-                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
-                }
-
-                if(!mesh->is_boundary(h1))
-                {
-                    const auto p2 = h1.next().to();
-                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
-                }
-            }
+            T weight = mesh->area(*v_it) / T(3.);
             vertex_weights.emplace_back(v_it->idx(), v_it->idx(), weight);
         }
 
@@ -234,6 +213,7 @@ public:
         mesh->update_face_normals();
 
         atcg::Laplacian<double> laplacian = LaplaceCotan<double>().calculate(mesh);
+        Eigen::SparseMatrix<double> L = laplacian.M.cwiseInverse() * laplacian.S;
         Eigen::SparseMatrix<double> Lc = laplacian.S;
 
         Eigen::VectorXd u0 = Eigen::VectorXd::Zero(mesh->n_vertices());
@@ -242,20 +222,9 @@ public:
             u0[start_vh.idx()] = 1.0;
         }
 
-        Eigen::VectorXd vertex_areas(mesh->n_vertices());
-        vertex_areas.setZero();
-        for(auto vh : mesh->vertices())
-        {
-            vertex_areas[vh.idx()] = mesh->area(vh);
-        }
-
-        Eigen::SparseMatrix<double> A_tLc = -t * Lc;
-        assert(A_tLc.rows() == A_tLc.cols());
-        for(uint32_t i = 0; i < A_tLc.rows(); ++i)
-        {
-            A_tLc.coeffRef(i, i) += vertex_areas[i];
-        }
-        assert(A_tLc.isCompressed());
+        Eigen::SparseMatrix<double> Id(mesh->n_vertices(), mesh->n_vertices());
+        Id.setIdentity();
+        Eigen::SparseMatrix<double> A_tLc = Id - t * L;
 
         Eigen::SparseLU<Eigen::SparseMatrix<double>> luSolver;
         luSolver.compute(A_tLc);
@@ -268,8 +237,7 @@ public:
             const atcg::Mesh::Normal& N = mesh->normal(fh);
             for(auto v_it = mesh->cfv_ccwbegin(fh); v_it != mesh->cfv_ccwend(fh); ++v_it)
             {
-                auto vh = *v_it;
-                auto heh = mesh->opposite_halfedge_handle(fh, vh);
+                auto heh = mesh->opposite_halfedge_handle(fh, *v_it);
                 atcg::Mesh::Point ei = mesh->point(mesh->to_vertex_handle(heh)) - mesh->point(mesh->from_vertex_handle(heh));
                 x += static_cast<float>(u[v_it->idx()]) * (N % ei);
             }
