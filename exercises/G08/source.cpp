@@ -248,14 +248,13 @@ public:
         mesh = atcg::IO::read_mesh("res/bunny.obj");
         mesh->request_vertex_colors();
 
-        GeodesicDistanceProperty distance_property;
         mesh->add_property(distance_property);
        
         mesh->request_face_normals();
         mesh->update_face_normals();
 
         std::vector<VertexHandle> start_vhs;
-        start_vhs.push_back(mesh->vertex_handle(0));
+        start_vhs.push_back(mesh->vertex_handle(start_id));
         double t = 0.1;
 
         compute_matrices(mesh, t);
@@ -290,6 +289,7 @@ public:
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+            ImGui::MenuItem("Show Geodesics Settings", nullptr, &show_geodesics_settings);
 
             ImGui::EndMenu();
         }
@@ -303,6 +303,24 @@ public:
             ImGui::Checkbox("Render Vertices", &render_points);
             ImGui::Checkbox("Render Edges", &render_edges);
             ImGui::Checkbox("Render Mesh", &render_faces);
+            ImGui::End();
+        }
+
+        if(show_geodesics_settings)
+        {
+            ImGui::Begin("Geodesics");
+
+            if(ImGui::SliderInt("Start vertex", &start_id, 0, mesh->n_vertices()))
+            {
+                std::vector<VertexHandle> start_vhs;
+                start_vhs.push_back(mesh->vertex_handle(start_id));
+
+                compute_heat_geodesics(mesh, start_vhs, distance_property);
+
+                cosine_colorize_mesh(mesh, distance_property, 32);
+                mesh->uploadData();
+            }
+
             ImGui::End();
         }
 
@@ -323,10 +341,14 @@ private:
     Eigen::SparseLU<Eigen::SparseMatrix<double>> luAtLc;
     Eigen::SparseLU<Eigen::SparseMatrix<double>> luLc;
 
+    int start_id = 0;
+
     bool show_render_settings = false;
     bool render_faces = true;
     bool render_points = false;
     bool render_edges = false;
+    bool show_geodesics_settings = true;
+    GeodesicDistanceProperty distance_property;
 };
 
 class G08 : public atcg::Application
