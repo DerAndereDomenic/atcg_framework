@@ -310,7 +310,7 @@ public:
         {
             ImGui::Begin("Geodesics");
 
-            if(ImGui::SliderInt("Start vertex", &start_id, 0, mesh->n_vertices()))
+            if(ImGui::SliderInt("Start vertex", &start_id, 0, mesh->n_vertices() - 1))
             {
                 std::vector<VertexHandle> start_vhs;
                 start_vhs.push_back(mesh->vertex_handle(start_id));
@@ -341,7 +341,7 @@ private:
     Eigen::SparseLU<Eigen::SparseMatrix<double>> luAtLc;
     Eigen::SparseLU<Eigen::SparseMatrix<double>> luLc;
 
-    int start_id = 0;
+    int start_id = 3225;
 
     bool show_render_settings = false;
     bool render_faces = true;
