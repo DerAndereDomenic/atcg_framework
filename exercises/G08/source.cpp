@@ -152,56 +152,6 @@ public:
         }
     }
 
-    struct BoundaryCondition 
-    {
-		Eigen::Index index;
-		double value;
-		double diagonal_value = 1.0;
-	};
-
-    void apply_boundary_conditions(Eigen::SparseMatrix<double> &laplacian, Eigen::VectorXd &rhs, const std::vector<std::pair<Eigen::Index, double>> &boundary_conditions) 
-    {
-        std::vector<BoundaryCondition> bcs;
-        bcs.reserve(boundary_conditions.size());
-        std::transform(boundary_conditions.begin(), boundary_conditions.end(), std::back_inserter(bcs), [&](auto bc) { return BoundaryCondition{bc.first, bc.second}; });
-        apply_boundary_conditions(laplacian, rhs, bcs);
-    }
-
-    void apply_boundary_conditions(Eigen::SparseMatrix<double> &laplacian, Eigen::VectorXd &rhs, const std::vector<BoundaryCondition> &boundary_conditions) {
-        std::set<Eigen::Index> boundary_indices;
-        for(auto bc : boundary_conditions) 
-        {
-            boundary_indices.insert(bc.index);
-            rhs -= laplacian.col(bc.index) * bc.value;
-        }
-        for(auto bc : boundary_conditions) 
-        {
-            rhs[bc.index] = bc.value;
-        }
-        for(int k = 0; k < laplacian.outerSize(); ++k) 
-        {
-            for(Eigen::SparseMatrix<double>::InnerIterator it(laplacian, k); it; ++it) 
-            {
-                if(boundary_indices.find(it.col()) != boundary_indices.end() || boundary_indices.find(it.row()) != boundary_indices.end()) 
-                {
-                    if(it.row() == it.col()) 
-                    {
-                        // handled below
-                        // it.valueRef() = 1.0;
-                    } 
-                    else 
-                    {
-                        it.valueRef() = 0.0;
-                    }
-                }
-            }
-        }
-        for(auto bc : boundary_conditions)
-        {
-            laplacian.coeffRef(bc.index, bc.index) = bc.diagonal_value;
-        }
-    }
-
     void compute_heat_geodesics(const std::shared_ptr<atcg::Mesh>& mesh, 
                                 const std::vector<VertexHandle>& start_vhs,
                                 GeodesicDistanceProperty& distance_property,
@@ -277,10 +227,9 @@ public:
             div /= 2.0;
         }
 
-        std::vector<std::pair<Eigen::Index, double>> bc{std::make_pair(start_vhs[0].idx(), 0.0)};
-        apply_boundary_conditions(Lc, vertex_div_u, bc);
         luSolver.compute(Lc);
         Eigen::VectorXd phi = luSolver.solve(vertex_div_u);
+
         for(auto vh : mesh->vertices()) 
         {
             mesh->property(distance_property, vh) = phi[vh.idx()];
