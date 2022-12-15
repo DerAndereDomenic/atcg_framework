@@ -152,19 +152,27 @@ public:
         }
     }
 
-    void compute_heat_geodesics(const std::shared_ptr<atcg::Mesh>& mesh, 
-                                const std::vector<VertexHandle>& start_vhs,
-                                GeodesicDistanceProperty& distance_property,
-                                double t)
+    void compute_matrices(const std::shared_ptr<atcg::Mesh>& mesh,
+                          double t)
     {
-        if(start_vhs.empty())return;
-
-        mesh->request_face_normals();
-        mesh->update_face_normals();
-
         atcg::Laplacian<double> laplacian = LaplaceCotan<double>().calculate(mesh);
         Eigen::SparseMatrix<double> L = laplacian.M.cwiseInverse() * laplacian.S;
         Eigen::SparseMatrix<double> Lc = laplacian.S;
+
+        Eigen::SparseMatrix<double> Id(mesh->n_vertices(), mesh->n_vertices());
+        Id.setIdentity();
+        Eigen::SparseMatrix<double> A_tLc = Id - t * L;
+
+        luAtLc.compute(A_tLc);
+
+        luLc.compute(Lc);
+    }
+
+    void compute_heat_geodesics(const std::shared_ptr<atcg::Mesh>& mesh, 
+                                const std::vector<VertexHandle>& start_vhs,
+                                GeodesicDistanceProperty& distance_property)
+    {
+        if(start_vhs.empty())return;
 
         Eigen::VectorXd u0 = Eigen::VectorXd::Zero(mesh->n_vertices());
         for(auto start_vh : start_vhs)
@@ -172,13 +180,7 @@ public:
             u0[start_vh.idx()] = 1.0;
         }
 
-        Eigen::SparseMatrix<double> Id(mesh->n_vertices(), mesh->n_vertices());
-        Id.setIdentity();
-        Eigen::SparseMatrix<double> A_tLc = Id - t * L;
-
-        Eigen::SparseLU<Eigen::SparseMatrix<double>> luSolver;
-        luSolver.compute(A_tLc);
-        Eigen::VectorXd u = luSolver.solve(u0);
+        Eigen::VectorXd u = luAtLc.solve(u0);
 
         std::vector<OpenMesh::Vec3d> face_grad_u(mesh->n_faces(), OpenMesh::Vec3d(0,0,0));
         for(auto fh : mesh->faces())
@@ -227,15 +229,12 @@ public:
             div /= 2.0;
         }
 
-        luSolver.compute(Lc);
-        Eigen::VectorXd phi = luSolver.solve(vertex_div_u);
+        Eigen::VectorXd phi = luLc.solve(vertex_div_u);
 
         for(auto vh : mesh->vertices()) 
         {
             mesh->property(distance_property, vh) = phi[vh.idx()];
         }
-
-        mesh->release_face_normals();
 
     }
 
@@ -251,12 +250,16 @@ public:
 
         GeodesicDistanceProperty distance_property;
         mesh->add_property(distance_property);
+       
+        mesh->request_face_normals();
+        mesh->update_face_normals();
 
         std::vector<VertexHandle> start_vhs;
         start_vhs.push_back(mesh->vertex_handle(0));
         double t = 0.1;
 
-        compute_heat_geodesics(mesh, start_vhs, distance_property, t);
+        compute_matrices(mesh, t);
+        compute_heat_geodesics(mesh, start_vhs, distance_property);
 
         cosine_colorize_mesh(mesh, distance_property, 32);
 
@@ -316,6 +319,9 @@ public:
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
+
+    Eigen::SparseLU<Eigen::SparseMatrix<double>> luAtLc;
+    Eigen::SparseLU<Eigen::SparseMatrix<double>> luLc;
 
     bool show_render_settings = false;
     bool render_faces = true;
