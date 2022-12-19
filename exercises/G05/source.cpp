@@ -161,7 +161,7 @@ public:
         atcg::Laplacian<T> laplacian = calculator.calculate(mesh);
         Eigen::SparseMatrix<T> Id(mesh->n_vertices(), mesh->n_vertices());
         Id.setIdentity();
-        auto K = Id - laplacian.M.cwiseInverse() * laplacian.S;
+        auto K = laplacian.M.cwiseInverse() * laplacian.S;
         auto taubin_operator = (Id - mu * K) * (Id - lambda * K);
 
         Eigen::Matrix<T, -1, -1> v(mesh->n_vertices(), 3);
@@ -193,10 +193,10 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = atcg::IO::read_mesh("res/suzanne_blender.obj");
+        mesh = atcg::IO::read_mesh("res/bunny.obj");
         mesh->uploadData();
 
-        default_mesh = atcg::IO::read_mesh("res/suzanne_blender.obj");
+        default_mesh = atcg::IO::read_mesh("res/bunny.obj");
         default_mesh->uploadData();
     }
 
@@ -246,7 +246,7 @@ public:
         {
             ImGui::Begin("Taubin Smoothing", &show_taubin);
 
-            bool update = ImGui::Checkbox("Use Cotan weights", &use_cotan);
+            /*bool update = ImGui::Checkbox("Use Cotan weights", &use_cotan);
             update = ImGui::InputInt("Number iterations", &num_iterations) || update;
             update = ImGui::InputFloat("Lambda", &lambda) || update;
             update = ImGui::InputFloat("Mu", &mu) || update;
@@ -264,6 +264,35 @@ public:
                     {
                         taubin_smoothing<float, LaplaceUniform<float>>(mesh, LaplaceUniform<float>());
                     }
+                }
+            }*/
+
+            if(ImGui::Button("Iteration step"))
+            {
+                for(int i = 0; i < num_iterations_per_step; ++i)
+                {
+                    taubin_smoothing<float, LaplaceUniform<float>>(mesh, LaplaceUniform<float>());
+                }
+                iterations += num_iterations_per_step;
+            }
+
+            ImGui::InputInt("Iterations per step", &num_iterations_per_step);
+            ImGui::Text(("Iterations: " + std::to_string(iterations)).c_str());
+
+            if(show_smoothed)
+            {
+                if(ImGui::Button("View default"))
+                {
+                    show_smoothed = false;
+                    std::swap(default_mesh, mesh);
+                }
+            }
+            else
+            {
+                if(ImGui::Button("View smoothed"))
+                {
+                    show_smoothed = true;
+                    std::swap(mesh, default_mesh);
                 }
             }
 
@@ -307,12 +336,13 @@ private:
     bool render_points = false;
     bool render_edges = false;
     bool show_taubin = true;
-    bool use_cotan = false;
+    bool show_smoothed = true;
 
-    float mu = -0.11f;
-    float lambda = 0.1f;
+    float mu = -0.9f;
+    float lambda = 0.91f;
 
-    int num_iterations = 10;
+    int num_iterations_per_step = 1;
+    int iterations = 0;
 };
 
 class G05 : public atcg::Application
