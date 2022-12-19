@@ -32,12 +32,12 @@ namespace atcg
         _data.width = props.width;
         _data.height = props.height;
 
-        _window = glfwCreateWindow((int)props.width, (int)props.height, props.title.c_str(), nullptr, nullptr);
+        _window = (void*)glfwCreateWindow((int)props.width, (int)props.height, props.title.c_str(), nullptr, nullptr);
 
-        glfwSetWindowUserPointer(_window, &_data);
+        glfwSetWindowUserPointer((GLFWwindow*)_window, &_data);
 
         // Set GLFW callbacks
-		glfwSetWindowSizeCallback(_window, [](GLFWwindow* window, int width, int height)
+		glfwSetWindowSizeCallback((GLFWwindow*)_window, [](GLFWwindow* window, int width, int height)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			data.width = width;
@@ -47,14 +47,14 @@ namespace atcg
 			data.on_event(event);
 		});
 
-		glfwSetWindowCloseCallback(_window, [](GLFWwindow* window)
+		glfwSetWindowCloseCallback((GLFWwindow*)_window, [](GLFWwindow* window)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 			WindowCloseEvent event;
 			data.on_event(event);
 		});
 
-		glfwSetKeyCallback(_window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+		glfwSetKeyCallback((GLFWwindow*)_window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -81,7 +81,7 @@ namespace atcg
 			}
 		});
 
-		glfwSetCharCallback(_window, [](GLFWwindow* window, unsigned int keycode)
+		glfwSetCharCallback((GLFWwindow*)_window, [](GLFWwindow* window, unsigned int keycode)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -89,7 +89,7 @@ namespace atcg
 			data.on_event(event);
 		});
 
-		glfwSetMouseButtonCallback(_window, [](GLFWwindow* window, int button, int action, int mods)
+		glfwSetMouseButtonCallback((GLFWwindow*)_window, [](GLFWwindow* window, int button, int action, int mods)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -110,7 +110,7 @@ namespace atcg
 			}
 		});
 
-		glfwSetScrollCallback(_window, [](GLFWwindow* window, double xOffset, double yOffset)
+		glfwSetScrollCallback((GLFWwindow*)_window, [](GLFWwindow* window, double xOffset, double yOffset)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -118,7 +118,7 @@ namespace atcg
 			data.on_event(event);
 		});
 
-		glfwSetCursorPosCallback(_window, [](GLFWwindow* window, double xPos, double yPos)
+		glfwSetCursorPosCallback((GLFWwindow*)_window, [](GLFWwindow* window, double xPos, double yPos)
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -126,7 +126,7 @@ namespace atcg
 			data.on_event(event);
 		});
 
-		glfwSetDropCallback(_window, [](GLFWwindow* window, int path_count, const char* paths[])
+		glfwSetDropCallback((GLFWwindow*)_window, [](GLFWwindow* window, int path_count, const char* paths[])
 		{
 			WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
@@ -134,18 +134,18 @@ namespace atcg
 			data.on_event(event);
 		});
 
-        glfwMakeContextCurrent(_window);
+        glfwMakeContextCurrent((GLFWwindow*)_window);
     }
 
     Window::~Window()
     {
-        glfwDestroyWindow(_window);
+        glfwDestroyWindow((GLFWwindow*)_window);
     }
 
     void Window::onUpdate()
     {
         glfwPollEvents();
-        glfwSwapBuffers(_window);
+        glfwSwapBuffers((GLFWwindow*)_window);
     }
 
     void Window::setEventCallback(const EventCallbackFn& callback)
@@ -153,7 +153,7 @@ namespace atcg
         _data.on_event = callback;
     }
 
-    GLFWwindow* Window::getNativeWindow() const
+    void* Window::getNativeWindow() const
     {
         return _window;
     }

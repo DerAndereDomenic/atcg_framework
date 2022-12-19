@@ -5,8 +5,6 @@
 
 #include <Events/Event.h>
 
-struct GLFWwindow;
-
 namespace atcg
 {
     struct WindowProps
@@ -65,7 +63,7 @@ namespace atcg
          * 
          * @return GLFWwindow* The glfw window pointer
          */
-        GLFWwindow* getNativeWindow() const;
+        void* getNativeWindow() const;
 
         /**
          * @brief Get the Width object
@@ -91,6 +89,6 @@ namespace atcg
         };
 
         WindowData _data;
-        GLFWwindow* _window;
+        void* _window;
     };
 }

@@ -7,14 +7,14 @@ namespace atcg
     bool Input::isKeyPressed(const int32_t& key)
     {
         auto* window = Application::get()->getWindow()->getNativeWindow();
-        auto state = glfwGetKey(window, key);
+        auto state = glfwGetKey((GLFWwindow*)window, key);
         return state == GLFW_PRESS;
     }
 
     bool Input::isMouseButtonPressed(const int32_t& button)
     {
         auto* window = Application::get()->getWindow()->getNativeWindow();
-        auto state = glfwGetMouseButton(window, button);
+        auto state = glfwGetMouseButton((GLFWwindow*)window, button);
         return state == GLFW_PRESS;
     }
 
@@ -22,7 +22,7 @@ namespace atcg
     {
         auto* window = Application::get()->getWindow()->getNativeWindow();
         double xpos, ypos;
-        glfwGetCursorPos(window, &xpos, &ypos);
+        glfwGetCursorPos((GLFWwindow*)window, &xpos, &ypos);
 
         return glm::vec2(xpos, ypos);
     }

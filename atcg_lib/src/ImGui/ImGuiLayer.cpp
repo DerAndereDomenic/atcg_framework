@@ -35,7 +35,7 @@ namespace atcg
 			style.Colors[ImGuiCol_WindowBg].w = 1.0f;
 		}
 
-        GLFWwindow* window = Application::get()->getWindow()->getNativeWindow();
+        GLFWwindow* window = (GLFWwindow*)Application::get()->getWindow()->getNativeWindow();
 
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init("#version 330");
