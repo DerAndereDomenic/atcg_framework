@@ -33,7 +33,7 @@ struct LaplaceCotan
         const auto d2 = v1 - v0;
         const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
         if(area > 1e-5)
-            return clampCotan(d0.dot(d1) / area);
+            return clampCotan(d0.dot(d1) / area) / T(2.);
         return 1e-5;
     }
 
@@ -56,13 +56,13 @@ struct LaplaceCotan
             if(!mesh->is_boundary(h0))
             {
                 const auto p2 = h0.next().to();
-                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / T(2.);
             }
 
             if(!mesh->is_boundary(h1))
             {
                 const auto p2 = h1.next().to();
-                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / T(2.);
             }
 
             edge_weights.emplace_back(i, j, weight);
@@ -75,28 +75,7 @@ struct LaplaceCotan
 
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            T weight = 0;
-
-            for(const auto& e : v_it->edges())
-            {
-                const auto h0 = e.h0();
-                const auto h1 = e.h1();
-
-                const auto p0 = h0.to();
-                const auto p1 = h1.to();
-
-                if(!mesh->is_boundary(h0))
-                {
-                    const auto p2 = h0.next().to();
-                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
-                }
-
-                if(!mesh->is_boundary(h1))
-                {
-                    const auto p2 = h1.next().to();
-                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
-                }
-            }
+            T weight = mesh->area(*v_it) / T(3.);
             vertex_weights.emplace_back(v_it->idx(), v_it->idx(), weight);
         }
 
@@ -173,68 +152,27 @@ public:
         }
     }
 
-    struct BoundaryCondition 
+    void compute_matrices(const std::shared_ptr<atcg::Mesh>& mesh,
+                          double t)
     {
-		Eigen::Index index;
-		double value;
-		double diagonal_value = 1.0;
-	};
+        atcg::Laplacian<double> laplacian = LaplaceCotan<double>().calculate(mesh);
+        Eigen::SparseMatrix<double> L = laplacian.M.cwiseInverse() * laplacian.S;
+        Eigen::SparseMatrix<double> Lc = laplacian.S;
 
-    void apply_boundary_conditions(Eigen::SparseMatrix<double> &laplacian, Eigen::VectorXd &rhs, const std::vector<std::pair<Eigen::Index, double>> &boundary_conditions) 
-    {
-        std::vector<BoundaryCondition> bcs;
-        bcs.reserve(boundary_conditions.size());
-        std::transform(boundary_conditions.begin(), boundary_conditions.end(), std::back_inserter(bcs), [&](auto bc) { return BoundaryCondition{bc.first, bc.second}; });
-        apply_boundary_conditions(laplacian, rhs, bcs);
-    }
+        Eigen::SparseMatrix<double> Id(mesh->n_vertices(), mesh->n_vertices());
+        Id.setIdentity();
+        Eigen::SparseMatrix<double> A_tLc = Id - t * L;
 
-    void apply_boundary_conditions(Eigen::SparseMatrix<double> &laplacian, Eigen::VectorXd &rhs, const std::vector<BoundaryCondition> &boundary_conditions) {
-        std::set<Eigen::Index> boundary_indices;
-        for(auto bc : boundary_conditions) 
-        {
-            boundary_indices.insert(bc.index);
-            rhs -= laplacian.col(bc.index) * bc.value;
-        }
-        for(auto bc : boundary_conditions) 
-        {
-            rhs[bc.index] = bc.value;
-        }
-        for(int k = 0; k < laplacian.outerSize(); ++k) 
-        {
-            for(Eigen::SparseMatrix<double>::InnerIterator it(laplacian, k); it; ++it) 
-            {
-                if(boundary_indices.find(it.col()) != boundary_indices.end() || boundary_indices.find(it.row()) != boundary_indices.end()) 
-                {
-                    if(it.row() == it.col()) 
-                    {
-                        // handled below
-                        // it.valueRef() = 1.0;
-                    } 
-                    else 
-                    {
-                        it.valueRef() = 0.0;
-                    }
-                }
-            }
-        }
-        for(auto bc : boundary_conditions)
-        {
-            laplacian.coeffRef(bc.index, bc.index) = bc.diagonal_value;
-        }
+        luAtLc.compute(A_tLc);
+
+        luLc.compute(Lc);
     }
 
     void compute_heat_geodesics(const std::shared_ptr<atcg::Mesh>& mesh, 
                                 const std::vector<VertexHandle>& start_vhs,
-                                GeodesicDistanceProperty& distance_property,
-                                double t)
+                                GeodesicDistanceProperty& distance_property)
     {
         if(start_vhs.empty())return;
-
-        mesh->request_face_normals();
-        mesh->update_face_normals();
-
-        atcg::Laplacian<double> laplacian = LaplaceCotan<double>().calculate(mesh);
-        Eigen::SparseMatrix<double> Lc = laplacian.S;
 
         Eigen::VectorXd u0 = Eigen::VectorXd::Zero(mesh->n_vertices());
         for(auto start_vh : start_vhs)
@@ -242,24 +180,7 @@ public:
             u0[start_vh.idx()] = 1.0;
         }
 
-        Eigen::VectorXd vertex_areas(mesh->n_vertices());
-        vertex_areas.setZero();
-        for(auto vh : mesh->vertices())
-        {
-            vertex_areas[vh.idx()] = mesh->area(vh);
-        }
-
-        Eigen::SparseMatrix<double> A_tLc = -t * Lc;
-        assert(A_tLc.rows() == A_tLc.cols());
-        for(uint32_t i = 0; i < A_tLc.rows(); ++i)
-        {
-            A_tLc.coeffRef(i, i) += vertex_areas[i];
-        }
-        assert(A_tLc.isCompressed());
-
-        Eigen::SparseLU<Eigen::SparseMatrix<double>> luSolver;
-        luSolver.compute(A_tLc);
-        Eigen::VectorXd u = luSolver.solve(u0);
+        Eigen::VectorXd u = luAtLc.solve(u0);
 
         std::vector<OpenMesh::Vec3d> face_grad_u(mesh->n_faces(), OpenMesh::Vec3d(0,0,0));
         for(auto fh : mesh->faces())
@@ -268,8 +189,7 @@ public:
             const atcg::Mesh::Normal& N = mesh->normal(fh);
             for(auto v_it = mesh->cfv_ccwbegin(fh); v_it != mesh->cfv_ccwend(fh); ++v_it)
             {
-                auto vh = *v_it;
-                auto heh = mesh->opposite_halfedge_handle(fh, vh);
+                auto heh = mesh->opposite_halfedge_handle(fh, *v_it);
                 atcg::Mesh::Point ei = mesh->point(mesh->to_vertex_handle(heh)) - mesh->point(mesh->from_vertex_handle(heh));
                 x += static_cast<float>(u[v_it->idx()]) * (N % ei);
             }
@@ -309,16 +229,12 @@ public:
             div /= 2.0;
         }
 
-        std::vector<std::pair<Eigen::Index, double>> bc{std::make_pair(start_vhs[0].idx(), 0.0)};
-        apply_boundary_conditions(Lc, vertex_div_u, bc);
-        luSolver.compute(Lc);
-        Eigen::VectorXd phi = luSolver.solve(vertex_div_u);
+        Eigen::VectorXd phi = luLc.solve(vertex_div_u);
+
         for(auto vh : mesh->vertices()) 
         {
             mesh->property(distance_property, vh) = phi[vh.idx()];
         }
-
-        mesh->release_face_normals();
 
     }
 
@@ -332,14 +248,17 @@ public:
         mesh = atcg::IO::read_mesh("res/bunny.obj");
         mesh->request_vertex_colors();
 
-        GeodesicDistanceProperty distance_property;
         mesh->add_property(distance_property);
+       
+        mesh->request_face_normals();
+        mesh->update_face_normals();
 
         std::vector<VertexHandle> start_vhs;
-        start_vhs.push_back(mesh->vertex_handle(0));
+        start_vhs.push_back(mesh->vertex_handle(start_id));
         double t = 0.1;
 
-        compute_heat_geodesics(mesh, start_vhs, distance_property, t);
+        compute_matrices(mesh, t);
+        compute_heat_geodesics(mesh, start_vhs, distance_property);
 
         cosine_colorize_mesh(mesh, distance_property, 32);
 
@@ -370,6 +289,7 @@ public:
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+            ImGui::MenuItem("Show Geodesics Settings", nullptr, &show_geodesics_settings);
 
             ImGui::EndMenu();
         }
@@ -383,6 +303,24 @@ public:
             ImGui::Checkbox("Render Vertices", &render_points);
             ImGui::Checkbox("Render Edges", &render_edges);
             ImGui::Checkbox("Render Mesh", &render_faces);
+            ImGui::End();
+        }
+
+        if(show_geodesics_settings)
+        {
+            ImGui::Begin("Geodesics");
+
+            if(ImGui::SliderInt("Start vertex", &start_id, 0, mesh->n_vertices() - 1))
+            {
+                std::vector<VertexHandle> start_vhs;
+                start_vhs.push_back(mesh->vertex_handle(start_id));
+
+                compute_heat_geodesics(mesh, start_vhs, distance_property);
+
+                cosine_colorize_mesh(mesh, distance_property, 32);
+                mesh->uploadData();
+            }
+
             ImGui::End();
         }
 
@@ -400,10 +338,17 @@ private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
 
+    Eigen::SparseLU<Eigen::SparseMatrix<double>> luAtLc;
+    Eigen::SparseLU<Eigen::SparseMatrix<double>> luLc;
+
+    int start_id = 3225;
+
     bool show_render_settings = false;
     bool render_faces = true;
     bool render_points = false;
     bool render_edges = false;
+    bool show_geodesics_settings = true;
+    GeodesicDistanceProperty distance_property;
 };
 
 class G08 : public atcg::Application
