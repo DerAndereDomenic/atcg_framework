@@ -26,6 +26,9 @@ public:
 
         cube = atcg::IO::read_mesh("res/cube.obj");
         cube->uploadData();
+
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
     }
 
     // This gets called each frame
