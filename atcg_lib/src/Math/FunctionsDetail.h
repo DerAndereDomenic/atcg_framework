@@ -48,11 +48,11 @@ namespace atcg
         }
         else if(m < 0)
         {
-            return std::sqrt(T(2)) * detail::Klm<T>(l, std::abs(m)) * std::sin(std::abs(m) * phi) * Plm<T>(l, std::abs(m), std::cos(theta));
+            return std::sqrt(T(2)) * detail::Klm<T>(l, std::abs(m)) * std::sin(std::abs(m) * phi) * detail::Plm<T>(l, std::abs(m), std::cos(theta));
         }
         else
         {
-            return Klm<T>(l, 0) * Plm<T>(l, 0, std::cos(theta)); 
+            return detail::Klm<T>(l, 0) * detail::Plm<T>(l, 0, std::cos(theta)); 
         }
     }
 }
