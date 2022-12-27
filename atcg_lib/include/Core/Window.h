@@ -4,6 +4,7 @@
 #include <functional>
 
 #include <Events/Event.h>
+#include <Renderer/Context.h>
 
 namespace atcg
 {
@@ -90,5 +91,6 @@ namespace atcg
 
         WindowData _data;
         void* _window;
+        std::shared_ptr<Context> _context;
     };
 }

@@ -9,6 +9,8 @@ namespace atcg
 {
     void Context::init(void* window)
     {
+        glfwMakeContextCurrent((GLFWwindow*)window);
+
         if (!gladLoadGL())
         {
             std::cerr << "Error loading glad!\n";

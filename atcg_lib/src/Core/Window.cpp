@@ -34,6 +34,9 @@ namespace atcg
 
         _window = (void*)glfwCreateWindow((int)props.width, (int)props.height, props.title.c_str(), nullptr, nullptr);
 
+		_context = std::make_shared<Context>();
+		_context->init(_window);
+
         glfwSetWindowUserPointer((GLFWwindow*)_window, &_data);
 
         // Set GLFW callbacks
@@ -133,8 +136,6 @@ namespace atcg
 			FileDroppedEvent event(paths[0]);
 			data.on_event(event);
 		});
-
-        glfwMakeContextCurrent((GLFWwindow*)_window);
     }
 
     Window::~Window()
@@ -145,7 +146,7 @@ namespace atcg
     void Window::onUpdate()
     {
         glfwPollEvents();
-        glfwSwapBuffers((GLFWwindow*)_window);
+		_context->swapBuffers();
     }
 
     void Window::setEventCallback(const EventCallbackFn& callback)
