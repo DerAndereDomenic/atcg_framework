@@ -22,28 +22,62 @@ public:
     G12Layer(const std::string& name) : atcg::Layer(name) {}
 
     template<typename T>
-    struct LaplaceUniform
+    struct LaplaceCotan
     {
+        T clampCotan(T v)
+        {
+            const T bound = T(19.1);
+            return (v < -bound ? -bound : (v > bound ? bound : v));
+        }
+
+        T triangleCotan(const atcg::TriMesh::Point& v0, const atcg::TriMesh::Point& v1, const atcg::TriMesh::Point& v2)
+        {
+            /// Exercise: Compute the cotan values for a triangle
+            ///           Hint: cotan = <edge0,edge1>/Area(Triangle)
+            ///           You can use atcg::areaFromMetric<T> to compute the triangle area
+            const auto d0 = v0 - v2;
+            const auto d1 = v1 - v2;
+            const auto d2 = v1 - v0;
+            const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
+            if(area > 1e-5)
+                return clampCotan(d0.dot(d1) / area)/2.f;
+            return T(1e-5);
+        }
+
         atcg::Laplacian<T> calculate(const std::shared_ptr<atcg::Mesh>& mesh)
         {
             std::vector<Eigen::Triplet<T>> edge_weights;
 
             for(auto e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
             {
+                /// Exercise: Compute the edge weights using cotan weights
+                ///           Remember to check for boundary edges and handle them accordingly
                 uint32_t i = e_it->v0().idx();
                 uint32_t j = e_it->v1().idx();
 
-                edge_weights.emplace_back(i, j, T(1.0));
-                edge_weights.emplace_back(j, i, T(1.0));
-                edge_weights.emplace_back(i, i, T(-1.0));
-                edge_weights.emplace_back(j, j, T(-1.0));
-            }
+                const auto h0 = e_it->h0();
+                const auto h1 = e_it->h1();
 
-            std::vector<Eigen::Triplet<T>> vertex_weights;
+                const auto p0 = h0.to();
+                const auto p1 = h1.to();
 
-            for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
-            {
-                vertex_weights.emplace_back(v_it->idx(), v_it->idx(), T(v_it->valence()));
+                T weight = 0;
+                if(!mesh->is_boundary(h0))
+                {
+                    const auto p2 = h0.next().to();
+                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / 2.f;
+                }
+
+                if(!mesh->is_boundary(h1))
+                {
+                    const auto p2 = h1.next().to();
+                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / 2.f;
+                }
+
+                edge_weights.emplace_back(i, j, weight);
+                edge_weights.emplace_back(j, i, weight);
+                edge_weights.emplace_back(i, i, -weight);
+                edge_weights.emplace_back(j, j, -weight);
             }
 
             size_t N = mesh->n_vertices();
@@ -53,7 +87,8 @@ public:
             laplace.M.resize(N, N);
 
             laplace.S.setFromTriplets(edge_weights.begin(), edge_weights.end());
-            laplace.M.setFromTriplets(vertex_weights.begin(), vertex_weights.end());
+            /// Exercise: Set M = |diagonal(S)|
+            laplace.M = laplace.S.diagonal().cwiseAbs().asDiagonal();
 
             return laplace;
         }
@@ -126,11 +161,11 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = atcg::IO::read_mesh("res/armadillo.obj");
+        mesh = atcg::IO::read_mesh("res/suzanne_blender.obj");
         mesh->request_vertex_colors();
 
-        atcg::Laplacian laplace = LaplaceUniform<double>().calculate(mesh);
-        Eigen::SparseMatrix<double> L = /*laplace.M.cwiseInverse() */ laplace.S;
+        atcg::Laplacian laplace = LaplaceCotan<double>().calculate(mesh);
+        Eigen::SparseMatrix<double> L = laplace.M.cwiseInverse() * laplace.S;
 
         /*Eigen::EigenSolver<Eigen::MatrixXd> solver;
         solver.compute(L.toDense());
