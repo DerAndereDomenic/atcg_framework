@@ -25,12 +25,19 @@ add_library(imgui STATIC "external/imgui/imgui.cpp"
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
     set(CMAKE_CUDA_ARCHITECTURES 86)
+    set(BACKEND "cuda")
+    file (GLOB_RECURSE backend_files LIST_DIRECTORIES false "atcg_lib/platform/cuda/**.c*"
+                                                            "atcg_lib/platform/cuda/**.h")
+else()
+    set(BACKEND "cpu")
+    file (GLOB_RECURSE backend_files LIST_DIRECTORIES false "atcg_lib/platform/cpu/**.c*"
+                                                            "atcg_lib/platform/cpu/**.h")
 endif()
 
 file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "atcg_lib/src/**.c*"
                                                           "atcg_lib/include/**.h")
 
-add_library(atcg_lib STATIC "${atcg_lib_files}")
+add_library(atcg_lib STATIC "${atcg_lib_files}" "${backend_files}") 
 
 target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
 target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
@@ -43,6 +50,7 @@ if(ATCG_CUDA_BACKEND)
 endif()
 
 include_directories(atcg_lib/include
+                    atcg_lib/platform/${BACKEND}/include
                     external/glad/include
                     external/glfw/include
                     external/imgui
