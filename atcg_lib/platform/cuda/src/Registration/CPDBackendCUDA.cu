@@ -7,10 +7,71 @@
 #include <DataStructure/Timer.h>
 #include <DataStructure/Statistics.h>
 
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
+
+inline
+void check(cudaError_t error, char const* const func, const char* const file, int const line)
+{
+    if (error != cudaSuccess)
+    {
+        fprintf(stderr, "CUDA error at %s:%d code=%d(%s) \"%s\" \n", file, line,
+                static_cast<unsigned int>(error), cudaGetErrorString(error), func);
+    }
+}
+
+#ifdef _DEBUG
+#define cudaSafeCall(val) check((val), #val, __FILE__, __LINE__)
+#else
+#define cudaSafeCall(val) val
+#endif
+
 namespace atcg
 {
     namespace detail
     {
+        __device__
+        inline uint32_t
+        globalThreadIndex()
+        {
+            return blockIdx.x * blockDim.x + threadIdx.x;
+        }
+
+        __host__ __device__
+        inline thrust::pair<uint32_t, uint32_t>
+        index2pixel(const uint32_t& index, const uint32_t& width)
+        {
+            uint32_t y = index / width;
+            uint32_t x = index - width * y;
+            return thrust::make_pair(x, y);
+        }
+
+        struct KernelSize
+        {
+            uint32_t blocks;
+            uint32_t threads;
+            const uint32_t THREADS_PER_BLOCK = 128;
+        };
+
+        __host__
+        inline KernelSize
+        configure(const uint32_t& size)
+        {
+            KernelSize result;
+
+            result.threads = result.THREADS_PER_BLOCK;
+
+
+            result.blocks = size / result.THREADS_PER_BLOCK + 1;
+
+            if (size % result.THREADS_PER_BLOCK == 0)
+            {
+                ++result.blocks;
+            }
+
+            return result;
+        }
+
         struct Pmn
         {
             double* X;
@@ -43,12 +104,12 @@ namespace atcg
 
         __global__ void fillP(double* X, double* Y, double* P, double* R, double* t, double* Z, double s, double var, uint32_t N, uint32_t M)
         {
-            const size_t tid = cutil::globalThreadIndex();
+            const size_t tid = globalThreadIndex();
 
             if(tid >= M*N)
                 return;
 
-            auto [n,m] = cutil::index1Dto2D(tid, N);
+            auto [n,m] = index2pixel(tid, N);
 
             double* x = X + 3*n;
             double* y = Y + 3*m;
@@ -66,14 +127,14 @@ namespace atcg
 
         __global__ void normalize(double* P, double* PX, double* PY, double* Z, double* Np, uint32_t N, uint32_t M)
         {
-            const size_t tid = cutil::globalThreadIndex();
+            const size_t tid = globalThreadIndex();
 
             if(tid >= N*M)
             {
                 return;
             }
 
-            auto [n,m] = cutil::index1Dto2D(tid, N);
+            auto [n,m] = index2pixel(tid, N);
 
             P[tid] = P[tid]/(Z[n] + 1e-12);
             atomicAdd(&PX[n], P[tid]);
@@ -135,6 +196,11 @@ namespace atcg
         cudaSafeCall(cudaMemcpy((void*)(impl->devY), (void*)&Y(0), sizeof(double) * impl->M * 3, cudaMemcpyHostToDevice));
     }
 
+    CPDBackendCUDA::~CPDBackendCUDA()
+    {
+
+    }
+
     void CPDBackendCUDA::estimate(const Transformation& transform,
                                  Eigen::VectorXd& PX, 
                                  Eigen::VectorXd& PY, 
@@ -149,7 +215,7 @@ namespace atcg
         cudaSafeCall(cudaMemset((void*)impl->devPY, 0, sizeof(double) * impl->M));
         cudaSafeCall(cudaMemset((void*)impl->devNp, 0, sizeof(double)));
 
-        cutil::KernelSize config = cutil::configureKernel(impl->N * impl->M);
+        detail::KernelSize config = detail::configure(impl->N * impl->M);
         detail::fillP<<<config.blocks, config.threads>>>(impl->devX,
                                                          impl->devY,
                                                          impl->devP,
@@ -160,7 +226,7 @@ namespace atcg
                                                          var,
                                                          impl->N,
                                                          impl->M);
-        cutil::syncStream();
+        cudaSafeCall(cudaDeviceSynchronize());
 
         detail::normalize<<<config.blocks, config.threads>>>(impl->devP,
                                                              impl->devPX,
@@ -169,7 +235,7 @@ namespace atcg
                                                              impl->devNp,
                                                              impl->N,
                                                              impl->M);
-        cutil::syncStream();
+        cudaSafeCall(cudaDeviceSynchronize());
 
         cudaSafeCall(cudaMemcpy((void*)&impl->P(0), (void*)(impl->devP), sizeof(double) * impl->N * impl->M, cudaMemcpyDeviceToHost));
         cudaSafeCall(cudaMemcpy((void*)&PX(0), (void*)(impl->devPX), sizeof(double) * impl->N, cudaMemcpyDeviceToHost));

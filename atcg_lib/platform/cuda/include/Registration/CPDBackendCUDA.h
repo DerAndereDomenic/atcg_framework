@@ -10,6 +10,8 @@ namespace atcg
     public:
         CPDBackendCUDA( RowMatrix& X,  RowMatrix& Y);
 
+        ~CPDBackendCUDA();
+
         virtual void estimate(const Transformation& transform,
                               Eigen::VectorXd& PX, 
                               Eigen::VectorXd& PY, 
