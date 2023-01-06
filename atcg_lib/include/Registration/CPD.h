@@ -28,6 +28,6 @@ namespace atcg
 
         Eigen::JacobiSVD<RowMatrix, Eigen::ComputeFullU | Eigen::ComputeFullV> svd;
 
-        std::unique_ptr<CPDBackend> _backend;
+        std::shared_ptr<CPDBackend> _backend;
     };
 }
