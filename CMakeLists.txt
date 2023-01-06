@@ -40,12 +40,8 @@ target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
 target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 
 if(ATCG_CUDA_BACKEND)
-    add_subdirectory(external/cutil)
-    include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
-                        external/cutil/include)
+    include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
-    target_link_libraries(atcg_lib
-                          cutil)
     string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
 endif()
 

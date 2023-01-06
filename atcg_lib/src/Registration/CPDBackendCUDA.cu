@@ -1,6 +1,5 @@
 #define EIGEN_NO_CUDA
 #include <Registration/CPDBackendCUDA.h>
-#include <cutil.h>
 
 #include <thrust/reduce.h>
 #include <thrust/transform_reduce.h>
