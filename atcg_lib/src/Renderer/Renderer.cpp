@@ -137,16 +137,7 @@ namespace atcg
 
     void Renderer::init(uint32_t width, uint32_t height)
     {
-        if(!gladLoadGL())
-        {
-            std::cerr << "Error loading glad!\n";
-        }
-
         s_renderer->impl = std::make_unique<Impl>(width, height);
-
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
     }
 
     void Renderer::finishFrame()

@@ -4,8 +4,7 @@
 #include <functional>
 
 #include <Events/Event.h>
-
-struct GLFWwindow;
+#include <Renderer/Context.h>
 
 namespace atcg
 {
@@ -65,7 +64,7 @@ namespace atcg
          * 
          * @return GLFWwindow* The glfw window pointer
          */
-        GLFWwindow* getNativeWindow() const;
+        void* getNativeWindow() const;
 
         /**
          * @brief Get the Width object
@@ -91,6 +90,7 @@ namespace atcg
         };
 
         WindowData _data;
-        GLFWwindow* _window;
+        void* _window;
+        std::shared_ptr<Context> _context;
     };
 }
