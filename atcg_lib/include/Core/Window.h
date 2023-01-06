@@ -5,6 +5,7 @@
 
 #include <Events/Event.h>
 #include <Renderer/Context.h>
+#include <memory>
 
 namespace atcg
 {
