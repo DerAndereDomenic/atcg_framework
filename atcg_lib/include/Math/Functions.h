@@ -21,4 +21,22 @@ namespace atcg
         return p;
     }
 
+    namespace Math
+    {
+        /**
+         *  @brief Evaluate a spherical harmonic basis function
+         * 
+         *  @tparam The data type
+         *  @param l Degree of the harmonic l >= 0
+         *  @param m Order of the harmonic |m| <= l
+         *  @param phi Angle between [0, 2pi]
+         *  @param theta Angle between [0, pi]
+         *  @return The evaluated function 
+         */
+        template<typename T>
+        T sphericalHarmonic(const int32_t& l, const int32_t& m, const T& phi, const T& theta);
+    }
+
 }
+
+#include "../../src/Math/FunctionsDetail.h"

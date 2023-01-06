@@ -284,6 +284,8 @@ namespace atcg
         shader->setVec3("flat_color", color);
         if(camera)
         {
+            shader->setVec3("camera_pos", camera->getPosition());
+            shader->setVec3("camera_dir", camera->getDirection());
             shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
         }
         else
@@ -312,6 +314,8 @@ namespace atcg
         shader->setVec3("flat_color", color);
         if(camera)
         {
+            shader->setVec3("camera_pos", camera->getPosition());
+            shader->setVec3("camera_dir", camera->getDirection());
             shader->setMVP(mesh->getModel(), camera->getView(), camera->getProjection());
         }
         else
@@ -339,6 +343,8 @@ namespace atcg
         shader->setVec3("flat_color", color);
         if(camera)
         {
+            shader->setVec3("camera_pos", camera->getPosition());
+            shader->setVec3("camera_dir", camera->getDirection());
             shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
         }
         else

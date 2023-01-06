@@ -26,12 +26,15 @@ struct LaplaceCotan
 
     T triangleCotan(const atcg::TriMesh::Point& v0, const atcg::TriMesh::Point& v1, const atcg::TriMesh::Point& v2)
     {
+        /// Exercise: Compute the cotan values for a triangle
+        ///           Hint: cotan = <edge0,edge1>/Area(Triangle)
+        ///           You can use atcg::areaFromMetric<T> to compute the triangle area
         const auto d0 = v0 - v2;
         const auto d1 = v1 - v2;
         const auto d2 = v1 - v0;
         const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
         if(area > 1e-5)
-            return clampCotan(d0.dot(d1) / area);
+            return clampCotan(d0.dot(d1) / area)/2.f;
         return T(1e-5);
     }
 
@@ -41,6 +44,8 @@ struct LaplaceCotan
 
         for(auto e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
         {
+            /// Exercise: Compute the edge weights using cotan weights
+            ///           Remember to check for boundary edges and handle them accordingly
             uint32_t i = e_it->v0().idx();
             uint32_t j = e_it->v1().idx();
 
@@ -54,48 +59,19 @@ struct LaplaceCotan
             if(!mesh->is_boundary(h0))
             {
                 const auto p2 = h0.next().to();
-                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / 2.f;
             }
 
             if(!mesh->is_boundary(h1))
             {
                 const auto p2 = h1.next().to();
-                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
+                weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2)) / 2.f;
             }
 
             edge_weights.emplace_back(i, j, weight);
             edge_weights.emplace_back(j, i, weight);
             edge_weights.emplace_back(i, i, -weight);
             edge_weights.emplace_back(j, j, -weight);
-        }
-
-        std::vector<Eigen::Triplet<T>> vertex_weights;
-
-        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
-        {
-            T weight = 0;
-
-            for(const auto& e : v_it->edges())
-            {
-                const auto h0 = e.h0();
-                const auto h1 = e.h1();
-
-                const auto p0 = h0.to();
-                const auto p1 = h1.to();
-
-                if(!mesh->is_boundary(h0))
-                {
-                    const auto p2 = h0.next().to();
-                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
-                }
-
-                if(!mesh->is_boundary(h1))
-                {
-                    const auto p2 = h1.next().to();
-                    weight += triangleCotan(mesh->point(p0), mesh->point(p1), mesh->point(p2));
-                }
-            }
-            vertex_weights.emplace_back(v_it->idx(), v_it->idx(), weight);
         }
 
         size_t N = mesh->n_vertices();
@@ -105,7 +81,8 @@ struct LaplaceCotan
         laplace.M.resize(N, N);
 
         laplace.S.setFromTriplets(edge_weights.begin(), edge_weights.end());
-        laplace.M.setFromTriplets(vertex_weights.begin(), vertex_weights.end());
+        /// Exercise: Set M = |diagonal(S)|
+        laplace.M = laplace.S.diagonal().cwiseAbs().asDiagonal();
 
         return laplace;
     }
@@ -117,7 +94,7 @@ public:
 
     G06Layer(const std::string& name) : atcg::Layer(name) {}
 
-    void color_mesh(const std::shared_ptr<atcg::Mesh>& p_mesh, const Eigen::VectorXf& u)
+    void color_mesh(const std::shared_ptr<atcg::Mesh>& p_mesh, const Eigen::VectorXd& u)
     {
         float max_abs_value = std::max(u.maxCoeff(), -u.minCoeff());
         for(auto vh : p_mesh->vertices())
@@ -136,75 +113,62 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = atcg::IO::read_mesh("res/plane.obj");
+        mesh = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh->request_vertex_colors();
 
-        mesh_explicit_large = atcg::IO::read_mesh("res/plane.obj");
+        mesh_explicit_large = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh_explicit_large->request_vertex_colors();
 
-        mesh_explicit_small = atcg::IO::read_mesh("res/plane.obj");
+        mesh_explicit_small = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh_explicit_small->request_vertex_colors();
 
-        mesh_implicit_large = atcg::IO::read_mesh("res/plane.obj");
+        mesh_implicit_large = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh_implicit_large->request_vertex_colors();
 
-        int start_idx = 0;
-        float min_dist = std::numeric_limits<float>::infinity();
-        for(auto vh : mesh->vertices())
-        {
-            float dist = mesh->point(vh).norm();
-            if(dist < min_dist)
-            {
-                start_idx = vh.idx();
-                min_dist = dist;
-            }
-        }
+        laplacian = LaplaceCotan<double>().calculate(mesh);
 
-        int end_idx = 0;
-        float max_dist = -std::numeric_limits<float>::infinity();
-        for(auto vh : mesh->vertices())
-        {
-            float dist = mesh->point(vh).norm();
-            if(dist > max_dist)
-            {
-                end_idx = vh.idx();
-                max_dist = dist;
-            }
-        }
+        Eigen::SparseMatrix<double> L = laplacian.M.cwiseInverse() * laplacian.S;
 
-        laplacian = LaplaceCotan<float>().calculate(mesh);
+        std::cout << "If S is correct, this number should be near zero\n";
+        Eigen::SparseMatrix<double> St = laplacian.S.transpose();
+        double error = (St-laplacian.S).norm();
+        std::cout << error << "\n";
 
-        Eigen::SparseMatrix<float> L = laplacian.M.cwiseInverse() * laplacian.S;
+        std::cout << "If your laplacian is correct, this number should be near zero\n";
+        std::cout << (L*Eigen::VectorXd::Ones(mesh->n_vertices())).sum() << "\n";
 
-        Eigen::VectorXf u0(mesh->n_vertices());
+        Eigen::VectorXd u0(mesh->n_vertices());
         u0.setZero();
-        u0[start_idx] = 1.0f;
-        u0[end_idx] = -1.0f;
+        int start_idx = 1892;
+        int end_idx = 1108;
+        u0[start_idx] = 1.0;
+        u0[end_idx] = -1.0;
 
-        float cfl_timestep = std::numeric_limits<float>::infinity();
+        double cfl_timestep = std::numeric_limits<double>::infinity();
         for(auto e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
         {
-            float length = mesh->calc_edge_length(*e_it);
+            double length = mesh->calc_edge_length(*e_it);
             if(length < cfl_timestep)
             {
                 cfl_timestep = length;
             }
         }
 
-        float delta_small = 0.9f * cfl_timestep;
-        float delta_large = 10.0f * cfl_timestep;
-        float time = 500.0f;
+        double delta_small = 0.9 * cfl_timestep;
+        double delta_large = 50.0 * cfl_timestep;
+        double time = 250.0;
 
         int steps_small = static_cast<int>(time/delta_small);
         int steps_large = static_cast<int>(time/delta_large);
 
-        Eigen::VectorXf u_explicit_small = u0;
-        Eigen::VectorXf u_explicit_large = u0;
-        Eigen::VectorXf u_implict_large = u0;
+        Eigen::VectorXd u_explicit_small = u0;
+        Eigen::VectorXd u_explicit_large = u0;
+        Eigen::VectorXd u_implict_large = u0;
 
         {
             atcg::Timer timer;
 
+            ///Exercise: Compute explicit euler with large steps
             for(int32_t i = 0; i <= steps_large; ++i)
             {
                 u_explicit_large += delta_large * L * u_explicit_large;
@@ -216,6 +180,7 @@ public:
         {
             atcg::Timer timer;
 
+            ///Exercise: Compute explicit euler with large steps
             for(int32_t i = 0; i <= steps_small; ++i)
             {
                 u_explicit_small += delta_small * L * u_explicit_small;
@@ -224,13 +189,15 @@ public:
             std::cout << "Time: " << timer.elapsedSeconds() << "s\n"; 
         }
 
-        Eigen::SparseMatrix<float> identity(L.cols(), L.rows());
+        Eigen::SparseMatrix<double> identity(L.cols(), L.rows());
         identity.setIdentity();
 
         {
             atcg::Timer timer;
 
-            Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
+            ///Exercise: Compute implicit euler with large steps
+            ///          You can use Eigen::SparseLU<...> to compute the LU decompostion of L
+            Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
             solver.compute(identity - delta_large * L);
 
             for(int32_t i = 0; i <= steps_large; ++i)
@@ -339,7 +306,7 @@ private:
     std::shared_ptr<atcg::Mesh> mesh_explicit_small;
     std::shared_ptr<atcg::Mesh> mesh_implicit_large;
 
-    atcg::Laplacian<float> laplacian;
+    atcg::Laplacian<double> laplacian;
 
     bool show_render_settings = false;
     bool show_diffusion = true;
