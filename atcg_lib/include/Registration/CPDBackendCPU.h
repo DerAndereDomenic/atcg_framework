@@ -10,6 +10,8 @@ namespace atcg
     public:
         CPDBackendCPU( RowMatrix& X,  RowMatrix& Y);
 
+        ~CPDBackendCPU();
+
         virtual void estimate(const Transformation& transform,
                               Eigen::VectorXd& PX, 
                               Eigen::VectorXd& PY,

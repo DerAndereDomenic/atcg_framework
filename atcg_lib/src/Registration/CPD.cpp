@@ -24,7 +24,7 @@ namespace atcg
     CoherentPointDrift::CoherentPointDrift(const std::shared_ptr<PointCloud>& source, const std::shared_ptr<PointCloud>& target, const double& w)
         :Registration::Registration(source, target), w(w)
     {
-        _backend = std::make_shared<Backend>(X,Y);
+        _backend = std::make_unique<Backend>(X,Y);
     }
 
     CoherentPointDrift::~CoherentPointDrift()

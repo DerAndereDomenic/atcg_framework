@@ -33,6 +33,11 @@ namespace atcg
         impl->P = RowMatrix::Zero(impl->M,impl->N);
     }
 
+    CPDBackendCPU::~CPDBackendCPU()
+    {
+        
+    }
+
     void CPDBackendCPU::estimate(const Transformation& transform,
                                  Eigen::VectorXd& PX, 
                                  Eigen::VectorXd& PY, 
