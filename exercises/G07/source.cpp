@@ -253,7 +253,7 @@ public:
         Eigen::SparseMatrix<double> W = Id * row_sum.asDiagonal();
         op = (W - op).eval();
 
-        op = (W.cwiseInverse() * op).eval();
+        op = (op.diagonal().cwiseInverse().asDiagonal() * op).eval();
 
         Eigen::VectorXd ones = Eigen::VectorXd::Ones(mesh->n_vertices());
         Eigen::VectorXd zeros = Eigen::VectorXd::Zero(mesh->n_vertices());
