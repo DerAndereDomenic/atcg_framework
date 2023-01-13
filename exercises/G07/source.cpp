@@ -278,9 +278,9 @@ public:
 
         for(uint32_t i = 0; i < boundary_constraints.size(); ++i)
         {
-            rhs(path[i].idx(), 0) = -boundary_constraints[i][0];
-            rhs(path[i].idx(), 1) = -boundary_constraints[i][1];
-            rhs(path[i].idx(), 2) = -boundary_constraints[i][2];
+            rhs(path[i].idx(), 0) = boundary_constraints[i][0];
+            rhs(path[i].idx(), 1) = boundary_constraints[i][1];
+            rhs(path[i].idx(), 2) = boundary_constraints[i][2];
         }
 
         return rhs;
@@ -326,7 +326,7 @@ public:
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         mesh_original = atcg::IO::read_mesh("res/maxear.obj");
-        mesh_original->request_vertex_colors();
+        //mesh_original->request_vertex_colors();
 
         mesh = std::make_shared<atcg::Mesh>(*mesh_original.get());
 
