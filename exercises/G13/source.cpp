@@ -269,12 +269,12 @@ public:
                 edited = true;
             }
 
-            if(ImGui::SliderFloat("Stiffness", &ks, 0.0f, 10.0f))
+            if(ImGui::SliderFloat("Stiffness", &ks, 0.0f, 1.0f))
             {
                 edited = true;
             }
 
-            if(ImGui::SliderFloat("Bending", &kb, 0.0f, 10.0f))
+            if(ImGui::SliderFloat("Bending", &kb, 0.0f, 1.0f))
             {
                 edited = true;
             }
