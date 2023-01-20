@@ -233,6 +233,7 @@ public:
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+            ImGui::MenuItem("Show Edit Settings", nullptr, &show_edit_settings);
 
             ImGui::EndMenu();
         }
@@ -247,6 +248,42 @@ public:
             ImGui::Checkbox("Render Edges", &render_edges);
             ImGui::Checkbox("Render Mesh", &render_faces);
             ImGui::End();
+        }
+
+        if(show_edit_settings)
+        {
+            bool edited = false;
+
+            if(ImGui::SliderFloat("Edit Radius", &edit_radius, 0.0f, region_radius))
+            {
+                edited = true;
+            }
+
+            if(ImGui::SliderFloat("Region Radius", &region_radius, edit_radius, 1.0f))
+            {
+                edited = true;
+            }
+
+            if(ImGui::SliderFloat("Height", &edit_height, 0.0f, 1.0f))
+            {
+                edited = true;
+            }
+
+            if(ImGui::SliderFloat("Stiffness", &ks, 0.0f, 10.0f))
+            {
+                edited = true;
+            }
+
+            if(ImGui::SliderFloat("Bending", &kb, 0.0f, 10.0f))
+            {
+                edited = true;
+            }
+
+            if(edited)
+            {
+                editMesh();
+                mesh->uploadData();
+            }
         }
 
     }
@@ -266,11 +303,12 @@ private:
     bool render_points = false;
     bool render_edges = false;
 
-    double ks = 1.0;
-    double kb = 1.0;
-    double edit_radius = 0.3;
-    double region_radius = 0.8;
-    double edit_height = 1.0;
+    bool show_edit_settings = true;
+    float ks = 1.0;
+    float kb = 1.0;
+    float edit_radius = 0.3;
+    float region_radius = 0.8;
+    float edit_height = 1.0;
 };
 
 class G13 : public atcg::Application
