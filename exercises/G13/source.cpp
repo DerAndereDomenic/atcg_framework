@@ -143,7 +143,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        std::vector<float> U = linspace(-1,1,500);
+        std::vector<float> U = linspace(-1,1,150);
         std::vector<atcg::Mesh::Point> grid;
 
         for(float u : U)
@@ -164,8 +164,8 @@ public:
         double kb = 1.0;
         Eigen::SparseMatrix<double> op = -ks * L + kb * L2;
 
-        double edit_radius = 0.1;
-        double region_radius = 0.5;
+        double edit_radius = 0.3;
+        double region_radius = 0.8;
 
         Eigen::MatrixXd starting_displacement(mesh->n_vertices(), 3);
 
@@ -195,9 +195,9 @@ public:
         op = ones.asDiagonal() * op;
         op = op + Id*zeros.asDiagonal();
 
-        Eigen::SparseLU<Eigen::SparseMatrix<double>> luSolver;
-        luSolver.compute(op);
-        Eigen::MatrixXd displacement = luSolver.solve(starting_displacement);
+        Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
+        solver.compute(op);
+        Eigen::MatrixXd displacement = solver.solve(starting_displacement);
 
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
