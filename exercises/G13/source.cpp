@@ -136,13 +136,8 @@ public:
         return mesh;
     }
 
-    // This is run at the start of the program
-    virtual void onAttach() override
+    void editMesh()
     {
-        const auto& window = atcg::Application::get()->getWindow();
-        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
-
         std::vector<float> U = linspace(-1,1,150);
         std::vector<atcg::Mesh::Point> grid;
 
@@ -160,12 +155,7 @@ public:
         Eigen::SparseMatrix<double> L = laplace.M.cwiseInverse() * laplace.S;
         Eigen::SparseMatrix<double> L2 = L*L;
 
-        double ks = 1.0;
-        double kb = 1.0;
         Eigen::SparseMatrix<double> op = -ks * L + kb * L2;
-
-        double edit_radius = 0.3;
-        double region_radius = 0.8;
 
         Eigen::MatrixXd starting_displacement(mesh->n_vertices(), 3);
 
@@ -179,7 +169,7 @@ public:
 
             if(distance < edit_radius)
             {
-                starting_displacement.row(v_it->idx()) = Eigen::Vector3d(0.0, 1.0, 0.0);
+                starting_displacement.row(v_it->idx()) = Eigen::Vector3d(0.0, edit_height, 0.0);
                 ones(v_it->idx()) = 0;
                 zeros(v_it->idx()) = 1;
             }
@@ -205,6 +195,16 @@ public:
             Eigen::Vector3d d = displacement.row(v_it->idx());
             mesh->set_point(*v_it, {p[0] + d(0), p[1] + d(1), p[2] + d(2)});
         }
+    }
+
+    // This is run at the start of the program
+    virtual void onAttach() override
+    {
+        const auto& window = atcg::Application::get()->getWindow();
+        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
+        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+
+        editMesh();
 
         mesh->uploadData();
     }
@@ -265,6 +265,12 @@ private:
     bool render_faces = true;
     bool render_points = false;
     bool render_edges = false;
+
+    double ks = 1.0;
+    double kb = 1.0;
+    double edit_radius = 0.3;
+    double region_radius = 0.8;
+    double edit_height = 1.0;
 };
 
 class G13 : public atcg::Application
