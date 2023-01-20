@@ -20,12 +20,107 @@ class G14Layer : public atcg::Layer
 public:
     G14Layer(const std::string& name) : atcg::Layer(name) {}
 
+    std::vector<uint32_t> find_correspondences(const std::shared_ptr<atcg::Mesh>& source, const std::shared_ptr<atcg::Mesh>& target)
+    {
+        const uint32_t n = source->n_vertices();
+        std::vector<uint32_t> correspondences(n);
+
+        for(uint32_t i = 0; i < n; ++i)
+        {
+            atcg::Mesh::Point q = source->point(atcg::Mesh::VertexHandle(i));
+            int minj = 0;
+            double min_distance = std::numeric_limits<double>::infinity();
+            for(uint32_t j = 0; j < n; ++j)
+            {
+                atcg::Mesh::Point p = target->point(atcg::Mesh::VertexHandle(j));
+                double distance = (p-q).norm();
+                if(distance < min_distance)
+                {
+                    min_distance = distance;
+                    minj = j;
+                }
+            }
+
+            correspondences[i] = minj;
+        }
+
+        return correspondences;
+    }
+
+    std::pair<atcg::Mesh::Point, atcg::Mesh::Point> calculate_center_of_mass(const std::shared_ptr<atcg::Mesh>& source, 
+                                                                             const std::shared_ptr<atcg::Mesh>& target,
+                                                                             const std::vector<uint32_t>& c)
+    {
+        const uint32_t n = source->n_vertices();
+        atcg::Mesh::Point q_bar{0,0,0};
+        atcg::Mesh::Point p_bar{0,0,0};
+
+        for(uint32_t i = 0; i < n; ++i)
+        {
+            q_bar += source->point(atcg::Mesh::VertexHandle(i));
+            p_bar += target->point(atcg::Mesh::VertexHandle(c[i]));
+        }
+        
+        return std::make_pair(q_bar/n, p_bar/n);
+    }
+
+    void update_rotation(const std::shared_ptr<atcg::Mesh>& source, 
+                         const std::shared_ptr<atcg::Mesh>& target,
+                         const atcg::Mesh::Point& q_bar,
+                         const atcg::Mesh::Point& p_bar,
+                         const std::vector<uint32_t>& c)
+    {
+        const uint32_t n = source->n_vertices();
+
+        Eigen::Matrix3d H;
+        H.setZero();
+
+        for(uint32_t i = 0; i < n; ++i)
+        {
+            atcg::Mesh::Point q_temp = source->point(atcg::Mesh::VertexHandle(i)) - q_bar;
+            Eigen::Vector3d q_(q_temp[0], q_temp[1], q_temp[2]);
+
+            atcg::Mesh::Point p_temp = target->point(atcg::Mesh::VertexHandle(c[i])) - p_bar;
+            Eigen::Vector3d p_(p_temp[0], p_temp[1], p_temp[2]);
+
+            H += q_ * p_.transpose();
+        }
+
+        Eigen::JacobiSVD<Eigen::Matrix3d, Eigen::ComputeFullU | Eigen::ComputeFullV> solver(H);
+        R = solver.matrixV() * solver.matrixU().transpose();
+    }
+
+    void update_translation(const atcg::Mesh::Point& q_bar,
+                            const atcg::Mesh::Point& p_bar)
+    {
+        Eigen::Vector3d q_temp(q_bar[0], q_bar[1], q_bar[2]);
+        Eigen::Vector3d p_temp(p_bar[0], p_bar[1], p_bar[2]);
+
+        t = p_temp - R*q_temp;
+    }
+
+    void apply_transform(const std::shared_ptr<atcg::Mesh>& source)
+    {
+        for(auto v_it = source->vertices_begin(); v_it != source->vertices_end(); ++v_it)
+        {
+            atcg::Mesh::Point q = source->point(*v_it);
+            Eigen::Vector3d q_temp(q[0], q[1], q[2]);
+
+            q_temp = R*q_temp + t;
+
+            source->set_point(*v_it, atcg::Mesh::Point{q_temp(0), q_temp(1), q_temp(2)});
+        }
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+
+        R.setIdentity();
+        t.setZero();
 
         mesh_source = atcg::IO::read_mesh("res/suzanne_blender.obj");
         mesh_target = atcg::IO::read_mesh("res/suzanne_blender.obj");
@@ -84,6 +179,7 @@ public:
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+            ImGui::MenuItem("Show Registration Settings", nullptr, &show_registration_settings);
 
             ImGui::EndMenu();
         }
@@ -101,6 +197,23 @@ public:
             ImGui::Checkbox("Render Source Vertices", &render_points_source);
             ImGui::Checkbox("Render Source Edges", &render_edges_source);
             ImGui::Checkbox("Render Source Mesh", &render_faces_source);
+            ImGui::End();
+        }
+
+        if(show_registration_settings)
+        {
+            ImGui::Begin("Registration Settings", &show_registration_settings);
+            
+            if(ImGui::Button("Step"))
+            {
+                std::vector<uint32_t> correspondences = find_correspondences(mesh_source, mesh_target);
+                auto [q_bar, p_bar] = calculate_center_of_mass(mesh_source, mesh_target, correspondences);
+                update_rotation(mesh_source, mesh_target, q_bar, p_bar, correspondences);
+                update_translation(q_bar, p_bar);
+                apply_transform(mesh_source);
+                mesh_source->uploadData();
+            }
+
             ImGui::End();
         }
     }
@@ -125,12 +238,10 @@ private:
     bool render_points_source = false;
     bool render_edges_source = false;
 
-    bool show_edit_settings = true;
-    float ks = 1.0;
-    float kb = 1.0;
-    float edit_radius = 0.3;
-    float region_radius = 0.8;
-    float edit_height = 1.0;
+    bool show_registration_settings = true;
+
+    Eigen::Matrix3d R;
+    Eigen::Vector3d t;
 };
 
 class G14 : public atcg::Application
