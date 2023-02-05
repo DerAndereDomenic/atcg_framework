@@ -12,7 +12,6 @@
 class PointCloudLayer : public atcg::Layer
 {
 public:
-
     PointCloudLayer(const std::string& name) : atcg::Layer(name) {}
 
     // This is run at the start of the program
@@ -22,7 +21,7 @@ public:
         atcg::Renderer::setPointSize(2.0f);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         depth_values.resize(search_radius * search_radius);
 
@@ -31,22 +30,23 @@ public:
         sphere->uploadData();
 
         {
-            auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/cloud1.xyz");
-            //auto point_cloud = atcg::IO::read_pointcloud("res/suzanne_blender.obj");
+            auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/"
+                                                         "cloud1.xyz");
+            // auto point_cloud = atcg::IO::read_pointcloud("res/suzanne_blender.obj");
             point_cloud->uploadData();
             clouds.push_back(std::make_pair(point_cloud, true));
         }
 
         {
-            auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/cloud2.xyz");
-            //auto point_cloud = atcg::IO::read_pointcloud("res/suzanne_blender.obj");
-            //atcg::normalize(point_cloud);
+            auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/"
+                                                         "cloud2.xyz");
+            // auto point_cloud = atcg::IO::read_pointcloud("res/suzanne_blender.obj");
+            // atcg::normalize(point_cloud);
             point_cloud->uploadData();
             clouds.push_back(std::make_pair(point_cloud, true));
         }
 
         registrator = std::make_unique<atcg::CoherentPointDrift>(clouds[1].first, clouds[0].first, 0);
-
     }
 
     // This gets called each frame
@@ -62,44 +62,44 @@ public:
                 atcg::Renderer::draw(it->first, atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
         }
 
-        glReadPixels(static_cast<int>(mouse_pos.x - search_radius / 2), static_cast<int>(mouse_pos.y - search_radius / 2), search_radius, search_radius, GL_DEPTH_COMPONENT, GL_FLOAT, depth_values.data());
+        glReadPixels(static_cast<int>(mouse_pos.x - search_radius / 2),
+                     static_cast<int>(mouse_pos.y - search_radius / 2),
+                     search_radius,
+                     search_radius,
+                     GL_DEPTH_COMPONENT,
+                     GL_FLOAT,
+                     depth_values.data());
         float min = 1.0f;
 
-        for(float depth : depth_values)
-        {
-            min = std::min(depth, min);
-        }
+        for(float depth: depth_values) { min = std::min(depth, min); }
 
         if(min != 0.0f && min != 1.0f)
         {
-            //Project and render sphere
+            // Project and render sphere
 
             const auto& window = atcg::Application::get()->getWindow();
 
-            float width = (float)window->getWidth();
+            float width  = (float)window->getWidth();
             float height = (float)window->getHeight();
 
             float x_ndc = (static_cast<float>(mouse_pos.x)) / (static_cast<float>(width) / 2.0f) - 1.0f;
             float y_ndc = (static_cast<float>(mouse_pos.y)) / (static_cast<float>(height) / 2.0f) - 1.0f;
 
-            glm::vec4 world_pos(x_ndc, y_ndc, 2*min-1, 1.0f);
+            glm::vec4 world_pos(x_ndc, y_ndc, 2 * min - 1, 1.0f);
 
             world_pos = glm::inverse(camera_controller->getCamera()->getViewProjection()) * world_pos;
             world_pos /= world_pos.w;
 
-            if(atcg::Input::isKeyPressed(GLFW_KEY_P))
-            {
-                sphere_pos.push_back(world_pos);
-            }
+            if(atcg::Input::isKeyPressed(GLFW_KEY_P)) { sphere_pos.push_back(world_pos); }
         }
 
-        //glDepthMask(false);
-        for(glm::vec3 p : sphere_pos)
+        // glDepthMask(false);
+        for(glm::vec3 p: sphere_pos)
         {
             sphere->setPosition(p);
             atcg::Renderer::draw(sphere, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
         }
-        //glDepthMask(true);
+        // glDepthMask(true);
     }
 
     virtual void onImGuiRender() override
@@ -150,8 +150,6 @@ public:
 
             ImGui::End();
         }
-
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -171,10 +169,10 @@ public:
         point_cloud->uploadData();
         clouds.push_back(std::make_pair(point_cloud, true));
 
-        //Also reset camera
+        // Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         return true;
     }
@@ -182,13 +180,13 @@ public:
     bool onMouseMoved(atcg::MouseMovedEvent& event)
     {
         const auto& window = atcg::Application::get()->getWindow();
-        mouse_pos = glm::vec2(event.getX(), window->getHeight() - event.getY());
+        mouse_pos          = glm::vec2(event.getX(), window->getHeight() - event.getY());
 
         return false;
     }
 
 private:
-    using CloudList = std::vector<std::pair<std::shared_ptr<atcg::PointCloud>,bool>>;
+    using CloudList = std::vector<std::pair<std::shared_ptr<atcg::PointCloud>, bool>>;
 
     CloudList clouds;
     std::shared_ptr<atcg::CameraController> camera_controller;
@@ -203,21 +201,15 @@ private:
     uint32_t search_radius = 10;
 
     bool show_render_settings = false;
-    bool show_cpd_settings = true;
+    bool show_cpd_settings    = true;
 };
 
 class PointCloudRenderer : public atcg::Application
 {
-    public:
-
-    PointCloudRenderer()
-        :atcg::Application()
-    {
-        pushLayer(new PointCloudLayer("Layer"));
-    }
+public:
+    PointCloudRenderer() : atcg::Application() { pushLayer(new PointCloudLayer("Layer")); }
 
     ~PointCloudRenderer() {}
-
 };
 
 atcg::Application* atcg::createApplication()

@@ -13,7 +13,7 @@
 #include <numeric>
 
 using VertexHandle = atcg::Mesh::VertexHandle;
-using EdgeHandle = atcg::Mesh::EdgeHandle;
+using EdgeHandle   = atcg::Mesh::EdgeHandle;
 
 template<typename T>
 struct LaplaceUniform
@@ -64,12 +64,11 @@ struct LaplaceCotan
 
     T triangleCotan(const atcg::TriMesh::Point& v0, const atcg::TriMesh::Point& v1, const atcg::TriMesh::Point& v2)
     {
-        const auto d0 = v0 - v2;
-        const auto d1 = v1 - v2;
-        const auto d2 = v1 - v0;
+        const auto d0   = v0 - v2;
+        const auto d1   = v1 - v2;
+        const auto d2   = v1 - v0;
         const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
-        if(area > 1e-5)
-            return clampCotan(d0.dot(d1) / area);
+        if(area > 1e-5) return clampCotan(d0.dot(d1) / area);
         return T(1e-5);
     }
 
@@ -113,7 +112,7 @@ struct LaplaceCotan
         {
             T weight = 0;
 
-            for(const auto& e : v_it->edges())
+            for(const auto& e: v_it->edges())
             {
                 const auto h0 = e.h0();
                 const auto h1 = e.h1();
@@ -152,7 +151,6 @@ struct LaplaceCotan
 class G05Layer : public atcg::Layer
 {
 public:
-
     G05Layer(const std::string& name) : atcg::Layer(name) {}
 
     template<typename T, class LaplaceCalculator>
@@ -161,7 +159,7 @@ public:
         atcg::Laplacian<T> laplacian = calculator.calculate(mesh);
         Eigen::SparseMatrix<T> Id(mesh->n_vertices(), mesh->n_vertices());
         Id.setIdentity();
-        auto K = laplacian.M.cwiseInverse() * laplacian.S;
+        auto K               = laplacian.M.cwiseInverse() * laplacian.S;
         auto taubin_operator = (Id - mu * K) * (Id - lambda * K);
 
         Eigen::Matrix<T, -1, -1> v(mesh->n_vertices(), 3);
@@ -169,18 +167,16 @@ public:
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
             atcg::Mesh::Point p = mesh->point(*v_it);
-            v(v_it->idx(),0) = p[0];
-            v(v_it->idx(),1) = p[1];
-            v(v_it->idx(),2) = p[2];
+            v(v_it->idx(), 0)   = p[0];
+            v(v_it->idx(), 1)   = p[1];
+            v(v_it->idx(), 2)   = p[2];
         }
 
         v = taubin_operator * v;
 
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            mesh->set_point(*v_it, atcg::Mesh::Point{v(v_it->idx(),0),
-                                                     v(v_it->idx(),1),
-                                                     v(v_it->idx(),2)});
+            mesh->set_point(*v_it, atcg::Mesh::Point {v(v_it->idx(), 0), v(v_it->idx(), 1), v(v_it->idx(), 2)});
         }
 
         mesh->uploadData();
@@ -191,7 +187,7 @@ public:
     {
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         mesh = atcg::IO::read_mesh("res/bunny.obj");
         mesh->uploadData();
@@ -211,10 +207,12 @@ public:
             atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_points)
-            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(mesh,
+                                       glm::vec3(0),
+                                       atcg::ShaderManager::getShader("flat"),
+                                       camera_controller->getCamera());
 
-        if(mesh && render_edges)
-            atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
+        if(mesh && render_edges) atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -298,7 +296,6 @@ public:
 
             ImGui::End();
         }
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -318,10 +315,10 @@ public:
         default_mesh = atcg::IO::read_mesh(event.getPath().c_str());
         default_mesh->uploadData();
 
-        //Also reset camera
+        // Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         return true;
     }
@@ -332,31 +329,25 @@ private:
     std::shared_ptr<atcg::Mesh> default_mesh;
 
     bool show_render_settings = false;
-    bool render_faces = true;
-    bool render_points = false;
-    bool render_edges = false;
-    bool show_taubin = true;
-    bool show_smoothed = true;
+    bool render_faces         = true;
+    bool render_points        = false;
+    bool render_edges         = false;
+    bool show_taubin          = true;
+    bool show_smoothed        = true;
 
-    float mu = -0.9f;
+    float mu     = -0.9f;
     float lambda = 0.91f;
 
     int num_iterations_per_step = 1;
-    int iterations = 0;
+    int iterations              = 0;
 };
 
 class G05 : public atcg::Application
 {
-    public:
-
-    G05()
-        :atcg::Application()
-    {
-        pushLayer(new G05Layer("Layer"));
-    }
+public:
+    G05() : atcg::Application() { pushLayer(new G05Layer("Layer")); }
 
     ~G05() {}
-
 };
 
 atcg::Application* atcg::createApplication()

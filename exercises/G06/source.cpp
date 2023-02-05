@@ -13,7 +13,7 @@
 #include <numeric>
 
 using VertexHandle = atcg::Mesh::VertexHandle;
-using EdgeHandle = atcg::Mesh::EdgeHandle;
+using EdgeHandle   = atcg::Mesh::EdgeHandle;
 
 template<typename T>
 struct LaplaceCotan
@@ -29,12 +29,11 @@ struct LaplaceCotan
         /// Exercise: Compute the cotan values for a triangle
         ///           Hint: cotan = <edge0,edge1>/Area(Triangle)
         ///           You can use atcg::areaFromMetric<T> to compute the triangle area
-        const auto d0 = v0 - v2;
-        const auto d1 = v1 - v2;
-        const auto d2 = v1 - v0;
+        const auto d0   = v0 - v2;
+        const auto d1   = v1 - v2;
+        const auto d2   = v1 - v0;
         const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
-        if(area > 1e-5)
-            return clampCotan(d0.dot(d1) / area)/2.f;
+        if(area > 1e-5) return clampCotan(d0.dot(d1) / area) / 2.f;
         return T(1e-5);
     }
 
@@ -91,18 +90,17 @@ struct LaplaceCotan
 class G06Layer : public atcg::Layer
 {
 public:
-
     G06Layer(const std::string& name) : atcg::Layer(name) {}
 
     void color_mesh(const std::shared_ptr<atcg::Mesh>& p_mesh, const Eigen::VectorXd& u)
     {
         float max_abs_value = std::max(u.maxCoeff(), -u.minCoeff());
-        for(auto vh : p_mesh->vertices())
+        for(auto vh: p_mesh->vertices())
         {
             if(u[vh.idx()] > 0)
-                p_mesh->set_color(vh, { u[vh.idx()] / max_abs_value * 255, 0, 0});
+                p_mesh->set_color(vh, {u[vh.idx()] / max_abs_value * 255, 0, 0});
             else
-                p_mesh->set_color(vh, { 0, 0, - u[vh.idx()] / max_abs_value * 255});
+                p_mesh->set_color(vh, {0, 0, -u[vh.idx()] / max_abs_value * 255});
         }
     }
 
@@ -111,7 +109,7 @@ public:
     {
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         mesh = atcg::IO::read_mesh("res/bumps_deformed.obj");
         mesh->request_vertex_colors();
@@ -131,62 +129,53 @@ public:
 
         std::cout << "If S is correct, this number should be near zero\n";
         Eigen::SparseMatrix<double> St = laplacian.S.transpose();
-        double error = (St-laplacian.S).norm();
+        double error                   = (St - laplacian.S).norm();
         std::cout << error << "\n";
 
         std::cout << "If your laplacian is correct, this number should be near zero\n";
-        std::cout << (L*Eigen::VectorXd::Ones(mesh->n_vertices())).sum() << "\n";
+        std::cout << (L * Eigen::VectorXd::Ones(mesh->n_vertices())).sum() << "\n";
 
         Eigen::VectorXd u0(mesh->n_vertices());
         u0.setZero();
         int start_idx = 1892;
-        int end_idx = 1108;
+        int end_idx   = 1108;
         u0[start_idx] = 1.0;
-        u0[end_idx] = -1.0;
+        u0[end_idx]   = -1.0;
 
         double cfl_timestep = std::numeric_limits<double>::infinity();
         for(auto e_it = mesh->edges_begin(); e_it != mesh->edges_end(); ++e_it)
         {
             double length = mesh->calc_edge_length(*e_it);
-            if(length < cfl_timestep)
-            {
-                cfl_timestep = length;
-            }
+            if(length < cfl_timestep) { cfl_timestep = length; }
         }
 
         double delta_small = 0.9 * cfl_timestep;
         double delta_large = 50.0 * cfl_timestep;
-        double time = 250.0;
+        double time        = 250.0;
 
-        int steps_small = static_cast<int>(time/delta_small);
-        int steps_large = static_cast<int>(time/delta_large);
+        int steps_small = static_cast<int>(time / delta_small);
+        int steps_large = static_cast<int>(time / delta_large);
 
         Eigen::VectorXd u_explicit_small = u0;
         Eigen::VectorXd u_explicit_large = u0;
-        Eigen::VectorXd u_implict_large = u0;
+        Eigen::VectorXd u_implict_large  = u0;
 
         {
             atcg::Timer timer;
 
-            ///Exercise: Compute explicit euler with large steps
-            for(int32_t i = 0; i <= steps_large; ++i)
-            {
-                u_explicit_large += delta_large * L * u_explicit_large;
-            }
+            /// Exercise: Compute explicit euler with large steps
+            for(int32_t i = 0; i <= steps_large; ++i) { u_explicit_large += delta_large * L * u_explicit_large; }
 
-            std::cout << "Time: " << timer.elapsedSeconds() << "s\n"; 
+            std::cout << "Time: " << timer.elapsedSeconds() << "s\n";
         }
 
         {
             atcg::Timer timer;
 
-            ///Exercise: Compute explicit euler with large steps
-            for(int32_t i = 0; i <= steps_small; ++i)
-            {
-                u_explicit_small += delta_small * L * u_explicit_small;
-            }
+            /// Exercise: Compute explicit euler with large steps
+            for(int32_t i = 0; i <= steps_small; ++i) { u_explicit_small += delta_small * L * u_explicit_small; }
 
-            std::cout << "Time: " << timer.elapsedSeconds() << "s\n"; 
+            std::cout << "Time: " << timer.elapsedSeconds() << "s\n";
         }
 
         Eigen::SparseMatrix<double> identity(L.cols(), L.rows());
@@ -195,17 +184,14 @@ public:
         {
             atcg::Timer timer;
 
-            ///Exercise: Compute implicit euler with large steps
-            ///          You can use Eigen::SparseLU<...> to compute the LU decompostion of L
+            /// Exercise: Compute implicit euler with large steps
+            ///           You can use Eigen::SparseLU<...> to compute the LU decompostion of L
             Eigen::SparseLU<Eigen::SparseMatrix<double>> solver;
             solver.compute(identity - delta_large * L);
 
-            for(int32_t i = 0; i <= steps_large; ++i)
-            {
-                u_implict_large = solver.solve(u_implict_large);
-            }
+            for(int32_t i = 0; i <= steps_large; ++i) { u_implict_large = solver.solve(u_implict_large); }
 
-            std::cout << "Time: " << timer.elapsedSeconds() << "s\n"; 
+            std::cout << "Time: " << timer.elapsedSeconds() << "s\n";
         }
 
         color_mesh(mesh_explicit_large, u_explicit_large);
@@ -230,10 +216,12 @@ public:
             atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_points)
-            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(mesh,
+                                       glm::vec3(0),
+                                       atcg::ShaderManager::getShader("base"),
+                                       camera_controller->getCamera());
 
-        if(mesh && render_edges)
-            atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
+        if(mesh && render_edges) atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -269,25 +257,15 @@ public:
         if(show_diffusion)
         {
             ImGui::Begin("Show Diffusion", &show_diffusion);
-            
-            if(ImGui::Button("Explicit large"))
-            {
-                mesh = mesh_explicit_large;
-            }
 
-            if(ImGui::Button("Explicit small"))
-            {
-                mesh = mesh_explicit_small;
-            }
+            if(ImGui::Button("Explicit large")) { mesh = mesh_explicit_large; }
 
-            if(ImGui::Button("Implicit large"))
-            {
-                mesh = mesh_implicit_large;
-            }
+            if(ImGui::Button("Explicit small")) { mesh = mesh_explicit_small; }
+
+            if(ImGui::Button("Implicit large")) { mesh = mesh_implicit_large; }
 
             ImGui::End();
         }
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -309,24 +287,18 @@ private:
     atcg::Laplacian<double> laplacian;
 
     bool show_render_settings = false;
-    bool show_diffusion = true;
-    bool render_faces = true;
-    bool render_points = false;
-    bool render_edges = false;
+    bool show_diffusion       = true;
+    bool render_faces         = true;
+    bool render_points        = false;
+    bool render_edges         = false;
 };
 
 class G06 : public atcg::Application
 {
-    public:
-
-    G06()
-        :atcg::Application()
-    {
-        pushLayer(new G06Layer("Layer"));
-    }
+public:
+    G06() : atcg::Application() { pushLayer(new G06Layer("Layer")); }
 
     ~G06() {}
-
 };
 
 atcg::Application* atcg::createApplication()

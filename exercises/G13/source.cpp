@@ -16,7 +16,6 @@
 class G13Layer : public atcg::Layer
 {
 public:
-
     using AssignmentMap = std::vector<std::vector<uint32_t>>;
 
     G13Layer(const std::string& name) : atcg::Layer(name) {}
@@ -35,12 +34,11 @@ public:
             /// Exercise: Compute the cotan values for a triangle
             ///           Hint: cotan = <edge0,edge1>/Area(Triangle)
             ///           You can use atcg::areaFromMetric<T> to compute the triangle area
-            const auto d0 = v0 - v2;
-            const auto d1 = v1 - v2;
-            const auto d2 = v1 - v0;
+            const auto d0   = v0 - v2;
+            const auto d1   = v1 - v2;
+            const auto d2   = v1 - v0;
             const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
-            if(area > 1e-5)
-                return clampCotan(d0.dot(d1) / area)/2.f;
+            if(area > 1e-5) return clampCotan(d0.dot(d1) / area) / 2.f;
             return T(1e-5);
         }
 
@@ -96,14 +94,11 @@ public:
 
     std::vector<float> linspace(float a, float b, uint32_t steps)
     {
-        float step_size = (b-a) / (steps - 1);
+        float step_size = (b - a) / (steps - 1);
 
         std::vector<float> space(steps);
 
-        for(uint32_t i = 0; i < steps; ++i)
-        {
-            space[i] = (a + i * step_size);
-        }
+        for(uint32_t i = 0; i < steps; ++i) { space[i] = (a + i * step_size); }
 
         return space;
     }
@@ -111,7 +106,7 @@ public:
     std::shared_ptr<atcg::Mesh> triangulate(const std::vector<atcg::Mesh::Point>& points)
     {
         std::shared_ptr<atcg::Mesh> mesh = std::make_shared<atcg::Mesh>();
-        
+
         std::vector<atcg::Mesh::VertexHandle> v_handles(points.size());
 
         for(uint32_t i = 0; i < points.size(); ++i)
@@ -123,10 +118,10 @@ public:
         {
             for(uint32_t grid_y = 0; grid_y < grid_size; ++grid_y)
             {
-                auto v00 = v_handles[grid_x + (grid_size+1) * grid_y];
-                auto v10 = v_handles[grid_x + 1 + (grid_size+1) * grid_y];
-                auto v01 = v_handles[grid_x + (grid_size+1) * (grid_y + 1)];
-                auto v11 = v_handles[grid_x + 1 + (grid_size+1) * (grid_y + 1)];
+                auto v00 = v_handles[grid_x + (grid_size + 1) * grid_y];
+                auto v10 = v_handles[grid_x + 1 + (grid_size + 1) * grid_y];
+                auto v01 = v_handles[grid_x + (grid_size + 1) * (grid_y + 1)];
+                auto v11 = v_handles[grid_x + 1 + (grid_size + 1) * (grid_y + 1)];
 
                 mesh->add_face(v00, v01, v10);
                 mesh->add_face(v10, v01, v11);
@@ -138,44 +133,41 @@ public:
 
     void editMesh()
     {
-        std::vector<float> U = linspace(-1,1,150);
+        std::vector<float> U = linspace(-1, 1, 150);
         std::vector<atcg::Mesh::Point> grid;
 
-        for(float u : U)
+        for(float u: U)
         {
-            for(float v : U)
-            {
-                grid.push_back({v, u, 0.f});
-            }
+            for(float v: U) { grid.push_back({v, u, 0.f}); }
         }
 
         mesh = triangulate(grid);
 
         atcg::Laplacian<double> laplace = LaplaceCotan<double>().calculate(mesh);
-        Eigen::SparseMatrix<double> L = laplace.M.cwiseInverse() * laplace.S;
-        Eigen::SparseMatrix<double> L2 = L*L;
+        Eigen::SparseMatrix<double> L   = laplace.M.cwiseInverse() * laplace.S;
+        Eigen::SparseMatrix<double> L2  = L * L;
 
         Eigen::SparseMatrix<double> op = -ks * L + kb * L2;
 
         Eigen::MatrixXd starting_displacement(mesh->n_vertices(), 3);
 
-        Eigen::VectorXd ones = Eigen::VectorXd::Ones(mesh->n_vertices());
+        Eigen::VectorXd ones  = Eigen::VectorXd::Ones(mesh->n_vertices());
         Eigen::VectorXd zeros = Eigen::VectorXd::Zero(mesh->n_vertices());
 
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
             atcg::Mesh::Point p = mesh->point(*v_it);
-            double distance = p.norm();
+            double distance     = p.norm();
 
             if(distance < edit_radius)
             {
                 starting_displacement.row(v_it->idx()) = Eigen::Vector3d(0.0, edit_height, 0.0);
-                ones(v_it->idx()) = 0;
-                zeros(v_it->idx()) = 1;
+                ones(v_it->idx())                      = 0;
+                zeros(v_it->idx())                     = 1;
             }
             else if(distance > region_radius)
             {
-                ones(v_it->idx()) = 0;
+                ones(v_it->idx())  = 0;
                 zeros(v_it->idx()) = 1;
             }
         }
@@ -183,7 +175,7 @@ public:
         Eigen::SparseMatrix<double> Id(mesh->n_vertices(), mesh->n_vertices());
         Id.setIdentity();
         op = ones.asDiagonal() * op;
-        op = op + Id*zeros.asDiagonal();
+        op = op + Id * zeros.asDiagonal();
 
         Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
         solver.compute(op);
@@ -192,7 +184,7 @@ public:
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
             atcg::Mesh::Point p = mesh->point(*v_it);
-            Eigen::Vector3d d = displacement.row(v_it->idx());
+            Eigen::Vector3d d   = displacement.row(v_it->idx());
             mesh->set_point(*v_it, {p[0] + d(0), p[1] + d(1), p[2] + d(2)});
         }
     }
@@ -202,7 +194,7 @@ public:
     {
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         editMesh();
 
@@ -220,10 +212,12 @@ public:
             atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_points)
-            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(mesh,
+                                       glm::vec3(0),
+                                       atcg::ShaderManager::getShader("base"),
+                                       camera_controller->getCamera());
 
-        if(mesh && render_edges)
-            atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
+        if(mesh && render_edges) atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -254,30 +248,15 @@ public:
         {
             bool edited = false;
 
-            if(ImGui::SliderFloat("Edit Radius", &edit_radius, 0.0f, region_radius))
-            {
-                edited = true;
-            }
+            if(ImGui::SliderFloat("Edit Radius", &edit_radius, 0.0f, region_radius)) { edited = true; }
 
-            if(ImGui::SliderFloat("Region Radius", &region_radius, edit_radius, 1.0f))
-            {
-                edited = true;
-            }
+            if(ImGui::SliderFloat("Region Radius", &region_radius, edit_radius, 1.0f)) { edited = true; }
 
-            if(ImGui::SliderFloat("Height", &edit_height, 0.0f, 1.0f))
-            {
-                edited = true;
-            }
+            if(ImGui::SliderFloat("Height", &edit_height, 0.0f, 1.0f)) { edited = true; }
 
-            if(ImGui::SliderFloat("Stiffness", &ks, 0.0f, 1.0f))
-            {
-                edited = true;
-            }
+            if(ImGui::SliderFloat("Stiffness", &ks, 0.0f, 1.0f)) { edited = true; }
 
-            if(ImGui::SliderFloat("Bending", &kb, 0.0f, 1.0f))
-            {
-                edited = true;
-            }
+            if(ImGui::SliderFloat("Bending", &kb, 0.0f, 1.0f)) { edited = true; }
 
             if(edited)
             {
@@ -285,44 +264,34 @@ public:
                 mesh->uploadData();
             }
         }
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event& event) override
-    {
-        camera_controller->onEvent(event);
-    }
+    virtual void onEvent(atcg::Event& event) override { camera_controller->onEvent(event); }
 
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
 
     bool show_render_settings = true;
-    bool render_faces = true;
-    bool render_points = false;
-    bool render_edges = false;
+    bool render_faces         = true;
+    bool render_points        = false;
+    bool render_edges         = false;
 
     bool show_edit_settings = true;
-    float ks = 1.0;
-    float kb = 1.0;
-    float edit_radius = 0.3;
-    float region_radius = 0.8;
-    float edit_height = 1.0;
+    float ks                = 1.0;
+    float kb                = 1.0;
+    float edit_radius       = 0.3;
+    float region_radius     = 0.8;
+    float edit_height       = 1.0;
 };
 
 class G13 : public atcg::Application
 {
-    public:
-
-    G13()
-        :atcg::Application()
-    {
-        pushLayer(new G13Layer("Layer"));
-    }
+public:
+    G13() : atcg::Application() { pushLayer(new G13Layer("Layer")); }
 
     ~G13() {}
-
 };
 
 atcg::Application* atcg::createApplication()

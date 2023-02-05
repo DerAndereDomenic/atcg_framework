@@ -16,7 +16,6 @@
 class G12Layer : public atcg::Layer
 {
 public:
-
     using AssignmentMap = std::vector<std::vector<uint32_t>>;
 
     G12Layer(const std::string& name) : atcg::Layer(name) {}
@@ -35,12 +34,11 @@ public:
             /// Exercise: Compute the cotan values for a triangle
             ///           Hint: cotan = <edge0,edge1>/Area(Triangle)
             ///           You can use atcg::areaFromMetric<T> to compute the triangle area
-            const auto d0 = v0 - v2;
-            const auto d1 = v1 - v2;
-            const auto d2 = v1 - v0;
+            const auto d0   = v0 - v2;
+            const auto d1   = v1 - v2;
+            const auto d2   = v1 - v0;
             const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
-            if(area > 1e-5)
-                return clampCotan(d0.dot(d1) / area)/2.f;
+            if(area > 1e-5) return clampCotan(d0.dot(d1) / area) / 2.f;
             return T(1e-5);
         }
 
@@ -94,14 +92,14 @@ public:
         }
     };
 
-    AssignmentMap kmeans(const Eigen::MatrixXd& X, const uint32_t k = 6, const uint32_t max_iterations=50)
+    AssignmentMap kmeans(const Eigen::MatrixXd& X, const uint32_t k = 6, const uint32_t max_iterations = 50)
     {
         std::random_device dev;
         std::mt19937 rng(dev());
         std::uniform_int_distribution<uint32_t> dist(0, X.rows());
 
         std::vector<Eigen::VectorXd> centers;
-        
+
         // Init
         AssignmentMap assignments;
         for(uint32_t i = 0; i < k; ++i)
@@ -110,13 +108,12 @@ public:
             centers.push_back(X.col(center_idx));
             assignments.push_back(std::vector<uint32_t>());
         }
-        
+
         for(uint32_t it = 0; it < max_iterations; ++it)
         {
             std::cout << it << "\n";
-            for(uint32_t i = 0; i < k; ++i)
-                assignments[i].clear();
-            
+            for(uint32_t i = 0; i < k; ++i) assignments[i].clear();
+
             // Assignment
             for(uint32_t i = 0; i < X.cols(); ++i)
             {
@@ -129,24 +126,21 @@ public:
                     if(dist < MIN_DIST)
                     {
                         MIN_DIST = dist;
-                        assign = j;
+                        assign   = j;
                     }
                 }
 
                 assignments[assign].push_back(i);
             }
 
-            //Update
+            // Update
             for(uint32_t i = 0; i < k; ++i)
             {
                 Eigen::VectorXd mean(X.rows());
                 mean.setZero();
 
-                for(uint32_t j = 0; j < assignments[i].size(); ++j)
-                {
-                    mean += X.col(assignments[i][j]);
-                }
-                mean = mean/static_cast<double>(assignments[i].size());
+                for(uint32_t j = 0; j < assignments[i].size(); ++j) { mean += X.col(assignments[i][j]); }
+                mean       = mean / static_cast<double>(assignments[i].size());
                 centers[i] = mean;
             }
         }
@@ -159,12 +153,12 @@ public:
     {
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         mesh = atcg::IO::read_mesh("res/suzanne_blender.obj");
         mesh->request_vertex_colors();
 
-        atcg::Laplacian laplace = LaplaceCotan<double>().calculate(mesh);
+        atcg::Laplacian laplace       = LaplaceCotan<double>().calculate(mesh);
         Eigen::SparseMatrix<double> L = laplace.M.cwiseInverse() * laplace.S;
 
         /*Eigen::EigenSolver<Eigen::MatrixXd> solver;
@@ -178,12 +172,20 @@ public:
         Eigen::VectorXd w = solver.singularValues();
         Eigen::MatrixXd V = solver.matrixV();
 
-        //Eigen::MatrixXd GPS = (w+Eigen::VectorXd::Constant(w.size(),1e-12)).cwiseAbs().cwiseSqrt().cwiseInverse().asDiagonal() * V.transpose();
-        Eigen::MatrixXd GPS = (w+Eigen::VectorXd::Constant(w.size(),1e-12)).cwiseInverse().asDiagonal() * V.transpose();
+        // Eigen::MatrixXd GPS =
+        // (w+Eigen::VectorXd::Constant(w.size(),1e-12)).cwiseAbs().cwiseSqrt().cwiseInverse().asDiagonal() *
+        // V.transpose();
+        Eigen::MatrixXd GPS =
+            (w + Eigen::VectorXd::Constant(w.size(), 1e-12)).cwiseInverse().asDiagonal() * V.transpose();
 
         AssignmentMap assignments = kmeans(GPS);
 
-        atcg::Mesh::Color colors[6] = {atcg::Mesh::Color{255,0,0}, atcg::Mesh::Color{0,255,0}, atcg::Mesh::Color{0,0,255}, atcg::Mesh::Color{255,0,255}, atcg::Mesh::Color{0,255,255}, atcg::Mesh::Color{255,255,0}};
+        atcg::Mesh::Color colors[6] = {atcg::Mesh::Color {255, 0, 0},
+                                       atcg::Mesh::Color {0, 255, 0},
+                                       atcg::Mesh::Color {0, 0, 255},
+                                       atcg::Mesh::Color {255, 0, 255},
+                                       atcg::Mesh::Color {0, 255, 255},
+                                       atcg::Mesh::Color {255, 255, 0}};
 
         for(uint32_t i = 0; i < 6; ++i)
         {
@@ -207,10 +209,12 @@ public:
             atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_points)
-            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(mesh,
+                                       glm::vec3(0),
+                                       atcg::ShaderManager::getShader("base"),
+                                       camera_controller->getCamera());
 
-        if(mesh && render_edges)
-            atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
+        if(mesh && render_edges) atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -235,37 +239,27 @@ public:
             ImGui::Checkbox("Render Mesh", &render_faces);
             ImGui::End();
         }
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event& event) override
-    {
-        camera_controller->onEvent(event);
-    }
+    virtual void onEvent(atcg::Event& event) override { camera_controller->onEvent(event); }
 
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
 
     bool show_render_settings = true;
-    bool render_faces = true;
-    bool render_points = false;
-    bool render_edges = false;
+    bool render_faces         = true;
+    bool render_points        = false;
+    bool render_edges         = false;
 };
 
 class G12 : public atcg::Application
 {
-    public:
-
-    G12()
-        :atcg::Application()
-    {
-        pushLayer(new G12Layer("Layer"));
-    }
+public:
+    G12() : atcg::Application() { pushLayer(new G12Layer("Layer")); }
 
     ~G12() {}
-
 };
 
 atcg::Application* atcg::createApplication()

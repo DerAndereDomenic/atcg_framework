@@ -15,19 +15,15 @@
 class G09Layer : public atcg::Layer
 {
 public:
-
     G09Layer(const std::string& name) : atcg::Layer(name) {}
 
     std::vector<float> linspace(float a, float b, uint32_t steps)
     {
-        float step_size = (b-a) / (steps - 1);
+        float step_size = (b - a) / (steps - 1);
 
         std::vector<float> space(steps);
 
-        for(uint32_t i = 0; i < steps; ++i)
-        {
-            space[i] = (a + i * step_size);
-        }
+        for(uint32_t i = 0; i < steps; ++i) { space[i] = (a + i * step_size); }
 
         return space;
     }
@@ -35,7 +31,7 @@ public:
     std::shared_ptr<atcg::Mesh> triangulate(const std::vector<atcg::Mesh::Point>& points)
     {
         std::shared_ptr<atcg::Mesh> mesh = std::make_shared<atcg::Mesh>();
-        
+
         std::vector<atcg::Mesh::VertexHandle> v_handles(points.size());
 
         for(uint32_t i = 0; i < points.size(); ++i)
@@ -47,10 +43,10 @@ public:
         {
             for(uint32_t grid_y = 0; grid_y < grid_size; ++grid_y)
             {
-                auto v00 = v_handles[grid_x + (grid_size+1) * grid_y];
-                auto v10 = v_handles[grid_x + 1 + (grid_size+1) * grid_y];
-                auto v01 = v_handles[grid_x + (grid_size+1) * (grid_y + 1)];
-                auto v11 = v_handles[grid_x + 1 + (grid_size+1) * (grid_y + 1)];
+                auto v00 = v_handles[grid_x + (grid_size + 1) * grid_y];
+                auto v10 = v_handles[grid_x + 1 + (grid_size + 1) * grid_y];
+                auto v01 = v_handles[grid_x + (grid_size + 1) * (grid_y + 1)];
+                auto v11 = v_handles[grid_x + 1 + (grid_size + 1) * (grid_y + 1)];
 
                 mesh->add_face(v00, v01, v10);
                 mesh->add_face(v10, v01, v11);
@@ -77,25 +73,26 @@ public:
         return base;
     }
 
-    std::vector<atcg::Mesh::Point> calculate_surface(const std::vector<atcg::Mesh::Point>& control_points, const std::vector<float>& samples)
+    std::vector<atcg::Mesh::Point> calculate_surface(const std::vector<atcg::Mesh::Point>& control_points,
+                                                     const std::vector<float>& samples)
     {
         std::vector<atcg::Mesh::Point> points;
         uint32_t m = 4, n = 4;
 
-        for(float u : samples)
+        for(float u: samples)
         {
-            for(float v : samples)
+            for(float v: samples)
             {
                 BezierBase F = getBezierCoefficients(u);
                 BezierBase G = getBezierCoefficients(v);
 
-                atcg::Mesh::Point p{0,0,0};
+                atcg::Mesh::Point p {0, 0, 0};
 
                 for(uint32_t i = 0; i < n; ++i)
                 {
                     for(uint32_t j = 0; j < m; ++j)
                     {
-                        p += control_points[j + m * i] * F.coefficients[i] * G.coefficients[j]; 
+                        p += control_points[j + m * i] * F.coefficients[i] * G.coefficients[j];
                     }
                 }
 
@@ -111,28 +108,27 @@ public:
     {
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        std::vector<float> X = linspace(-1,1,4);
-        std::vector<float> Y = linspace(-1,1,4);
-        std::vector<float> Z = {0.1f, 0.4f, -0.1f, 0.3f, 0.3f, 0.3f, 0.8f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.2f, 0.4f, 1.0f, 0.1f};
-        frequencies = {0.10f,0.2f,0.3f,0.12f,0.1f,0.5f,0.5f,0.25f,0.13f,0.15f,0.2f,0.20f,0.9f,0.11f,0.8f,0.7f};
+        std::vector<float> X = linspace(-1, 1, 4);
+        std::vector<float> Y = linspace(-1, 1, 4);
+        std::vector<float> Z =
+            {0.1f, 0.4f, -0.1f, 0.3f, 0.3f, 0.3f, 0.8f, 0.0f, 0.0f, 0.5f, 0.5f, 0.0f, 0.2f, 0.4f, 1.0f, 0.1f};
+        frequencies =
+            {0.10f, 0.2f, 0.3f, 0.12f, 0.1f, 0.5f, 0.5f, 0.25f, 0.13f, 0.15f, 0.2f, 0.20f, 0.9f, 0.11f, 0.8f, 0.7f};
 
         for(uint32_t i = 0; i < Y.size(); ++i)
         {
-            for(uint32_t j = 0; j < X.size(); ++j)
-            {
-                control_polygon.push_back({X[j], Y[i], Z[j + X.size() * i]});
-            }
+            for(uint32_t j = 0; j < X.size(); ++j) { control_polygon.push_back({X[j], Y[i], Z[j + X.size() * i]}); }
         }
 
         control_polygon_mesh = triangulate(control_polygon);
         control_polygon_mesh->uploadData();
 
-        std::vector<float> sample_points = linspace(0,1, 100);
+        std::vector<float> sample_points = linspace(0, 1, 100);
 
         std::vector<atcg::Mesh::Point> surface = calculate_surface(control_polygon, sample_points);
-        mesh = triangulate(surface);
+        mesh                                   = triangulate(surface);
         mesh->uploadData();
     }
 
@@ -146,9 +142,9 @@ public:
             control_polygon[i][2] = std::sin(2.0f * static_cast<float>(M_PI) * frequencies[i] * t);
         }
 
-        control_polygon_mesh = triangulate(control_polygon);
-        std::vector<atcg::Mesh::Point> surface = calculate_surface(control_polygon, linspace(0,1,100));
-        mesh = triangulate(surface);
+        control_polygon_mesh                   = triangulate(control_polygon);
+        std::vector<atcg::Mesh::Point> surface = calculate_surface(control_polygon, linspace(0, 1, 100));
+        mesh                                   = triangulate(surface);
 
         control_polygon_mesh->uploadData();
         mesh->uploadData();
@@ -161,13 +157,15 @@ public:
             atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_points)
-            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(mesh,
+                                       glm::vec3(0),
+                                       atcg::ShaderManager::getShader("base"),
+                                       camera_controller->getCamera());
 
-        if(mesh && render_edges)
-            atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
+        if(mesh && render_edges) atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
 
         if(control_polygon_mesh && render_control_polygon)
-            atcg::Renderer::drawLines(control_polygon_mesh, glm::vec3(1,0,0), camera_controller->getCamera());
+            atcg::Renderer::drawLines(control_polygon_mesh, glm::vec3(1, 0, 0), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -205,7 +203,6 @@ public:
             }
             ImGui::End();
         }
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -223,11 +220,11 @@ private:
     std::vector<float> frequencies;
     std::shared_ptr<atcg::Mesh> control_polygon_mesh;
 
-    bool show_render_settings = true;
+    bool show_render_settings  = true;
     bool show_surface_settings = true;
-    bool render_faces = true;
-    bool render_points = false;
-    bool render_edges = false;
+    bool render_faces          = true;
+    bool render_points         = false;
+    bool render_edges          = false;
 
     bool render_control_polygon = true;
 
@@ -236,16 +233,10 @@ private:
 
 class G09 : public atcg::Application
 {
-    public:
-
-    G09()
-        :atcg::Application()
-    {
-        pushLayer(new G09Layer("Layer"));
-    }
+public:
+    G09() : atcg::Application() { pushLayer(new G09Layer("Layer")); }
 
     ~G09() {}
-
 };
 
 atcg::Application* atcg::createApplication()

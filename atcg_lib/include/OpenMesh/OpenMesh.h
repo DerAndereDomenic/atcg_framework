@@ -6,5 +6,5 @@
 
 namespace atcg
 {
-    typedef OpenMesh::TriMesh_ArrayKernelT<> TriMesh;
+typedef OpenMesh::TriMesh_ArrayKernelT<> TriMesh;
 }

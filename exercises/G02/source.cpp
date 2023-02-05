@@ -22,13 +22,12 @@ using SDFGrid = atcg::Grid<SDFVoxel>;
 class G02Layer : public atcg::Layer
 {
 public:
-
     G02Layer(const std::string& name) : atcg::Layer(name) {}
 
     struct SDFResult
     {
         float sdf;
-        glm::vec3 color; 
+        glm::vec3 color;
     };
 
     struct SDF
@@ -43,7 +42,9 @@ public:
             float x = p.x;
             float y = p.y;
             float z = p.z;
-            return {std::pow(x * x + 9.f / 4.f * y * y + z * z - 1.f, 3.f) - x * x * z * z * z - 9.f / 80.f * y * y * z * z * z, glm::vec3(0,1,0)}; 
+            return {std::pow(x * x + 9.f / 4.f * y * y + z * z - 1.f, 3.f) - x * x * z * z * z -
+                        9.f / 80.f * y * y * z * z * z,
+                    glm::vec3(0, 1, 0)};
         }
     };
 
@@ -53,16 +54,16 @@ public:
         float radius;
         glm::vec3 color;
 
-        SDFSphere(const glm::vec3& position, float radius, const glm::vec3& color=glm::vec3(1))
-            :position(position),
-             radius(radius),
-             color(color)
+        SDFSphere(const glm::vec3& position, float radius, const glm::vec3& color = glm::vec3(1))
+            : position(position)
+            , radius(radius)
+            , color(color)
         {
         }
 
         virtual SDFResult operator()(const glm::vec3& p) override
         {
-            return {glm::length(p-position) - radius, color};
+            return {glm::length(p - position) - radius, color};
         }
     };
 
@@ -72,21 +73,18 @@ public:
         glm::vec3 bound;
         glm::vec3 color;
 
-        SDFBox(const glm::vec3& position, const glm::vec3& bound, const glm::vec3& color=glm::vec3(1))
-            :position(position),
-             bound(bound),
-             color(color)
+        SDFBox(const glm::vec3& position, const glm::vec3& bound, const glm::vec3& color = glm::vec3(1))
+            : position(position)
+            , bound(bound)
+            , color(color)
         {
         }
 
-        float vmax(const glm::vec3& p)
-        {
-            return std::max(std::max(p.x, p.y), p.z);
-        }
+        float vmax(const glm::vec3& p) { return std::max(std::max(p.x, p.y), p.z); }
 
         virtual SDFResult operator()(const glm::vec3& p) override
         {
-            return {vmax(glm::abs(p-position) - bound), color};
+            return {vmax(glm::abs(p - position) - bound), color};
         }
     };
 
@@ -97,17 +95,17 @@ public:
         uint32_t axis;
         glm::vec3 color;
 
-        SDFCylinder(const glm::vec3& position, float radius, uint32_t axis, const glm::vec3& color=glm::vec3(1))
-            :position(position),
-             radius(radius),
-             axis(axis),
-             color(color)
+        SDFCylinder(const glm::vec3& position, float radius, uint32_t axis, const glm::vec3& color = glm::vec3(1))
+            : position(position)
+            , radius(radius)
+            , axis(axis)
+            , color(color)
         {
         }
 
         virtual SDFResult operator()(const glm::vec3& p) override
         {
-            auto offset = p-position;
+            auto offset  = p - position;
             offset[axis] = 0;
             return {glm::length(offset) - radius, color};
         }
@@ -115,55 +113,43 @@ public:
 
     struct SDFUnion : public SDF
     {
-        SDF* sdf1,* sdf2;
-        SDFUnion(SDF* sdf1, SDF* sdf2)
-            :sdf1(sdf1), sdf2(sdf2)
-        {
-        }
+        SDF *sdf1, *sdf2;
+        SDFUnion(SDF* sdf1, SDF* sdf2) : sdf1(sdf1), sdf2(sdf2) {}
 
         virtual SDFResult operator()(const glm::vec3& p) override
         {
             SDFResult res1 = (*sdf1)(p);
             SDFResult res2 = (*sdf2)(p);
-            if(res1.sdf < res2.sdf)
-                return res1;
+            if(res1.sdf < res2.sdf) return res1;
             return res2;
         }
     };
 
     struct SDFIntersection : public SDF
     {
-        SDF* sdf1,* sdf2;
-        SDFIntersection(SDF* sdf1, SDF* sdf2)
-            :sdf1(sdf1), sdf2(sdf2)
-        {
-        }
+        SDF *sdf1, *sdf2;
+        SDFIntersection(SDF* sdf1, SDF* sdf2) : sdf1(sdf1), sdf2(sdf2) {}
 
         virtual SDFResult operator()(const glm::vec3& p) override
         {
             SDFResult res1 = (*sdf1)(p);
             SDFResult res2 = (*sdf2)(p);
-            if(res1.sdf > res2.sdf)
-                return res1;
+            if(res1.sdf > res2.sdf) return res1;
             return res2;
         }
     };
 
     struct SDFDifference : public SDF
     {
-        SDF* sdf1,* sdf2;
-        SDFDifference(SDF* sdf1, SDF* sdf2)
-            :sdf1(sdf1), sdf2(sdf2)
-        {
-        }
+        SDF *sdf1, *sdf2;
+        SDFDifference(SDF* sdf1, SDF* sdf2) : sdf1(sdf1), sdf2(sdf2) {}
 
         virtual SDFResult operator()(const glm::vec3& p) override
         {
             SDFResult res1 = (*sdf1)(p);
             SDFResult res2 = (*sdf2)(p);
             res2.sdf *= -1;
-            if(res1.sdf > res2.sdf)
-                return res1;
+            if(res1.sdf > res2.sdf) return res1;
             return res2;
         }
     };
@@ -173,26 +159,25 @@ public:
         for(uint32_t i = 0; i < grid->voxels_per_volume(); ++i)
         {
             glm::ivec3 voxel = grid->index2voxel(i);
-            glm::vec3 p = grid->voxel2position(voxel);
+            glm::vec3 p      = grid->voxel2position(voxel);
 
-            SDFResult res = (*sdf)(p);
-            (*grid)[i].sdf = res.sdf;
+            SDFResult res    = (*sdf)(p);
+            (*grid)[i].sdf   = res.sdf;
             (*grid)[i].color = res.color;
         }
     }
 
     inline glm::vec3 interpolate_point(const float isovalue,
-                                  const glm::vec3 vector_1,
-                                  const float sdf_1,
-                                  const glm::vec3 vector_2,
-                                  const float sdf_2)
+                                       const glm::vec3 vector_1,
+                                       const float sdf_1,
+                                       const glm::vec3 vector_2,
+                                       const float sdf_2)
     {
-        if(std::abs(sdf_1 - sdf_2) < 1e-8f)
-            return vector_1;
-        
+        if(std::abs(sdf_1 - sdf_2) < 1e-8f) return vector_1;
+
         float t = (isovalue - sdf_1) / (sdf_2 - sdf_1);
         return vector_1 + t * (vector_2 - vector_1);
-        //return (vector_1 + vector_2)/2.0f;
+        // return (vector_1 + vector_2)/2.0f;
     }
 
     void marching_cubes(const std::shared_ptr<SDFGrid>& grid, const std::shared_ptr<atcg::Mesh>& mesh)
@@ -200,13 +185,13 @@ public:
         mesh->request_vertex_colors();
         for(uint32_t index = 0; index < grid->voxels_per_volume(); ++index)
         {
-            glm::ivec3 voxel = grid->index2voxel(index);
+            glm::ivec3 voxel      = grid->index2voxel(index);
             glm::vec3 voxel_start = grid->voxel2position(voxel);
 
             const float I = grid->voxel_side_length();
             const float O = 0.0f;
 
-            //Get neighboring voxel positions
+            // Get neighboring voxel positions
             glm::vec3 voxel_positions[8] = {
                 glm::vec3(voxel_start.x + O, voxel_start.y + O, voxel_start.z + O),
                 glm::vec3(voxel_start.x + I, voxel_start.y + O, voxel_start.z + O),
@@ -218,76 +203,78 @@ public:
                 glm::vec3(voxel_start.x + O, voxel_start.y + I, voxel_start.z + I),
             };
 
-            //Get voxel information
+            // Get voxel information
             float sdf_values[8];
             glm::vec3 color_values[8];
             bool all_valid = true;
             for(uint32_t i = 0; i < 8; ++i)
             {
-                //Abort if a neighbor is missing (at the broder of volume)
+                // Abort if a neighbor is missing (at the broder of volume)
                 if(!grid->insideVolume(voxel_positions[i]))
                 {
                     all_valid = false;
-                    break;        
+                    break;
                 }
 
-                sdf_values[i] = (*grid)(voxel_positions[i]).sdf;
+                sdf_values[i]   = (*grid)(voxel_positions[i]).sdf;
                 color_values[i] = (*grid)(voxel_positions[i]).color;
             }
 
-            if(!all_valid)
-                continue;
+            if(!all_valid) continue;
 
             const float ISOVALUE = 0.0f;
 
-            #define SET_BIT(ind, i) \
-                ind |= (1 << i)
+#define SET_BIT(ind, i) ind |= (1 << i)
 
             uint8_t cubeindex = 0;
             for(uint32_t i = 0; i < 8; ++i)
             {
-                if(sdf_values[i] >= ISOVALUE)
-                {
-                    SET_BIT(cubeindex, i);
-                }
+                if(sdf_values[i] >= ISOVALUE) { SET_BIT(cubeindex, i); }
             }
 
-            #undef SET_BIT
+#undef SET_BIT
 
-            //No edges -> early out
-            if(edge_table[cubeindex] == 0)
-                continue;
+            // No edges -> early out
+            if(edge_table[cubeindex] == 0) continue;
 
             glm::vec3 vertex_list[12];
             atcg::Mesh::VertexHandle v_handles[12];
 
-            #define CREATE_VERTEX_ON_EDGE(n, corner_i, corner_j) \
-                if(edge_table[cubeindex] & (1 << n)) \
-                {\
-                    vertex_list[n] = interpolate_point(ISOVALUE, voxel_positions[corner_i], sdf_values[corner_i], voxel_positions[corner_j], sdf_values[corner_j]);\
-                    v_handles[n] = mesh->add_vertex(atcg::Mesh::Point(vertex_list[n].x, vertex_list[n].y, vertex_list[n].z)); \
-                    glm::vec3 c = interpolate_point(ISOVALUE, color_values[corner_i], sdf_values[corner_i], color_values[corner_j], sdf_values[corner_j]);\
-                    atcg::Mesh::Color clr;\
-                    clr[0] = static_cast<uint8_t>(c.x*255.0f);\
-                    clr[1] = static_cast<uint8_t>(c.y*255.0f);\
-                    clr[2] = static_cast<uint8_t>(c.z*255.0f);\
-                    mesh->set_color(v_handles[n], clr); \
-                }
+#define CREATE_VERTEX_ON_EDGE(n, corner_i, corner_j)                                                                   \
+    if(edge_table[cubeindex] & (1 << n))                                                                               \
+    {                                                                                                                  \
+        vertex_list[n] = interpolate_point(ISOVALUE,                                                                   \
+                                           voxel_positions[corner_i],                                                  \
+                                           sdf_values[corner_i],                                                       \
+                                           voxel_positions[corner_j],                                                  \
+                                           sdf_values[corner_j]);                                                      \
+        v_handles[n]   = mesh->add_vertex(atcg::Mesh::Point(vertex_list[n].x, vertex_list[n].y, vertex_list[n].z));    \
+        glm::vec3 c    = interpolate_point(ISOVALUE,                                                                   \
+                                        color_values[corner_i],                                                     \
+                                        sdf_values[corner_i],                                                       \
+                                        color_values[corner_j],                                                     \
+                                        sdf_values[corner_j]);                                                      \
+        atcg::Mesh::Color clr;                                                                                         \
+        clr[0] = static_cast<uint8_t>(c.x * 255.0f);                                                                   \
+        clr[1] = static_cast<uint8_t>(c.y * 255.0f);                                                                   \
+        clr[2] = static_cast<uint8_t>(c.z * 255.0f);                                                                   \
+        mesh->set_color(v_handles[n], clr);                                                                            \
+    }
 
-            CREATE_VERTEX_ON_EDGE( 0, 0, 1);
-            CREATE_VERTEX_ON_EDGE( 1, 1, 2);
-            CREATE_VERTEX_ON_EDGE( 2, 2, 3);
-            CREATE_VERTEX_ON_EDGE( 3, 3, 0);
-            CREATE_VERTEX_ON_EDGE( 4, 4, 5);
-            CREATE_VERTEX_ON_EDGE( 5, 5, 6);
-            CREATE_VERTEX_ON_EDGE( 6, 6, 7);
-            CREATE_VERTEX_ON_EDGE( 7, 7, 4);
-            CREATE_VERTEX_ON_EDGE( 8, 0, 4);
-            CREATE_VERTEX_ON_EDGE( 9, 1, 5);
+            CREATE_VERTEX_ON_EDGE(0, 0, 1);
+            CREATE_VERTEX_ON_EDGE(1, 1, 2);
+            CREATE_VERTEX_ON_EDGE(2, 2, 3);
+            CREATE_VERTEX_ON_EDGE(3, 3, 0);
+            CREATE_VERTEX_ON_EDGE(4, 4, 5);
+            CREATE_VERTEX_ON_EDGE(5, 5, 6);
+            CREATE_VERTEX_ON_EDGE(6, 6, 7);
+            CREATE_VERTEX_ON_EDGE(7, 7, 4);
+            CREATE_VERTEX_ON_EDGE(8, 0, 4);
+            CREATE_VERTEX_ON_EDGE(9, 1, 5);
             CREATE_VERTEX_ON_EDGE(10, 2, 6);
             CREATE_VERTEX_ON_EDGE(11, 3, 7);
 
-            #undef CREATE_VERTEX_ON_EDGE
+#undef CREATE_VERTEX_ON_EDGE
 
             for(uint32_t i = 0; triangle_table[cubeindex][i] != -1; i += 3)
             {
@@ -303,12 +290,12 @@ public:
 
     void subdivide_mesh(const std::shared_ptr<atcg::Mesh>& mesh)
     {
-        //TODO: sqrt(3) subdivision
+        // TODO: sqrt(3) subdivision
         mesh->request_edge_status();
         mesh->request_vertex_status();
         uint32_t num_features = mesh->find_feature_edges();
         std::cout << "Found " << num_features << " feature edges\n";
-        
+
         size_t nv = mesh->n_vertices();
         size_t ne = mesh->n_edges();
         size_t nf = mesh->n_faces();
@@ -318,51 +305,49 @@ public:
 
         auto new_pos_property = OpenMesh::makeTemporaryProperty<OpenMesh::VertexHandle, atcg::Mesh::Point>(*mesh.get());
 
-        //Calculate new position of old vertices
+        // Calculate new position of old vertices
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
             uint32_t n = (*v_it).valence();
             float beta = (4.0f - 2.0f * cosf(2.0f * static_cast<float>(M_PI) / static_cast<float>(n))) / 9.0f;
-            new_pos_property[*v_it] = {0,0,0};
+            new_pos_property[*v_it] = {0, 0, 0};
 
             for(auto vv_it = v_it->vertices().begin(); vv_it != v_it->vertices().end(); ++vv_it)
             {
                 new_pos_property[*v_it] += mesh->point(*vv_it);
             }
 
-            new_pos_property[*v_it] = (1.0f - beta) * mesh->point(*v_it) + beta/static_cast<float>(n) * new_pos_property[*v_it];
+            new_pos_property[*v_it] =
+                (1.0f - beta) * mesh->point(*v_it) + beta / static_cast<float>(n) * new_pos_property[*v_it];
 
-            if(mesh->is_boundary(*v_it) || v_it->feature())
-            {
-                new_pos_property[*v_it] = mesh->point(*v_it);
-            }
+            if(mesh->is_boundary(*v_it) || v_it->feature()) { new_pos_property[*v_it] = mesh->point(*v_it); }
         }
 
-        //Split faces
+        // Split faces
         std::vector<atcg::Mesh::FaceHandle> faces;
         std::vector<atcg::Mesh::VertexHandle> centroids;
         for(auto f_it = mesh->faces_begin(); f_it != fend; ++f_it)
         {
-            atcg::Mesh::Point center = {0,0,0};
+            atcg::Mesh::Point center = {0, 0, 0};
             for(auto v_it = f_it->vertices().begin(); v_it != f_it->vertices().end(); ++v_it)
             {
                 center += mesh->point(*v_it);
             }
 
             center /= 3.0f;
-            auto handle = mesh->new_vertex(center);
+            auto handle              = mesh->new_vertex(center);
             new_pos_property[handle] = center;
             mesh->split(*f_it, handle);
         }
 
-        //Set new vertex positions
+        // Set new vertex positions
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
-            if(mesh->is_boundary(*v_it)  || v_it->feature())continue;
+            if(mesh->is_boundary(*v_it) || v_it->feature()) continue;
             mesh->point(*v_it) = new_pos_property[*v_it];
         }
 
-        //Flip old edges
+        // Flip old edges
         for(auto e_it = mesh->edges_begin(); e_it != eend; ++e_it)
         {
             atcg::Mesh::EdgeHandle e = *e_it;
@@ -371,19 +356,18 @@ public:
             mesh->flip(e);
         }
 
-        //Update rendering
+        // Update rendering
         mesh->uploadData();
     }
 
     // This is run at the start of the program
     virtual void onAttach() override
     {
-
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        //Create a grid at the origin with 10 voxels per side length with a size of 0.1
+        // Create a grid at the origin with 10 voxels per side length with a size of 0.1
         grid = std::make_shared<SDFGrid>(glm::vec3(0), 70, 0.05f);
     }
 
@@ -398,10 +382,12 @@ public:
             atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_points)
-            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(mesh,
+                                       glm::vec3(0),
+                                       atcg::ShaderManager::getShader("flat"),
+                                       camera_controller->getCamera());
 
-        if(mesh && render_edges)
-            atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
+        if(mesh && render_edges) atcg::Renderer::drawLines(mesh, glm::vec3(0), camera_controller->getCamera());
 
         if(render_grid)
             atcg::Renderer::drawGrid(grid->getGridDimensions(), camera_controller->getCamera(), update_grid);
@@ -432,26 +418,28 @@ public:
             ImGui::Begin("Settings MC", &show_marching_cubes);
             if(ImGui::SliderFloat("Voxel Size", &voxel_size, 0.01f, 0.2f))
             {
-                uint32_t num_voxels = static_cast<uint32_t>(70.0f/voxel_size * 0.05f);
-                num_voxels += (1 - num_voxels%2);
-                grid = std::make_shared<SDFGrid>(glm::vec3(0), static_cast<uint32_t>(70.0f/voxel_size * 0.05f) , voxel_size);
+                uint32_t num_voxels = static_cast<uint32_t>(70.0f / voxel_size * 0.05f);
+                num_voxels += (1 - num_voxels % 2);
+                grid        = std::make_shared<SDFGrid>(glm::vec3(0),
+                                                 static_cast<uint32_t>(70.0f / voxel_size * 0.05f),
+                                                 voxel_size);
                 update_grid = true;
             }
 
             if(ImGui::Button("Run"))
             {
-                //Fill the grid with the sdf
+                // Fill the grid with the sdf
                 mesh = std::make_shared<atcg::Mesh>();
-                
-                SDFCylinder c1(glm::vec3(0), 0.5f, 0, glm::vec3(0,1,0));
-                SDFCylinder c2(glm::vec3(0), 0.5f, 1, glm::vec3(0,1,0));
-                SDFCylinder c3(glm::vec3(0), 0.5f, 2, glm::vec3(0,1,0));
+
+                SDFCylinder c1(glm::vec3(0), 0.5f, 0, glm::vec3(0, 1, 0));
+                SDFCylinder c2(glm::vec3(0), 0.5f, 1, glm::vec3(0, 1, 0));
+                SDFCylinder c3(glm::vec3(0), 0.5f, 2, glm::vec3(0, 1, 0));
 
                 SDFUnion c1uc2(&c1, &c2);
                 SDFUnion c1uc2uc3(&c1uc2, &c3);
 
-                SDFSphere s(glm::vec3(0), 1, glm::vec3(0,0,1));
-                SDFBox b(glm::vec3(0), glm::vec3(0.8f), glm::vec3(1,0,0));
+                SDFSphere s(glm::vec3(0), 1, glm::vec3(0, 0, 1));
+                SDFBox b(glm::vec3(0), glm::vec3(0.8f), glm::vec3(1, 0, 0));
 
                 SDFIntersection sib(&b, &s);
 
@@ -473,10 +461,7 @@ public:
         {
             ImGui::Begin("Settings SD", &show_subdivision);
 
-            if(ImGui::Button("Subdivide"))
-            {
-                subdivide_mesh(mesh);
-            }
+            if(ImGui::Button("Subdivide")) { subdivide_mesh(mesh); }
 
             ImGui::End();
         }
@@ -491,8 +476,6 @@ public:
             ImGui::Checkbox("Render Grid", &render_grid);
             ImGui::End();
         }
-
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -510,10 +493,10 @@ public:
 
         mesh->uploadData();
 
-        //Also reset camera
+        // Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         return true;
     }
@@ -523,30 +506,24 @@ private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<SDFGrid> grid;
 
-    bool show_marching_cubes = true;
+    bool show_marching_cubes  = true;
     bool show_render_settings = false;
-    bool render_faces = true;
-    bool render_points = false;
-    bool render_edges = false;
-    bool update_grid = false;
-    bool render_grid = true;
-    float voxel_size = 0.05f;
+    bool render_faces         = true;
+    bool render_points        = false;
+    bool render_edges         = false;
+    bool update_grid          = false;
+    bool render_grid          = true;
+    float voxel_size          = 0.05f;
 
     bool show_subdivision = true;
 };
 
 class G02 : public atcg::Application
 {
-    public:
-
-    G02()
-        :atcg::Application()
-    {
-        pushLayer(new G02Layer("Layer"));
-    }
+public:
+    G02() : atcg::Application() { pushLayer(new G02Layer("Layer")); }
 
     ~G02() {}
-
 };
 
 atcg::Application* atcg::createApplication()

@@ -12,9 +12,9 @@
 
 #include <numeric>
 
-using VertexHandle = atcg::Mesh::VertexHandle;
-using EdgeHandle = atcg::Mesh::EdgeHandle;
-using HalfEdgeHandle = atcg::Mesh::HalfedgeHandle;
+using VertexHandle             = atcg::Mesh::VertexHandle;
+using EdgeHandle               = atcg::Mesh::EdgeHandle;
+using HalfEdgeHandle           = atcg::Mesh::HalfedgeHandle;
 using GeodesicDistanceProperty = OpenMesh::VPropHandleT<double>;
 
 template<typename T>
@@ -28,12 +28,11 @@ struct LaplaceCotan
 
     T triangleCotan(const atcg::TriMesh::Point& v0, const atcg::TriMesh::Point& v1, const atcg::TriMesh::Point& v2)
     {
-        const auto d0 = v0 - v2;
-        const auto d1 = v1 - v2;
-        const auto d2 = v1 - v0;
+        const auto d0   = v0 - v2;
+        const auto d1   = v1 - v2;
+        const auto d2   = v1 - v0;
         const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
-        if(area > 1e-5)
-            return clampCotan(d0.dot(d1) / area) / T(2.);
+        if(area > 1e-5) return clampCotan(d0.dot(d1) / area) / T(2.);
         return 1e-5;
     }
 
@@ -95,7 +94,6 @@ struct LaplaceCotan
 class G08Layer : public atcg::Layer
 {
 public:
-
     G08Layer(const std::string& name) : atcg::Layer(name) {}
 
     void colorize_mesh(const std::shared_ptr<atcg::Mesh>& mesh, const OpenMesh::VPropHandleT<double>& vertexProperty)
@@ -103,7 +101,7 @@ public:
         assert(mesh->has_vertex_colors());
         double max_value = -std::numeric_limits<double>::infinity();
         double min_value = std::numeric_limits<double>::infinity();
-        for(auto vh : mesh->vertices()) 
+        for(auto vh: mesh->vertices())
         {
             double value = mesh->property(vertexProperty, vh);
             if(!std::isfinite(value)) continue;
@@ -111,53 +109,51 @@ public:
             min_value = std::min(min_value, value);
         }
         std::cout << min_value << " " << max_value << std::endl;
-        for(auto vh : mesh->vertices()) 
+        for(auto vh: mesh->vertices())
         {
             double value = mesh->property(vertexProperty, vh);
-            if(std::isfinite(value)) 
+            if(std::isfinite(value))
             {
                 mesh->set_color(vh, {255 * (value - min_value) / (max_value - min_value), 0, 0});
-            } 
-            else 
-            {
-                mesh->set_color(vh, {0, 0, 255});
             }
+            else { mesh->set_color(vh, {0, 0, 255}); }
         }
     }
 
-    void cosine_colorize_mesh(const std::shared_ptr<atcg::Mesh>& mesh, const OpenMesh::VPropHandleT<double>& vertexProperty, const double periods)
+    void cosine_colorize_mesh(const std::shared_ptr<atcg::Mesh>& mesh,
+                              const OpenMesh::VPropHandleT<double>& vertexProperty,
+                              const double periods)
     {
         assert(mesh->has_vertex_colors());
         double max_value = -std::numeric_limits<double>::infinity();
         double min_value = std::numeric_limits<double>::infinity();
-        for(auto vh : mesh->vertices()) 
+        for(auto vh: mesh->vertices())
         {
             double value = mesh->property(vertexProperty, vh);
             if(!std::isfinite(value)) continue;
             max_value = std::max(max_value, value);
             min_value = std::min(min_value, value);
         }
-        
-        for(auto vh : mesh->vertices()) 
+
+        for(auto vh: mesh->vertices())
         {
-            double value = ((mesh->property(vertexProperty, vh) - min_value) / (max_value - min_value)) * 2 * M_PI * periods;
-            if(std::isfinite(value)) 
+            double value =
+                ((mesh->property(vertexProperty, vh) - min_value) / (max_value - min_value)) * 2 * M_PI * periods;
+            if(std::isfinite(value))
             {
-                mesh->set_color(vh, {static_cast<unsigned char>(value / (2 * M_PI * periods) * 255 * (1.0 + cos(value)) / 2.0), 0, 0});
+                mesh->set_color(
+                    vh,
+                    {static_cast<unsigned char>(value / (2 * M_PI * periods) * 255 * (1.0 + cos(value)) / 2.0), 0, 0});
             }
-            else
-            {
-                mesh->set_color(vh, {0, 0, 255});
-            }
+            else { mesh->set_color(vh, {0, 0, 255}); }
         }
     }
 
-    void compute_matrices(const std::shared_ptr<atcg::Mesh>& mesh,
-                          double t)
+    void compute_matrices(const std::shared_ptr<atcg::Mesh>& mesh, double t)
     {
         atcg::Laplacian<double> laplacian = LaplaceCotan<double>().calculate(mesh);
-        Eigen::SparseMatrix<double> L = laplacian.M.cwiseInverse() * laplacian.S;
-        Eigen::SparseMatrix<double> Lc = laplacian.S;
+        Eigen::SparseMatrix<double> L     = laplacian.M.cwiseInverse() * laplacian.S;
+        Eigen::SparseMatrix<double> Lc    = laplacian.S;
 
         Eigen::SparseMatrix<double> Id(mesh->n_vertices(), mesh->n_vertices());
         Id.setIdentity();
@@ -168,40 +164,38 @@ public:
         luLc.compute(Lc);
     }
 
-    void compute_heat_geodesics(const std::shared_ptr<atcg::Mesh>& mesh, 
+    void compute_heat_geodesics(const std::shared_ptr<atcg::Mesh>& mesh,
                                 const std::vector<VertexHandle>& start_vhs,
                                 GeodesicDistanceProperty& distance_property)
     {
-        if(start_vhs.empty())return;
+        if(start_vhs.empty()) return;
 
         Eigen::VectorXd u0 = Eigen::VectorXd::Zero(mesh->n_vertices());
-        for(auto start_vh : start_vhs)
-        {
-            u0[start_vh.idx()] = 1.0;
-        }
+        for(auto start_vh: start_vhs) { u0[start_vh.idx()] = 1.0; }
 
         Eigen::VectorXd u = luAtLc.solve(u0);
 
-        std::vector<OpenMesh::Vec3d> face_grad_u(mesh->n_faces(), OpenMesh::Vec3d(0,0,0));
-        for(auto fh : mesh->faces())
+        std::vector<OpenMesh::Vec3d> face_grad_u(mesh->n_faces(), OpenMesh::Vec3d(0, 0, 0));
+        for(auto fh: mesh->faces())
         {
-            OpenMesh::Vec3d& x = face_grad_u[fh.idx()];
+            OpenMesh::Vec3d& x          = face_grad_u[fh.idx()];
             const atcg::Mesh::Normal& N = mesh->normal(fh);
             for(auto v_it = mesh->cfv_ccwbegin(fh); v_it != mesh->cfv_ccwend(fh); ++v_it)
             {
                 auto heh = mesh->opposite_halfedge_handle(fh, *v_it);
-                atcg::Mesh::Point ei = mesh->point(mesh->to_vertex_handle(heh)) - mesh->point(mesh->from_vertex_handle(heh));
+                atcg::Mesh::Point ei =
+                    mesh->point(mesh->to_vertex_handle(heh)) - mesh->point(mesh->from_vertex_handle(heh));
                 x += static_cast<float>(u[v_it->idx()]) * (N % ei);
             }
             x /= 2.0 * mesh->area(fh);
         }
 
         Eigen::VectorXd vertex_div_u = Eigen::VectorXd::Zero(mesh->n_vertices());
-        for(auto vh : mesh->vertices()) 
+        for(auto vh: mesh->vertices())
         {
-            auto pi = mesh->point(vh);
-            double &div = vertex_div_u[vh.idx()];
-            for(auto h_it = mesh->cvoh_ccwbegin(vh); h_it != mesh->cvoh_ccwend(vh); ++h_it) 
+            auto pi     = mesh->point(vh);
+            double& div = vertex_div_u[vh.idx()];
+            for(auto h_it = mesh->cvoh_ccwbegin(vh); h_it != mesh->cvoh_ccwend(vh); ++h_it)
             {
                 // The edge and the next edge belong to a common face,
                 // except when the current edge is a boundary edge. In that case
@@ -214,11 +208,11 @@ public:
 
                 auto fh = mesh->face_handle(heh);
 
-                auto p1 = mesh->point(mesh->to_vertex_handle(heh));
-                auto p2 = mesh->point(mesh->to_vertex_handle(next_heh));
-                atcg::Mesh::Point e1 = (p1 - pi);
-                atcg::Mesh::Point e2 = (p2 - pi);
-                atcg::Mesh::Point e3 = (p2 - p1);
+                auto p1                = mesh->point(mesh->to_vertex_handle(heh));
+                auto p2                = mesh->point(mesh->to_vertex_handle(next_heh));
+                atcg::Mesh::Point e1   = (p1 - pi);
+                atcg::Mesh::Point e2   = (p2 - pi);
+                atcg::Mesh::Point e3   = (p2 - p1);
                 OpenMesh::Vec3d X_face = -face_grad_u[fh.idx()] / face_grad_u[fh.idx()].norm();
 
                 double angle1 = acos((-e3.normalized()) | (-e2.normalized()));
@@ -231,11 +225,7 @@ public:
 
         Eigen::VectorXd phi = luLc.solve(vertex_div_u);
 
-        for(auto vh : mesh->vertices()) 
-        {
-            mesh->property(distance_property, vh) = phi[vh.idx()];
-        }
-
+        for(auto vh: mesh->vertices()) { mesh->property(distance_property, vh) = phi[vh.idx()]; }
     }
 
     // This is run at the start of the program
@@ -243,13 +233,13 @@ public:
     {
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         mesh = atcg::IO::read_mesh("res/bunny.obj");
         mesh->request_vertex_colors();
 
         mesh->add_property(distance_property);
-       
+
         mesh->request_face_normals();
         mesh->update_face_normals();
 
@@ -276,10 +266,12 @@ public:
             atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_points)
-            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(mesh,
+                                       glm::vec3(0),
+                                       atcg::ShaderManager::getShader("base"),
+                                       camera_controller->getCamera());
 
-        if(mesh && render_edges)
-            atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
+        if(mesh && render_edges) atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -323,7 +315,6 @@ public:
 
             ImGui::End();
         }
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -343,26 +334,20 @@ private:
 
     int start_id = 3225;
 
-    bool show_render_settings = false;
-    bool render_faces = true;
-    bool render_points = false;
-    bool render_edges = false;
+    bool show_render_settings    = false;
+    bool render_faces            = true;
+    bool render_points           = false;
+    bool render_edges            = false;
     bool show_geodesics_settings = true;
     GeodesicDistanceProperty distance_property;
 };
 
 class G08 : public atcg::Application
 {
-    public:
-
-    G08()
-        :atcg::Application()
-    {
-        pushLayer(new G08Layer("Layer"));
-    }
+public:
+    G08() : atcg::Application() { pushLayer(new G08Layer("Layer")); }
 
     ~G08() {}
-
 };
 
 atcg::Application* atcg::createApplication()
