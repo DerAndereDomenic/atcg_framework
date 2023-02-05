@@ -5,14 +5,15 @@ jobs:
     name: Formatting Check
     runs-on: ubuntu-latest
     strategy:
-    matrix:
-    path:
-      - 'atcg_lib'
-      - 'exercises'
+      matrix:
+        path:
+          - 'atcg_lib'
+          - 'exercises'
     steps:
     - uses: actions/checkout@v3
-    - name: Run clang-format style check for C/C++ programs
-    uses: jidicula/clang-format-action@v4.10.2
-      clang-format-version: '13'
-      check-path: ${{matrix.path}}
-      fallback-style: 'Mozilla'
+    - name: Run clang-format style check for C/C++/Protobuf programs.
+      uses: jidicula/clang-format-action@v4.10.2
+      with:
+        clang-format-version: '13'
+        check-path: ${{ matrix.path }}
+        fallback-style: 'Mozilla' # optional
