@@ -55,9 +55,9 @@ public:
         glm::vec3 color;
 
         SDFSphere(const glm::vec3& position, float radius, const glm::vec3& color = glm::vec3(1))
-            : position(position)
-            , radius(radius)
-            , color(color)
+            : position(position),
+              radius(radius),
+              color(color)
         {
         }
 
@@ -74,9 +74,9 @@ public:
         glm::vec3 color;
 
         SDFBox(const glm::vec3& position, const glm::vec3& bound, const glm::vec3& color = glm::vec3(1))
-            : position(position)
-            , bound(bound)
-            , color(color)
+            : position(position),
+              bound(bound),
+              color(color)
         {
         }
 
@@ -96,10 +96,10 @@ public:
         glm::vec3 color;
 
         SDFCylinder(const glm::vec3& position, float radius, uint32_t axis, const glm::vec3& color = glm::vec3(1))
-            : position(position)
-            , radius(radius)
-            , axis(axis)
-            , color(color)
+            : position(position),
+              radius(radius),
+              axis(axis),
+              color(color)
         {
         }
 

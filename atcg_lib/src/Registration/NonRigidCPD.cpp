@@ -10,8 +10,8 @@ namespace atcg
 NonRigidCoherentPointDrift::NonRigidCoherentPointDrift(const std::shared_ptr<PointCloud>& source,
                                                        const std::shared_ptr<PointCloud>& target,
                                                        const double& w)
-    : Registration::Registration(source, target)
-    , w(w)
+    : Registration::Registration(source, target),
+      w(w)
 {
 }
 

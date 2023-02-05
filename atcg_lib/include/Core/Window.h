@@ -16,9 +16,9 @@ struct WindowProps
     uint32_t height;
 
     WindowProps(const std::string& title = "ATCG", uint32_t width = 1600, uint32_t height = 900)
-        : title(title)
-        , width(width)
-        , height(height)
+        : title(title),
+          width(width),
+          height(height)
     {
     }
 };

@@ -4,10 +4,10 @@
 namespace atcg
 {
 OrthographicCamera::OrthographicCamera(const float& left, const float& right, const float& bottom, const float& top)
-    : _left(left)
-    , _right(right)
-    , _bottom(bottom)
-    , _top(top)
+    : _left(left),
+      _right(right),
+      _bottom(bottom),
+      _top(top)
 {
     recalculateProjection();
 }
