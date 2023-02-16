@@ -91,10 +91,13 @@ PYBIND11_MODULE(pyatcg, m)
              { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
         .def_static("clear", &atcg::Renderer::clear);
 
+    py::class_<atcg::PerspectiveCamera, std::shared_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");
+
     py::class_<atcg::CameraController>(m, "CameraController")
         .def(py::init<float>())
         .def("onUpdate", &atcg::CameraController::onUpdate)
-        .def("onEvent", &atcg::CameraController::onEvent);
+        .def("onEvent", &atcg::CameraController::onEvent)
+        .def("getCamera", &atcg::CameraController::getCamera);
 
 
 #ifdef VERSION_INFO
