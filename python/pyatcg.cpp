@@ -89,7 +89,12 @@ PYBIND11_MODULE(pyatcg, m)
         .def("setClearColor",
              [](const float r, const float g, const float b, const float a)
              { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
-        .def_static("clear", &atcg::Renderer::clear);
+        .def_static("clear", &atcg::Renderer::clear)
+        .def("renderMesh",
+             [](const std::shared_ptr<atcg::Mesh>& mesh,
+                const std::shared_ptr<atcg::Shader>& shader,
+                const std::shared_ptr<atcg::PerspectiveCamera>& camera)
+             { atcg::Renderer::draw(mesh, shader, camera); });
 
     py::class_<atcg::PerspectiveCamera, std::shared_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");
 
