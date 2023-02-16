@@ -67,7 +67,7 @@ void CameraController::onUpdate(float delta_time)
     _lastY = _currentY;
 }
 
-void CameraController::onEvent(Event& e)
+void CameraController::onEvent(Event* e)
 {
     EventDispatcher dispatcher(e);
     dispatcher.dispatch<MouseScrolledEvent>(ATCG_BIND_EVENT_FN(CameraController::onMouseZoom));
@@ -75,9 +75,9 @@ void CameraController::onEvent(Event& e)
     dispatcher.dispatch<MouseMovedEvent>(ATCG_BIND_EVENT_FN(CameraController::onMouseMove));
 }
 
-bool CameraController::onMouseZoom(MouseScrolledEvent& event)
+bool CameraController::onMouseZoom(MouseScrolledEvent* event)
 {
-    float offset = event.getYOffset();
+    float offset = event->getYOffset();
 
     _distance *= glm::exp2(-offset * _parameters.zoom_speed);
     glm::vec3 back_dir = glm::normalize(_camera->getPosition() - _camera->getLookAt());
@@ -86,17 +86,17 @@ bool CameraController::onMouseZoom(MouseScrolledEvent& event)
     return false;
 }
 
-bool CameraController::onWindowResize(WindowResizeEvent& event)
+bool CameraController::onWindowResize(WindowResizeEvent* event)
 {
-    float aspect_ratio = (float)event.getWidth() / (float)event.getHeight();
+    float aspect_ratio = (float)event->getWidth() / (float)event->getHeight();
     _camera->setAspectRatio(aspect_ratio);
     return false;
 }
 
-bool CameraController::onMouseMove(MouseMovedEvent& event)
+bool CameraController::onMouseMove(MouseMovedEvent* event)
 {
-    _currentX = event.getX();
-    _currentY = event.getY();
+    _currentX = event->getX();
+    _currentY = event->getY();
 
     return false;
 }

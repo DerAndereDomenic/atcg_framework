@@ -433,7 +433,7 @@ public:
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event& event) override
+    virtual void onEvent(atcg::Event* event) override
     {
         camera_controller->onEvent(event);
 

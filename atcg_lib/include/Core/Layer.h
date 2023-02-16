@@ -54,7 +54,7 @@ public:
      *
      * @param event The event to handle
      */
-    virtual void onEvent(Event& event) {}
+    virtual void onEvent(Event* event) {}
 
     /**
      * @brief Get the Name object

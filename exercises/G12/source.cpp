@@ -242,7 +242,7 @@ public:
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event& event) override { camera_controller->onEvent(event); }
+    virtual void onEvent(atcg::Event* event) override { camera_controller->onEvent(event); }
 
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;

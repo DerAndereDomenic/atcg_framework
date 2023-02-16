@@ -44,7 +44,7 @@ void Application::close()
     _running = false;
 }
 
-void Application::onEvent(Event& e)
+void Application::onEvent(Event* e)
 {
     EventDispatcher dispatcher(e);
     dispatcher.dispatch<WindowCloseEvent>(ATCG_BIND_EVENT_FN(Application::onWindowClose));
@@ -52,7 +52,7 @@ void Application::onEvent(Event& e)
 
     for(auto it = _layer_stack.rbegin(); it != _layer_stack.rend(); ++it)
     {
-        if(e.handled) break;
+        if(e->handled) break;
         (*it)->onEvent(e);
     }
 }
@@ -94,15 +94,15 @@ void Application::run()
     }
 }
 
-bool Application::onWindowClose(WindowCloseEvent& e)
+bool Application::onWindowClose(WindowCloseEvent* e)
 {
     _running = false;
     return true;
 }
 
-bool Application::onWindowResize(WindowResizeEvent& e)
+bool Application::onWindowResize(WindowResizeEvent* e)
 {
-    Renderer::resize(e.getWidth(), e.getHeight());
+    Renderer::resize(e->getWidth(), e->getHeight());
     return false;
 }
 }    // namespace atcg

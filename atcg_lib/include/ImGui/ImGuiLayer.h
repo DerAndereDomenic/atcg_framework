@@ -36,7 +36,7 @@ public:
      *
      * @param event The event to handle
      */
-    virtual void onEvent(Event& event) override;
+    virtual void onEvent(Event* event) override;
 
     /**
      * @brief Start a new ImGui Frame

@@ -31,7 +31,7 @@ class Window
 {
 public:
     // A function pointer that is used on event
-    using EventCallbackFn = std::function<void(Event&)>;
+    using EventCallbackFn = std::function<void(Event*)>;
 
     /**
      * @brief Construct a new Window object

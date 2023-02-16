@@ -153,7 +153,7 @@ public:
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event& event) override
+    virtual void onEvent(atcg::Event* event) override
     {
         camera_controller->onEvent(event);
 
@@ -162,9 +162,9 @@ public:
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(PointCloudLayer::onMouseMoved));
     }
 
-    bool onFileDropped(atcg::FileDroppedEvent& event)
+    bool onFileDropped(atcg::FileDroppedEvent* event)
     {
-        auto point_cloud = atcg::IO::read_pointcloud(event.getPath().c_str());
+        auto point_cloud = atcg::IO::read_pointcloud(event->getPath().c_str());
         atcg::normalize(point_cloud);
         point_cloud->uploadData();
         clouds.push_back(std::make_pair(point_cloud, true));
@@ -177,10 +177,10 @@ public:
         return true;
     }
 
-    bool onMouseMoved(atcg::MouseMovedEvent& event)
+    bool onMouseMoved(atcg::MouseMovedEvent* event)
     {
         const auto& window = atcg::Application::get()->getWindow();
-        mouse_pos          = glm::vec2(event.getX(), window->getHeight() - event.getY());
+        mouse_pos          = glm::vec2(event->getX(), window->getHeight() - event->getY());
 
         return false;
     }

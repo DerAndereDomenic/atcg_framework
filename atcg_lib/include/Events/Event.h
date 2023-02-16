@@ -73,22 +73,22 @@ public:
 class EventDispatcher
 {
 public:
-    EventDispatcher(Event& event) : _event(event) {}
+    EventDispatcher(Event* event) : _event(event) {}
 
     // F will be deduced by the compiler
     template<typename T, typename F>
     bool dispatch(const F& func)
     {
-        if(_event.getEventType() == T::getStaticType())
+        if(_event->getEventType() == T::getStaticType())
         {
-            _event.handled |= func(static_cast<T&>(_event));
+            _event->handled |= func(static_cast<T*>(_event));
             return true;
         }
         return false;
     }
 
 private:
-    Event& _event;
+    Event* _event;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Event& e)

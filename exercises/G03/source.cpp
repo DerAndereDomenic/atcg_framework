@@ -168,7 +168,7 @@ public:
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event& event) override
+    virtual void onEvent(atcg::Event* event) override
     {
         atcg::EventDispatcher distpatcher(event);
         if(atcg::Input::isKeyPressed(GLFW_KEY_LEFT_SHIFT))
@@ -178,7 +178,7 @@ public:
         distpatcher.dispatch<atcg::WindowResizeEvent>(ATCG_BIND_EVENT_FN(G03Layer::onWindowResized));
     }
 
-    bool onMousePressed(atcg::MouseButtonPressedEvent& e)
+    bool onMousePressed(atcg::MouseButtonPressedEvent* e)
     {
         if(points.size() >= 3)
         {
@@ -213,9 +213,9 @@ public:
         return true;
     }
 
-    bool onWindowResized(atcg::WindowResizeEvent& event)
+    bool onWindowResized(atcg::WindowResizeEvent* event)
     {
-        camera->setProjection(0, static_cast<float>(event.getWidth()), 0, static_cast<float>(event.getHeight()));
+        camera->setProjection(0, static_cast<float>(event->getWidth()), 0, static_cast<float>(event->getHeight()));
         return false;
     }
 

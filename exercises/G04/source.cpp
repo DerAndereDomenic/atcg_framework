@@ -261,7 +261,7 @@ public:
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event& event) override
+    virtual void onEvent(atcg::Event* event) override
     {
         camera_controller->onEvent(event);
 
@@ -269,9 +269,9 @@ public:
         dispatcher.dispatch<atcg::FileDroppedEvent>(ATCG_BIND_EVENT_FN(G04Layer::onFileDropped));
     }
 
-    bool onFileDropped(atcg::FileDroppedEvent& event)
+    bool onFileDropped(atcg::FileDroppedEvent* event)
     {
-        mesh = atcg::IO::read_mesh(event.getPath().c_str());
+        mesh = atcg::IO::read_mesh(event->getPath().c_str());
 
         // Each vertex now holds a distance property (double)
         mesh->add_property(property_distance);

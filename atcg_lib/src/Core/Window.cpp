@@ -44,7 +44,7 @@ Window::Window(const WindowProps& props)
                                   data.height      = height;
 
                                   WindowResizeEvent event(width, height);
-                                  data.on_event(event);
+                                  data.on_event(&event);
                               });
 
     glfwSetWindowCloseCallback(_window,
@@ -52,7 +52,7 @@ Window::Window(const WindowProps& props)
                                {
                                    WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
                                    WindowCloseEvent event;
-                                   data.on_event(event);
+                                   data.on_event(&event);
                                });
 
     glfwSetKeyCallback(_window,
@@ -65,19 +65,19 @@ Window::Window(const WindowProps& props)
                                case GLFW_PRESS:
                                {
                                    KeyPressedEvent event(key, 0);
-                                   data.on_event(event);
+                                   data.on_event(&event);
                                    break;
                                }
                                case GLFW_RELEASE:
                                {
                                    KeyReleasedEvent event(key);
-                                   data.on_event(event);
+                                   data.on_event(&event);
                                    break;
                                }
                                case GLFW_REPEAT:
                                {
                                    KeyPressedEvent event(key, true);
-                                   data.on_event(event);
+                                   data.on_event(&event);
                                    break;
                                }
                            }
@@ -89,7 +89,7 @@ Window::Window(const WindowProps& props)
                             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
                             KeyTypedEvent event(keycode);
-                            data.on_event(event);
+                            data.on_event(&event);
                         });
 
     glfwSetMouseButtonCallback(_window,
@@ -102,13 +102,13 @@ Window::Window(const WindowProps& props)
                                        case GLFW_PRESS:
                                        {
                                            MouseButtonPressedEvent event(button);
-                                           data.on_event(event);
+                                           data.on_event(&event);
                                            break;
                                        }
                                        case GLFW_RELEASE:
                                        {
                                            MouseButtonReleasedEvent event(button);
-                                           data.on_event(event);
+                                           data.on_event(&event);
                                            break;
                                        }
                                    }
@@ -120,7 +120,7 @@ Window::Window(const WindowProps& props)
                               WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
                               MouseScrolledEvent event((float)xOffset, (float)yOffset);
-                              data.on_event(event);
+                              data.on_event(&event);
                           });
 
     glfwSetCursorPosCallback(_window,
@@ -129,7 +129,7 @@ Window::Window(const WindowProps& props)
                                  WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
                                  MouseMovedEvent event((float)xPos, (float)yPos);
-                                 data.on_event(event);
+                                 data.on_event(&event);
                              });
 
     glfwSetDropCallback(_window,
@@ -138,7 +138,7 @@ Window::Window(const WindowProps& props)
                             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
                             FileDroppedEvent event(paths[0]);
-                            data.on_event(event);
+                            data.on_event(&event);
                         });
 
     glfwMakeContextCurrent(_window);

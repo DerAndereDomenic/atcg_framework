@@ -10,7 +10,7 @@
 #include <memory>
 
 int main(int argc, char** argv);
-int entry_point();
+int entry_point(atcg::Layer* layer);
 
 namespace atcg
 {
@@ -38,7 +38,7 @@ public:
      *
      * @param e The event
      */
-    void onEvent(Event& e);
+    void onEvent(Event* e);
 
     /**
      * @brief Push a layer to the application
@@ -69,8 +69,8 @@ public:
 
 private:
     void run();
-    bool onWindowClose(WindowCloseEvent& e);
-    bool onWindowResize(WindowResizeEvent& e);
+    bool onWindowClose(WindowCloseEvent* e);
+    bool onWindowResize(WindowResizeEvent* e);
 
 private:
     bool _running = false;
@@ -79,7 +79,7 @@ private:
     std::unique_ptr<Window> _window;
 
     friend int ::main(int argc, char** argv);
-    friend int ::entry_point();    // Entry point for python bindings
+    friend int ::entry_point(atcg::Layer* layer);    // Entry point for python bindings
     static Application* s_instance;
 };
 

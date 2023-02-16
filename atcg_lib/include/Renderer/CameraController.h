@@ -36,7 +36,7 @@ public:
      *
      * @param e The event
      */
-    void onEvent(Event& e);
+    void onEvent(Event* e);
 
     /**
      * @brief Get the Camera object
@@ -46,9 +46,9 @@ public:
     inline const std::shared_ptr<PerspectiveCamera>& getCamera() const { return _camera; }
 
 private:
-    bool onMouseZoom(MouseScrolledEvent& event);
-    bool onWindowResize(WindowResizeEvent& event);
-    bool onMouseMove(MouseMovedEvent& event);
+    bool onMouseZoom(MouseScrolledEvent* event);
+    bool onWindowResize(WindowResizeEvent* event);
+    bool onMouseMove(MouseMovedEvent* event);
 
     // Adjustable only through here for now
     struct CameraParameters
