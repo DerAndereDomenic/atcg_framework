@@ -1,11 +1,53 @@
 #include <pybind11/pybind11.h>
+#include <ATCG.h>
 
 #define STRINGIFY(x)       #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-int add(int i, int j)
+class PythonLayer : public atcg::Layer
 {
-    return i + j;
+public:
+    PythonLayer(const std::string& name) : atcg::Layer(name) {}
+
+    // This is run at the start of the program
+    virtual void onAttach() override {}
+
+    // This gets called each frame
+    virtual void onUpdate(float delta_time) override
+    {
+        // Renders points and curves
+        atcg::Renderer::clear();
+    }
+
+    virtual void onImGuiRender() override {}
+
+    // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
+    virtual void onEvent(atcg::Event& event) override {}
+
+private:
+};
+
+class PythonApplication : public atcg::Application
+{
+public:
+    PythonApplication() : atcg::Application() { pushLayer(new PythonLayer("Layer")); }
+
+    ~PythonApplication() {}
+};
+
+atcg::Application* atcg::createApplication()
+{
+    return new PythonApplication;
+}
+
+int entry_point()
+{
+    atcg::Application* app = atcg::createApplication();
+    app->run();
+
+    delete app;
+
+    return 0;
 }
 
 namespace py = pybind11;
@@ -13,27 +55,15 @@ namespace py = pybind11;
 PYBIND11_MODULE(pyatcg, m)
 {
     m.doc() = R"pbdoc(
-        Pybind11 example plugin
+        Pybind11 atcg plugin
         -----------------------
         .. currentmodule:: pyatcg
         .. autosummary::
            :toctree: _generate
-           add
-           subtract
     )pbdoc";
 
-    m.def("add", &add, R"pbdoc(
-        Add two numbers
-        Some other explanation about the add function.
-    )pbdoc");
+    m.def("start", &entry_point, "Start the application");
 
-    m.def(
-        "subtract",
-        [](int i, int j) { return i - j; },
-        R"pbdoc(
-        Subtract two numbers
-        Some other explanation about the subtract function.
-    )pbdoc");
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

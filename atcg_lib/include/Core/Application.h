@@ -10,6 +10,7 @@
 #include <memory>
 
 int main(int argc, char** argv);
+int entry_point();
 
 namespace atcg
 {
@@ -78,6 +79,7 @@ private:
     std::unique_ptr<Window> _window;
 
     friend int ::main(int argc, char** argv);
+    friend int ::entry_point();    // Entry point for python bindings
     static Application* s_instance;
 };
 
