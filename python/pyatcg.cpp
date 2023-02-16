@@ -99,6 +99,10 @@ PYBIND11_MODULE(pyatcg, m)
         .def("onEvent", &atcg::CameraController::onEvent)
         .def("getCamera", &atcg::CameraController::getCamera);
 
+    py::class_<atcg::Shader, std::shared_ptr<atcg::Shader>>(m, "Shader");
+
+    py::class_<atcg::ShaderManager>(m, "ShaderManager").def_static("getShader", &atcg::ShaderManager::getShader);
+
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
