@@ -62,6 +62,19 @@ PYBIND11_MODULE(pyatcg, m)
     )pbdoc";
 
     m.def("start", &entry_point, "Start the application.");
+    m.def("width",
+          []()
+          {
+              const auto& window = atcg::Application::get()->getWindow();
+              return (float)window->getWidth();
+          });
+
+    m.def("height",
+          []()
+          {
+              const auto& window = atcg::Application::get()->getWindow();
+              return (float)window->getHeight();
+          });
 
     py::class_<atcg::Layer, PythonLayer>(m, "Layer")
         .def(py::init<>())
@@ -77,6 +90,11 @@ PYBIND11_MODULE(pyatcg, m)
              [](const float r, const float g, const float b, const float a)
              { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
         .def_static("clear", &atcg::Renderer::clear);
+
+    py::class_<atcg::CameraController>(m, "CameraController")
+        .def(py::init<float>())
+        .def("onUpdate", &atcg::CameraController::onUpdate)
+        .def("onEvent", &atcg::CameraController::onEvent);
 
 
 #ifdef VERSION_INFO
