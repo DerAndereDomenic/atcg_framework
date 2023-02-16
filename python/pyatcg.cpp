@@ -71,7 +71,12 @@ PYBIND11_MODULE(pyatcg, m)
         .def("onEvent", &atcg::Layer::onEvent);
 
     py::class_<atcg::Event>(m, "Event");
-    py::class_<atcg::MouseMovedEvent, atcg::Event>(m, "MouseMovedEvent").def(py::init<const float, const float>());
+
+    py::class_<atcg::Renderer>(m, "Renderer")
+        .def("setClearColor",
+             [](const float r, const float g, const float b, const float a)
+             { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
+        .def_static("clear", &atcg::Renderer::clear);
 
 
 #ifdef VERSION_INFO

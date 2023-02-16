@@ -192,9 +192,10 @@ public:
      */
     inline static void destroy() { delete s_renderer; }
 
+    ~Renderer();
+
 private:
     Renderer();
-    ~Renderer();
 
     class Impl;
     std::unique_ptr<Impl> impl;
