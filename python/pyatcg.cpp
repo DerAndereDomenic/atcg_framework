@@ -103,6 +103,9 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::ShaderManager>(m, "ShaderManager").def_static("getShader", &atcg::ShaderManager::getShader);
 
+    py::class_<atcg::Mesh, std::shared_ptr<atcg::Mesh>>(m, "Mesh").def("uploadData", &atcg::Mesh::uploadData);
+
+    m.def("readMesh", &atcg::IO::read_mesh);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
