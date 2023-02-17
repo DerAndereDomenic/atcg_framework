@@ -98,7 +98,7 @@ PYBIND11_MODULE(pyatcg, m)
                 const std::shared_ptr<atcg::PerspectiveCamera>& camera)
              { atcg::Renderer::draw(mesh, shader, camera); });
 
-    py::class_<glm::vec3>(m, "Vector", py::buffer_protocol())
+    py::class_<glm::vec3>(m, "Vector3", py::buffer_protocol())
         .def(py::init(
             [](py::buffer b)
             {
@@ -128,9 +128,71 @@ PYBIND11_MODULE(pyatcg, m)
                                        {sizeof(float)});
             });
 
+    py::class_<glm::mat3>(m, "Matrix3", py::buffer_protocol())
+        .def(py::init(
+            [](py::buffer b)
+            {
+                py::buffer_info info = b.request();
+
+                glm::mat3 M;
+
+                if(info.format == py::format_descriptor<float>::format())
+                {
+                    M = glm::make_mat3(static_cast<float*>(info.ptr));
+                }
+                else if(info.format == py::format_descriptor<double>::format())
+                {
+                    M = glm::make_mat3(static_cast<double*>(info.ptr));
+                }
+
+                return M;
+            }))
+        .def_buffer(
+            [](glm::mat3& M) -> py::buffer_info
+            {
+                return py::buffer_info(glm::value_ptr(M),
+                                       sizeof(float),
+                                       py::format_descriptor<float>::format(),
+                                       2,
+                                       {3, 3},
+                                       {sizeof(float) * 3, sizeof(float)});
+            });
+
+    py::class_<glm::mat4>(m, "Matrix4", py::buffer_protocol())
+        .def(py::init(
+            [](py::buffer b)
+            {
+                py::buffer_info info = b.request();
+
+                glm::mat4 M;
+
+                if(info.format == py::format_descriptor<float>::format())
+                {
+                    M = glm::make_mat4(static_cast<float*>(info.ptr));
+                }
+                else if(info.format == py::format_descriptor<double>::format())
+                {
+                    M = glm::make_mat4(static_cast<double*>(info.ptr));
+                }
+
+                return glm::transpose(M);
+            }))
+        .def_buffer(
+            [](glm::mat4& M) -> py::buffer_info
+            {
+                return py::buffer_info(glm::value_ptr(M),
+                                       sizeof(float),
+                                       py::format_descriptor<float>::format(),
+                                       2,
+                                       {4, 4},
+                                       {sizeof(float), sizeof(float) * 4});
+            });
+
     py::class_<atcg::PerspectiveCamera, std::shared_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
         .def("getPosition", &atcg::PerspectiveCamera::getPosition)
-        .def("setPosition", &atcg::PerspectiveCamera::setPosition);
+        .def("setPosition", &atcg::PerspectiveCamera::setPosition)
+        .def("getView", &atcg::PerspectiveCamera::getView)
+        .def("setView", &atcg::PerspectiveCamera::setView);
 
     py::class_<atcg::CameraController>(m, "CameraController")
         .def(py::init<float>())
