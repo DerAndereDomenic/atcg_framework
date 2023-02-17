@@ -199,7 +199,9 @@ PYBIND11_MODULE(pyatcg, m)
         .def("getPosition", &atcg::PerspectiveCamera::getPosition)
         .def("setPosition", &atcg::PerspectiveCamera::setPosition)
         .def("getView", &atcg::PerspectiveCamera::getView)
-        .def("setView", &atcg::PerspectiveCamera::setView);
+        .def("setView", &atcg::PerspectiveCamera::setView)
+        .def("getProjection", &atcg::PerspectiveCamera::getProjection)
+        .def("setProjection", &atcg::PerspectiveCamera::setProjection);
 
     py::class_<atcg::CameraController>(m, "CameraController")
         .def(py::init<float>())
