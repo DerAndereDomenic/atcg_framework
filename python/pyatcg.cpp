@@ -78,6 +78,13 @@ PYBIND11_MODULE(pyatcg, m)
               return (float)window->getHeight();
           });
 
+    m.def("setSize",
+          [](uint32_t width, uint32_t height)
+          {
+              const auto& window = atcg::Application::get()->getWindow();
+              window->resize(width, height);
+          });
+
     py::class_<atcg::Layer, PythonLayer>(m, "Layer")
         .def(py::init<>())
         .def("onAttach", &atcg::Layer::onAttach)
