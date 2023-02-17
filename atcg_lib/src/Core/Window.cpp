@@ -164,4 +164,12 @@ GLFWwindow* Window::getNativeWindow() const
 {
     return _window;
 }
+
+void Window::resize(const uint32_t& _width, const uint32_t& _height)
+{
+    _data.width  = _width;
+    _data.height = _height;
+
+    glfwSetWindowSize(_window, _width, _height);
+}
 }    // namespace atcg

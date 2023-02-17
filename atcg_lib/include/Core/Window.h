@@ -67,6 +67,14 @@ public:
     GLFWwindow* getNativeWindow() const;
 
     /**
+     * @brief Resize the window
+     *
+     * @param width The width
+     * @param height The height
+     */
+    void resize(const uint32_t& width, const uint32_t& height);
+
+    /**
      * @brief Get the Width object
      *
      * @return uint32_t width
