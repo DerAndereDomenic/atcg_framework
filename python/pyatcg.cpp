@@ -99,6 +99,24 @@ PYBIND11_MODULE(pyatcg, m)
              { atcg::Renderer::draw(mesh, shader, camera); });
 
     py::class_<glm::vec3>(m, "Vector", py::buffer_protocol())
+        .def(py::init(
+            [](py::buffer b)
+            {
+                py::buffer_info info = b.request();
+
+                // Copy for now, is there a better method?
+                glm::vec3 v;
+                if(info.format == py::format_descriptor<float>::format())
+                {
+                    v = glm::make_vec3(static_cast<float*>(info.ptr));
+                }
+                else if(info.format == py::format_descriptor<double>::format())
+                {
+                    v = glm::make_vec3(static_cast<double*>(info.ptr));
+                }
+
+                return v;
+            }))
         .def_buffer(
             [](glm::vec3& v) -> py::buffer_info
             {
@@ -111,7 +129,8 @@ PYBIND11_MODULE(pyatcg, m)
             });
 
     py::class_<atcg::PerspectiveCamera, std::shared_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
-        .def("getPosition", &atcg::PerspectiveCamera::getPosition);
+        .def("getPosition", &atcg::PerspectiveCamera::getPosition)
+        .def("setPosition", &atcg::PerspectiveCamera::setPosition);
 
     py::class_<atcg::CameraController>(m, "CameraController")
         .def(py::init<float>())
