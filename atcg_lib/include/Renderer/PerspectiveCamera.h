@@ -87,6 +87,13 @@ public:
     inline void setView(const glm::mat4& view) { _view = view; }
 
     /**
+     *  @brief Set the projection matrix
+     *
+     *  @param projection The new projection matrix
+     */
+    inline void setProjection(const glm::mat4& projection) { _projection = projection; }
+
+    /**
      * @brief Set the Position
      *
      * @param position The new position
