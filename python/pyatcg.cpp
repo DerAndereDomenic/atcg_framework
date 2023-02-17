@@ -1,6 +1,8 @@
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 #include <pybind11/pybind11.h>
 #include <ATCG.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #define STRINGIFY(x)       #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
@@ -96,7 +98,20 @@ PYBIND11_MODULE(pyatcg, m)
                 const std::shared_ptr<atcg::PerspectiveCamera>& camera)
              { atcg::Renderer::draw(mesh, shader, camera); });
 
-    py::class_<atcg::PerspectiveCamera, std::shared_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");
+    py::class_<glm::vec3>(m, "Vector", py::buffer_protocol())
+        .def_buffer(
+            [](glm::vec3& v) -> py::buffer_info
+            {
+                return py::buffer_info(glm::value_ptr(v),
+                                       sizeof(float),
+                                       py::format_descriptor<float>::format(),
+                                       1,
+                                       {3},
+                                       {sizeof(float)});
+            });
+
+    py::class_<atcg::PerspectiveCamera, std::shared_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
+        .def("getPosition", &atcg::PerspectiveCamera::getPosition);
 
     py::class_<atcg::CameraController>(m, "CameraController")
         .def(py::init<float>())
