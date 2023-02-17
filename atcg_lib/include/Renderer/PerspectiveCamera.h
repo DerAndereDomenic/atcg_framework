@@ -80,6 +80,13 @@ public:
     inline virtual glm::mat4 getView() const override { return _view; }
 
     /**
+     *  @brief Set the view matrix
+     *
+     *  @param view The new view matrix
+     */
+    inline void setView(const glm::mat4& view) { _view = view; }
+
+    /**
      * @brief Set the Position
      *
      * @param position The new position
