@@ -162,7 +162,7 @@ PYBIND11_MODULE(pyatcg, m)
                                        py::format_descriptor<float>::format(),
                                        2,
                                        {3, 3},
-                                       {sizeof(float) * 3, sizeof(float)});
+                                       {sizeof(float), sizeof(float) * 3});
             });
 
     py::class_<glm::mat4>(m, "Matrix4", py::buffer_protocol())

@@ -7,6 +7,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
+#include <Eigen/Dense>
 
 namespace atcg
 {
@@ -372,5 +373,66 @@ void Renderer::drawGrid(const GridDimension& grid_dimension, const std::shared_p
     else { shader->setMVP(model); }
 
     glDrawArraysInstanced(GL_TRIANGLES, 0, 36, dummy.voxels_per_volume());
+}
+
+std::vector<float> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
+                                             const uint32_t& width,
+                                             const uint32_t& height,
+                                             const Eigen::Matrix3f& R,
+                                             const Eigen::Vector3f& t,
+                                             const Eigen::Matrix3f& K)
+{
+    std::vector<float> buffer(width * height);
+    std::fill(buffer.begin(), buffer.end(), 0.0f);
+
+    for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
+    {
+        Eigen::Vector4f vertices[3];
+        int idx = 0;
+        for(auto v_it = f_it->vertices().begin(); v_it != f_it->vertices().end(); ++v_it)
+        {
+            auto v        = mesh->point(*v_it);
+            vertices[idx] = Eigen::Vector4f(v[0], v[1], v[2], 1.0f);
+            ++idx;
+        }
+
+        // Project point onto image
+        Eigen::MatrixXf I(3, 4);
+        I.setIdentity();
+        I.col(3)          = -t;
+        Eigen::MatrixXf P = K * R.transpose() * I;
+
+        Eigen::Vector2i pixels[3];
+        for(int i = 0; i < 3; ++i)
+        {
+            Eigen::Vector3f projected = P * vertices[i];
+            pixels[i]                 = Eigen::Vector2i(projected[0] / projected[2], projected[1] / projected[2]);
+        }
+
+        uint32_t bminx = std::min(pixels[0].x(), std::min(pixels[1].x(), pixels[2].x()));
+        uint32_t bmaxx = std::max(pixels[0].x(), std::max(pixels[1].x(), pixels[2].x()));
+        uint32_t bminy = std::min(pixels[0].y(), std::min(pixels[1].y(), pixels[2].y()));
+        uint32_t bmaxy = std::max(pixels[0].y(), std::max(pixels[1].y(), pixels[2].y()));
+
+        for(uint32_t x = bminx; x < bmaxx; ++x)
+        {
+            for(uint32_t y = bminy; y < bmaxy; ++y)
+            {
+                Eigen::Matrix3f B;
+                B.col(0) = Eigen::Vector3f(static_cast<float>(pixels[0].x()), static_cast<float>(pixels[0].y()), 1.0f);
+                B.col(1) = Eigen::Vector3f(static_cast<float>(pixels[1].x()), static_cast<float>(pixels[1].y()), 1.0f);
+                B.col(2) = Eigen::Vector3f(static_cast<float>(pixels[2].x()), static_cast<float>(pixels[2].y()), 1.0f);
+                Eigen::Vector3f b(static_cast<float>(x), static_cast<float>(y), 1.0f);
+
+                Eigen::Vector3f barys = B.inverse() * b;
+
+                if(barys.x() < 0 || barys.y() < 0 || barys.z() < 0) continue;
+
+                buffer[x + width * y] = 1;
+            }
+        }
+    }
+
+    return buffer;
 }
 }    // namespace atcg
