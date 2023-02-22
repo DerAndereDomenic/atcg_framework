@@ -1,5 +1,6 @@
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 #include <pybind11/pybind11.h>
+#include <pybind11/eigen.h>
 #include <ATCG.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -102,8 +103,18 @@ PYBIND11_MODULE(pyatcg, m)
         .def("renderMesh",
              [](const std::shared_ptr<atcg::Mesh>& mesh,
                 const std::shared_ptr<atcg::Shader>& shader,
-                const std::shared_ptr<atcg::PerspectiveCamera>& camera)
-             { atcg::Renderer::draw(mesh, shader, camera); });
+                const std::shared_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::draw(mesh, shader, camera); })
+        .def("generateZBuffer",
+             [](const std::shared_ptr<atcg::Mesh>& mesh,
+                const uint32_t& width,
+                const uint32_t& height,
+                const Eigen::Matrix3f& R,
+                const Eigen::Vector3f& t,
+                const Eigen::Matrix3f& K)
+             {
+                 std::vector<float> buffer = atcg::Renderer::generateZBuffer(mesh, width, height, R, t, K);
+                 return py::array(buffer.size(), buffer.data());
+             });
 
     py::class_<glm::vec3>(m, "Vector3", py::buffer_protocol())
         .def(py::init(
