@@ -84,7 +84,7 @@ public:
      *
      *  @param view The new view matrix
      */
-    inline void setView(const glm::mat4& view) { _view = view; }
+    void setView(const glm::mat4& view);
 
     /**
      *  @brief Set the projection matrix

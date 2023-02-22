@@ -22,4 +22,14 @@ void PerspectiveCamera::recalculateProjection()
 {
     _projection = glm::perspective(glm::radians(60.0f), _aspect_ratio, 0.01f, 100.0f);
 }
+
+void PerspectiveCamera::setView(const glm::mat4& view)
+{
+    _view = view;
+
+    glm::mat4 inv_view = glm::inverse(view);
+    _position          = glm::vec3(inv_view[3]);
+    _look_at           = _position - glm::vec3(inv_view[2]);
+}
+
 }    // namespace atcg
