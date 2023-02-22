@@ -429,7 +429,7 @@ std::vector<double> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
 
                 Eigen::Vector3d barys = B.inverse() * b;
 
-                if(barys.x() < 0 || barys.y() < 0 || barys.z() < 0) continue;
+                if(barys.x() < -1e-5 || barys.y() < -1e-5 || barys.z() < -1e-5) continue;
 
                 double z              = barys.x() * depth[0] + barys.y() * depth[1] + barys.z() * depth[2];
                 buffer[x + width * y] = std::min(z, buffer[x + width * y]);
