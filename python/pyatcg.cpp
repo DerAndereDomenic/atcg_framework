@@ -108,11 +108,11 @@ PYBIND11_MODULE(pyatcg, m)
              [](const std::shared_ptr<atcg::Mesh>& mesh,
                 const uint32_t& width,
                 const uint32_t& height,
-                const Eigen::Matrix3f& R,
-                const Eigen::Vector3f& t,
-                const Eigen::Matrix3f& K)
+                const Eigen::Matrix3d& R,
+                const Eigen::Vector3d& t,
+                const Eigen::Matrix3d& K)
              {
-                 std::vector<float> buffer = atcg::Renderer::generateZBuffer(mesh, width, height, R, t, K);
+                 std::vector<double> buffer = atcg::Renderer::generateZBuffer(mesh, width, height, R, t, K);
                  return py::array(buffer.size(), buffer.data());
              });
 

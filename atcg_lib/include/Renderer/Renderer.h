@@ -196,12 +196,12 @@ public:
      *
      * @return The depth buffer
      */
-    static std::vector<float> generateZBuffer(const std::shared_ptr<Mesh>& mesh,
-                                              const uint32_t& width,
-                                              const uint32_t& height,
-                                              const Eigen::Matrix3f& R,
-                                              const Eigen::Vector3f& t,
-                                              const Eigen::Matrix3f& K);
+    static std::vector<double> generateZBuffer(const std::shared_ptr<Mesh>& mesh,
+                                               const uint32_t& width,
+                                               const uint32_t& height,
+                                               const Eigen::Matrix3d& R,
+                                               const Eigen::Vector3d& t,
+                                               const Eigen::Matrix3d& K);
 
     /**
      * @brief Clear the currently bound framebuffer

@@ -376,39 +376,39 @@ void Renderer::drawGrid(const GridDimension& grid_dimension, const std::shared_p
     glDrawArraysInstanced(GL_TRIANGLES, 0, 36, dummy.voxels_per_volume());
 }
 
-std::vector<float> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
-                                             const uint32_t& width,
-                                             const uint32_t& height,
-                                             const Eigen::Matrix3f& R,
-                                             const Eigen::Vector3f& t,
-                                             const Eigen::Matrix3f& K)
+std::vector<double> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
+                                              const uint32_t& width,
+                                              const uint32_t& height,
+                                              const Eigen::Matrix3d& R,
+                                              const Eigen::Vector3d& t,
+                                              const Eigen::Matrix3d& K)
 {
-    std::vector<float> buffer(width * height);
-    std::fill(buffer.begin(), buffer.end(), std::numeric_limits<float>::infinity());
+    std::vector<double> buffer(width * height);
+    std::fill(buffer.begin(), buffer.end(), std::numeric_limits<double>::infinity());
 
     for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
     {
-        Eigen::Vector4f vertices[3];
+        Eigen::Vector4d vertices[3];
         int idx = 0;
         for(auto v_it = f_it->vertices().begin(); v_it != f_it->vertices().end(); ++v_it)
         {
             auto v        = mesh->point(*v_it);
-            vertices[idx] = Eigen::Vector4f(v[0], v[1], v[2], 1.0f);
+            vertices[idx] = Eigen::Vector4d(v[0], v[1], v[2], 1.0f);
             ++idx;
         }
 
         // Project point onto image
-        Eigen::MatrixXf I(3, 4);
+        Eigen::MatrixXd I(3, 4);
         I.setIdentity();
         I.col(3)          = -t;
-        Eigen::MatrixXf P = K * R.transpose() * I;
+        Eigen::MatrixXd P = K * R.transpose() * I;
 
-        Eigen::Vector2i pixels[3];
-        float depth[3];
+        Eigen::Vector2d pixels[3];
+        double depth[3];
         for(int i = 0; i < 3; ++i)
         {
-            Eigen::Vector3f projected = P * vertices[i];
-            pixels[i]                 = Eigen::Vector2i(projected[0] / projected[2], projected[1] / projected[2]);
+            Eigen::Vector3d projected = P * vertices[i];
+            pixels[i]                 = Eigen::Vector2d(projected[0] / projected[2], projected[1] / projected[2]);
             depth[i]                  = std::abs(projected[2]);
         }
 
@@ -421,17 +421,17 @@ std::vector<float> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
         {
             for(int32_t y = bminy - 1; y <= bmaxy; ++y)
             {
-                Eigen::Matrix3f B;
-                B.col(0) = Eigen::Vector3f(static_cast<float>(pixels[0].x()), static_cast<float>(pixels[0].y()), 1.0f);
-                B.col(1) = Eigen::Vector3f(static_cast<float>(pixels[1].x()), static_cast<float>(pixels[1].y()), 1.0f);
-                B.col(2) = Eigen::Vector3f(static_cast<float>(pixels[2].x()), static_cast<float>(pixels[2].y()), 1.0f);
-                Eigen::Vector3f b(static_cast<float>(x), static_cast<float>(y), 1.0f);
+                Eigen::Matrix3d B;
+                B.col(0) = Eigen::Vector3d(pixels[0].x(), pixels[0].y(), 1.0);
+                B.col(1) = Eigen::Vector3d(pixels[1].x(), pixels[1].y(), 1.0);
+                B.col(2) = Eigen::Vector3d(pixels[2].x(), pixels[2].y(), 1.0);
+                Eigen::Vector3d b(x, y, 1.0);
 
-                Eigen::Vector3f barys = B.inverse() * b;
+                Eigen::Vector3d barys = B.inverse() * b;
 
                 if(barys.x() < 0 || barys.y() < 0 || barys.z() < 0) continue;
 
-                float z               = barys.x() * depth[0] + barys.y() * depth[1] + barys.z() * depth[2];
+                double z              = barys.x() * depth[0] + barys.y() * depth[1] + barys.z() * depth[2];
                 buffer[x + width * y] = std::min(z, buffer[x + width * y]);
             }
         }
