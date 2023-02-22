@@ -132,6 +132,10 @@ PYBIND11_MODULE(pyatcg, m)
                 {
                     v = glm::make_vec3(static_cast<double*>(info.ptr));
                 }
+                else if(info.format == py::format_descriptor<int>::format())
+                {
+                    v = glm::make_vec3(static_cast<int*>(info.ptr));
+                }
 
                 return v;
             }))
@@ -143,6 +147,40 @@ PYBIND11_MODULE(pyatcg, m)
                                        py::format_descriptor<float>::format(),
                                        1,
                                        {3},
+                                       {sizeof(float)});
+            });
+
+    py::class_<glm::vec4>(m, "Vector4", py::buffer_protocol())
+        .def(py::init(
+            [](py::buffer b)
+            {
+                py::buffer_info info = b.request();
+
+                // Copy for now, is there a better method?
+                glm::vec4 v;
+                if(info.format == py::format_descriptor<float>::format())
+                {
+                    v = glm::make_vec4(static_cast<float*>(info.ptr));
+                }
+                else if(info.format == py::format_descriptor<double>::format())
+                {
+                    v = glm::make_vec4(static_cast<double*>(info.ptr));
+                }
+                else if(info.format == py::format_descriptor<int>::format())
+                {
+                    v = glm::make_vec4(static_cast<int*>(info.ptr));
+                }
+
+                return v;
+            }))
+        .def_buffer(
+            [](glm::vec4& v) -> py::buffer_info
+            {
+                return py::buffer_info(glm::value_ptr(v),
+                                       sizeof(float),
+                                       py::format_descriptor<float>::format(),
+                                       1,
+                                       {4},
                                        {sizeof(float)});
             });
 
@@ -161,6 +199,10 @@ PYBIND11_MODULE(pyatcg, m)
                 else if(info.format == py::format_descriptor<double>::format())
                 {
                     M = glm::make_mat3(static_cast<double*>(info.ptr));
+                }
+                else if(info.format == py::format_descriptor<int>::format())
+                {
+                    M = glm::make_mat3(static_cast<int*>(info.ptr));
                 }
 
                 return M;
@@ -192,6 +234,10 @@ PYBIND11_MODULE(pyatcg, m)
                 {
                     M = glm::make_mat4(static_cast<double*>(info.ptr));
                 }
+                else if(info.format == py::format_descriptor<int>::format())
+                {
+                    M = glm::make_mat4(static_cast<int*>(info.ptr));
+                }
 
                 return glm::transpose(M);
             }))
@@ -220,9 +266,21 @@ PYBIND11_MODULE(pyatcg, m)
         .def("onEvent", &atcg::CameraController::onEvent)
         .def("getCamera", &atcg::CameraController::getCamera);
 
-    py::class_<atcg::Shader, std::shared_ptr<atcg::Shader>>(m, "Shader");
+    py::class_<atcg::Shader, std::shared_ptr<atcg::Shader>>(m, "Shader")
+        .def(py::init<std::string, std::string>())
+        .def(py::init<std::string, std::string, std::string>())
+        .def("use", &atcg::Shader::use)
+        .def("setInt", &atcg::Shader::setInt)
+        .def("setFloat", &atcg::Shader::setFloat)
+        .def("setVec3", &atcg::Shader::setVec3)
+        .def("setVec4", &atcg::Shader::setVec4)
+        .def("setMat4", &atcg::Shader::setMat4)
+        .def("setMVP", &atcg::Shader::setMVP);
 
-    py::class_<atcg::ShaderManager>(m, "ShaderManager").def_static("getShader", &atcg::ShaderManager::getShader);
+    py::class_<atcg::ShaderManager>(m, "ShaderManager")
+        .def_static("getShader", &atcg::ShaderManager::getShader)
+        .def_static("addShader", &atcg::ShaderManager::addShader)
+        .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName);
 
     py::class_<atcg::Mesh, std::shared_ptr<atcg::Mesh>>(m, "Mesh").def("uploadData", &atcg::Mesh::uploadData);
 
