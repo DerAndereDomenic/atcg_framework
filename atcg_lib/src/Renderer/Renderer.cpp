@@ -8,6 +8,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <Eigen/Dense>
+#include <numeric>
 
 namespace atcg
 {
@@ -383,7 +384,7 @@ std::vector<float> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
                                              const Eigen::Matrix3f& K)
 {
     std::vector<float> buffer(width * height);
-    std::fill(buffer.begin(), buffer.end(), 0.0f);
+    std::fill(buffer.begin(), buffer.end(), std::numeric_limits<float>::infinity());
 
     for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
     {
@@ -403,10 +404,12 @@ std::vector<float> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
         Eigen::MatrixXf P = K * R.transpose() * I;
 
         Eigen::Vector2i pixels[3];
+        float depth[3];
         for(int i = 0; i < 3; ++i)
         {
             Eigen::Vector3f projected = P * vertices[i];
             pixels[i]                 = Eigen::Vector2i(projected[0] / projected[2], projected[1] / projected[2]);
+            depth[i]                  = std::abs(projected[2]);
         }
 
         uint32_t bminx = std::min(pixels[0].x(), std::min(pixels[1].x(), pixels[2].x()));
@@ -414,9 +417,9 @@ std::vector<float> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
         uint32_t bminy = std::min(pixels[0].y(), std::min(pixels[1].y(), pixels[2].y()));
         uint32_t bmaxy = std::max(pixels[0].y(), std::max(pixels[1].y(), pixels[2].y()));
 
-        for(uint32_t x = bminx; x < bmaxx; ++x)
+        for(int32_t x = bminx - 1; x <= bmaxx; ++x)
         {
-            for(uint32_t y = bminy; y < bmaxy; ++y)
+            for(int32_t y = bminy - 1; y <= bmaxy; ++y)
             {
                 Eigen::Matrix3f B;
                 B.col(0) = Eigen::Vector3f(static_cast<float>(pixels[0].x()), static_cast<float>(pixels[0].y()), 1.0f);
@@ -428,7 +431,8 @@ std::vector<float> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
 
                 if(barys.x() < 0 || barys.y() < 0 || barys.z() < 0) continue;
 
-                buffer[x + width * y] = 1;
+                float z               = barys.x() * depth[0] + barys.y() * depth[1] + barys.z() * depth[2];
+                buffer[x + width * y] = std::min(z, buffer[x + width * y]);
             }
         }
     }
