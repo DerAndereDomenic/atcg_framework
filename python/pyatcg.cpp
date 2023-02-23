@@ -113,11 +113,18 @@ PYBIND11_MODULE(pyatcg, m)
         .def("setClearColor",
              [](const float r, const float g, const float b, const float a)
              { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
+        .def_static("setPointSize", &atcg::Renderer::setPointSize)
         .def_static("clear", &atcg::Renderer::clear)
         .def("renderMesh",
              [](const std::shared_ptr<atcg::Mesh>& mesh,
                 const std::shared_ptr<atcg::Shader>& shader,
                 const std::shared_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::draw(mesh, shader, camera); })
+        .def("renderPoints",
+             [](const std::shared_ptr<atcg::Mesh>& mesh,
+                const glm::vec3& color,
+                const std::shared_ptr<atcg::Shader>& shader,
+                const std::shared_ptr<atcg::PerspectiveCamera>& camera)
+             { atcg::Renderer::drawPoints(mesh, color, shader, camera); })
         .def("getFrame",
              []()
              {
