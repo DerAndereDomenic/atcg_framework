@@ -392,10 +392,14 @@ std::vector<uint8_t> Renderer::getFrame()
 
 std::vector<float> Renderer::getZBuffer()
 {
-    auto zbuffer = s_renderer->impl->screen_fbo->getDepthAttachement();
-    std::vector<float> buffer(zbuffer->width() * zbuffer->height());
+    auto frame      = s_renderer->impl->screen_fbo->getDepthAttachement();
+    uint32_t width  = frame->width();
+    uint32_t height = frame->height();
+    std::vector<float> buffer(width * height);
 
-    // TODO
+    useScreenBuffer();
+
+    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, (void*)buffer.data());
 
     return buffer;
 }
