@@ -182,26 +182,13 @@ public:
     static void
     drawGrid(const GridDimension& grid_dimension, const std::shared_ptr<Camera>& camera = {}, bool reset = false);
 
+    static std::vector<uint8_t> getFrame();
     /**
      * @brief Generate a Z-Buffer buffer.
-     * WARNING: This is a CPU implementation for the python bindings. In normal circumstances, use the GPU generated
-     * depth buffer
-     *
-     * @param mesh The mesh to render
-     * @param width The output width
-     * @param height The output height
-     * @param R The rotation matrix
-     * @param t The camera offset
-     * @param K The camera matrix
      *
      * @return The depth buffer
      */
-    static std::vector<double> generateZBuffer(const std::shared_ptr<Mesh>& mesh,
-                                               const uint32_t& width,
-                                               const uint32_t& height,
-                                               const Eigen::Matrix3d& R,
-                                               const Eigen::Vector3d& t,
-                                               const Eigen::Matrix3d& K);
+    static std::vector<float> getZBuffer();
 
     /**
      * @brief Clear the currently bound framebuffer

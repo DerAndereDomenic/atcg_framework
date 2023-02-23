@@ -376,66 +376,26 @@ void Renderer::drawGrid(const GridDimension& grid_dimension, const std::shared_p
     glDrawArraysInstanced(GL_TRIANGLES, 0, 36, dummy.voxels_per_volume());
 }
 
-std::vector<double> Renderer::generateZBuffer(const std::shared_ptr<Mesh>& mesh,
-                                              const uint32_t& width,
-                                              const uint32_t& height,
-                                              const Eigen::Matrix3d& R,
-                                              const Eigen::Vector3d& t,
-                                              const Eigen::Matrix3d& K)
+std::vector<uint8_t> Renderer::getFrame()
 {
-    std::vector<double> buffer(width * height);
-    std::fill(buffer.begin(), buffer.end(), std::numeric_limits<double>::infinity());
+    auto frame      = s_renderer->impl->screen_fbo->getColorAttachement();
+    uint32_t width  = frame->width();
+    uint32_t height = frame->height();
+    std::vector<uint8_t> buffer(width * height * 4);
 
-    for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
-    {
-        Eigen::Vector4d vertices[3];
-        int idx = 0;
-        for(auto v_it = f_it->vertices().begin(); v_it != f_it->vertices().end(); ++v_it)
-        {
-            auto v        = mesh->point(*v_it);
-            vertices[idx] = Eigen::Vector4d(v[0], v[1], v[2], 1.0f);
-            ++idx;
-        }
+    useScreenBuffer();
 
-        // Project point onto image
-        Eigen::MatrixXd I(3, 4);
-        I.setIdentity();
-        I.col(3)          = -t;
-        Eigen::MatrixXd P = K * R.transpose() * I;
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (void*)buffer.data());
 
-        Eigen::Vector2d pixels[3];
-        double depth[3];
-        for(int i = 0; i < 3; ++i)
-        {
-            Eigen::Vector3d projected = P * vertices[i];
-            pixels[i]                 = Eigen::Vector2d(projected[0] / projected[2], projected[1] / projected[2]);
-            depth[i]                  = std::abs(projected[2]);
-        }
+    return buffer;
+}
 
-        uint32_t bminx = std::min(pixels[0].x(), std::min(pixels[1].x(), pixels[2].x()));
-        uint32_t bmaxx = std::max(pixels[0].x(), std::max(pixels[1].x(), pixels[2].x()));
-        uint32_t bminy = std::min(pixels[0].y(), std::min(pixels[1].y(), pixels[2].y()));
-        uint32_t bmaxy = std::max(pixels[0].y(), std::max(pixels[1].y(), pixels[2].y()));
+std::vector<float> Renderer::getZBuffer()
+{
+    auto zbuffer = s_renderer->impl->screen_fbo->getDepthAttachement();
+    std::vector<float> buffer(zbuffer->width() * zbuffer->height());
 
-        for(int32_t x = bminx - 1; x <= bmaxx; ++x)
-        {
-            for(int32_t y = bminy - 1; y <= bmaxy; ++y)
-            {
-                Eigen::Matrix3d B;
-                B.col(0) = Eigen::Vector3d(pixels[0].x(), pixels[0].y(), 1.0);
-                B.col(1) = Eigen::Vector3d(pixels[1].x(), pixels[1].y(), 1.0);
-                B.col(2) = Eigen::Vector3d(pixels[2].x(), pixels[2].y(), 1.0);
-                Eigen::Vector3d b(x, y, 1.0);
-
-                Eigen::Vector3d barys = B.inverse() * b;
-
-                if(barys.x() < -1e-5 || barys.y() < -1e-5 || barys.z() < -1e-5) continue;
-
-                double z              = barys.x() * depth[0] + barys.y() * depth[1] + barys.z() * depth[2];
-                buffer[x + width * y] = std::min(z, buffer[x + width * y]);
-            }
-        }
-    }
+    // TODO
 
     return buffer;
 }

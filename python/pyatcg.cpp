@@ -105,8 +105,9 @@ PYBIND11_MODULE(pyatcg, m)
                  const auto& window                     = app->getWindow();
 
                  window->hide();
-
                  window->resize(width, height);
+
+                 atcg::Renderer::useScreenBuffer();
                  return app;
              })
         .def("setClearColor",
@@ -117,15 +118,16 @@ PYBIND11_MODULE(pyatcg, m)
              [](const std::shared_ptr<atcg::Mesh>& mesh,
                 const std::shared_ptr<atcg::Shader>& shader,
                 const std::shared_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::draw(mesh, shader, camera); })
-        .def("generateZBuffer",
-             [](const std::shared_ptr<atcg::Mesh>& mesh,
-                const uint32_t& width,
-                const uint32_t& height,
-                const Eigen::Matrix3d& R,
-                const Eigen::Vector3d& t,
-                const Eigen::Matrix3d& K)
+        .def("getFrame",
+             []()
              {
-                 std::vector<double> buffer = atcg::Renderer::generateZBuffer(mesh, width, height, R, t, K);
+                 std::vector<uint8_t> buffer = atcg::Renderer::getFrame();
+                 return py::array(buffer.size(), buffer.data());
+             })
+        .def("getZBuffer",
+             []()
+             {
+                 std::vector<float> buffer = atcg::Renderer::getZBuffer();
                  return py::array(buffer.size(), buffer.data());
              });
 
