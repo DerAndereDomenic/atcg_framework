@@ -13,12 +13,12 @@
 #include <numeric>
 #include <random>
 
-class G12Layer : public atcg::Layer
+class G13Layer : public atcg::Layer
 {
 public:
     using AssignmentMap = std::vector<std::vector<uint32_t>>;
 
-    G12Layer(const std::string& name) : atcg::Layer(name) {}
+    G13Layer(const std::string& name) : atcg::Layer(name) {}
 
     template<typename T>
     struct LaplaceCotan
@@ -92,60 +92,101 @@ public:
         }
     };
 
-    AssignmentMap kmeans(const Eigen::MatrixXd& X, const uint32_t k = 6, const uint32_t max_iterations = 50)
+    std::vector<float> linspace(float a, float b, uint32_t steps)
     {
-        std::random_device dev;
-        std::mt19937 rng(dev());
-        std::uniform_int_distribution<uint32_t> dist(0, X.rows());
+        float step_size = (b - a) / (steps - 1);
 
-        std::vector<Eigen::VectorXd> centers;
+        std::vector<float> space(steps);
 
-        // Init
-        AssignmentMap assignments;
-        for(uint32_t i = 0; i < k; ++i)
+        for(uint32_t i = 0; i < steps; ++i) { space[i] = (a + i * step_size); }
+
+        return space;
+    }
+
+    std::shared_ptr<atcg::Mesh> triangulate(const std::vector<atcg::Mesh::Point>& points)
+    {
+        std::shared_ptr<atcg::Mesh> mesh = std::make_shared<atcg::Mesh>();
+
+        std::vector<atcg::Mesh::VertexHandle> v_handles(points.size());
+
+        for(uint32_t i = 0; i < points.size(); ++i)
+            v_handles[i] = mesh->add_vertex({points[i][0], points[i][2], points[i][1]});
+
+        uint32_t grid_size = static_cast<uint32_t>(std::sqrt(points.size())) - 1;
+
+        for(uint32_t grid_x = 0; grid_x < grid_size; ++grid_x)
         {
-            uint32_t center_idx = dist(rng);
-            centers.push_back(X.col(center_idx));
-            assignments.push_back(std::vector<uint32_t>());
-        }
-
-        for(uint32_t it = 0; it < max_iterations; ++it)
-        {
-            std::cout << it << "\n";
-            for(uint32_t i = 0; i < k; ++i) assignments[i].clear();
-
-            // Assignment
-            for(uint32_t i = 0; i < X.cols(); ++i)
+            for(uint32_t grid_y = 0; grid_y < grid_size; ++grid_y)
             {
-                double MIN_DIST = std::numeric_limits<double>::infinity();
-                uint32_t assign = 0;
+                auto v00 = v_handles[grid_x + (grid_size + 1) * grid_y];
+                auto v10 = v_handles[grid_x + 1 + (grid_size + 1) * grid_y];
+                auto v01 = v_handles[grid_x + (grid_size + 1) * (grid_y + 1)];
+                auto v11 = v_handles[grid_x + 1 + (grid_size + 1) * (grid_y + 1)];
 
-                for(uint32_t j = 0; j < k; ++j)
-                {
-                    double dist = (X.col(i) - centers[j]).norm();
-                    if(dist < MIN_DIST)
-                    {
-                        MIN_DIST = dist;
-                        assign   = j;
-                    }
-                }
-
-                assignments[assign].push_back(i);
-            }
-
-            // Update
-            for(uint32_t i = 0; i < k; ++i)
-            {
-                Eigen::VectorXd mean(X.rows());
-                mean.setZero();
-
-                for(uint32_t j = 0; j < assignments[i].size(); ++j) { mean += X.col(assignments[i][j]); }
-                mean       = mean / static_cast<double>(assignments[i].size());
-                centers[i] = mean;
+                mesh->add_face(v00, v01, v10);
+                mesh->add_face(v10, v01, v11);
             }
         }
 
-        return assignments;
+        return mesh;
+    }
+
+    void editMesh()
+    {
+        std::vector<float> U = linspace(-1, 1, 150);
+        std::vector<atcg::Mesh::Point> grid;
+
+        for(float u: U)
+        {
+            for(float v: U) { grid.push_back({v, u, 0.f}); }
+        }
+
+        mesh = triangulate(grid);
+
+        atcg::Laplacian<double> laplace = LaplaceCotan<double>().calculate(mesh);
+        Eigen::SparseMatrix<double> L   = laplace.M.cwiseInverse() * laplace.S;
+        Eigen::SparseMatrix<double> L2  = L * L;
+
+        Eigen::SparseMatrix<double> op = -ks * L + kb * L2;
+
+        Eigen::MatrixXd starting_displacement(mesh->n_vertices(), 3);
+
+        Eigen::VectorXd ones  = Eigen::VectorXd::Ones(mesh->n_vertices());
+        Eigen::VectorXd zeros = Eigen::VectorXd::Zero(mesh->n_vertices());
+
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            atcg::Mesh::Point p = mesh->point(*v_it);
+            double distance     = p.norm();
+
+            if(distance < edit_radius)
+            {
+                starting_displacement.row(v_it->idx()) = Eigen::Vector3d(0.0, edit_height, 0.0);
+                ones(v_it->idx())                      = 0;
+                zeros(v_it->idx())                     = 1;
+            }
+            else if(distance > region_radius)
+            {
+                ones(v_it->idx())  = 0;
+                zeros(v_it->idx()) = 1;
+            }
+        }
+
+        Eigen::SparseMatrix<double> Id(mesh->n_vertices(), mesh->n_vertices());
+        Id.setIdentity();
+        op = ones.asDiagonal() * op;
+        op = op + Id * zeros.asDiagonal();
+
+        Eigen::BiCGSTAB<Eigen::SparseMatrix<double>> solver;
+        solver.compute(op);
+        Eigen::MatrixXd displacement = solver.solve(starting_displacement);
+
+        for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
+        {
+            atcg::Mesh::Point p = mesh->point(*v_it);
+            Eigen::Vector3d d   = displacement.row(v_it->idx());
+            mesh->set_point(*v_it, {p[0] + d(0), p[1] + d(1), p[2] + d(2)});
+        }
     }
 
     // This is run at the start of the program
@@ -155,45 +196,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        mesh = atcg::IO::read_mesh("res/suzanne_blender.obj");
-        mesh->request_vertex_colors();
-
-        atcg::Laplacian laplace       = LaplaceCotan<double>().calculate(mesh);
-        Eigen::SparseMatrix<double> L = laplace.M.cwiseInverse() * laplace.S;
-
-        /*Eigen::EigenSolver<Eigen::MatrixXd> solver;
-        solver.compute(L.toDense());
-
-        Eigen::MatrixXd V = solver.eigenvectors().real();
-        Eigen::VectorXd w = solver.eigenvalues().real();*/
-
-        Eigen::BDCSVD<Eigen::MatrixXd, Eigen::ComputeFullV> solver(L);
-
-        Eigen::VectorXd w = solver.singularValues();
-        Eigen::MatrixXd V = solver.matrixV();
-
-        // Eigen::MatrixXd GPS =
-        // (w+Eigen::VectorXd::Constant(w.size(),1e-12)).cwiseAbs().cwiseSqrt().cwiseInverse().asDiagonal() *
-        // V.transpose();
-        Eigen::MatrixXd GPS =
-            (w + Eigen::VectorXd::Constant(w.size(), 1e-12)).cwiseInverse().asDiagonal() * V.transpose();
-
-        AssignmentMap assignments = kmeans(GPS);
-
-        atcg::Mesh::Color colors[6] = {atcg::Mesh::Color {255, 0, 0},
-                                       atcg::Mesh::Color {0, 255, 0},
-                                       atcg::Mesh::Color {0, 0, 255},
-                                       atcg::Mesh::Color {255, 0, 255},
-                                       atcg::Mesh::Color {0, 255, 255},
-                                       atcg::Mesh::Color {255, 255, 0}};
-
-        for(uint32_t i = 0; i < 6; ++i)
-        {
-            for(uint32_t j = 0; j < assignments[i].size(); ++j)
-            {
-                mesh->set_color(atcg::Mesh::VertexHandle(assignments[i][j]), colors[i]);
-            }
-        }
+        editMesh();
 
         mesh->uploadData();
     }
@@ -224,6 +227,7 @@ public:
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+            ImGui::MenuItem("Show Edit Settings", nullptr, &show_edit_settings);
 
             ImGui::EndMenu();
         }
@@ -239,6 +243,27 @@ public:
             ImGui::Checkbox("Render Mesh", &render_faces);
             ImGui::End();
         }
+
+        if(show_edit_settings)
+        {
+            bool edited = false;
+
+            if(ImGui::SliderFloat("Edit Radius", &edit_radius, 0.0f, region_radius)) { edited = true; }
+
+            if(ImGui::SliderFloat("Region Radius", &region_radius, edit_radius, 1.0f)) { edited = true; }
+
+            if(ImGui::SliderFloat("Height", &edit_height, 0.0f, 1.0f)) { edited = true; }
+
+            if(ImGui::SliderFloat("Stiffness", &ks, 0.0f, 1.0f)) { edited = true; }
+
+            if(ImGui::SliderFloat("Bending", &kb, 0.0f, 1.0f)) { edited = true; }
+
+            if(edited)
+            {
+                editMesh();
+                mesh->uploadData();
+            }
+        }
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -252,17 +277,24 @@ private:
     bool render_faces         = true;
     bool render_points        = false;
     bool render_edges         = false;
+
+    bool show_edit_settings = true;
+    float ks                = 1.0;
+    float kb                = 1.0;
+    float edit_radius       = 0.3;
+    float region_radius     = 0.8;
+    float edit_height       = 1.0;
 };
 
-class G12 : public atcg::Application
+class G13 : public atcg::Application
 {
 public:
-    G12() : atcg::Application() { pushLayer(new G12Layer("Layer")); }
+    G13() : atcg::Application() { pushLayer(new G13Layer("Layer")); }
 
-    ~G12() {}
+    ~G13() {}
 };
 
 atcg::Application* atcg::createApplication()
 {
-    return new G12;
+    return new G13;
 }

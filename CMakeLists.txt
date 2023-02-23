@@ -13,6 +13,11 @@ find_package(OpenGL REQUIRED)
 
 add_subdirectory(external/glfw)
 add_subdirectory(external/openmesh)
+
+set(PYBIND11_PYTHON_VERSION 3)
+set(PYBIND11_FINDPYTHON ON)
+add_subdirectory(external/pybind11)
+
 add_library(glad STATIC "external/glad/src/glad.c")
 add_library(imgui STATIC "external/imgui/imgui.cpp"
                          "external/imgui/imgui_demo.cpp"
@@ -61,7 +66,8 @@ include_directories(atcg_lib/include
                     external/eigen
                     external/glm
                     external/openmesh/src
-                    external/nanoflann/include)
+                    external/nanoflann/include
+                    external/pybind11/include)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
@@ -89,3 +95,17 @@ function(ATCG_add_executable target_name_base target_name_var source)
 endfunction()
 
 add_subdirectory(exercises)
+
+# PYTHON BINDINGS
+pybind11_add_module(pyatcg python/pyatcg.cpp)
+target_compile_definitions(pyatcg PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
+target_link_libraries( pyatcg PRIVATE
+    atcg_lib
+    glfw
+    imgui
+    glad
+    OpenGL::GL
+    OpenMeshCore
+    OpenMeshTools
+    #stdc++
+)

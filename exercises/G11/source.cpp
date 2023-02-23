@@ -15,7 +15,6 @@
 class G11Layer : public atcg::Layer
 {
 public:
-
     G11Layer(const std::string& name) : atcg::Layer(name) {}
 
     template<typename T>
@@ -58,14 +57,11 @@ public:
 
     std::vector<float> linspace(float a, float b, uint32_t steps)
     {
-        float step_size = (b-a) / (steps - 1);
+        float step_size = (b - a) / (steps - 1);
 
         std::vector<float> space(steps);
 
-        for(uint32_t i = 0; i < steps; ++i)
-        {
-            space[i] = (a + i * step_size);
-        }
+        for(uint32_t i = 0; i < steps; ++i) { space[i] = (a + i * step_size); }
 
         return space;
     }
@@ -73,7 +69,7 @@ public:
     std::shared_ptr<atcg::Mesh> triangulate(const std::vector<atcg::Mesh::Point>& points)
     {
         std::shared_ptr<atcg::Mesh> mesh = std::make_shared<atcg::Mesh>();
-        
+
         std::vector<atcg::Mesh::VertexHandle> v_handles(points.size());
 
         for(uint32_t i = 0; i < points.size(); ++i)
@@ -85,10 +81,10 @@ public:
         {
             for(uint32_t grid_y = 0; grid_y < grid_size; ++grid_y)
             {
-                auto v00 = v_handles[grid_x + (grid_size+1) * grid_y];
-                auto v10 = v_handles[grid_x + 1 + (grid_size+1) * grid_y];
-                auto v01 = v_handles[grid_x + (grid_size+1) * (grid_y + 1)];
-                auto v11 = v_handles[grid_x + 1 + (grid_size+1) * (grid_y + 1)];
+                auto v00 = v_handles[grid_x + (grid_size + 1) * grid_y];
+                auto v10 = v_handles[grid_x + 1 + (grid_size + 1) * grid_y];
+                auto v01 = v_handles[grid_x + (grid_size + 1) * (grid_y + 1)];
+                auto v11 = v_handles[grid_x + 1 + (grid_size + 1) * (grid_y + 1)];
 
                 mesh->add_face(v00, v01, v10);
                 mesh->add_face(v10, v01, v11);
@@ -105,8 +101,8 @@ public:
     {
         std::vector<Eigen::Triplet<float, int>> vals;
         Eigen::SparseMatrix<float> Mt = M.transpose();
-        int slice = 0;
-        for(int index : indices)
+        int slice                     = 0;
+        for(int index: indices)
         {
             for(Eigen::InnerIterator<Eigen::SparseMatrix<float>> it = Eigen::InnerIterator(Mt, index); it; ++it)
             {
@@ -114,8 +110,8 @@ public:
             }
             ++slice;
         }
-                    
-        
+
+
         Eigen::SparseMatrix<float> res;
         res.resize(indices.size(), M.cols());
         res.setFromTriplets(vals.begin(), vals.end());
@@ -130,7 +126,7 @@ public:
     {
         std::vector<Eigen::Triplet<float, int>> vals;
         int slice = 0;
-        for(int index : indices)
+        for(int index: indices)
         {
             for(Eigen::InnerIterator<Eigen::SparseMatrix<float>> it = Eigen::InnerIterator(M, index); it; ++it)
             {
@@ -138,7 +134,7 @@ public:
             }
             ++slice;
         }
-        
+
         Eigen::SparseMatrix<float> res;
         res.resize(M.rows(), indices.size());
         res.setFromTriplets(vals.begin(), vals.end());
@@ -164,42 +160,37 @@ public:
     {
         for(uint32_t i = 0; i < points.rows(); ++i)
         {
-            mesh->set_point(atcg::VertexHandle(i), {points(i,0), points(i,2), points(i,1)});
+            mesh->set_point(atcg::VertexHandle(i), {points(i, 0), points(i, 2), points(i, 1)});
         }
     }
 
-    void detect_boundary(const std::shared_ptr<atcg::Mesh>& mesh, std::vector<int>& boundary, std::vector<int>& interior)
+    void
+    detect_boundary(const std::shared_ptr<atcg::Mesh>& mesh, std::vector<int>& boundary, std::vector<int>& interior)
     {
-        for(auto v : mesh->vertices())
+        for(auto v: mesh->vertices())
         {
-            if(mesh->is_boundary(v))
-            {
-                boundary.push_back(v.idx());
-            }
-            else
-            {
-                interior.push_back(v.idx());
-            }
+            if(mesh->is_boundary(v)) { boundary.push_back(v.idx()); }
+            else { interior.push_back(v.idx()); }
         }
     }
 
-    Eigen::MatrixXf solve_boundary_problem(const std::shared_ptr<atcg::Mesh>& mesh, 
-                                           const Eigen::MatrixXf& boundary_constraints, 
-                                           const std::vector<int>& boundary, 
+    Eigen::MatrixXf solve_boundary_problem(const std::shared_ptr<atcg::Mesh>& mesh,
+                                           const Eigen::MatrixXf& boundary_constraints,
+                                           const std::vector<int>& boundary,
                                            const std::vector<int>& interior)
     {
         Eigen::MatrixXf z(mesh->n_vertices(), 3);
 
         atcg::Laplacian<float> laplacian = LaplaceUniform<float>().calculate(mesh);
-        Eigen::SparseMatrix<float> L = laplacian.M.cwiseInverse() * laplacian.S;
+        Eigen::SparseMatrix<float> L     = laplacian.M.cwiseInverse() * laplacian.S;
 
-        Eigen::SparseMatrix<float> Lin = slice_rows(L, interior);
+        Eigen::SparseMatrix<float> Lin   = slice_rows(L, interior);
         Eigen::SparseMatrix<float> Linin = slice_cols(Lin, interior);
-        Eigen::SparseMatrix<float> Linb = slice_cols(Lin, boundary);
+        Eigen::SparseMatrix<float> Linb  = slice_cols(Lin, boundary);
 
         Eigen::SparseLU<Eigen::SparseMatrix<float>> solver;
         solver.compute(Linin);
-        Eigen::MatrixXf zi = solver.solve(-Linb*boundary_constraints);
+        Eigen::MatrixXf zi = solver.solve(-Linb * boundary_constraints);
 
         z(interior, Eigen::placeholders::all) = zi;
         z(boundary, Eigen::placeholders::all) = boundary_constraints;
@@ -212,17 +203,14 @@ public:
     {
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
-        std::vector<float> U = linspace(-1,1,100);
+        std::vector<float> U = linspace(-1, 1, 100);
         std::vector<atcg::Mesh::Point> grid;
 
-        for(float u : U)
+        for(float u: U)
         {
-            for(float v : U)
-            {
-                grid.push_back({v, u, 0.f});
-            }
+            for(float v: U) { grid.push_back({v, u, 0.f}); }
         }
 
         mesh = triangulate(grid);
@@ -231,17 +219,17 @@ public:
         std::vector<int> interior;
         detect_boundary(mesh, boundary, interior);
 
-        //Create some boundary constraints
-        Eigen::MatrixXf z = openmesh2eigen(grid);
+        // Create some boundary constraints
+        Eigen::MatrixXf z  = openmesh2eigen(grid);
         Eigen::MatrixXf zb = z(boundary, Eigen::placeholders::all);
         for(int i = 0; i < zb.rows(); ++i)
         {
-            float u = zb(i,0);
-            float v = M_PI * zb(i,1);
+            float u = zb(i, 0);
+            float v = M_PI * zb(i, 1);
 
-            zb(i,0) = u * std::cos(v);
-            zb(i,1) = u * std::sin(v);
-            zb(i,2) = v;
+            zb(i, 0) = u * std::cos(v);
+            zb(i, 1) = u * std::sin(v);
+            zb(i, 2) = v;
         }
 
         z = solve_boundary_problem(mesh, zb, boundary, interior);
@@ -262,10 +250,12 @@ public:
             atcg::Renderer::draw(mesh, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
 
         if(mesh && render_points)
-            atcg::Renderer::drawPoints(mesh, glm::vec3(0), atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+            atcg::Renderer::drawPoints(mesh,
+                                       glm::vec3(0),
+                                       atcg::ShaderManager::getShader("base"),
+                                       camera_controller->getCamera());
 
-        if(mesh && render_edges)
-            atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
+        if(mesh && render_edges) atcg::Renderer::drawLines(mesh, glm::vec3(1), camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -290,37 +280,27 @@ public:
             ImGui::Checkbox("Render Mesh", &render_faces);
             ImGui::End();
         }
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event& event) override
-    {
-        camera_controller->onEvent(event);
-    }
+    virtual void onEvent(atcg::Event* event) override { camera_controller->onEvent(event); }
 
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> mesh;
 
     bool show_render_settings = true;
-    bool render_faces = true;
-    bool render_points = false;
-    bool render_edges = false;
+    bool render_faces         = true;
+    bool render_points        = false;
+    bool render_edges         = false;
 };
 
 class G11 : public atcg::Application
 {
-    public:
-
-    G11()
-        :atcg::Application()
-    {
-        pushLayer(new G11Layer("Layer"));
-    }
+public:
+    G11() : atcg::Application() { pushLayer(new G11Layer("Layer")); }
 
     ~G11() {}
-
 };
 
 atcg::Application* atcg::createApplication()

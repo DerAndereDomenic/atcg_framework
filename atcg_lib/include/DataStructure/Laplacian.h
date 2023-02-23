@@ -4,10 +4,10 @@
 
 namespace atcg
 {
-    template<typename T>
-    struct Laplacian
-    {
-        Eigen::SparseMatrix<T> S; //Stiffness matrix
-        Eigen::SparseMatrix<T> M; //Mass matrix
-    };
-}
+template<typename T>
+struct Laplacian
+{
+    Eigen::SparseMatrix<T> S;    // Stiffness matrix
+    Eigen::SparseMatrix<T> M;    // Mass matrix
+};
+}    // namespace atcg
