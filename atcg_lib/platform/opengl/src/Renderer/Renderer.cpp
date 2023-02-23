@@ -367,4 +367,32 @@ void Renderer::drawGrid(const GridDimension& grid_dimension, const std::shared_p
 
     glDrawArraysInstanced(GL_TRIANGLES, 0, 36, dummy.voxels_per_volume());
 }
+
+std::vector<uint8_t> Renderer::getFrame()
+{
+    auto frame      = s_renderer->impl->screen_fbo->getColorAttachement();
+    uint32_t width  = frame->width();
+    uint32_t height = frame->height();
+    std::vector<uint8_t> buffer(width * height * 4);
+
+    useScreenBuffer();
+
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (void*)buffer.data());
+
+    return buffer;
+}
+
+std::vector<float> Renderer::getZBuffer()
+{
+    auto frame      = s_renderer->impl->screen_fbo->getDepthAttachement();
+    uint32_t width  = frame->width();
+    uint32_t height = frame->height();
+    std::vector<float> buffer(width * height);
+
+    useScreenBuffer();
+
+    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, (void*)buffer.data());
+
+    return buffer;
+}
 }    // namespace atcg

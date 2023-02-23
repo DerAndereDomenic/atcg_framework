@@ -5,25 +5,24 @@
 
 namespace atcg
 {
-    class CPDBackendCUDA : public CPDBackend
-    {
-    public:
-        CPDBackendCUDA( RowMatrix& X,  RowMatrix& Y);
+class CPDBackendCUDA : public CPDBackend
+{
+public:
+    CPDBackendCUDA(RowMatrix& X, RowMatrix& Y);
 
-        ~CPDBackendCUDA();
+    ~CPDBackendCUDA();
 
-        virtual void estimate(const Transformation& transform,
-                              Eigen::VectorXd& PX, 
-                              Eigen::VectorXd& PY, 
-                              double& Np,
-                              double bias, 
-                              double var) override;
+    virtual void estimate(const Transformation& transform,
+                          Eigen::VectorXd& PX,
+                          Eigen::VectorXd& PY,
+                          double& Np,
+                          double bias,
+                          double var) override;
 
-        virtual void maximize(const RowMatrix& XC,
-                              const RowMatrix& YC,
-                              RowMatrix& A) override;
-    private:
-        class Impl;
-        std::unique_ptr<Impl> impl;
-    };
-}
+    virtual void maximize(const RowMatrix& XC, const RowMatrix& YC, RowMatrix& A) override;
+
+private:
+    class Impl;
+    std::unique_ptr<Impl> impl;
+};
+}    // namespace atcg

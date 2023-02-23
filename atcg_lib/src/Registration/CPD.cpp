@@ -104,12 +104,12 @@ double CoherentPointDrift::maximize(Eigen::VectorXd& PX, Eigen::VectorXd& PY)
     RowMatrix C = RowMatrix::Identity(3, 3);
     C(2, 2)     = (U * V.transpose()).determinant();
 
-    R = U * C * V.transpose();
-    s = (A.transpose() * R).trace() / (YC.transpose() * PY.asDiagonal() * YC).trace();
+    T.R = U * C * V.transpose();
+    T.s = (A.transpose() * T.R).trace() / (YC.transpose() * PY.asDiagonal() * YC).trace();
 
-    double var = Np / 3 * ((XC.transpose() * PX.asDiagonal() * XC).trace() - s * (A.transpose() * R).trace());
+    double var = Np / 3 * ((XC.transpose() * PX.asDiagonal() * XC).trace() - T.s * (A.transpose() * T.R).trace());
 
-    t = uX - s * R * uY;
+    T.t = uX - T.s * T.R * uY;
 
     return var;
 }
@@ -123,7 +123,7 @@ void CoherentPointDrift::applyTransform(const std::shared_ptr<PointCloud>& cloud
         p(0) = p_[0];
         p(1) = p_[1];
         p(2) = p_[2];
-        p    = s * R * p + t;
+        p    = T.s * T.R * p + T.t;
         cloud->set_point(*v_it, PointCloud::Point {p(0), p(1), p(2)});
     }
 }

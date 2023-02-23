@@ -165,4 +165,22 @@ void* Window::getNativeWindow() const
 {
     return _window;
 }
+
+void Window::resize(const uint32_t& _width, const uint32_t& _height)
+{
+    _data.width  = _width;
+    _data.height = _height;
+
+    glfwSetWindowSize((GLFWwindow*)_window, _width, _height);
+}
+
+void Window::hide()
+{
+    glfwHideWindow((GLFWwindow*)_window);
+}
+
+void Window::show()
+{
+    glfwShowWindow((GLFWwindow*)_window);
+}
 }    // namespace atcg

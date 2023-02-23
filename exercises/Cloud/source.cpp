@@ -12,7 +12,6 @@
 class CloudLayer : public atcg::Layer
 {
 public:
-
     CloudLayer(const std::string& name) : atcg::Layer(name) {}
 
     // This is run at the start of the program
@@ -22,7 +21,7 @@ public:
         atcg::ShaderManager::addShaderFromName("cloud");
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
 
         cube = atcg::IO::read_mesh("res/cube.obj");
         cube->uploadData();
@@ -59,36 +58,25 @@ public:
 
             ImGui::End();
         }
-
-
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event& event) override
-    {
-        camera_controller->onEvent(event);
-    }
+    virtual void onEvent(atcg::Event* event) override { camera_controller->onEvent(event); }
 
 private:
     std::shared_ptr<atcg::CameraController> camera_controller;
     std::shared_ptr<atcg::Mesh> cube;
 
     bool show_render_settings = false;
-    bool show_cpd_settings = true;
+    bool show_cpd_settings    = true;
 };
 
 class CloudRenderer : public atcg::Application
 {
-    public:
-
-    CloudRenderer()
-        :atcg::Application()
-    {
-        pushLayer(new CloudLayer("Layer"));
-    }
+public:
+    CloudRenderer() : atcg::Application() { pushLayer(new CloudLayer("Layer")); }
 
     ~CloudRenderer() {}
-
 };
 
 atcg::Application* atcg::createApplication()
