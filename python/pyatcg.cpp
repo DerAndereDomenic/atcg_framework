@@ -95,7 +95,18 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::Event>(m, "Event");
 
+    py::class_<atcg::Application, std::shared_ptr<atcg::Application>>(m, "Application");
+
     py::class_<atcg::Renderer>(m, "Renderer")
+        .def("init",
+             [](uint32_t width, uint32_t height)
+             {
+                 std::shared_ptr<atcg::Application> app = std::make_shared<atcg::Application>();
+                 const auto& window                     = app->getWindow();
+
+                 window->resize(width, height);
+                 return app;
+             })
         .def("setClearColor",
              [](const float r, const float g, const float b, const float a)
              { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
