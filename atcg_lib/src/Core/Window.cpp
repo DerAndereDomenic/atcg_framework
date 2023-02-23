@@ -172,4 +172,14 @@ void Window::resize(const uint32_t& _width, const uint32_t& _height)
 
     glfwSetWindowSize(_window, _width, _height);
 }
+
+void Window::hide()
+{
+    glfwHideWindow(_window);
+}
+
+void Window::show()
+{
+    glfwShowWindow(_window);
+}
 }    // namespace atcg

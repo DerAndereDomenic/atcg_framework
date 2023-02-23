@@ -60,6 +60,18 @@ public:
     void setEventCallback(const EventCallbackFn& callback);
 
     /**
+     * @brief Hides the window.
+     *
+     */
+    void hide();
+
+    /**
+     * @brief Shows the window
+     *
+     */
+    void show();
+
+    /**
      * @brief Get the Native Window object
      *
      * @return GLFWwindow* The glfw window pointer
