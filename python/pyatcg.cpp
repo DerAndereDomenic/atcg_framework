@@ -104,6 +104,8 @@ PYBIND11_MODULE(pyatcg, m)
                  std::shared_ptr<atcg::Application> app = std::make_shared<atcg::Application>();
                  const auto& window                     = app->getWindow();
 
+                 window->hide();
+
                  window->resize(width, height);
                  return app;
              })
