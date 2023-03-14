@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <imgui.h>
+
 #define STRINGIFY(x)       #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
@@ -308,6 +310,35 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::Mesh, std::shared_ptr<atcg::Mesh>>(m, "Mesh").def("uploadData", &atcg::Mesh::uploadData);
 
     m.def("readMesh", &atcg::IO::read_mesh);
+
+    // IMGUI BINDINGS
+
+    m.def("BeginMainMenuBar", &ImGui::BeginMainMenuBar);
+    m.def("EndMainMenuBar", &ImGui::EndMainMenuBar);
+    m.def("BeginMenu", &ImGui::BeginMenu, py::arg("label"), py::arg("enabled") = true);
+    m.def("EndMenu", &ImGui::EndMenu);
+    m.def(
+        "MenuItem",
+        [](const char* label, const char* shortcut, bool* p_selected, bool enabled)
+        {
+            auto ret = ImGui::MenuItem(label, shortcut, p_selected, enabled);
+            return std::make_tuple(ret, p_selected);
+        },
+        py::arg("label"),
+        py::arg("shortcut"),
+        py::arg("p_selected"),
+        py::arg("enabled") = true);
+    m.def(
+        "Begin",
+        [](const char* name, bool* p_open, ImGuiWindowFlags flags)
+        {
+            auto ret = ImGui::Begin(name, p_open, flags);
+            return std::make_tuple(ret, p_open);
+        },
+        py::arg("name"),
+        py::arg("p_open") = nullptr,
+        py::arg("flags")  = 0);
+    m.def("End", &ImGui::End);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
