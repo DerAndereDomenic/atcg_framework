@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION "3.18")
 project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
 
 option(ATCG_CUDA_BACKEND "Compile cuda backend" OFF)
+option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_C_STANDARD 99)
@@ -97,15 +98,18 @@ endfunction()
 add_subdirectory(exercises)
 
 # PYTHON BINDINGS
-pybind11_add_module(pyatcg python/pyatcg.cpp)
-target_compile_definitions(pyatcg PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
-target_link_libraries( pyatcg PRIVATE
-    glad
-    atcg_lib
-    glfw
-    imgui
-    OpenGL::GL
-    OpenMeshCore
-    OpenMeshTools
-    #stdc++
-)
+
+if(ATCG_PYTHON_BINDINGS)
+    pybind11_add_module(pyatcg python/pyatcg.cpp)
+    target_compile_definitions(pyatcg PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
+    target_link_libraries( pyatcg PRIVATE
+        glad
+        atcg_lib
+        glfw
+        imgui
+        OpenGL::GL
+        OpenMeshCore
+        OpenMeshTools
+        #stdc++
+    )
+endif()
