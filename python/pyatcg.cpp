@@ -327,7 +327,8 @@ PYBIND11_MODULE(pyatcg, m)
         py::arg("label"),
         py::arg("shortcut"),
         py::arg("p_selected"),
-        py::arg("enabled") = true);
+        py::arg("enabled") = true,
+        py::return_value_policy::automatic_reference);
     m.def(
         "Begin",
         [](const char* name, bool* p_open, ImGuiWindowFlags flags)
@@ -337,8 +338,70 @@ PYBIND11_MODULE(pyatcg, m)
         },
         py::arg("name"),
         py::arg("p_open") = nullptr,
-        py::arg("flags")  = 0);
+        py::arg("flags")  = 0,
+        py::return_value_policy::automatic_reference);
     m.def("End", &ImGui::End);
+    m.def(
+        "Checkbox",
+        [](const char* label, bool* v)
+        {
+            auto ret = ImGui::Checkbox(label, v);
+            return std::make_tuple(ret, v);
+        },
+        py::arg("label"),
+        py::arg("v"),
+        py::return_value_policy::automatic_reference);
+    m.def(
+        "Button",
+        [](const char* label)
+        {
+            auto ret = ImGui::Button(label);
+            return ret;
+        },
+        py::arg("label"),
+        py::return_value_policy::automatic_reference);
+    m.def(
+        "SliderInt",
+        [](const char* label, int* v, int v_min, int v_max, const char* format = "%d", ImGuiSliderFlags flags = 0)
+        {
+            auto ret = ImGui::SliderInt(label, v, v_min, v_max, format, flags);
+            return std::make_tuple(ret, v);
+        },
+        py::arg("label"),
+        py::arg("v"),
+        py::arg("v_min"),
+        py::arg("v_max"),
+        py::arg("format") = "%d",
+        py::arg("flags")  = 0,
+        py::return_value_policy::automatic_reference);
+    m.def(
+        "SliderFloat",
+        [](const char* label,
+           float* v,
+           float v_min,
+           float v_max,
+           const char* format     = "%.3f",
+           ImGuiSliderFlags flags = 0)
+        {
+            auto ret = ImGui::SliderFloat(label, v, v_min, v_max, format, flags);
+            return std::make_tuple(ret, v);
+        },
+        py::arg("label"),
+        py::arg("v"),
+        py::arg("v_min"),
+        py::arg("v_max"),
+        py::arg("format") = "%.3f",
+        py::arg("flags")  = 0,
+        py::return_value_policy::automatic_reference);
+    m.def(
+        "Text",
+        [](const char* fmt)
+        {
+            ImGui::Text(fmt);
+            return;
+        },
+        py::arg("fmt"),
+        py::return_value_policy::automatic_reference);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
