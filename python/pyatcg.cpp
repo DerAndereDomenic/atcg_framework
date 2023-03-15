@@ -96,18 +96,16 @@ PYBIND11_MODULE(pyatcg, m)
         .def("onEvent", &atcg::Layer::onEvent);
 
     py::class_<atcg::Event>(m, "Event");
-    py::class_<atcg::KeyEvent>(m, "KeyEvent");
-    py::class_<atcg::KeyPressedEvent>(m, "KeyPressedEvent");
-    py::class_<atcg::KeyReleasedEvent>(m, "KeyReleasedEvent");
-    py::class_<atcg::KeyTypedEvent>(m, "KeyTypedEvent");
-    py::class_<atcg::MouseMovedEvent>(m, "MouseMovedEvent");
-    py::class_<atcg::MouseScrolledEvent>(m, "MouseScrolledEvent");
-    py::class_<atcg::MouseButtonEvent>(m, "MouseButtonEvent");
-    py::class_<atcg::MouseButtonPressedEvent>(m, "MouseButtonPressedEvent");
-    py::class_<atcg::MouseButtonReleasedEvent>(m, "MouseButtonReleasedEvent");
-    py::class_<atcg::WindowResizeEvent>(m, "WindowResizeEvent");
-    py::class_<atcg::WindowCloseEvent>(m, "WindowCloseEvent");
-    py::class_<atcg::FileDroppedEvent>(m, "FileDroppedEvent");
+
+    py::class_<atcg::Input>(m, "Input")
+        .def_static("isKeyPressed", &atcg::Input::isKeyPressed)
+        .def_static("isMouseButtonPressed", &atcg::Input::isMouseButtonPressed)
+        .def("getMousePosition",
+             []()
+             {
+                 glm::vec2 mouse_position = atcg::Input::getMousePosition();
+                 return py::array(2, reinterpret_cast<float*>(&mouse_position));
+             });
 
     py::class_<atcg::Application, std::shared_ptr<atcg::Application>>(m, "Application");
 
