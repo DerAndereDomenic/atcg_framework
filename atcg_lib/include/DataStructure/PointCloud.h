@@ -98,6 +98,13 @@ public:
     RowMatrix asMatrix();
 
     /**
+     * @brief Set the point data from a matrix
+     *
+     * @param points The point matrix
+     */
+    void fromMatrix(const RowMatrix& points);
+
+    /**
      * @brief Get the Vertex Array object
      *
      * @return std::shared_ptr<VertexArray> The vao
@@ -230,6 +237,21 @@ RowMatrix PointCloudT<Traits>::asMatrix()
     }
 
     return S;
+}
+
+template<class Traits>
+void PointCloudT<Traits>::fromMatrix(const RowMatrix& points)
+{
+    _vertices.clear();
+    _points.clear();
+    _normals.clear();
+    _colors.clear();
+
+    for(uint32_t i = 0; i < points.rows(); ++i)
+    {
+        OpenMesh::Vec3f pos {points(i, 0), points(i, 1), points(i, 2)};
+        add_vertex(pos);
+    }
 }
 
 using PointCloud = PointCloudT<>;
