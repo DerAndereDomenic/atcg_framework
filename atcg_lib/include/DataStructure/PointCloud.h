@@ -64,6 +64,12 @@ public:
     void set_color(const VertexHandle& vh, const Color& color);
 
     /**
+     * @brief Set the color of all points
+     * @param color The color
+     */
+    void setColor(const Color& color);
+
+    /**
      * @brief Get the point of a vertex
      *
      * @param vh The VertexHandle
@@ -171,6 +177,12 @@ void PointCloudT<Traits>::set_color(const PointCloudT<Traits>::VertexHandle& vh,
                                     const PointCloudT<Traits>::Color& color)
 {
     _colors[vh.idx()] = color;
+}
+
+template<class Traits>
+void PointCloudT<Traits>::setColor(const PointCloudT<Traits>::Color& color)
+{
+    for(uint32_t i = 0; i < _colors.size(); ++i) _colors[i] = color;
 }
 
 template<class Traits>

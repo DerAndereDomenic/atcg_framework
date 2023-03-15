@@ -62,6 +62,13 @@ public:
     float total_area() const;
 
     /**
+     * @brief Set the color of all vertices
+     *
+     * @param color The color
+     */
+    void setColor(const Color& color);
+
+    /**
      * @brief Get the handle to the opposite vertex on the face
      *
      * @param fh The face handle

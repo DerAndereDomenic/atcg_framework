@@ -97,6 +97,11 @@ float Mesh::total_area() const
     return total_area;
 }
 
+void Mesh::setColor(const Color& color)
+{
+    for(auto v_it = vertices_begin(); v_it != vertices_end(); ++v_it) { set_color(*v_it, color); }
+}
+
 Mesh::HalfedgeHandle Mesh::opposite_halfedge_handle(const Mesh::FaceHandle& fh, const Mesh::VertexHandle& vh)
 {
     for(auto he_it = cfh_ccwbegin(fh); he_it != cfh_ccwend(fh); ++he_it)
