@@ -156,6 +156,7 @@ PYBIND11_MODULE(pyatcg, m)
              });
 
     py::class_<glm::vec3>(m, "Vector3", py::buffer_protocol())
+        .def(py::init<float, float, float>())
         .def(py::init(
             [](py::buffer b)
             {
@@ -322,7 +323,10 @@ PYBIND11_MODULE(pyatcg, m)
         .def_static("addShader", &atcg::ShaderManager::addShader)
         .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName);
 
-    py::class_<atcg::Mesh, std::shared_ptr<atcg::Mesh>>(m, "Mesh").def("uploadData", &atcg::Mesh::uploadData);
+    py::class_<atcg::Mesh, std::shared_ptr<atcg::Mesh>>(m, "Mesh")
+        .def("uploadData", &atcg::Mesh::uploadData)
+        .def("setPosition", &atcg::Mesh::setPosition)
+        .def("setScale", &atcg::Mesh::setScale);
     py::class_<atcg::PointCloud, std::shared_ptr<atcg::PointCloud>>(m, "PointCloud")
         .def("uploadData", &atcg::PointCloud::uploadData)
         .def("asMatrix", &atcg::PointCloud::asMatrix)
