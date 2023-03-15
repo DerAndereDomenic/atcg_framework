@@ -137,6 +137,11 @@ PYBIND11_MODULE(pyatcg, m)
                 const std::shared_ptr<atcg::Shader>& shader,
                 const std::shared_ptr<atcg::PerspectiveCamera>& camera)
              { atcg::Renderer::drawPoints(mesh, color, shader, camera); })
+        .def("renderPointCloud",
+             [](const std::shared_ptr<atcg::PointCloud>& cloud,
+                const std::shared_ptr<atcg::Shader>& shader,
+                const std::shared_ptr<atcg::PerspectiveCamera>& camera)
+             { atcg::Renderer::draw(cloud, shader, camera); })
         .def("getFrame",
              []()
              {
@@ -318,8 +323,13 @@ PYBIND11_MODULE(pyatcg, m)
         .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName);
 
     py::class_<atcg::Mesh, std::shared_ptr<atcg::Mesh>>(m, "Mesh").def("uploadData", &atcg::Mesh::uploadData);
+    py::class_<atcg::PointCloud, std::shared_ptr<atcg::PointCloud>>(m, "PointCloud")
+        .def("uploadData", &atcg::PointCloud::uploadData)
+        .def("asMatrix", &atcg::PointCloud::asMatrix)
+        .def("fromMatrix", &atcg::PointCloud::fromMatrix);
 
     m.def("readMesh", &atcg::IO::read_mesh);
+    m.def("readPointCloud", &atcg::IO::read_pointcloud);
 
     // IMGUI BINDINGS
 
