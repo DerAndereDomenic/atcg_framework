@@ -326,14 +326,18 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::Mesh, std::shared_ptr<atcg::Mesh>>(m, "Mesh")
         .def("uploadData", &atcg::Mesh::uploadData)
         .def("setPosition", &atcg::Mesh::setPosition)
-        .def("setScale", &atcg::Mesh::setScale);
+        .def("setScale", &atcg::Mesh::setScale)
+        .def("setColor", &atcg::Mesh::setColor);
     py::class_<atcg::PointCloud, std::shared_ptr<atcg::PointCloud>>(m, "PointCloud")
         .def("uploadData", &atcg::PointCloud::uploadData)
         .def("asMatrix", &atcg::PointCloud::asMatrix)
-        .def("fromMatrix", &atcg::PointCloud::fromMatrix);
+        .def("fromMatrix", &atcg::PointCloud::fromMatrix)
+        .def("setColor", &atcg::PointCloud::setColor);
 
     m.def("readMesh", &atcg::IO::read_mesh);
     m.def("readPointCloud", &atcg::IO::read_pointcloud);
+
+    m.def("rayMeshIntersection", &atcg::Tracing::rayMeshIntersection);
 
     // IMGUI BINDINGS
 
