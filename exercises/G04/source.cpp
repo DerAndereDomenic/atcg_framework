@@ -92,7 +92,7 @@ public:
                     if(!was_visited(*vit))
                     {
                         mesh->property(property_distance, *vit) =
-                            my_distance + (mesh->point(vh) - mesh->point(*vit)).norm();
+                            my_distance + glm::length(mesh->point(vh) - mesh->point(*vit));
                         queue.push(*vit);
                     }
                 }

@@ -31,8 +31,8 @@ struct LaplaceCotan
         const auto d0   = v0 - v2;
         const auto d1   = v1 - v2;
         const auto d2   = v1 - v0;
-        const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
-        if(area > 1e-5) return clampCotan(d0.dot(d1) / area) / T(2.);
+        const auto area = atcg::areaFromMetric<T>(glm::length(d0), glm::length(d1), glm::length(d2));
+        if(area > 1e-5) return clampCotan(glm::dot(d0, d1) / area) / T(2.);
         return 1e-5;
     }
 
@@ -175,17 +175,17 @@ public:
 
         Eigen::VectorXd u = luAtLc.solve(u0);
 
-        std::vector<OpenMesh::Vec3d> face_grad_u(mesh->n_faces(), OpenMesh::Vec3d(0, 0, 0));
+        std::vector<glm::vec3> face_grad_u(mesh->n_faces(), glm::vec3(0, 0, 0));
         for(auto fh: mesh->faces())
         {
-            OpenMesh::Vec3d& x          = face_grad_u[fh.idx()];
+            glm::vec3& x                = face_grad_u[fh.idx()];
             const atcg::Mesh::Normal& N = mesh->normal(fh);
             for(auto v_it = mesh->cfv_ccwbegin(fh); v_it != mesh->cfv_ccwend(fh); ++v_it)
             {
                 auto heh = mesh->opposite_halfedge_handle(fh, *v_it);
                 atcg::Mesh::Point ei =
                     mesh->point(mesh->to_vertex_handle(heh)) - mesh->point(mesh->from_vertex_handle(heh));
-                x += static_cast<float>(u[v_it->idx()]) * (N % ei);
+                x += static_cast<float>(u[v_it->idx()]) * (glm::cross(N, ei));
             }
             x /= 2.0 * mesh->area(fh);
         }
@@ -208,17 +208,17 @@ public:
 
                 auto fh = mesh->face_handle(heh);
 
-                auto p1                = mesh->point(mesh->to_vertex_handle(heh));
-                auto p2                = mesh->point(mesh->to_vertex_handle(next_heh));
-                atcg::Mesh::Point e1   = (p1 - pi);
-                atcg::Mesh::Point e2   = (p2 - pi);
-                atcg::Mesh::Point e3   = (p2 - p1);
-                OpenMesh::Vec3d X_face = -face_grad_u[fh.idx()] / face_grad_u[fh.idx()].norm();
+                auto p1              = mesh->point(mesh->to_vertex_handle(heh));
+                auto p2              = mesh->point(mesh->to_vertex_handle(next_heh));
+                atcg::Mesh::Point e1 = (p1 - pi);
+                atcg::Mesh::Point e2 = (p2 - pi);
+                atcg::Mesh::Point e3 = (p2 - p1);
+                glm::vec3 X_face     = -face_grad_u[fh.idx()] / glm::length(face_grad_u[fh.idx()]);
 
-                double angle1 = acos((-e3.normalized()) | (-e2.normalized()));
-                double angle2 = acos(e3.normalized() | (-e1.normalized()));
+                double angle1 = acos(-glm::dot(glm::normalize(e3), -glm::normalize(e2)));
+                double angle2 = acos(glm::dot(glm::normalize(e3), glm::normalize(-e1)));
 
-                div += (1.0 / tan(angle1)) * (e1 | X_face) + (1.0 / tan(angle2)) * (e2 | X_face);
+                div += (1.0 / tan(angle1)) * glm::dot(e1, X_face) + (1.0 / tan(angle2)) * glm::dot(e2, X_face);
             }
             div /= 2.0;
         }

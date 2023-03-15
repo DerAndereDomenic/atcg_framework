@@ -76,7 +76,7 @@ public:
         {
             atcg::TriMesh::Point p0 = mesh->point(path[i]);
             atcg::TriMesh::Point p1 = mesh->point(path[i + 1]);
-            path_lengths.push_back((p0 - p1).norm());
+            path_lengths.push_back((p0 - p1).length());
         }
 
         return path_lengths;
@@ -134,9 +134,9 @@ public:
             int j = v[1].idx();
             int k = v[2].idx();
 
-            double rij = (vj - vi).norm();
-            double rjk = (vk - vj).norm();
-            double rki = (vi - vk).norm();
+            double rij = glm::length(vj - vi);
+            double rjk = glm::length(vk - vj);
+            double rki = glm::length(vi - vk);
 
             double alphai = angle_from_metric(rij, rki, rjk);
             double alphaj = angle_from_metric(rjk, rij, rki);

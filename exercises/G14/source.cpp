@@ -34,7 +34,7 @@ public:
             for(uint32_t j = 0; j < n; ++j)
             {
                 atcg::Mesh::Point p = target->point(atcg::Mesh::VertexHandle(j));
-                double distance     = (p - q).norm();
+                double distance     = glm::length(p - q);
                 if(distance < min_distance)
                 {
                     min_distance = distance;
@@ -62,7 +62,7 @@ public:
             p_bar += target->point(atcg::Mesh::VertexHandle(c[i]));
         }
 
-        return std::make_pair(q_bar / n, p_bar / n);
+        return std::make_pair(q_bar / static_cast<float>(n), p_bar / static_cast<float>(n));
     }
 
     void update_rotation(const std::shared_ptr<atcg::Mesh>& source,

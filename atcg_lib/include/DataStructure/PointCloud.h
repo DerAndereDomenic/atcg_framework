@@ -6,9 +6,11 @@
 #include <Renderer/VertexArray.h>
 #include <Math/Utils.h>
 
+#include <OpenMesh/GLMTraits.h>
+
 namespace atcg
 {
-template<class Traits = OpenMesh::DefaultTraits>
+template<class Traits = GLMTraits>
 class PointCloudT
 {
 public:
@@ -145,7 +147,7 @@ typename PointCloudT<Traits>::VertexHandle PointCloudT<Traits>::add_vertex(const
     typename PointCloudT<Traits>::VertexHandle vh(static_cast<int>(_vertices.size()));
     _vertices.push_back(vh);
     _normals.push_back(typename PointCloudT<Traits>::Normal {1, 0, 0});
-    _colors.push_back(typename PointCloudT<Traits>::Color {0, 0, 0});
+    _colors.push_back(typename PointCloudT<Traits>::Color {255, 255, 255});
     _points.push_back(p);
 
     return vh;
@@ -198,9 +200,9 @@ void PointCloudT<Traits>::uploadData()
     for(auto vertex: _vertices)
     {
         int32_t vertex_id              = vertex.idx();
-        OpenMesh::Vec3f pos            = point(vertex);
-        OpenMesh::Vec3f norm           = normal(vertex);
-        OpenMesh::Vec3uc col           = color(vertex);
+        glm::vec3 pos                  = point(vertex);
+        glm::vec3 norm                 = normal(vertex);
+        glm::vec3 col                  = color(vertex);
         vertex_data[9 * vertex_id + 0] = pos[0];
         vertex_data[9 * vertex_id + 1] = pos[1];
         vertex_data[9 * vertex_id + 2] = pos[2];
@@ -229,10 +231,10 @@ RowMatrix PointCloudT<Traits>::asMatrix()
     uint32_t i = 0;
     for(auto vertex: _vertices)
     {
-        OpenMesh::Vec3f pos = point(vertex);
-        S(i, 0)             = static_cast<double>(pos[0]);
-        S(i, 1)             = static_cast<double>(pos[1]);
-        S(i, 2)             = static_cast<double>(pos[2]);
+        glm::vec3 pos = point(vertex);
+        S(i, 0)       = static_cast<double>(pos[0]);
+        S(i, 1)       = static_cast<double>(pos[1]);
+        S(i, 2)       = static_cast<double>(pos[2]);
         ++i;
     }
 
@@ -249,7 +251,7 @@ void PointCloudT<Traits>::fromMatrix(const RowMatrix& points)
 
     for(uint32_t i = 0; i < points.rows(); ++i)
     {
-        OpenMesh::Vec3f pos {points(i, 0), points(i, 1), points(i, 2)};
+        glm::vec3 pos {points(i, 0), points(i, 1), points(i, 2)};
         add_vertex(pos);
     }
 }

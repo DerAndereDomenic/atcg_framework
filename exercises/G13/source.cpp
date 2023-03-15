@@ -37,8 +37,8 @@ public:
             const auto d0   = v0 - v2;
             const auto d1   = v1 - v2;
             const auto d2   = v1 - v0;
-            const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
-            if(area > 1e-5) return clampCotan(d0.dot(d1) / area) / 2.f;
+            const auto area = atcg::areaFromMetric<T>(glm::length(d0), glm::length(d1), glm::length(d2));
+            if(area > 1e-5) return clampCotan(glm::dot(d0, d1) / area) / 2.f;
             return T(1e-5);
         }
 
@@ -157,7 +157,7 @@ public:
         for(auto v_it = mesh->vertices_begin(); v_it != mesh->vertices_end(); ++v_it)
         {
             atcg::Mesh::Point p = mesh->point(*v_it);
-            double distance     = p.norm();
+            double distance     = glm::length(p);
 
             if(distance < edit_radius)
             {

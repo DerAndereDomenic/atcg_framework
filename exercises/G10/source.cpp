@@ -53,10 +53,10 @@ public:
     // Rotate source onto target
     LocalFrame rotateCoordinateSystem(const LocalFrame& target, const LocalFrame& source)
     {
-        double cosa = target.z.dot(source.z);
+        double cosa = glm::dot(target.z, source.z);
 
         double sina         = std::sqrt(std::max(0.0, 1.0 - cosa * cosa));
-        atcg::Mesh::Point n = target.z.cross(source.z).normalized();
+        atcg::Mesh::Point n = glm::normalize(glm::cross(target.z, source.z));
         double n1           = n[0];
         double n2           = n[1];
         double n3           = n[2];
@@ -105,8 +105,8 @@ public:
             atcg::Mesh::Point nd[3] = {nd21, nd02, nd10};
 
             // Get orthonormal parameterization u,v (choose one edge and normalize the other)
-            atcg::Mesh::Point u = edges[0].normalized();
-            atcg::Mesh::Point v = (edges[1] - u.dot(edges[1]) * u).normalized();
+            atcg::Mesh::Point u = glm::normalize(edges[0]);
+            atcg::Mesh::Point v = glm::normalize(edges[1] - glm::dot(u, edges[1]) * u);
 
             // Construct least squares matrix
             Eigen::MatrixXd A = Eigen::MatrixXd::Zero(6, 3);
@@ -114,10 +114,10 @@ public:
 
             for(uint32_t i = 0; i < 3; ++i)    // One equation for each edge
             {
-                double a1 = edges[i].dot(u);
-                double a2 = edges[i].dot(v);
-                double b1 = nd[i].dot(u);
-                double b2 = nd[i].dot(v);
+                double a1 = glm::dot(edges[i], u);
+                double a2 = glm::dot(edges[i], v);
+                double b1 = glm::dot(nd[i], u);
+                double b2 = glm::dot(nd[i], v);
 
                 A(2 * i, 0)     = a1;
                 A(2 * i, 1)     = a2;
@@ -150,7 +150,7 @@ public:
             for(auto f_it = v_it->faces().begin(); f_it != v_it->faces().end(); ++f_it)
             {
                 FundamentalFormFace form = form_property[*f_it];
-                LocalFrame local_frame_f = {form.uf, form.vf, form.uf.cross(form.vf).normalized()};
+                LocalFrame local_frame_f = {form.uf, form.vf, glm::normalize(glm::cross(form.uf, form.vf))};
 
                 LocalFrame rotated_frame = rotateCoordinateSystem(local_frame_p, local_frame_f);
 
@@ -160,10 +160,10 @@ public:
                 F(1, 0) = form.f;
                 F(1, 1) = form.g;
                 Eigen::Vector2d up, vp;
-                up(0) = local_frame_p.x.dot(rotated_frame.x);
-                up(1) = local_frame_p.x.dot(rotated_frame.y);
-                vp(0) = local_frame_p.y.dot(rotated_frame.x);
-                vp(1) = local_frame_p.y.dot(rotated_frame.y);
+                up(0) = glm::dot(local_frame_p.x, rotated_frame.x);
+                up(1) = glm::dot(local_frame_p.x, rotated_frame.y);
+                vp(0) = glm::dot(local_frame_p.y, rotated_frame.x);
+                vp(1) = glm::dot(local_frame_p.y, rotated_frame.y);
 
                 ep += up.transpose() * F * up;
                 fp += up.transpose() * F * vp;
