@@ -22,6 +22,7 @@ float rayTriangleIntersection(const Eigen::Vector3f vertices[3],
     a     = edge1.dot(h);
     if(std::abs(a) < 1e-5f) return tmax;
     f = 1.0f / a;
+    s = origin - vertex0;
     u = f * s.dot(h);
     if(u < 0.0f || u > 1.0f) return tmax;
     q = s.cross(edge1);
@@ -51,7 +52,7 @@ float rayMeshIntersection(const std::shared_ptr<Mesh>& mesh,
 
         float hit = rayTriangleIntersection(vertices, origin, direction, tmin, tmax);
 
-        if(hit < tmax && hit < best_hit) { hit = best_hit; }
+        if(hit < tmax && hit < best_hit) { best_hit = hit; }
     }
 
     return best_hit;
