@@ -327,7 +327,9 @@ PYBIND11_MODULE(pyatcg, m)
         .def("uploadData", &atcg::Mesh::uploadData)
         .def("setPosition", &atcg::Mesh::setPosition)
         .def("setScale", &atcg::Mesh::setScale)
-        .def("setColor", &atcg::Mesh::setColor);
+        .def("setColor", &atcg::Mesh::setColor)
+        .def("requestVertexColors", &atcg::Mesh::request_vertex_colors)
+        .def("requestVertexNormals", &atcg::Mesh::request_vertex_normals);
     py::class_<atcg::PointCloud, std::shared_ptr<atcg::PointCloud>>(m, "PointCloud")
         .def("uploadData", &atcg::PointCloud::uploadData)
         .def("asMatrix", &atcg::PointCloud::asMatrix)
