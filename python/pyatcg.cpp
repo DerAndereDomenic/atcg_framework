@@ -131,6 +131,11 @@ PYBIND11_MODULE(pyatcg, m)
              [](const std::shared_ptr<atcg::Mesh>& mesh,
                 const std::shared_ptr<atcg::Shader>& shader,
                 const std::shared_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::draw(mesh, shader, camera); })
+        .def("renderLines",
+             [](const std::shared_ptr<atcg::Mesh>& mesh,
+                const glm::vec3& color,
+                const std::shared_ptr<atcg::PerspectiveCamera>& camera)
+             { atcg::Renderer::drawLines(mesh, color, camera); })
         .def("renderPoints",
              [](const std::shared_ptr<atcg::Mesh>& mesh,
                 const glm::vec3& color,
