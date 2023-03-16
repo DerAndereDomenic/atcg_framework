@@ -64,13 +64,17 @@ struct LaplaceCotan
 
     T triangleCotan(const atcg::TriMesh::Point& v0, const atcg::TriMesh::Point& v1, const atcg::TriMesh::Point& v2)
     {
+        /// Exercise: Compute the cotan values for a triangle
+        ///           Hint: cotan = <edge0,edge1>/Area(Triangle)
+        ///           You can use atcg::areaFromMetric<T> to compute the triangle area
         const auto d0   = v0 - v2;
         const auto d1   = v1 - v2;
         const auto d2   = v1 - v0;
-        const auto area = atcg::areaFromMetric<T>(d0.norm(), d1.norm(), d2.norm());
-        if(area > 1e-5) return clampCotan(d0.dot(d1) / area);
+        const auto area = atcg::areaFromMetric<T>(glm::length(d0), glm::length(d1), glm::length(d2));
+        if(area > 1e-5) return clampCotan(glm::dot(d0, d1) / area) / 2.f;
         return T(1e-5);
     }
+
 
     atcg::Laplacian<T> calculate(const std::shared_ptr<atcg::Mesh>& mesh)
     {
