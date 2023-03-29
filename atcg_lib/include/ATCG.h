@@ -41,7 +41,3 @@
 #include <Math/Functions.h>
 #include <Math/Utils.h>
 #include <Math/Tracing.h>
-
-//-------- Registration -----------
-#include <Registration/CPD.h>
-#include <Registration/NonRigidCPD.h>

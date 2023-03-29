@@ -30,23 +30,12 @@ public:
         sphere->uploadData();
 
         {
-            auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/"
-                                                         "cloud1.xyz");
+            auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/PointCloudCompression/"
+                                                         "sample.xyz");
             // auto point_cloud = atcg::IO::read_pointcloud("res/bunny.obj");
             point_cloud->uploadData();
             clouds.push_back(std::make_pair(point_cloud, true));
         }
-
-        {
-            auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/Repositories/AdaBins/"
-                                                         "cloud2.xyz");
-            // auto point_cloud = atcg::IO::read_pointcloud("res/bunny.obj");
-            // atcg::normalize(point_cloud);
-            point_cloud->uploadData();
-            clouds.push_back(std::make_pair(point_cloud, true));
-        }
-
-        registrator = std::make_unique<atcg::CoherentPointDrift>(clouds[1].first, clouds[0].first, 0);
     }
 
     // This gets called each frame
@@ -112,12 +101,6 @@ public:
             ImGui::EndMenu();
         }
 
-        if(ImGui::BeginMenu("Registration"))
-        {
-            ImGui::MenuItem("Show CPD Settings", nullptr, &show_cpd_settings);
-            ImGui::EndMenu();
-        }
-
         ImGui::EndMainMenuBar();
 
         if(show_render_settings)
@@ -131,21 +114,6 @@ public:
                 ImGui::Checkbox("Render Cloud:", &(it->second));
                 ImGui::PopID();
                 ++id;
-            }
-
-            ImGui::End();
-        }
-
-        if(show_cpd_settings)
-        {
-            ImGui::Begin("CPD", &show_cpd_settings);
-
-            if(ImGui::Button("Register"))
-            {
-                registrator->solve(10, 0);
-                std::cout << "Done!\n";
-                registrator->applyTransform(clouds[0].first);
-                clouds[0].first->uploadData();
             }
 
             ImGui::End();
@@ -193,15 +161,12 @@ private:
     std::shared_ptr<atcg::Mesh> sphere;
     std::vector<glm::vec3> sphere_pos;
 
-    std::unique_ptr<atcg::Registration> registrator;
-
     glm::vec2 mouse_pos;
 
     std::vector<float> depth_values;
     uint32_t search_radius = 10;
 
     bool show_render_settings = false;
-    bool show_cpd_settings    = true;
 };
 
 class PointCloudRenderer : public atcg::Application
