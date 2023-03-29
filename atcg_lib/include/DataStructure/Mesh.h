@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <Renderer/VertexArray.h>
 #include <OpenMesh/OpenMesh.h>
+#include <Eigen/Dense>
 
 namespace atcg
 {
@@ -67,6 +68,13 @@ public:
      * @param color The color
      */
     void setColor(const Color& color);
+
+    /**
+     * @brief Set the color of all vertices
+     *
+     * @param colors A matrix with vertex colors
+     */
+    void setColors(const Eigen::MatrixX3d& colors);
 
     /**
      * @brief Get the handle to the opposite vertex on the face

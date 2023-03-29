@@ -102,6 +102,16 @@ void Mesh::setColor(const Color& color)
     for(auto v_it = vertices_begin(); v_it != vertices_end(); ++v_it) { set_color(*v_it, color); }
 }
 
+void Mesh::setColors(const Eigen::MatrixX3d& colors)
+{
+    for(auto v_it = vertices_begin(); v_it != vertices_end(); ++v_it)
+    {
+        Eigen::Vector3d c = colors.row(v_it->idx());
+        Color color       = glm::vec3(c.x(), c.y(), c.z());
+        set_color(*v_it, color);
+    }
+}
+
 Mesh::HalfedgeHandle Mesh::opposite_halfedge_handle(const Mesh::FaceHandle& fh, const Mesh::VertexHandle& vh)
 {
     for(auto he_it = cfh_ccwbegin(fh); he_it != cfh_ccwend(fh); ++he_it)
