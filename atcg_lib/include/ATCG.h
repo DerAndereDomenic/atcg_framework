@@ -9,6 +9,7 @@
 #include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/Log.h>
+#include <Core/CUDA.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>
