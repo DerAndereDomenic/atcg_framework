@@ -37,8 +37,8 @@ private:
     #define ATCG_INFO(...)
     #define ATCG_TRACE(...)
 #else
-    #define ATCG_ERROR(...) ::Log::getLogger()->error(__VA_ARGS__)
-    #define ATCG_WARN(...)  ::Log::getLogger()->warn(__VA_ARGS__)
-    #define ATCG_INFO(...)  ::Log::getLogger()->info(__VA_ARGS__)
-    #define ATCG_TRACE(...) ::Log::getLogger()->trace(__VA_ARGS__)
+    #define ATCG_ERROR(...) atcg::Log::getLogger()->error(__VA_ARGS__)
+    #define ATCG_WARN(...)  atcg::Log::getLogger()->warn(__VA_ARGS__)
+    #define ATCG_INFO(...)  atcg::Log::getLogger()->info(__VA_ARGS__)
+    #define ATCG_TRACE(...) atcg::Log::getLogger()->trace(__VA_ARGS__)
 #endif

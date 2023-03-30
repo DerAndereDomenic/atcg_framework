@@ -1,8 +1,11 @@
 #include <Core/Application.h>
+
 #include <Core/API.h>
+#include <Core/Log.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/ShaderManager.h>
 #include <chrono>
+
 
 namespace atcg
 {
@@ -10,6 +13,8 @@ Application* Application::s_instance = nullptr;
 
 Application::Application()
 {
+    Log::init();
+
     _window = atcg::make_scope<Window>(WindowProps());
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
