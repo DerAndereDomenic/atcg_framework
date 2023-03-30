@@ -3,6 +3,7 @@
 #include <Core/CUDA.h>
 #include <memory>
 #include <cstring>
+#include <cstdlib>
 
 namespace atcg
 {
