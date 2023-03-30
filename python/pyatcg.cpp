@@ -109,57 +109,6 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::Application, std::shared_ptr<atcg::Application>>(m, "Application");
 
-    py::class_<atcg::Renderer>(m, "Renderer")
-        .def("init",
-             [](uint32_t width, uint32_t height)
-             {
-                 std::shared_ptr<atcg::Application> app = std::make_shared<atcg::Application>();
-                 const auto& window                     = app->getWindow();
-
-                 window->hide();
-                 window->resize(width, height);
-
-                 atcg::Renderer::useScreenBuffer();
-                 return app;
-             })
-        .def("setClearColor",
-             [](const float r, const float g, const float b, const float a)
-             { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
-        .def_static("setPointSize", &atcg::Renderer::setPointSize)
-        .def_static("clear", &atcg::Renderer::clear)
-        .def("renderMesh",
-             [](const std::shared_ptr<atcg::Mesh>& mesh,
-                const std::shared_ptr<atcg::Shader>& shader,
-                const std::shared_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::draw(mesh, shader, camera); })
-        .def("renderLines",
-             [](const std::shared_ptr<atcg::Mesh>& mesh,
-                const glm::vec3& color,
-                const std::shared_ptr<atcg::PerspectiveCamera>& camera)
-             { atcg::Renderer::drawLines(mesh, color, camera); })
-        .def("renderPoints",
-             [](const std::shared_ptr<atcg::Mesh>& mesh,
-                const glm::vec3& color,
-                const std::shared_ptr<atcg::Shader>& shader,
-                const std::shared_ptr<atcg::PerspectiveCamera>& camera)
-             { atcg::Renderer::drawPoints(mesh, color, shader, camera); })
-        .def("renderPointCloud",
-             [](const std::shared_ptr<atcg::PointCloud>& cloud,
-                const std::shared_ptr<atcg::Shader>& shader,
-                const std::shared_ptr<atcg::PerspectiveCamera>& camera)
-             { atcg::Renderer::draw(cloud, shader, camera); })
-        .def("getFrame",
-             []()
-             {
-                 std::vector<uint8_t> buffer = atcg::Renderer::getFrame();
-                 return py::array(buffer.size(), buffer.data());
-             })
-        .def("getZBuffer",
-             []()
-             {
-                 std::vector<float> buffer = atcg::Renderer::getZBuffer();
-                 return py::array(buffer.size(), buffer.data());
-             });
-
     py::class_<glm::vec3>(m, "Vector3", py::buffer_protocol())
         .def(py::init<float, float, float>())
         .def(py::init(
@@ -297,6 +246,7 @@ PYBIND11_MODULE(pyatcg, m)
                                        {sizeof(float), sizeof(float) * 4});
             });
 
+
     py::class_<atcg::PerspectiveCamera, std::shared_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
         .def(py::init<float>())
         .def("getPosition", &atcg::PerspectiveCamera::getPosition)
@@ -346,6 +296,59 @@ PYBIND11_MODULE(pyatcg, m)
     m.def("readPointCloud", &atcg::IO::read_pointcloud);
 
     m.def("rayMeshIntersection", &atcg::Tracing::rayMeshIntersection);
+
+    py::enum_<atcg::DrawMode>(m, "DrawMode")
+        .value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+        .value("ATCG_DRAW_MODE_POINTS", atcg::DrawMode::ATCG_DRAW_MODE_POINTS)
+        .value("ATCG_DRAW_MODE_POINTS_SPHERE", atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE)
+        .value("ATCG_DRAW_MODE_EDGES", atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+
+    py::class_<atcg::Renderer>(m, "Renderer")
+        .def("init",
+             [](uint32_t width, uint32_t height)
+             {
+                 std::shared_ptr<atcg::Application> app = std::make_shared<atcg::Application>();
+                 const auto& window                     = app->getWindow();
+
+                 window->hide();
+                 window->resize(width, height);
+
+                 atcg::Renderer::useScreenBuffer();
+                 return app;
+             })
+        .def("setClearColor",
+             [](const float r, const float g, const float b, const float a)
+             { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
+        .def_static("setPointSize", &atcg::Renderer::setPointSize)
+        .def_static("clear", &atcg::Renderer::clear)
+        .def(
+            "draw",
+            [](const std::shared_ptr<atcg::Mesh>& mesh,
+               const std::shared_ptr<atcg::PerspectiveCamera>& camera,
+               const glm::vec3& color,
+               const std::shared_ptr<atcg::Shader>& shader,
+               atcg::DrawMode draw_mode) { atcg::Renderer::draw(mesh, camera, color, shader, draw_mode); },
+            py::return_value_policy::automatic_reference)
+        .def(
+            "draw",
+            [](const std::shared_ptr<atcg::PointCloud>& cloud,
+               const std::shared_ptr<atcg::PerspectiveCamera>& camera,
+               const glm::vec3& color,
+               const std::shared_ptr<atcg::Shader>& shader)
+            { atcg::Renderer::draw(cloud, camera, color, shader, atcg::DrawMode::ATCG_DRAW_MODE_POINTS); },
+            py::return_value_policy::automatic_reference)
+        .def("getFrame",
+             []()
+             {
+                 std::vector<uint8_t> buffer = atcg::Renderer::getFrame();
+                 return py::array(buffer.size(), buffer.data());
+             })
+        .def("getZBuffer",
+             []()
+             {
+                 std::vector<float> buffer = atcg::Renderer::getZBuffer();
+                 return py::array(buffer.size(), buffer.data());
+             });
 
     // IMGUI BINDINGS
 

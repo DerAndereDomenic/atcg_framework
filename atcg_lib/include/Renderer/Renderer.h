@@ -7,6 +7,7 @@
 #include <DataStructure/Mesh.h>
 #include <DataStructure/Grid.h>
 #include <DataStructure/PointCloud.h>
+#include <Renderer/ShaderManager.h>
 
 #include <memory>
 
@@ -14,6 +15,18 @@
 
 namespace atcg
 {
+/**
+ * @brief An enum defining draw modes.
+ *
+ */
+enum DrawMode
+{
+    ATCG_DRAW_MODE_TRIANGLE,         // Draw as standard mesh
+    ATCG_DRAW_MODE_POINTS,           // Draw as points (screen space)
+    ATCG_DRAW_MODE_POINTS_SPHERE,    // Draw points as spheres
+    ATCG_DRAW_MODE_EDGES,            // Draw edges
+};
+
 /**
  * @brief This class models a renderer
  */
@@ -74,87 +87,59 @@ public:
      * @brief Render a vao
      * NEEDS to have an index buffer
      *
+     * The default draw mode is "base". It applys slight shading based on the vertex normals.
+     * An optional color can be given to color the whole mesh with a constant color.
+     * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
+     *
      * @param vao The vertex array
-     * @param shader The shader
      * @param camera The camera
+     * @param color An optional color
+     * @param shader The shader
+     * @param draw_mode The draw mode
      */
     static void draw(const std::shared_ptr<VertexArray>& vao,
-                     const std::shared_ptr<Shader>& shader,
-                     const std::shared_ptr<Camera>& camera = {});
+                     const std::shared_ptr<Camera>& camera = {},
+                     const glm::vec3& color                = glm::vec3(1),
+                     const std::shared_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                     DrawMode draw_mode                    = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
     /**
      * @brief Render a mesh
      *
+     * The default draw mode is "base". It applys slight shading based on the vertex normals.
+     * An optional color can be given to color the whole mesh with a constant color.
+     * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
+     *
      * @param mesh The mesh
-     * @param shader The shader
      * @param camera The camera
+     * @param color An optional color
+     * @param shader The shader
+     * @param draw_mode The draw mode
      */
     static void draw(const std::shared_ptr<Mesh>& mesh,
-                     const std::shared_ptr<Shader>& shader,
-                     const std::shared_ptr<Camera>& camera = {});
+                     const std::shared_ptr<Camera>& camera = {},
+                     const glm::vec3& color                = glm::vec3(1),
+                     const std::shared_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                     DrawMode draw_mode                    = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
     /**
      * @brief Draw a pointcloud
      *
+     * The default draw mode is "base". It applys slight shading based on the vertex normals.
+     * An optional color can be given to color the whole mesh with a constant color.
+     * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
+     *
      * @param cloud The pointcloud
-     * @param shader The shader
      * @param camera The camera
+     * @param color An optional color
+     * @param shader The shader
+     * @param draw_mode The draw mode
      */
     static void draw(const std::shared_ptr<PointCloud>& cloud,
-                     const std::shared_ptr<Shader>& shader,
-                     const std::shared_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Render a vao as points
-     * NEEDS to have an index buffer
-     *
-     * @param vao The vertex array
-     * @param color The color
-     * @param shader The shader
-     * @param camera The camera
-     */
-    static void drawPoints(const std::shared_ptr<VertexArray>& vao,
-                           const glm::vec3& color,
-                           const std::shared_ptr<Shader>& shader,
-                           const std::shared_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Render a mesh as points
-     *
-     * @param mesh The mesh
-     * @param color The color
-     * @param shader The shader
-     * @param camera The camera
-     */
-    static void drawPoints(const std::shared_ptr<Mesh>& mesh,
-                           const glm::vec3& color,
-                           const std::shared_ptr<Shader>& shader,
-                           const std::shared_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Render a vao as lines
-     * NEEDS to have an index buffer
-     *
-     * @param vao The vertex array
-     * @param color The color
-     * @param shader The shader
-     * @param camera The camera
-     */
-    static void drawLines(const std::shared_ptr<VertexArray>& vao,
-                          const glm::vec3& color,
-                          const std::shared_ptr<Shader>& shader,
-                          const std::shared_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Render a vao as lines
-     * NEEDS to have an index buffer
-     *
-     * @param mesh The mesh
-     * @param color The color
-     * @param camera The camera
-     */
-    static void
-    drawLines(const std::shared_ptr<Mesh>& mesh, const glm::vec3& color, const std::shared_ptr<Camera>& camera = {});
+                     const std::shared_ptr<Camera>& camera = {},
+                     const glm::vec3& color                = glm::vec3(1),
+                     const std::shared_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                     DrawMode draw_mode                    = DrawMode::ATCG_DRAW_MODE_POINTS);
 
     /**
      * @brief Draw Circle
@@ -168,19 +153,6 @@ public:
                            const float& radius,
                            const glm::vec3& color,
                            const std::shared_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Draw a grid
-     * WARNING: CURRENTLY ONLY ONE GRID PER APPLICATION CAN BE RENDERED.
-     * THE UNDERLYING GPU DATA WILL ALWAYS REPRESENT THE FIRST GRID THAT IS CALLED BY THIS FUNCTION EXCEPT IF reset =
-     * true
-     *
-     * @param grid_dimension The spatial information about the grid
-     * @param camera The camera
-     * @param reset If the GPU data should be updated
-     */
-    static void
-    drawGrid(const GridDimension& grid_dimension, const std::shared_ptr<Camera>& camera = {}, bool reset = false);
 
     static std::vector<uint8_t> getFrame();
     /**

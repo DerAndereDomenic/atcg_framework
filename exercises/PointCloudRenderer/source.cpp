@@ -48,7 +48,10 @@ public:
         for(auto it = clouds.begin(); it != clouds.end(); ++it)
         {
             if(it->second)
-                atcg::Renderer::draw(it->first, atcg::ShaderManager::getShader("flat"), camera_controller->getCamera());
+                atcg::Renderer::draw(it->first,
+                                     camera_controller->getCamera(),
+                                     glm::vec3(1),
+                                     atcg::ShaderManager::getShader("flat"));
         }
 
         glReadPixels(static_cast<int>(mouse_pos.x - search_radius / 2),
@@ -86,7 +89,7 @@ public:
         for(glm::vec3 p: sphere_pos)
         {
             sphere->setPosition(p);
-            atcg::Renderer::draw(sphere, atcg::ShaderManager::getShader("base"), camera_controller->getCamera());
+            atcg::Renderer::draw(sphere, camera_controller->getCamera());
         }
         // glDepthMask(true);
     }

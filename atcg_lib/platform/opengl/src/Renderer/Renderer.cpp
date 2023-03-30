@@ -32,6 +32,20 @@ public:
     std::shared_ptr<Framebuffer> screen_fbo;
 
     float point_size = 8;
+
+    // Render methods
+    void drawVAO(const std::shared_ptr<VertexArray>& vao,
+                 const std::shared_ptr<Camera>& camera,
+                 const glm::vec3& color,
+                 const std::shared_ptr<Shader>& shader,
+                 const glm::mat4& model,
+                 GLenum mode,
+                 uint32_t size);
+
+    void
+    drawEdges(const std::shared_ptr<VertexArray>& vao, const std::shared_ptr<Camera>& camera, const glm::vec3& color);
+
+    void drawEdges(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Camera>& camera, const glm::vec3& color);
 };
 
 Renderer::Renderer() {}
@@ -152,75 +166,125 @@ void Renderer::clear()
 }
 
 void Renderer::draw(const std::shared_ptr<VertexArray>& vao,
+                    const std::shared_ptr<Camera>& camera,
+                    const glm::vec3& color,
                     const std::shared_ptr<Shader>& shader,
-                    const std::shared_ptr<Camera>& camera)
+                    DrawMode draw_mode)
 {
-    vao->use();
-    shader->use();
-    if(camera)
+    switch(draw_mode)
     {
-        shader->setVec3("camera_pos", camera->getPosition());
-        shader->setVec3("camera_dir", camera->getDirection());
-        shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+        case ATCG_DRAW_MODE_TRIANGLE:
+        {
+            s_renderer->impl->drawVAO(vao, camera, color, shader, glm::mat4(1), GL_TRIANGLES, 1e6);    // TODO
+        }
+        break;
+        case ATCG_DRAW_MODE_POINTS:
+        {
+            s_renderer->impl->drawVAO(vao, camera, color, shader, glm::mat4(1), GL_POINTS, 1e6);
+        }
+        break;
+        case ATCG_DRAW_MODE_POINTS_SPHERE:
+        {
+            throw std::logic_error {"Not implemented"};
+        }
+        break;
+        case ATCG_DRAW_MODE_EDGES:
+        {
+            s_renderer->impl
+                ->drawVAO(vao, camera, color, ShaderManager::getShader("edge"), glm::mat4(1), GL_LINE_STRIP, 1e6);
+        }
+        break;
     }
-    else { shader->setMVP(); }
-
-    const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
-
-    if(ibo)
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
-    else
-        std::cerr << "Missing IndexBuffer!\n";
 }
 
 void Renderer::draw(const std::shared_ptr<Mesh>& mesh,
+                    const std::shared_ptr<Camera>& camera,
+                    const glm::vec3& color,
                     const std::shared_ptr<Shader>& shader,
-                    const std::shared_ptr<Camera>& camera)
+                    DrawMode draw_mode)
 {
-    std::shared_ptr<VertexArray> vao = mesh->getVertexArray();
-    vao->use();
-    shader->use();
-    if(camera)
+    switch(draw_mode)
     {
-        shader->setVec3("camera_pos", camera->getPosition());
-        shader->setVec3("camera_dir", camera->getDirection());
-        shader->setMVP(mesh->getModel(), camera->getView(), camera->getProjection());
+        case ATCG_DRAW_MODE_TRIANGLE:
+        {
+            s_renderer->impl->drawVAO(mesh->getVertexArray(),
+                                      camera,
+                                      color,
+                                      shader,
+                                      mesh->getModel(),
+                                      GL_TRIANGLES,
+                                      mesh->n_vertices());    // TODO
+        }
+        break;
+        case ATCG_DRAW_MODE_POINTS:
+        {
+            s_renderer->impl->drawVAO(mesh->getVertexArray(),
+                                      camera,
+                                      color,
+                                      shader,
+                                      mesh->getModel(),
+                                      GL_POINTS,
+                                      mesh->n_vertices());
+        }
+        break;
+        case ATCG_DRAW_MODE_POINTS_SPHERE:
+        {
+            throw std::logic_error {"Not implemented"};
+        }
+        break;
+        case ATCG_DRAW_MODE_EDGES:
+        {
+            s_renderer->impl->drawVAO(mesh->getVertexArray(),
+                                      camera,
+                                      color,
+                                      ShaderManager::getShader("edge"),
+                                      mesh->getModel(),
+                                      GL_TRIANGLES,
+                                      mesh->n_vertices());
+        }
+        break;
     }
-    else { shader->setMVP(); }
-
-    const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
-
-    if(ibo)
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
-    else
-        std::cerr << "Missing IndexBuffer!\n";
 }
 
 void Renderer::draw(const std::shared_ptr<PointCloud>& cloud,
+                    const std::shared_ptr<Camera>& camera,
+                    const glm::vec3& color,
                     const std::shared_ptr<Shader>& shader,
-                    const std::shared_ptr<Camera>& camera)
+                    DrawMode draw_mode)
 {
-    std::shared_ptr<VertexArray> vao = cloud->getVertexArray();
-    vao->use();
-    shader->use();
-    shader->setVec3("flat_color", glm::vec3(1));
-    if(camera)
+    switch(draw_mode)
     {
-        shader->setVec3("camera_pos", camera->getPosition());
-        shader->setVec3("camera_dir", camera->getDirection());
-        shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+        case ATCG_DRAW_MODE_TRIANGLE:
+        {
+            throw std::invalid_argument("PointCloud cannot be rendered as triangle mesh!");
+        }
+        break;
+        case ATCG_DRAW_MODE_POINTS:
+        {
+            s_renderer->impl
+                ->drawVAO(cloud->getVertexArray(), camera, color, shader, glm::mat4(1), GL_POINTS, cloud->n_vertices());
+        }
+        break;
+        case ATCG_DRAW_MODE_POINTS_SPHERE:
+        {
+            throw std::logic_error {"Not implemented"};
+        }
+        break;
+        case ATCG_DRAW_MODE_EDGES:
+        {
+            throw std::invalid_argument("PointCloud cannot be rendered as edges!");
+        }
+        break;
     }
-    else { shader->setMVP(); }
-
-    glPointSize(s_renderer->impl->point_size);
-
-    glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(cloud->n_vertices()));
 }
 
-void Renderer::drawPoints(const std::shared_ptr<VertexArray>& vao,
-                          const glm::vec3& color,
-                          const std::shared_ptr<Shader>& shader,
-                          const std::shared_ptr<Camera>& camera)
+void Renderer::Impl::drawVAO(const std::shared_ptr<VertexArray>& vao,
+                             const std::shared_ptr<Camera>& camera,
+                             const glm::vec3& color,
+                             const std::shared_ptr<Shader>& shader,
+                             const glm::mat4& model,
+                             GLenum mode,
+                             uint32_t size)
 {
     vao->use();
     shader->use();
@@ -229,89 +293,16 @@ void Renderer::drawPoints(const std::shared_ptr<VertexArray>& vao,
     {
         shader->setVec3("camera_pos", camera->getPosition());
         shader->setVec3("camera_dir", camera->getDirection());
-        shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
-    }
-    else { shader->setMVP(); }
-
-    const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
-
-    glPointSize(s_renderer->impl->point_size);
-
-    if(ibo)
-        glDrawElements(GL_POINTS, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
-    else
-        std::cerr << "Missing IndexBuffer!\n";
-}
-
-void Renderer::drawPoints(const std::shared_ptr<Mesh>& mesh,
-                          const glm::vec3& color,
-                          const std::shared_ptr<Shader>& shader,
-                          const std::shared_ptr<Camera>& camera)
-{
-    std::shared_ptr<VertexArray> vao = mesh->getVertexArray();
-    vao->use();
-    shader->use();
-    shader->setVec3("flat_color", color);
-    if(camera)
-    {
-        shader->setVec3("camera_pos", camera->getPosition());
-        shader->setVec3("camera_dir", camera->getDirection());
-        shader->setMVP(mesh->getModel(), camera->getView(), camera->getProjection());
-    }
-    else { shader->setMVP(); }
-
-    const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
-
-    glPointSize(s_renderer->impl->point_size);
-
-    if(ibo)
-        glDrawElements(GL_POINTS, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
-    else
-        std::cerr << "Missing IndexBuffer!\n";
-}
-
-void Renderer::drawLines(const std::shared_ptr<VertexArray>& vao,
-                         const glm::vec3& color,
-                         const std::shared_ptr<Shader>& shader,
-                         const std::shared_ptr<Camera>& camera)
-{
-    vao->use();
-    shader->use();
-    shader->setVec3("flat_color", color);
-    if(camera)
-    {
-        shader->setVec3("camera_pos", camera->getPosition());
-        shader->setVec3("camera_dir", camera->getDirection());
-        shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+        shader->setMVP(model, camera->getView(), camera->getProjection());
     }
     else { shader->setMVP(); }
 
     const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
     if(ibo)
-        glDrawElements(GL_LINE_STRIP, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
+        glDrawElements(mode, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
     else
-        std::cerr << "Missing IndexBuffer!\n";
-}
-
-void Renderer::drawLines(const std::shared_ptr<Mesh>& mesh,
-                         const glm::vec3& color,
-                         const std::shared_ptr<Camera>& camera)
-{
-    std::shared_ptr<VertexArray> vao = mesh->getVertexArray();
-    vao->use();
-    const auto& shader = ShaderManager::getShader("edge");
-    shader->use();
-    shader->setVec3("flat_color", color);
-    if(camera) { shader->setMVP(mesh->getModel(), camera->getView(), camera->getProjection()); }
-    else { shader->setMVP(); }
-
-    const std::shared_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
-
-    if(ibo)
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
-    else
-        std::cerr << "Missing IndexBuffer!\n";
+        glDrawArrays(mode, 0, static_cast<GLsizei>(size));
 }
 
 void Renderer::drawCircle(const glm::vec3& position,
@@ -333,39 +324,6 @@ void Renderer::drawCircle(const glm::vec3& position,
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
     else
         std::cerr << "Missing IndexBuffer!\n";
-}
-
-void Renderer::drawGrid(const GridDimension& grid_dimension, const std::shared_ptr<Camera>& camera, bool reset)
-{
-    s_renderer->impl->cube_vao->use();
-    const auto& shader = ShaderManager::getShader("grid");
-
-    Grid<int> dummy(grid_dimension.origin, grid_dimension.num_voxels, grid_dimension.voxel_length, false);
-    if(!s_renderer->impl->grid_vbo || reset)
-    {
-        s_renderer->impl->initCube();
-        std::vector<glm::vec3> positions;
-
-        for(uint32_t i = 0; i < dummy.voxels_per_volume(); ++i)
-        {
-            glm::vec3 pos = dummy.voxel2position(dummy.index2voxel(i));
-            positions.push_back(pos);
-        }
-
-        s_renderer->impl->grid_vbo =
-            std::make_shared<VertexBuffer>(positions.data(), positions.size() * sizeof(glm::vec3));
-        s_renderer->impl->grid_vbo->setLayout({{ShaderDataType::Float3, "aPosition"}});
-
-        s_renderer->impl->cube_vao->addInstanceBuffer(s_renderer->impl->grid_vbo);
-    }
-
-    shader->use();
-    shader->setVec3("flat_color", glm::vec3(0));
-    glm::mat4 model = glm::scale(glm::vec3(grid_dimension.voxel_length));
-    if(camera) { shader->setMVP(model, camera->getView(), camera->getProjection()); }
-    else { shader->setMVP(model); }
-
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, dummy.voxels_per_volume());
 }
 
 std::vector<uint8_t> Renderer::getFrame()
