@@ -29,6 +29,7 @@ add_library(imgui STATIC "external/imgui/imgui.cpp"
                          "external/imgui/backends/imgui_impl_opengl3.cpp")
 
 if(ATCG_CUDA_BACKEND)
+    find_package(CUDA REQUIRED)
     enable_language(CUDA)
     set(CMAKE_CUDA_ARCHITECTURES 86)
     set(BACKEND "cuda")
@@ -87,6 +88,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
         OpenGL::GL
         OpenMeshCore
         OpenMeshTools
+        ${CUDA_LIBRARIES}
         #stdc++
     )
 
@@ -111,6 +113,7 @@ if(ATCG_PYTHON_BINDINGS)
         OpenGL::GL
         OpenMeshCore
         OpenMeshTools
+        ${CUDA_LIBRARIES}
         #stdc++
     )
 endif()
