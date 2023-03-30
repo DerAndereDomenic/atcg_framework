@@ -43,10 +43,6 @@ public:
                  const glm::mat4& model,
                  GLenum mode,
                  uint32_t size);
-
-    void drawEdges(const atcg::ref_ptr<VertexArray>& vao, const atcg::ref_ptr<Camera>& camera, const glm::vec3& color);
-
-    void drawEdges(const atcg::ref_ptr<Mesh>& mesh, const atcg::ref_ptr<Camera>& camera, const glm::vec3& color);
 };
 
 Renderer::Renderer() {}
