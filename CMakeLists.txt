@@ -14,7 +14,6 @@ find_package(OpenGL REQUIRED)
 
 add_subdirectory(external/glfw)
 add_subdirectory(external/openmesh)
-add_subdirectory(external/spdlog)
 
 set(PYBIND11_PYTHON_VERSION 3)
 set(PYBIND11_FINDPYTHON ON)
@@ -88,7 +87,6 @@ function(ATCG_add_executable target_name_base target_name_var source)
         OpenGL::GL
         OpenMeshCore
         OpenMeshTools
-        spdlog
         #stdc++
     )
 
