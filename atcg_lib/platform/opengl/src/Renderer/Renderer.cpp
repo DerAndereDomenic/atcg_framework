@@ -2,6 +2,8 @@
 #include <glad/glad.h>
 #include <iostream>
 
+#include <Core/Log.h>
+
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Framebuffer.h>
 
@@ -42,8 +44,7 @@ public:
                  GLenum mode,
                  uint32_t size);
 
-    void
-    drawEdges(const atcg::ref_ptr<VertexArray>& vao, const atcg::ref_ptr<Camera>& camera, const glm::vec3& color);
+    void drawEdges(const atcg::ref_ptr<VertexArray>& vao, const atcg::ref_ptr<Camera>& camera, const glm::vec3& color);
 
     void drawEdges(const atcg::ref_ptr<Mesh>& mesh, const atcg::ref_ptr<Camera>& camera, const glm::vec3& color);
 };
@@ -112,6 +113,12 @@ void Renderer::Impl::initCube()
 
 void Renderer::init(uint32_t width, uint32_t height)
 {
+    ATCG_INFO("OpenGL Renderer:");
+    ATCG_INFO("    Vendor: {0}", (const char*)glGetString(GL_VENDOR));
+    ATCG_INFO("    Renderer: {0}", (const char*)glGetString(GL_RENDERER));
+    ATCG_INFO("    Version: {0}", (const char*)glGetString(GL_VERSION));
+    ATCG_INFO("---------------------------------");
+
     s_renderer->impl = atcg::make_scope<Impl>(width, height);
 }
 
