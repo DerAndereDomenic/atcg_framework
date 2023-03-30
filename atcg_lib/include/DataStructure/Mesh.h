@@ -38,7 +38,7 @@ public:
      *
      * @param buffer The buffer
      */
-    void addBuffer(const std::shared_ptr<VertexBuffer>& buffer);
+    void addBuffer(const atcg::ref_ptr<VertexBuffer>& buffer);
 
     /**
      * @brief Calcualte the area of a triangle
@@ -145,9 +145,9 @@ public:
     /**
      * @brief Get the Vertex Array object
      *
-     * @return std::shared_ptr<VertexArray> The vao
+     * @return atcg::ref_ptr<VertexArray> The vao
      */
-    inline std::shared_ptr<VertexArray> getVertexArray() const { return _vao; }
+    inline atcg::ref_ptr<VertexArray> getVertexArray() const { return _vao; }
 
 private:
     void calculateModelMatrix();
@@ -159,7 +159,7 @@ private:
     glm::vec3 _rotation_axis = glm::vec3(0, 1, 0);
     float _rotation_angle    = 0;
 
-    std::shared_ptr<VertexArray> _vao;
+    atcg::ref_ptr<VertexArray> _vao;
 };
 
 using VertexHandle = Mesh::VertexHandle;
@@ -174,6 +174,6 @@ namespace IO
  * @param path The path
  * @returns The mesh
  */
-std::shared_ptr<Mesh> read_mesh(const char* path);
+atcg::ref_ptr<Mesh> read_mesh(const char* path);
 }    // namespace IO
 }    // namespace atcg

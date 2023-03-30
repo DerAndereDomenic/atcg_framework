@@ -4,9 +4,9 @@
 
 namespace atcg
 {
-std::shared_ptr<Texture2D> Texture2D::createColorTexture(uint32_t width, uint32_t height)
+atcg::ref_ptr<Texture2D> Texture2D::createColorTexture(uint32_t width, uint32_t height)
 {
-    std::shared_ptr<Texture2D> result = std::make_shared<Texture2D>();
+    atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
 
     result->_width  = width;
     result->_height = height;
@@ -24,9 +24,9 @@ std::shared_ptr<Texture2D> Texture2D::createColorTexture(uint32_t width, uint32_
     return result;
 }
 
-std::shared_ptr<Texture2D> Texture2D::createDepthTexture(uint32_t width, uint32_t height)
+atcg::ref_ptr<Texture2D> Texture2D::createDepthTexture(uint32_t width, uint32_t height)
 {
-    std::shared_ptr<Texture2D> result = std::make_shared<Texture2D>();
+    atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
 
     result->_width  = width;
     result->_height = height;

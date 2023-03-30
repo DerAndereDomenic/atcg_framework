@@ -53,7 +53,7 @@ public:
      * @param slot The number of which attachement to use
      * @return The specified texture
      */
-    inline std::shared_ptr<Texture2D> getColorAttachement(const uint32_t& slot = 0) const
+    inline atcg::ref_ptr<Texture2D> getColorAttachement(const uint32_t& slot = 0) const
     {
         return _color_attachements[slot];
     }
@@ -63,14 +63,14 @@ public:
      *
      * @return The depth texture
      */
-    inline std::shared_ptr<Texture2D> getDepthAttachement() const { return _depth_attachement; }
+    inline atcg::ref_ptr<Texture2D> getDepthAttachement() const { return _depth_attachement; }
 
 private:
     friend class Renderer;
     static void useDefault();
     uint32_t _ID;
     uint32_t _width, _height;
-    std::vector<std::shared_ptr<Texture2D>> _color_attachements;
-    std::shared_ptr<Texture2D> _depth_attachement;
+    std::vector<atcg::ref_ptr<Texture2D>> _color_attachements;
+    atcg::ref_ptr<Texture2D> _depth_attachement;
 };
 }    // namespace atcg

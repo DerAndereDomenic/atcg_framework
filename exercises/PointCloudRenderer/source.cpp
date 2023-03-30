@@ -21,7 +21,7 @@ public:
         atcg::Renderer::setPointSize(2.0f);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = atcg::make_ref<atcg::CameraController>(aspect_ratio);
 
         depth_values.resize(search_radius * search_radius);
 
@@ -143,7 +143,7 @@ public:
         // Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = std::make_shared<atcg::CameraController>(aspect_ratio);
+        camera_controller  = atcg::make_ref<atcg::CameraController>(aspect_ratio);
 
         return true;
     }
@@ -157,11 +157,11 @@ public:
     }
 
 private:
-    using CloudList = std::vector<std::pair<std::shared_ptr<atcg::PointCloud>, bool>>;
+    using CloudList = std::vector<std::pair<atcg::ref_ptr<atcg::PointCloud>, bool>>;
 
     CloudList clouds;
-    std::shared_ptr<atcg::CameraController> camera_controller;
-    std::shared_ptr<atcg::Mesh> sphere;
+    atcg::ref_ptr<atcg::CameraController> camera_controller;
+    atcg::ref_ptr<atcg::Mesh> sphere;
     std::vector<glm::vec3> sphere_pos;
 
     glm::vec2 mouse_pos;

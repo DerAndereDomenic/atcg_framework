@@ -31,7 +31,7 @@ std::vector<std::string> split_string(const std::string& str, const char delimit
     return res;
 }
 
-void parse_xyz_file(const std::shared_ptr<PointCloud>& cloud, const char* path)
+void parse_xyz_file(const atcg::ref_ptr<PointCloud>& cloud, const char* path)
 {
     std::string line;
     std::ifstream file;
@@ -86,9 +86,9 @@ void parse_xyz_file(const std::shared_ptr<PointCloud>& cloud, const char* path)
 }
 }    // namespace detail
 
-std::shared_ptr<PointCloud> read_pointcloud(const char* path)
+atcg::ref_ptr<PointCloud> read_pointcloud(const char* path)
 {
-    std::shared_ptr<PointCloud> cloud = std::make_shared<PointCloud>();
+    atcg::ref_ptr<PointCloud> cloud = atcg::make_ref<PointCloud>();
 
     std::string path_str    = path;
     std::string file_ending = path_str.substr(path_str.size() - 4);

@@ -10,7 +10,7 @@ Application* Application::s_instance = nullptr;
 
 Application::Application()
 {
-    _window = std::make_unique<Window>(WindowProps());
+    _window = atcg::make_scope<Window>(WindowProps());
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
     Renderer::init(_window->getWidth(), _window->getHeight());

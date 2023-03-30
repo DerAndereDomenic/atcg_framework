@@ -34,7 +34,7 @@ bool Framebuffer::verify() const
 void Framebuffer::attachColor()
 {
     use();
-    std::shared_ptr<Texture2D> texture = Texture2D::createColorTexture(_width, _height);
+    atcg::ref_ptr<Texture2D> texture = Texture2D::createColorTexture(_width, _height);
     glFramebufferTexture2D(GL_FRAMEBUFFER,
                            GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
                            GL_TEXTURE_2D,

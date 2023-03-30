@@ -7,6 +7,7 @@
 #include <Core/Window.h>
 #include <Core/Input.h>
 #include <Core/API.h>
+#include <Core/Memory.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>

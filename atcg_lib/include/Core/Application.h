@@ -7,7 +7,7 @@
 
 #include <ImGui/ImGuiLayer.h>
 
-#include <memory>
+#include <Core/Memory.h>
 
 int main(int argc, char** argv);
 int entry_point(atcg::Layer* layer);
@@ -56,9 +56,9 @@ public:
     /**
      * @brief Get the Window object
      *
-     * @return const std::unique_ptr<Window>& The window
+     * @return const atcg::scope_ptr<Window>& The window
      */
-    inline const std::unique_ptr<Window>& getWindow() const { return _window; }
+    inline const atcg::scope_ptr<Window>& getWindow() const { return _window; }
 
     /**
      * @brief Get an instance of the application
@@ -76,7 +76,7 @@ private:
     bool _running = false;
     LayerStack _layer_stack;
     ImGuiLayer* _imgui_layer;
-    std::unique_ptr<Window> _window;
+    atcg::scope_ptr<Window> _window;
 
     friend int ::main(int argc, char** argv);
     friend int ::entry_point(atcg::Layer* layer);    // Entry point for python bindings

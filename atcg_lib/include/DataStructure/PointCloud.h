@@ -115,9 +115,9 @@ public:
     /**
      * @brief Get the Vertex Array object
      *
-     * @return std::shared_ptr<VertexArray> The vao
+     * @return atcg::ref_ptr<VertexArray> The vao
      */
-    inline std::shared_ptr<VertexArray> getVertexArray() const { return _vao; }
+    inline atcg::ref_ptr<VertexArray> getVertexArray() const { return _vao; }
 
     /**
      * @brief Get the number of vertices
@@ -140,7 +140,7 @@ private:
     std::vector<Normal> _normals;
     std::vector<Color> _colors;
 
-    std::shared_ptr<VertexArray> _vao;
+    atcg::ref_ptr<VertexArray> _vao;
 };
 
 ///
@@ -226,9 +226,9 @@ void PointCloudT<Traits>::uploadData()
         vertex_data[9 * vertex_id + 8] = static_cast<float>(col[2]) / 255.0f;
     }
 
-    _vao = std::make_shared<VertexArray>();
-    std::shared_ptr<VertexBuffer> vbo =
-        std::make_shared<VertexBuffer>(vertex_data.data(), static_cast<uint32_t>(vertex_data.size() * sizeof(float)));
+    _vao = atcg::make_ref<VertexArray>();
+    atcg::ref_ptr<VertexBuffer> vbo =
+        atcg::make_ref<VertexBuffer>(vertex_data.data(), static_cast<uint32_t>(vertex_data.size() * sizeof(float)));
     vbo->setLayout({{ShaderDataType::Float3, "aPosition"},
                     {ShaderDataType::Float3, "aNormal"},
                     {ShaderDataType::Float3, "aColor"}});
@@ -278,6 +278,6 @@ namespace IO
  * @param path The path
  * @returns The pointcloud
  */
-std::shared_ptr<PointCloud> read_pointcloud(const char* path);
+atcg::ref_ptr<PointCloud> read_pointcloud(const char* path);
 }    // namespace IO
 }    // namespace atcg

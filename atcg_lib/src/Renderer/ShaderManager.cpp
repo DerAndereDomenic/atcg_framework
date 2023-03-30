@@ -6,7 +6,7 @@ namespace atcg
 {
 ShaderManager* ShaderManager::s_instance = new ShaderManager;
 
-void ShaderManager::addShaderImpl(const std::string& name, const std::shared_ptr<Shader>& shader)
+void ShaderManager::addShaderImpl(const std::string& name, const atcg::ref_ptr<Shader>& shader)
 {
     _shader.insert(std::make_pair(name, shader));
     const std::string& vertex_path   = shader->getVertexPath();
@@ -34,17 +34,17 @@ void ShaderManager::addShaderFromNameImpl(const std::string& name)
         return;
     }
 
-    std::shared_ptr<Shader> shader;
+    atcg::ref_ptr<Shader> shader;
     if(std::filesystem::exists(geometry_path))
     {
-        shader = std::make_shared<Shader>(vertex_path, geometry_path, fragment_path);
+        shader = atcg::make_ref<Shader>(vertex_path, geometry_path, fragment_path);
     }
-    else { shader = std::make_shared<Shader>(vertex_path, fragment_path); }
+    else { shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
 
     addShaderImpl(name, shader);
 }
 
-const std::shared_ptr<Shader>& ShaderManager::getShaderImpl(const std::string& name)
+const atcg::ref_ptr<Shader>& ShaderManager::getShaderImpl(const std::string& name)
 {
     return _shader[name];
 }

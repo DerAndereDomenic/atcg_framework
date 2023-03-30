@@ -5,7 +5,7 @@
 
 #include <Events/Event.h>
 #include <Renderer/Context.h>
-#include <memory>
+#include <Core/Memory.h>
 
 namespace atcg
 {
@@ -110,6 +110,6 @@ private:
 
     WindowData _data;
     void* _window;
-    std::shared_ptr<Context> _context;
+    atcg::ref_ptr<Context> _context;
 };
 }    // namespace atcg

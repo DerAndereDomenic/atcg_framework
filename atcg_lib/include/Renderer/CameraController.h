@@ -5,7 +5,7 @@
 #include <Events/MouseEvent.h>
 #include <Events/WindowEvent.h>
 
-#include <memory>
+#include <Core/Memory.h>
 
 namespace atcg
 {
@@ -41,9 +41,9 @@ public:
     /**
      * @brief Get the Camera object
      *
-     * @return const std::unique_ptr<Camera>& The camera
+     * @return const atcg::scope_ptr<Camera>& The camera
      */
-    inline const std::shared_ptr<PerspectiveCamera>& getCamera() const { return _camera; }
+    inline const atcg::ref_ptr<PerspectiveCamera>& getCamera() const { return _camera; }
 
 private:
     bool onMouseZoom(MouseScrolledEvent* event);
@@ -59,7 +59,7 @@ private:
 
     float _distance;
     CameraParameters _parameters;
-    std::shared_ptr<PerspectiveCamera> _camera;
+    atcg::ref_ptr<PerspectiveCamera> _camera;
     float _lastX = 0, _lastY = 0;
     float _currentX = 0, _currentY = 0;
 };

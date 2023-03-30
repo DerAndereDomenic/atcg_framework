@@ -52,7 +52,7 @@ void VertexArray::use() const
     glBindVertexArray(_ID);
 }
 
-void VertexArray::addVertexBuffer(const std::shared_ptr<VertexBuffer>& vbo)
+void VertexArray::addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
 {
     glBindVertexArray(_ID);
     vbo->use();
@@ -118,14 +118,14 @@ void VertexArray::addVertexBuffer(const std::shared_ptr<VertexBuffer>& vbo)
     _vertex_buffers.push_back(vbo);
 }
 
-void VertexArray::setIndexBuffer(const std::shared_ptr<IndexBuffer>& ibo)
+void VertexArray::setIndexBuffer(const atcg::ref_ptr<IndexBuffer>& ibo)
 {
     glBindVertexArray(_ID);
     ibo->use();
     _ibo = ibo;
 }
 
-void VertexArray::addInstanceBuffer(const std::shared_ptr<VertexBuffer>& vbo)
+void VertexArray::addInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
 {
     addVertexBuffer(vbo);
     const auto& layout = vbo->getLayout();

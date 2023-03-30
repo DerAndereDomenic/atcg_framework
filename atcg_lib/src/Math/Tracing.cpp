@@ -33,7 +33,7 @@ float rayTriangleIntersection(const Eigen::Vector3f vertices[3],
     else { return tmax; }
 }
 
-float rayMeshIntersection(const std::shared_ptr<Mesh>& mesh,
+float rayMeshIntersection(const atcg::ref_ptr<Mesh>& mesh,
                           const Eigen::Vector3f& origin,
                           const Eigen::Vector3f& direction,
                           const float tmin,
@@ -59,7 +59,7 @@ float rayMeshIntersection(const std::shared_ptr<Mesh>& mesh,
 }
 }    // namespace detail
 
-Eigen::VectorXf Tracing::rayMeshIntersection(const std::shared_ptr<Mesh>& mesh,
+Eigen::VectorXf Tracing::rayMeshIntersection(const atcg::ref_ptr<Mesh>& mesh,
                                              const Eigen::MatrixX3f& origin,
                                              const Eigen::MatrixX3f& direction,
                                              const float tmin,

@@ -4,7 +4,7 @@
 #include <DataStructure/Mesh.h>
 #include <Eigen/Dense>
 
-#include <memory>
+#include <Core/Memory.h>
 #include <vector>
 
 namespace atcg
@@ -22,7 +22,7 @@ namespace Tracing
  *
  * @return vector with depth to the first intersection point
  */
-Eigen::VectorXf rayMeshIntersection(const std::shared_ptr<Mesh>& mesh,
+Eigen::VectorXf rayMeshIntersection(const atcg::ref_ptr<Mesh>& mesh,
                                     const Eigen::MatrixX3f& origin,
                                     const Eigen::MatrixX3f& direction,
                                     const float tmin,

@@ -47,21 +47,21 @@ void Mesh::uploadData()
         ++face_id;
     }
 
-    _vao = std::make_shared<atcg::VertexArray>();
-    std::shared_ptr<atcg::VertexBuffer> vbo =
-        std::make_shared<atcg::VertexBuffer>(vertex_data.data(),
+    _vao = atcg::make_ref<atcg::VertexArray>();
+    atcg::ref_ptr<atcg::VertexBuffer> vbo =
+        atcg::make_ref<atcg::VertexBuffer>(vertex_data.data(),
                                              static_cast<uint32_t>(sizeof(float) * vertex_data.size()));
     vbo->setLayout({{atcg::ShaderDataType::Float3, "aPosition"},
                     {atcg::ShaderDataType::Float3, "aNormal"},
                     {atcg::ShaderDataType::Float3, "aColor"}});
     _vao->addVertexBuffer(vbo);
 
-    std::shared_ptr<atcg::IndexBuffer> ibo =
-        std::make_shared<atcg::IndexBuffer>(indices_data.data(), static_cast<uint32_t>(indices_data.size()));
+    atcg::ref_ptr<atcg::IndexBuffer> ibo =
+        atcg::make_ref<atcg::IndexBuffer>(indices_data.data(), static_cast<uint32_t>(indices_data.size()));
     _vao->setIndexBuffer(ibo);
 }
 
-void Mesh::addBuffer(const std::shared_ptr<VertexBuffer>& buffer)
+void Mesh::addBuffer(const atcg::ref_ptr<VertexBuffer>& buffer)
 {
     _vao->addVertexBuffer(buffer);
 }
@@ -125,9 +125,9 @@ Mesh::HalfedgeHandle Mesh::opposite_halfedge_handle(const Mesh::FaceHandle& fh, 
 
 namespace IO
 {
-std::shared_ptr<Mesh> read_mesh(const char* path)
+atcg::ref_ptr<Mesh> read_mesh(const char* path)
 {
-    std::shared_ptr<Mesh> mesh = std::make_shared<Mesh>();
+    atcg::ref_ptr<Mesh> mesh = atcg::make_ref<Mesh>();
     OpenMesh::IO::read_mesh(*mesh.get(), path);
     return mesh;
 }

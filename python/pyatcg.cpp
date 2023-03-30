@@ -107,7 +107,7 @@ PYBIND11_MODULE(pyatcg, m)
                  return py::array(2, reinterpret_cast<float*>(&mouse_position));
              });
 
-    py::class_<atcg::Application, std::shared_ptr<atcg::Application>>(m, "Application");
+    py::class_<atcg::Application, atcg::ref_ptr<atcg::Application>>(m, "Application");
 
     py::class_<glm::vec3>(m, "Vector3", py::buffer_protocol())
         .def(py::init<float, float, float>())
@@ -247,7 +247,7 @@ PYBIND11_MODULE(pyatcg, m)
             });
 
 
-    py::class_<atcg::PerspectiveCamera, std::shared_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
+    py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
         .def(py::init<float>())
         .def("getPosition", &atcg::PerspectiveCamera::getPosition)
         .def("setPosition", &atcg::PerspectiveCamera::setPosition)
@@ -262,7 +262,7 @@ PYBIND11_MODULE(pyatcg, m)
         .def("onEvent", &atcg::CameraController::onEvent)
         .def("getCamera", &atcg::CameraController::getCamera);
 
-    py::class_<atcg::Shader, std::shared_ptr<atcg::Shader>>(m, "Shader")
+    py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
         .def(py::init<std::string, std::string>())
         .def(py::init<std::string, std::string, std::string>())
         .def("use", &atcg::Shader::use)
@@ -278,7 +278,7 @@ PYBIND11_MODULE(pyatcg, m)
         .def_static("addShader", &atcg::ShaderManager::addShader)
         .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName);
 
-    py::class_<atcg::Mesh, std::shared_ptr<atcg::Mesh>>(m, "Mesh")
+    py::class_<atcg::Mesh, atcg::ref_ptr<atcg::Mesh>>(m, "Mesh")
         .def("uploadData", &atcg::Mesh::uploadData)
         .def("setPosition", &atcg::Mesh::setPosition)
         .def("setScale", &atcg::Mesh::setScale)
@@ -286,7 +286,7 @@ PYBIND11_MODULE(pyatcg, m)
         .def("setColors", &atcg::Mesh::setColors)
         .def("requestVertexColors", &atcg::Mesh::request_vertex_colors)
         .def("requestVertexNormals", &atcg::Mesh::request_vertex_normals);
-    py::class_<atcg::PointCloud, std::shared_ptr<atcg::PointCloud>>(m, "PointCloud")
+    py::class_<atcg::PointCloud, atcg::ref_ptr<atcg::PointCloud>>(m, "PointCloud")
         .def("uploadData", &atcg::PointCloud::uploadData)
         .def("asMatrix", &atcg::PointCloud::asMatrix)
         .def("fromMatrix", &atcg::PointCloud::fromMatrix)
@@ -307,7 +307,7 @@ PYBIND11_MODULE(pyatcg, m)
         .def("init",
              [](uint32_t width, uint32_t height)
              {
-                 std::shared_ptr<atcg::Application> app = std::make_shared<atcg::Application>();
+                 atcg::ref_ptr<atcg::Application> app = atcg::make_ref<atcg::Application>();
                  const auto& window                     = app->getWindow();
 
                  window->hide();
@@ -323,18 +323,18 @@ PYBIND11_MODULE(pyatcg, m)
         .def_static("clear", &atcg::Renderer::clear)
         .def(
             "draw",
-            [](const std::shared_ptr<atcg::Mesh>& mesh,
-               const std::shared_ptr<atcg::PerspectiveCamera>& camera,
+            [](const atcg::ref_ptr<atcg::Mesh>& mesh,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
                const glm::vec3& color,
-               const std::shared_ptr<atcg::Shader>& shader,
+               const atcg::ref_ptr<atcg::Shader>& shader,
                atcg::DrawMode draw_mode) { atcg::Renderer::draw(mesh, camera, color, shader, draw_mode); },
             py::return_value_policy::automatic_reference)
         .def(
             "draw",
-            [](const std::shared_ptr<atcg::PointCloud>& cloud,
-               const std::shared_ptr<atcg::PerspectiveCamera>& camera,
+            [](const atcg::ref_ptr<atcg::PointCloud>& cloud,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
                const glm::vec3& color,
-               const std::shared_ptr<atcg::Shader>& shader)
+               const atcg::ref_ptr<atcg::Shader>& shader)
             { atcg::Renderer::draw(cloud, camera, color, shader, atcg::DrawMode::ATCG_DRAW_MODE_POINTS); },
             py::return_value_policy::automatic_reference)
         .def("getFrame",

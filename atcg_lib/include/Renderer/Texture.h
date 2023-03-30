@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
+#include <Core/Memory.h>
 
 namespace atcg
 {
@@ -17,7 +17,7 @@ public:
      * @param width The width
      * @param height The height
      */
-    static std::shared_ptr<Texture2D> createColorTexture(uint32_t width, uint32_t height);
+    static atcg::ref_ptr<Texture2D> createColorTexture(uint32_t width, uint32_t height);
 
     /**
      * @brief Create a depth texture
@@ -25,7 +25,7 @@ public:
      * @param width The width
      * @param height The height
      */
-    static std::shared_ptr<Texture2D> createDepthTexture(uint32_t width, uint32_t height);
+    static atcg::ref_ptr<Texture2D> createDepthTexture(uint32_t width, uint32_t height);
 
     /**
      *  @brief Destructor

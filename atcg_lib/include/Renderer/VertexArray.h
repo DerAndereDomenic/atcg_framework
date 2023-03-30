@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Renderer/Buffer.h>
-#include <memory>
+#include <Core/Memory.h>
 
 namespace atcg
 {
@@ -31,40 +31,40 @@ public:
      *
      * @param vbo The vertex buffer to add
      */
-    void addVertexBuffer(const std::shared_ptr<VertexBuffer>& vbo);
+    void addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo);
 
     /**
      * @brief Set the Index Buffer
      *
      * @param ibo The index buffer
      */
-    void setIndexBuffer(const std::shared_ptr<IndexBuffer>& ibo);
+    void setIndexBuffer(const atcg::ref_ptr<IndexBuffer>& ibo);
 
     /**
      * @brief Set an instance buffer used for instance rendering
      *
      * @param buffer The buffer
      */
-    void addInstanceBuffer(const std::shared_ptr<VertexBuffer>& vbo);
+    void addInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& vbo);
 
     /**
      * @brief Get the Vertex Buffers object
      *
-     * @return const std::vector<std::shared_ptr<VertexBuffer>>& The vertex buffers
+     * @return const std::vector<atcg::ref_ptr<VertexBuffer>>& The vertex buffers
      */
-    inline const std::vector<std::shared_ptr<VertexBuffer>>& getVertexBuffers() const { return _vertex_buffers; }
+    inline const std::vector<atcg::ref_ptr<VertexBuffer>>& getVertexBuffers() const { return _vertex_buffers; }
 
     /**
      * @brief Get the Index Buffer object
      *
-     * @return const std::shared_ptr<IndexBuffer>& The index buffer
+     * @return const atcg::ref_ptr<IndexBuffer>& The index buffer
      */
-    inline const std::shared_ptr<IndexBuffer>& getIndexBuffer() const { return _ibo; }
+    inline const atcg::ref_ptr<IndexBuffer>& getIndexBuffer() const { return _ibo; }
 
 private:
     uint32_t _ID;
     uint32_t _vertex_buffer_index = 0;
-    std::vector<std::shared_ptr<VertexBuffer>> _vertex_buffers;
-    std::shared_ptr<IndexBuffer> _ibo;
+    std::vector<atcg::ref_ptr<VertexBuffer>> _vertex_buffers;
+    atcg::ref_ptr<IndexBuffer> _ibo;
 };
 }    // namespace atcg

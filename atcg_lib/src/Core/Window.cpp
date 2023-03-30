@@ -33,7 +33,7 @@ Window::Window(const WindowProps& props)
 
     _window = (void*)glfwCreateWindow((int)props.width, (int)props.height, props.title.c_str(), nullptr, nullptr);
 
-    _context = std::make_shared<Context>();
+    _context = atcg::make_ref<Context>();
     _context->init(_window);
 
     glfwSetWindowUserPointer((GLFWwindow*)_window, &_data);

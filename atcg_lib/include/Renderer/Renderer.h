@@ -9,7 +9,7 @@
 #include <DataStructure/PointCloud.h>
 #include <Renderer/ShaderManager.h>
 
-#include <memory>
+#include <Core/Memory.h>
 
 #include <glm/glm.hpp>
 
@@ -97,10 +97,10 @@ public:
      * @param shader The shader
      * @param draw_mode The draw mode
      */
-    static void draw(const std::shared_ptr<VertexArray>& vao,
-                     const std::shared_ptr<Camera>& camera = {},
+    static void draw(const atcg::ref_ptr<VertexArray>& vao,
+                     const atcg::ref_ptr<Camera>& camera = {},
                      const glm::vec3& color                = glm::vec3(1),
-                     const std::shared_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                     const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                      DrawMode draw_mode                    = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
     /**
@@ -116,10 +116,10 @@ public:
      * @param shader The shader
      * @param draw_mode The draw mode
      */
-    static void draw(const std::shared_ptr<Mesh>& mesh,
-                     const std::shared_ptr<Camera>& camera = {},
+    static void draw(const atcg::ref_ptr<Mesh>& mesh,
+                     const atcg::ref_ptr<Camera>& camera = {},
                      const glm::vec3& color                = glm::vec3(1),
-                     const std::shared_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                     const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                      DrawMode draw_mode                    = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
     /**
@@ -135,10 +135,10 @@ public:
      * @param shader The shader
      * @param draw_mode The draw mode
      */
-    static void draw(const std::shared_ptr<PointCloud>& cloud,
-                     const std::shared_ptr<Camera>& camera = {},
+    static void draw(const atcg::ref_ptr<PointCloud>& cloud,
+                     const atcg::ref_ptr<Camera>& camera = {},
                      const glm::vec3& color                = glm::vec3(1),
-                     const std::shared_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                     const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                      DrawMode draw_mode                    = DrawMode::ATCG_DRAW_MODE_POINTS);
 
     /**
@@ -152,7 +152,7 @@ public:
     static void drawCircle(const glm::vec3& position,
                            const float& radius,
                            const glm::vec3& color,
-                           const std::shared_ptr<Camera>& camera = {});
+                           const atcg::ref_ptr<Camera>& camera = {});
 
     static std::vector<uint8_t> getFrame();
     /**
@@ -178,7 +178,7 @@ private:
     Renderer();
 
     class Impl;
-    std::unique_ptr<Impl> impl;
+    atcg::scope_ptr<Impl> impl;
 
     static Renderer* s_renderer;
 };

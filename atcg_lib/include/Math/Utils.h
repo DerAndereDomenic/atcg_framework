@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include <Core/Memory.h>
 #include <numeric>
 #include <Eigen/Dense>
 
@@ -10,7 +10,7 @@ namespace atcg
  * @brief Normalize a mesh to be in the unit cube
  */
 template<class Geometry>
-void normalize(const std::shared_ptr<Geometry>& geom)
+void normalize(const atcg::ref_ptr<Geometry>& geom)
 {
     float max_scale = -std::numeric_limits<float>::infinity();
     typename Geometry::Point mean_point {0, 0, 0};
