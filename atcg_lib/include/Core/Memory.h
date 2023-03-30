@@ -139,7 +139,6 @@ private:
 
 /**
  * @brief These memory objects currently only replace std::shared_ptr and std::unique_ptr.
- * Later, we plan to use this interface to also handle cuda (device) memory.
  */
 
 template<typename T>
@@ -159,4 +158,115 @@ constexpr ref_ptr<T> make_ref(Args&&... args)
 {
     return std::make_shared<T>(std::forward<Args>(args)...);
 }
+
+/**
+ * @brief A device buffer with managed memory
+ */
+template<typename T>
+class DeviceBuffer
+{
+public:
+    /**
+     * @brief Constructor
+     *
+     */
+    DeviceBuffer() { _container = make_ref<MemoryContainer<T>>(); }
+
+    /**
+     * @brief Constructor
+     *
+     * @param n Size of the buffer
+     *
+     */
+    DeviceBuffer(std::size_t n)
+    {
+        _container = make_ref<MemoryContainer<T>>();
+        create(n);
+    }
+
+    /**
+     * @brief Destructor
+     *
+     */
+    ~DeviceBuffer()
+    {
+        if(_container) _container.reset();
+    }
+
+    /**
+     * @brief Destroy the underlying buffer, i.e., free device memory
+     *
+     */
+    void destroy()
+    {
+        if(_container) _container->destroy();
+    }
+
+    /**
+     * @brief Get the data
+     *
+     * @return Data pointer on the device
+     *
+     */
+    T* get() const { return _container->get(); }
+
+    /**
+     * @brief The size of the container, i.e., the number of elements
+     *
+     * @return The size
+     */
+    std::size_t size() const { return _container->size(); }
+
+    /**
+     * @brief The capacity of the container.
+     * May be larger than its size
+     *
+     * @return The capacity
+     */
+    std::size_t capacity() const { return _container->capacity(); }
+
+    /**
+     * @brief Create a buffer of size n.
+     *
+     * @param n The number of elements
+     * @return If the allocation was successful
+     */
+    bool create(std::size_t n) { return _container->create(n); }
+
+    /**
+     * @brief Upload the data.
+     * Copies buffer->size() many elements.
+     *
+     * @param host_data The source host buffer
+     */
+    void upload(const T* host_data) { _container->upload(host_data, _container->size()); }
+
+    /**
+     * @brief Upload the data.
+     *
+     * @param host_data The source host buffer
+     * @param n The number of elements
+     */
+    void upload(const T* host_data, size_t n) { _container->upload(host_data, n); }
+
+    /**
+     * @brief Download the data.
+     * Copies buffer->size() many elements.
+     *
+     * @param host_data The target host buffer
+     */
+    void download(const T* host_data) { _container->download(host_data, _container->size()); }
+
+    /**
+     * @brief Download the data.
+     *
+     * @param host_data The target host buffer
+     * @param n The number of elements
+     */
+    void download(const T* host_data, size_t n) { _container->download(host_data, n); }
+
+private:
+    ref_ptr<MemoryContainer<T>> _container;
+};
+
 }    // namespace atcg
