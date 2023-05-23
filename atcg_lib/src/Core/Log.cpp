@@ -3,7 +3,7 @@
 
 namespace atcg
 {
-atcg::ref_ptr<spdlog::logger> Log::s_logger;
+std::shared_ptr<spdlog::logger> Log::s_logger;
 
 void Log::init()
 {

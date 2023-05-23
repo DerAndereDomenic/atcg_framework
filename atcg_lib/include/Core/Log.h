@@ -3,8 +3,6 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
-#include <Core/Memory.h>
-
 namespace atcg
 {
 /**
@@ -24,10 +22,10 @@ public:
      * @return The logger
      *
      */
-    inline static atcg::ref_ptr<spdlog::logger>& getLogger() { return s_logger; }
+    inline static std::shared_ptr<spdlog::logger>& getLogger() { return s_logger; }
 
 private:
-    static atcg::ref_ptr<spdlog::logger> s_logger;
+    static std::shared_ptr<spdlog::logger> s_logger;
 };
 }    // namespace atcg
 
