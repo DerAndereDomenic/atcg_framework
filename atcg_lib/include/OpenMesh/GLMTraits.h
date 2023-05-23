@@ -39,7 +39,8 @@ Scalar sqrnorm(const glm::vec<Dimension, Scalar>& x)
 template<typename Scalar, int Dimension>
 glm::vec<Dimension, Scalar> vectorize(glm::vec<Dimension, Scalar>& x, Scalar const& val)
 {
-    return glm::vec<Dimension, Scalar>(val);
+    x = glm::vec<Dimension, Scalar>(val);
+    return x;
 }
 
 }    // namespace glm
