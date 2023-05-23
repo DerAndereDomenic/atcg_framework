@@ -11,5 +11,8 @@ int main(int argc, char** argv)
 
     delete app;
 
+    atcg::ShaderManager::destroy();
+    atcg::Renderer::destroy();
+
     return 0;
 }

@@ -54,6 +54,8 @@ public:
      */
     inline static void onUpdate() { s_instance->onUpdateImpl(); }
 
+    inline static void destroy() { delete s_instance; }
+
 private:
     void addShaderImpl(const std::string& name, const atcg::ref_ptr<Shader>& shader);
     void addShaderFromNameImpl(const std::string& name);
