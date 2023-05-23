@@ -50,7 +50,7 @@ void Mesh::uploadData()
     _vao = atcg::make_ref<atcg::VertexArray>();
     atcg::ref_ptr<atcg::VertexBuffer> vbo =
         atcg::make_ref<atcg::VertexBuffer>(vertex_data.data(),
-                                             static_cast<uint32_t>(sizeof(float) * vertex_data.size()));
+                                           static_cast<uint32_t>(sizeof(float) * vertex_data.size()));
     vbo->setLayout({{atcg::ShaderDataType::Float3, "aPosition"},
                     {atcg::ShaderDataType::Float3, "aNormal"},
                     {atcg::ShaderDataType::Float3, "aColor"}});
