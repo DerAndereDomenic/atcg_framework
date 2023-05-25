@@ -56,6 +56,8 @@ int entry_point(atcg::Layer* layer)
 
 namespace py = pybind11;
 
+PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
+
 PYBIND11_MODULE(pyatcg, m)
 {
     m.doc() = R"pbdoc(
@@ -308,7 +310,7 @@ PYBIND11_MODULE(pyatcg, m)
              [](uint32_t width, uint32_t height)
              {
                  atcg::ref_ptr<atcg::Application> app = atcg::make_ref<atcg::Application>();
-                 const auto& window                     = app->getWindow();
+                 const auto& window                   = app->getWindow();
 
                  window->hide();
                  window->resize(width, height);
