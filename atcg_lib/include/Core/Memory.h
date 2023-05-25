@@ -25,7 +25,7 @@ struct host_allocator
     void* allocate(std::size_t n)
     {
         bytes_allocated += n;
-        return new uint8_t[n];
+        return std::malloc(n);
     }
 
     /**
@@ -36,7 +36,7 @@ struct host_allocator
     void deallocate(void* ptr, std::size_t n)
     {
         bytes_deallocated += n;
-        delete[] ptr;
+        std::free(ptr);
     }
 
     /**
