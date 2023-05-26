@@ -174,6 +174,14 @@ void Window::resize(const uint32_t& _width, const uint32_t& _height)
     glfwSetWindowSize((GLFWwindow*)_window, _width, _height);
 }
 
+glm::vec2 Window::getPosition() const
+{
+    int x;
+    int y;
+    glfwGetWindowPos((GLFWwindow*)_window, &x, &y);
+    return glm::vec2(x, y);
+}
+
 void Window::hide()
 {
     glfwHideWindow((GLFWwindow*)_window);

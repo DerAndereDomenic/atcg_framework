@@ -7,6 +7,8 @@
 #include <Renderer/Context.h>
 #include <Core/Memory.h>
 
+#include <glm/glm.hpp>
+
 namespace atcg
 {
 struct WindowProps
@@ -85,6 +87,13 @@ public:
      * @param height The height
      */
     void resize(const uint32_t& width, const uint32_t& height);
+
+    /**
+     * @brief Get the window position
+     *
+     * @return Vector of (x,y) with the absolute window coordinates
+     */
+    glm::vec2 getPosition() const;
 
     /**
      * @brief Get the Width object
