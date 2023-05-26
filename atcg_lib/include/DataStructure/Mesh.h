@@ -7,6 +7,12 @@
 
 namespace atcg
 {
+
+struct EulerAngle
+{
+    float rx, ry, rz;
+};
+
 /**
  * @brief This class basically models a triangle soup.
  * This structure is only used to hold the GPU buffers for rendering the mesh
@@ -109,11 +115,14 @@ public:
 
     /**
      * @brief Set the model matrix
-     * TODO: Reset position, scale and rotation
      *
      * @param model The new model matrix
      */
-    inline void setModel(const glm::mat4 model) { _model = model; }
+    inline void setModel(const glm::mat4 model)
+    {
+        _model = model;
+        decomposeModelMatrix();
+    }
 
     /**
      * @brief Set the Position
@@ -140,13 +149,11 @@ public:
     /**
      * @brief Set the Rotation
      *
-     * @param axis The rotation axis
-     * @param angle The rotation angle
+     * @param rotation The rotation described by three euler angles
      */
-    inline void setRotation(const glm::vec3& axis, const float& angle)
+    inline void setRotation(const EulerAngle& rotation)
     {
-        _rotation_axis  = axis;
-        _rotation_angle = angle;
+        _rotation = rotation;
         calculateModelMatrix();
     }
 
@@ -159,13 +166,13 @@ public:
 
 private:
     void calculateModelMatrix();
+    void decomposeModelMatrix();
 
     glm::vec3 _position = glm::vec3(0);
     glm::vec3 _scale    = glm::vec3(1);
     glm::mat4 _model    = glm::mat4(1);
 
-    glm::vec3 _rotation_axis = glm::vec3(0, 1, 0);
-    float _rotation_angle    = 0;
+    EulerAngle _rotation;
 
     atcg::ref_ptr<VertexArray> _vao;
 };
