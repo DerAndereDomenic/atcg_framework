@@ -3,11 +3,14 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include <glad/glad.h>
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <algorithm>
+#include <ImGuizmo.h>
 
 class PointCloudLayer : public atcg::Layer
 {
@@ -17,7 +20,6 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        atcg::Renderer::setClearColor(glm::vec4(1));
         atcg::Renderer::setPointSize(2.0f);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -25,17 +27,17 @@ public:
 
         depth_values.resize(search_radius * search_radius);
 
-        sphere = atcg::IO::read_mesh("res/sphere.obj");
-        sphere->setScale(glm::vec3(0.01f));
+        sphere = atcg::IO::read_mesh("res/bunny.obj");
+        // sphere->setScale(glm::vec3(0.01f));
         sphere->uploadData();
 
-        {
+        /*{
             auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/PointCloudCompression/"
                                                          "sample.xyz");
             // auto point_cloud = atcg::IO::read_pointcloud("res/bunny.obj");
             point_cloud->uploadData();
             clouds.push_back(std::make_pair(point_cloud, true));
-        }
+        }*/
     }
 
     // This gets called each frame
@@ -45,14 +47,19 @@ public:
 
         atcg::Renderer::clear();
 
-        for(auto it = clouds.begin(); it != clouds.end(); ++it)
+        atcg::Renderer::draw(sphere,
+                             camera_controller->getCamera(),
+                             glm::vec3(1),
+                             atcg::ShaderManager::getShader("base"));
+
+        /*for(auto it = clouds.begin(); it != clouds.end(); ++it)
         {
             if(it->second)
                 atcg::Renderer::draw(it->first,
                                      camera_controller->getCamera(),
                                      glm::vec3(1),
                                      atcg::ShaderManager::getShader("flat"));
-        }
+        }*/
 
         glReadPixels(static_cast<int>(mouse_pos.x - search_radius / 2),
                      static_cast<int>(mouse_pos.y - search_radius / 2),
@@ -121,6 +128,27 @@ public:
 
             ImGui::End();
         }
+
+        // Gizmo test
+        ImGuizmo::SetOrthographic(false);
+        ImGuizmo::BeginFrame();
+
+        const auto& window   = atcg::Application::get()->getWindow();
+        glm::vec2 window_pos = window->getPosition();
+        ImGuizmo::SetRect(window_pos.x, window_pos.y, (float)window->getWidth(), (float)window->getHeight());
+
+        glm::mat4 camera_projection = camera_controller->getCamera()->getProjection();
+        glm::mat4 camera_view       = camera_controller->getCamera()->getView();
+
+        glm::mat4 transform = sphere->getModel();
+
+        ImGuizmo::Manipulate(glm::value_ptr(camera_view),
+                             glm::value_ptr(camera_projection),
+                             current_operation,
+                             ImGuizmo::LOCAL,
+                             glm::value_ptr(transform));
+
+        if(ImGuizmo::IsUsing()) { sphere->setModel(transform); }
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -131,6 +159,7 @@ public:
         atcg::EventDispatcher dispatcher(event);
         dispatcher.dispatch<atcg::FileDroppedEvent>(ATCG_BIND_EVENT_FN(PointCloudLayer::onFileDropped));
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(PointCloudLayer::onMouseMoved));
+        dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(PointCloudLayer::onKeyPressed));
     }
 
     bool onFileDropped(atcg::FileDroppedEvent* event)
@@ -156,6 +185,15 @@ public:
         return false;
     }
 
+    bool onKeyPressed(atcg::KeyPressedEvent* event)
+    {
+        if(event->getKeyCode() == GLFW_KEY_T) { current_operation = ImGuizmo::OPERATION::TRANSLATE; }
+        if(event->getKeyCode() == GLFW_KEY_R) { current_operation = ImGuizmo::OPERATION::ROTATE; }
+        if(event->getKeyCode() == GLFW_KEY_S) { current_operation = ImGuizmo::OPERATION::SCALE; }
+
+        return true;
+    }
+
 private:
     using CloudList = std::vector<std::pair<atcg::ref_ptr<atcg::PointCloud>, bool>>;
 
@@ -170,6 +208,8 @@ private:
     uint32_t search_radius = 10;
 
     bool show_render_settings = false;
+
+    ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 };
 
 class PointCloudRenderer : public atcg::Application
