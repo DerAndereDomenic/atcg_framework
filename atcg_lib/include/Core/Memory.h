@@ -451,7 +451,7 @@ public:
     }
 
 private:
-    template<typename U, typename allocator>
+    template<typename U, typename _allocator>
     friend class DeviceBuffer;
 
     template<typename _allocator>
