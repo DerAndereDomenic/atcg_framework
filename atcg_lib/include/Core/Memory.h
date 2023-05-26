@@ -329,7 +329,11 @@ public:
     ~DeviceBuffer()
     {
         // We are the last object that owns the memory -> call destructor first
-        destroy_object<allocator>();
+        if(std::is_same<allocator, host_allocator>::value && _container.use_count() == 1)
+        {
+            T* obj = static_cast<T*>(_container->get());
+            obj->~T();
+        }
     }
 
     /**
@@ -453,21 +457,6 @@ public:
 private:
     template<typename U, typename _allocator>
     friend class DeviceBuffer;
-
-    template<typename _allocator>
-    void destroy_object()
-    {
-        if(_container.use_count() == 1)
-        {
-            T* obj = static_cast<T*>(_container->get());
-            obj->~T();
-        }
-    }
-
-    template<>
-    void destroy_object<device_allocator>()
-    {
-    }
 
     std::shared_ptr<MemoryContainer<allocator>> _container;
 };
