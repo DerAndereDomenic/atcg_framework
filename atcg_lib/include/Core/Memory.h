@@ -461,6 +461,18 @@ private:
     std::shared_ptr<MemoryContainer<allocator>> _container;
 };
 
+template<typename T, typename allocator>
+bool operator==(const DeviceBuffer<T, allocator>& p1, const DeviceBuffer<T, allocator>& p2) noexcept
+{
+    return p1.get() == p2.get();
+}
+
+template<typename T, typename allocator>
+bool operator!=(const DeviceBuffer<T, allocator>& p1, const DeviceBuffer<T, allocator>& p2) noexcept
+{
+    return p1.get() != p2.get();
+}
+
 
 template<typename T>
 using scope_ptr = std::unique_ptr<T>;
