@@ -99,9 +99,9 @@ public:
      */
     static void draw(const atcg::ref_ptr<VertexArray>& vao,
                      const atcg::ref_ptr<Camera>& camera = {},
-                     const glm::vec3& color                = glm::vec3(1),
+                     const glm::vec3& color              = glm::vec3(1),
                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                     DrawMode draw_mode                    = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
+                     DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
     /**
      * @brief Render a mesh
@@ -118,9 +118,9 @@ public:
      */
     static void draw(const atcg::ref_ptr<Mesh>& mesh,
                      const atcg::ref_ptr<Camera>& camera = {},
-                     const glm::vec3& color                = glm::vec3(1),
+                     const glm::vec3& color              = glm::vec3(1),
                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                     DrawMode draw_mode                    = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
+                     DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
     /**
      * @brief Draw a pointcloud
@@ -137,9 +137,9 @@ public:
      */
     static void draw(const atcg::ref_ptr<PointCloud>& cloud,
                      const atcg::ref_ptr<Camera>& camera = {},
-                     const glm::vec3& color                = glm::vec3(1),
+                     const glm::vec3& color              = glm::vec3(1),
                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                     DrawMode draw_mode                    = DrawMode::ATCG_DRAW_MODE_POINTS);
+                     DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_POINTS);
 
     /**
      * @brief Draw Circle

@@ -11,4 +11,4 @@ void Log::init()
     s_logger = spdlog::stdout_color_mt("ATCG");
     s_logger->set_level(spdlog::level::trace);
 }
-}
+}    // namespace atcg
