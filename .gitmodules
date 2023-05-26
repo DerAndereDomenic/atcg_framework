@@ -19,3 +19,6 @@
 [submodule "external/spdlog"]
 	path = external/spdlog
 	url = git@github.com:gabime/spdlog.git
+[submodule "external/imguizmo"]
+	path = external/imguizmo
+	url = git@github.com:CedricGuillemet/ImGuizmo.git

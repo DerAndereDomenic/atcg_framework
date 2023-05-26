@@ -15,6 +15,18 @@ find_package(OpenGL REQUIRED)
 add_subdirectory(external/glfw)
 add_subdirectory(external/openmesh)
 
+add_library(imguizmo STATIC "external/imguizmo/GraphEditor.cpp"
+                            "external/imguizmo/GraphEditor.h"
+                            "external/imguizmo/ImCurveEdit.cpp"
+                            "external/imguizmo/ImCurveEdit.h"
+                            "external/imguizmo/ImGradient.cpp"
+                            "external/imguizmo/ImGradient.h"
+                            "external/imguizmo/ImGuizmo.cpp"
+                            "external/imguizmo/ImGuizmo.h"
+                            "external/imguizmo/ImSequencer.cpp"
+                            "external/imguizmo/ImSequencer.h"
+                            "external/imguizmo/ImZoomSlider.h")
+
 set(PYBIND11_PYTHON_VERSION 3)
 set(PYBIND11_FINDPYTHON ON)
 add_subdirectory(external/pybind11)
@@ -70,7 +82,8 @@ include_directories(atcg_lib/include
                     external/openmesh/src
                     external/nanoflann/include
                     external/pybind11/include
-                    external/spdlog/include)
+                    external/spdlog/include
+                    external/imguizmo)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
@@ -84,6 +97,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
         atcg_lib
         glfw
         imgui
+        imguizmo
         glad
         OpenGL::GL
         OpenMeshCore
@@ -110,6 +124,7 @@ if(ATCG_PYTHON_BINDINGS)
         atcg_lib
         glfw
         imgui
+        imguizmo
         OpenGL::GL
         OpenMeshCore
         OpenMeshTools
