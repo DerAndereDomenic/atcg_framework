@@ -108,6 +108,14 @@ public:
     inline glm::mat4 getModel() const { return _model; }
 
     /**
+     * @brief Set the model matrix
+     * TODO: Reset position, scale and rotation
+     *
+     * @param model The new model matrix
+     */
+    inline void setModel(const glm::mat4 model) { _model = model; }
+
+    /**
      * @brief Set the Position
      *
      * @param position The position
