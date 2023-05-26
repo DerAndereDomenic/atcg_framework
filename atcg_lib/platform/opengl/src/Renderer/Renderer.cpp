@@ -33,7 +33,9 @@ public:
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
 
-    float point_size = 8;
+    atcg::ref_ptr<Mesh> sphere_mesh;
+
+    float point_size = 1.0f;
 
     // Render methods
     void drawVAO(const atcg::ref_ptr<VertexArray>& vao,
@@ -42,7 +44,8 @@ public:
                  const atcg::ref_ptr<Shader>& shader,
                  const glm::mat4& model,
                  GLenum mode,
-                 uint32_t size);
+                 uint32_t size,
+                 uint32_t instances = 1);
 };
 
 Renderer::Renderer() {}
@@ -70,6 +73,10 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
 
     // Generate cube
     initCube();
+
+    // Load a sphere
+    sphere_mesh = atcg::IO::read_mesh("res/sphere_low.obj");
+    sphere_mesh->uploadData();
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -270,7 +277,19 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
-            throw std::logic_error {"Not implemented"};
+            atcg::ref_ptr<VertexArray> vao_sphere               = s_renderer->impl->sphere_mesh->getVertexArray();
+            const std::vector<atcg::ref_ptr<VertexBuffer>> vbos = vao_sphere->getVertexBuffers();
+            atcg::ref_ptr<VertexBuffer> vbo_cloud               = cloud->getVertexArray()->getVertexBuffers()[0];
+            if(vbos.size() == 1 || vbos.back() != vbo_cloud) { vao_sphere->addInstanceBuffer(vbo_cloud); }
+            glm::mat4 model = glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
+            s_renderer->impl->drawVAO(vao_sphere,
+                                      camera,
+                                      color,
+                                      shader,
+                                      model,
+                                      GL_TRIANGLES,
+                                      s_renderer->impl->sphere_mesh->n_vertices(),
+                                      cloud->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_EDGES:
@@ -287,25 +306,27 @@ void Renderer::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
                              const atcg::ref_ptr<Shader>& shader,
                              const glm::mat4& model,
                              GLenum mode,
-                             uint32_t size)
+                             uint32_t size,
+                             uint32_t instances)
 {
     vao->use();
     shader->use();
     shader->setVec3("flat_color", color);
+    shader->setInt("instanced", static_cast<int>(instances > 1));
     if(camera)
     {
         shader->setVec3("camera_pos", camera->getPosition());
         shader->setVec3("camera_dir", camera->getDirection());
         shader->setMVP(model, camera->getView(), camera->getProjection());
     }
-    else { shader->setMVP(); }
+    else { shader->setMVP(model); }
 
     const atcg::ref_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
     if(ibo)
-        glDrawElements(mode, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
+        glDrawElementsInstanced(mode, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0, instances);
     else
-        glDrawArrays(mode, 0, static_cast<GLsizei>(size));
+        glDrawArraysInstanced(mode, 0, static_cast<GLsizei>(size), instances);
 }
 
 void Renderer::drawCircle(const glm::vec3& position,
