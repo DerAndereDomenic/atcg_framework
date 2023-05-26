@@ -57,6 +57,8 @@ void VertexArray::addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
     glBindVertexArray(_ID);
     vbo->use();
 
+    uint32_t vertex_buffer_index = _vertex_buffer_index.empty() ? 0 : _vertex_buffer_index.back().vertex_buffer_index;
+
     const auto& layout = vbo->getLayout();
     for(const auto& element: layout)
     {
@@ -67,14 +69,14 @@ void VertexArray::addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
             case ShaderDataType::Float3:
             case ShaderDataType::Float4:
             {
-                glEnableVertexAttribArray(_vertex_buffer_index);
-                glVertexAttribPointer(_vertex_buffer_index,
+                glEnableVertexAttribArray(vertex_buffer_index);
+                glVertexAttribPointer(vertex_buffer_index,
                                       element.getComponentCount(),
                                       shaderDataTypeToOpenGLBaseType(element.type),
                                       element.normalized ? GL_TRUE : GL_FALSE,
                                       layout.getStride(),
                                       (const void*)element.offset);
-                _vertex_buffer_index++;
+                vertex_buffer_index++;
                 break;
             }
             case ShaderDataType::Int:
@@ -83,13 +85,13 @@ void VertexArray::addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
             case ShaderDataType::Int4:
             case ShaderDataType::Bool:
             {
-                glEnableVertexAttribArray(_vertex_buffer_index);
-                glVertexAttribIPointer(_vertex_buffer_index,
+                glEnableVertexAttribArray(vertex_buffer_index);
+                glVertexAttribIPointer(vertex_buffer_index,
                                        element.getComponentCount(),
                                        shaderDataTypeToOpenGLBaseType(element.type),
                                        layout.getStride(),
                                        (const void*)element.offset);
-                _vertex_buffer_index++;
+                vertex_buffer_index++;
                 break;
             }
             case ShaderDataType::Mat3:
@@ -98,15 +100,15 @@ void VertexArray::addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
                 uint8_t count = element.getComponentCount();
                 for(uint8_t i = 0; i < count; i++)
                 {
-                    glEnableVertexAttribArray(_vertex_buffer_index);
-                    glVertexAttribPointer(_vertex_buffer_index,
+                    glEnableVertexAttribArray(vertex_buffer_index);
+                    glVertexAttribPointer(vertex_buffer_index,
                                           count,
                                           shaderDataTypeToOpenGLBaseType(element.type),
                                           element.normalized ? GL_TRUE : GL_FALSE,
                                           layout.getStride(),
                                           (const void*)(element.offset + sizeof(float) * count * i));
-                    glVertexAttribDivisor(_vertex_buffer_index, 1);
-                    _vertex_buffer_index++;
+                    glVertexAttribDivisor(vertex_buffer_index, 1);
+                    vertex_buffer_index++;
                 }
                 break;
             }
@@ -116,6 +118,7 @@ void VertexArray::addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
     }
 
     _vertex_buffers.push_back(vbo);
+    _vertex_buffer_index.push_back({vertex_buffer_index, 0});
 }
 
 void VertexArray::setIndexBuffer(const atcg::ref_ptr<IndexBuffer>& ibo)
@@ -128,10 +131,20 @@ void VertexArray::setIndexBuffer(const atcg::ref_ptr<IndexBuffer>& ibo)
 void VertexArray::addInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
 {
     addVertexBuffer(vbo);
-    const auto& layout = vbo->getLayout();
+    markInstance(static_cast<uint32_t>(_vertex_buffers.size()) - 1, 1);
+}
+
+void VertexArray::markInstance(uint32_t buffer_idx, uint32_t divisor)
+{
+    uint32_t curr_divisor = _vertex_buffer_index[buffer_idx].divisor;
+    if(curr_divisor == divisor) { return; }
+
+    this->use();
+    _vertex_buffer_index[buffer_idx].divisor = divisor;
+    const auto& layout                       = _vertex_buffers[buffer_idx]->getLayout();
     for(uint32_t i = 0; i < layout.getElements().size(); ++i)
     {
-        glVertexAttribDivisor(_vertex_buffer_index - 1 - i, 1);
+        glVertexAttribDivisor(_vertex_buffer_index[buffer_idx].vertex_buffer_index - 1 - i, divisor);
     }
 }
 }    // namespace atcg
