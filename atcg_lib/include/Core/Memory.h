@@ -286,6 +286,21 @@ private:
     std::size_t _capacity = 0;
 };
 
+template<typename T, typename allocator>
+struct ContainerDeleter
+{
+    void operator()(MemoryContainer<allocator>* container)
+    {
+        // We are the last object that owns the memory -> call destructor first
+        if(std::is_same<allocator, host_allocator>::value)
+        {
+            T* obj = static_cast<T*>(container->get());
+            obj->~T();
+        }
+        delete container;
+    }
+};
+
 /**
  * @brief A device buffer with managed memory
  */
@@ -307,7 +322,8 @@ public:
      */
     DeviceBuffer(std::size_t n)
     {
-        _container = std::make_shared<MemoryContainer<allocator>>();
+        _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
+                                                                 ContainerDeleter<T, allocator>());
         create(n);
     }
 
@@ -321,20 +337,17 @@ public:
      * The pointer already has to be on the right device.
      * The memory will be assumed to be exactly the size of on object (no arrays)
      */
-    DeviceBuffer(T* ptr) { _container = std::make_shared<MemoryContainer<allocator>>(ptr, sizeof(T)); }
+    DeviceBuffer(T* ptr)
+    {
+        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, sizeof(T));
+
+        _container = std::shared_ptr<MemoryContainer<allocator>>(obj, ContainerDeleter<T, allocator>());
+    }
 
     /**
      * @brief Destructor
      */
-    ~DeviceBuffer()
-    {
-        // We are the last object that owns the memory -> call destructor first
-        if(std::is_same<allocator, host_allocator>::value && _container.use_count() == 1)
-        {
-            T* obj = static_cast<T*>(_container->get());
-            obj->~T();
-        }
-    }
+    ~DeviceBuffer() {}
 
     /**
      * @brief Get the data
@@ -451,8 +464,17 @@ public:
     template<typename U>
     void reset(U* ptr)
     {
-        _container = std::make_shared<MemoryContainer<allocator>>(ptr, sizeof(U));
+        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, sizeof(U));
+
+        _container = std::shared_ptr<MemoryContainer<allocator>>(obj, ContainerDeleter<T, allocator>());
     }
+
+    /**
+     * @brief Get the number of pointers that point to the memory owned by this object
+     *
+     * @return The use count
+     */
+    int64_t use_count() const { return _container.use_count(); }
 
 private:
     template<typename U, typename _allocator>
