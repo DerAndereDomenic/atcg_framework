@@ -8,6 +8,7 @@
 #include <DataStructure/Grid.h>
 #include <DataStructure/PointCloud.h>
 #include <Renderer/ShaderManager.h>
+#include <Renderer/Framebuffer.h>
 
 #include <Core/Memory.h>
 
@@ -165,6 +166,19 @@ public:
                            const glm::vec3& color,
                            const atcg::ref_ptr<Camera>& camera = {});
 
+    /**
+     * @brief Get the framebuffer object that is used by the renderer
+     *
+     * @return The fbo
+     */
+    static atcg::ref_ptr<Framebuffer> Renderer::getFramebuffer();
+
+    /**
+     * @brief Get a buffer representing the color attachement of the frame buffer.
+     * @note This copies memory between GPU and CPU
+     *
+     * @return The buffer containing the frame image.
+     */
     static std::vector<uint8_t> getFrame();
 
     /**

@@ -5,7 +5,6 @@
 #include <Core/Log.h>
 
 #include <Renderer/ShaderManager.h>
-#include <Renderer/Framebuffer.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
@@ -177,6 +176,11 @@ void Renderer::resize(const uint32_t& width, const uint32_t& height)
 void Renderer::useScreenBuffer()
 {
     s_renderer->impl->screen_fbo->use();
+}
+
+atcg::ref_ptr<Framebuffer> Renderer::getFramebuffer()
+{
+    return s_renderer->impl->screen_fbo;
 }
 
 void Renderer::clear()
