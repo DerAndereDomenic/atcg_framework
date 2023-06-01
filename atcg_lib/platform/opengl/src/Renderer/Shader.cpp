@@ -6,6 +6,30 @@
 
 namespace atcg
 {
+Shader::Shader(const std::string& compute_path)
+{
+    // File reading
+    std::string compute_buffer;
+
+    readShaderCode(compute_path, &compute_buffer);
+    const char* cShaderCode = compute_buffer.c_str();
+
+    // Compiling
+    uint32_t compute;
+
+    compute = compileShader(GL_COMPUTE_SHADER, cShaderCode);
+
+    // Linking
+    uint32_t shaders[] = {compute};
+    linkShader(shaders, 1);
+
+    glDeleteShader(compute);
+
+    _has_geometry = false;
+    _is_compute   = true;
+    _compute_path = compute_path;
+}
+
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
 {
     // File reading
@@ -128,6 +152,10 @@ uint32_t Shader::compileShader(unsigned int shaderType, const std::string& shade
         {
             std::cerr << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" + std::string(infoLog) + "\n";
         }
+        else if(shaderType == GL_COMPUTE_SHADER)
+        {
+            std::cerr << "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n" + std::string(infoLog) + "\n";
+        }
         else { std::cerr << "ERROR::SHADER::COMPILATION_FAILED\nUnknown shader type\n"; }
 
         free(infoLog);
@@ -197,4 +225,12 @@ void Shader::setMVP(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P)
     setMat4("V", V);
     setMat4("P", P);
 }
+
+void Shader::dispatch(const glm::ivec3& work_groups) const
+{
+    use();
+    glDispatchCompute(work_groups.x, work_groups.y, work_groups.z);
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
+}
+
 }    // namespace atcg
