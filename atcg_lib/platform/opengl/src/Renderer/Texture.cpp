@@ -44,6 +44,26 @@ atcg::ref_ptr<Texture2D> Texture2D::createDepthTexture(uint32_t width, uint32_t 
     return result;
 }
 
+atcg::ref_ptr<Texture2D> Texture2D::createFloatTexture(uint32_t width, uint32_t height)
+{
+    atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
+
+    result->_width  = width;
+    result->_height = height;
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_2D, result->_ID);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return result;
+}
+
 Texture2D::~Texture2D()
 {
     glDeleteTextures(1, &_ID);
@@ -53,5 +73,10 @@ void Texture2D::use(const uint32_t& slot) const
 {
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_2D, _ID);
+}
+
+void Texture2D::useForCompute(const uint32_t& slot) const
+{
+    glBindImageTexture(slot, _ID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 }
 }    // namespace atcg

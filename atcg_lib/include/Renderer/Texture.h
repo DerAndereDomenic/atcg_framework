@@ -28,6 +28,14 @@ public:
     static atcg::ref_ptr<Texture2D> createDepthTexture(uint32_t width, uint32_t height);
 
     /**
+     * @brief Create a one channel float texture
+     *
+     * @param width The width
+     * @param height The height
+     */
+    static atcg::ref_ptr<Texture2D> createFloatTexture(uint32_t width, uint32_t height);
+
+    /**
      *  @brief Destructor
      */
     ~Texture2D();
@@ -59,6 +67,13 @@ public:
      * @param slot The used texture slot
      */
     void use(const uint32_t& slot = 0) const;
+
+    /**
+     * @brief Use this texture as output in a compute shader
+     *
+     * @param slot The used texture slot
+     */
+    void useForCompute(const uint32_t& slot = 0) const;
 
 private:
     uint32_t _width, _height;
