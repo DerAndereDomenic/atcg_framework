@@ -28,6 +28,17 @@ enum DrawMode
 };
 
 /**
+ * @brief An enum defining cull modes.
+ *
+ */
+enum CullMode
+{
+    ATCG_FRONT_FACE_CULLING,
+    ATCG_BACK_FACE_CULLING,
+    ATCG_BOTH_FACE_CULLING
+};
+
+/**
  * @brief This class models a renderer
  */
 class Renderer
@@ -155,6 +166,7 @@ public:
                            const atcg::ref_ptr<Camera>& camera = {});
 
     static std::vector<uint8_t> getFrame();
+
     /**
      * @brief Generate a Z-Buffer buffer.
      *
@@ -168,9 +180,31 @@ public:
     static void clear();
 
     /**
+     * @brief Toggle depth testing
+     *
+     * @param enable If it should be enabled or disabled
+     */
+    static void toggleDepthTesting(bool enable = true);
+
+    /**
+     * @brief Toggle face culling
+     *
+     * @param enable If it should be enabled or disabled
+     */
+    static void toggleCulling(bool enable = true);
+
+    /**
+     * @brief Set the cull face
+     *
+     * @param mode The culling mode
+     */
+    static void setCullFace(CullMode mode);
+
+    /**
      * @brief Destroys the renderer instance
      */
     inline static void destroy() { delete s_renderer; }
+
 
     ~Renderer();
 

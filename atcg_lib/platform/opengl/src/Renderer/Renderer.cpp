@@ -35,6 +35,8 @@ public:
 
     atcg::ref_ptr<Mesh> sphere_mesh;
 
+    uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+
     float point_size = 1.0f;
 
     // Render methods
@@ -123,6 +125,13 @@ void Renderer::init(uint32_t width, uint32_t height)
     ATCG_INFO("---------------------------------");
 
     s_renderer->impl = atcg::make_scope<Impl>(width, height);
+
+    // General settings
+    toggleDepthTesting(true);
+    toggleCulling(true);
+    setCullFace(ATCG_BACK_FACE_CULLING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void Renderer::finishFrame()
@@ -172,7 +181,65 @@ void Renderer::useScreenBuffer()
 
 void Renderer::clear()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(s_renderer->impl->clear_flag);
+}
+
+void Renderer::toggleDepthTesting(bool enable)
+{
+    s_renderer->impl->clear_flag = GL_COLOR_BUFFER_BIT;
+    switch(enable)
+    {
+        case true:
+        {
+            glEnable(GL_DEPTH_TEST);
+            s_renderer->impl->clear_flag |= GL_DEPTH_BUFFER_BIT;
+        }
+        break;
+        case false:
+        {
+            glDisable(GL_DEPTH_TEST);
+        }
+        break;
+    }
+}
+
+void Renderer::toggleCulling(bool enable)
+{
+    switch(enable)
+    {
+        case true:
+        {
+            glEnable(GL_CULL_FACE);
+        }
+        break;
+        case false:
+        {
+            glDisable(GL_CULL_FACE);
+        }
+        break;
+    }
+}
+
+void Renderer::setCullFace(CullMode mode)
+{
+    switch(mode)
+    {
+        case CullMode::ATCG_BACK_FACE_CULLING:
+        {
+            glCullFace(GL_BACK);
+        }
+        break;
+        case CullMode::ATCG_FRONT_FACE_CULLING:
+        {
+            glCullFace(GL_FRONT);
+        }
+        break;
+        case CullMode::ATCG_BOTH_FACE_CULLING:
+        {
+            glCullFace(GL_FRONT_AND_BACK);
+        }
+        break;
+    }
 }
 
 void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
