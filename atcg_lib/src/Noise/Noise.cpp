@@ -21,5 +21,19 @@ atcg::ref_ptr<Texture2D> createWhiteNoiseTexture2D(glm::ivec2 dim)
     return result;
 }
 
+atcg::ref_ptr<Texture3D> createWhiteNoiseTexture3D(glm::ivec3 dim)
+{
+    atcg::ref_ptr<Shader> compute_shader = ShaderManager::getShader("white_noise_3D");
+
+    atcg::ref_ptr<Texture3D> result = Texture3D::createFloatTexture(dim.x, dim.y, dim.z);
+
+    result->useForCompute();
+
+    // Use 4x4x4 = 64 thread sized work group
+    compute_shader->dispatch(glm::ivec3(ceil(dim.x / 4), ceil(dim.y / 4), ceil(dim.z / 4)));
+
+    return result;
+}
+
 }    // namespace Noise
 }    // namespace atcg

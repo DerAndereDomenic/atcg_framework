@@ -20,7 +20,14 @@ namespace Noise
  */
 atcg::ref_ptr<Texture2D> createWhiteNoiseTexture2D(glm::ivec2 dim);
 
-// TODO:
-// atcg::ref_ptr<Texture2D> createWhiteNoiseTexture3D(glm::ivec3 dim);
+/**
+ * @brief Create a 3D texture with white noise.
+ * The floating point texture will have uniformly sampled pixels between [0,1]
+ *
+ * @param dim The dimensions of the texture
+ * @return The noise texture
+ */
+atcg::ref_ptr<Texture3D> createWhiteNoiseTexture3D(glm::ivec3 dim);
+
 }    // namespace Noise
 }    // namespace atcg
