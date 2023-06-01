@@ -9,6 +9,9 @@ ShaderManager* ShaderManager::s_instance = new ShaderManager;
 void ShaderManager::addShaderImpl(const std::string& name, const atcg::ref_ptr<Shader>& shader)
 {
     _shader.insert(std::make_pair(name, shader));
+
+    if(shader->isComputeShader()) return;
+
     const std::string& vertex_path   = shader->getVertexPath();
     const std::string& fragment_path = shader->getFragmentPath();
 
@@ -68,6 +71,8 @@ void ShaderManager::onUpdateImpl()
 {
     for(auto& shader: _shader)
     {
+        if(shader.second->isComputeShader()) continue;
+
         const std::string& vertex_path   = shader.second->getVertexPath();
         const std::string& fragment_path = shader.second->getFragmentPath();
         const std::string& geometry_path = shader.second->getGeometryPath();
