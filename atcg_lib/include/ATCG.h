@@ -44,3 +44,6 @@
 #include <Math/Functions.h>
 #include <Math/Utils.h>
 #include <Math/Tracing.h>
+
+//-------- Utility -----------
+#include <Noise/Noise.h>
