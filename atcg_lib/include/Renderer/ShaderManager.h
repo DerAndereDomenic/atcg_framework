@@ -39,6 +39,17 @@ public:
     inline static void addShaderFromName(const std::string& name) { s_instance->addShaderFromNameImpl(name); }
 
     /**
+     * @brief Add a compute shader by loading it from file
+     *
+     * @param name The name of the .glsl file (without file ending)
+     *
+     */
+    inline static void addComputerShaderFromName(const std::string& name)
+    {
+        s_instance->addComputeShaderFromNameImpl(name);
+    }
+
+    /**
      * @brief Get the Shader object
      *
      * @param name The name
@@ -59,6 +70,7 @@ public:
 private:
     void addShaderImpl(const std::string& name, const atcg::ref_ptr<Shader>& shader);
     void addShaderFromNameImpl(const std::string& name);
+    void addComputeShaderFromNameImpl(const std::string& name);
     const atcg::ref_ptr<Shader>& getShaderImpl(const std::string& name);
     void onUpdateImpl();
     static ShaderManager* s_instance;

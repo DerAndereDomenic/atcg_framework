@@ -44,6 +44,21 @@ void ShaderManager::addShaderFromNameImpl(const std::string& name)
     addShaderImpl(name, shader);
 }
 
+void ShaderManager::addComputeShaderFromNameImpl(const std::string& name)
+{
+    std::string compute_path = "shader/" + name + ".glsl";
+
+    if(!std::filesystem::exists(compute_path))
+    {
+        std::cerr << "Shader: " << name << " cannot be found!\n";
+        return;
+    }
+
+    atcg::ref_ptr<Shader> shader = atcg::make_ref<Shader>(compute_path);
+
+    addShaderImpl(name, shader);
+}
+
 const atcg::ref_ptr<Shader>& ShaderManager::getShaderImpl(const std::string& name)
 {
     return _shader[name];
