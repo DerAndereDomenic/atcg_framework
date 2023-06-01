@@ -12,6 +12,8 @@ uniform vec3 camera_pos;
 uniform vec3 camera_dir;
 uniform vec3 flat_color;
 
+uniform sampler3D noise_texture;
+
 struct HitInfo
 {
     bool hit;
@@ -19,10 +21,10 @@ struct HitInfo
     float tmax;
 };
 
-vec3 light_position = vec3(0,0,0);
-vec3 light_intensity = vec3(1,1,1)*100;
+uniform vec3 light_position;
+vec3 light_intensity = vec3(1,1,1);
 vec3 ambient = -log(1 - pow(vec3(76.0, 76.0, 128.0) / 255.0, vec3(2.4)));
-float sigma_s_base = 10.0;
+float sigma_s_base = 20;
 float sigma_a_base = 0.0;
 float g = 0.0;
 
@@ -33,13 +35,8 @@ float sigma_a(vec3 pos)
 
 float sigma_s(vec3 pos)
 {
-    float dist = length(pos);
-    if(dist > 1.0)
-    {
-        return 0;
-    }
-
-    return sigma_s_base * (1.0 - dist);
+    float noise = texture(noise_texture, (pos+1)/2).r;
+    return max(0.0, (0.2 - noise)) * sigma_s_base;
 }
 
 float sigma_t(vec3 pos)
