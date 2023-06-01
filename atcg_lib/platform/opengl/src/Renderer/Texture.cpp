@@ -79,4 +79,64 @@ void Texture2D::useForCompute(const uint32_t& slot) const
 {
     glBindImageTexture(slot, _ID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
 }
+
+atcg::ref_ptr<Texture3D> Texture3D::createColorTexture(uint32_t width, uint32_t height, uint32_t depth)
+{
+    atcg::ref_ptr<Texture3D> result = atcg::make_ref<Texture3D>();
+
+    result->_width  = width;
+    result->_height = height;
+    result->_depth  = depth;
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_3D, result->_ID);
+
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return result;
+}
+
+atcg::ref_ptr<Texture3D> Texture3D::createFloatTexture(uint32_t width, uint32_t height, uint32_t depth)
+{
+    atcg::ref_ptr<Texture3D> result = atcg::make_ref<Texture3D>();
+
+    result->_width  = width;
+    result->_height = height;
+    result->_depth  = depth;
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_3D, result->_ID);
+
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, width, height, depth, 0, GL_RED, GL_FLOAT, nullptr);
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return result;
+}
+
+Texture3D::~Texture3D()
+{
+    glDeleteTextures(1, &_ID);
+}
+
+void Texture3D::use(const uint32_t& slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_3D, _ID);
+}
+
+void Texture3D::useForCompute(const uint32_t& slot) const
+{
+    glBindImageTexture(slot, _ID, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R32F);
+}
 }    // namespace atcg
