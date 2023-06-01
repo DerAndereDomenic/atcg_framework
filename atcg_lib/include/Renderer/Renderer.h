@@ -171,7 +171,7 @@ public:
      *
      * @return The fbo
      */
-    static atcg::ref_ptr<Framebuffer> Renderer::getFramebuffer();
+    static atcg::ref_ptr<Framebuffer> getFramebuffer();
 
     /**
      * @brief Get a buffer representing the color attachement of the frame buffer.
