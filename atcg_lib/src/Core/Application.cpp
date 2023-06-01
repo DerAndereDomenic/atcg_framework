@@ -30,6 +30,7 @@ Application::Application()
     ShaderManager::addShaderFromName("screen");
     ShaderManager::addComputerShaderFromName("white_noise_2D");
     ShaderManager::addComputerShaderFromName("white_noise_3D");
+    ShaderManager::addComputerShaderFromName("worly_noise_2D");
 
     s_instance = this;
 

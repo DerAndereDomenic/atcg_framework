@@ -35,5 +35,21 @@ atcg::ref_ptr<Texture3D> createWhiteNoiseTexture3D(glm::ivec3 dim)
     return result;
 }
 
+atcg::ref_ptr<Texture2D> createWorleyNoiseTexture2D(glm::ivec2 dim, uint32_t num_points)
+{
+    atcg::ref_ptr<Shader> compute_shader = ShaderManager::getShader("worly_noise_2D");
+
+    atcg::ref_ptr<Texture2D> result = Texture2D::createFloatTexture(dim.x, dim.y);
+
+
+    // Use 8x8x1 = 64 thread sized work group
+    compute_shader->use();
+    compute_shader->setInt("num_points", num_points);
+    result->useForCompute();
+    compute_shader->dispatch(glm::ivec3(ceil(dim.x / 8), ceil(dim.y / 8), 1));
+
+    return result;
+}
+
 }    // namespace Noise
 }    // namespace atcg
