@@ -28,7 +28,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::CameraController>(aspect_ratio);
 
-        mesh = atcg::IO::read_mesh("res/cornell_box_radiosity.ply");
+        mesh = atcg::IO::read_mesh("res/cornell_box_radiosity.ply", true);
         mesh->uploadData();
 
         Eigen::MatrixX3f emission = Eigen::MatrixX3f::Zero(mesh->n_faces(), 3);

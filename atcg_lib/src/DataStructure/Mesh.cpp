@@ -137,10 +137,17 @@ Mesh::HalfedgeHandle Mesh::opposite_halfedge_handle(const Mesh::FaceHandle& fh, 
 
 namespace IO
 {
-atcg::ref_ptr<Mesh> read_mesh(const char* path)
+atcg::ref_ptr<Mesh> read_mesh(const char* path, bool colors)
 {
     atcg::ref_ptr<Mesh> mesh = atcg::make_ref<Mesh>();
-    OpenMesh::IO::read_mesh(*mesh.get(), path);
+    uint32_t flags           = OpenMesh::IO::Options::Default;
+    if(colors)
+    {
+        mesh->request_vertex_colors();
+        flags = flags | OpenMesh::IO::Options::Flag::VertexColor;
+    }
+    OpenMesh::IO::Options options(flags);
+    OpenMesh::IO::read_mesh(*mesh.get(), path, options);
     return mesh;
 }
 }    // namespace IO

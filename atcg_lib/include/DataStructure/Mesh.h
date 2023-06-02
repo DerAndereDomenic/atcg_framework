@@ -187,8 +187,9 @@ namespace IO
  * @brief Load a mesh
  *
  * @param path The path
+ * @param colors If vertex colors should be loaded
  * @returns The mesh
  */
-atcg::ref_ptr<Mesh> read_mesh(const char* path);
+atcg::ref_ptr<Mesh> read_mesh(const char* path, bool colors = false);
 }    // namespace IO
 }    // namespace atcg
