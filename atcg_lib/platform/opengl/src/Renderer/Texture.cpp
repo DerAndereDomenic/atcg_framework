@@ -4,12 +4,26 @@
 
 namespace atcg
 {
+
+void Texture::use(const uint32_t& slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(_target, _ID);
+}
+
+void Texture::useForCompute(const uint32_t& slot) const
+{
+    glBindImageTexture(slot, _ID, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R32F);
+}
+
 atcg::ref_ptr<Texture2D> Texture2D::createColorTexture(uint32_t width, uint32_t height)
 {
     atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
 
     result->_width  = width;
     result->_height = height;
+    result->_depth  = 1;
+    result->_target = GL_TEXTURE_2D;
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_2D, result->_ID);
@@ -30,6 +44,8 @@ atcg::ref_ptr<Texture2D> Texture2D::createDepthTexture(uint32_t width, uint32_t 
 
     result->_width  = width;
     result->_height = height;
+    result->_depth  = 1;
+    result->_target = GL_TEXTURE_2D;
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_2D, result->_ID);
@@ -50,6 +66,8 @@ atcg::ref_ptr<Texture2D> Texture2D::createFloatTexture(uint32_t width, uint32_t 
 
     result->_width  = width;
     result->_height = height;
+    result->_depth  = 1;
+    result->_target = GL_TEXTURE_2D;
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_2D, result->_ID);
@@ -69,17 +87,6 @@ Texture2D::~Texture2D()
     glDeleteTextures(1, &_ID);
 }
 
-void Texture2D::use(const uint32_t& slot) const
-{
-    glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_2D, _ID);
-}
-
-void Texture2D::useForCompute(const uint32_t& slot) const
-{
-    glBindImageTexture(slot, _ID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F);
-}
-
 atcg::ref_ptr<Texture3D> Texture3D::createColorTexture(uint32_t width, uint32_t height, uint32_t depth)
 {
     atcg::ref_ptr<Texture3D> result = atcg::make_ref<Texture3D>();
@@ -87,6 +94,7 @@ atcg::ref_ptr<Texture3D> Texture3D::createColorTexture(uint32_t width, uint32_t 
     result->_width  = width;
     result->_height = height;
     result->_depth  = depth;
+    result->_target = GL_TEXTURE_3D;
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_3D, result->_ID);
@@ -109,6 +117,7 @@ atcg::ref_ptr<Texture3D> Texture3D::createFloatTexture(uint32_t width, uint32_t 
     result->_width  = width;
     result->_height = height;
     result->_depth  = depth;
+    result->_target = GL_TEXTURE_3D;
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_3D, result->_ID);
@@ -129,14 +138,4 @@ Texture3D::~Texture3D()
     glDeleteTextures(1, &_ID);
 }
 
-void Texture3D::use(const uint32_t& slot) const
-{
-    glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_3D, _ID);
-}
-
-void Texture3D::useForCompute(const uint32_t& slot) const
-{
-    glBindImageTexture(slot, _ID, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R32F);
-}
 }    // namespace atcg
