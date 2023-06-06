@@ -7,6 +7,8 @@ layout (location = 0) out vec4 outColor;
 in vec3 frag_normal;
 in vec3 frag_pos;
 in vec3 frag_color;
+in vec3 bbox_max;
+in vec3 bbox_min;
 
 uniform vec3 camera_pos;
 uniform vec3 camera_dir;
@@ -53,8 +55,8 @@ HitInfo intersect(vec3 ray_origin, vec3 ray_dir)
     vec3 ray_invdir = 1.0 / ray_dir;
 
     vec3 bounds[2];
-    bounds[0] = vec3(-1,-1,-1);
-    bounds[1] = vec3(1,1,1);
+    bounds[0] = bbox_min;
+    bounds[1] = bbox_max;
 
     int signs[3];
     signs[0] = ray_dir.x < 0 ? 1 : 0;

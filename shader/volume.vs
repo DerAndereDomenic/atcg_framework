@@ -14,6 +14,8 @@ uniform int instanced;
 out vec3 frag_normal;
 out vec3 frag_pos;
 out vec3 frag_color;
+out vec3 bbox_max;
+out vec3 bbox_min;
 
 void main()
 {
@@ -21,4 +23,6 @@ void main()
     frag_pos = vec3(M * vec4(aPosition, 1));
     frag_normal = normalize(vec3(inverse(transpose(M)) * vec4(aNormal, 0)));
     frag_color = aColor * (instanced * aInstanceColor + (1 - instanced) * vec3(1));
+    bbox_max = vec3(M * vec4(1));
+    bbox_min = vec3(M * vec4(-1, -1, -1, 1));
 }
