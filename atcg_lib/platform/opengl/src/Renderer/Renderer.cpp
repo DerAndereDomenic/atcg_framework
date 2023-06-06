@@ -275,6 +275,11 @@ void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
                 ->drawVAO(vao, camera, color, ShaderManager::getShader("edge"), glm::mat4(1), GL_LINE_STRIP, 1e6);
         }
         break;
+        case ATCG_DRAW_MODE_EDGES_CYLINDER:
+        {
+            throw std::logic_error {"Not implemented"};
+        }
+        break;
     }
 }
 
@@ -324,6 +329,11 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
                                       mesh->n_vertices());
         }
         break;
+        case ATCG_DRAW_MODE_EDGES_CYLINDER:
+        {
+            throw std::logic_error {"Not implemented"};
+        }
+        break;
     }
 }
 
@@ -364,6 +374,11 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
         }
         break;
         case ATCG_DRAW_MODE_EDGES:
+        {
+            throw std::invalid_argument("PointCloud cannot be rendered as edges!");
+        }
+        break;
+        case ATCG_DRAW_MODE_EDGES_CYLINDER:
         {
             throw std::invalid_argument("PointCloud cannot be rendered as edges!");
         }
