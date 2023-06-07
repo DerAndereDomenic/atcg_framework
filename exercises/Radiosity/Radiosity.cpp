@@ -1,11 +1,11 @@
-#include <Renderer/Radiosity.h>
+#include "Radiosity.h"
 
 #include <glm/ext/scalar_constants.hpp>
 
 #include <nanort.h>
 
-namespace atcg
-{
+using namespace atcg;
+
 atcg::ref_ptr<Mesh> solve_radiosity(const atcg::ref_ptr<Mesh>& mesh, const Eigen::MatrixX3f& emission)
 {
     const glm::vec3* vertices = mesh->points();
@@ -127,4 +127,3 @@ atcg::ref_ptr<Mesh> solve_radiosity(const atcg::ref_ptr<Mesh>& mesh, const Eigen
     result->uploadData();
     return result;
 }
-}    // namespace atcg

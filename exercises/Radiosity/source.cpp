@@ -14,6 +14,8 @@
 
 #include <glm/gtx/transform.hpp>
 
+#include "Radiosity.h"
+
 class RadiosityLayer : public atcg::Layer
 {
 public:
@@ -42,9 +44,7 @@ public:
             }
         }
 
-        mesh = atcg::solve_radiosity(mesh, emission);
-
-        atcg::ShaderManager::addShaderFromName("volume");
+        mesh = solve_radiosity(mesh, emission);
     }
 
     // This gets called each frame
