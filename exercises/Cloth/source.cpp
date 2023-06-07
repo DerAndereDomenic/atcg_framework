@@ -1,0 +1,139 @@
+#include <iostream>
+
+#include <Core/EntryPoint.h>
+#include <ATCG.h>
+
+#include <glm/gtc/type_ptr.hpp>
+
+#include <glad/glad.h>
+
+#include <GLFW/glfw3.h>
+#include <imgui.h>
+#include <algorithm>
+#include <ImGuizmo.h>
+
+#include <glm/gtx/transform.hpp>
+
+class ClothLayer : public atcg::Layer
+{
+public:
+    ClothLayer(const std::string& name) : atcg::Layer(name) {}
+
+    // This is run at the start of the program
+    virtual void onAttach() override
+    {
+        const auto& window = atcg::Application::get()->getWindow();
+        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
+        camera_controller  = atcg::make_ref<atcg::CameraController>(aspect_ratio);
+
+        for(int i = 0; i < grid_size; ++i)
+        {
+            for(int j = 0; j < grid_size; ++j)
+            {
+                points.push_back(glm::vec3(-grid_size / 2 + j, -grid_size / 2 + i, 0.0f));
+            }
+        }
+
+        std::vector<uint32_t> grid;
+
+        for(int i = 0; i < grid_size; ++i)
+        {
+            for(int j = 0; j < grid_size; ++j)
+            {
+                for(int x = -1; x < 2; ++x)
+                {
+                    int dx = i + x;
+                    if(dx < 0 || dx >= grid_size) continue;
+                    grid.push_back(i + grid_size * j);
+                    grid.push_back(dx + grid_size * j);
+                }
+                for(int y = -1; y < 2; ++y)
+                {
+                    int dy = j + y;
+                    if(dy < 0 || dy >= grid_size) continue;
+                    grid.push_back(i + grid_size * j);
+                    grid.push_back(i + grid_size * dy);
+                }
+            }
+        }
+
+        points_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)points.data(), points.size() * sizeof(glm::vec3));
+
+        grid_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)grid.data(), grid.size() * sizeof(uint32_t));
+        grid_vbo->setLayout({{atcg::ShaderDataType::Int2, "aIndex"}});
+    }
+
+    // This gets called each frame
+    virtual void onUpdate(float delta_time) override
+    {
+        camera_controller->onUpdate(delta_time);
+
+        atcg::Renderer::clear();
+
+        time += delta_time;
+
+        for(int i = 0; i < grid_size; ++i)
+        {
+            for(int j = 0; j < grid_size; ++j)
+            {
+                points[i + grid_size * j].z = glm::sin(2.0f * glm::pi<float>() * (time) + j / 3.0f + i);
+            }
+        }
+
+        points_vbo->setData((void*)points.data(), sizeof(glm::vec3) * points.size());
+
+        atcg::Renderer::drawGrid(points_vbo, grid_vbo, camera_controller->getCamera(), glm::vec3(1));
+    }
+
+    virtual void onImGuiRender() override
+    {
+        ImGui::BeginMainMenuBar();
+
+        if(ImGui::BeginMenu("Rendering"))
+        {
+            ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+
+        if(show_render_settings)
+        {
+            ImGui::Begin("Settings", &show_render_settings);
+
+            ImGui::End();
+        }
+    }
+
+    // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
+    virtual void onEvent(atcg::Event* event) override
+    {
+        camera_controller->onEvent(event);
+
+        atcg::EventDispatcher dispatcher(event);
+    }
+
+private:
+    atcg::ref_ptr<atcg::CameraController> camera_controller;
+    atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
+    atcg::ref_ptr<atcg::VertexBuffer> grid_vbo;
+    std::vector<glm::vec3> points;
+    int32_t grid_size = 51;
+
+    float time = 0.0f;
+
+    bool show_render_settings = false;
+};
+
+class Cloth : public atcg::Application
+{
+public:
+    Cloth() : atcg::Application() { pushLayer(new ClothLayer("Layer")); }
+
+    ~Cloth() {}
+};
+
+atcg::Application* atcg::createApplication()
+{
+    return new Cloth;
+}
