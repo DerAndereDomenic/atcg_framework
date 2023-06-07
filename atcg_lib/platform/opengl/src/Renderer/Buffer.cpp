@@ -28,6 +28,11 @@ void VertexBuffer::use() const
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
 }
 
+void VertexBuffer::bindStorage(uint32_t slot) const
+{
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, slot, _ID);
+}
+
 void VertexBuffer::setData(const void* data, size_t size)
 {
     _size = size;
