@@ -46,20 +46,19 @@ public:
         {
             for(int j = 0; j < grid_size; ++j)
             {
-                for(int x = -1; x < 2; ++x)
+                int dx = i - 1;
+                if(!(dx < 0 || dx >= grid_size))
                 {
-                    int dx = i + x;
-                    if(dx < 0 || dx >= grid_size) continue;
                     grid.push_back(i + grid_size * j);
                     grid.push_back(dx + grid_size * j);
                     grid.push_back(distrib(gen));
                     grid.push_back(distrib(gen));
                     grid.push_back(distrib(gen));
                 }
-                for(int y = -1; y < 2; ++y)
+
+                int dy = j - 1;
+                if(!(dy < 0 || dy >= grid_size))
                 {
-                    int dy = j + y;
-                    if(dy < 0 || dy >= grid_size) continue;
                     grid.push_back(i + grid_size * j);
                     grid.push_back(i + grid_size * dy);
                     grid.push_back(distrib(gen));
