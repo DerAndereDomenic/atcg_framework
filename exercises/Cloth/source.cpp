@@ -28,13 +28,17 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::CameraController>(aspect_ratio);
 
+        std::vector<glm::vec3> host_points;
         for(int i = 0; i < grid_size; ++i)
         {
             for(int j = 0; j < grid_size; ++j)
             {
-                points.push_back(glm::vec3(-grid_size / 2 + j, -grid_size / 2 + i, 0.0f));
+                host_points.push_back(glm::vec3(-grid_size / 2 + j, -grid_size / 2 + i, 0.0f));
             }
         }
+
+        points = atcg::ref_ptr<glm::vec3>(host_points.size());
+        points.upload(host_points.data());
 
         std::vector<float> grid;
 
@@ -68,7 +72,7 @@ public:
             }
         }
 
-        points_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)points.data(), points.size() * sizeof(glm::vec3));
+        points_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)points.get(), points.size() * sizeof(glm::vec3));
 
         grid_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)grid.data(), grid.size() * sizeof(uint32_t));
         grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"}, {atcg::ShaderDataType::Float3, "aColor"}});
@@ -87,11 +91,11 @@ public:
         {
             for(int j = 0; j < grid_size; ++j)
             {
-                points[i + grid_size * j].z = glm::sin(2.0f * glm::pi<float>() * (time) + j / 3.0f + i);
+                points.get()[i + grid_size * j].z = glm::sin(2.0f * glm::pi<float>() * (time) + j / 3.0f + i);
             }
         }
 
-        points_vbo->setData((void*)points.data(), sizeof(glm::vec3) * points.size());
+        points_vbo->setData((void*)points.get(), sizeof(glm::vec3) * points.size());
 
         atcg::Renderer::drawGrid(points_vbo, grid_vbo, camera_controller->getCamera(), glm::vec3(1));
     }
@@ -128,7 +132,7 @@ private:
     atcg::ref_ptr<atcg::CameraController> camera_controller;
     atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
     atcg::ref_ptr<atcg::VertexBuffer> grid_vbo;
-    std::vector<glm::vec3> points;
+    atcg::ref_ptr<glm::vec3> points;
     int32_t grid_size = 51;
 
     float time = 0.0f;
