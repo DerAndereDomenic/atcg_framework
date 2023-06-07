@@ -174,7 +174,7 @@ public:
     /**
      * @brief Construct a new empty Vertex Buffer object
      *
-     * @param size The size of be allocated on the GPU
+     * @param size The size of bytes allocated on the GPU
      */
     VertexBuffer(size_t size);
 
@@ -218,9 +218,17 @@ public:
      */
     inline void setLayout(const BufferLayout& layout) { _layout = layout; }
 
+    /**
+     * @brief Get the size that is allocated in bytes
+     *
+     * @return The size
+     */
+    inline std::size_t size() const { return _size; }
+
 private:
     uint32_t _ID;
     BufferLayout _layout;
+    std::size_t _size;
 };
 
 /**

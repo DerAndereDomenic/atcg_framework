@@ -4,14 +4,14 @@
 
 namespace atcg
 {
-VertexBuffer::VertexBuffer(size_t size)
+VertexBuffer::VertexBuffer(size_t size) : _size(size)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 }
 
-VertexBuffer::VertexBuffer(const void* data, size_t size)
+VertexBuffer::VertexBuffer(const void* data, size_t size) : _size(size)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
@@ -30,6 +30,7 @@ void VertexBuffer::use() const
 
 void VertexBuffer::setData(const void* data, size_t size)
 {
+    _size = size;
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 }
