@@ -197,6 +197,13 @@ public:
     void use() const;
 
     /**
+     * @brief Bind the buffer as Shader Storage Buffer
+     *
+     * @param slot The slot to bind to
+     */
+    void bindStorage(uint32_t slot = 0) const;
+
+    /**
      * @brief Set the Data of the buffer
      *
      * @param data The data

@@ -33,6 +33,7 @@ public:
     atcg::ref_ptr<Framebuffer> screen_fbo;
 
     atcg::ref_ptr<Mesh> sphere_mesh;
+    atcg::ref_ptr<Mesh> cylinder_mesh;
 
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
 
@@ -78,6 +79,9 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     // Load a sphere
     sphere_mesh = atcg::IO::read_mesh("res/sphere_low.obj");
     sphere_mesh->uploadData();
+
+    cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj");
+    cylinder_mesh->uploadData();
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -275,11 +279,6 @@ void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
                 ->drawVAO(vao, camera, color, ShaderManager::getShader("edge"), glm::mat4(1), GL_LINE_STRIP, 1e6);
         }
         break;
-        case ATCG_DRAW_MODE_EDGES_CYLINDER:
-        {
-            throw std::logic_error {"Not implemented"};
-        }
-        break;
     }
 }
 
@@ -329,11 +328,6 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
                                       mesh->n_vertices());
         }
         break;
-        case ATCG_DRAW_MODE_EDGES_CYLINDER:
-        {
-            throw std::logic_error {"Not implemented"};
-        }
-        break;
     }
 }
 
@@ -374,11 +368,6 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
         }
         break;
         case ATCG_DRAW_MODE_EDGES:
-        {
-            throw std::invalid_argument("PointCloud cannot be rendered as edges!");
-        }
-        break;
-        case ATCG_DRAW_MODE_EDGES_CYLINDER:
         {
             throw std::invalid_argument("PointCloud cannot be rendered as edges!");
         }
@@ -434,6 +423,28 @@ void Renderer::drawCircle(const glm::vec3& position,
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
     else
         std::cerr << "Missing IndexBuffer!\n";
+}
+
+void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
+                        const atcg::ref_ptr<VertexBuffer>& indices,
+                        const atcg::ref_ptr<Camera>& camera,
+                        const glm::vec3& color)
+{
+    atcg::ref_ptr<VertexArray> vao_cylinder              = s_renderer->impl->cylinder_mesh->getVertexArray();
+    const std::vector<atcg::ref_ptr<VertexBuffer>>& vbos = vao_cylinder->getVertexBuffers();
+    if(vbos.size() == 1 || vbos.back() != indices) { vao_cylinder->addInstanceBuffer(indices); }
+    glm::mat4 model    = glm::mat4(1);    // glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
+    uint32_t num_edges = indices->size() / (sizeof(uint32_t) * 2);    // TODO
+    ShaderManager::getShader("cylinder_edge")->use();
+    points->bindStorage(0);
+    s_renderer->impl->drawVAO(vao_cylinder,
+                              camera,
+                              color,
+                              ShaderManager::getShader("cylinder_edge"),
+                              model,
+                              GL_TRIANGLES,
+                              s_renderer->impl->cylinder_mesh->n_vertices(),
+                              num_edges);
 }
 
 std::vector<uint8_t> Renderer::getFrame()

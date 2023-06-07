@@ -22,11 +22,10 @@ namespace atcg
  */
 enum DrawMode
 {
-    ATCG_DRAW_MODE_TRIANGLE,          // Draw as standard mesh
-    ATCG_DRAW_MODE_POINTS,            // Draw as points (screen space)
-    ATCG_DRAW_MODE_POINTS_SPHERE,     // Draw points as spheres
-    ATCG_DRAW_MODE_EDGES,             // Draw edges
-    ATCG_DRAW_MODE_EDGES_CYLINDER,    // Draw Edges as cylinder
+    ATCG_DRAW_MODE_TRIANGLE,         // Draw as standard mesh
+    ATCG_DRAW_MODE_POINTS,           // Draw as points (screen space)
+    ATCG_DRAW_MODE_POINTS_SPHERE,    // Draw points as spheres
+    ATCG_DRAW_MODE_EDGES,            // Draw edges
 };
 
 /**
@@ -166,6 +165,19 @@ public:
                            const float& radius,
                            const glm::vec3& color,
                            const atcg::ref_ptr<Camera>& camera = {});
+
+    /**
+     * @brief Draw a grid where each edge is modeled by a cylinder
+     *
+     * @param points A vertex buffer with points
+     * @param indices A vertex buffer storing the indices forming an edge (n x 2)
+     * @param camera The camera
+     * @param color The color
+     */
+    static void drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
+                         const atcg::ref_ptr<VertexBuffer>& indices,
+                         const atcg::ref_ptr<Camera>& camera = {},
+                         const glm::vec3& color              = glm::vec3(1));
 
     /**
      * @brief Get the framebuffer object that is used by the renderer

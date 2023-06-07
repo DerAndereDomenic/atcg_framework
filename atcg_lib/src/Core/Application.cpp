@@ -28,6 +28,7 @@ Application::Application()
     ShaderManager::addShaderFromName("circle");
     ShaderManager::addShaderFromName("grid");
     ShaderManager::addShaderFromName("screen");
+    ShaderManager::addShaderFromName("cylinder_edge");
     ShaderManager::addComputerShaderFromName("white_noise_2D");
     ShaderManager::addComputerShaderFromName("white_noise_3D");
     ShaderManager::addComputerShaderFromName("worly_noise_2D");
