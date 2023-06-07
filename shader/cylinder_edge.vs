@@ -5,7 +5,8 @@ layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec3 aColor;
 
 // Instance variables
-layout (location = 3) in ivec2 aEdge;
+layout (location = 3) in vec2 aEdge;
+layout (location = 4) in vec3 aEdgeColor;
 
 uniform mat4 M, V, P;
 uniform int instanced;
@@ -21,8 +22,8 @@ layout(std430, binding = 0) buffer points_layout
 
 void main()
 {
-    vec3 aInstanceStart = vec3(points[3*aEdge.x + 0], points[3*aEdge.x + 1], points[3*aEdge.x + 2]);
-    vec3 aInstanceEnd = vec3(points[3*aEdge.y + 0], points[3*aEdge.y + 1], points[3*aEdge.y + 2]);
+    vec3 aInstanceStart = vec3(points[3*int(aEdge.x) + 0], points[3*int(aEdge.x) + 1], points[3*int(aEdge.x) + 2]);
+    vec3 aInstanceEnd = vec3(points[3*int(aEdge.y) + 0], points[3*int(aEdge.y) + 1], points[3*int(aEdge.y) + 2]);
     vec3 axis = (aInstanceEnd - aInstanceStart);
     vec3 middle_point = aInstanceStart + axis/2.0;
 
@@ -44,5 +45,5 @@ void main()
     gl_Position = P * V * (M * model_edge * vec4(aPosition, 1));// + vec4(instanced * aInstanceStart, 0));
     frag_pos = vec3(M * vec4(aPosition, 1));
     frag_normal = normalize(vec3(inverse(transpose(M * model_edge)) * vec4(aNormal, 0)));
-    frag_color = aColor;
+    frag_color = aColor * aEdgeColor;
 }

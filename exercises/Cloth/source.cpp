@@ -14,6 +14,8 @@
 
 #include <glm/gtx/transform.hpp>
 
+#include <random>
+
 class ClothLayer : public atcg::Layer
 {
 public:
@@ -34,7 +36,11 @@ public:
             }
         }
 
-        std::vector<uint32_t> grid;
+        std::vector<float> grid;
+
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<float> distrib(0.0f, 1.0f);
 
         for(int i = 0; i < grid_size; ++i)
         {
@@ -46,6 +52,9 @@ public:
                     if(dx < 0 || dx >= grid_size) continue;
                     grid.push_back(i + grid_size * j);
                     grid.push_back(dx + grid_size * j);
+                    grid.push_back(distrib(gen));
+                    grid.push_back(distrib(gen));
+                    grid.push_back(distrib(gen));
                 }
                 for(int y = -1; y < 2; ++y)
                 {
@@ -53,6 +62,9 @@ public:
                     if(dy < 0 || dy >= grid_size) continue;
                     grid.push_back(i + grid_size * j);
                     grid.push_back(i + grid_size * dy);
+                    grid.push_back(distrib(gen));
+                    grid.push_back(distrib(gen));
+                    grid.push_back(distrib(gen));
                 }
             }
         }
@@ -60,7 +72,7 @@ public:
         points_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)points.data(), points.size() * sizeof(glm::vec3));
 
         grid_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)grid.data(), grid.size() * sizeof(uint32_t));
-        grid_vbo->setLayout({{atcg::ShaderDataType::Int2, "aIndex"}});
+        grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"}, {atcg::ShaderDataType::Float3, "aColor"}});
     }
 
     // This gets called each frame
