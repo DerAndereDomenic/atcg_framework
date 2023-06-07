@@ -29,14 +29,14 @@ public:
      *
      * @param delta_time Time since last frame
      */
-    void onUpdate(float delta_time);
+    virtual void onUpdate(float delta_time) = 0;
 
     /**
      * @brief Handles events
      *
      * @param e The event
      */
-    void onEvent(Event* e);
+    virtual void onEvent(Event* e) = 0;
 
     /**
      * @brief Get the Camera object
@@ -45,22 +45,44 @@ public:
      */
     inline const atcg::ref_ptr<PerspectiveCamera>& getCamera() const { return _camera; }
 
+protected:
+    atcg::ref_ptr<PerspectiveCamera> _camera;
+};
+
+class FocusedController : CameraController
+{
+public:
+    /**
+     * @brief Construct a new Focus Camera object
+     *
+     * @param aspect_ratio The aspect ratio of the camera
+     */
+    FocusedController(const float& aspect_ratio);
+
+    /**
+     * @brief Gets called every frame
+     *
+     * @param delta_time Time since last frame
+     */
+    virtual void onUpdate(float delta_time);
+
+    /**
+     * @brief Handles events
+     *
+     * @param e The event
+     */
+    virtual void onEvent(Event* e);
+
 private:
     bool onMouseZoom(MouseScrolledEvent* event);
     bool onWindowResize(WindowResizeEvent* event);
     bool onMouseMove(MouseMovedEvent* event);
 
-    // Adjustable only through here for now
-    struct CameraParameters
-    {
-        float zoom_speed     = 0.25f;
-        float rotation_speed = 0.005f;
-    };
-
     float _distance;
-    CameraParameters _parameters;
-    atcg::ref_ptr<PerspectiveCamera> _camera;
+    float _zoom_speed     = 0.25f;
+    float _rotation_speed = 0.005f;
     float _lastX = 0, _lastY = 0;
     float _currentX = 0, _currentY = 0;
 };
+
 }    // namespace atcg

@@ -15,10 +15,9 @@ namespace atcg
 CameraController::CameraController(const float& aspect_ratio)
 {
     _camera   = atcg::make_ref<PerspectiveCamera>(aspect_ratio, glm::vec3(0, 0, -1));
-    _distance = 1;
 }
 
-void CameraController::onUpdate(float delta_time)
+void FocusedController::onUpdate(float delta_time)
 {
     if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_3))
     {
@@ -27,8 +26,8 @@ void CameraController::onUpdate(float delta_time)
 
         if(offsetX != 0 || offsetY != 0)
         {
-            float pitchDelta = offsetY * /*delta_time */ _parameters.rotation_speed * _camera->getAspectRatio();
-            float yawDelta   = -offsetX * /*delta_time */ _parameters.rotation_speed;
+            float pitchDelta = offsetY * /*delta_time */ _rotation_speed * _camera->getAspectRatio();
+            float yawDelta   = -offsetX * /*delta_time */ _rotation_speed;
 
             glm::vec3 forward = glm::normalize(_camera->getPosition() - _camera->getLookAt());
 
@@ -48,8 +47,8 @@ void CameraController::onUpdate(float delta_time)
 
         if(offsetX != 0 || offsetY != 0)
         {
-            float yDelta = -offsetY * /*delta_time */ _parameters.rotation_speed * _camera->getAspectRatio();
-            float xDelta = -offsetX * /*delta_time */ _parameters.rotation_speed;
+            float yDelta = -offsetY * /*delta_time */ _rotation_speed * _camera->getAspectRatio();
+            float xDelta = -offsetX * /*delta_time */ _rotation_speed;
 
             glm::vec3 forward = glm::normalize(_camera->getPosition() - _camera->getLookAt());
 
@@ -67,7 +66,7 @@ void CameraController::onUpdate(float delta_time)
     _lastY = _currentY;
 }
 
-void CameraController::onEvent(Event* e)
+void FocusedController::onEvent(Event* e)
 {
     EventDispatcher dispatcher(e);
     dispatcher.dispatch<MouseScrolledEvent>(ATCG_BIND_EVENT_FN(CameraController::onMouseZoom));
@@ -75,25 +74,25 @@ void CameraController::onEvent(Event* e)
     dispatcher.dispatch<MouseMovedEvent>(ATCG_BIND_EVENT_FN(CameraController::onMouseMove));
 }
 
-bool CameraController::onMouseZoom(MouseScrolledEvent* event)
+bool FocusedController::onMouseZoom(MouseScrolledEvent* event)
 {
     float offset = event->getYOffset();
 
-    _distance *= glm::exp2(-offset * _parameters.zoom_speed);
+    _distance *= glm::exp2(-offset * _zoom_speed);
     glm::vec3 back_dir = glm::normalize(_camera->getPosition() - _camera->getLookAt());
     _camera->setPosition(_camera->getLookAt() + back_dir * _distance);
 
     return false;
 }
 
-bool CameraController::onWindowResize(WindowResizeEvent* event)
+bool FocusedController::onWindowResize(WindowResizeEvent* event)
 {
     float aspect_ratio = (float)event->getWidth() / (float)event->getHeight();
     _camera->setAspectRatio(aspect_ratio);
     return false;
 }
 
-bool CameraController::onMouseMove(MouseMovedEvent* event)
+bool FocusedController::onMouseMove(MouseMovedEvent* event)
 {
     _currentX = event->getX();
     _currentY = event->getY();
