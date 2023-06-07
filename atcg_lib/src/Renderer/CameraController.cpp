@@ -20,7 +20,7 @@ CameraController::CameraController(const float& aspect_ratio)
 
 void CameraController::onUpdate(float delta_time)
 {
-    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_1))
+    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_3))
     {
         float offsetX = _lastX - _currentX;
         float offsetY = _lastY - _currentY;
