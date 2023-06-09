@@ -232,6 +232,13 @@ public:
      */
     inline std::size_t size() const { return _size; }
 
+    /**
+     * @brief Get the internal rendering ID of this buffer
+     *
+     * @return The renderer ID
+     */
+    inline uint32_t ID() const { return _ID; }
+
 private:
     uint32_t _ID;
     BufferLayout _layout;
