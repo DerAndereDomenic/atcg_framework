@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+#include <Core/Memory.h>
+
 namespace atcg
 {
 /**
@@ -193,11 +195,15 @@ public:
 
     /**
      * @brief Use this vbo
+     *
+     * @note Invalidades the device pointer obtained by "getData"
      */
     void use() const;
 
     /**
      * @brief Bind the buffer as Shader Storage Buffer
+     *
+     * @note Invalidades the device pointer obtained by "getData"
      *
      * @param slot The slot to bind to
      */
@@ -206,10 +212,24 @@ public:
     /**
      * @brief Set the Data of the buffer
      *
+     * @note Invalidades the device pointer obtained by "getData"
+     *
      * @param data The data
      * @param size The size
      */
     void setData(const void* data, size_t size);
+
+    /**
+     * @brief Get the underlying data as a device pointer.
+     * This only returns a valid device pointer if the CUDA backend is enabled. Otherwise this returns nullptr.
+     *
+     * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
+     * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
+     * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
+     *
+     * @return The pointer
+     */
+    void* getData() const;
 
     /**
      * @brief Get the Layout
@@ -240,6 +260,8 @@ public:
     inline uint32_t ID() const { return _ID; }
 
 private:
+    class Impl;
+    atcg::scope_ptr<Impl> impl;
     uint32_t _ID;
     BufferLayout _layout;
     std::size_t _size;
