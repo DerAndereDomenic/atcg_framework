@@ -14,8 +14,6 @@
 
 #include <glm/gtx/transform.hpp>
 
-#include <cuda_gl_interop.h>
-
 #include <random>
 
 #include "kernels.h"
