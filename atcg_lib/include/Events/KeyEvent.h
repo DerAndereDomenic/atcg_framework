@@ -24,6 +24,7 @@ public:
     KeyPressedEvent(const int32_t keycode, bool isRepeat = false) : KeyEvent(keycode), _is_repeat(isRepeat) {}
 
     bool IsRepeat() const { return _is_repeat; }
+    int32_t getCode() const { return _keycode; }
 
     std::string toString() const override
     {

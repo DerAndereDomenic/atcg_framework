@@ -3,6 +3,7 @@
 #include <Renderer/PerspectiveCamera.h>
 #include <Events/Event.h>
 #include <Events/MouseEvent.h>
+#include <Events/KeyEvent.h>
 #include <Events/WindowEvent.h>
 
 #include <Core/Memory.h>
@@ -100,14 +101,30 @@ public:
      *
      * @param delta_time Time since last frame
      */
-    virtual void onUpdate(float delta_time){};
+    virtual void onUpdate(float delta_time);
 
     /**
      * @brief Handles events
      *
      * @param e The event
      */
-    virtual void onEvent(Event* e){};
+    virtual void onEvent(Event* e);
+
+private:
+    bool onWindowResize(WindowResizeEvent* event);
+    bool onMouseMove(MouseMovedEvent* event);
+    bool onKeyPressed(KeyPressedEvent* event);
+
+    float _speed = 1.0f;
+    float _velocity_forward = 0.0f;
+    float _velocity_right = 0.0f;
+    float _velocity_up = 0.0f;
+    float _velocity_threshold = 0.005f;
+    float _max_velocity = 0.1f;
+    float _acceleration = 0.004f;
+    float _rotation_speed = 0.005f;
+    float _lastX = 0, _lastY = 0;
+    float _currentX = 0, _currentY = 0;
 };
 
 }    // namespace atcg
