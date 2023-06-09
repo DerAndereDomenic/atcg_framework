@@ -68,6 +68,7 @@ if(ATCG_CUDA_BACKEND)
     include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
+    string(APPEND CUDA_LIBRARIES "cudart_static")
 endif()
 
 include_directories(atcg_lib/include
@@ -102,7 +103,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
         OpenGL::GL
         OpenMeshCore
         OpenMeshTools
-        cudart_static
+        ${CUDA_LIBRARIES}
     )
 
 	if(MSVC)
