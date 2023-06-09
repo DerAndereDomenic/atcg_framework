@@ -14,6 +14,8 @@
 
 #include <glm/gtx/transform.hpp>
 
+#include <cuda_gl_interop.h>
+
 #include <random>
 
 #include "kernels.h"
@@ -38,9 +40,6 @@ public:
                 host_points.push_back(glm::vec3(-grid_size / 2 + j, -grid_size / 2 + i, 0.0f));
             }
         }
-
-        points = atcg::ref_ptr<glm::vec3, atcg::device_allocator>(host_points.size());
-        points.upload(host_points.data());
 
         std::vector<float> grid;
 
@@ -79,32 +78,29 @@ public:
 
         grid_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)grid.data(), grid.size() * sizeof(uint32_t));
         grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"}, {atcg::ShaderDataType::Float3, "aColor"}});
+
+        atcg::cudaSafeCall(cudaGraphicsGLRegisterBuffer(&resource, points_vbo->ID(), cudaGraphicsRegisterFlagsNone));
     }
 
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
-        ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
+        // ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
         camera_controller->onUpdate(delta_time);
 
         atcg::Renderer::clear();
 
         time += delta_time;
 
-        /*for(int i = 0; i < grid_size; ++i)
-        {
-            for(int j = 0; j < grid_size; ++j)
-            {
-                points.get()[i + grid_size * j].z = glm::sin(2.0f * glm::pi<float>() * (time) + j / 3.0f + i);
-            }
-        }*/
+        atcg::cudaSafeCall(cudaGraphicsMapResources(1, &resource));
 
-        simulate(points, time);
+        glm::vec3* dev_ptr;
+        std::size_t size;
+        atcg::cudaSafeCall(cudaGraphicsResourceGetMappedPointer((void**)&dev_ptr, &size, resource));
 
-        std::vector<glm::vec3> host_points(grid_size * grid_size);
-        points.download(host_points.data());
+        simulate(dev_ptr, grid_size * grid_size, time);
 
-        points_vbo->setData((void*)host_points.data(), sizeof(glm::vec3) * host_points.size());
+        atcg::cudaSafeCall(cudaGraphicsUnmapResources(1, &resource));
 
         atcg::Renderer::drawGrid(points_vbo, grid_vbo, camera_controller->getCamera(), glm::vec3(1));
     }
@@ -141,8 +137,9 @@ private:
     atcg::ref_ptr<atcg::CameraController> camera_controller;
     atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
     atcg::ref_ptr<atcg::VertexBuffer> grid_vbo;
-    atcg::ref_ptr<glm::vec3, atcg::device_allocator> points;
     int32_t grid_size = 51;
+
+    cudaGraphicsResource* resource;
 
     float time = 0.0f;
 

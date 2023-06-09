@@ -16,10 +16,10 @@ __global__ void simulate(glm::vec3* points, float time, uint32_t n_points)
 }
 }    // namespace detail
 
-void simulate(const atcg::ref_ptr<glm::vec3, atcg::device_allocator>& points, float time)
+void simulate(glm::vec3* points, uint32_t size, float time)
 {
     uint32_t threads = 128;
-    uint32_t blocks  = glm::ceil((float)points.size() / (float)threads);
-    detail::simulate<<<blocks, threads>>>(points.get(), time, points.size());
+    uint32_t blocks  = glm::ceil((float)size / (float)threads);
+    detail::simulate<<<blocks, threads>>>(points, time, size);
     cudaDeviceSynchronize();
 }
