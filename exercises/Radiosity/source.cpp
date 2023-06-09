@@ -28,7 +28,7 @@ public:
         // atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::CameraController>(aspect_ratio);
+        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
         mesh = atcg::IO::read_mesh("res/cornell_box_radiosity.ply", true);
         mesh->uploadData();
@@ -84,7 +84,7 @@ public:
     virtual void onEvent(atcg::Event* event) override { camera_controller->onEvent(event); }
 
 private:
-    atcg::ref_ptr<atcg::CameraController> camera_controller;
+    atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Mesh> mesh;
 
     bool show_render_settings = false;

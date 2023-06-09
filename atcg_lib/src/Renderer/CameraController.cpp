@@ -14,12 +14,15 @@ namespace atcg
 {
 CameraController::CameraController(const float& aspect_ratio)
 {
-    _camera   = atcg::make_ref<PerspectiveCamera>(aspect_ratio, glm::vec3(0, 0, -1));
+    _camera = atcg::make_ref<PerspectiveCamera>(aspect_ratio, glm::vec3(0, 0, -1));
 }
+
+
+FocusedController::FocusedController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
 
 void FocusedController::onUpdate(float delta_time)
 {
-    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_3))
+    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_MIDDLE))
     {
         float offsetX = _lastX - _currentX;
         float offsetY = _lastY - _currentY;
@@ -40,7 +43,7 @@ void FocusedController::onUpdate(float delta_time)
             _camera->setPosition(_camera->getLookAt() + _distance * forward);
         }
     }
-    else if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_2))
+    else if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
     {
         float offsetX = _lastX - _currentX;
         float offsetY = _lastY - _currentY;
@@ -69,9 +72,9 @@ void FocusedController::onUpdate(float delta_time)
 void FocusedController::onEvent(Event* e)
 {
     EventDispatcher dispatcher(e);
-    dispatcher.dispatch<MouseScrolledEvent>(ATCG_BIND_EVENT_FN(CameraController::onMouseZoom));
-    dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(CameraController::onWindowResize));
-    dispatcher.dispatch<MouseMovedEvent>(ATCG_BIND_EVENT_FN(CameraController::onMouseMove));
+    dispatcher.dispatch<MouseScrolledEvent>(ATCG_BIND_EVENT_FN(FocusedController::onMouseZoom));
+    dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(FocusedController::onWindowResize));
+    dispatcher.dispatch<MouseMovedEvent>(ATCG_BIND_EVENT_FN(FocusedController::onMouseMove));
 }
 
 bool FocusedController::onMouseZoom(MouseScrolledEvent* event)
@@ -99,4 +102,7 @@ bool FocusedController::onMouseMove(MouseMovedEvent* event)
 
     return false;
 }
+
+
+FirstPersonController::FirstPersonController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
 }    // namespace atcg

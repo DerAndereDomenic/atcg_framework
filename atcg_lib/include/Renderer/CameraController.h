@@ -49,7 +49,7 @@ protected:
     atcg::ref_ptr<PerspectiveCamera> _camera;
 };
 
-class FocusedController : CameraController
+class FocusedController : public CameraController
 {
 public:
     /**
@@ -78,11 +78,36 @@ private:
     bool onWindowResize(WindowResizeEvent* event);
     bool onMouseMove(MouseMovedEvent* event);
 
-    float _distance;
-    float _zoom_speed     = 0.25f;
+    float _distance = 1.0f;
+    float _zoom_speed = 0.25f;
     float _rotation_speed = 0.005f;
     float _lastX = 0, _lastY = 0;
     float _currentX = 0, _currentY = 0;
+};
+
+class FirstPersonController : public CameraController
+{
+public:
+    /**
+     * @brief Construct a new First Person Camera object
+     *
+     * @param aspect_ratio The aspect ratio of the camera
+     */
+    FirstPersonController(const float& aspect_ratio);
+
+    /**
+     * @brief Gets called every frame
+     *
+     * @param delta_time Time since last frame
+     */
+    virtual void onUpdate(float delta_time){};
+
+    /**
+     * @brief Handles events
+     *
+     * @param e The event
+     */
+    virtual void onEvent(Event* e){};
 };
 
 }    // namespace atcg
