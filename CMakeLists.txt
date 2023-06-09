@@ -102,6 +102,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
         OpenGL::GL
         OpenMeshCore
         OpenMeshTools
+        cudart_static
     )
 
 	if(MSVC)
