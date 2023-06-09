@@ -16,6 +16,8 @@
 
 #include <random>
 
+#include "kernels.h"
+
 class ClothLayer : public atcg::Layer
 {
 public:
@@ -37,7 +39,7 @@ public:
             }
         }
 
-        points = atcg::ref_ptr<glm::vec3>(host_points.size());
+        points = atcg::ref_ptr<glm::vec3, atcg::device_allocator>(host_points.size());
         points.upload(host_points.data());
 
         std::vector<float> grid;
@@ -72,7 +74,8 @@ public:
             }
         }
 
-        points_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)points.get(), points.size() * sizeof(glm::vec3));
+        points_vbo =
+            atcg::make_ref<atcg::VertexBuffer>((void*)host_points.data(), host_points.size() * sizeof(glm::vec3));
 
         grid_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)grid.data(), grid.size() * sizeof(uint32_t));
         grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"}, {atcg::ShaderDataType::Float3, "aColor"}});
@@ -81,21 +84,27 @@ public:
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
+        ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
         camera_controller->onUpdate(delta_time);
 
         atcg::Renderer::clear();
 
         time += delta_time;
 
-        for(int i = 0; i < grid_size; ++i)
+        /*for(int i = 0; i < grid_size; ++i)
         {
             for(int j = 0; j < grid_size; ++j)
             {
                 points.get()[i + grid_size * j].z = glm::sin(2.0f * glm::pi<float>() * (time) + j / 3.0f + i);
             }
-        }
+        }*/
 
-        points_vbo->setData((void*)points.get(), sizeof(glm::vec3) * points.size());
+        simulate(points, time);
+
+        std::vector<glm::vec3> host_points(grid_size * grid_size);
+        points.download(host_points.data());
+
+        points_vbo->setData((void*)host_points.data(), sizeof(glm::vec3) * host_points.size());
 
         atcg::Renderer::drawGrid(points_vbo, grid_vbo, camera_controller->getCamera(), glm::vec3(1));
     }
@@ -132,7 +141,7 @@ private:
     atcg::ref_ptr<atcg::CameraController> camera_controller;
     atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
     atcg::ref_ptr<atcg::VertexBuffer> grid_vbo;
-    atcg::ref_ptr<glm::vec3> points;
+    atcg::ref_ptr<glm::vec3, atcg::device_allocator> points;
     int32_t grid_size = 51;
 
     float time = 0.0f;
