@@ -3,7 +3,10 @@
 #include <glad/glad.h>
 
 #include <Core/CUDA.h>
-#include <cuda_gl_interop.h>
+
+#ifdef ATCG_CUDA_BACKEND
+    #include <cuda_gl_interop.h>
+#endif
 
 namespace atcg
 {
@@ -83,6 +86,10 @@ VertexBuffer::VertexBuffer(const void* data, size_t size) : _size(size)
 
 VertexBuffer::~VertexBuffer()
 {
+    impl->unmapResource();
+#ifdef ATCG_CUDA_BACKEND
+    atcg::cudaSafeCall(cudaGraphicsUnregisterResource(impl->resource));
+#endif
     glDeleteBuffers(1, &_ID);
 }
 
