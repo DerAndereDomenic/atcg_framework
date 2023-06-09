@@ -9,10 +9,11 @@ int main(int argc, char** argv)
     atcg::Application* app = atcg::createApplication();
     app->run();
 
-    delete app;
-
-    atcg::ShaderManager::destroy();
-    atcg::Renderer::destroy();
+    {
+        atcg::ShaderManager::destroy();
+        atcg::Renderer::destroy();
+        delete app;
+    }
 
     atcg::host_allocator alloc_host;
     std::size_t host_bytes_allocated   = alloc_host.bytes_allocated;

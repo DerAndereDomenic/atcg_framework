@@ -74,9 +74,9 @@ private:
 
 private:
     bool _running = false;
-    LayerStack _layer_stack;
-    ImGuiLayer* _imgui_layer;
     atcg::scope_ptr<Window> _window;
+    ImGuiLayer* _imgui_layer;
+    LayerStack _layer_stack;
 
     friend int ::main(int argc, char** argv);
     friend int ::entry_point(atcg::Layer* layer);    // Entry point for python bindings
