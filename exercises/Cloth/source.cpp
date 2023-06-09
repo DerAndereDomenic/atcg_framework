@@ -78,8 +78,6 @@ public:
 
         grid_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)grid.data(), grid.size() * sizeof(uint32_t));
         grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"}, {atcg::ShaderDataType::Float3, "aColor"}});
-
-        atcg::cudaSafeCall(cudaGraphicsGLRegisterBuffer(&resource, points_vbo->ID(), cudaGraphicsRegisterFlagsNone));
     }
 
     // This gets called each frame
@@ -92,15 +90,9 @@ public:
 
         time += delta_time;
 
-        atcg::cudaSafeCall(cudaGraphicsMapResources(1, &resource));
-
-        glm::vec3* dev_ptr;
-        std::size_t size;
-        atcg::cudaSafeCall(cudaGraphicsResourceGetMappedPointer((void**)&dev_ptr, &size, resource));
+        glm::vec3* dev_ptr = reinterpret_cast<glm::vec3*>(points_vbo->getData());
 
         simulate(dev_ptr, grid_size * grid_size, time);
-
-        atcg::cudaSafeCall(cudaGraphicsUnmapResources(1, &resource));
 
         atcg::Renderer::drawGrid(points_vbo, grid_vbo, camera_controller->getCamera(), glm::vec3(1));
     }
@@ -138,8 +130,6 @@ private:
     atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
     atcg::ref_ptr<atcg::VertexBuffer> grid_vbo;
     int32_t grid_size = 51;
-
-    cudaGraphicsResource* resource;
 
     float time = 0.0f;
 
