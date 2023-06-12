@@ -26,7 +26,7 @@ public:
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::CameraController>(aspect_ratio);
+        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
         sphere = atcg::IO::read_mesh("res/cube.obj");
         sphere->uploadData();
@@ -122,7 +122,7 @@ public:
     }
 
 private:
-    atcg::ref_ptr<atcg::CameraController> camera_controller;
+    atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Mesh> sphere;
 
     atcg::ref_ptr<atcg::Texture3D> noise_texture;

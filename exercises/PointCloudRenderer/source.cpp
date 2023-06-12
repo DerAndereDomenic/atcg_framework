@@ -23,7 +23,7 @@ public:
         atcg::Renderer::setPointSize(2.0f);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::CameraController>(aspect_ratio);
+        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
         depth_values.resize(search_radius * search_radius);
 
@@ -145,7 +145,7 @@ public:
         // Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::CameraController>(aspect_ratio);
+        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
         return true;
     }
@@ -162,7 +162,7 @@ private:
     using CloudList = std::vector<std::pair<atcg::ref_ptr<atcg::PointCloud>, bool>>;
 
     CloudList clouds;
-    atcg::ref_ptr<atcg::CameraController> camera_controller;
+    atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Mesh> sphere;
     std::vector<glm::vec3> sphere_pos;
 
