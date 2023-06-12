@@ -10,6 +10,7 @@ layout (location = 4) in vec3 aEdgeColor;
 
 uniform mat4 M, V, P;
 uniform int instanced;
+uniform float radius;
 
 out vec3 frag_normal;
 out vec3 frag_pos;
@@ -27,7 +28,7 @@ void main()
     vec3 axis = (aInstanceEnd - aInstanceStart);
     vec3 middle_point = aInstanceStart + axis/2.0;
 
-    mat4 model_scale = mat4(0.1);
+    mat4 model_scale = mat4(radius);
     model_scale[1].y = length(axis)/2.0;
     model_scale[3].w = 1;
 
@@ -43,7 +44,7 @@ void main()
     mat4 model_edge = model_translate * model_rotation * model_scale;
 
     gl_Position = P * V * (M * model_edge * vec4(aPosition, 1));// + vec4(instanced * aInstanceStart, 0));
-    frag_pos = vec3(M * vec4(aPosition, 1));
+    frag_pos = vec3(M * model_edge * vec4(aPosition, 1));
     frag_normal = normalize(vec3(inverse(transpose(M * model_edge)) * vec4(aNormal, 0)));
     frag_color = aColor * aEdgeColor;
 }

@@ -427,6 +427,7 @@ void Renderer::drawCircle(const glm::vec3& position,
 
 void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
                         const atcg::ref_ptr<VertexBuffer>& indices,
+                        const float radius,
                         const atcg::ref_ptr<Camera>& camera,
                         const glm::vec3& color)
 {
@@ -437,10 +438,13 @@ void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
     uint32_t num_edges = indices->size() / (sizeof(uint32_t) * 2);    // TODO
     ShaderManager::getShader("cylinder_edge")->use();
     points->bindStorage(0);
+    const atcg::ref_ptr<atcg::Shader>& shader = ShaderManager::getShader("cylinder_edge");
+    shader->use();
+    shader->setFloat("radius", radius);
     s_renderer->impl->drawVAO(vao_cylinder,
                               camera,
                               color,
-                              ShaderManager::getShader("cylinder_edge"),
+                              shader,
                               model,
                               GL_TRIANGLES,
                               s_renderer->impl->cylinder_mesh->n_vertices(),

@@ -92,7 +92,7 @@ public:
 
         simulate(dev_ptr, grid_size * grid_size, time);
 
-        atcg::Renderer::drawGrid(points_vbo, grid_vbo, camera_controller->getCamera(), glm::vec3(1));
+        atcg::Renderer::drawGrid(points_vbo, grid_vbo, 0.1f, camera_controller->getCamera(), glm::vec3(1));
     }
 
     virtual void onImGuiRender() override
