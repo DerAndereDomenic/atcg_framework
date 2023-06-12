@@ -28,19 +28,19 @@ constexpr bool cuda_available()
 }    // namespace atcg
 
     #ifdef NDEBUG
-        #define cudaSafeCall(val) val
+        #define CUDA_SAFE_CALL(val) val
     #else
-        #define cudaSafeCall(val) atcg::check((val), #val, __FILE__, __LINE__)
+        #define CUDA_SAFE_CALL(val) atcg::check((val), #val, __FILE__, __LINE__)
     #endif
 
-    #define setDevice(dev)     cudaSafeCall(cudaSetDevice(dev))
-    #define setDefaultDevice() setDevice(0)
+    #define SET_DEVICE(dev)      CUDA_SAFE_CALL(cudaSetDevice(dev))
+    #define SET_DEFAULT_DEVICE() SET_DEVICE(0)
 
-    #define synchronizeDefaultStream() cudaSafeCall(cudaDeviceSynchronize())
-    #define ATCG_HOST                  __host__
-    #define ATCG_DEVICE                __device__
-    #define ATCG_HOST_DEVICE           __host__ __device__
-    #define ATCG_GLOBAL                __global__
+    #define SYNCHRONIZE_DEFAULT_STREAM() CUDA_SAFE_CALL(cudaDeviceSynchronize())
+    #define ATCG_HOST                    __host__
+    #define ATCG_DEVICE                  __device__
+    #define ATCG_HOST_DEVICE             __host__ __device__
+    #define ATCG_GLOBAL                  __global__
 #else
 namespace atcg
 {

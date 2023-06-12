@@ -43,14 +43,14 @@ VertexBuffer::Impl::~Impl() {}
 void VertexBuffer::Impl::initResource(uint32_t ID)
 {
 #ifdef ATCG_CUDA_BACKEND
-    cudaSafeCall(cudaGraphicsGLRegisterBuffer(&resource, ID, cudaGraphicsRegisterFlagsNone));
+    CUDA_SAFE_CALL(cudaGraphicsGLRegisterBuffer(&resource, ID, cudaGraphicsRegisterFlagsNone));
 #endif
 }
 
 void VertexBuffer::Impl::mapResource()
 {
 #ifdef ATCG_CUDA_BACKEND
-    cudaSafeCall(cudaGraphicsMapResources(1, &resource));
+    CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &resource));
     mapped = true;
 #endif
 }
@@ -60,7 +60,7 @@ void VertexBuffer::Impl::unmapResource()
 #ifdef ATCG_CUDA_BACKEND
     if(mapped)
     {
-        cudaSafeCall(cudaGraphicsUnmapResources(1, &resource));
+        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource));
         mapped = false;
     }
 #endif
@@ -88,7 +88,7 @@ VertexBuffer::~VertexBuffer()
 {
     impl->unmapResource();
 #ifdef ATCG_CUDA_BACKEND
-    cudaSafeCall(cudaGraphicsUnregisterResource(impl->resource));
+    CUDA_SAFE_CALL(cudaGraphicsUnregisterResource(impl->resource));
 #endif
     glDeleteBuffers(1, &_ID);
 }
@@ -119,7 +119,7 @@ void* VertexBuffer::getData() const
     void* dev_ptr = nullptr;
     std::size_t size;
 #ifdef ATCG_CUDA_BACKEND
-    cudaSafeCall(cudaGraphicsResourceGetMappedPointer((void**)&dev_ptr, &size, impl->resource));
+    CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer((void**)&dev_ptr, &size, impl->resource));
 #endif
     return dev_ptr;
 }

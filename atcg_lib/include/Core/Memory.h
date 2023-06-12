@@ -91,7 +91,7 @@ struct device_allocator
     {
         bytes_allocated += n;
         void* ptr;
-        cudaSafeCall(cudaMalloc((void**)&ptr, n));
+        CUDA_SAFE_CALL(cudaMalloc((void**)&ptr, n));
         return ptr;
     }
 
@@ -114,7 +114,7 @@ struct device_allocator
      */
     void memcpy_host2host(void* dst, const void* src, std::size_t n)
     {
-        cudaSafeCall(cudaMemcpy(dst, src, n, cudaMemcpyHostToHost));
+        CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyHostToHost));
     }
 
     /**
@@ -125,7 +125,7 @@ struct device_allocator
      */
     void memcpy_dev2host(void* dst, const void* src, std::size_t n)
     {
-        cudaSafeCall(cudaMemcpy(dst, src, n, cudaMemcpyDeviceToHost));
+        CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDeviceToHost));
     }
 
     /**
@@ -136,7 +136,7 @@ struct device_allocator
      */
     void memcpy_host2dev(void* dst, const void* src, std::size_t n)
     {
-        cudaSafeCall(cudaMemcpy(dst, src, n, cudaMemcpyHostToDevice));
+        CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyHostToDevice));
     }
 
     /**
@@ -147,7 +147,7 @@ struct device_allocator
      */
     void memcpy_dev2dev(void* dst, const void* src, std::size_t n)
     {
-        cudaSafeCall(cudaMemcpy(dst, src, n, cudaMemcpyDeviceToDevice));
+        CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDeviceToDevice));
     }
 
     static std::size_t bytes_allocated;
