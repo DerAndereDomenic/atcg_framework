@@ -4,7 +4,7 @@ namespace atcg
 {
 namespace detail
 {
-int32_t double_factorial(const int32_t& m)
+inline int32_t double_factorial(const int32_t& m)
 {
     int32_t res = 1;
     for(int32_t i = 0; i <= m; ++i) { res *= (2 * i - 1); }
