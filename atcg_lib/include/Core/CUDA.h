@@ -21,27 +21,26 @@ inline void check(cudaError_t error, char const* const func, const char* const f
     }
 }
 
+constexpr bool cuda_available()
+{
+    return true;
+}
+}    // namespace atcg
+
     #ifdef NDEBUG
         #define cudaSafeCall(val) val
     #else
-        #define cudaSafeCall(val) check((val), #val, __FILE__, __LINE__)
+        #define cudaSafeCall(val) atcg::check((val), #val, __FILE__, __LINE__)
     #endif
 
     #define setDevice(dev)     cudaSafeCall(cudaSetDevice(dev))
     #define setDefaultDevice() setDevice(0)
 
     #define synchronizeDefaultStream() cudaSafeCall(cudaDeviceSynchronize())
-
-constexpr bool cuda_available()
-{
-    return true;
-}
-
-    #define ATCG_HOST        __host__
-    #define ATCG_DEVICE      __device__
-    #define ATCG_HOST_DEVICE __host__ __device__
-    #define ATCG_GLOBAL      __global__
-
+    #define ATCG_HOST                  __host__
+    #define ATCG_DEVICE                __device__
+    #define ATCG_HOST_DEVICE           __host__ __device__
+    #define ATCG_GLOBAL                __global__
 #else
 namespace atcg
 {
@@ -49,6 +48,7 @@ constexpr bool cuda_available()
 {
     return false;
 }
+}    // namespace atcg
 
     #define ATCG_HOST
     #define ATCG_DEVICE
@@ -56,4 +56,3 @@ constexpr bool cuda_available()
     #define ATCG_GLOBAL
 
 #endif
-}    // namespace atcg

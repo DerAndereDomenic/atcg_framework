@@ -21,5 +21,5 @@ void simulate(glm::vec3* points, uint32_t size, float time)
     uint32_t threads = 128;
     uint32_t blocks  = glm::ceil((float)size / (float)threads);
     detail::simulate<<<blocks, threads>>>(points, time, size);
-    cudaDeviceSynchronize();
+    synchronizeDefaultStream();
 }
