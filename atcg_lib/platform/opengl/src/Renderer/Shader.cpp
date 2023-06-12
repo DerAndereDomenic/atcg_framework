@@ -189,34 +189,76 @@ void Shader::use() const
     glUseProgram(_ID);
 }
 
-void Shader::setInt(const std::string& name, const int& value)
+template<typename T>
+void Shader::setValue(const std::string& name, const T& value)
+{
+    throw std::invalid_argument("Shader Set not implemented for this datatype!");
+}
+
+template<>
+void Shader::setValue<int>(const std::string& name, const int& value)
 {
     glUniform1i(glGetUniformLocation(_ID, name.c_str()), value);
 }
 
-void Shader::setFloat(const std::string& name, const float& value)
+template<>
+void Shader::setValue<float>(const std::string& name, const float& value)
 {
     glUniform1f(glGetUniformLocation(_ID, name.c_str()), value);
 }
 
-void Shader::setVec2(const std::string& name, const glm::vec2& value)
+template<>
+void Shader::setValue<glm::vec2>(const std::string& name, const glm::vec2& value)
 {
     glUniform2f(glGetUniformLocation(_ID, name.c_str()), value.x, value.y);
 }
 
-void Shader::setVec3(const std::string& name, const glm::vec3& value)
+template<>
+void Shader::setValue<glm::vec3>(const std::string& name, const glm::vec3& value)
 {
     glUniform3f(glGetUniformLocation(_ID, name.c_str()), value.x, value.y, value.z);
 }
 
-void Shader::setVec4(const std::string& name, const glm::vec4& value)
+template<>
+void Shader::setValue<glm::vec4>(const std::string& name, const glm::vec4& value)
 {
     glUniform4f(glGetUniformLocation(_ID, name.c_str()), value.x, value.y, value.z, value.w);
 }
 
-void Shader::setMat4(const std::string& name, const glm::mat4& value)
+template<>
+void Shader::setValue<glm::mat4>(const std::string& name, const glm::mat4& value)
 {
     glUniformMatrix4fv(glGetUniformLocation(_ID, name.c_str()), 1, GL_FALSE, &value[0][0]);
+}
+
+void Shader::setInt(const std::string& name, const int& value)
+{
+    setValue(name.c_str(), value);
+}
+
+void Shader::setFloat(const std::string& name, const float& value)
+{
+    setValue(name.c_str(), value);
+}
+
+void Shader::setVec2(const std::string& name, const glm::vec2& value)
+{
+    setValue(name.c_str(), value);
+}
+
+void Shader::setVec3(const std::string& name, const glm::vec3& value)
+{
+    setValue(name.c_str(), value);
+}
+
+void Shader::setVec4(const std::string& name, const glm::vec4& value)
+{
+    setValue(name.c_str(), value);
+}
+
+void Shader::setMat4(const std::string& name, const glm::mat4& value)
+{
+    setValue(name.c_str(), value);
 }
 
 void Shader::setMVP(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P)

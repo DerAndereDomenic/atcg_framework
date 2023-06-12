@@ -3,6 +3,8 @@
 #include <string>
 #include <glm/glm.hpp>
 
+#include <variant>
+
 namespace atcg
 {
 /**
@@ -50,6 +52,9 @@ public:
      * @brief Use the shader
      */
     void use() const;
+
+    template<typename T>
+    void setValue(const std::string& name, const T& value);
 
     /**
      * @brief Set an int uniform
