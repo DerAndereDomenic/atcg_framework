@@ -23,7 +23,9 @@ public:
      *
      * @param aspect_ratio The aspect ratio of the camera
      */
-    CameraController(const float& aspect_ratio);
+    CameraController(const float& aspect_ratio,
+                     const glm::vec3& position = glm::vec3(0, 0, -1),
+                     const glm::vec3& look_at  = glm::vec3(0));
 
     /**
      * @brief Gets called every frame
@@ -79,8 +81,8 @@ private:
     bool onWindowResize(WindowResizeEvent* event);
     bool onMouseMove(MouseMovedEvent* event);
 
-    float _distance = 1.0f;
-    float _zoom_speed = 0.25f;
+    float _distance       = 1.0f;
+    float _zoom_speed     = 0.25f;
     float _rotation_speed = 0.005f;
     float _lastX = 0, _lastY = 0;
     float _currentX = 0, _currentY = 0;
@@ -94,7 +96,10 @@ public:
      *
      * @param aspect_ratio The aspect ratio of the camera
      */
-    FirstPersonController(const float& aspect_ratio);
+    FirstPersonController(const float& aspect_ratio,
+                          const glm::vec3& position       = glm::vec3(0),
+                          const glm::vec3& view_direction = glm::vec3(1, 0, 0),
+                          const float& speed              = 1.0f);
 
     /**
      * @brief Gets called every frame
@@ -115,14 +120,14 @@ private:
     bool onMouseMove(MouseMovedEvent* event);
     bool onKeyPressed(KeyPressedEvent* event);
 
-    float _speed = 1.0f;
-    float _velocity_forward = 0.0f;
-    float _velocity_right = 0.0f;
-    float _velocity_up = 0.0f;
+    float _speed;
+    float _velocity_forward   = 0.0f;
+    float _velocity_right     = 0.0f;
+    float _velocity_up        = 0.0f;
     float _velocity_threshold = 0.005f;
-    float _max_velocity = 0.1f;
-    float _acceleration = 0.004f;
-    float _rotation_speed = 0.005f;
+    float _max_velocity       = 0.1f;
+    float _acceleration       = 0.004f;
+    float _rotation_speed     = 0.005f;
     float _lastX = 0, _lastY = 0;
     float _currentX = 0, _currentY = 0;
 };

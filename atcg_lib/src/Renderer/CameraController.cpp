@@ -12,9 +12,9 @@
 
 namespace atcg
 {
-CameraController::CameraController(const float& aspect_ratio)
+CameraController::CameraController(const float& aspect_ratio, const glm::vec3& position, const glm::vec3& look_at)
 {
-    _camera = atcg::make_ref<PerspectiveCamera>(aspect_ratio, glm::vec3(0, 0, -1));
+    _camera = atcg::make_ref<PerspectiveCamera>(aspect_ratio, position, look_at);
 }
 
 
@@ -104,7 +104,14 @@ bool FocusedController::onMouseMove(MouseMovedEvent* event)
 }
 
 
-FirstPersonController::FirstPersonController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
+FirstPersonController::FirstPersonController(const float& aspect_ratio,
+                                             const glm::vec3& position,
+                                             const glm::vec3& view_direction,
+                                             const float& speed)
+    : CameraController(aspect_ratio, position, position + view_direction),
+      _speed(speed)
+{
+}
 
 void FirstPersonController::onUpdate(float delta_time)
 {

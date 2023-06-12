@@ -28,7 +28,8 @@ public:
     {
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
+        camera_controller =
+            atcg::make_ref<atcg::FirstPersonController>(aspect_ratio, glm::vec3(0, 0, -2), glm::vec3(1, 0, 0), 0.2f);
 
         std::vector<glm::vec3> host_points;
         for(int i = 0; i < grid_size; ++i)
