@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include <Core/glm.h>
 #include <Renderer/VertexArray.h>
 #include <OpenMesh/OpenMesh.h>
 #include <Eigen/Dense>

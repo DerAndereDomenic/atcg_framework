@@ -2,7 +2,7 @@
 
 #include <Core/Memory.h>
 #include <Renderer/Texture.h>
-#include <glm/glm.hpp>
+#include <Core/glm.h>
 
 namespace atcg
 {

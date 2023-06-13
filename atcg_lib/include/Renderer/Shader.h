@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <glm/glm.hpp>
+#include <Core/glm.h>
 
 #include <Renderer/Buffer.h>
 

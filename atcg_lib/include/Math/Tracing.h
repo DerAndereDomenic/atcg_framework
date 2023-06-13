@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include <DataStructure/Mesh.h>
 #include <Eigen/Dense>
 

@@ -1,5 +1,4 @@
 #include <Renderer/OrthographicCamera.h>
-#include <glm/gtx/transform.hpp>
 
 namespace atcg
 {

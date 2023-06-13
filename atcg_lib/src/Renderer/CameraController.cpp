@@ -6,10 +6,6 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 namespace atcg
 {
 CameraController::CameraController(const float& aspect_ratio, const glm::vec3& position, const glm::vec3& look_at)

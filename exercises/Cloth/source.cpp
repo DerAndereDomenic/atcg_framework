@@ -3,16 +3,12 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
-#include <glm/gtc/type_ptr.hpp>
-
 #include <glad/glad.h>
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <algorithm>
 #include <ImGuizmo.h>
-
-#include <glm/gtx/transform.hpp>
 
 #include <random>
 

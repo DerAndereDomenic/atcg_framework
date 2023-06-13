@@ -7,7 +7,7 @@
 #include <Renderer/Context.h>
 #include <Core/Memory.h>
 
-#include <glm/glm.hpp>
+#include <Core/glm.h>
 
 namespace atcg
 {

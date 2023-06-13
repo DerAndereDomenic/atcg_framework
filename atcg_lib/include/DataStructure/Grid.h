@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include <Core/glm.h>
 #include <string>
 
 namespace atcg

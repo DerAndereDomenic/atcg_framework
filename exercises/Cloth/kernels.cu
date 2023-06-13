@@ -1,7 +1,5 @@
 #include "kernels.h"
 
-#include <glm/gtx/transform.hpp>
-
 namespace detail
 {
 __global__ void simulate(glm::vec3* points, float time, uint32_t n_points)

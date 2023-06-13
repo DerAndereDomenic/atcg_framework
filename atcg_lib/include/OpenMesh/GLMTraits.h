@@ -1,7 +1,7 @@
 #pragma once
 
 #include <OpenMesh/Core/Mesh/Traits.hh>
-#include <glm/glm.hpp>
+#include <Core/glm.h>
 
 namespace OpenMesh
 {
