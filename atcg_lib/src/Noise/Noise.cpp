@@ -43,8 +43,8 @@ atcg::ref_ptr<Texture2D> createWorleyNoiseTexture2D(glm::ivec2 dim, uint32_t num
 
 
     // Use 8x8x1 = 64 thread sized work group
-    compute_shader->use();
     compute_shader->setInt("num_points", num_points);
+    compute_shader->use();
     result->useForCompute();
     compute_shader->dispatch(glm::ivec3(ceil(dim.x / 8), ceil(dim.y / 8), 1));
 
@@ -59,8 +59,8 @@ atcg::ref_ptr<Texture3D> createWorleyNoiseTexture3D(glm::ivec3 dim, uint32_t num
 
 
     // Use 8x8x1 = 64 thread sized work group
-    compute_shader->use();
     compute_shader->setInt("num_points", num_points);
+    compute_shader->use();
     result->useForCompute();
     compute_shader->dispatch(glm::ivec3(ceil(dim.x / 4), ceil(dim.y / 4), ceil(dim.z / 4)));
 

@@ -44,7 +44,6 @@ public:
         atcg::Renderer::clear();
 
 
-        atcg::ShaderManager::getShader("volume")->use();
         atcg::ShaderManager::getShader("volume")->setInt("noise_texture", 0);
         atcg::ShaderManager::getShader("volume")->setVec3("light_position", light_pos);
         noise_texture->use();

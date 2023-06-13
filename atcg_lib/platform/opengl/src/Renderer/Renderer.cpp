@@ -143,9 +143,9 @@ void Renderer::finishFrame()
     clear();
     s_renderer->impl->quad_vao->use();
     auto shader = ShaderManager::getShader("screen");
-    shader->use();
     shader->setInt("screen_texture", 0);
 
+    shader->use();
     s_renderer->impl->screen_fbo->getColorAttachement()->use();
 
     const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
@@ -385,7 +385,6 @@ void Renderer::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
                              uint32_t instances)
 {
     vao->use();
-    shader->use();
     shader->setVec3("flat_color", color);
     shader->setInt("instanced", static_cast<int>(instances > 1));
     if(camera)
@@ -395,6 +394,7 @@ void Renderer::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
         shader->setMVP(model, camera->getView(), camera->getProjection());
     }
     else { shader->setMVP(model); }
+    shader->use();
 
     const atcg::ref_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
@@ -411,7 +411,6 @@ void Renderer::drawCircle(const glm::vec3& position,
 {
     s_renderer->impl->quad_vao->use();
     const auto& shader = ShaderManager::getShader("circle");
-    shader->use();
     shader->setVec3("flat_color", color);
     glm::mat4 model = glm::translate(position) * glm::scale(glm::vec3(radius));
     if(camera) { shader->setMVP(model, camera->getView(), camera->getProjection()); }
@@ -419,6 +418,7 @@ void Renderer::drawCircle(const glm::vec3& position,
 
     const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
 
+    shader->use();
     if(ibo)
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
     else
@@ -436,10 +436,8 @@ void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
     if(vbos.size() == 1 || vbos.back() != indices) { vao_cylinder->addInstanceBuffer(indices); }
     glm::mat4 model    = glm::mat4(1);    // glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
     uint32_t num_edges = indices->size() / (sizeof(uint32_t) * 2);    // TODO
-    ShaderManager::getShader("cylinder_edge")->use();
-    points->bindStorage(0);
     const atcg::ref_ptr<atcg::Shader>& shader = ShaderManager::getShader("cylinder_edge");
-    shader->use();
+    points->bindStorage(0);
     shader->setFloat("radius", radius);
     s_renderer->impl->drawVAO(vao_cylinder,
                               camera,
