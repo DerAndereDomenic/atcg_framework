@@ -79,7 +79,7 @@ VertexBuffer::VertexBuffer(const void* data, size_t size) : _size(size)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 
     impl = atcg::make_scope<Impl>(_ID);
 }
@@ -128,7 +128,7 @@ IndexBuffer::IndexBuffer(const uint32_t* indices, size_t count) : _count(count)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_DYNAMIC_DRAW);
 }
 
 IndexBuffer::IndexBuffer(size_t count) : _count(count)
