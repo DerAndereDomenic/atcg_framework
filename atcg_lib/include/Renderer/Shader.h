@@ -52,12 +52,18 @@ public:
     ~Shader();
 
     /**
-     * @brief Use the shader
+     * @brief Use the shader.
+     * This sets all the shader uniforms so it should always be called last before doing the draw call.
+     * Typically the client does not have to use it as every Rendering command uses the shader at some point.
      */
     void use() const;
 
     /**
-     * @brief Set an int uniform
+     * @brief Set an int uniform.
+     * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
+     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
+     * frame.
      *
      * @param name Name of the uniform
      * @param value The value
@@ -66,6 +72,10 @@ public:
 
     /**
      * @brief Set a float uniform
+     * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
+     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
+     * frame.
      *
      * @param name Name of the uniform
      * @param value The value
@@ -74,6 +84,10 @@ public:
 
     /**
      * @brief Set a vec2 uniform
+     * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
+     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
+     * frame.
      *
      * @param name Name of the uniform
      * @param value The value
@@ -82,6 +96,10 @@ public:
 
     /**
      * @brief Set a vec3 uniform
+     * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
+     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
+     * frame.
      *
      * @param name Name of the uniform
      * @param value The value
@@ -90,6 +108,10 @@ public:
 
     /**
      * @brief Set a vec4 uniform
+     * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
+     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
+     * frame.
      *
      * @param name Name of the uniform
      * @param value The value
@@ -98,6 +120,10 @@ public:
 
     /**
      * @brief Set a mat4 uniform
+     * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
+     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
+     * frame.
      *
      * @param name Name of the uniform
      * @param value The value
