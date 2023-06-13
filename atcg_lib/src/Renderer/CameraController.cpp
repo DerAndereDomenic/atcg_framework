@@ -191,7 +191,7 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_right -= delta_velocity * restoring_factor(_velocity_right / max_velocity);
     }
 
-    if(Input::isKeyPressed(GLFW_KEY_Q) && !Input::isKeyPressed(GLFW_KEY_E))    // up
+    if(Input::isKeyPressed(GLFW_KEY_E) && !Input::isKeyPressed(GLFW_KEY_Q))    // up
     {
         if(-_velocity_threshold < _velocity_up && _velocity_up < _velocity_threshold)
             _velocity_up = _velocity_threshold;
@@ -200,7 +200,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(_velocity_up < 0.0)
             _velocity_up -= delta_velocity * (restoring_factor(_velocity_up / max_velocity) - 1.0f);
     }
-    else if(Input::isKeyPressed(GLFW_KEY_E) && !Input::isKeyPressed(GLFW_KEY_Q))    // down
+    else if(Input::isKeyPressed(GLFW_KEY_Q) && !Input::isKeyPressed(GLFW_KEY_E))    // down
     {
         if(-_velocity_threshold < _velocity_up && _velocity_up < _velocity_threshold)
             _velocity_up = -_velocity_threshold;

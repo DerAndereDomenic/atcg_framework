@@ -19,7 +19,7 @@ void PerspectiveCamera::recalculateView()
 
 void PerspectiveCamera::recalculateProjection()
 {
-    _projection = glm::perspective(glm::radians(60.0f), _aspect_ratio, 0.01f, 100.0f);
+    _projection = glm::perspective(glm::radians(60.0f), _aspect_ratio, 0.01f, 1000.0f);
 }
 
 void PerspectiveCamera::setView(const glm::mat4& view)
