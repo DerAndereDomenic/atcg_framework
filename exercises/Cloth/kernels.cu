@@ -10,7 +10,7 @@ __global__ void simulate(glm::vec3* points, float time, uint32_t n_points)
     int j = tid % n_points;
     int i = tid / n_points;
 
-    points[tid].z = glm::sin(2.0f * glm::pi<float>() * (time) + j / 3.0f + i);
+    updatePoint(points, tid, j, i, time);
 }
 }    // namespace detail
 
