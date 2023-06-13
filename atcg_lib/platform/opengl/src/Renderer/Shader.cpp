@@ -184,81 +184,101 @@ void Shader::linkShader(const uint32_t* shaders, const uint32_t& num_shaders)
     }
 }
 
-void Shader::use() const
+Shader::Uniform& Shader::getUniform(const std::string& name)
 {
-    glUseProgram(_ID);
+    auto it = _uniforms.find(name);
+    if(it == _uniforms.end())
+    {
+        Uniform uniform;
+        uniform.location = glGetUniformLocation(_ID, name.c_str());
+        _uniforms.insert(std::make_pair(name, uniform));
+        it = _uniforms.find(name);
+    }
+    return it->second;
 }
 
 template<typename T>
-void Shader::setValue(const std::string& name, const T& value)
+void Shader::setValue(const uint32_t location, const T& value) const
 {
     throw std::invalid_argument("Shader Set not implemented for this datatype!");
 }
 
 template<>
-void Shader::setValue<int>(const std::string& name, const int& value)
+void Shader::setValue<int>(const uint32_t location, const int& value) const
 {
-    glUniform1i(glGetUniformLocation(_ID, name.c_str()), value);
+    glUniform1i(location, value);
 }
 
 template<>
-void Shader::setValue<float>(const std::string& name, const float& value)
+void Shader::setValue<float>(const uint32_t location, const float& value) const
 {
-    glUniform1f(glGetUniformLocation(_ID, name.c_str()), value);
+    glUniform1f(location, value);
 }
 
 template<>
-void Shader::setValue<glm::vec2>(const std::string& name, const glm::vec2& value)
+void Shader::setValue<glm::vec2>(const uint32_t location, const glm::vec2& value) const
 {
-    glUniform2f(glGetUniformLocation(_ID, name.c_str()), value.x, value.y);
+    glUniform2f(location, value.x, value.y);
 }
 
 template<>
-void Shader::setValue<glm::vec3>(const std::string& name, const glm::vec3& value)
+void Shader::setValue<glm::vec3>(const uint32_t location, const glm::vec3& value) const
 {
-    glUniform3f(glGetUniformLocation(_ID, name.c_str()), value.x, value.y, value.z);
+    glUniform3f(location, value.x, value.y, value.z);
 }
 
 template<>
-void Shader::setValue<glm::vec4>(const std::string& name, const glm::vec4& value)
+void Shader::setValue<glm::vec4>(const uint32_t location, const glm::vec4& value) const
 {
-    glUniform4f(glGetUniformLocation(_ID, name.c_str()), value.x, value.y, value.z, value.w);
+    glUniform4f(location, value.x, value.y, value.z, value.w);
 }
 
 template<>
-void Shader::setValue<glm::mat4>(const std::string& name, const glm::mat4& value)
+void Shader::setValue<glm::mat4>(const uint32_t location, const glm::mat4& value) const
 {
-    glUniformMatrix4fv(glGetUniformLocation(_ID, name.c_str()), 1, GL_FALSE, &value[0][0]);
+    glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
 }
 
 void Shader::setInt(const std::string& name, const int& value)
 {
-    setValue(name.c_str(), value);
+    Uniform& uniform = getUniform(name);
+    uniform.type     = ShaderDataType::Int;
+    uniform.data     = value;
 }
 
 void Shader::setFloat(const std::string& name, const float& value)
 {
-    setValue(name.c_str(), value);
+    Uniform& uniform = getUniform(name);
+    uniform.type     = ShaderDataType::Float;
+    uniform.data     = value;
 }
 
 void Shader::setVec2(const std::string& name, const glm::vec2& value)
 {
-    setValue(name.c_str(), value);
+    Uniform& uniform = getUniform(name);
+    uniform.type     = ShaderDataType::Float2;
+    uniform.data     = value;
 }
 
 void Shader::setVec3(const std::string& name, const glm::vec3& value)
 {
-    setValue(name.c_str(), value);
+    Uniform& uniform = getUniform(name);
+    uniform.type     = ShaderDataType::Float3;
+    uniform.data     = value;
 }
 
 void Shader::setVec4(const std::string& name, const glm::vec4& value)
 {
-    setValue(name.c_str(), value);
+    Uniform& uniform = getUniform(name);
+    uniform.type     = ShaderDataType::Float4;
+    uniform.data     = value;
 }
 
 void Shader::setMat4(const std::string& name, const glm::mat4& value)
 {
-    setValue(name.c_str(), value);
+    Uniform& uniform = getUniform(name);
+    uniform.type     = ShaderDataType::Mat4;
+    uniform.data     = value;
 }
 
 void Shader::setMVP(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P)
@@ -266,6 +286,49 @@ void Shader::setMVP(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P)
     setMat4("M", M);
     setMat4("V", V);
     setMat4("P", P);
+}
+
+void Shader::use() const
+{
+    glUseProgram(_ID);
+    for(auto it = _uniforms.begin(); it != _uniforms.end(); ++it)
+    {
+        const Uniform& uniform = it->second;
+        switch(uniform.type)
+        {
+            case ShaderDataType::Int:
+            case ShaderDataType::Bool:
+            {
+                setValue<int>(uniform.location, std::get<int>(uniform.data));
+            }
+            break;
+            case ShaderDataType::Float:
+            {
+                setValue<float>(uniform.location, std::get<float>(uniform.data));
+            }
+            break;
+            case ShaderDataType::Float2:
+            {
+                setValue<glm::vec2>(uniform.location, std::get<glm::vec2>(uniform.data));
+            }
+            break;
+            case ShaderDataType::Float3:
+            {
+                setValue<glm::vec3>(uniform.location, std::get<glm::vec3>(uniform.data));
+            }
+            break;
+            case ShaderDataType::Float4:
+            {
+                setValue<glm::vec4>(uniform.location, std::get<glm::vec4>(uniform.data));
+            }
+            break;
+            case ShaderDataType::Mat4:
+            {
+                setValue<glm::mat4>(uniform.location, std::get<glm::mat4>(uniform.data));
+            }
+            break;
+        }
+    }
 }
 
 void Shader::dispatch(const glm::ivec3& work_groups) const

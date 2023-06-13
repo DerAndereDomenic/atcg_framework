@@ -3,7 +3,10 @@
 #include <string>
 #include <glm/glm.hpp>
 
+#include <Renderer/Buffer.h>
+
 #include <variant>
+#include <unordered_map>
 
 namespace atcg
 {
@@ -52,9 +55,6 @@ public:
      * @brief Use the shader
      */
     void use() const;
-
-    template<typename T>
-    void setValue(const std::string& name, const T& value);
 
     /**
      * @brief Set an int uniform
@@ -134,11 +134,23 @@ public:
     inline const std::string& getComputePath() const { return _compute_path; }
 
 private:
+    struct Uniform
+    {
+        uint32_t location;
+        ShaderDataType type;
+        std::variant<int, float, glm::vec2, glm::vec3, glm::vec4, glm::mat4> data;
+    };
+
     void readShaderCode(const std::string& path, std::string* code);
 
     uint32_t compileShader(unsigned int shaderType, const std::string& shader_source);
 
     void linkShader(const uint32_t* shaders, const uint32_t& num_shaders);
+
+    Uniform& getUniform(const std::string& name);
+
+    template<typename T>
+    void setValue(const uint32_t location, const T& value) const;
 
 private:
     uint32_t _ID               = 0;
@@ -148,5 +160,6 @@ private:
     std::string _compute_path  = "";
     bool _has_geometry         = false;
     bool _is_compute           = false;
+    std::unordered_map<std::string, Uniform> _uniforms;
 };
 }    // namespace atcg
