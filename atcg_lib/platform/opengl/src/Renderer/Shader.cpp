@@ -118,7 +118,7 @@ void Shader::readShaderCode(const std::string& path, std::string* code)
     }
     catch(std::ifstream::failure e)
     {
-        std::cerr << "Could not read shader file: " << path;
+        ATCG_ERROR("Could not read shader file: {0}", path);
     }
 }
 
@@ -142,21 +142,21 @@ uint32_t Shader::compileShader(unsigned int shaderType, const std::string& shade
         glGetShaderInfoLog(shader, length, &length, infoLog);
         if(shaderType == GL_VERTEX_SHADER)
         {
-            std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" + std::string(infoLog) + "\n";
+            ATCG_ERROR("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n{0}", std::string(infoLog));
         }
         else if(shaderType == GL_FRAGMENT_SHADER)
         {
-            std::cerr << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" + std::string(infoLog) + "\n";
+            ATCG_ERROR("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n{0}", std::string(infoLog));
         }
         else if(shaderType == GL_GEOMETRY_SHADER)
         {
-            std::cerr << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" + std::string(infoLog) + "\n";
+            ATCG_ERROR("ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n{0}", std::string(infoLog));
         }
         else if(shaderType == GL_COMPUTE_SHADER)
         {
-            std::cerr << "ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n" + std::string(infoLog) + "\n";
+            ATCG_ERROR("ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n{0}", std::string(infoLog));
         }
-        else { std::cerr << "ERROR::SHADER::COMPILATION_FAILED\nUnknown shader type\n"; }
+        else { ATCG_ERROR("ERROR::SHADER::COMPILATION_FAILED\nUnknown shader type"); }
 
         free(infoLog);
     }
@@ -179,7 +179,7 @@ void Shader::linkShader(const uint32_t* shaders, const uint32_t& num_shaders)
         glGetProgramiv(_ID, GL_INFO_LOG_LENGTH, &length);
         char* infoLog = (char*)malloc(sizeof(char) * length);
         glGetProgramInfoLog(_ID, length, &length, infoLog);
-        std::cerr << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" + std::string(infoLog) + "\n";
+        ATCG_ERROR("ERROR::SHADER::PROGRAM::LINKING_FAILED\n{0}", std::string(infoLog));
         free(infoLog);
     }
 }

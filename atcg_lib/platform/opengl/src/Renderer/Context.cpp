@@ -44,7 +44,7 @@ void Context::init(void* window)
 {
     glfwMakeContextCurrent((GLFWwindow*)window);
 
-    if(!gladLoadGL()) { std::cerr << "Error loading glad!\n"; }
+    if(!gladLoadGL()) { ATCG_ERROR("Error loading glad!"); }
 
     _window = window;
 

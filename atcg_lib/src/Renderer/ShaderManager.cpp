@@ -33,7 +33,7 @@ void ShaderManager::addShaderFromNameImpl(const std::string& name)
 
     if(!std::filesystem::exists(vertex_path) || !std::filesystem::exists(fragment_path))
     {
-        std::cerr << "Shader: " << name << " needs at least a vertex and fragment shader\n";
+        ATCG_ERROR("Shader: {0} needs at least a vertex and fragment shader!", name);
         return;
     }
 
@@ -53,7 +53,7 @@ void ShaderManager::addComputeShaderFromNameImpl(const std::string& name)
 
     if(!std::filesystem::exists(compute_path))
     {
-        std::cerr << "Shader: " << name << " cannot be found!\n";
+        ATCG_ERROR("Shader: {0} cannot be found!", name);
         return;
     }
 

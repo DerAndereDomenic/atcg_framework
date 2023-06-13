@@ -113,7 +113,7 @@ void VertexArray::addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
                 break;
             }
             default:
-                std::cerr << "Unknown ShaderDataType\n";
+                ATCG_WARN("Unknown ShaderDataType");
         }
     }
 

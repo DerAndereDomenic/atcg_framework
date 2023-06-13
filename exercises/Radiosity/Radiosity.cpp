@@ -89,7 +89,7 @@ atcg::ref_ptr<Mesh> solve_radiosity(const atcg::ref_ptr<Mesh>& mesh, const Eigen
         }
     }
 
-    std::cout << "Solving\n";
+    ATCG_TRACE("Solving");
 
     Eigen::MatrixX3f solution = Eigen::MatrixX3f::Zero(mesh->n_faces(), 3);
     Eigen::MatrixX3f FE       = Eigen::MatrixX3f::Zero(mesh->n_faces(), 3);
@@ -97,7 +97,7 @@ atcg::ref_ptr<Mesh> solve_radiosity(const atcg::ref_ptr<Mesh>& mesh, const Eigen
 
     for(int iter = 0; iter < 50; ++iter)
     {
-        std::cout << iter << "\n";
+        ATCG_TRACE("{0}", iter);
 
         FE = form_factors * solution;
 

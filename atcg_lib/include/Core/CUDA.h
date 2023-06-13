@@ -7,19 +7,19 @@
     #include "device_launch_parameters.h"
     #include <Core/glm.h>
     #include <Math/Functions.h>
+    #include <Core/Log.h>
 namespace atcg
 {
 inline void check(cudaError_t error, char const* const func, const char* const file, int const line)
 {
     if(error != cudaSuccess)
     {
-        fprintf(stderr,
-                "CUDA error at %s:%d code=%d(%s) \"%s\" \n",
-                file,
-                line,
-                static_cast<unsigned int>(error),
-                cudaGetErrorString(error),
-                func);
+        ATCG_ERROR("CUDA error at {0}:{1} code={2}({3}) \"{4}\" \n",
+                   file,
+                   line,
+                   static_cast<unsigned int>(error),
+                   cudaGetErrorString(error),
+                   func);
     }
 }
 

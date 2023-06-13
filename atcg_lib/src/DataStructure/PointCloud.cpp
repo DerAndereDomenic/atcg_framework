@@ -65,7 +65,7 @@ void parse_xyz_file(const atcg::ref_ptr<PointCloud>& cloud, const char* path)
 
     if(!has_position_data)
     {
-        std::cerr << "Can only create point cloud that has spatial information!\n";
+        ATCG_ERROR("Can only create point cloud that has spatial information!");
         return;
     }
 

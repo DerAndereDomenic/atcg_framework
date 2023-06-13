@@ -26,7 +26,7 @@ bool Framebuffer::verify() const
     use();
     uint32_t error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     bool complete  = error == GL_FRAMEBUFFER_COMPLETE;
-    if(!complete) { std::cerr << "ERROR: Framebuffer not complete!\n"; }
+    if(!complete) { ATCG_ERROR("ERROR: Framebuffer not complete!"); }
     useDefault();
     return complete;
 }

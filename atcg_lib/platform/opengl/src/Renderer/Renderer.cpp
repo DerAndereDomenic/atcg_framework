@@ -419,7 +419,7 @@ void Renderer::drawCircle(const glm::vec3& position,
     if(ibo)
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
     else
-        std::cerr << "Missing IndexBuffer!\n";
+        ATCG_ERROR("Missing IndexBuffer!");
 }
 
 void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
