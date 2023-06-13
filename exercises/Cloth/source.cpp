@@ -73,6 +73,14 @@ public:
 
         grid_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)grid.data(), grid.size() * sizeof(uint32_t));
         grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"}, {atcg::ShaderDataType::Float3, "aColor"}});
+
+        plane = atcg::IO::read_mesh("res/plane_low.obj");
+        plane->setScale(glm::vec3(100, 1, 100));
+        plane->uploadData();
+
+        checkerboard_shader =
+            atcg::make_ref<atcg::Shader>("exercises/Cloth/checkerboard.vs", "exercises/Cloth/checkerboard.fs");
+        checkerboard_shader->setFloat("checker_size", 0.1f);
     }
 
     // This gets called each frame
@@ -90,6 +98,8 @@ public:
         simulate(dev_ptr, grid_size * grid_size, time);
 
         atcg::Renderer::drawGrid(points_vbo, grid_vbo, 0.1f, camera_controller->getCamera(), glm::vec3(1));
+
+        atcg::Renderer::draw(plane, camera_controller->getCamera(), glm::vec3(1), checkerboard_shader);
     }
 
     virtual void onImGuiRender() override
@@ -125,6 +135,9 @@ private:
     atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
     atcg::ref_ptr<atcg::VertexBuffer> grid_vbo;
     int32_t grid_size = 51;
+
+    atcg::ref_ptr<atcg::Mesh> plane;
+    atcg::ref_ptr<atcg::Shader> checkerboard_shader;
 
     float time = 0.0f;
 
