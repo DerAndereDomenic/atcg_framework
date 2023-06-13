@@ -36,6 +36,13 @@ namespace Math
  */
 template<typename T>
 T sphericalHarmonic(const int32_t& l, const int32_t& m, const T& phi, const T& theta);
+
+template<typename T>
+T ceil_div(T num, T den)
+{
+    return (num - T(1)) / den + T(1);
+}
+
 }    // namespace Math
 
 }    // namespace atcg

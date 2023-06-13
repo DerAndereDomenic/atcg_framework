@@ -4,7 +4,7 @@ namespace detail
 {
 __global__ void simulate(glm::vec3* points, float time, uint32_t n_points)
 {
-    uint32_t tid = threadIdx.x + blockDim.x * blockIdx.x;
+    size_t tid = atcg::threadIndex();
     if(tid >= n_points) return;
 
     int j = tid % n_points;
@@ -16,8 +16,8 @@ __global__ void simulate(glm::vec3* points, float time, uint32_t n_points)
 
 void simulate(glm::vec3* points, uint32_t size, float time)
 {
-    uint32_t threads = 128;
-    uint32_t blocks  = glm::ceil((float)size / (float)threads);
+    size_t threads = 128;
+    size_t blocks  = atcg::configure(size);
     detail::simulate<<<blocks, threads>>>(points, time, size);
     SYNCHRONIZE_DEFAULT_STREAM();
 }
