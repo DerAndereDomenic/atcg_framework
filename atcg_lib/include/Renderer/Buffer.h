@@ -233,6 +233,25 @@ public:
     void* getData() const;
 
     /**
+     * @brief Get the underlying data as a device pointer.
+     * This only returns a valid device pointer if the CUDA backend is enabled. Otherwise this will return the buffer
+     * mapped to host space.
+     *
+     * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
+     * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
+     * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
+     *
+     * \tparam T The type on how to interpret the data
+     *
+     * @return The pointer
+     */
+    template<typename T>
+    inline T* getData() const
+    {
+        return reinterpret_cast<T*>(getData());
+    }
+
+    /**
      * @brief Get the Layout
      *
      * @return const BufferLayout& The layout of the buffer

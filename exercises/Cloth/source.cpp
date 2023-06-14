@@ -93,7 +93,7 @@ public:
 
         time += delta_time;
 
-        glm::vec3* dev_ptr = reinterpret_cast<glm::vec3*>(points_vbo->getData());
+        glm::vec3* dev_ptr = points_vbo->getData<glm::vec3>();
 
         simulate(dev_ptr, grid_size * grid_size, time);
 
