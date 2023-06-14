@@ -11,6 +11,7 @@
 #include <Core/Log.h>
 #include <Core/CUDA.h>
 #include <Core/glm.h>
+#include <Core/UUID.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>
