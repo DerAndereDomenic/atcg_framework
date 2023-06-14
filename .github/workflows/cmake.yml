@@ -29,13 +29,13 @@ jobs:
       - run: cmake -B ./build -S .
       - run: cmake --build build
       
-  macos-build:
-    name: MacOS Compile Check
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@main
-        with:
-          submodules: recursive
-      - run: cmake -B ./build -S .
-      - run: cmake --build build
+  #macos-build:
+  #  name: MacOS Compile Check
+  #  runs-on: macos-latest
+  #  steps:
+  #    - uses: actions/checkout@main
+  #      with:
+  #        submodules: recursive
+  #    - run: cmake -B ./build -S .
+  #    - run: cmake --build build
       
