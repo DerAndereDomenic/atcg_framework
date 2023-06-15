@@ -31,6 +31,8 @@ public:
 
     atcg::ref_ptr<Mesh> sphere_mesh;
     atcg::ref_ptr<Mesh> cylinder_mesh;
+    bool sphere_has_instance   = false;
+    bool cylinder_has_instance = false;
 
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
 
@@ -351,7 +353,12 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
         {
             atcg::ref_ptr<VertexArray> vao_sphere = s_renderer->impl->sphere_mesh->getVertexArray();
             atcg::ref_ptr<VertexBuffer> vbo_cloud = cloud->getVertexArray()->peekVertexBuffer();
-            if(vao_sphere->peekVertexBuffer() != vbo_cloud) { vao_sphere->pushInstanceBuffer(vbo_cloud); }
+            if(vao_sphere->peekVertexBuffer() != vbo_cloud)
+            {
+                if(s_renderer->impl->sphere_has_instance) { vao_sphere->popVertexBuffer(); }
+                vao_sphere->pushInstanceBuffer(vbo_cloud);
+                s_renderer->impl->sphere_has_instance = true;
+            }
             glm::mat4 model = glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
             s_renderer->impl->drawVAO(vao_sphere,
                                       camera,
@@ -428,7 +435,12 @@ void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
                         const glm::vec3& color)
 {
     atcg::ref_ptr<VertexArray> vao_cylinder = s_renderer->impl->cylinder_mesh->getVertexArray();
-    if(vao_cylinder->peekVertexBuffer() != indices) { vao_cylinder->pushInstanceBuffer(indices); }
+    if(vao_cylinder->peekVertexBuffer() != indices)
+    {
+        if(s_renderer->impl->cylinder_has_instance) { vao_cylinder->popVertexBuffer(); }
+        vao_cylinder->pushInstanceBuffer(indices);
+        s_renderer->impl->cylinder_has_instance = true;
+    }
     glm::mat4 model    = glm::mat4(1);    // glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
     uint32_t num_edges = indices->size() / (sizeof(uint32_t) * 2);    // TODO
     const atcg::ref_ptr<atcg::Shader>& shader = ShaderManager::getShader("cylinder_edge");
