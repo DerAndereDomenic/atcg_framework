@@ -62,7 +62,7 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
         quad_vbo = atcg::make_ref<VertexBuffer>(vertices, sizeof(vertices));
         quad_vbo->setLayout({{ShaderDataType::Float3, "aPosition"}, {ShaderDataType::Float2, "aUV"}});
 
-        quad_vao->addVertexBuffer(quad_vbo);
+        quad_vao->pushVertexBuffer(quad_vbo);
 
         uint32_t indices[] = {0, 1, 2, 1, 3, 2};
 
@@ -113,7 +113,7 @@ void Renderer::Impl::initCube()
     cube_vbo = atcg::make_ref<VertexBuffer>(vertices, sizeof(vertices));
     cube_vbo->setLayout({{ShaderDataType::Float3, "aPosition"}});
 
-    cube_vao->addVertexBuffer(cube_vbo);
+    cube_vao->pushVertexBuffer(cube_vbo);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
@@ -349,10 +349,9 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
-            atcg::ref_ptr<VertexArray> vao_sphere               = s_renderer->impl->sphere_mesh->getVertexArray();
-            const std::vector<atcg::ref_ptr<VertexBuffer>> vbos = vao_sphere->getVertexBuffers();
-            atcg::ref_ptr<VertexBuffer> vbo_cloud               = cloud->getVertexArray()->getVertexBuffers()[0];
-            if(vbos.size() == 1 || vbos.back() != vbo_cloud) { vao_sphere->addInstanceBuffer(vbo_cloud); }
+            atcg::ref_ptr<VertexArray> vao_sphere = s_renderer->impl->sphere_mesh->getVertexArray();
+            atcg::ref_ptr<VertexBuffer> vbo_cloud = cloud->getVertexArray()->peekVertexBuffer();
+            if(vao_sphere->peekVertexBuffer() != vbo_cloud) { vao_sphere->pushInstanceBuffer(vbo_cloud); }
             glm::mat4 model = glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
             s_renderer->impl->drawVAO(vao_sphere,
                                       camera,
@@ -428,9 +427,8 @@ void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
                         const atcg::ref_ptr<Camera>& camera,
                         const glm::vec3& color)
 {
-    atcg::ref_ptr<VertexArray> vao_cylinder              = s_renderer->impl->cylinder_mesh->getVertexArray();
-    const std::vector<atcg::ref_ptr<VertexBuffer>>& vbos = vao_cylinder->getVertexBuffers();
-    if(vbos.size() == 1 || vbos.back() != indices) { vao_cylinder->addInstanceBuffer(indices); }
+    atcg::ref_ptr<VertexArray> vao_cylinder = s_renderer->impl->cylinder_mesh->getVertexArray();
+    if(vao_cylinder->peekVertexBuffer() != indices) { vao_cylinder->pushInstanceBuffer(indices); }
     glm::mat4 model    = glm::mat4(1);    // glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
     uint32_t num_edges = indices->size() / (sizeof(uint32_t) * 2);    // TODO
     const atcg::ref_ptr<atcg::Shader>& shader = ShaderManager::getShader("cylinder_edge");

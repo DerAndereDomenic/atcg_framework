@@ -52,7 +52,7 @@ void Mesh::uploadData()
     vbo->setLayout({{atcg::ShaderDataType::Float3, "aPosition"},
                     {atcg::ShaderDataType::Float3, "aNormal"},
                     {atcg::ShaderDataType::Float3, "aColor"}});
-    _vao->addVertexBuffer(vbo);
+    _vao->pushVertexBuffer(vbo);
 
     atcg::ref_ptr<atcg::IndexBuffer> ibo =
         atcg::make_ref<atcg::IndexBuffer>(indices_data.data(), static_cast<uint32_t>(indices_data.size()));
@@ -61,7 +61,7 @@ void Mesh::uploadData()
 
 void Mesh::addBuffer(const atcg::ref_ptr<VertexBuffer>& buffer)
 {
-    _vao->addVertexBuffer(buffer);
+    _vao->pushVertexBuffer(buffer);
 }
 
 void Mesh::calculateModelMatrix()

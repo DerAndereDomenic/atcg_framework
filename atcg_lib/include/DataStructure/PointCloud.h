@@ -233,7 +233,7 @@ void PointCloudT<Traits>::uploadData()
                     {ShaderDataType::Float3, "aNormal"},
                     {ShaderDataType::Float3, "aColor"}});
 
-    _vao->addVertexBuffer(vbo);
+    _vao->pushVertexBuffer(vbo);
 }
 
 template<class Traits>

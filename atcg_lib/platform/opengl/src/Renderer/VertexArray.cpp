@@ -52,7 +52,7 @@ void VertexArray::use() const
     glBindVertexArray(_ID);
 }
 
-void VertexArray::addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
+void VertexArray::pushVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
 {
     glBindVertexArray(_ID);
     vbo->use();
@@ -121,6 +121,28 @@ void VertexArray::addVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
     _vertex_buffer_index.push_back({vertex_buffer_index, 0});
 }
 
+const atcg::ref_ptr<VertexBuffer>& VertexArray::popVertexBuffer()
+{
+    glBindVertexArray(_ID);
+    atcg::ref_ptr<VertexBuffer> last_buffer = _vertex_buffers.back();
+    VertexBufferIndexing indexing           = _vertex_buffer_index.back();
+
+    _vertex_buffers.pop_back();
+    _vertex_buffer_index.pop_back();
+
+    for(uint32_t i = _vertex_buffer_index.back().vertex_buffer_index; i < indexing.vertex_buffer_index; ++i)
+    {
+        glDisableVertexAttribArray(i);
+    }
+
+    return last_buffer;
+}
+
+const atcg::ref_ptr<VertexBuffer>& VertexArray::peekVertexBuffer() const
+{
+    return _vertex_buffers.back();
+}
+
 void VertexArray::setIndexBuffer(const atcg::ref_ptr<IndexBuffer>& ibo)
 {
     glBindVertexArray(_ID);
@@ -128,23 +150,23 @@ void VertexArray::setIndexBuffer(const atcg::ref_ptr<IndexBuffer>& ibo)
     _ibo = ibo;
 }
 
-void VertexArray::addInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
+void VertexArray::pushInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
 {
-    addVertexBuffer(vbo);
-    markInstance(static_cast<uint32_t>(_vertex_buffers.size()) - 1, 1);
+    pushVertexBuffer(vbo);
+    markInstance(1);
 }
 
-void VertexArray::markInstance(uint32_t buffer_idx, uint32_t divisor)
+void VertexArray::markInstance(uint32_t divisor)
 {
-    uint32_t curr_divisor = _vertex_buffer_index[buffer_idx].divisor;
+    uint32_t curr_divisor = _vertex_buffer_index.back().divisor;
     if(curr_divisor == divisor) { return; }
 
     this->use();
-    _vertex_buffer_index[buffer_idx].divisor = divisor;
-    const auto& layout                       = _vertex_buffers[buffer_idx]->getLayout();
+    _vertex_buffer_index.back().divisor = divisor;
+    const auto& layout                  = _vertex_buffers.back()->getLayout();
     for(uint32_t i = 0; i < layout.getElements().size(); ++i)
     {
-        glVertexAttribDivisor(_vertex_buffer_index[buffer_idx].vertex_buffer_index - 1 - i, divisor);
+        glVertexAttribDivisor(_vertex_buffer_index.back().vertex_buffer_index - 1 - i, divisor);
     }
 }
 }    // namespace atcg
