@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 namespace atcg
 {
 /**
@@ -35,7 +37,7 @@ public:
 
 private:
     uint64_t _UUID;
-}
+};
 }    // namespace atcg
 
 namespace std
@@ -47,5 +49,5 @@ template<>
 struct hash<atcg::UUID>
 {
     size_t operator()(const atcg::UUID& uuid) const { return (uint64_t)uuid; }
-}
+};
 }    // namespace std
