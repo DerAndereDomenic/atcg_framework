@@ -105,7 +105,7 @@ public:
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
-        ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
+        // ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
         camera_controller->onUpdate(delta_time);
 
         atcg::Renderer::clear();
@@ -137,6 +137,29 @@ public:
 
             ImGui::End();
         }
+
+        if(hovered_entity)
+        {
+            ImGuizmo::SetOrthographic(false);
+            ImGuizmo::BeginFrame();
+
+            const auto& window   = atcg::Application::get()->getWindow();
+            glm::vec2 window_pos = window->getPosition();
+            ImGuizmo::SetRect(window_pos.x, window_pos.y, (float)window->getWidth(), (float)window->getHeight());
+
+            glm::mat4 camera_projection = camera_controller->getCamera()->getProjection();
+            glm::mat4 camera_view       = camera_controller->getCamera()->getView();
+
+            atcg::TransformComponent& transform = hovered_entity.getComponent<atcg::TransformComponent>();
+            glm::mat4 model                     = transform.getModel();
+
+            ImGuizmo::Manipulate(glm::value_ptr(camera_view),
+                                 glm::value_ptr(camera_projection),
+                                 current_operation,
+                                 ImGuizmo::LOCAL,
+                                 glm::value_ptr(model));
+            transform.setModel(model);
+        }
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -145,10 +168,42 @@ public:
         camera_controller->onEvent(event);
 
         atcg::EventDispatcher dispatcher(event);
+        dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onMouseMoved));
+        dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onMousePressed));
+        dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onKeyPressed));
+    }
+
+    bool onKeyPressed(atcg::KeyPressedEvent* event)
+    {
+        if(event->getKeyCode() == GLFW_KEY_T) { current_operation = ImGuizmo::OPERATION::TRANSLATE; }
+        if(event->getKeyCode() == GLFW_KEY_R) { current_operation = ImGuizmo::OPERATION::ROTATE; }
+        if(event->getKeyCode() == GLFW_KEY_S) { current_operation = ImGuizmo::OPERATION::SCALE; }
+        // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
+
+        return true;
+    }
+
+    bool onMousePressed(atcg::MouseButtonPressedEvent* event)
+    {
+        if(event->getMouseButton() == GLFW_MOUSE_BUTTON_LEFT)
+        {
+            int id         = atcg::Renderer::getEntityIndex(mouse_pos);
+            hovered_entity = id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, scene.get());
+        }
+        return true;
+    }
+
+    bool onMouseMoved(atcg::MouseMovedEvent* event)
+    {
+        const auto& window = atcg::Application::get()->getWindow();
+        mouse_pos          = glm::vec2(event->getX(), window->getHeight() - event->getY());
+
+        return false;
     }
 
 private:
     atcg::ref_ptr<atcg::Scene> scene;
+    atcg::Entity hovered_entity;
 
     atcg::ref_ptr<atcg::FirstPersonController> camera_controller;
     atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
@@ -160,7 +215,10 @@ private:
 
     float time = 0.0f;
 
-    bool show_render_settings = false;
+    glm::vec2 mouse_pos;
+
+    bool show_render_settings             = false;
+    ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 };
 
 class Cloth : public atcg::Application
