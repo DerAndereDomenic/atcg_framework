@@ -43,10 +43,10 @@ Window::Window(const WindowProps& props)
                               [](GLFWwindow* window, int width, int height)
                               {
                                   WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
-                                  data.width       = width;
-                                  data.height      = height;
+                                  data.width       = std::max(width, 1);
+                                  data.height      = std::max(height, 1);
 
-                                  WindowResizeEvent event(width, height);
+                                  WindowResizeEvent event(data.width, data.height);
                                   data.on_event(&event);
                               });
 
