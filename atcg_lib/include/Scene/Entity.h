@@ -30,9 +30,10 @@ public:
         return _scene->_regsitry.has<T>(_entity_handle);
     }
 
-    operator() bool() const { return _entity_handle != entt::null; }
+    operator bool() const { return _entity_handle != entt::null; }
 
 private:
+    friend class Scene;
     Entity(entt::entity handle, Scene* scene);
 
     Scene* _scene               = nullptr;

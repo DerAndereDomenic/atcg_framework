@@ -1,5 +1,7 @@
 #pragma once
 
+#include <entt.hpp>
+
 namespace atcg
 {
 class Entity;
@@ -16,5 +18,5 @@ public:
 private:
     friend class Entity;
     entt::registry _registry;
-}
+};
 }    // namespace atcg

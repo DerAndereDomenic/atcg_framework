@@ -49,3 +49,8 @@
 
 //-------- Utility -----------
 #include <Noise/Noise.h>
+
+//-------- Scene -----------
+#include <Scene/Components.h>
+#include <Scene/Scene.h>
+#include <Scene/Entity.h>
