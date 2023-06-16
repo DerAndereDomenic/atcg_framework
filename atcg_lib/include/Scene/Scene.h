@@ -20,6 +20,12 @@ public:
 
     Entity getEntityByID(UUID id) const;
 
+    template<typename... Components>
+    auto getAllEntitiesWith() const
+    {
+        return _registry.view<Components...>();
+    }
+
 private:
     friend class Entity;
     entt::registry _registry;

@@ -9,7 +9,6 @@
 #include <DataStructure/PointCloud.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Framebuffer.h>
-#include <Scene/Entity.h>
 
 #include <Core/Memory.h>
 
@@ -17,6 +16,9 @@
 
 namespace atcg
 {
+class Scene;
+class Entity;
+
 /**
  * @brief An enum defining draw modes.
  *
@@ -173,6 +175,13 @@ public:
      * @param entity The entity to render
      */
     static void draw(Entity entity);
+
+    /**
+     * @brief Render a scene
+     *
+     * @param scene The scene to render
+     */
+    static void draw(const atcg::ref_ptr<Scene>& scene);
 
     /**
      * @brief Draw Circle

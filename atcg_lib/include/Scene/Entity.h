@@ -10,6 +10,7 @@ class Entity
 {
 public:
     Entity() = default;
+    Entity(entt::entity handle, Scene* scene);
 
     template<typename T, typename... Args>
     T& addComponent(Args&&... args)
@@ -33,9 +34,6 @@ public:
     operator bool() const { return _entity_handle != entt::null; }
 
 private:
-    friend class Scene;
-    Entity(entt::entity handle, Scene* scene);
-
     Scene* _scene               = nullptr;
     entt::entity _entity_handle = entt::null;
 };

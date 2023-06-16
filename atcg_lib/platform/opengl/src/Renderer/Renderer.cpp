@@ -7,6 +7,9 @@
 #include <Renderer/ShaderManager.h>
 #include <Scene/Components.h>
 
+#include <Scene/Scene.h>
+#include <Scene/Entity.h>
+
 namespace atcg
 {
 Renderer* Renderer::s_renderer = new Renderer;
@@ -425,6 +428,17 @@ void Renderer::draw(Entity entity)
     {
         GridComponent grid = entity.getComponent<GridComponent>();
         Renderer::drawGrid(grid.points, grid.edges, grid.radius, renderer.camera, transform.getModel(), renderer.color);
+    }
+}
+
+void Renderer::draw(const atcg::ref_ptr<Scene>& scene)
+{
+    auto& view = scene->getAllEntitiesWith<RenderComponent>();
+
+    for(auto e: view)
+    {
+        Entity entity(e, scene.get());
+        Renderer::draw(entity);
     }
 }
 

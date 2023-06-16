@@ -82,7 +82,9 @@ public:
             atcg::make_ref<atcg::Shader>("exercises/Cloth/checkerboard.vs", "exercises/Cloth/checkerboard.fs");
         checkerboard_shader->setFloat("checker_size", 0.1f);
 
-        grid_entity = scene.createEntity();
+        scene = atcg::make_ref<atcg::Scene>();
+
+        atcg::Entity grid_entity = scene->createEntity();
         grid_entity.addComponent<atcg::GridComponent>(points_vbo, grid_vbo, 0.1f);
         grid_entity.addComponent<atcg::TransformComponent>();
         grid_entity.addComponent<atcg::RenderComponent>(nullptr,
@@ -90,7 +92,7 @@ public:
                                                         glm::vec3(1),
                                                         atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
-        plane_entity = scene.createEntity();
+        atcg::Entity plane_entity = scene->createEntity();
         plane_entity.addComponent<atcg::MeshComponent>(plane);
         auto& transform = plane_entity.addComponent<atcg::TransformComponent>();
         transform.setScale(glm::vec3(100, 1, 100));
@@ -103,7 +105,7 @@ public:
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
-        // ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
+        ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
         camera_controller->onUpdate(delta_time);
 
         atcg::Renderer::clear();
@@ -114,8 +116,7 @@ public:
 
         simulate(dev_ptr, grid_size * grid_size, time);
 
-        atcg::Renderer::draw(grid_entity);
-        atcg::Renderer::draw(plane_entity);
+        atcg::Renderer::draw(scene);
     }
 
     virtual void onImGuiRender() override
@@ -147,9 +148,7 @@ public:
     }
 
 private:
-    atcg::Scene scene;
-    atcg::Entity grid_entity;
-    atcg::Entity plane_entity;
+    atcg::ref_ptr<atcg::Scene> scene;
 
     atcg::ref_ptr<atcg::FirstPersonController> camera_controller;
     atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
