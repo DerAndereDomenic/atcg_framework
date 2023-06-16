@@ -54,6 +54,7 @@ public:
 
         atcg::Renderer::draw(mesh,
                              camera_controller->getCamera(),
+                             glm::mat4(1),
                              glm::vec3(1),
                              atcg::ShaderManager::getShader("flat"));
     }

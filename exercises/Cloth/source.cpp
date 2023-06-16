@@ -75,7 +75,7 @@ public:
         grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"}, {atcg::ShaderDataType::Float3, "aColor"}});
 
         plane = atcg::IO::read_mesh("res/plane_low.obj");
-        plane->setScale(glm::vec3(100, 1, 100));
+        // plane->setScale(glm::vec3(100, 1, 100));
         plane->uploadData();
 
         checkerboard_shader =
@@ -97,9 +97,13 @@ public:
 
         simulate(dev_ptr, grid_size * grid_size, time);
 
-        atcg::Renderer::drawGrid(points_vbo, grid_vbo, 0.1f, camera_controller->getCamera(), glm::vec3(1));
+        atcg::Renderer::drawGrid(points_vbo, grid_vbo, 0.1f, camera_controller->getCamera());
 
-        atcg::Renderer::draw(plane, camera_controller->getCamera(), glm::vec3(1), checkerboard_shader);
+        atcg::Renderer::draw(plane,
+                             camera_controller->getCamera(),
+                             glm::scale(glm::vec3(100, 1, 100)),
+                             glm::vec3(1),
+                             checkerboard_shader);
     }
 
     virtual void onImGuiRender() override

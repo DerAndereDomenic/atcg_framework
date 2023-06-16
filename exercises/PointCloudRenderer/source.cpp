@@ -26,7 +26,7 @@ public:
         depth_values.resize(search_radius * search_radius);
 
         sphere = atcg::IO::read_mesh("res/sphere.obj");
-        sphere->setScale(glm::vec3(0.01f));
+        // sphere->setScale(glm::vec3(0.01f));
         sphere->uploadData();
 
         {
@@ -50,6 +50,7 @@ public:
             if(it->second)
                 atcg::Renderer::draw(it->first,
                                      camera_controller->getCamera(),
+                                     glm::mat4(1),
                                      glm::vec3(1),
                                      atcg::ShaderManager::getShader("flat"));
         }
@@ -88,7 +89,7 @@ public:
         // glDepthMask(false);
         for(glm::vec3 p: sphere_pos)
         {
-            sphere->setPosition(p);
+            // sphere->setPosition(p);
             atcg::Renderer::draw(sphere, camera_controller->getCamera());
         }
         // glDepthMask(true);
