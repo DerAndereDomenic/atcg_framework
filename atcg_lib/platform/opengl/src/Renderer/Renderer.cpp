@@ -97,7 +97,7 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
     screen_fbo->attachDepth();
-    screen_fbo->verify();
+    screen_fbo->complete();
 }
 
 void Renderer::Impl::initCube()
@@ -191,7 +191,7 @@ void Renderer::resize(const uint32_t& width, const uint32_t& height)
     s_renderer->impl->screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     s_renderer->impl->screen_fbo->attachColor();
     s_renderer->impl->screen_fbo->attachDepth();
-    s_renderer->impl->screen_fbo->verify();
+    s_renderer->impl->screen_fbo->complete();
 }
 
 void Renderer::useScreenBuffer()

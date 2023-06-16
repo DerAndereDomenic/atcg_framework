@@ -31,11 +31,11 @@ public:
     void use() const;
 
     /**
-     * @brief Vertify that the framebuffer is complete
+     * @brief Complete the Framebuffer. Should be called after all attachements where made
      *
      * @return True if it is complete, false otherwise
      */
-    bool verify() const;
+    bool complete() const;
 
     /**
      * @brief Add a color attachement
