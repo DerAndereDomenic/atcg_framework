@@ -21,13 +21,13 @@ public:
     template<typename T>
     T& getComponent()
     {
-        return _scene->registry.get<T>(_entity_handle);
+        return _scene->_registry.get<T>(_entity_handle);
     }
 
     template<typename T>
     bool hasComponent()
     {
-        return _scene->_regsitry.has<T>(_entity_handle);
+        return _scene->_registry.all_of<T>(_entity_handle);
     }
 
     operator bool() const { return _entity_handle != entt::null; }

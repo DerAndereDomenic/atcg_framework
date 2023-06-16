@@ -5,6 +5,7 @@
 #include <Core/Log.h>
 
 #include <Renderer/ShaderManager.h>
+#include <Scene/Components.h>
 
 namespace atcg
 {
@@ -380,6 +381,50 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
             throw std::invalid_argument("PointCloud cannot be rendered as edges!");
         }
         break;
+    }
+}
+
+void Renderer::draw(Entity entity)
+{
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<RenderComponent>())
+    {
+        ATCG_WARN("Entity does not have render component!");
+        return;
+    }
+
+    TransformComponent transform = entity.getComponent<TransformComponent>();
+    RenderComponent renderer     = entity.getComponent<RenderComponent>();
+
+    if(entity.hasComponent<MeshComponent>())
+    {
+        MeshComponent mesh = entity.getComponent<MeshComponent>();
+        Renderer::draw(mesh.mesh,
+                       renderer.camera,
+                       transform.getModel(),
+                       renderer.color,
+                       renderer.shader,
+                       renderer.draw_mode);
+    }
+    else if(entity.hasComponent<PointCloudComponent>())
+    {
+        PointCloudComponent cloud = entity.getComponent<PointCloudComponent>();
+        Renderer::draw(cloud.point_cloud,
+                       renderer.camera,
+                       transform.getModel(),
+                       renderer.color,
+                       renderer.shader,
+                       renderer.draw_mode);
+    }
+    else if(entity.hasComponent<GridComponent>())
+    {
+        GridComponent grid = entity.getComponent<GridComponent>();
+        Renderer::drawGrid(grid.points, grid.edges, grid.radius, renderer.camera, transform.getModel(), renderer.color);
     }
 }
 

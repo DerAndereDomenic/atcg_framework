@@ -9,6 +9,7 @@
 #include <DataStructure/PointCloud.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Framebuffer.h>
+#include <Scene/Entity.h>
 
 #include <Core/Memory.h>
 
@@ -165,6 +166,13 @@ public:
                      const glm::vec3& color              = glm::vec3(1),
                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_POINTS);
+
+    /**
+     * @brief Render an entity
+     *
+     * @param entity The entity to render
+     */
+    static void draw(Entity entity);
 
     /**
      * @brief Draw Circle
