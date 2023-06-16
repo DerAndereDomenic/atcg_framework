@@ -54,6 +54,7 @@ public:
                     grid.push_back(distrib(gen));
                     grid.push_back(distrib(gen));
                     grid.push_back(distrib(gen));
+                    grid.push_back(0.1f);
                 }
 
                 int dy = j - 1;
@@ -64,6 +65,7 @@ public:
                     grid.push_back(distrib(gen));
                     grid.push_back(distrib(gen));
                     grid.push_back(distrib(gen));
+                    grid.push_back(0.1f);
                 }
             }
         }
@@ -72,7 +74,9 @@ public:
             atcg::make_ref<atcg::VertexBuffer>((void*)host_points.data(), host_points.size() * sizeof(glm::vec3));
 
         grid_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)grid.data(), grid.size() * sizeof(uint32_t));
-        grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"}, {atcg::ShaderDataType::Float3, "aColor"}});
+        grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"},
+                             {atcg::ShaderDataType::Float3, "aColor"},
+                             {atcg::ShaderDataType::Float, "aRadius"}});
 
         plane = atcg::IO::read_mesh("res/plane_low.obj");
         // plane->setScale(glm::vec3(100, 1, 100));
@@ -85,7 +89,7 @@ public:
         scene = atcg::make_ref<atcg::Scene>();
 
         atcg::Entity grid_entity = scene->createEntity();
-        grid_entity.addComponent<atcg::GridComponent>(points_vbo, grid_vbo, 0.1f);
+        grid_entity.addComponent<atcg::GridComponent>(points_vbo, grid_vbo);
         grid_entity.addComponent<atcg::TransformComponent>();
         grid_entity.addComponent<atcg::RenderComponent>(nullptr,
                                                         camera_controller->getCamera(),

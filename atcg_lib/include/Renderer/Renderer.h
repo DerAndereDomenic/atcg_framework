@@ -201,14 +201,12 @@ public:
      *
      * @param points A vertex buffer with points
      * @param indices A vertex buffer storing the indices forming an edge (n x 2)
-     * @param size The radius of each cylinder (edge)
      * @param camera The camera
      * @param model The model matrix
      * @param color The color
      */
     static void drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
                          const atcg::ref_ptr<VertexBuffer>& indices,
-                         const float radius,
                          const atcg::ref_ptr<Camera>& camera = {},
                          const glm::mat4& model              = glm::mat4(1),
                          const glm::vec3& color              = glm::vec3(1));

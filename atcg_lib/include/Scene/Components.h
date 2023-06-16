@@ -90,16 +90,14 @@ struct PointCloudComponent
 
 struct GridComponent
 {
-    GridComponent(const atcg::ref_ptr<VertexBuffer>& points, const atcg::ref_ptr<VertexBuffer>& edges, float radius)
+    GridComponent(const atcg::ref_ptr<VertexBuffer>& points, const atcg::ref_ptr<VertexBuffer>& edges)
         : points(points),
-          edges(edges),
-          radius(radius)
+          edges(edges)
     {
     }
 
     atcg::ref_ptr<VertexBuffer> points;
     atcg::ref_ptr<VertexBuffer> edges;
-    float radius;
 };
 
 struct RenderComponent

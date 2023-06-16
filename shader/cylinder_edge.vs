@@ -7,10 +7,10 @@ layout (location = 2) in vec3 aColor;
 // Instance variables
 layout (location = 3) in vec2 aEdge;
 layout (location = 4) in vec3 aEdgeColor;
+layout (location = 5) in float aRadius;
 
 uniform mat4 M, V, P;
 uniform int instanced;
-uniform float radius;
 
 out vec3 frag_normal;
 out vec3 frag_pos;
@@ -28,7 +28,7 @@ void main()
     vec3 axis = (aInstanceEnd - aInstanceStart);
     vec3 middle_point = aInstanceStart + axis/2.0;
 
-    mat4 model_scale = mat4(radius);
+    mat4 model_scale = mat4(aRadius);
     model_scale[1].y = length(axis)/2.0;
     model_scale[3].w = 1;
 
