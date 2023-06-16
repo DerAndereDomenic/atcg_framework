@@ -77,6 +77,7 @@ public:
     operator bool() const { return _entity_handle != entt::null; }
 
 private:
+    friend class Renderer;
     Scene* _scene               = nullptr;
     entt::entity _entity_handle = entt::null;
 };

@@ -406,9 +406,12 @@ void Renderer::draw(Entity entity)
     TransformComponent transform = entity.getComponent<TransformComponent>();
     RenderComponent renderer     = entity.getComponent<RenderComponent>();
 
+    uint32_t entity_id = (uint32_t)entity._entity_handle;
+
     if(entity.hasComponent<MeshComponent>())
     {
         MeshComponent mesh = entity.getComponent<MeshComponent>();
+        renderer.shader->setInt("entityID", entity_id);
         Renderer::draw(mesh.mesh,
                        renderer.camera,
                        transform.getModel(),
@@ -419,6 +422,7 @@ void Renderer::draw(Entity entity)
     else if(entity.hasComponent<PointCloudComponent>())
     {
         PointCloudComponent cloud = entity.getComponent<PointCloudComponent>();
+        renderer.shader->setInt("entityID", entity_id);
         Renderer::draw(cloud.point_cloud,
                        renderer.camera,
                        transform.getModel(),
@@ -429,6 +433,7 @@ void Renderer::draw(Entity entity)
     else if(entity.hasComponent<GridComponent>())
     {
         GridComponent grid = entity.getComponent<GridComponent>();
+        ShaderManager::getShader("cylinder_edge")->setInt("entityID", entity_id);
         Renderer::drawGrid(grid.points, grid.edges, grid.radius, renderer.camera, transform.getModel(), renderer.color);
     }
 }
