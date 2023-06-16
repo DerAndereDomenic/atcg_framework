@@ -81,6 +81,23 @@ public:
         checkerboard_shader =
             atcg::make_ref<atcg::Shader>("exercises/Cloth/checkerboard.vs", "exercises/Cloth/checkerboard.fs");
         checkerboard_shader->setFloat("checker_size", 0.1f);
+
+        grid_entity = scene.createEntity();
+        grid_entity.addComponent<atcg::GridComponent>(points_vbo, grid_vbo, 0.1f);
+        grid_entity.addComponent<atcg::TransformComponent>();
+        grid_entity.addComponent<atcg::RenderComponent>(nullptr,
+                                                        camera_controller->getCamera(),
+                                                        glm::vec3(1),
+                                                        atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
+
+        plane_entity = scene.createEntity();
+        plane_entity.addComponent<atcg::MeshComponent>(plane);
+        auto& transform = plane_entity.addComponent<atcg::TransformComponent>();
+        transform.setScale(glm::vec3(100, 1, 100));
+        plane_entity.addComponent<atcg::RenderComponent>(checkerboard_shader,
+                                                         camera_controller->getCamera(),
+                                                         glm::vec3(1),
+                                                         atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
     }
 
     // This gets called each frame
@@ -97,13 +114,8 @@ public:
 
         simulate(dev_ptr, grid_size * grid_size, time);
 
-        atcg::Renderer::drawGrid(points_vbo, grid_vbo, 0.1f, camera_controller->getCamera());
-
-        atcg::Renderer::draw(plane,
-                             camera_controller->getCamera(),
-                             glm::scale(glm::vec3(100, 1, 100)),
-                             glm::vec3(1),
-                             checkerboard_shader);
+        atcg::Renderer::draw(grid_entity);
+        atcg::Renderer::draw(plane_entity);
     }
 
     virtual void onImGuiRender() override
@@ -135,6 +147,10 @@ public:
     }
 
 private:
+    atcg::Scene scene;
+    atcg::Entity grid_entity;
+    atcg::Entity plane_entity;
+
     atcg::ref_ptr<atcg::FirstPersonController> camera_controller;
     atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
     atcg::ref_ptr<atcg::VertexBuffer> grid_vbo;
