@@ -43,6 +43,13 @@ public:
     void attachColor();
 
     /**
+     * @brief Attach a texture to the framebuffer
+     *
+     * @param texture The texture to attach
+     */
+    void attachTexture(const atcg::ref_ptr<Texture>& texture);
+
+    /**
      * @brief Add a depth attachement
      */
     void attachDepth();

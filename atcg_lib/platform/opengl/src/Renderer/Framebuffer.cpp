@@ -44,6 +44,18 @@ void Framebuffer::attachColor()
     useDefault();
 }
 
+void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
+{
+    use();
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
+                           GL_TEXTURE_2D,
+                           texture->getID(),
+                           0);
+    _color_attachements.push_back(texture);
+    useDefault();
+}
+
 void Framebuffer::attachDepth()
 {
     use();
