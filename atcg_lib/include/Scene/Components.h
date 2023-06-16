@@ -69,6 +69,8 @@ private:
 
 struct IDComponent
 {
+    IDComponent() : ID(UUID()) {}
+
     UUID ID;
 };
 
