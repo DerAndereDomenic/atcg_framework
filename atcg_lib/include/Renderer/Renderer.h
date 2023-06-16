@@ -221,6 +221,14 @@ public:
     static atcg::ref_ptr<Framebuffer> getFramebuffer();
 
     /**
+     * @brief Get the entity index that was rendered onto the given pixel
+     *
+     * @param mouse The mouse position
+     * @return The entity id
+     */
+    static int getEntityIndex(const glm::vec2& mouse);
+
+    /**
      * @brief Get a buffer representing the color attachement of the frame buffer.
      * @note This copies memory between GPU and CPU
      *

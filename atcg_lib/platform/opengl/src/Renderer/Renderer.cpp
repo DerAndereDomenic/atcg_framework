@@ -158,7 +158,7 @@ void Renderer::finishFrame()
     shader->setInt("screen_texture", 0);
 
     shader->use();
-    s_renderer->impl->screen_fbo->getColorAttachement(1)->use();
+    s_renderer->impl->screen_fbo->getColorAttachement()->use();
 
     const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
@@ -167,9 +167,6 @@ void Renderer::finishFrame()
 void Renderer::setClearColor(const glm::vec4& color)
 {
     glClearColor(color.r, color.g, color.b, color.a);
-
-    int value = -1;
-    glClearTexImage(s_renderer->impl->screen_fbo->getColorAttachement(1)->getID(), 0, GL_RED_INTEGER, GL_INT, &value);
 }
 
 void Renderer::setPointSize(const float& size)
@@ -212,6 +209,16 @@ atcg::ref_ptr<Framebuffer> Renderer::getFramebuffer()
 void Renderer::clear()
 {
     glClear(s_renderer->impl->clear_flag);
+
+    if(Framebuffer::currentFramebuffer() == s_renderer->impl->screen_fbo->getID())
+    {
+        int value = -1;
+        glClearTexImage(s_renderer->impl->screen_fbo->getColorAttachement(1)->getID(),
+                        0,
+                        GL_RED_INTEGER,
+                        GL_INT,
+                        &value);
+    }
 }
 
 void Renderer::toggleDepthTesting(bool enable)
@@ -553,6 +560,15 @@ void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
                               GL_TRIANGLES,
                               s_renderer->impl->cylinder_mesh->n_vertices(),
                               num_edges);
+}
+
+int Renderer::getEntityIndex(const glm::vec2& mouse)
+{
+    useScreenBuffer();
+    glReadBuffer(GL_COLOR_ATTACHMENT1);
+    int pixelData;
+    glReadPixels((int)mouse.x, (int)mouse.y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
+    return pixelData;
 }
 
 std::vector<uint8_t> Renderer::getFrame()
