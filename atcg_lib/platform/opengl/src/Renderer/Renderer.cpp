@@ -313,7 +313,23 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
-            throw std::logic_error {"Not implemented"};
+            atcg::ref_ptr<VertexArray> vao_sphere = s_renderer->impl->sphere_mesh->getVertexArray();
+            atcg::ref_ptr<VertexBuffer> vbo_mesh  = mesh->getVertexArray()->peekVertexBuffer();
+            if(vao_sphere->peekVertexBuffer() != vbo_mesh)
+            {
+                if(s_renderer->impl->sphere_has_instance) { vao_sphere->popVertexBuffer(); }
+                vao_sphere->pushInstanceBuffer(vbo_mesh);
+                s_renderer->impl->sphere_has_instance = true;
+            }
+            glm::mat4 model = glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
+            s_renderer->impl->drawVAO(vao_sphere,
+                                      camera,
+                                      color,
+                                      shader,
+                                      model,
+                                      GL_TRIANGLES,
+                                      s_renderer->impl->sphere_mesh->n_vertices(),
+                                      mesh->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_EDGES:
