@@ -96,6 +96,7 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
+    screen_fbo->attachTexture(Texture2D::createIntTexture(width, height));
     screen_fbo->attachDepth();
     screen_fbo->complete();
 }
@@ -190,6 +191,7 @@ void Renderer::resize(const uint32_t& width, const uint32_t& height)
     setViewport(0, 0, width, height);
     s_renderer->impl->screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     s_renderer->impl->screen_fbo->attachColor();
+    s_renderer->impl->screen_fbo->attachTexture(Texture2D::createIntTexture(width, height));
     s_renderer->impl->screen_fbo->attachDepth();
     s_renderer->impl->screen_fbo->complete();
 }
