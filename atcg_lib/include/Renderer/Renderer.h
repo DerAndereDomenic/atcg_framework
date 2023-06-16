@@ -73,6 +73,13 @@ public:
     static void setPointSize(const float& size);
 
     /**
+     * @brief Set the size of rendered lines
+     *
+     * @param size The size
+     */
+    static void setLineSize(const float& size);
+
+    /**
      * @brief Change the viewport of the renderer
      *
      * @param x The viewport x location

@@ -37,6 +37,7 @@ public:
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
 
     float point_size = 1.0f;
+    float line_size  = 1.0f;
 
     void drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
                                const atcg::ref_ptr<Camera>& camera,
@@ -166,6 +167,12 @@ void Renderer::setPointSize(const float& size)
 {
     s_renderer->impl->point_size = size;
     glPointSize(size);
+}
+
+void Renderer::setLineSize(const float& size)
+{
+    s_renderer->impl->line_size = size;
+    glLineWidth(size);
 }
 
 void Renderer::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
