@@ -8,11 +8,6 @@
 namespace atcg
 {
 
-struct EulerAngle
-{
-    float rx, ry, rz;
-};
-
 /**
  * @brief This class basically models a triangle soup.
  * This structure is only used to hold the GPU buffers for rendering the mesh
@@ -93,71 +88,6 @@ public:
     Mesh::HalfedgeHandle opposite_halfedge_handle(const Mesh::FaceHandle& fh, const Mesh::VertexHandle& vh);
 
     /**
-     * @brief Get the Position
-     *
-     * @return glm::vec3 The position
-     */
-    inline glm::vec3 getPosition() const { return _position; }
-
-    /**
-     * @brief Get the Scale
-     *
-     * @return glm::vec3 The scale
-     */
-    inline glm::vec3 getScale() const { return _scale; }
-
-    /**
-     * @brief Get the Model
-     *
-     * @return glm::mat4 The model
-     */
-    inline glm::mat4 getModel() const { return _model; }
-
-    /**
-     * @brief Set the model matrix
-     *
-     * @param model The new model matrix
-     */
-    inline void setModel(const glm::mat4 model)
-    {
-        _model = model;
-        decomposeModelMatrix();
-    }
-
-    /**
-     * @brief Set the Position
-     *
-     * @param position The position
-     */
-    inline void setPosition(const glm::vec3& position)
-    {
-        _position = position;
-        calculateModelMatrix();
-    }
-
-    /**
-     * @brief Set the Scale
-     *
-     * @param scale The scale
-     */
-    inline void setScale(const glm::vec3& scale)
-    {
-        _scale = scale;
-        calculateModelMatrix();
-    }
-
-    /**
-     * @brief Set the Rotation
-     *
-     * @param rotation The rotation described by three euler angles
-     */
-    inline void setRotation(const EulerAngle& rotation)
-    {
-        _rotation = rotation;
-        calculateModelMatrix();
-    }
-
-    /**
      * @brief Get the Vertex Array object
      *
      * @return atcg::ref_ptr<VertexArray> The vao
@@ -165,15 +95,6 @@ public:
     inline atcg::ref_ptr<VertexArray> getVertexArray() const { return _vao; }
 
 private:
-    void calculateModelMatrix();
-    void decomposeModelMatrix();
-
-    glm::vec3 _position = glm::vec3(0);
-    glm::vec3 _scale    = glm::vec3(1);
-    glm::mat4 _model    = glm::mat4(1);
-
-    EulerAngle _rotation;
-
     atcg::ref_ptr<VertexArray> _vao;
 };
 
