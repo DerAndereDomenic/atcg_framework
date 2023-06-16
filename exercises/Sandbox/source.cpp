@@ -25,12 +25,24 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
-        sphere = atcg::IO::read_mesh("res/cube.obj");
-        sphere->uploadData();
+        cube = atcg::IO::read_mesh("res/cube.obj");
+        cube->uploadData();
 
         atcg::ShaderManager::addShaderFromName("volume");
 
         noise_texture = atcg::Noise::createWorleyNoiseTexture3D(glm::ivec3(128), num_points);
+
+        scene       = atcg::make_ref<atcg::Scene>();
+        cube_entity = scene->createEntity();
+        cube_entity.addComponent<atcg::TransformComponent>();
+        cube_entity.addComponent<atcg::RenderComponent>(atcg::ShaderManager::getShader("volume"),
+                                                        camera_controller->getCamera(),
+                                                        glm::vec3(1),
+                                                        atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
+        cube_entity.addComponent<atcg::MeshComponent>(cube);
+
+        light_entity = scene->createEntity();
+        light_entity.addComponent<atcg::TransformComponent>();
     }
 
     // This gets called each frame
@@ -41,14 +53,11 @@ public:
         atcg::Renderer::clear();
 
 
+        glm::vec3 light_pos = light_entity.getComponent<atcg::TransformComponent>().getPosition();
         atcg::ShaderManager::getShader("volume")->setInt("noise_texture", 0);
         atcg::ShaderManager::getShader("volume")->setVec3("light_position", light_pos);
         noise_texture->use();
-        atcg::Renderer::draw(sphere,
-                             camera_controller->getCamera(),
-                             glm::mat4(1),
-                             glm::vec3(1),
-                             atcg::ShaderManager::getShader("volume"));
+        atcg::Renderer::draw(cube_entity);
     }
 
     virtual void onImGuiRender() override
@@ -86,7 +95,8 @@ public:
         glm::mat4 camera_projection = camera_controller->getCamera()->getProjection();
         glm::mat4 camera_view       = camera_controller->getCamera()->getView();
 
-        glm::mat4 transform = glm::translate(light_pos);    // sphere->getModel();
+        glm::mat4 transform =
+            light_entity.getComponent<atcg::TransformComponent>().getModel();    // sphere->getModel();
 
         ImGuizmo::Manipulate(glm::value_ptr(camera_view),
                              glm::value_ptr(camera_projection),
@@ -94,7 +104,7 @@ public:
                              ImGuizmo::LOCAL,
                              glm::value_ptr(transform));
 
-        light_pos = transform[3];
+        light_entity.getComponent<atcg::TransformComponent>().setPosition(transform[3]);
 
         // if(ImGuizmo::IsUsing()) { sphere->setModel(transform); }
     }
@@ -119,13 +129,15 @@ public:
     }
 
 private:
+    atcg::ref_ptr<atcg::Scene> scene;
+    atcg::Entity cube_entity;
+    atcg::Entity light_entity;
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
-    atcg::ref_ptr<atcg::Mesh> sphere;
+    atcg::ref_ptr<atcg::Mesh> cube;
 
     atcg::ref_ptr<atcg::Texture3D> noise_texture;
 
     uint32_t num_points = 16;
-    glm::vec3 light_pos = glm::vec3(0);
 
     bool show_render_settings = true;
 
