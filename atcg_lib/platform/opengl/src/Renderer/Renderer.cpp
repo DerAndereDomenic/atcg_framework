@@ -462,6 +462,7 @@ void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
                         const atcg::ref_ptr<VertexBuffer>& indices,
                         const float radius,
                         const atcg::ref_ptr<Camera>& camera,
+                        const glm::mat4& model,
                         const glm::vec3& color)
 {
     atcg::ref_ptr<VertexArray> vao_cylinder = s_renderer->impl->cylinder_mesh->getVertexArray();
@@ -471,8 +472,7 @@ void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
         vao_cylinder->pushInstanceBuffer(indices);
         s_renderer->impl->cylinder_has_instance = true;
     }
-    glm::mat4 model    = glm::mat4(1);    // glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
-    uint32_t num_edges = indices->size() / (sizeof(uint32_t) * 2);    // TODO
+    uint32_t num_edges                        = indices->size() / (sizeof(uint32_t) * 2);    // TODO
     const atcg::ref_ptr<atcg::Shader>& shader = ShaderManager::getShader("cylinder_edge");
     points->bindStorage(0);
     shader->setFloat("radius", radius);
