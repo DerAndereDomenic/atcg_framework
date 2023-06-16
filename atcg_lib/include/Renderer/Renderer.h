@@ -112,12 +112,14 @@ public:
      *
      * @param vao The vertex array
      * @param camera The camera
+     * @param model The optional model matrix
      * @param color An optional color
      * @param shader The shader
      * @param draw_mode The draw mode
      */
     static void draw(const atcg::ref_ptr<VertexArray>& vao,
                      const atcg::ref_ptr<Camera>& camera = {},
+                     const glm::mat4& model              = glm::mat4(1),
                      const glm::vec3& color              = glm::vec3(1),
                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
@@ -131,12 +133,14 @@ public:
      *
      * @param mesh The mesh
      * @param camera The camera
+     * @param model The optional model matrix
      * @param color An optional color
      * @param shader The shader
      * @param draw_mode The draw mode
      */
     static void draw(const atcg::ref_ptr<Mesh>& mesh,
                      const atcg::ref_ptr<Camera>& camera = {},
+                     const glm::mat4& model              = glm::mat4(1),
                      const glm::vec3& color              = glm::vec3(1),
                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
@@ -150,12 +154,14 @@ public:
      *
      * @param cloud The pointcloud
      * @param camera The camera
+     * @param model The optional model matrix
      * @param color An optional color
      * @param shader The shader
      * @param draw_mode The draw mode
      */
     static void draw(const atcg::ref_ptr<PointCloud>& cloud,
                      const atcg::ref_ptr<Camera>& camera = {},
+                     const glm::mat4& model              = glm::mat4(1),
                      const glm::vec3& color              = glm::vec3(1),
                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_POINTS);

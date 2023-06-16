@@ -41,6 +41,7 @@ public:
 
     void drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
                                const atcg::ref_ptr<Camera>& camera,
+                               const glm::mat4& model,
                                const glm::vec3& color,
                                const atcg::ref_ptr<Shader>& shader,
                                uint32_t n_instances);
@@ -264,6 +265,7 @@ void Renderer::setCullFace(CullMode mode)
 
 void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
                     const atcg::ref_ptr<Camera>& camera,
+                    const glm::mat4& model,
                     const glm::vec3& color,
                     const atcg::ref_ptr<Shader>& shader,
                     DrawMode draw_mode)
@@ -272,12 +274,12 @@ void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
     {
         case ATCG_DRAW_MODE_TRIANGLE:
         {
-            s_renderer->impl->drawVAO(vao, camera, color, shader, glm::mat4(1), GL_TRIANGLES, 1e6);    // TODO
+            s_renderer->impl->drawVAO(vao, camera, color, shader, model, GL_TRIANGLES, 1e6);    // TODO
         }
         break;
         case ATCG_DRAW_MODE_POINTS:
         {
-            s_renderer->impl->drawVAO(vao, camera, color, shader, glm::mat4(1), GL_POINTS, 1e6);
+            s_renderer->impl->drawVAO(vao, camera, color, shader, model, GL_POINTS, 1e6);
         }
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
@@ -287,8 +289,7 @@ void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
         break;
         case ATCG_DRAW_MODE_EDGES:
         {
-            s_renderer->impl
-                ->drawVAO(vao, camera, color, ShaderManager::getShader("edge"), glm::mat4(1), GL_LINE_STRIP, 1e6);
+            s_renderer->impl->drawVAO(vao, camera, color, ShaderManager::getShader("edge"), model, GL_LINE_STRIP, 1e6);
         }
         break;
     }
@@ -296,6 +297,7 @@ void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
 
 void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
                     const atcg::ref_ptr<Camera>& camera,
+                    const glm::mat4& model,
                     const glm::vec3& color,
                     const atcg::ref_ptr<Shader>& shader,
                     DrawMode draw_mode)
@@ -308,26 +310,22 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
                                       camera,
                                       color,
                                       shader,
-                                      mesh->getModel(),
+                                      model,
                                       GL_TRIANGLES,
                                       mesh->n_vertices());    // TODO
         }
         break;
         case ATCG_DRAW_MODE_POINTS:
         {
-            s_renderer->impl->drawVAO(mesh->getVertexArray(),
-                                      camera,
-                                      color,
-                                      shader,
-                                      mesh->getModel(),
-                                      GL_POINTS,
-                                      mesh->n_vertices());
+            s_renderer->impl
+                ->drawVAO(mesh->getVertexArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
             s_renderer->impl->drawPointCloudSpheres(mesh->getVertexArray()->peekVertexBuffer(),
                                                     camera,
+                                                    model,
                                                     color,
                                                     shader,
                                                     mesh->n_vertices());
@@ -339,7 +337,7 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
                                       camera,
                                       color,
                                       ShaderManager::getShader("edge"),
-                                      mesh->getModel(),
+                                      model,
                                       GL_TRIANGLES,
                                       mesh->n_vertices());
         }
@@ -349,6 +347,7 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
 
 void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
                     const atcg::ref_ptr<Camera>& camera,
+                    const glm::mat4& model,
                     const glm::vec3& color,
                     const atcg::ref_ptr<Shader>& shader,
                     DrawMode draw_mode)
@@ -363,13 +362,14 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
         case ATCG_DRAW_MODE_POINTS:
         {
             s_renderer->impl
-                ->drawVAO(cloud->getVertexArray(), camera, color, shader, glm::mat4(1), GL_POINTS, cloud->n_vertices());
+                ->drawVAO(cloud->getVertexArray(), camera, color, shader, model, GL_POINTS, cloud->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
             s_renderer->impl->drawPointCloudSpheres(cloud->getVertexArray()->peekVertexBuffer(),
                                                     camera,
+                                                    model,
                                                     color,
                                                     shader,
                                                     cloud->n_vertices());
@@ -385,6 +385,7 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
 
 void Renderer::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
                                            const atcg::ref_ptr<Camera>& camera,
+                                           const glm::mat4& model,
                                            const glm::vec3& color,
                                            const atcg::ref_ptr<Shader>& shader,
                                            uint32_t n_instances)
@@ -396,12 +397,12 @@ void Renderer::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vb
         vao_sphere->pushInstanceBuffer(vbo);
         s_renderer->impl->sphere_has_instance = true;
     }
-    glm::mat4 model = glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
+    glm::mat4 model_new = model * glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
     s_renderer->impl->drawVAO(vao_sphere,
                               camera,
                               color,
                               shader,
-                              model,
+                              model_new,
                               GL_TRIANGLES,
                               s_renderer->impl->sphere_mesh->n_vertices(),
                               n_instances);
