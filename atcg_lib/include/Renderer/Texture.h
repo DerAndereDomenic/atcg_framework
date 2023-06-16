@@ -88,6 +88,14 @@ public:
     static atcg::ref_ptr<Texture2D> createDepthTexture(uint32_t width, uint32_t height);
 
     /**
+     * @brief Create a one channel int texture
+     *
+     * @param width The width
+     * @param height The height
+     */
+    static atcg::ref_ptr<Texture2D> createIntTexture(uint32_t width, uint32_t height);
+
+    /**
      * @brief Create a one channel float texture
      *
      * @param width The width

@@ -60,6 +60,28 @@ atcg::ref_ptr<Texture2D> Texture2D::createDepthTexture(uint32_t width, uint32_t 
     return result;
 }
 
+atcg::ref_ptr<Texture2D> Texture2D::createIntTexture(uint32_t width, uint32_t height)
+{
+    atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
+
+    result->_width  = width;
+    result->_height = height;
+    result->_depth  = 1;
+    result->_target = GL_TEXTURE_2D;
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_2D, result->_ID);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, nullptr);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return result;
+}
+
 atcg::ref_ptr<Texture2D> Texture2D::createFloatTexture(uint32_t width, uint32_t height)
 {
     atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
