@@ -84,7 +84,8 @@ include_directories(atcg_lib/include
                     external/pybind11/include
                     external/spdlog/include
                     external/imguizmo
-                    external/nanort)
+                    external/nanort
+                    external/entt/include)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
