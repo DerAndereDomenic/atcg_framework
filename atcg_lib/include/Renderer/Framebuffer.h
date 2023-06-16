@@ -72,9 +72,24 @@ public:
      */
     inline atcg::ref_ptr<Texture2D> getDepthAttachement() const { return _depth_attachement; }
 
+    /**
+     * @brief Get the ID of the framebuffer
+     *
+     * @return The ID
+     */
+    inline uint32_t getID() const { return _ID; }
+
+    /**
+     * @brief Get the currently bound fbo
+     *
+     * @return ID of the fbo
+     */
+    static uint32_t currentFramebuffer();
+
 private:
     friend class Renderer;
     static void useDefault();
+    static uint32_t s_current_fbo;
     uint32_t _ID;
     uint32_t _width, _height;
     std::vector<atcg::ref_ptr<Texture2D>> _color_attachements;

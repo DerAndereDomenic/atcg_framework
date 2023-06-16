@@ -5,6 +5,9 @@
 
 namespace atcg
 {
+
+uint32_t Framebuffer::s_current_fbo = 0;
+
 Framebuffer::Framebuffer(uint32_t width, uint32_t height) : _width(width), _height(height)
 {
     glGenFramebuffers(1, &_ID);
@@ -19,6 +22,7 @@ Framebuffer::~Framebuffer()
 void Framebuffer::use() const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, _ID);
+    s_current_fbo = _ID;
 }
 
 bool Framebuffer::complete() const
@@ -72,5 +76,11 @@ void Framebuffer::attachDepth()
 void Framebuffer::useDefault()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    s_current_fbo = 0;
+}
+
+uint32_t Framebuffer::currentFramebuffer()
+{
+    return s_current_fbo;
 }
 }    // namespace atcg
