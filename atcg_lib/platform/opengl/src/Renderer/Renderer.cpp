@@ -38,6 +38,12 @@ public:
 
     float point_size = 1.0f;
 
+    void drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
+                               const atcg::ref_ptr<Camera>& camera,
+                               const glm::vec3& color,
+                               const atcg::ref_ptr<Shader>& shader,
+                               uint32_t n_instances);
+
     // Render methods
     void drawVAO(const atcg::ref_ptr<VertexArray>& vao,
                  const atcg::ref_ptr<Camera>& camera,
@@ -313,23 +319,11 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
-            atcg::ref_ptr<VertexArray> vao_sphere = s_renderer->impl->sphere_mesh->getVertexArray();
-            atcg::ref_ptr<VertexBuffer> vbo_mesh  = mesh->getVertexArray()->peekVertexBuffer();
-            if(vao_sphere->peekVertexBuffer() != vbo_mesh)
-            {
-                if(s_renderer->impl->sphere_has_instance) { vao_sphere->popVertexBuffer(); }
-                vao_sphere->pushInstanceBuffer(vbo_mesh);
-                s_renderer->impl->sphere_has_instance = true;
-            }
-            glm::mat4 model = glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
-            s_renderer->impl->drawVAO(vao_sphere,
-                                      camera,
-                                      color,
-                                      shader,
-                                      model,
-                                      GL_TRIANGLES,
-                                      s_renderer->impl->sphere_mesh->n_vertices(),
-                                      mesh->n_vertices());
+            s_renderer->impl->drawPointCloudSpheres(mesh->getVertexArray()->peekVertexBuffer(),
+                                                    camera,
+                                                    color,
+                                                    shader,
+                                                    mesh->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_EDGES:
@@ -367,23 +361,11 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
-            atcg::ref_ptr<VertexArray> vao_sphere = s_renderer->impl->sphere_mesh->getVertexArray();
-            atcg::ref_ptr<VertexBuffer> vbo_cloud = cloud->getVertexArray()->peekVertexBuffer();
-            if(vao_sphere->peekVertexBuffer() != vbo_cloud)
-            {
-                if(s_renderer->impl->sphere_has_instance) { vao_sphere->popVertexBuffer(); }
-                vao_sphere->pushInstanceBuffer(vbo_cloud);
-                s_renderer->impl->sphere_has_instance = true;
-            }
-            glm::mat4 model = glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
-            s_renderer->impl->drawVAO(vao_sphere,
-                                      camera,
-                                      color,
-                                      shader,
-                                      model,
-                                      GL_TRIANGLES,
-                                      s_renderer->impl->sphere_mesh->n_vertices(),
-                                      cloud->n_vertices());
+            s_renderer->impl->drawPointCloudSpheres(cloud->getVertexArray()->peekVertexBuffer(),
+                                                    camera,
+                                                    color,
+                                                    shader,
+                                                    cloud->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_EDGES:
@@ -392,6 +374,30 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
         }
         break;
     }
+}
+
+void Renderer::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
+                                           const atcg::ref_ptr<Camera>& camera,
+                                           const glm::vec3& color,
+                                           const atcg::ref_ptr<Shader>& shader,
+                                           uint32_t n_instances)
+{
+    atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVertexArray();
+    if(vao_sphere->peekVertexBuffer() != vbo)
+    {
+        if(s_renderer->impl->sphere_has_instance) { vao_sphere->popVertexBuffer(); }
+        vao_sphere->pushInstanceBuffer(vbo);
+        s_renderer->impl->sphere_has_instance = true;
+    }
+    glm::mat4 model = glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
+    s_renderer->impl->drawVAO(vao_sphere,
+                              camera,
+                              color,
+                              shader,
+                              model,
+                              GL_TRIANGLES,
+                              s_renderer->impl->sphere_mesh->n_vertices(),
+                              n_instances);
 }
 
 void Renderer::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
