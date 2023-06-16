@@ -43,6 +43,8 @@ public:
 
         light_entity = scene->createEntity();
         light_entity.addComponent<atcg::TransformComponent>();
+
+        selected_entity = light_entity;
     }
 
     // This gets called each frame
@@ -84,6 +86,14 @@ public:
             ImGui::End();
         }
 
+        ImGui::Begin("Scene Panel");
+
+        if(ImGui::Button("Light")) { selected_entity = light_entity; }
+
+        if(ImGui::Button("Volume")) { selected_entity = cube_entity; }
+
+        ImGui::End();
+
         // Gizmo test
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::BeginFrame();
@@ -96,7 +106,7 @@ public:
         glm::mat4 camera_view       = camera_controller->getCamera()->getView();
 
         glm::mat4 transform =
-            light_entity.getComponent<atcg::TransformComponent>().getModel();    // sphere->getModel();
+            selected_entity.getComponent<atcg::TransformComponent>().getModel();    // sphere->getModel();
 
         ImGuizmo::Manipulate(glm::value_ptr(camera_view),
                              glm::value_ptr(camera_projection),
@@ -104,7 +114,7 @@ public:
                              ImGuizmo::LOCAL,
                              glm::value_ptr(transform));
 
-        light_entity.getComponent<atcg::TransformComponent>().setPosition(transform[3]);
+        selected_entity.getComponent<atcg::TransformComponent>().setModel(transform);
 
         // if(ImGuizmo::IsUsing()) { sphere->setModel(transform); }
     }
@@ -132,6 +142,7 @@ private:
     atcg::ref_ptr<atcg::Scene> scene;
     atcg::Entity cube_entity;
     atcg::Entity light_entity;
+    atcg::Entity selected_entity;
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Mesh> cube;
 
