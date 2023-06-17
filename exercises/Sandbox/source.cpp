@@ -58,6 +58,9 @@ public:
         glm::vec3 light_pos = light_entity.getComponent<atcg::TransformComponent>().getPosition();
         atcg::ShaderManager::getShader("volume")->setInt("noise_texture", 0);
         atcg::ShaderManager::getShader("volume")->setVec3("light_position", light_pos);
+        atcg::ShaderManager::getShader("volume")->setFloat("sigma_s_base", sigma_s_base);
+        atcg::ShaderManager::getShader("volume")->setFloat("sigma_a_base", sigma_a_base);
+        atcg::ShaderManager::getShader("volume")->setFloat("g", g);
         noise_texture->use();
         atcg::Renderer::draw(cube_entity);
     }
@@ -82,6 +85,12 @@ public:
             {
                 noise_texture = atcg::Noise::createWorleyNoiseTexture3D(glm::ivec3(128), num_points);
             }
+
+            ImGui::InputFloat("sigma_s_base", &sigma_s_base);
+
+            ImGui::InputFloat("sigma_a_base", &sigma_a_base);
+
+            ImGui::SliderFloat("g", &g, -0.9999f, 0.9999f);
 
             ImGui::End();
         }
@@ -151,6 +160,10 @@ private:
     uint32_t num_points = 16;
 
     bool show_render_settings = true;
+
+    float sigma_s_base = 20.0f;
+    float sigma_a_base = 0.0f;
+    float g            = 0.0f;
 
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 };
