@@ -57,6 +57,8 @@ struct TransformComponent
 
     inline glm::vec3 getRotation() const { return _rotation; }
 
+    inline operator glm::mat4() const { return _model_matrix; }
+
 private:
     void calculateModelMatrix();
     void decomposeModelMatrix();
