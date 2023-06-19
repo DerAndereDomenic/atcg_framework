@@ -14,6 +14,6 @@ uniform int instanced;
 
 void main()
 {
-    gl_Position = P * V * (M * vec4(aPosition, 1) + vec4(aInstanceOffset * instanced, 0));
+    gl_Position = P * V * (M * (vec4(aPosition, 1) + vec4(aInstanceOffset * instanced, 0)));
     frag_color = aColor * (instanced * aInstanceColor + (1 - instanced) * vec3(1));;
 }
