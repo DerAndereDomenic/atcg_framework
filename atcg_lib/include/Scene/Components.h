@@ -12,8 +12,9 @@ namespace atcg
 {
 struct TransformComponent
 {
-    TransformComponent() = default;
-    TransformComponent(const glm::vec3& position, const glm::vec3& scale, const glm::vec3& rotation)
+    TransformComponent(const glm::vec3& position = glm::vec3(0),
+                       const glm::vec3& scale    = glm::vec3(1),
+                       const glm::vec3& rotation = glm::vec3(0))
         : _position(position),
           _scale(scale),
           _rotation(rotation)
@@ -102,7 +103,9 @@ struct GridComponent
 
 struct RenderComponent
 {
-    RenderComponent(const atcg::ref_ptr<Shader>& shader, const glm::vec3& color, const atcg::DrawMode& draw_mode)
+    RenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                    const glm::vec3& color              = glm::vec3(1),
+                    const atcg::DrawMode& draw_mode     = atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
         : shader(shader),
           color(color),
           draw_mode(draw_mode)
