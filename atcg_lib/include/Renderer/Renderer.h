@@ -173,15 +173,17 @@ public:
      * @brief Render an entity
      *
      * @param entity The entity to render
+     * @param camera The camera
      */
-    static void draw(Entity entity);
+    static void draw(Entity entity, const atcg::ref_ptr<Camera>& camera = {});
 
     /**
      * @brief Render a scene
      *
      * @param scene The scene to render
+     * @param camera The camera
      */
-    static void draw(const atcg::ref_ptr<Scene>& scene);
+    static void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
 
     /**
      * @brief Draw Circle

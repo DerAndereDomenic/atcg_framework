@@ -102,19 +102,14 @@ struct GridComponent
 
 struct RenderComponent
 {
-    RenderComponent(const atcg::ref_ptr<Shader>& shader,
-                    const atcg::ref_ptr<Camera>& camera,
-                    const glm::vec3& color,
-                    const atcg::DrawMode& draw_mode)
+    RenderComponent(const atcg::ref_ptr<Shader>& shader, const glm::vec3& color, const atcg::DrawMode& draw_mode)
         : shader(shader),
-          camera(camera),
           color(color),
           draw_mode(draw_mode)
     {
     }
 
     atcg::ref_ptr<Shader> shader;
-    atcg::ref_ptr<Camera> camera;
     glm::vec3 color;
     atcg::DrawMode draw_mode;
 };

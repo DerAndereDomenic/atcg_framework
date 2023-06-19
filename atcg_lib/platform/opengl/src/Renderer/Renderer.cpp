@@ -399,7 +399,7 @@ void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
     }
 }
 
-void Renderer::draw(Entity entity)
+void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 {
     if(!entity.hasComponent<TransformComponent>())
     {
@@ -422,19 +422,14 @@ void Renderer::draw(Entity entity)
     {
         MeshComponent mesh = entity.getComponent<MeshComponent>();
         renderer.shader->setInt("entityID", entity_id);
-        Renderer::draw(mesh.mesh,
-                       renderer.camera,
-                       transform.getModel(),
-                       renderer.color,
-                       renderer.shader,
-                       renderer.draw_mode);
+        Renderer::draw(mesh.mesh, camera, transform.getModel(), renderer.color, renderer.shader, renderer.draw_mode);
     }
     else if(entity.hasComponent<PointCloudComponent>())
     {
         PointCloudComponent cloud = entity.getComponent<PointCloudComponent>();
         renderer.shader->setInt("entityID", entity_id);
         Renderer::draw(cloud.point_cloud,
-                       renderer.camera,
+                       camera,
                        transform.getModel(),
                        renderer.color,
                        renderer.shader,
@@ -444,18 +439,18 @@ void Renderer::draw(Entity entity)
     {
         GridComponent grid = entity.getComponent<GridComponent>();
         ShaderManager::getShader("cylinder_edge")->setInt("entityID", entity_id);
-        Renderer::drawGrid(grid.points, grid.edges, renderer.camera, transform.getModel(), renderer.color);
+        Renderer::drawGrid(grid.points, grid.edges, camera, transform.getModel(), renderer.color);
     }
 }
 
-void Renderer::draw(const atcg::ref_ptr<Scene>& scene)
+void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
 {
     auto& view = scene->getAllEntitiesWith<RenderComponent>();
 
     for(auto e: view)
     {
         Entity entity(e, scene.get());
-        Renderer::draw(entity);
+        Renderer::draw(entity, camera);
     }
 }
 

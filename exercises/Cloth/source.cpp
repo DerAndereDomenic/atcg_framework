@@ -91,17 +91,13 @@ public:
         atcg::Entity grid_entity = scene->createEntity();
         grid_entity.addComponent<atcg::GridComponent>(points_vbo, grid_vbo);
         grid_entity.addComponent<atcg::TransformComponent>();
-        grid_entity.addComponent<atcg::RenderComponent>(nullptr,
-                                                        camera_controller->getCamera(),
-                                                        glm::vec3(1),
-                                                        atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
+        grid_entity.addComponent<atcg::RenderComponent>(nullptr, glm::vec3(1), atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
         atcg::Entity plane_entity = scene->createEntity();
         plane_entity.addComponent<atcg::MeshComponent>(plane);
         auto& transform = plane_entity.addComponent<atcg::TransformComponent>();
         transform.setScale(glm::vec3(100, 1, 100));
         plane_entity.addComponent<atcg::RenderComponent>(checkerboard_shader,
-                                                         camera_controller->getCamera(),
                                                          glm::vec3(1),
                                                          atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
     }
@@ -120,7 +116,7 @@ public:
 
         simulate(dev_ptr, grid_size * grid_size, time);
 
-        atcg::Renderer::draw(scene);
+        atcg::Renderer::draw(scene, camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override

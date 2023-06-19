@@ -36,7 +36,6 @@ public:
         cube_entity = scene->createEntity();
         cube_entity.addComponent<atcg::TransformComponent>();
         cube_entity.addComponent<atcg::RenderComponent>(atcg::ShaderManager::getShader("volume"),
-                                                        camera_controller->getCamera(),
                                                         glm::vec3(1),
                                                         atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
         cube_entity.addComponent<atcg::MeshComponent>(cube);
@@ -62,7 +61,7 @@ public:
         atcg::ShaderManager::getShader("volume")->setFloat("sigma_a_base", sigma_a_base);
         atcg::ShaderManager::getShader("volume")->setFloat("g", g);
         noise_texture->use();
-        atcg::Renderer::draw(cube_entity);
+        atcg::Renderer::draw(cube_entity, camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
