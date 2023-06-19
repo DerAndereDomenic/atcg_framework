@@ -78,6 +78,13 @@ public:
     void setColors(const Eigen::MatrixX3d& colors);
 
     /**
+     * @brief Apply a model matrix to all points
+     *
+     * @param transform The transform matrix
+     */
+    void applyTransform(const glm::mat4& transform);
+
+    /**
      * @brief Get the handle to the opposite vertex on the face
      *
      * @param fh The face handle

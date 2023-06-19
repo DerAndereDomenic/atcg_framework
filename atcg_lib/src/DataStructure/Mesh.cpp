@@ -101,6 +101,15 @@ void Mesh::setColors(const Eigen::MatrixX3d& colors)
     }
 }
 
+void Mesh::applyTransform(const glm::mat4& transform)
+{
+    for(auto vt = vertices_begin(); vt != vertices_end(); ++vt)
+    {
+        set_point(*vt, glm::vec3(transform * glm::vec4(point(*vt), 1.0f)));
+    }
+    update_normals();
+}
+
 Mesh::HalfedgeHandle Mesh::opposite_halfedge_handle(const Mesh::FaceHandle& fh, const Mesh::VertexHandle& vh)
 {
     for(auto he_it = cfh_ccwbegin(fh); he_it != cfh_ccwend(fh); ++he_it)

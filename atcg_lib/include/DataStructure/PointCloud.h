@@ -120,6 +120,13 @@ public:
     inline atcg::ref_ptr<VertexArray> getVertexArray() const { return _vao; }
 
     /**
+     * @brief Apply a model matrix to all points
+     *
+     * @param transform The transform matrix
+     */
+    void applyTransform(const glm::mat4& transform);
+
+    /**
      * @brief Get the number of vertices
      *
      * @returns The number of vertices
@@ -265,6 +272,17 @@ void PointCloudT<Traits>::fromMatrix(const RowMatrix& points)
     {
         glm::vec3 pos {points(i, 0), points(i, 1), points(i, 2)};
         add_vertex(pos);
+    }
+}
+
+template<class Traits>
+void PointCloudT<Traits>::applyTransform(const glm::mat4& transform)
+{
+    glm::mat4 model_matrix = glm::inverse(glm::transpose(transform));
+    for(auto vt = vertices_begin(); vt != vertices_end(); ++vt)
+    {
+        set_point(*vt, glm::vec3(transform * glm::vec4(point(*vt), 1.0f)));
+        set_normal(*vt, glm::normalize(glm::vec3(model_matrix * glm::vec4(normal(*vt), 1.0f))));
     }
 }
 
