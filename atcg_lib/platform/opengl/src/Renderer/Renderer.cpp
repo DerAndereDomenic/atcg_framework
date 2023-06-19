@@ -407,45 +407,54 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         return;
     }
 
-    if(!entity.hasComponent<RenderComponent>())
-    {
-        ATCG_WARN("Entity does not have render component!");
-        return;
-    }
-
     TransformComponent transform = entity.getComponent<TransformComponent>();
-    RenderComponent renderer     = entity.getComponent<RenderComponent>();
 
     uint32_t entity_id = (uint32_t)entity._entity_handle;
 
     if(entity.hasComponent<MeshComponent>())
     {
         MeshComponent mesh = entity.getComponent<MeshComponent>();
-        renderer.shader->setInt("entityID", entity_id);
-        Renderer::draw(mesh.mesh, camera, transform.getModel(), renderer.color, renderer.shader, renderer.draw_mode);
+        for(auto& renderer: mesh.configs)
+        {
+            renderer.shader->setInt("entityID", entity_id);
+            Renderer::draw(mesh.mesh,
+                           camera,
+                           transform.getModel(),
+                           renderer.color,
+                           renderer.shader,
+                           renderer.draw_mode);
+        }
     }
-    else if(entity.hasComponent<PointCloudComponent>())
+
+    if(entity.hasComponent<PointCloudComponent>())
     {
         PointCloudComponent cloud = entity.getComponent<PointCloudComponent>();
-        renderer.shader->setInt("entityID", entity_id);
-        Renderer::draw(cloud.point_cloud,
-                       camera,
-                       transform.getModel(),
-                       renderer.color,
-                       renderer.shader,
-                       renderer.draw_mode);
+        for(auto& renderer: cloud.configs)
+        {
+            renderer.shader->setInt("entityID", entity_id);
+            Renderer::draw(cloud.point_cloud,
+                           camera,
+                           transform.getModel(),
+                           renderer.color,
+                           renderer.shader,
+                           renderer.draw_mode);
+        }
     }
-    else if(entity.hasComponent<GridComponent>())
+
+    if(entity.hasComponent<GridComponent>())
     {
         GridComponent grid = entity.getComponent<GridComponent>();
-        ShaderManager::getShader("cylinder_edge")->setInt("entityID", entity_id);
-        Renderer::drawGrid(grid.points, grid.edges, camera, transform.getModel(), renderer.color);
+        for(auto& renderer: grid.configs)
+        {
+            ShaderManager::getShader("cylinder_edge")->setInt("entityID", entity_id);
+            Renderer::drawGrid(grid.points, grid.edges, camera, transform.getModel(), renderer.color);
+        }
     }
 }
 
 void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
 {
-    auto& view = scene->getAllEntitiesWith<RenderComponent>();
+    auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
     for(auto e: view)
     {

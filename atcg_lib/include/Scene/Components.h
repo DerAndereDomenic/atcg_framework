@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include <Core/glm.h>
 #include <Core/UUID.h>
 #include <DataStructure/Mesh.h>
@@ -77,37 +79,11 @@ struct IDComponent
     UUID ID;
 };
 
-struct MeshComponent
+struct RenderConfig
 {
-    MeshComponent(const atcg::ref_ptr<Mesh>& mesh) : mesh(mesh) {}
-
-    atcg::ref_ptr<Mesh> mesh;
-};
-
-struct PointCloudComponent
-{
-    PointCloudComponent(const atcg::ref_ptr<PointCloud>& point_cloud) : point_cloud(point_cloud) {}
-
-    atcg::ref_ptr<Mesh> point_cloud;
-};
-
-struct GridComponent
-{
-    GridComponent(const atcg::ref_ptr<VertexBuffer>& points, const atcg::ref_ptr<VertexBuffer>& edges)
-        : points(points),
-          edges(edges)
-    {
-    }
-
-    atcg::ref_ptr<VertexBuffer> points;
-    atcg::ref_ptr<VertexBuffer> edges;
-};
-
-struct RenderComponent
-{
-    RenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                    const glm::vec3& color              = glm::vec3(1),
-                    const atcg::DrawMode& draw_mode     = atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+    RenderConfig(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                 const glm::vec3& color              = glm::vec3(1),
+                 const atcg::DrawMode& draw_mode     = atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
         : shader(shader),
           color(color),
           draw_mode(draw_mode)
@@ -117,5 +93,42 @@ struct RenderComponent
     atcg::ref_ptr<Shader> shader;
     glm::vec3 color;
     atcg::DrawMode draw_mode;
+};
+
+struct GeometryComponent
+{
+    inline GeometryComponent& addConfig(const RenderConfig& config = {})
+    {
+        configs.push_back(config);
+        return *this;
+    }
+
+    std::vector<RenderConfig> configs;
+};
+
+struct MeshComponent : public GeometryComponent
+{
+    MeshComponent(const atcg::ref_ptr<Mesh>& mesh) : mesh(mesh) {}
+
+    atcg::ref_ptr<Mesh> mesh;
+};
+
+struct PointCloudComponent : public GeometryComponent
+{
+    PointCloudComponent(const atcg::ref_ptr<PointCloud>& point_cloud) : point_cloud(point_cloud) {}
+
+    atcg::ref_ptr<Mesh> point_cloud;
+};
+
+struct GridComponent : public GeometryComponent
+{
+    GridComponent(const atcg::ref_ptr<VertexBuffer>& points, const atcg::ref_ptr<VertexBuffer>& edges)
+        : points(points),
+          edges(edges)
+    {
+    }
+
+    atcg::ref_ptr<VertexBuffer> points;
+    atcg::ref_ptr<VertexBuffer> edges;
 };
 }    // namespace atcg

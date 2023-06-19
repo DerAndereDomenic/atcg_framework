@@ -88,15 +88,13 @@ public:
         scene = atcg::make_ref<atcg::Scene>();
 
         atcg::Entity grid_entity = scene->createEntity();
-        grid_entity.addComponent<atcg::GridComponent>(points_vbo, grid_vbo);
+        grid_entity.addComponent<atcg::GridComponent>(points_vbo, grid_vbo).addConfig();
         grid_entity.addComponent<atcg::TransformComponent>();
-        grid_entity.addComponent<atcg::RenderComponent>();
 
         atcg::Entity plane_entity = scene->createEntity();
-        plane_entity.addComponent<atcg::MeshComponent>(plane);
+        plane_entity.addComponent<atcg::MeshComponent>(plane).addConfig({checkerboard_shader});
         auto& transform = plane_entity.addComponent<atcg::TransformComponent>();
-        transform.setScale(glm::vec3(100, 1, 100));
-        plane_entity.addComponent<atcg::RenderComponent>(checkerboard_shader);
+        transform.setScale(glm::vec3(100, 100, 100));
     }
 
     // This gets called each frame

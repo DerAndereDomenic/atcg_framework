@@ -35,10 +35,8 @@ public:
         scene       = atcg::make_ref<atcg::Scene>();
         cube_entity = scene->createEntity();
         cube_entity.addComponent<atcg::TransformComponent>();
-        cube_entity.addComponent<atcg::RenderComponent>(atcg::ShaderManager::getShader("volume"),
-                                                        glm::vec3(1),
-                                                        atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
-        cube_entity.addComponent<atcg::MeshComponent>(cube);
+        cube_entity.addComponent<atcg::MeshComponent>(cube).addConfig(
+            {atcg::ShaderManager::getShader("volume"), glm::vec3(1), atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE});
 
         light_entity = scene->createEntity();
         light_entity.addComponent<atcg::TransformComponent>();
