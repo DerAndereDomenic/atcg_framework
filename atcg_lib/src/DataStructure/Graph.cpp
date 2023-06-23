@@ -42,25 +42,25 @@ Graph::Impl::~Impl() {}
 
 void Graph::Impl::createVertexBuffer(const std::vector<Vertex>& vertices)
 {
-    vertices = atcg::make_ref<VertexBuffer>((void*)vertices.data(), vertices.size() * sizeof(Vertex));
-    vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
+    this->vertices = atcg::make_ref<VertexBuffer>((void*)vertices.data(), vertices.size() * sizeof(Vertex));
+    this->vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
                          {ShaderDataType::Float3, "aNormal"},
                          {ShaderDataType::Float3, "aColor"}});
 
 
     vertices_array = atcg::make_ref<VertexArray>();
-    vertices_array->pushVertexBuffer(vertices);
+    vertices_array->pushVertexBuffer(this->vertices);
 }
 
 void Graph::Impl::createEdgeBuffer(const std::vector<Edge>& edges)
 {
-    edges = atcg::make_ref<VertexBuffer>((void*)edges.data(), edges.size() * sizeof(Edge));
-    edges->setLayout(
+    this->edges = atcg::make_ref<VertexBuffer>((void*)edges.data(), edges.size() * sizeof(Edge));
+    this->edges->setLayout(
         {{ShaderDataType::Float2, "aIndex"}, {ShaderDataType::Float3, "aColor"}, {ShaderDataType::Float, "aRadius"}});
 
 
     edges_array = atcg::make_ref<VertexArray>();
-    edges_array->pushVertexBuffer(edges);
+    edges_array->pushVertexBuffer(this->edges);
 }
 
 Graph::Graph()
@@ -122,7 +122,7 @@ Graph::createGraph(const Vertex* vertices, const Edge* edges, uint32_t num_verti
     return nullptr;
 }
 
-const atcg::ref_ptr<VertexBuffer>& Graph::getPointsBuffer() const
+const atcg::ref_ptr<VertexBuffer>& Graph::getVerticesBuffer() const
 {
     return impl->vertices;
 }
