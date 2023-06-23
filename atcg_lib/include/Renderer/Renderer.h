@@ -4,9 +4,6 @@
 #include <Renderer/VertexArray.h>
 #include <Renderer/Shader.h>
 #include <Renderer/PerspectiveCamera.h>
-#include <DataStructure/Mesh.h>
-#include <DataStructure/Grid.h>
-#include <DataStructure/PointCloud.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Framebuffer.h>
 

@@ -4,8 +4,6 @@
 
 #include <Core/glm.h>
 #include <Core/UUID.h>
-#include <DataStructure/Mesh.h>
-#include <DataStructure/PointCloud.h>
 #include <Renderer/Shader.h>
 #include <Renderer/Camera.h>
 #include <Renderer/Renderer.h>

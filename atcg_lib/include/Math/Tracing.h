@@ -1,6 +1,5 @@
 #pragma once
 
-#include <DataStructure/Mesh.h>
 #include <Eigen/Dense>
 
 #include <Core/Memory.h>
