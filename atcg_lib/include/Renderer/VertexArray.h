@@ -38,7 +38,7 @@ public:
      *
      * @return The Vertex buffer that was removed
      */
-    const atcg::ref_ptr<VertexBuffer>& popVertexBuffer();
+    atcg::ref_ptr<VertexBuffer> popVertexBuffer();
 
     /**
      * @brief Get the top vertex buffer on the stack

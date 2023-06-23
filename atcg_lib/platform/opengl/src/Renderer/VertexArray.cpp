@@ -121,7 +121,7 @@ void VertexArray::pushVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
     _vertex_buffer_index.push_back({vertex_buffer_index, 0});
 }
 
-const atcg::ref_ptr<VertexBuffer>& VertexArray::popVertexBuffer()
+atcg::ref_ptr<VertexBuffer> VertexArray::popVertexBuffer()
 {
     glBindVertexArray(_ID);
     atcg::ref_ptr<VertexBuffer> last_buffer = _vertex_buffers.back();
