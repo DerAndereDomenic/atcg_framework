@@ -56,40 +56,65 @@ Graph::Impl::~Impl() {}
 
 void Graph::Impl::createVertexBuffer(const std::vector<Vertex>& vertices)
 {
-    this->vertices = atcg::make_ref<VertexBuffer>((void*)vertices.data(), vertices.size() * sizeof(Vertex));
-    this->vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
-                               {ShaderDataType::Float3, "aNormal"},
-                               {ShaderDataType::Float3, "aColor"}});
+    if(n_vertices < vertices.size())
+    {
+        this->vertices = atcg::make_ref<VertexBuffer>((void*)vertices.data(), vertices.size() * sizeof(Vertex));
+        this->vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
+                                   {ShaderDataType::Float3, "aNormal"},
+                                   {ShaderDataType::Float3, "aColor"}});
 
 
-    vertices_array = atcg::make_ref<VertexArray>();
-    vertices_array->pushVertexBuffer(this->vertices);
+        vertices_array = atcg::make_ref<VertexArray>();
+        vertices_array->pushVertexBuffer(this->vertices);
 
-    n_vertices   = vertices.size();
-    cap_vertices = vertices.size();
+        n_vertices   = vertices.size();
+        cap_vertices = vertices.size();
+    }
+    else
+    {
+        this->vertices->setData((void*)vertices.data(), sizeof(Vertex) * vertices.size());
+        n_vertices = vertices.size();
+    }
 }
 
 void Graph::Impl::createEdgeBuffer(const std::vector<Edge>& edges)
 {
-    this->edges = atcg::make_ref<VertexBuffer>((void*)edges.data(), edges.size() * sizeof(Edge));
-    this->edges->setLayout(
-        {{ShaderDataType::Float2, "aIndex"}, {ShaderDataType::Float3, "aColor"}, {ShaderDataType::Float, "aRadius"}});
+    if(n_edges < edges.size())
+    {
+        this->edges = atcg::make_ref<VertexBuffer>((void*)edges.data(), edges.size() * sizeof(Edge));
+        this->edges->setLayout({{ShaderDataType::Float2, "aIndex"},
+                                {ShaderDataType::Float3, "aColor"},
+                                {ShaderDataType::Float, "aRadius"}});
 
 
-    edges_array = atcg::make_ref<VertexArray>();
-    edges_array->pushVertexBuffer(this->edges);
+        edges_array = atcg::make_ref<VertexArray>();
+        edges_array->pushVertexBuffer(this->edges);
 
-    n_edges      = edges.size();
-    cap_vertices = edges.size();
+        n_edges      = edges.size();
+        cap_vertices = edges.size();
+    }
+    else
+    {
+        this->edges->setData((void*)edges.data(), sizeof(Edge) * edges.size());
+        n_edges = edges.size();
+    }
 }
 
 void Graph::Impl::createFaceBuffer(const std::vector<glm::u32vec3>& face_indices)
 {
-    indices = atcg::make_ref<IndexBuffer>((uint32_t*)face_indices.data(), face_indices.size() * 3);
-    vertices_array->setIndexBuffer(indices);
+    if(n_faces < face_indices.size())
+    {
+        indices = atcg::make_ref<IndexBuffer>((uint32_t*)face_indices.data(), face_indices.size() * 3);
+        vertices_array->setIndexBuffer(indices);
 
-    n_faces   = face_indices.size();
-    cap_faces = face_indices.size();
+        n_faces   = face_indices.size();
+        cap_faces = face_indices.size();
+    }
+    else
+    {
+        indices->setData((uint32_t*)face_indices.data(), face_indices.size() * 3);
+        n_faces = face_indices.size();
+    }
 }
 
 std::vector<Edge> Graph::Impl::edgesFromIndices(const std::vector<Vertex>& vertices,
@@ -218,11 +243,22 @@ const atcg::ref_ptr<VertexArray>& Graph::getEdgesArray() const
     return impl->edges_array;
 }
 
-void Graph::updateVertices(const std::vector<Vertex>& vertices) {}
+void Graph::updateVertices(const std::vector<Vertex>& vertices)
+{
+    impl->createVertexBuffer(vertices);
+}
 
-void Graph::updateFaces(const std::vector<glm::u32vec3>& faces) {}
+void Graph::updateFaces(const std::vector<Vertex>& vertices, const std::vector<glm::u32vec3>& faces)
+{
+    impl->createFaceBuffer(faces);
+    std::vector<Edge> edges = impl->edgesFromIndices(vertices, faces);
+    impl->createEdgeBuffer(edges);
+}
 
-void Graph::updateEdges(const std::vector<Edge>& edges) {}
+void Graph::updateEdges(const std::vector<Edge>& edges)
+{
+    impl->createEdgeBuffer(edges);
+}
 
 void Graph::updateVertices(const Vertex* vertices, uint32_t num_vertices) {}
 
