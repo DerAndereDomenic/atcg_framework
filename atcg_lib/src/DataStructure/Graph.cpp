@@ -25,9 +25,9 @@ public:
     atcg::ref_ptr<VertexArray> vertices_array;
     atcg::ref_ptr<VertexArray> edges_array;
 
-    uint32_t n_vertices;
-    uint32_t n_edges;
-    uint32_t n_faces;
+    uint32_t n_vertices = 0;
+    uint32_t n_edges    = 0;
+    uint32_t n_faces    = 0;
 
     GraphType type;
 };
@@ -70,9 +70,19 @@ atcg::ref_ptr<Graph> Graph::createPointCloud(const std::vector<Vertex>& vertices
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->impl->createVertexBuffer(vertices);
-    result->impl->type = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
+    result->impl->type       = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
+    result->impl->n_vertices = vertices.size();
     return result;
 }
+
+struct Vec2Hasher
+{
+    std::size_t operator()(const glm::vec2& v) const
+    {
+        return (*reinterpret_cast<const uint32_t*>(&v.x) * 73856093) ^
+               (*reinterpret_cast<const uint32_t*>(&v.y) * 19349669);
+    }
+};
 
 atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertices,
                                                const std::vector<glm::u32vec3>& face_indices,
@@ -82,36 +92,39 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
     result->impl->createVertexBuffer(vertices);
     result->impl->indices = atcg::make_ref<IndexBuffer>((uint32_t*)face_indices.data(), face_indices.size() * 3);
     result->impl->vertices_array->setIndexBuffer(result->impl->indices);
-    result->impl->n_faces = face_indices.size();
-    result->impl->type    = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
+    result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
 
-    std::unordered_map<std::pair<uint32_t, uint32_t>, glm::vec3> edge_set;
+    std::unordered_map<glm::vec2, glm::vec3, Vec2Hasher> edge_set;
 
-    for(glm::u32vec3& triangle: face_indices)
+    for(glm::u32vec3 triangle: face_indices)
     {
-        uint32_t v1 = face_indices.x;
-        uint32_t v2 = face_indices.y;
-        uint32_t v3 = face_indices.z;
+        uint32_t v1 = triangle.x;
+        uint32_t v2 = triangle.y;
+        uint32_t v3 = triangle.z;
 
         glm::vec3 color_v1 = vertices[v1].color;
         glm::vec3 color_v2 = vertices[v2].color;
         glm::vec3 color_v3 = vertices[v3].color;
 
         edge_set.insert(
-            std::make_pair(std::make_pair(std::min(v1, v2), std::max(v1, v2)), glm::mix(color_v1, color_v2, 0.5f)));
+            std::make_pair(glm::vec2(std::min(v1, v2), std::max(v1, v2)), glm::mix(color_v1, color_v2, 0.5f)));
         edge_set.insert(
-            std::make_pair(std::make_pair(std::min(v2, v3), std::max(v2, v3)), glm::mix(color_v2, color_v3, 0.5f)));
+            std::make_pair(glm::vec2(std::min(v2, v3), std::max(v2, v3)), glm::mix(color_v2, color_v3, 0.5f)));
         edge_set.insert(
-            std::make_pair(std::make_pair(std::min(v3, v1), std::max(v3, v1)), glm::mix(color_v3, color_v1, 0.5f)));
+            std::make_pair(glm::vec2(std::min(v3, v1), std::max(v3, v1)), glm::mix(color_v3, color_v1, 0.5f)));
     }
 
     std::vector<Edge> edges;
     for(auto it = edge_set.begin(); it != edge_set.end(); ++it)
     {
-        edges.push_back({glm::vec2(it->first.first, it->first.second), it->second, edge_radius});
+        edges.push_back({it->first, it->second, edge_radius});
     }
 
     result->impl->createEdgeBuffer(edges);
+
+    result->impl->n_faces    = face_indices.size();
+    result->impl->n_vertices = vertices.size();
+    result->impl->n_edges    = edges.size();
 
     return result;
 }
@@ -121,7 +134,9 @@ atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, con
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->impl->createVertexBuffer(vertices);
     result->impl->createEdgeBuffer(edges);
-    result->impl->type = GraphType::ATCG_GRAPH_TYPE_GRAPH;
+    result->impl->type       = GraphType::ATCG_GRAPH_TYPE_GRAPH;
+    result->impl->n_vertices = vertices.size();
+    result->impl->n_edges    = edges.size();
     return result;
 }
 
