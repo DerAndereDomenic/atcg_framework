@@ -26,7 +26,6 @@ public:
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
         cube = atcg::IO::read_mesh("res/cube.obj");
-        cube->uploadData();
 
         atcg::ShaderManager::addShaderFromName("volume");
 
@@ -35,7 +34,7 @@ public:
         scene       = atcg::make_ref<atcg::Scene>();
         cube_entity = scene->createEntity();
         cube_entity.addComponent<atcg::TransformComponent>();
-        cube_entity.addComponent<atcg::MeshComponent>(cube).addConfig(
+        cube_entity.addComponent<atcg::GeometryComponent>(cube).addConfig(
             {atcg::ShaderManager::getShader("volume"), glm::vec3(1), atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE});
 
         light_entity = scene->createEntity();
@@ -60,6 +59,7 @@ public:
         atcg::ShaderManager::getShader("volume")->setFloat("g", g);
         noise_texture->use();
         atcg::Renderer::draw(cube_entity, camera_controller->getCamera());
+        dt = delta_time;
     }
 
     virtual void onImGuiRender() override
@@ -77,6 +77,10 @@ public:
         if(show_render_settings)
         {
             ImGui::Begin("Settings", &show_render_settings);
+
+            std::stringstream ss;
+            ss << "FPS: " << 1.0f / dt << " | " << dt << " ms\n";
+            ImGui::Text(ss.str().c_str());
 
             if(ImGui::SliderInt("Number of points", reinterpret_cast<int*>(&num_points), 1, 512))
             {
@@ -150,7 +154,7 @@ private:
     atcg::Entity light_entity;
     atcg::Entity selected_entity;
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
-    atcg::ref_ptr<atcg::Mesh> cube;
+    atcg::ref_ptr<atcg::Graph> cube;
 
     atcg::ref_ptr<atcg::Texture3D> noise_texture;
 
@@ -161,6 +165,7 @@ private:
     float sigma_s_base = 20.0f;
     float sigma_a_base = 0.0f;
     float g            = 0.0f;
+    float dt           = 1.0f / 60.0f;
 
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 };
