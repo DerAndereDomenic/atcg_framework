@@ -27,8 +27,7 @@ public:
     void createVertexBuffer(const std::vector<Vertex>& vertices);
     void createEdgeBuffer(const std::vector<Edge>& edges);
     void createFaceBuffer(const std::vector<glm::u32vec3>& face_indices);
-    std::vector<Edge> edgesFromIndices(const std::vector<Vertex>& vertices,
-                                       const std::vector<glm::u32vec3>& face_indices);
+    std::vector<Edge> edgesFromIndices(const std::vector<glm::u32vec3>& face_indices);
 
     atcg::ref_ptr<VertexBuffer> vertices;
     atcg::ref_ptr<IndexBuffer> indices;
@@ -117,8 +116,7 @@ void Graph::Impl::createFaceBuffer(const std::vector<glm::u32vec3>& face_indices
     }
 }
 
-std::vector<Edge> Graph::Impl::edgesFromIndices(const std::vector<Vertex>& vertices,
-                                                const std::vector<glm::u32vec3>& face_indices)
+std::vector<Edge> Graph::Impl::edgesFromIndices(const std::vector<glm::u32vec3>& face_indices)
 {
     std::unordered_set<glm::vec2, Vec2Hasher> edge_set;
 
@@ -129,24 +127,25 @@ std::vector<Edge> Graph::Impl::edgesFromIndices(const std::vector<Vertex>& verti
         uint32_t v2 = triangle.y;
         uint32_t v3 = triangle.z;
 
-        glm::vec3 color_v1 = vertices[v1].color;
-        glm::vec3 color_v2 = vertices[v2].color;
-        glm::vec3 color_v3 = vertices[v3].color;
+        // glm::vec3 color_v1 = vertices[v1].color;
+        // glm::vec3 color_v2 = vertices[v2].color;
+        // glm::vec3 color_v3 = vertices[v3].color;
 
         glm::vec2 edges[3] = {glm::vec2(std::min(v1, v2), std::max(v1, v2)),
                               glm::vec2(std::min(v2, v3), std::max(v2, v3)),
                               glm::vec2(std::min(v3, v1), std::max(v3, v1))};
 
-        glm::vec3 colors[3] = {glm::mix(color_v1, color_v2, 0.5f),
-                               glm::mix(color_v2, color_v3, 0.5f),
-                               glm::mix(color_v3, color_v1, 0.5f)};
+        // glm::vec3 colors[3] = {glm::mix(color_v1, color_v2, 0.5f),
+        //                        glm::mix(color_v2, color_v3, 0.5f),
+        //                        glm::mix(color_v3, color_v1, 0.5f)};
+
 
         for(uint32_t i = 0; i < 3; ++i)
         {
             if(edge_set.find(edges[i]) == edge_set.end())
             {
                 edge_set.insert(edges[i]);
-                edge_buffer.push_back({edges[i], colors[i], edge_radius});
+                edge_buffer.push_back({edges[i], glm::vec3(1), edge_radius});
             }
         }
     }
@@ -178,7 +177,7 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
     result->impl->createVertexBuffer(vertices);
     result->impl->createFaceBuffer(face_indices);
     result->impl->edge_radius     = edge_radius;
-    std::vector<Edge> edge_buffer = result->impl->edgesFromIndices(vertices, face_indices);
+    std::vector<Edge> edge_buffer = result->impl->edgesFromIndices(face_indices);
     result->impl->createEdgeBuffer(edge_buffer);
 
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
@@ -248,10 +247,10 @@ void Graph::updateVertices(const std::vector<Vertex>& vertices)
     impl->createVertexBuffer(vertices);
 }
 
-void Graph::updateFaces(const std::vector<Vertex>& vertices, const std::vector<glm::u32vec3>& faces)
+void Graph::updateFaces(const std::vector<glm::u32vec3>& faces)
 {
     impl->createFaceBuffer(faces);
-    std::vector<Edge> edges = impl->edgesFromIndices(vertices, faces);
+    std::vector<Edge> edges = impl->edgesFromIndices(faces);
     impl->createEdgeBuffer(edges);
 }
 

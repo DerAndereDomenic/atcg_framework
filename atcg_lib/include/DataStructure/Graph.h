@@ -199,7 +199,7 @@ public:
      * @param vertices The vertices of the new faces
      * @param faces The new face information
      */
-    void updateFaces(const std::vector<Vertex>& vertices, const std::vector<glm::u32vec3>& faces);
+    void updateFaces(const std::vector<glm::u32vec3>& faces);
 
     /**
      * @brief Update the edges.
