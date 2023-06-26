@@ -1,6 +1,6 @@
 #include <DataStructure/Graph.h>
 
-#include <unordered_map>
+#include <unordered_set>
 
 // TEMPORARY
 #include <OpenMesh/OpenMesh.h>
@@ -94,8 +94,9 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
     result->impl->vertices_array->setIndexBuffer(result->impl->indices);
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
 
-    std::unordered_map<glm::vec2, glm::vec3, Vec2Hasher> edge_set;
+    std::unordered_set<glm::vec2, Vec2Hasher> edge_set;
 
+    std::vector<Edge> edge_buffer;
     for(glm::u32vec3 triangle: face_indices)
     {
         uint32_t v1 = triangle.x;
@@ -106,25 +107,29 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
         glm::vec3 color_v2 = vertices[v2].color;
         glm::vec3 color_v3 = vertices[v3].color;
 
-        edge_set.insert(
-            std::make_pair(glm::vec2(std::min(v1, v2), std::max(v1, v2)), glm::mix(color_v1, color_v2, 0.5f)));
-        edge_set.insert(
-            std::make_pair(glm::vec2(std::min(v2, v3), std::max(v2, v3)), glm::mix(color_v2, color_v3, 0.5f)));
-        edge_set.insert(
-            std::make_pair(glm::vec2(std::min(v3, v1), std::max(v3, v1)), glm::mix(color_v3, color_v1, 0.5f)));
+        glm::vec2 edges[3] = {glm::vec2(std::min(v1, v2), std::max(v1, v2)),
+                              glm::vec2(std::min(v2, v3), std::max(v2, v3)),
+                              glm::vec2(std::min(v3, v1), std::max(v3, v1))};
+
+        glm::vec3 colors[3] = {glm::mix(color_v1, color_v2, 0.5f),
+                               glm::mix(color_v2, color_v3, 0.5f),
+                               glm::mix(color_v3, color_v1, 0.5f)};
+
+        for(uint32_t i = 0; i < 3; ++i)
+        {
+            if(edge_set.find(edges[i]) == edge_set.end())
+            {
+                edge_set.insert(edges[i]);
+                edge_buffer.push_back({edges[i], colors[i], edge_radius});
+            }
+        }
     }
 
-    std::vector<Edge> edges;
-    for(auto it = edge_set.begin(); it != edge_set.end(); ++it)
-    {
-        edges.push_back({it->first, it->second, edge_radius});
-    }
-
-    result->impl->createEdgeBuffer(edges);
+    result->impl->createEdgeBuffer(edge_buffer);
 
     result->impl->n_faces    = face_indices.size();
     result->impl->n_vertices = vertices.size();
-    result->impl->n_edges    = edges.size();
+    result->impl->n_edges    = edge_buffer.size();
 
     return result;
 }
