@@ -172,12 +172,12 @@ const atcg::ref_ptr<VertexBuffer>& Graph::getVerticesBuffer() const
     return impl->vertices;
 }
 
-const atcg::ref_ptr<IndexBuffer>& Graph::getFaceIndices() const
+const atcg::ref_ptr<IndexBuffer>& Graph::getFaceIndexBuffer() const
 {
     return impl->indices;
 }
 
-const atcg::ref_ptr<VertexBuffer>& Graph::getEdgeIndices() const
+const atcg::ref_ptr<VertexBuffer>& Graph::getEdgesBuffer() const
 {
     return impl->edges;
 }
