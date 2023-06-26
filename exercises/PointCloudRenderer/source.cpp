@@ -27,13 +27,11 @@ public:
 
         sphere = atcg::IO::read_mesh("res/sphere.obj");
         // sphere->setScale(glm::vec3(0.01f));
-        sphere->uploadData();
 
         {
             // auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/PointCloudCompression/"
             //                                              "sample.xyz");
-            auto point_cloud = atcg::IO::read_pointcloud("res/bunny.obj");
-            point_cloud->uploadData();
+            auto point_cloud = atcg::IO::read_mesh("res/bunny.obj");
             clouds.push_back(std::make_pair(point_cloud, true));
         }
     }
@@ -52,7 +50,8 @@ public:
                                      camera_controller->getCamera(),
                                      glm::mat4(1),
                                      glm::vec3(1),
-                                     atcg::ShaderManager::getShader("flat"));
+                                     atcg::ShaderManager::getShader("base"),
+                                     atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE);
         }
 
         glReadPixels(static_cast<int>(mouse_pos.x - search_radius / 2),
@@ -136,9 +135,8 @@ public:
 
     bool onFileDropped(atcg::FileDroppedEvent* event)
     {
-        auto point_cloud = atcg::IO::read_pointcloud(event->getPath().c_str());
-        atcg::normalize(point_cloud);
-        point_cloud->uploadData();
+        auto point_cloud = atcg::IO::read_mesh(event->getPath().c_str());
+        // atcg::normalize(point_cloud);
         clouds.push_back(std::make_pair(point_cloud, true));
 
         // Also reset camera
@@ -158,11 +156,11 @@ public:
     }
 
 private:
-    using CloudList = std::vector<std::pair<atcg::ref_ptr<atcg::PointCloud>, bool>>;
+    using CloudList = std::vector<std::pair<atcg::ref_ptr<atcg::Graph>, bool>>;
 
     CloudList clouds;
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
-    atcg::ref_ptr<atcg::Mesh> sphere;
+    atcg::ref_ptr<atcg::Graph> sphere;
     std::vector<glm::vec3> sphere_pos;
 
     glm::vec2 mouse_pos;
