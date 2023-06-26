@@ -260,7 +260,7 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
         ++face_id;
     }
 
-    return Graph::createTriangleMesh(vertex_data, indices_data);
+    return Graph::createTriangleMesh(vertex_data, indices_data, 0.01f);
 }
 
 }    // namespace atcg

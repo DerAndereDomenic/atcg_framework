@@ -306,6 +306,11 @@ void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
             s_renderer->impl->drawVAO(vao, camera, color, ShaderManager::getShader("edge"), model, GL_LINE_STRIP, 1e6);
         }
         break;
+        case ATCG_DRAW_MODE_EDGES_CYLINDER:
+        {
+            throw std::logic_error {"Not implemented"};
+        }
+        break;
     }
 }
 
@@ -354,6 +359,11 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
                                       model,
                                       GL_TRIANGLES,
                                       mesh->n_vertices());
+        }
+        break;
+        case ATCG_DRAW_MODE_EDGES_CYLINDER:
+        {
+            drawGrid(mesh->getVerticesBuffer(), mesh->getEdgeIndices(), camera, model, color);
         }
         break;
     }
@@ -496,7 +506,7 @@ void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
         vao_cylinder->pushInstanceBuffer(indices);
         s_renderer->impl->cylinder_has_instance = true;
     }
-    uint32_t num_edges                        = indices->size() / (sizeof(uint32_t) * 2);    // TODO
+    uint32_t num_edges                        = indices->size() / (sizeof(Edge));
     const atcg::ref_ptr<atcg::Shader>& shader = ShaderManager::getShader("cylinder_edge");
     points->bindStorage(0);
     s_renderer->impl->drawVAO(vao_cylinder,

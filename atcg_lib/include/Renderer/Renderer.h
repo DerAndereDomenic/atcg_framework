@@ -27,6 +27,7 @@ enum DrawMode
     ATCG_DRAW_MODE_POINTS,           // Draw as points (screen space)
     ATCG_DRAW_MODE_POINTS_SPHERE,    // Draw points as spheres
     ATCG_DRAW_MODE_EDGES,            // Draw edges
+    ATCG_DRAW_MODE_EDGES_CYLINDER    // Draw edges as 3D cylinders
 };
 
 /**

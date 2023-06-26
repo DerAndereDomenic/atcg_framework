@@ -1,5 +1,8 @@
 #version 430 core
 
+// POSITION + NORMAL + COLOR
+#define VERTEX_DIM (3 + 3 + 3)
+
 layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec3 aColor;
@@ -23,8 +26,14 @@ layout(std430, binding = 0) buffer points_layout
 
 void main()
 {
-    vec3 aInstanceStart = vec3(points[3*int(aEdge.x) + 0], points[3*int(aEdge.x) + 1], points[3*int(aEdge.x) + 2]);
-    vec3 aInstanceEnd = vec3(points[3*int(aEdge.y) + 0], points[3*int(aEdge.y) + 1], points[3*int(aEdge.y) + 2]);
+    vec3 aInstanceStart = vec3(points[VERTEX_DIM * int(aEdge.x) + 0], 
+                               points[VERTEX_DIM * int(aEdge.x) + 1], 
+                               points[VERTEX_DIM * int(aEdge.x) + 2]);
+
+    vec3 aInstanceEnd = vec3(points[VERTEX_DIM * int(aEdge.y) + 0],
+                             points[VERTEX_DIM * int(aEdge.y) + 1], 
+                             points[VERTEX_DIM * int(aEdge.y) + 2]);
+
     vec3 axis = (aInstanceEnd - aInstanceStart);
     vec3 middle_point = aInstanceStart + axis/2.0;
 

@@ -17,7 +17,8 @@ out vec3 frag_color;
 
 void main()
 {
-    gl_Position = P * V * (M * (vec4(aPosition, 1) + vec4(instanced * aInstanceOffset, 0)));
+    //TODO: Fix point size not actually working with model
+    gl_Position = P * V * (M * vec4(aPosition, 1) + vec4(instanced * aInstanceOffset, 0));
     frag_pos = vec3(M * vec4(aPosition, 1));
     frag_normal = normalize(vec3(inverse(transpose(M)) * vec4(aNormal, 0)));
     frag_color = aColor * (instanced * aInstanceColor + (1 - instanced) * vec3(1));
