@@ -1,5 +1,7 @@
 #include <DataStructure/Graph.h>
 
+#include <unordered_map>
+
 // TEMPORARY
 #include <OpenMesh/OpenMesh.h>
 
@@ -73,7 +75,8 @@ atcg::ref_ptr<Graph> Graph::createPointCloud(const std::vector<Vertex>& vertices
 }
 
 atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertices,
-                                               const std::vector<glm::u32vec3>& face_indices)
+                                               const std::vector<glm::u32vec3>& face_indices,
+                                               float edge_radius)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->impl->createVertexBuffer(vertices);
@@ -81,7 +84,35 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
     result->impl->vertices_array->setIndexBuffer(result->impl->indices);
     result->impl->n_faces = face_indices.size();
     result->impl->type    = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
-    // TODO create Edge buffer
+
+    std::unordered_map<std::pair<uint32_t, uint32_t>, glm::vec3> edge_set;
+
+    for(glm::u32vec3& triangle: face_indices)
+    {
+        uint32_t v1 = face_indices.x;
+        uint32_t v2 = face_indices.y;
+        uint32_t v3 = face_indices.z;
+
+        glm::vec3 color_v1 = vertices[v1].color;
+        glm::vec3 color_v2 = vertices[v2].color;
+        glm::vec3 color_v3 = vertices[v3].color;
+
+        edge_set.insert(
+            std::make_pair(std::make_pair(std::min(v1, v2), std::max(v1, v2)), glm::mix(color_v1, color_v2, 0.5f)));
+        edge_set.insert(
+            std::make_pair(std::make_pair(std::min(v2, v3), std::max(v2, v3)), glm::mix(color_v2, color_v3, 0.5f)));
+        edge_set.insert(
+            std::make_pair(std::make_pair(std::min(v3, v1), std::max(v3, v1)), glm::mix(color_v3, color_v1, 0.5f)));
+    }
+
+    std::vector<Edge> edges;
+    for(auto it = edge_set.begin(); it != edge_set.end(); ++it)
+    {
+        edges.push_back({glm::vec2(it->first.first, it->first.second), it->second, edge_radius});
+    }
+
+    result->impl->createEdgeBuffer(edges);
+
     return result;
 }
 

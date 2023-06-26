@@ -40,7 +40,8 @@ public:
     static atcg::ref_ptr<Graph> createPointCloud(const std::vector<Vertex>& vertices);
 
     static atcg::ref_ptr<Graph> createTriangleMesh(const std::vector<Vertex>& vertices,
-                                                   const std::vector<glm::u32vec3>& face_indices);
+                                                   const std::vector<glm::u32vec3>& face_indices,
+                                                   float edge_radius = 0.1f);
 
     static atcg::ref_ptr<Graph> createGraph(const std::vector<Vertex>& vertices, const std::vector<Edge>& edges);
 
