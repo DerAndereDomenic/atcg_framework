@@ -28,10 +28,11 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
-        mesh = atcg::IO::read_mesh("res/cornell_box_radiosity.ply", true);
-        mesh->uploadData();
+        // TODO FIX RADIOSITY
+        // mesh = atcg::IO::read_mesh("res/cornell_box_radiosity.ply", true);
+        //   mesh->uploadData();
 
-        Eigen::MatrixX3f emission = Eigen::MatrixX3f::Zero(mesh->n_faces(), 3);
+        /*Eigen::MatrixX3f emission = Eigen::MatrixX3f::Zero(mesh->n_faces(), 3);
 
         for(auto ft: mesh->faces())
         {
@@ -40,9 +41,9 @@ public:
             {
                 emission.row(ft.idx()) = Eigen::Vector3f {50.0f, 50.0f, 50.0f};
             }
-        }
+        }*/
 
-        mesh = solve_radiosity(mesh, emission);
+        // mesh = solve_radiosity(mesh, emission);
     }
 
     // This gets called each frame
@@ -84,7 +85,7 @@ public:
 
 private:
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
-    atcg::ref_ptr<atcg::Mesh> mesh;
+    atcg::ref_ptr<atcg::Graph> mesh;
 
     bool show_render_settings = false;
 };
