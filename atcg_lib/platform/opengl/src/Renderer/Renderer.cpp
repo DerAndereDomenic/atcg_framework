@@ -374,7 +374,7 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
         case ATCG_DRAW_MODE_EDGES_CYLINDER:
         {
             s_renderer->impl->drawGrid(mesh->getVerticesBuffer(),
-                                       mesh->getEdgeIndices(),
+                                       mesh->getEdgesBuffer(),
                                        ShaderManager::getShader("cylinder_edge"),
                                        camera,
                                        model,
