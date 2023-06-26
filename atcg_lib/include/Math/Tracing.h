@@ -20,10 +20,10 @@ namespace Tracing
  *
  * @return vector with depth to the first intersection point
  */
-Eigen::VectorXf rayMeshIntersection(const atcg::ref_ptr<Mesh>& mesh,
-                                    const Eigen::MatrixX3f& origin,
-                                    const Eigen::MatrixX3f& direction,
-                                    const float tmin,
-                                    const float tmax);
+// Eigen::VectorXf rayMeshIntersection(const atcg::ref_ptr<Mesh>& mesh,
+//                                     const Eigen::MatrixX3f& origin,
+//                                     const Eigen::MatrixX3f& direction,
+//                                     const float tmin,
+//                                     const float tmax);
 }    // namespace Tracing
 }    // namespace atcg
