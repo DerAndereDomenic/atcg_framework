@@ -108,16 +108,4 @@ struct GeometryComponent
     atcg::ref_ptr<Graph> graph;
     std::vector<RenderConfig> configs;
 };
-
-struct GridComponent : public GeometryComponent
-{
-    GridComponent(const atcg::ref_ptr<VertexBuffer>& points, const atcg::ref_ptr<VertexBuffer>& edges)
-        : points(points),
-          edges(edges)
-    {
-    }
-
-    atcg::ref_ptr<VertexBuffer> points;
-    atcg::ref_ptr<VertexBuffer> edges;
-};
 }    // namespace atcg

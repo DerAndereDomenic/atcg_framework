@@ -59,6 +59,13 @@ public:
                  GLenum mode,
                  uint32_t size,
                  uint32_t instances = 1);
+
+    void drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
+                  const atcg::ref_ptr<VertexBuffer>& indices,
+                  const atcg::ref_ptr<Shader>& shader,
+                  const atcg::ref_ptr<Camera>& camera = {},
+                  const glm::mat4& model              = glm::mat4(1),
+                  const glm::vec3& color              = glm::vec3(1));
 };
 
 Renderer::Renderer() {}
@@ -352,18 +359,26 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
         case ATCG_DRAW_MODE_EDGES:
         {
-            s_renderer->impl->drawVAO(mesh->getVerticesArray(),
+            atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
+            points->bindStorage(0);
+            s_renderer->impl->drawVAO(mesh->getEdgesArray(),
                                       camera,
                                       color,
                                       ShaderManager::getShader("edge"),
                                       model,
-                                      GL_TRIANGLES,
-                                      mesh->n_vertices());
+                                      GL_POINTS,
+                                      mesh->n_edges(),
+                                      1);
         }
         break;
         case ATCG_DRAW_MODE_EDGES_CYLINDER:
         {
-            drawGrid(mesh->getVerticesBuffer(), mesh->getEdgeIndices(), camera, model, color);
+            s_renderer->impl->drawGrid(mesh->getVerticesBuffer(),
+                                       mesh->getEdgeIndices(),
+                                       ShaderManager::getShader("cylinder_edge"),
+                                       camera,
+                                       model,
+                                       color);
         }
         break;
     }
@@ -393,16 +408,6 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                            renderer.color,
                            renderer.shader,
                            renderer.draw_mode);
-        }
-    }
-
-    if(entity.hasComponent<GridComponent>())
-    {
-        GridComponent grid = entity.getComponent<GridComponent>();
-        for(auto& renderer: grid.configs)
-        {
-            ShaderManager::getShader("cylinder_edge")->setInt("entityID", entity_id);
-            Renderer::drawGrid(grid.points, grid.edges, camera, transform.getModel(), renderer.color);
         }
     }
 }
@@ -493,30 +498,23 @@ void Renderer::drawCircle(const glm::vec3& position,
         ATCG_ERROR("Missing IndexBuffer!");
 }
 
-void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
-                        const atcg::ref_ptr<VertexBuffer>& indices,
-                        const atcg::ref_ptr<Camera>& camera,
-                        const glm::mat4& model,
-                        const glm::vec3& color)
+void Renderer::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
+                              const atcg::ref_ptr<VertexBuffer>& indices,
+                              const atcg::ref_ptr<Shader>& shader,
+                              const atcg::ref_ptr<Camera>& camera,
+                              const glm::mat4& model,
+                              const glm::vec3& color)
 {
-    atcg::ref_ptr<VertexArray> vao_cylinder = s_renderer->impl->cylinder_mesh->getVerticesArray();
+    atcg::ref_ptr<VertexArray> vao_cylinder = cylinder_mesh->getVerticesArray();
     if(vao_cylinder->peekVertexBuffer() != indices)
     {
-        if(s_renderer->impl->cylinder_has_instance) { vao_cylinder->popVertexBuffer(); }
+        if(cylinder_has_instance) { vao_cylinder->popVertexBuffer(); }
         vao_cylinder->pushInstanceBuffer(indices);
-        s_renderer->impl->cylinder_has_instance = true;
+        cylinder_has_instance = true;
     }
-    uint32_t num_edges                        = indices->size() / (sizeof(Edge));
-    const atcg::ref_ptr<atcg::Shader>& shader = ShaderManager::getShader("cylinder_edge");
+    uint32_t num_edges = indices->size() / (sizeof(Edge));
     points->bindStorage(0);
-    s_renderer->impl->drawVAO(vao_cylinder,
-                              camera,
-                              color,
-                              shader,
-                              model,
-                              GL_TRIANGLES,
-                              s_renderer->impl->cylinder_mesh->n_vertices(),
-                              num_edges);
+    drawVAO(vao_cylinder, camera, color, shader, model, GL_TRIANGLES, cylinder_mesh->n_vertices(), num_edges);
 }
 
 int Renderer::getEntityIndex(const glm::vec2& mouse)
