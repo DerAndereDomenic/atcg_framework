@@ -122,11 +122,11 @@ public:
      *
      * @return The graph
      */
-    static atcg::ref_ptr<Graph> createTriangleMesh(const Vertex* vertices,
-                                                   uint32_t num_vertices,
-                                                   const glm::u32vec3* indices,
-                                                   uint32_t num_faces,
-                                                   float edge_radius = 0.1f);
+    // static atcg::ref_ptr<Graph> createTriangleMesh(const Vertex* vertices,
+    //                                                uint32_t num_vertices,
+    //                                                const glm::u32vec3* indices,
+    //                                                uint32_t num_faces,
+    //                                                float edge_radius = 0.1f);
 
     /**
      * @brief Create a graph mesh from a device buffer.
@@ -232,7 +232,7 @@ public:
      *
      * @param faces The new facce information
      */
-    void updateFaces(const glm::u32vec3* faces, uint32_t num_faces);
+    // void updateFaces(const glm::u32vec3* faces, uint32_t num_faces);
 
     /**
      * @brief Update the edges.

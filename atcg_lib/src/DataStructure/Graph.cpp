@@ -196,25 +196,32 @@ atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, con
 
 atcg::ref_ptr<Graph> Graph::createPointCloud(const Vertex* vertices, uint32_t num_vertices)
 {
-    // TODO
-    return nullptr;
+    atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
+    result->updateVertices(vertices, num_vertices);
+
+    result->impl->type = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
+    return result;
 }
 
-atcg::ref_ptr<Graph> Graph::createTriangleMesh(const Vertex* vertices,
-                                               uint32_t num_vertices,
-                                               const glm::u32vec3* indices,
-                                               uint32_t num_faces,
-                                               float edge_radius)
-{
-    // TODO
-    return nullptr;
-}
+// atcg::ref_ptr<Graph> Graph::createTriangleMesh(const Vertex* vertices,
+//                                                uint32_t num_vertices,
+//                                                const glm::u32vec3* indices,
+//                                                uint32_t num_faces,
+//                                                float edge_radius)
+// {
+//     // TODO
+//     return nullptr;
+// }
 
 atcg::ref_ptr<Graph>
 Graph::createGraph(const Vertex* vertices, uint32_t num_vertices, const Edge* edges, uint32_t num_edges)
 {
-    // TODO
-    return nullptr;
+    atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
+    result->updateVertices(vertices, num_vertices);
+    result->updateEdges(edges, num_edges);
+
+    result->impl->type = GraphType::ATCG_GRAPH_TYPE_GRAPH;
+    return result;
 }
 
 const atcg::ref_ptr<VertexBuffer>& Graph::getVerticesBuffer() const
@@ -259,11 +266,31 @@ void Graph::updateEdges(const std::vector<Edge>& edges)
     impl->createEdgeBuffer(edges.data(), edges.size());
 }
 
-void Graph::updateVertices(const Vertex* vertices, uint32_t num_vertices) {}
+void Graph::updateVertices(const Vertex* vertices, uint32_t num_vertices)
+{
+    impl->createVertexBuffer(nullptr, num_vertices);
 
-void Graph::updateFaces(const glm::u32vec3* faces, uint32_t num_faces) {}
+#ifdef ATCG_CUDA_BACKEND
+    void* dev_ptr = impl->vertices->getData();
+    CUDA_SAFE_CALL(cudaMemcpy(dev_ptr, (void*)vertices, sizeof(Vertex) * num_vertices, cudaMemcpyDeviceToDevice));
+#else
+    impl->vertices->setData(vertices, num_vertices * sizeof(Vertex));
+#endif
+}
 
-void Graph::updateEdges(const Edge* edges, uint32_t num_edges) {}
+// void Graph::updateFaces(const glm::u32vec3* faces, uint32_t num_faces) {}
+
+void Graph::updateEdges(const Edge* edges, uint32_t num_edges)
+{
+    impl->createEdgeBuffer(nullptr, num_edges);
+
+#ifdef ATCG_CUDA_BACKEND
+    void* dev_ptr = impl->edges->getData();
+    CUDA_SAFE_CALL(cudaMemcpy(dev_ptr, (void*)edges, sizeof(Edge) * num_edges, cudaMemcpyDeviceToDevice));
+#else
+    impl->edges->setData(edges, num_edges * sizeof(Edge));
+#endif
+}
 
 uint32_t Graph::n_vertices() const
 {
