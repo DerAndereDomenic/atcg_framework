@@ -2,7 +2,7 @@
 
 namespace detail
 {
-__global__ void simulate(glm::vec3* points, float time, uint32_t n_points)
+__global__ void simulate(atcg::Vertex* points, float time, uint32_t n_points)
 {
     size_t tid = atcg::threadIndex();
     if(tid >= n_points) return;
@@ -14,7 +14,7 @@ __global__ void simulate(glm::vec3* points, float time, uint32_t n_points)
 }
 }    // namespace detail
 
-void simulate(glm::vec3* points, uint32_t size, float time)
+void simulate(atcg::Vertex* points, uint32_t size, float time)
 {
     size_t threads = 128;
     size_t blocks  = atcg::configure(size);

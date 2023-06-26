@@ -2,7 +2,7 @@
 #ifndef ATCG_CUDA_BACKEND
 
 
-void simulate(glm::vec3* points, uint32_t size, float time)
+void simulate(atcg::Vertex* points, uint32_t size, float time)
 {
     for(size_t tid = 0; tid < size; ++tid)
     {

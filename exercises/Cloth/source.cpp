@@ -26,16 +26,19 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
-        std::vector<glm::vec3> host_points;
+        atcg::Renderer::setPointSize(25);
+
+        std::vector<atcg::Vertex> host_points;
         for(int i = 0; i < grid_size; ++i)
         {
             for(int j = 0; j < grid_size; ++j)
             {
-                host_points.push_back(glm::vec3(-grid_size / 2 + j, -grid_size / 2 + i, 0.0f));
+                host_points.push_back(
+                    {glm::vec3(-grid_size / 2 + j, -grid_size / 2 + i, 0.0f), glm::vec3(1), glm::vec3(1)});
             }
         }
 
-        std::vector<float> grid;
+        std::vector<atcg::Edge> edges;
 
         std::random_device rd;
         std::mt19937 gen(rd());
@@ -48,38 +51,24 @@ public:
                 int dx = i - 1;
                 if(!(dx < 0 || dx >= grid_size))
                 {
-                    grid.push_back(i + grid_size * j);
-                    grid.push_back(dx + grid_size * j);
-                    grid.push_back(distrib(gen));
-                    grid.push_back(distrib(gen));
-                    grid.push_back(distrib(gen));
-                    grid.push_back(0.1f);
+                    edges.push_back({glm::vec2(i + grid_size * j, dx + grid_size * j),
+                                     glm::vec3(distrib(gen), distrib(gen), distrib(gen)),
+                                     0.1f});
                 }
 
                 int dy = j - 1;
                 if(!(dy < 0 || dy >= grid_size))
                 {
-                    grid.push_back(i + grid_size * j);
-                    grid.push_back(i + grid_size * dy);
-                    grid.push_back(distrib(gen));
-                    grid.push_back(distrib(gen));
-                    grid.push_back(distrib(gen));
-                    grid.push_back(0.1f);
+                    edges.push_back({glm::vec2(i + grid_size * j, i + grid_size * dy),
+                                     glm::vec3(distrib(gen), distrib(gen), distrib(gen)),
+                                     0.1f});
                 }
             }
         }
 
-        points_vbo =
-            atcg::make_ref<atcg::VertexBuffer>((void*)host_points.data(), host_points.size() * sizeof(glm::vec3));
-
-        grid_vbo = atcg::make_ref<atcg::VertexBuffer>((void*)grid.data(), grid.size() * sizeof(uint32_t));
-        grid_vbo->setLayout({{atcg::ShaderDataType::Float2, "aIndex"},
-                             {atcg::ShaderDataType::Float3, "aColor"},
-                             {atcg::ShaderDataType::Float, "aRadius"}});
+        grid = atcg::Graph::createGraph(host_points, edges);
 
         plane = atcg::IO::read_mesh("res/plane_low.obj");
-        // plane->setScale(glm::vec3(100, 1, 100));
-        plane->uploadData();
 
         checkerboard_shader =
             atcg::make_ref<atcg::Shader>("exercises/Cloth/checkerboard.vs", "exercises/Cloth/checkerboard.fs");
@@ -88,11 +77,15 @@ public:
         scene = atcg::make_ref<atcg::Scene>();
 
         atcg::Entity grid_entity = scene->createEntity();
-        grid_entity.addComponent<atcg::GridComponent>(points_vbo, grid_vbo).addConfig();
+        grid_entity.addComponent<atcg::GeometryComponent>(grid)
+            .addConfig(
+                {atcg::ShaderManager::getShader("base"), glm::vec3(1), atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER})
+            .addConfig(
+                {atcg::ShaderManager::getShader("base"), glm::vec3(1), atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE});
         grid_entity.addComponent<atcg::TransformComponent>();
 
         atcg::Entity plane_entity = scene->createEntity();
-        plane_entity.addComponent<atcg::MeshComponent>(plane).addConfig({checkerboard_shader});
+        plane_entity.addComponent<atcg::GeometryComponent>(plane).addConfig({checkerboard_shader});
         auto& transform = plane_entity.addComponent<atcg::TransformComponent>();
         transform.setScale(glm::vec3(100, 100, 100));
     }
@@ -107,7 +100,7 @@ public:
 
         time += delta_time;
 
-        glm::vec3* dev_ptr = points_vbo->getData<glm::vec3>();
+        atcg::Vertex* dev_ptr = grid->getVerticesBuffer()->getData<atcg::Vertex>();
 
         simulate(dev_ptr, grid_size * grid_size, time);
 
@@ -201,11 +194,10 @@ private:
     atcg::Entity hovered_entity;
 
     atcg::ref_ptr<atcg::FirstPersonController> camera_controller;
-    atcg::ref_ptr<atcg::VertexBuffer> points_vbo;
-    atcg::ref_ptr<atcg::VertexBuffer> grid_vbo;
+    atcg::ref_ptr<atcg::Graph> grid;
     int32_t grid_size = 51;
 
-    atcg::ref_ptr<atcg::Mesh> plane;
+    atcg::ref_ptr<atcg::Graph> plane;
     atcg::ref_ptr<atcg::Shader> checkerboard_shader;
 
     float time = 0.0f;
