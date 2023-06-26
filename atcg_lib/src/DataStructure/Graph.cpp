@@ -8,6 +8,15 @@
 namespace atcg
 {
 
+struct Vec2Hasher
+{
+    std::size_t operator()(const glm::vec2& v) const
+    {
+        return (*reinterpret_cast<const uint32_t*>(&v.x) * 73856093) ^
+               (*reinterpret_cast<const uint32_t*>(&v.y) * 19349669);
+    }
+};
+
 class Graph::Impl
 {
 public:
@@ -17,6 +26,9 @@ public:
 
     void createVertexBuffer(const std::vector<Vertex>& vertices);
     void createEdgeBuffer(const std::vector<Edge>& edges);
+    void createFaceBuffer(const std::vector<glm::u32vec3>& face_indices);
+    std::vector<Edge> edgesFromIndices(const std::vector<Vertex>& vertices,
+                                       const std::vector<glm::u32vec3>& face_indices);
 
     atcg::ref_ptr<VertexBuffer> vertices;
     atcg::ref_ptr<IndexBuffer> indices;
@@ -32,6 +44,8 @@ public:
     uint32_t cap_vertices = 0;
     uint32_t cap_edges    = 0;
     uint32_t cap_faces    = 0;
+
+    float edge_radius = 0.1f;
 
     GraphType type;
 };
@@ -50,6 +64,9 @@ void Graph::Impl::createVertexBuffer(const std::vector<Vertex>& vertices)
 
     vertices_array = atcg::make_ref<VertexArray>();
     vertices_array->pushVertexBuffer(this->vertices);
+
+    n_vertices   = vertices.size();
+    cap_vertices = vertices.size();
 }
 
 void Graph::Impl::createEdgeBuffer(const std::vector<Edge>& edges)
@@ -61,44 +78,23 @@ void Graph::Impl::createEdgeBuffer(const std::vector<Edge>& edges)
 
     edges_array = atcg::make_ref<VertexArray>();
     edges_array->pushVertexBuffer(this->edges);
+
+    n_edges      = edges.size();
+    cap_vertices = edges.size();
 }
 
-Graph::Graph()
+void Graph::Impl::createFaceBuffer(const std::vector<glm::u32vec3>& face_indices)
 {
-    impl = atcg::make_scope<Impl>();
+    indices = atcg::make_ref<IndexBuffer>((uint32_t*)face_indices.data(), face_indices.size() * 3);
+    vertices_array->setIndexBuffer(indices);
+
+    n_faces   = face_indices.size();
+    cap_faces = face_indices.size();
 }
 
-Graph::~Graph() {}
-
-atcg::ref_ptr<Graph> Graph::createPointCloud(const std::vector<Vertex>& vertices)
+std::vector<Edge> Graph::Impl::edgesFromIndices(const std::vector<Vertex>& vertices,
+                                                const std::vector<glm::u32vec3>& face_indices)
 {
-    atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->impl->createVertexBuffer(vertices);
-    result->impl->type         = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
-    result->impl->n_vertices   = vertices.size();
-    result->impl->cap_vertices = vertices.size();
-    return result;
-}
-
-struct Vec2Hasher
-{
-    std::size_t operator()(const glm::vec2& v) const
-    {
-        return (*reinterpret_cast<const uint32_t*>(&v.x) * 73856093) ^
-               (*reinterpret_cast<const uint32_t*>(&v.y) * 19349669);
-    }
-};
-
-atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertices,
-                                               const std::vector<glm::u32vec3>& face_indices,
-                                               float edge_radius)
-{
-    atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->impl->createVertexBuffer(vertices);
-    result->impl->indices = atcg::make_ref<IndexBuffer>((uint32_t*)face_indices.data(), face_indices.size() * 3);
-    result->impl->vertices_array->setIndexBuffer(result->impl->indices);
-    result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
-
     std::unordered_set<glm::vec2, Vec2Hasher> edge_set;
 
     std::vector<Edge> edge_buffer;
@@ -130,16 +126,37 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
         }
     }
 
+    return edge_buffer;
+}
+
+Graph::Graph()
+{
+    impl = atcg::make_scope<Impl>();
+}
+
+Graph::~Graph() {}
+
+atcg::ref_ptr<Graph> Graph::createPointCloud(const std::vector<Vertex>& vertices)
+{
+    atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
+    result->impl->createVertexBuffer(vertices);
+
+    result->impl->type = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
+    return result;
+}
+
+atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertices,
+                                               const std::vector<glm::u32vec3>& face_indices,
+                                               float edge_radius)
+{
+    atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
+    result->impl->createVertexBuffer(vertices);
+    result->impl->createFaceBuffer(face_indices);
+    result->impl->edge_radius     = edge_radius;
+    std::vector<Edge> edge_buffer = result->impl->edgesFromIndices(vertices, face_indices);
     result->impl->createEdgeBuffer(edge_buffer);
 
-    result->impl->n_faces    = face_indices.size();
-    result->impl->n_vertices = vertices.size();
-    result->impl->n_edges    = edge_buffer.size();
-
-    result->impl->cap_faces    = face_indices.size();
-    result->impl->cap_vertices = vertices.size();
-    result->impl->cap_edges    = edge_buffer.size();
-
+    result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
     return result;
 }
 
@@ -148,11 +165,8 @@ atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, con
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->impl->createVertexBuffer(vertices);
     result->impl->createEdgeBuffer(edges);
-    result->impl->type         = GraphType::ATCG_GRAPH_TYPE_GRAPH;
-    result->impl->n_vertices   = vertices.size();
-    result->impl->n_edges      = edges.size();
-    result->impl->cap_vertices = vertices.size();
-    result->impl->cap_edges    = edges.size();
+
+    result->impl->type = GraphType::ATCG_GRAPH_TYPE_GRAPH;
     return result;
 }
 
@@ -163,16 +177,17 @@ atcg::ref_ptr<Graph> Graph::createPointCloud(const Vertex* vertices, uint32_t nu
 }
 
 atcg::ref_ptr<Graph> Graph::createTriangleMesh(const Vertex* vertices,
-                                               const glm::u32vec3* indices,
                                                uint32_t num_vertices,
-                                               uint32_t num_faces)
+                                               const glm::u32vec3* indices,
+                                               uint32_t num_faces,
+                                               float edge_radius)
 {
     // TODO
     return nullptr;
 }
 
 atcg::ref_ptr<Graph>
-Graph::createGraph(const Vertex* vertices, const Edge* edges, uint32_t num_vertices, uint32_t num_edges)
+Graph::createGraph(const Vertex* vertices, uint32_t num_vertices, const Edge* edges, uint32_t num_edges)
 {
     // TODO
     return nullptr;
