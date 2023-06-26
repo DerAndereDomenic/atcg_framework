@@ -29,6 +29,10 @@ public:
     uint32_t n_edges    = 0;
     uint32_t n_faces    = 0;
 
+    uint32_t cap_vertices = 0;
+    uint32_t cap_edges    = 0;
+    uint32_t cap_faces    = 0;
+
     GraphType type;
 };
 
@@ -70,8 +74,9 @@ atcg::ref_ptr<Graph> Graph::createPointCloud(const std::vector<Vertex>& vertices
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->impl->createVertexBuffer(vertices);
-    result->impl->type       = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
-    result->impl->n_vertices = vertices.size();
+    result->impl->type         = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
+    result->impl->n_vertices   = vertices.size();
+    result->impl->cap_vertices = vertices.size();
     return result;
 }
 
@@ -131,6 +136,10 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
     result->impl->n_vertices = vertices.size();
     result->impl->n_edges    = edge_buffer.size();
 
+    result->impl->cap_faces    = face_indices.size();
+    result->impl->cap_vertices = vertices.size();
+    result->impl->cap_edges    = edge_buffer.size();
+
     return result;
 }
 
@@ -139,9 +148,11 @@ atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, con
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->impl->createVertexBuffer(vertices);
     result->impl->createEdgeBuffer(edges);
-    result->impl->type       = GraphType::ATCG_GRAPH_TYPE_GRAPH;
-    result->impl->n_vertices = vertices.size();
-    result->impl->n_edges    = edges.size();
+    result->impl->type         = GraphType::ATCG_GRAPH_TYPE_GRAPH;
+    result->impl->n_vertices   = vertices.size();
+    result->impl->n_edges      = edges.size();
+    result->impl->cap_vertices = vertices.size();
+    result->impl->cap_edges    = edges.size();
     return result;
 }
 
@@ -215,6 +226,21 @@ uint32_t Graph::n_edges() const
 }
 
 uint32_t Graph::n_faces() const
+{
+    return impl->n_faces;
+}
+
+uint32_t Graph::capacity_vertices() const
+{
+    return impl->n_vertices;
+}
+
+uint32_t Graph::capacity_edges() const
+{
+    return impl->n_edges;
+}
+
+uint32_t Graph::capacity_faces() const
 {
     return impl->n_faces;
 }
