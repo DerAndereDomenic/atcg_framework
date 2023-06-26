@@ -5,6 +5,7 @@
 #include <Core/Memory.h>
 #include <Core/glm.h>
 #include <Renderer/Buffer.h>
+#include <Renderer/VertexArray.h>
 
 namespace atcg
 {
@@ -85,4 +86,10 @@ private:
     class Impl;
     atcg::scope_ptr<Impl> impl;
 };
+
+namespace IO
+{
+atcg::ref_ptr<Graph> read_mesh(const std::string& path);
+}
+
 }    // namespace atcg

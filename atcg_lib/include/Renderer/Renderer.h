@@ -6,6 +6,7 @@
 #include <Renderer/PerspectiveCamera.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Framebuffer.h>
+#include <DataStructure/Graph.h>
 
 #include <Core/Memory.h>
 
@@ -138,33 +139,12 @@ public:
      * @param shader The shader
      * @param draw_mode The draw mode
      */
-    static void draw(const atcg::ref_ptr<Mesh>& mesh,
+    static void draw(const atcg::ref_ptr<Graph>& mesh,
                      const atcg::ref_ptr<Camera>& camera = {},
                      const glm::mat4& model              = glm::mat4(1),
                      const glm::vec3& color              = glm::vec3(1),
                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
-
-    /**
-     * @brief Draw a pointcloud
-     *
-     * The default draw mode is "base". It applys slight shading based on the vertex normals.
-     * An optional color can be given to color the whole mesh with a constant color.
-     * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
-     *
-     * @param cloud The pointcloud
-     * @param camera The camera
-     * @param model The optional model matrix
-     * @param color An optional color
-     * @param shader The shader
-     * @param draw_mode The draw mode
-     */
-    static void draw(const atcg::ref_ptr<PointCloud>& cloud,
-                     const atcg::ref_ptr<Camera>& camera = {},
-                     const glm::mat4& model              = glm::mat4(1),
-                     const glm::vec3& color              = glm::vec3(1),
-                     const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                     DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_POINTS);
 
     /**
      * @brief Render an entity

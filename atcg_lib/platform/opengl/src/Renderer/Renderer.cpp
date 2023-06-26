@@ -33,8 +33,8 @@ public:
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
 
-    atcg::ref_ptr<Mesh> sphere_mesh;
-    atcg::ref_ptr<Mesh> cylinder_mesh;
+    atcg::ref_ptr<Graph> sphere_mesh;
+    atcg::ref_ptr<Graph> cylinder_mesh;
     bool sphere_has_instance   = false;
     bool cylinder_has_instance = false;
 
@@ -89,10 +89,8 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
 
     // Load a sphere
     sphere_mesh = atcg::IO::read_mesh("res/sphere_low.obj");
-    sphere_mesh->uploadData();
 
     cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj");
-    cylinder_mesh->uploadData();
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -311,7 +309,7 @@ void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
     }
 }
 
-void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
+void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
                     const atcg::ref_ptr<Camera>& camera,
                     const glm::mat4& model,
                     const glm::vec3& color,
@@ -322,7 +320,7 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
     {
         case ATCG_DRAW_MODE_TRIANGLE:
         {
-            s_renderer->impl->drawVAO(mesh->getVertexArray(),
+            s_renderer->impl->drawVAO(mesh->getVerticesArray(),
                                       camera,
                                       color,
                                       shader,
@@ -334,12 +332,12 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
         case ATCG_DRAW_MODE_POINTS:
         {
             s_renderer->impl
-                ->drawVAO(mesh->getVertexArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
+                ->drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
-            s_renderer->impl->drawPointCloudSpheres(mesh->getVertexArray()->peekVertexBuffer(),
+            s_renderer->impl->drawPointCloudSpheres(mesh->getVerticesArray()->peekVertexBuffer(),
                                                     camera,
                                                     model,
                                                     color,
@@ -349,51 +347,13 @@ void Renderer::draw(const atcg::ref_ptr<Mesh>& mesh,
         break;
         case ATCG_DRAW_MODE_EDGES:
         {
-            s_renderer->impl->drawVAO(mesh->getVertexArray(),
+            s_renderer->impl->drawVAO(mesh->getVerticesArray(),
                                       camera,
                                       color,
                                       ShaderManager::getShader("edge"),
                                       model,
                                       GL_TRIANGLES,
                                       mesh->n_vertices());
-        }
-        break;
-    }
-}
-
-void Renderer::draw(const atcg::ref_ptr<PointCloud>& cloud,
-                    const atcg::ref_ptr<Camera>& camera,
-                    const glm::mat4& model,
-                    const glm::vec3& color,
-                    const atcg::ref_ptr<Shader>& shader,
-                    DrawMode draw_mode)
-{
-    switch(draw_mode)
-    {
-        case ATCG_DRAW_MODE_TRIANGLE:
-        {
-            throw std::invalid_argument("PointCloud cannot be rendered as triangle mesh!");
-        }
-        break;
-        case ATCG_DRAW_MODE_POINTS:
-        {
-            s_renderer->impl
-                ->drawVAO(cloud->getVertexArray(), camera, color, shader, model, GL_POINTS, cloud->n_vertices());
-        }
-        break;
-        case ATCG_DRAW_MODE_POINTS_SPHERE:
-        {
-            s_renderer->impl->drawPointCloudSpheres(cloud->getVertexArray()->peekVertexBuffer(),
-                                                    camera,
-                                                    model,
-                                                    color,
-                                                    shader,
-                                                    cloud->n_vertices());
-        }
-        break;
-        case ATCG_DRAW_MODE_EDGES:
-        {
-            throw std::invalid_argument("PointCloud cannot be rendered as edges!");
         }
         break;
     }
@@ -411,28 +371,13 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
     uint32_t entity_id = (uint32_t)entity._entity_handle;
 
-    if(entity.hasComponent<MeshComponent>())
+    if(entity.hasComponent<GeometryComponent>())
     {
-        MeshComponent mesh = entity.getComponent<MeshComponent>();
-        for(auto& renderer: mesh.configs)
+        GeometryComponent geometry = entity.getComponent<GeometryComponent>();
+        for(auto& renderer: geometry.configs)
         {
             renderer.shader->setInt("entityID", entity_id);
-            Renderer::draw(mesh.mesh,
-                           camera,
-                           transform.getModel(),
-                           renderer.color,
-                           renderer.shader,
-                           renderer.draw_mode);
-        }
-    }
-
-    if(entity.hasComponent<PointCloudComponent>())
-    {
-        PointCloudComponent cloud = entity.getComponent<PointCloudComponent>();
-        for(auto& renderer: cloud.configs)
-        {
-            renderer.shader->setInt("entityID", entity_id);
-            Renderer::draw(cloud.point_cloud,
+            Renderer::draw(geometry.graph,
                            camera,
                            transform.getModel(),
                            renderer.color,
@@ -470,7 +415,7 @@ void Renderer::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vb
                                            const atcg::ref_ptr<Shader>& shader,
                                            uint32_t n_instances)
 {
-    atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVertexArray();
+    atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVerticesArray();
     if(vao_sphere->peekVertexBuffer() != vbo)
     {
         if(s_renderer->impl->sphere_has_instance) { vao_sphere->popVertexBuffer(); }
@@ -544,7 +489,7 @@ void Renderer::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
                         const glm::mat4& model,
                         const glm::vec3& color)
 {
-    atcg::ref_ptr<VertexArray> vao_cylinder = s_renderer->impl->cylinder_mesh->getVertexArray();
+    atcg::ref_ptr<VertexArray> vao_cylinder = s_renderer->impl->cylinder_mesh->getVerticesArray();
     if(vao_cylinder->peekVertexBuffer() != indices)
     {
         if(s_renderer->impl->cylinder_has_instance) { vao_cylinder->popVertexBuffer(); }

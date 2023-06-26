@@ -35,6 +35,7 @@
 // #include <OpenMesh/OpenMesh.h>
 
 //-------- DataStructure --
+#include <DataStructure/Graph.h>
 #include <DataStructure/Grid.h>
 #include <DataStructure/Laplacian.h>
 #include <DataStructure/Timer.h>

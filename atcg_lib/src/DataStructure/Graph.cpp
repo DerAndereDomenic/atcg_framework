@@ -1,13 +1,7 @@
 #include <DataStructure/Graph.h>
 
-#pragma once
-
-#include <vector>
-
-#include <Core/Memory.h>
-#include <Core/glm.h>
-#include <Renderer/Buffer.h>
-#include <Renderer/VertexArray.h>
+// TEMPORARY
+#include <OpenMesh/OpenMesh.h>
 
 namespace atcg
 {
@@ -44,8 +38,8 @@ void Graph::Impl::createVertexBuffer(const std::vector<Vertex>& vertices)
 {
     this->vertices = atcg::make_ref<VertexBuffer>((void*)vertices.data(), vertices.size() * sizeof(Vertex));
     this->vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
-                         {ShaderDataType::Float3, "aNormal"},
-                         {ShaderDataType::Float3, "aColor"}});
+                               {ShaderDataType::Float3, "aNormal"},
+                               {ShaderDataType::Float3, "aColor"}});
 
 
     vertices_array = atcg::make_ref<VertexArray>();
@@ -178,4 +172,49 @@ GraphType Graph::type() const
 {
     return impl->type;
 }
+
+atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
+{
+    // TODO: Replace this with dedicated obj loader
+    TriMesh mesh;
+    OpenMesh::IO::read_mesh(mesh, path);
+
+    mesh.request_vertex_normals();
+    mesh.request_face_normals();
+    mesh.update_normals();
+
+    std::vector<Vertex> vertex_data;
+    vertex_data.resize(mesh.n_vertices());
+
+    std::vector<glm::u32vec3> indices_data;
+    indices_data.resize(mesh.n_faces());
+
+    bool has_color = mesh.has_vertex_colors();
+
+    for(auto vertex = mesh.vertices_begin(); vertex != mesh.vertices_end(); ++vertex)
+    {
+        int32_t vertex_id               = vertex->idx();
+        glm::vec3 pos                   = mesh.point(*vertex);
+        glm::vec3 normal                = mesh.calc_vertex_normal(*vertex);
+        glm::vec3 col                   = has_color ? mesh.color(*vertex) : glm::vec3(1);
+        vertex_data[vertex_id].position = pos;
+        vertex_data[vertex_id].normal   = normal;
+        vertex_data[vertex_id].color    = has_color ? col / 255.0f : glm::vec3(1.0f);
+    }
+
+    int32_t face_id = 0;
+    for(auto face = mesh.faces_begin(); face != mesh.faces_end(); ++face)
+    {
+        int32_t vertex_id = 0;
+        for(auto vertex = face->vertices().begin(); vertex != face->vertices().end(); ++vertex)
+        {
+            glm::value_ptr(indices_data[face_id])[vertex_id] = vertex->idx();
+            ++vertex_id;
+        }
+        ++face_id;
+    }
+
+    return Graph::createTriangleMesh(vertex_data, indices_data);
+}
+
 }    // namespace atcg

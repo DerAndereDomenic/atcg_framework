@@ -7,6 +7,7 @@
 #include <Renderer/Shader.h>
 #include <Renderer/Camera.h>
 #include <Renderer/Renderer.h>
+#include <DataStructure/Graph.h>
 
 namespace atcg
 {
@@ -95,27 +96,17 @@ struct RenderConfig
 
 struct GeometryComponent
 {
+    GeometryComponent() = default;
+    GeometryComponent(const atcg::ref_ptr<Graph>& graph) : graph(graph) {}
+
     inline GeometryComponent& addConfig(const RenderConfig& config = {})
     {
         configs.push_back(config);
         return *this;
     }
 
+    atcg::ref_ptr<Graph> graph;
     std::vector<RenderConfig> configs;
-};
-
-struct MeshComponent : public GeometryComponent
-{
-    MeshComponent(const atcg::ref_ptr<Mesh>& mesh) : mesh(mesh) {}
-
-    atcg::ref_ptr<Mesh> mesh;
-};
-
-struct PointCloudComponent : public GeometryComponent
-{
-    PointCloudComponent(const atcg::ref_ptr<PointCloud>& point_cloud) : point_cloud(point_cloud) {}
-
-    atcg::ref_ptr<Mesh> point_cloud;
 };
 
 struct GridComponent : public GeometryComponent
