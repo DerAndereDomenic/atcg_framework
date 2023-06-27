@@ -118,8 +118,7 @@ VertexBuffer::VertexBuffer(const void* data, size_t size) : _size(size)
 
 VertexBuffer::~VertexBuffer()
 {
-    impl->unmapResourceDevice();
-    impl->unmapResourceHost();
+    unmapPointers();
 #ifdef ATCG_CUDA_BACKEND
     CUDA_SAFE_CALL(cudaGraphicsUnregisterResource(impl->resource));
 #endif
@@ -128,22 +127,19 @@ VertexBuffer::~VertexBuffer()
 
 void VertexBuffer::use() const
 {
-    impl->unmapResourceDevice();
-    impl->unmapResourceHost();
+    unmapPointers();
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
 }
 
 void VertexBuffer::bindStorage(uint32_t slot) const
 {
-    impl->unmapResourceDevice();
-    impl->unmapResourceHost();
+    unmapPointers();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, slot, _ID);
 }
 
 void VertexBuffer::setData(const void* data, size_t size)
 {
-    impl->unmapResourceDevice();
-    impl->unmapResourceHost();
+    unmapPointers();
     _size = size;
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
@@ -167,127 +163,36 @@ void* VertexBuffer::getHostPointer() const
     return impl->dev_ptr;
 }
 
-void VertexBuffer::unmapPointers()
+void VertexBuffer::unmapPointers() const
 {
     impl->unmapResourceDevice();
     impl->unmapResourceHost();
 }
 
-class IndexBuffer::Impl
+IndexBuffer::IndexBuffer(const uint32_t* indices, size_t count) : VertexBuffer((void*)indices, count * sizeof(uint32_t))
 {
-public:
-    Impl() = default;
-
-    Impl(uint32_t ID);
-
-    ~Impl();
-
-    void initResource(uint32_t ID);
-
-    void mapResource();
-
-    void unmapResource();
-
-    bool mapped = false;
-
-    void* dev_ptr = nullptr;
-
-#ifdef ATCG_CUDA_BACKEND
-    cudaGraphicsResource* resource = nullptr;
-#endif
-    uint32_t ID;
-};
-
-IndexBuffer::Impl::Impl(uint32_t ID)
-{
-    initResource(ID);
+    _size = count * sizeof(uint32_t);
 }
 
-IndexBuffer::Impl::~Impl() {}
-
-void IndexBuffer::Impl::initResource(uint32_t ID)
+IndexBuffer::IndexBuffer(size_t count) : VertexBuffer(count * sizeof(uint32_t))
 {
-#ifdef ATCG_CUDA_BACKEND
-    CUDA_SAFE_CALL(cudaGraphicsGLRegisterBuffer(&resource, ID, cudaGraphicsRegisterFlagsNone));
-#endif
-    this->ID = ID;
+    _size = count * sizeof(uint32_t);
 }
 
-void IndexBuffer::Impl::mapResource()
-{
-#ifdef ATCG_CUDA_BACKEND
-    CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &resource));
-#else
-    glBindBuffer(GL_ARRAY_BUFFER, ID);
-    dev_ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
-#endif
-    mapped = true;
-}
-
-void IndexBuffer::Impl::unmapResource()
-{
-    if(mapped)
-    {
-#ifdef ATCG_CUDA_BACKEND
-        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource));
-#else
-        glBindBuffer(GL_ARRAY_BUFFER, ID);
-        glUnmapBuffer(GL_ARRAY_BUFFER);
-#endif
-        mapped = false;
-    }
-}
-
-IndexBuffer::IndexBuffer(const uint32_t* indices, size_t count) : _count(count)
-{
-    glGenBuffers(1, &_ID);
-    glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_DYNAMIC_DRAW);
-
-    impl = atcg::make_scope<Impl>(_ID);
-}
-
-IndexBuffer::IndexBuffer(size_t count) : _count(count)
-{
-    glGenBuffers(1, &_ID);
-    glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), nullptr, GL_DYNAMIC_DRAW);
-
-    impl = atcg::make_scope<Impl>(_ID);
-}
-
-IndexBuffer::~IndexBuffer()
-{
-    impl->unmapResource();
-#ifdef ATCG_CUDA_BACKEND
-    CUDA_SAFE_CALL(cudaGraphicsUnregisterResource(impl->resource));
-#endif
-    glDeleteBuffers(1, &_ID);
-}
+IndexBuffer::~IndexBuffer() {}
 
 void IndexBuffer::use() const
 {
-    impl->unmapResource();
+    unmapPointers();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ID);
 }
 
 void IndexBuffer::setData(const uint32_t* data, size_t count)
 {
-    impl->unmapResource();
-    _count = count;
+    unmapPointers();
+    _size = count * sizeof(uint32_t);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(uint32_t), data);
 }
-
-uint32_t* IndexBuffer::getData() const
-{
-    impl->mapResource();
-    std::size_t size;
-#ifdef ATCG_CUDA_BACKEND
-    CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer((void**)&impl->dev_ptr, &size, impl->resource));
-#endif
-    return static_cast<uint32_t*>(impl->dev_ptr);
-}
-
 
 }    // namespace atcg

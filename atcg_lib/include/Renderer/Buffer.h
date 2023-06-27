@@ -294,7 +294,7 @@ public:
     /**
      * @brief Unmaps and invalidates all mapped pointers used by the application.
      */
-    void unmapPointers();
+    void unmapPointers() const;
 
     /**
      * @brief Get the Layout
@@ -324,7 +324,7 @@ public:
      */
     inline uint32_t ID() const { return _ID; }
 
-private:
+protected:
     class Impl;
     atcg::scope_ptr<Impl> impl;
     uint32_t _ID;
@@ -333,9 +333,10 @@ private:
 };
 
 /**
- * @brief A class to model an IndexBuffer
+ * @brief A class to model an IndexBuffer.
+ * An index buffer is just a vertex buffer with uint32_t and a different binding
  */
-class IndexBuffer
+class IndexBuffer : public VertexBuffer
 {
 public:
     /**
@@ -377,29 +378,12 @@ public:
     void setData(const uint32_t* data, size_t count);
 
     /**
-     * @brief Get the underlying data as a device pointer.
-     * This only returns a valid device pointer if the CUDA backend is enabled. Otherwise this will return the buffer
-     * mapped to host space.
-     *
-     * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
-     * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
-     * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
-     *
-     * @return The pointer
-     */
-    uint32_t* getData() const;
-
-    /**
      * @brief Get the Count of objects
      *
      * @return uint32_t The count
      */
-    inline size_t getCount() const { return _count; }
+    inline size_t getCount() const { return _size / sizeof(uint32_t); }
 
 private:
-    class Impl;
-    atcg::scope_ptr<Impl> impl;
-    uint32_t _ID;
-    size_t _count;
 };
 }    // namespace atcg
