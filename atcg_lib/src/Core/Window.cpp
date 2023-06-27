@@ -95,27 +95,28 @@ Window::Window(const WindowProps& props)
                             data.on_event(&event);
                         });
 
-    glfwSetMouseButtonCallback((GLFWwindow*)_window,
-                               [](GLFWwindow* window, int button, int action, int mods)
-                               {
-                                   WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+    glfwSetMouseButtonCallback(
+        (GLFWwindow*)_window,
+        [](GLFWwindow* window, int button, int action, int mods)
+        {
+            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-                                   switch(action)
-                                   {
-                                       case GLFW_PRESS:
-                                       {
-                                           MouseButtonPressedEvent event(button);
-                                           data.on_event(&event);
-                                           break;
-                                       }
-                                       case GLFW_RELEASE:
-                                       {
-                                           MouseButtonReleasedEvent event(button);
-                                           data.on_event(&event);
-                                           break;
-                                       }
-                                   }
-                               });
+            switch(action)
+            {
+                case GLFW_PRESS:
+                {
+                    MouseButtonPressedEvent event(button, data.current_mouse_x, data.current_mouse_y);
+                    data.on_event(&event);
+                    break;
+                }
+                case GLFW_RELEASE:
+                {
+                    MouseButtonReleasedEvent event(button, data.current_mouse_x, data.current_mouse_y);
+                    data.on_event(&event);
+                    break;
+                }
+            }
+        });
 
     glfwSetScrollCallback((GLFWwindow*)_window,
                           [](GLFWwindow* window, double xOffset, double yOffset)
@@ -130,6 +131,9 @@ Window::Window(const WindowProps& props)
                              [](GLFWwindow* window, double xPos, double yPos)
                              {
                                  WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+
+                                 data.current_mouse_x = (float)xPos;
+                                 data.current_mouse_y = (float)yPos;
 
                                  MouseMovedEvent event((float)xPos, (float)yPos);
                                  data.on_event(&event);
