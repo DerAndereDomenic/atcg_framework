@@ -147,6 +147,8 @@ Window::Window(const WindowProps& props)
                             FileDroppedEvent event(paths[0]);
                             data.on_event(&event);
                         });
+
+    toggleVSync(props.vsync);
 }
 
 Window::~Window()
@@ -176,6 +178,11 @@ void Window::resize(const uint32_t& _width, const uint32_t& _height)
     _data.height = _height;
 
     glfwSetWindowSize((GLFWwindow*)_window, _width, _height);
+}
+
+void Window::toggleVSync(bool vsync)
+{
+    glfwSwapInterval(vsync);
 }
 
 glm::vec2 Window::getPosition() const

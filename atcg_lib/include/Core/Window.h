@@ -16,11 +16,13 @@ struct WindowProps
     std::string title;
     uint32_t width;
     uint32_t height;
+    bool vsync;
 
-    WindowProps(const std::string& title = "ATCG", uint32_t width = 1600, uint32_t height = 900)
+    WindowProps(const std::string& title = "ATCG", uint32_t width = 1600, uint32_t height = 900, bool vsync = true)
         : title(title),
           width(width),
-          height(height)
+          height(height),
+          vsync(vsync)
     {
     }
 };
@@ -87,6 +89,13 @@ public:
      * @param height The height
      */
     void resize(const uint32_t& width, const uint32_t& height);
+
+    /**
+     * @brief Toggle if vsync should be enabled or not
+     *
+     * @param vsyinc if vsync should be enabled
+     */
+    void toggleVSync(bool vsync);
 
     /**
      * @brief Get the window position
