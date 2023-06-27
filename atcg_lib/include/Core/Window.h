@@ -114,6 +114,8 @@ private:
     {
         uint32_t width;
         uint32_t height;
+        float current_mouse_x;
+        float current_mouse_y;
         EventCallbackFn on_event;
     };
 
