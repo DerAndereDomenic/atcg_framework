@@ -42,7 +42,8 @@ add_library(imgui STATIC "external/imgui/imgui.cpp"
 
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
-    set(CMAKE_CUDA_ARCHITECTURES 86)
+    #TODO
+    set(CMAKE_CUDA_ARCHITECTURES "75;86")
     set(BACKEND "cuda")
     file (GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "atcg_lib/platform/cuda/**.c*"
                                                             "atcg_lib/platform/cuda/**.h")

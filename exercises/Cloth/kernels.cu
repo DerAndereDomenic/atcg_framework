@@ -19,5 +19,6 @@ void simulate(atcg::Vertex* points, uint32_t size, float time)
     size_t threads = 128;
     size_t blocks  = atcg::configure(size);
     detail::simulate<<<blocks, threads>>>(points, time, size);
+    CUDA_SAFE_CALL(cudaGetLastError());
     SYNCHRONIZE_DEFAULT_STREAM();
 }
