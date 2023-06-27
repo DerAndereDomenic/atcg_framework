@@ -183,6 +183,10 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
 
 atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mesh, float edge_radius)
 {
+    mesh->request_vertex_normals();
+    mesh->request_face_normals();
+    mesh->update_normals();
+
     std::vector<Vertex> vertex_data;
     vertex_data.resize(mesh->n_vertices());
 
@@ -371,8 +375,6 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Option
     if(options.face_has_color()) { mesh->request_face_colors(); }
 
     OpenMesh::IO::read_mesh(*mesh.get(), path, options);
-
-    mesh->update_normals();
 
     return Graph::createTriangleMesh(mesh, 0.01f);
 }

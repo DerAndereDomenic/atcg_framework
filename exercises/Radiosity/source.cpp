@@ -29,21 +29,28 @@ public:
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
         // TODO FIX RADIOSITY
-        // mesh = atcg::IO::read_mesh("res/cornell_box_radiosity.ply", true);
+        trimesh = atcg::make_ref<atcg::TriMesh>();
+        trimesh->request_vertex_colors();
+        OpenMesh::IO::read_mesh(*trimesh.get(),
+                                "res/cornell_box_radiosity.ply",
+                                OpenMesh::IO::Options(OpenMesh::IO::Options::VertexColor));
+
+
         //   mesh->uploadData();
 
-        /*Eigen::MatrixX3f emission = Eigen::MatrixX3f::Zero(mesh->n_faces(), 3);
+        Eigen::MatrixX3f emission = Eigen::MatrixX3f::Zero(trimesh->n_faces(), 3);
 
-        for(auto ft: mesh->faces())
+        for(auto ft: trimesh->faces())
         {
-            glm::vec3 centroid = mesh->calc_centroid(ft);
+            glm::vec3 centroid = trimesh->calc_centroid(ft);
             if(glm::length(centroid - glm::vec3(0, 10, 0)) < 1.0f)
             {
                 emission.row(ft.idx()) = Eigen::Vector3f {50.0f, 50.0f, 50.0f};
             }
-        }*/
+        }
 
-        // mesh = solve_radiosity(mesh, emission);
+        trimesh = solve_radiosity(trimesh, emission);
+        mesh    = atcg::Graph::createTriangleMesh(trimesh);
     }
 
     // This gets called each frame
@@ -86,6 +93,7 @@ public:
 private:
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Graph> mesh;
+    atcg::ref_ptr<atcg::TriMesh> trimesh;
 
     bool show_render_settings = false;
 };
