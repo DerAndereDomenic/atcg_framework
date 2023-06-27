@@ -26,13 +26,15 @@ layout(std430, binding = 0) buffer points_layout
 
 void main()
 {
-    vec3 aInstanceStart = vec3(points[VERTEX_DIM * int(aEdge.x) + 0], 
-                               points[VERTEX_DIM * int(aEdge.x) + 1], 
-                               points[VERTEX_DIM * int(aEdge.x) + 2]);
+    vec3 aInstanceStart = vec3(M * vec4(points[VERTEX_DIM * int(aEdge.x) + 0], 
+                                        points[VERTEX_DIM * int(aEdge.x) + 1], 
+                                        points[VERTEX_DIM * int(aEdge.x) + 2], 
+                                        1));
 
-    vec3 aInstanceEnd = vec3(points[VERTEX_DIM * int(aEdge.y) + 0],
-                             points[VERTEX_DIM * int(aEdge.y) + 1], 
-                             points[VERTEX_DIM * int(aEdge.y) + 2]);
+    vec3 aInstanceEnd = vec3(M * vec4(points[VERTEX_DIM * int(aEdge.y) + 0],
+                                      points[VERTEX_DIM * int(aEdge.y) + 1], 
+                                      points[VERTEX_DIM * int(aEdge.y) + 2],
+                                      1));
 
     vec3 axis = (aInstanceEnd - aInstanceStart);
     vec3 middle_point = aInstanceStart + axis/2.0;
@@ -52,8 +54,8 @@ void main()
 
     mat4 model_edge = model_translate * model_rotation * model_scale;
 
-    gl_Position = P * V * (M * model_edge * vec4(aPosition, 1));// + vec4(instanced * aInstanceStart, 0));
-    frag_pos = vec3(M * model_edge * vec4(aPosition, 1));
-    frag_normal = normalize(vec3(inverse(transpose(M * model_edge)) * vec4(aNormal, 0)));
+    gl_Position = P * V * (model_edge * vec4(aPosition, 1));// + vec4(instanced * aInstanceStart, 0));
+    frag_pos = vec3(model_edge * vec4(aPosition, 1));
+    frag_normal = normalize(vec3(inverse(transpose(model_edge)) * vec4(aNormal, 0)));
     frag_color = aColor * aEdgeColor;
 }
