@@ -227,6 +227,9 @@ public:
      * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
      * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
      * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a Vertex array for example only points to this
+     * buffer), the client has to manually unmap the pointers using "unmapPointers()" before any further rendering calls
+     * can be done.
      *
      * @return The pointer
      */
@@ -240,6 +243,9 @@ public:
      * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
      * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
      * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a Vertex array for example only points to this
+     * buffer), the client has to manually unmap the pointers using "unmapPointers()" before any further rendering calls
+     * can be done..
      *
      * \tparam T The type on how to interpret the data
      *
@@ -250,6 +256,45 @@ public:
     {
         return reinterpret_cast<T*>(getData());
     }
+
+    /**
+     * @brief Get the underlying data as a host pointer.
+     *
+     * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
+     * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
+     * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a Vertex array for example only points to this
+     * buffer), the client has to manually unmap the pointers using "unmapPointers()" before any further rendering calls
+     * can be done.
+     *
+     * @return The pointer
+     */
+    void* getDataHost() const;
+
+    /**
+     * @brief Get the underlying data as a host pointer.
+     *
+     * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
+     * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
+     * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a Vertex array for example only points to this
+     * buffer), the client has to manually unmap the pointers using "unmapPointers()" before any further rendering calls
+     * can be done.
+     *
+     * \tparam T The type on how to interpret the data
+     *
+     * @return The pointer
+     */
+    template<typename T>
+    inline T* getDataHost() const
+    {
+        return reinterpret_cast<T*>(getDataHost());
+    }
+
+    /**
+     * @brief Unmaps and invalidates all mapped pointers used by the application.
+     */
+    void unmapPointers();
 
     /**
      * @brief Get the Layout

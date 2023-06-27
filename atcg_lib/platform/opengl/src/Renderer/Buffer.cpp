@@ -22,11 +22,14 @@ public:
 
     void initResource(uint32_t ID);
 
-    void mapResource();
+    void mapResourceDevice();
+    void unmapResourceDevice();
 
-    void unmapResource();
+    void mapResourceHost();
+    void unmapResourceHost();
 
-    bool mapped = false;
+    bool mapped_device = false;
+    bool mapped_host   = false;
 
     void* dev_ptr = nullptr;
 
@@ -51,28 +54,47 @@ void VertexBuffer::Impl::initResource(uint32_t ID)
     this->ID = ID;
 }
 
-void VertexBuffer::Impl::mapResource()
+void VertexBuffer::Impl::mapResourceDevice()
 {
 #ifdef ATCG_CUDA_BACKEND
     CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &resource));
+    mapped_device = true;
 #else
     glBindBuffer(GL_ARRAY_BUFFER, ID);
-    dev_ptr = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+    dev_ptr     = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+    mapped_host = true;
 #endif
-    mapped = true;
 }
 
-void VertexBuffer::Impl::unmapResource()
+void VertexBuffer::Impl::unmapResourceDevice()
 {
-    if(mapped)
-    {
 #ifdef ATCG_CUDA_BACKEND
-        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource));
+    if(mapped_device) { CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource)); }
+    mapped_device = false;
 #else
+    if(mapped_host)
+    {
         glBindBuffer(GL_ARRAY_BUFFER, ID);
         glUnmapBuffer(GL_ARRAY_BUFFER);
+    }
+    mapped_host = false;
 #endif
-        mapped = false;
+}
+
+void VertexBuffer::Impl::mapResourceHost()
+{
+    glBindBuffer(GL_ARRAY_BUFFER, ID);
+    dev_ptr     = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+    mapped_host = true;
+}
+
+void VertexBuffer::Impl::unmapResourceHost()
+{
+    if(mapped_host)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, ID);
+        glUnmapBuffer(GL_ARRAY_BUFFER);
+        mapped_host = false;
     }
 }
 
@@ -96,7 +118,8 @@ VertexBuffer::VertexBuffer(const void* data, size_t size) : _size(size)
 
 VertexBuffer::~VertexBuffer()
 {
-    impl->unmapResource();
+    impl->unmapResourceDevice();
+    impl->unmapResourceHost();
 #ifdef ATCG_CUDA_BACKEND
     CUDA_SAFE_CALL(cudaGraphicsUnregisterResource(impl->resource));
 #endif
@@ -105,19 +128,22 @@ VertexBuffer::~VertexBuffer()
 
 void VertexBuffer::use() const
 {
-    impl->unmapResource();
+    impl->unmapResourceDevice();
+    impl->unmapResourceHost();
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
 }
 
 void VertexBuffer::bindStorage(uint32_t slot) const
 {
-    impl->unmapResource();
+    impl->unmapResourceDevice();
+    impl->unmapResourceHost();
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, slot, _ID);
 }
 
 void VertexBuffer::setData(const void* data, size_t size)
 {
-    impl->unmapResource();
+    impl->unmapResourceDevice();
+    impl->unmapResourceHost();
     _size = size;
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
@@ -125,12 +151,26 @@ void VertexBuffer::setData(const void* data, size_t size)
 
 void* VertexBuffer::getData() const
 {
-    impl->mapResource();
-    std::size_t size;
 #ifdef ATCG_CUDA_BACKEND
+    impl->mapResourceDevice();
+    std::size_t size;
     CUDA_SAFE_CALL(cudaGraphicsResourceGetMappedPointer((void**)&impl->dev_ptr, &size, impl->resource));
+#else
+    impl->mapResourceHost();
 #endif
     return impl->dev_ptr;
+}
+
+void* VertexBuffer::getDataHost() const
+{
+    impl->mapResourceHost();
+    return impl->dev_ptr;
+}
+
+void VertexBuffer::unmapPointers()
+{
+    impl->unmapResourceDevice();
+    impl->unmapResourceHost();
 }
 
 class IndexBuffer::Impl
