@@ -2,9 +2,6 @@
 
 #include <unordered_set>
 
-// TEMPORARY
-#include <OpenMesh/OpenMesh.h>
-
 namespace atcg
 {
 
@@ -327,14 +324,18 @@ GraphType Graph::type() const
     return impl->type;
 }
 
-atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
+atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Options& options)
 {
     // TODO: Replace this with dedicated obj loader
     TriMesh mesh;
-    OpenMesh::IO::read_mesh(mesh, path);
-
     mesh.request_vertex_normals();
     mesh.request_face_normals();
+
+    if(options.vertex_has_color()) { mesh.request_vertex_colors(); }
+    if(options.face_has_color()) { mesh.request_face_colors(); }
+
+    OpenMesh::IO::read_mesh(mesh, path, options);
+
     mesh.update_normals();
 
     std::vector<Vertex> vertex_data;

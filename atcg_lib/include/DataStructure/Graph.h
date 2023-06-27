@@ -7,6 +7,8 @@
 #include <Renderer/Buffer.h>
 #include <Renderer/VertexArray.h>
 
+#include <OpenMesh/OpenMesh.h>
+
 namespace atcg
 {
 
@@ -302,7 +304,7 @@ private:
 
 namespace IO
 {
-atcg::ref_ptr<Graph> read_mesh(const std::string& path);
+atcg::ref_ptr<Graph> read_mesh(const std::string& path, OpenMesh::IO::Options& options = OpenMesh::IO::Options());
 }
 
 }    // namespace atcg
