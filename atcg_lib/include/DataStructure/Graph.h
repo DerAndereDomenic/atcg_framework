@@ -83,6 +83,17 @@ public:
                                                    float edge_radius = 0.1f);
 
     /**
+     * @brief Create a triangle mesh from a half edge structure.
+     * The data gets directly uploaded to the GPU for rendering
+     *
+     * @param trimesh The halfedge structure
+     * @param edge_radius The default radius of edges
+     *
+     * @return The graph
+     */
+    static atcg::ref_ptr<Graph> createTriangleMesh(const atcg::ref_ptr<TriMesh>& trimesh, float edge_radius = 0.1f);
+
+    /**
      * @brief Create a graph.
      * The data gets directly uploaded to the GPU for rendering.
      * It does not hold any face information for now. It only connects vertices by (arbitrary) edges.

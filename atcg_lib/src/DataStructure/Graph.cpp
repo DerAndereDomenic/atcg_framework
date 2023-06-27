@@ -181,6 +181,42 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
     return result;
 }
 
+atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mesh, float edge_radius)
+{
+    std::vector<Vertex> vertex_data;
+    vertex_data.resize(mesh->n_vertices());
+
+    std::vector<glm::u32vec3> indices_data;
+    indices_data.resize(mesh->n_faces());
+
+    bool has_color = mesh->has_vertex_colors();
+
+    for(auto vertex = mesh->vertices_begin(); vertex != mesh->vertices_end(); ++vertex)
+    {
+        int32_t vertex_id               = vertex->idx();
+        glm::vec3 pos                   = mesh->point(*vertex);
+        glm::vec3 normal                = mesh->calc_vertex_normal(*vertex);
+        glm::vec3 col                   = has_color ? mesh->color(*vertex) : glm::vec3(1);
+        vertex_data[vertex_id].position = pos;
+        vertex_data[vertex_id].normal   = normal;
+        vertex_data[vertex_id].color    = has_color ? col / 255.0f : glm::vec3(1.0f);
+    }
+
+    int32_t face_id = 0;
+    for(auto face = mesh->faces_begin(); face != mesh->faces_end(); ++face)
+    {
+        int32_t vertex_id = 0;
+        for(auto vertex = face->vertices().begin(); vertex != face->vertices().end(); ++vertex)
+        {
+            glm::value_ptr(indices_data[face_id])[vertex_id] = vertex->idx();
+            ++vertex_id;
+        }
+        ++face_id;
+    }
+
+    return createTriangleMesh(vertex_data, indices_data, edge_radius);
+}
+
 atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, const std::vector<Edge>& edges)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
@@ -327,49 +363,18 @@ GraphType Graph::type() const
 atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Options& options)
 {
     // TODO: Replace this with dedicated obj loader
-    TriMesh mesh;
-    mesh.request_vertex_normals();
-    mesh.request_face_normals();
+    atcg::ref_ptr<TriMesh> mesh = atcg::make_ref<TriMesh>();
+    mesh->request_vertex_normals();
+    mesh->request_face_normals();
 
-    if(options.vertex_has_color()) { mesh.request_vertex_colors(); }
-    if(options.face_has_color()) { mesh.request_face_colors(); }
+    if(options.vertex_has_color()) { mesh->request_vertex_colors(); }
+    if(options.face_has_color()) { mesh->request_face_colors(); }
 
-    OpenMesh::IO::read_mesh(mesh, path, options);
+    OpenMesh::IO::read_mesh(*mesh.get(), path, options);
 
-    mesh.update_normals();
+    mesh->update_normals();
 
-    std::vector<Vertex> vertex_data;
-    vertex_data.resize(mesh.n_vertices());
-
-    std::vector<glm::u32vec3> indices_data;
-    indices_data.resize(mesh.n_faces());
-
-    bool has_color = mesh.has_vertex_colors();
-
-    for(auto vertex = mesh.vertices_begin(); vertex != mesh.vertices_end(); ++vertex)
-    {
-        int32_t vertex_id               = vertex->idx();
-        glm::vec3 pos                   = mesh.point(*vertex);
-        glm::vec3 normal                = mesh.calc_vertex_normal(*vertex);
-        glm::vec3 col                   = has_color ? mesh.color(*vertex) : glm::vec3(1);
-        vertex_data[vertex_id].position = pos;
-        vertex_data[vertex_id].normal   = normal;
-        vertex_data[vertex_id].color    = has_color ? col / 255.0f : glm::vec3(1.0f);
-    }
-
-    int32_t face_id = 0;
-    for(auto face = mesh.faces_begin(); face != mesh.faces_end(); ++face)
-    {
-        int32_t vertex_id = 0;
-        for(auto vertex = face->vertices().begin(); vertex != face->vertices().end(); ++vertex)
-        {
-            glm::value_ptr(indices_data[face_id])[vertex_id] = vertex->idx();
-            ++vertex_id;
-        }
-        ++face_id;
-    }
-
-    return Graph::createTriangleMesh(vertex_data, indices_data, 0.01f);
+    return Graph::createTriangleMesh(mesh, 0.01f);
 }
 
 }    // namespace atcg
