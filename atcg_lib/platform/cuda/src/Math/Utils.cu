@@ -64,5 +64,7 @@ void normalize(const atcg::ref_ptr<Graph>& graph)
     detail::translate_and_scale_kernel<<<blocks, threads>>>(vertices, n_points, mean_point.get(), max_scale.get());
     CUDA_SAFE_CALL(cudaGetLastError());
     SYNCHRONIZE_DEFAULT_STREAM();
+
+    graph->getVerticesBuffer()->unmapPointers();
 }
 }    // namespace atcg
