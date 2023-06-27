@@ -437,7 +437,8 @@ void Renderer::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vb
         vao_sphere->pushInstanceBuffer(vbo);
         s_renderer->impl->sphere_has_instance = true;
     }
-    glm::mat4 model_new = model * glm::scale(glm::vec3(s_renderer->impl->point_size / 100.0f));
+    glm::mat4 model_new = model;
+    shader->setFloat("point_size", s_renderer->impl->point_size);
     s_renderer->impl->drawVAO(vao_sphere,
                               camera,
                               color,
