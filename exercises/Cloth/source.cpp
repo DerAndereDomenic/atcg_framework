@@ -26,7 +26,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
-        atcg::Renderer::setPointSize(25);
+        atcg::Renderer::setPointSize(0.25f);
 
         std::vector<atcg::Vertex> host_points;
         for(int i = 0; i < grid_size; ++i)
@@ -100,7 +100,7 @@ public:
 
         time += delta_time;
 
-        atcg::Vertex* dev_ptr = grid->getVerticesBuffer()->getData<atcg::Vertex>();
+        atcg::Vertex* dev_ptr = grid->getVerticesBuffer()->getDevicePointer<atcg::Vertex>();
 
         simulate(dev_ptr, grid_size * grid_size, time);
 

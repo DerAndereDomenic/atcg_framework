@@ -315,7 +315,7 @@ private:
 
 namespace IO
 {
-atcg::ref_ptr<Graph> read_mesh(const std::string& path, OpenMesh::IO::Options& options = OpenMesh::IO::Options());
+atcg::ref_ptr<Graph> read_mesh(const std::string& path, OpenMesh::IO::Options options = OpenMesh::IO::Options());
 }
 
 }    // namespace atcg

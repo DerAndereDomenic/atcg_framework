@@ -196,14 +196,14 @@ public:
     /**
      * @brief Use this vbo
      *
-     * @note Invalidades the device pointer obtained by "getData"
+     * @note Invalidades the device pointer obtained by "getDevicePointer"
      */
     void use() const;
 
     /**
      * @brief Bind the buffer as Shader Storage Buffer
      *
-     * @note Invalidades the device pointer obtained by "getData"
+     * @note Invalidades the device pointer obtained by "getDevicePointer"
      *
      * @param slot The slot to bind to
      */
@@ -212,7 +212,7 @@ public:
     /**
      * @brief Set the Data of the buffer
      *
-     * @note Invalidades the device pointer obtained by "getData"
+     * @note Invalidades the device pointer obtained by "getDevicePointer"
      *
      * @param data The data
      * @param size The size
@@ -233,7 +233,7 @@ public:
      *
      * @return The pointer
      */
-    void* getData() const;
+    void* getDevicePointer() const;
 
     /**
      * @brief Get the underlying data as a device pointer.
@@ -252,9 +252,9 @@ public:
      * @return The pointer
      */
     template<typename T>
-    inline T* getData() const
+    inline T* getDevicePointer() const
     {
-        return reinterpret_cast<T*>(getData());
+        return reinterpret_cast<T*>(getDevicePointer());
     }
 
     /**
@@ -269,7 +269,7 @@ public:
      *
      * @return The pointer
      */
-    void* getDataHost() const;
+    void* getHostPointer() const;
 
     /**
      * @brief Get the underlying data as a host pointer.
@@ -286,9 +286,9 @@ public:
      * @return The pointer
      */
     template<typename T>
-    inline T* getDataHost() const
+    inline T* getHostPointer() const
     {
-        return reinterpret_cast<T*>(getDataHost());
+        return reinterpret_cast<T*>(getHostPointer());
     }
 
     /**

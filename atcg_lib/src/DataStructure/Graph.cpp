@@ -308,7 +308,7 @@ void Graph::updateVertices(const Vertex* vertices, uint32_t num_vertices)
     impl->createVertexBuffer(nullptr, num_vertices);
 
 #ifdef ATCG_CUDA_BACKEND
-    void* dev_ptr = impl->vertices->getData();
+    void* dev_ptr = impl->vertices->getDevicePointer();
     CUDA_SAFE_CALL(cudaMemcpy(dev_ptr, (void*)vertices, sizeof(Vertex) * num_vertices, cudaMemcpyDeviceToDevice));
 #else
     impl->vertices->setData(vertices, num_vertices * sizeof(Vertex));
@@ -322,7 +322,7 @@ void Graph::updateEdges(const Edge* edges, uint32_t num_edges)
     impl->createEdgeBuffer(nullptr, num_edges);
 
 #ifdef ATCG_CUDA_BACKEND
-    void* dev_ptr = impl->edges->getData();
+    void* dev_ptr = impl->edges->getDevicePointer();
     CUDA_SAFE_CALL(cudaMemcpy(dev_ptr, (void*)edges, sizeof(Edge) * num_edges, cudaMemcpyDeviceToDevice));
 #else
     impl->edges->setData(edges, num_edges * sizeof(Edge));
@@ -364,7 +364,7 @@ GraphType Graph::type() const
     return impl->type;
 }
 
-atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Options& options)
+atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Options options)
 {
     // TODO: Replace this with dedicated obj loader
     atcg::ref_ptr<TriMesh> mesh = atcg::make_ref<TriMesh>();

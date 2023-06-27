@@ -149,7 +149,7 @@ void VertexBuffer::setData(const void* data, size_t size)
     glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 }
 
-void* VertexBuffer::getData() const
+void* VertexBuffer::getDevicePointer() const
 {
 #ifdef ATCG_CUDA_BACKEND
     impl->mapResourceDevice();
@@ -161,7 +161,7 @@ void* VertexBuffer::getData() const
     return impl->dev_ptr;
 }
 
-void* VertexBuffer::getDataHost() const
+void* VertexBuffer::getHostPointer() const
 {
     impl->mapResourceHost();
     return impl->dev_ptr;
