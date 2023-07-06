@@ -57,12 +57,18 @@ void VertexBuffer::Impl::initResource(uint32_t ID)
 void VertexBuffer::Impl::mapResourceDevice()
 {
 #ifdef ATCG_CUDA_BACKEND
-    CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &resource));
-    mapped_device = true;
+    if(!mapped_device)
+    {
+        CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &resource));
+        mapped_device = true;
+    }
 #else
-    glBindBuffer(GL_ARRAY_BUFFER, ID);
-    dev_ptr     = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
-    mapped_host = true;
+    if(!mapped_host)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, ID);
+        dev_ptr     = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+        mapped_host = true;
+    }
 #endif
 }
 
@@ -83,9 +89,12 @@ void VertexBuffer::Impl::unmapResourceDevice()
 
 void VertexBuffer::Impl::mapResourceHost()
 {
-    glBindBuffer(GL_ARRAY_BUFFER, ID);
-    dev_ptr     = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
-    mapped_host = true;
+    if(!mapped_host)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, ID);
+        dev_ptr     = glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
+        mapped_host = true;
+    }
 }
 
 void VertexBuffer::Impl::unmapResourceHost()
