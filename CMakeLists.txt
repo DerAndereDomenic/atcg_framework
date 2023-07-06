@@ -40,6 +40,9 @@ add_library(imgui STATIC "external/imgui/imgui.cpp"
                          "external/imgui/backends/imgui_impl_glfw.cpp"
                          "external/imgui/backends/imgui_impl_opengl3.cpp")
 
+add_library(implot STATIC "external/implot/implot.cpp"
+                          "external/implot/implot_items.cpp")
+
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
     #TODO
@@ -78,6 +81,7 @@ include_directories(atcg_lib/include
                     external/glad/include
                     external/glfw/include
                     external/imgui
+                    external/implot
                     external/eigen
                     external/glm
                     external/openmesh/src
@@ -101,6 +105,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
         glfw
         imgui
         imguizmo
+        implot
         glad
         OpenGL::GL
         OpenMeshCore
