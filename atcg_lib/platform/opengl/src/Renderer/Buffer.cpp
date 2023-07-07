@@ -172,10 +172,20 @@ void* VertexBuffer::getHostPointer() const
     return impl->dev_ptr;
 }
 
-void VertexBuffer::unmapPointers() const
+void VertexBuffer::unmapHostPointers() const
+{
+    impl->unmapResourceHost();
+}
+
+void VertexBuffer::unmapDevicePointers() const
 {
     impl->unmapResourceDevice();
-    impl->unmapResourceHost();
+}
+
+void VertexBuffer::unmapPointers() const
+{
+    unmapHostPointers();
+    unmapDevicePointers();
 }
 
 IndexBuffer::IndexBuffer(const uint32_t* indices, size_t count) : VertexBuffer((void*)indices, count * sizeof(uint32_t))

@@ -292,6 +292,16 @@ public:
     }
 
     /**
+     * @brief Unmaps and invalidates all host pointers used by the application
+     */
+    void unmapHostPointers() const;
+
+    /**
+     * @brief Unmaps and invalidates all device pointers used by the application
+     */
+    void unmapDevicePointers() const;
+
+    /**
      * @brief Unmaps and invalidates all mapped pointers used by the application.
      */
     void unmapPointers() const;
