@@ -414,7 +414,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
 void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
 {
-    auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
+    const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
     for(auto e: view)
     {

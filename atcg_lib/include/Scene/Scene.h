@@ -1,7 +1,7 @@
 #pragma once
 
 #include <entt.hpp>
-#include <unordered_map>
+#include <memory>
 
 #include <Core/UUID.h>
 
@@ -18,12 +18,12 @@ public:
     /**
      * @brief Constructor
      */
-    Scene() = default;
+    Scene();
 
     /**
      * @brief Destructor
      */
-    ~Scene() = default;
+    ~Scene();
 
     /**
      * @brief Create a new entity that is part of this scene.
@@ -57,6 +57,7 @@ private:
     friend class Entity;
     entt::registry _registry;
 
-    std::unordered_map<UUID, Entity> _entities;
+    class Impl;
+    std::unique_ptr<Impl> impl;
 };
 }    // namespace atcg

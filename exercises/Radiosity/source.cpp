@@ -31,9 +31,8 @@ public:
         // TODO FIX RADIOSITY
         trimesh = atcg::make_ref<atcg::TriMesh>();
         trimesh->request_vertex_colors();
-        OpenMesh::IO::read_mesh(*trimesh.get(),
-                                "res/cornell_box_radiosity.ply",
-                                OpenMesh::IO::Options(OpenMesh::IO::Options::VertexColor));
+        auto options = OpenMesh::IO::Options(OpenMesh::IO::Options::VertexColor);
+        OpenMesh::IO::read_mesh(*trimesh.get(), "res/cornell_box_radiosity.ply", options);
 
 
         //   mesh->uploadData();
