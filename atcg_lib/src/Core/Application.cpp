@@ -91,10 +91,6 @@ void Application::run()
 
         current_time = std::chrono::high_resolution_clock::now();
 
-        delta_time =
-            std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_time).count() / 1000000.0f;
-
-        total_time += delta_time;
 
         // Only check for shader reloading every second
         if(total_time >= 1.0f)
@@ -102,6 +98,11 @@ void Application::run()
             total_time = 0.0f;
             ShaderManager::onUpdate();
         }
+
+        delta_time =
+            std::chrono::duration_cast<std::chrono::microseconds>(current_time - last_time).count() / 1000000.0f;
+
+        total_time += delta_time;
     }
 }
 
