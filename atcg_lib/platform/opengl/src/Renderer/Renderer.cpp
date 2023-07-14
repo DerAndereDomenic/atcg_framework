@@ -553,9 +553,9 @@ void Renderer::drawCircle(const glm::vec3& position,
     s_renderer->impl->quad_vao->use();
     const auto& shader = ShaderManager::getShader("circle");
     shader->setVec3("flat_color", color);
-    glm::mat4 model = glm::translate(position) * glm::scale(glm::vec3(radius));
-    if(camera) { shader->setMVP(model, camera->getView(), camera->getProjection()); }
-    else { shader->setMVP(model); }
+    shader->setFloat("radius", radius);
+    shader->setVec3("position", position);
+    if(camera) { shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection()); }
 
     const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
 
