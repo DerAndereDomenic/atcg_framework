@@ -16,6 +16,13 @@ class SandboxLayer : public atcg::Layer
 public:
     SandboxLayer(const std::string& name) : atcg::Layer(name) {}
 
+    void drawLightSource(atcg::Entity entity, const atcg::ref_ptr<atcg::Camera>& camera)
+    {
+        atcg::TransformComponent transform = entity.getComponent<atcg::TransformComponent>();
+
+        atcg::Renderer::drawCircle(transform.getPosition(), 0.1f, 0.2f, glm::vec3(1), camera);
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -39,6 +46,8 @@ public:
 
         light_entity = scene->createEntity();
         light_entity.addComponent<atcg::TransformComponent>();
+        light_entity.addComponent<atcg::CustomRenderComponent>(ATCG_BIND_EVENT_FN(SandboxLayer::drawLightSource),
+                                                               atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
         selected_entity = light_entity;
     }
@@ -59,6 +68,7 @@ public:
         atcg::ShaderManager::getShader("volume")->setFloat("g", g);
         noise_texture->use();
         atcg::Renderer::draw(cube_entity, camera_controller->getCamera());
+        atcg::Renderer::draw(light_entity, camera_controller->getCamera());
         dt = delta_time;
     }
 
