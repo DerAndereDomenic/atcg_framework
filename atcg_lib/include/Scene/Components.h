@@ -93,7 +93,7 @@ struct RenderComponent
     atcg::DrawMode draw_mode;
 };
 
-struct MeshRenderComponent : RenderComponent
+struct MeshRenderComponent : public RenderComponent
 {
     MeshRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                         const glm::vec3& color              = glm::vec3(1))
@@ -107,7 +107,7 @@ struct MeshRenderComponent : RenderComponent
     glm::vec3 color              = glm::vec3(1);
 };
 
-struct PointRenderComponent : RenderComponent
+struct PointRenderComponent : public RenderComponent
 {
     PointRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                          const glm::vec3& color              = glm::vec3(1))
@@ -121,7 +121,7 @@ struct PointRenderComponent : RenderComponent
     glm::vec3 color              = glm::vec3(1);
 };
 
-struct PointSphereRenderComponent : RenderComponent
+struct PointSphereRenderComponent : public RenderComponent
 {
     PointSphereRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                                const glm::vec3& color              = glm::vec3(1))
@@ -135,7 +135,7 @@ struct PointSphereRenderComponent : RenderComponent
     glm::vec3 color              = glm::vec3(1);
 };
 
-struct EdgeRenderComponent : RenderComponent
+struct EdgeRenderComponent : public RenderComponent
 {
     EdgeRenderComponent(const glm::vec3& color = glm::vec3(1))
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES),
@@ -146,7 +146,7 @@ struct EdgeRenderComponent : RenderComponent
     glm::vec3 color = glm::vec3(1);
 };
 
-struct EdgeCylinderRenderComponent : RenderComponent
+struct EdgeCylinderRenderComponent : public RenderComponent
 {
     EdgeCylinderRenderComponent(const glm::vec3& color = glm::vec3(1))
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER),
@@ -155,6 +155,19 @@ struct EdgeCylinderRenderComponent : RenderComponent
     }
 
     glm::vec3 color = glm::vec3(1);
+};
+
+struct CustomRenderComponent : public RenderComponent
+{
+    using RenderCallbackFn = std::function<void(Entity, const atcg::ref_ptr<Camera>& camera)>;
+
+    CustomRenderComponent(const RenderCallbackFn& callback, atcg::DrawMode draw_mode)
+        : RenderComponent(draw_mode),
+          callback(callback)
+    {
+    }
+
+    RenderCallbackFn callback;
 };
 
 }    // namespace atcg

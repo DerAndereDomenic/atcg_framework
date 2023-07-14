@@ -386,17 +386,31 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
 
 void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 {
-    if(!entity.hasComponent<TransformComponent>())
+    if(entity.hasComponent<CustomRenderComponent>())
     {
-        ATCG_WARN("Entity does not have transform component!");
-        return;
+        CustomRenderComponent renderer = entity.getComponent<CustomRenderComponent>();
+        renderer.callback(entity, camera);
     }
 
-    if(!entity.hasComponent<GeometryComponent>())
+    if(entity.hasAnyComponent<MeshRenderComponent,
+                              PointRenderComponent,
+                              PointSphereRenderComponent,
+                              EdgeRenderComponent,
+                              EdgeCylinderRenderComponent>())
     {
-        ATCG_WARN("Entity does not have geometry component!");
-        return;
+        if(!entity.hasComponent<TransformComponent>())
+        {
+            ATCG_WARN("Entity does not have transform component!");
+            return;
+        }
+
+        if(!entity.hasComponent<GeometryComponent>())
+        {
+            ATCG_WARN("Entity does not have geometry component!");
+            return;
+        }
     }
+    else { return; }
 
     uint32_t entity_id           = (uint32_t)entity._entity_handle;
     TransformComponent transform = entity.getComponent<TransformComponent>();
