@@ -57,16 +57,29 @@ public:
     }
 
     /**
-     * @brief Check if the Entity holds the component
+     * @brief Check if the Entity holds all components
      *
-     * @tparam T The component type
+     * @tparam T The component types
      *
-     * @return True if the entity has this component
+     * @return True if the entity has all of the component
      */
-    template<typename T>
+    template<typename... T>
     bool hasComponent()
     {
-        return _scene->_registry.all_of<T>(_entity_handle);
+        return _scene->_registry.all_of<T...>(_entity_handle);
+    }
+
+    /**
+     * @brief Check if the Entity holds any components
+     *
+     * @tparam T The component types
+     *
+     * @return True if the entity has any the component
+     */
+    template<typename... T>
+    bool hasAnyComponent()
+    {
+        return _scene->_registry.any_of<T...>(_entity_handle);
     }
 
     /**
