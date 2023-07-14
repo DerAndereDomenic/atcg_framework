@@ -168,11 +168,13 @@ public:
      *
      * @param position The position
      * @param radius The radius
+     * @param thickness The thickness of the circle
      * @param color The color
      * @param camera The camera
      */
     static void drawCircle(const glm::vec3& position,
                            const float& radius,
+                           const float& thickness,
                            const glm::vec3& color,
                            const atcg::ref_ptr<Camera>& camera = {});
 

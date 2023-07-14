@@ -547,6 +547,7 @@ void Renderer::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
 
 void Renderer::drawCircle(const glm::vec3& position,
                           const float& radius,
+                          const float& thickness,
                           const glm::vec3& color,
                           const atcg::ref_ptr<Camera>& camera)
 {
@@ -554,6 +555,7 @@ void Renderer::drawCircle(const glm::vec3& position,
     const auto& shader = ShaderManager::getShader("circle");
     shader->setVec3("flat_color", color);
     shader->setFloat("radius", radius);
+    shader->setFloat("thickness", thickness);
     shader->setVec3("position", position);
     if(camera) { shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection()); }
 
