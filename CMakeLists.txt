@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION "3.18")
+cmake_minimum_required(VERSION "3.24")
 
 project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
 
@@ -46,7 +46,7 @@ add_library(implot STATIC "external/implot/implot.cpp"
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
     #TODO
-    set(CMAKE_CUDA_ARCHITECTURES "75;86")
+    set(CMAKE_CUDA_ARCHITECTURES "native")
     set(BACKEND "cuda")
     file (GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "atcg_lib/platform/cuda/**.c*"
                                                             "atcg_lib/platform/cuda/**.h")
