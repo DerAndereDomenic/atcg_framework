@@ -77,15 +77,14 @@ public:
         scene = atcg::make_ref<atcg::Scene>();
 
         atcg::Entity grid_entity = scene->createEntity();
-        grid_entity.addComponent<atcg::GeometryComponent>(grid)
-            .addConfig(
-                {atcg::ShaderManager::getShader("base"), glm::vec3(1), atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER})
-            .addConfig(
-                {atcg::ShaderManager::getShader("base"), glm::vec3(1), atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE});
+        grid_entity.addComponent<atcg::GeometryComponent>(grid);
+        grid_entity.addComponent<atcg::PointSphereRenderComponent>();
+        grid_entity.addComponent<atcg::EdgeCylinderRenderComponent>();
         grid_entity.addComponent<atcg::TransformComponent>();
 
         atcg::Entity plane_entity = scene->createEntity();
-        plane_entity.addComponent<atcg::GeometryComponent>(plane).addConfig({checkerboard_shader});
+        plane_entity.addComponent<atcg::GeometryComponent>(plane);
+        plane_entity.addComponent<atcg::MeshRenderComponent>(checkerboard_shader);
         auto& transform = plane_entity.addComponent<atcg::TransformComponent>();
         transform.setScale(glm::vec3(100, 100, 100));
     }

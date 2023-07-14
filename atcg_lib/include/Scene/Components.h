@@ -78,34 +78,83 @@ struct IDComponent
     UUID ID;
 };
 
-struct RenderConfig
-{
-    RenderConfig(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                 const glm::vec3& color              = glm::vec3(1),
-                 const atcg::DrawMode& draw_mode     = atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
-        : shader(shader),
-          color(color),
-          draw_mode(draw_mode)
-    {
-    }
-
-    atcg::ref_ptr<Shader> shader;
-    glm::vec3 color;
-    atcg::DrawMode draw_mode;
-};
-
 struct GeometryComponent
 {
     GeometryComponent() = default;
     GeometryComponent(const atcg::ref_ptr<Graph>& graph) : graph(graph) {}
 
-    inline GeometryComponent& addConfig(const RenderConfig& config = {})
+    atcg::ref_ptr<Graph> graph;
+};
+
+struct RenderComponent
+{
+    RenderComponent(atcg::DrawMode draw_mode) : draw_mode(draw_mode) {}
+
+    atcg::DrawMode draw_mode;
+};
+
+struct MeshRenderComponent : RenderComponent
+{
+    MeshRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                        const glm::vec3& color              = glm::vec3(1))
+        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE),
+          shader(shader),
+          color(color)
     {
-        configs.push_back(config);
-        return *this;
     }
 
-    atcg::ref_ptr<Graph> graph;
-    std::vector<RenderConfig> configs;
+    atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
+    glm::vec3 color              = glm::vec3(1);
 };
+
+struct PointRenderComponent : RenderComponent
+{
+    PointRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                         const glm::vec3& color              = glm::vec3(1))
+        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS),
+          shader(shader),
+          color(color)
+    {
+    }
+
+    atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
+    glm::vec3 color              = glm::vec3(1);
+};
+
+struct PointSphereRenderComponent : RenderComponent
+{
+    PointSphereRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                               const glm::vec3& color              = glm::vec3(1))
+        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE),
+          shader(shader),
+          color(color)
+    {
+    }
+
+    atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
+    glm::vec3 color              = glm::vec3(1);
+};
+
+struct EdgeRenderComponent : RenderComponent
+{
+    EdgeRenderComponent(const glm::vec3& color = glm::vec3(1))
+        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES),
+          color(color)
+    {
+    }
+
+    glm::vec3 color = glm::vec3(1);
+};
+
+struct EdgeCylinderRenderComponent : RenderComponent
+{
+    EdgeCylinderRenderComponent(const glm::vec3& color = glm::vec3(1))
+        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER),
+          color(color)
+    {
+    }
+
+    glm::vec3 color = glm::vec3(1);
+};
+
 }    // namespace atcg
