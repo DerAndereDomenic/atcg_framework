@@ -89,7 +89,7 @@ public:
 
         scene = atcg::make_ref<atcg::Scene>();
         atcg::Serializer serializer(scene);
-        serializer.deserialize("res/Scene.yaml");
+        serializer.deserialize("res/Cloth/Scene.yaml");
 
         for(auto e: scene->getAllEntitiesWith<atcg::MeshRenderComponent>())
         {
@@ -136,14 +136,14 @@ public:
             if(ImGui::MenuItem("Save"))
             {
                 atcg::Serializer serializer(scene);
-                serializer.serialize("res/Scene.yaml");
+                serializer.serialize("res/Cloth/Scene.yaml");
             }
 
             if(ImGui::MenuItem("Load"))
             {
                 scene = atcg::make_ref<atcg::Scene>();
                 atcg::Serializer serializer(scene);
-                serializer.deserialize("res/Scene.yaml");
+                serializer.deserialize("res/Cloth/Scene.yaml");
 
                 for(auto e: scene->getAllEntitiesWith<atcg::MeshRenderComponent>())
                 {

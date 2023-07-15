@@ -1,0 +1,39 @@
+Scene: Untitled
+Entities:
+  - Entity: 5905187068440045987
+    PerspectiveCamera:
+      Translation: [-37.0499725, 61.3200493, -35.9613724]
+      LookAt: [-0.904254317, 11.3465595, 8.6339283]
+  - Entity: 11321595665421148368
+    Transform:
+      Translation: [0, 0, 0]
+      Scale: [100, 100, 100]
+      EulerAngles: [-0, 0, -0]
+    Geometry:
+      Type: 1
+      Vertices: res/Cloth/Scene.yaml.11321595665421148368.vertices
+      Faces: res/Cloth/Scene.yaml.11321595665421148368.faces
+      Edges: res/Cloth/Scene.yaml.11321595665421148368.edges
+    Renderer:
+      - RenderType: 0
+        Color: [1, 1, 1]
+        VertexShaderPath: exercises/Cloth/checkerboard.vs
+        FragmentShaderPath: exercises/Cloth/checkerboard.fs
+        GeometryShaderPath: ""
+  - Entity: 5914046139043569560
+    Transform:
+      Translation: [0, 27.6573601, 0]
+      Scale: [1, 1.00000012, 1.00000012]
+      EulerAngles: [0.994062543, 0, 0]
+    Geometry:
+      Type: 2
+      Vertices: res/Cloth/Scene.yaml.5914046139043569560.vertices
+      Edges: res/Cloth/Scene.yaml.5914046139043569560.edges
+    Renderer:
+      - RenderType: 2
+        Color: [1, 1, 1]
+        VertexShaderPath: shader/base.vs
+        FragmentShaderPath: shader/base.fs
+        GeometryShaderPath: ""
+      - RenderType: 4
+        Color: [1, 1, 1]
