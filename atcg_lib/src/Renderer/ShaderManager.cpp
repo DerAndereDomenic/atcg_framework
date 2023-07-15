@@ -62,6 +62,11 @@ void ShaderManager::addComputeShaderFromNameImpl(const std::string& name)
     addShaderImpl(name, shader);
 }
 
+bool ShaderManager::hasShaderImpl(const std::string& name)
+{
+    return _shader.find(name) != _shader.end();
+}
+
 const atcg::ref_ptr<Shader>& ShaderManager::getShaderImpl(const std::string& name)
 {
     return _shader[name];

@@ -61,6 +61,14 @@ public:
     }
 
     /**
+     * @brief Check if the shader exists
+     *
+     * @param name The name
+     * @return True if the shader exists in the shader manager
+     */
+    inline static bool hasShader(const std::string& name) { return s_instance->hasShaderImpl(name); }
+
+    /**
      * @brief This gets called by the application. Don't call manually
      */
     inline static void onUpdate() { s_instance->onUpdateImpl(); }
@@ -71,6 +79,7 @@ private:
     void addShaderImpl(const std::string& name, const atcg::ref_ptr<Shader>& shader);
     void addShaderFromNameImpl(const std::string& name);
     void addComputeShaderFromNameImpl(const std::string& name);
+    bool hasShaderImpl(const std::string& name);
     const atcg::ref_ptr<Shader>& getShaderImpl(const std::string& name);
     void onUpdateImpl();
     static ShaderManager* s_instance;
