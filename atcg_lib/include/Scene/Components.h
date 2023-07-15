@@ -86,6 +86,18 @@ struct GeometryComponent
     atcg::ref_ptr<Graph> graph;
 };
 
+struct CameraComponent
+{
+    CameraComponent() = default;
+    CameraComponent(const atcg::ref_ptr<Camera>& camera) : camera(camera)
+    {
+        if(dynamic_cast<PerspectiveCamera*>(camera.get())) { perspective = true; }
+    }
+
+    atcg::ref_ptr<Camera> camera;
+    bool perspective = false;
+};
+
 struct RenderComponent
 {
     RenderComponent(atcg::DrawMode draw_mode) : draw_mode(draw_mode) {}
