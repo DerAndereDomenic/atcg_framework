@@ -17,6 +17,8 @@ CameraController::CameraController(const atcg::ref_ptr<PerspectiveCamera>& camer
 
 FocusedController::FocusedController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
 
+FocusedController::FocusedController(const atcg::ref_ptr<Camera>& camera) : CameraController(camera) {}
+
 void FocusedController::onUpdate(float delta_time)
 {
     if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_MIDDLE))
@@ -109,6 +111,8 @@ FirstPersonController::FirstPersonController(const float& aspect_ratio,
       _speed(speed)
 {
 }
+
+FirstPersonController::FirstPersonController(const atcg::ref_ptr<Camera>& camera) : CameraController(camera) {}
 
 void FirstPersonController::onUpdate(float delta_time)
 {

@@ -77,6 +77,13 @@ public:
     FocusedController(const float& aspect_ratio);
 
     /**
+     * @brief Construct a new First Person Camera object
+     *
+     * @param camera The camera
+     */
+    FocusedController(const atcg::ref_ptr<Camera>& camera);
+
+    /**
      * @brief Gets called every frame
      *
      * @param delta_time Time since last frame
@@ -114,6 +121,13 @@ public:
                           const glm::vec3& position       = glm::vec3(0),
                           const glm::vec3& view_direction = glm::vec3(1, 0, 0),
                           const float& speed              = 1.0f);
+
+    /**
+     * @brief Construct a new First Person Camera object
+     *
+     * @param camera The camera
+     */
+    FirstPersonController(const atcg::ref_ptr<Camera>& camera);
 
     /**
      * @brief Gets called every frame
