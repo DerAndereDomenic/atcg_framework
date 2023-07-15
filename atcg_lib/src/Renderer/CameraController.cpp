@@ -13,6 +13,7 @@ CameraController::CameraController(const float& aspect_ratio, const glm::vec3& p
     _camera = atcg::make_ref<PerspectiveCamera>(aspect_ratio, position, look_at);
 }
 
+CameraController::CameraController(const atcg::ref_ptr<PerspectiveCamera>& camera) : _camera(camera) {}
 
 FocusedController::FocusedController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
 

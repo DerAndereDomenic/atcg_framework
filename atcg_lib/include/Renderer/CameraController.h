@@ -28,6 +28,13 @@ public:
                      const glm::vec3& look_at  = glm::vec3(0));
 
     /**
+     * @brief Create a camera controller with a given camera.
+     *
+     * @param camera The camera
+     */
+    CameraController(const atcg::ref_ptr<PerspectiveCamera>& camera);
+
+    /**
      * @brief Gets called every frame
      *
      * @param delta_time Time since last frame
@@ -47,6 +54,13 @@ public:
      * @return const atcg::scope_ptr<Camera>& The camera
      */
     inline const atcg::ref_ptr<PerspectiveCamera>& getCamera() const { return _camera; }
+
+    /**
+     * @brief Set the Camera object
+     *
+     * @param camera The camera
+     */
+    inline void setCamera(const atcg::ref_ptr<PerspectiveCamera>& camera) { _camera = camera; }
 
 protected:
     atcg::ref_ptr<PerspectiveCamera> _camera;
