@@ -74,6 +74,7 @@ private:
 struct IDComponent
 {
     IDComponent() : ID(UUID()) {}
+    IDComponent(uint64_t id) : ID(UUID(id)) {}
 
     UUID ID;
 };
