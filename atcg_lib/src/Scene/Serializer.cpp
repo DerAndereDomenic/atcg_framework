@@ -127,7 +127,7 @@ namespace detail
 #define TRANSFORM_COMPONENT_NAME "Transform"
 #define TRANSFORM_POSITION_NAME  "Translation"
 #define TRANSFORM_SCALE_NAME     "Scale"
-#define TRANSFORM_ROTATION_NAME  "Euler_Angles"
+#define TRANSFORM_ROTATION_NAME  "EulerAngles"
 
 #define GEOMETRY_COMPONENT_NAME "Geometry"
 #define GEOMETRY_TYPE_NAME      "Type"
@@ -136,11 +136,15 @@ namespace detail
 #define GEOMETRY_FACES_NAME     "Faces"
 
 #define RENDER_COMPONENT_NAME       "Renderer"
-#define RENDER_TYPE_NAME            "Render_Type"
-#define RENDER_VERTEX_SHADER_NAME   "Vertex_Shader_Path"
-#define RENDER_FRAGMENT_SHADER_NAME "Fragment_Shader_Path"
-#define RENDER_GEOMETRY_SHADER_NAME "Geometry_Shader_Path"
+#define RENDER_TYPE_NAME            "RenderType"
+#define RENDER_VERTEX_SHADER_NAME   "VertexShaderPath"
+#define RENDER_FRAGMENT_SHADER_NAME "FragmentShaderPath"
+#define RENDER_GEOMETRY_SHADER_NAME "GeometryShaderPath"
 #define RENDER_COLOR_NAME           "Color"
+
+#define CAMERA_COMPONENT_NAME "PerspectiveCamera"
+#define CAMERA_POSITION_NAME  "Translation"
+#define CAMERA_LOOKAT_NAME    "LookAt"
 
 void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -164,6 +168,20 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         out << YAML::Key << TRANSFORM_POSITION_NAME << YAML::Value << transform.getPosition();
         out << YAML::Key << TRANSFORM_SCALE_NAME << YAML::Value << transform.getScale();
         out << YAML::Key << TRANSFORM_ROTATION_NAME << YAML::Value << transform.getRotation();
+
+        out << YAML::EndMap;
+    }
+
+    if(entity.hasComponent<CameraComponent>())
+    {
+        out << YAML::Key << CAMERA_COMPONENT_NAME;
+        out << YAML::BeginMap;
+
+        auto& camera                         = entity.getComponent<CameraComponent>();
+        atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
+
+        out << YAML::Key << CAMERA_POSITION_NAME << YAML::Value << cam->getPosition();
+        out << YAML::Key << CAMERA_LOOKAT_NAME << YAML::Value << cam->getLookAt();
 
         out << YAML::EndMap;
     }
