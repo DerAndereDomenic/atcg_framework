@@ -17,7 +17,10 @@ CameraController::CameraController(const atcg::ref_ptr<PerspectiveCamera>& camer
 
 FocusedController::FocusedController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
 
-FocusedController::FocusedController(const atcg::ref_ptr<Camera>& camera) : CameraController(camera) {}
+FocusedController::FocusedController(const atcg::ref_ptr<Camera>& camera) : CameraController(camera)
+{
+    _distance = glm::length(_camera->getPosition() - _camera->getLookAt());
+}
 
 void FocusedController::onUpdate(float delta_time)
 {
