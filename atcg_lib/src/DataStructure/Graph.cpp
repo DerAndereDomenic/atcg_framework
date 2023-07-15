@@ -26,9 +26,9 @@ public:
     void createFaceBuffer(const glm::u32vec3* face_indices, uint32_t num_faces);
     std::vector<Edge> edgesFromIndices(const std::vector<glm::u32vec3>& face_indices);
 
-    atcg::ref_ptr<VertexBuffer> vertices;
-    atcg::ref_ptr<IndexBuffer> indices;
-    atcg::ref_ptr<VertexBuffer> edges;
+    atcg::ref_ptr<VertexBuffer> vertices = nullptr;
+    atcg::ref_ptr<IndexBuffer> indices   = nullptr;
+    atcg::ref_ptr<VertexBuffer> edges    = nullptr;
 
     atcg::ref_ptr<VertexArray> vertices_array;
     atcg::ref_ptr<VertexArray> edges_array;
