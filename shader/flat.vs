@@ -28,7 +28,7 @@ void main()
     scale_primitive[1][1] = scale_point.y;
     scale_primitive[2][2] = scale_point.z;
 
-    vec3 frag_pos = vec3(M * inv_scale_model * scale_primitive * vec4(aPosition, 1) + instanced * M * vec4(aInstanceOffset, 1));
+    vec3 frag_pos = vec3(M * inv_scale_model * scale_primitive * vec4(aPosition, 1) + instanced * M * vec4(aInstanceOffset, 0));
 
     gl_Position = P * V * vec4(frag_pos, 1);
 

@@ -31,11 +31,12 @@ void main()
     scale_primitive[1][1] = scale_point.y;
     scale_primitive[2][2] = scale_point.z;
 
-    frag_pos = vec3(M * inv_scale_model * scale_primitive * vec4(aPosition, 1) + instanced * M * vec4(aInstanceOffset, 1));
+    frag_pos = vec3(M * inv_scale_model * scale_primitive * vec4(aPosition, 1) + instanced * M * vec4(aInstanceOffset, 0));
 
     gl_Position = P * V * vec4(frag_pos, 1);
 
     // This could eventually lead to problems if we allow the client to do instance rendering of arbitrary meshes
-    frag_normal = normalize(vec3(inverse(transpose((1-instanced) * M + instanced * mat4(1))) * vec4(aNormal, 0)));
+    // frag_normal = normalize(vec3(inverse(transpose((1-instanced) * M + instanced * M)) * vec4(aNormal, 0)));
+    frag_normal = normalize(vec3(M * vec4(aNormal, 0)));
     frag_color = aColor * (instanced * aInstanceColor + (1 - instanced) * vec3(1));
 }
