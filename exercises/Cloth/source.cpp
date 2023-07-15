@@ -22,13 +22,9 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        const auto& window = atcg::Application::get()->getWindow();
-        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
-
         atcg::Renderer::setPointSize(0.25f);
 
-        std::vector<atcg::Vertex> host_points;
+        /*std::vector<atcg::Vertex> host_points;
         for(int i = 0; i < grid_size; ++i)
         {
             for(int j = 0; j < grid_size; ++j)
@@ -87,6 +83,27 @@ public:
         plane_entity.addComponent<atcg::MeshRenderComponent>(checkerboard_shader);
         auto& transform = plane_entity.addComponent<atcg::TransformComponent>();
         transform.setScale(glm::vec3(100, 100, 100));
+
+        atcg::Entity camera_entity = scene->createEntity();
+        camera_entity.addComponent<atcg::CameraComponent>(camera_controller->getCamera());*/
+
+        scene = atcg::make_ref<atcg::Scene>();
+        atcg::Serializer serializer(scene);
+        serializer.deserialize("res/Scene.yaml");
+
+        for(auto e: scene->getAllEntitiesWith<atcg::MeshRenderComponent>())
+        {
+            atcg::Entity entity = {e, scene.get()};
+            auto& comp          = entity.getComponent<atcg::MeshRenderComponent>();
+            comp.shader->setFloat("checker_size", 0.1f);
+        }
+
+        for(auto e: scene->getAllEntitiesWith<atcg::CameraComponent>())
+        {
+            atcg::Entity entity = {e, scene.get()};
+            auto& camera        = entity.getComponent<atcg::CameraComponent>();
+            camera_controller   = atcg::make_ref<atcg::FocusedController>(camera.camera);
+        }
     }
 
     // This gets called each frame
@@ -99,9 +116,13 @@ public:
 
         time += delta_time;
 
-        atcg::Vertex* dev_ptr = grid->getVerticesBuffer()->getDevicePointer<atcg::Vertex>();
-
-        simulate(dev_ptr, grid_size * grid_size, time);
+        for(auto e: scene->getAllEntitiesWith<atcg::EdgeCylinderRenderComponent>())
+        {
+            atcg::Entity entity   = {e, scene.get()};
+            auto& geometry        = entity.getComponent<atcg::GeometryComponent>();
+            atcg::Vertex* dev_ptr = geometry.graph->getVerticesBuffer()->getDevicePointer<atcg::Vertex>();
+            simulate(dev_ptr, grid_size * grid_size, time);
+        }
 
         atcg::Renderer::draw(scene, camera_controller->getCamera());
     }
