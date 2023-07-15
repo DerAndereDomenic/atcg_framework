@@ -1,5 +1,7 @@
 #include <Scene/Serializer.h>
 
+#include <Core/Application.h>
+
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
 
@@ -153,6 +155,21 @@ void serializeBuffer(const std::string& file_name, const char* data, const uint3
     summary_file.close();
 }
 
+template<typename T>
+std::vector<T> deserializeBuffer(const std::string& file_name)
+{
+    std::ifstream summary_file(file_name, std::ios::in | std::ios::binary);
+    std::vector<char> buffer_char(std::istreambuf_iterator<char>(summary_file), {});
+    summary_file.close();
+
+    std::vector<T> buffer(buffer_char.size() / sizeof(T));
+
+    T* data = reinterpret_cast<T*>(buffer_char.data());
+    for(uint32_t i = 0; i < buffer_char.size() / sizeof(T); ++i) { buffer[i] = data[i]; }
+
+    return buffer;
+}
+
 void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_path)
 {
     IDComponent id = entity.getComponent<IDComponent>();
@@ -199,7 +216,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         if(graph->getVerticesBuffer())
         {
             const char* buffer      = graph->getVerticesBuffer()->getHostPointer<char>();
-            std::string buffer_name = file_path + ".vertices";
+            std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".vertices";
             serializeBuffer(buffer_name, buffer, graph->getVerticesBuffer()->size());
             out << YAML::Key << GEOMETRY_VERTICES_NAME << YAML::Value << buffer_name;
             graph->getVerticesBuffer()->unmapHostPointers();
@@ -208,7 +225,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         if(graph->getFaceIndexBuffer())
         {
             const char* buffer      = graph->getFaceIndexBuffer()->getHostPointer<char>();
-            std::string buffer_name = file_path + ".faces";
+            std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".faces";
             serializeBuffer(buffer_name, buffer, graph->getFaceIndexBuffer()->size());
             out << YAML::Key << GEOMETRY_FACES_NAME << YAML::Value << buffer_name;
             graph->getFaceIndexBuffer()->unmapHostPointers();
@@ -217,7 +234,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         if(graph->getEdgesBuffer())
         {
             const char* buffer      = graph->getEdgesBuffer()->getHostPointer<char>();
-            std::string buffer_name = file_path + ".edges";
+            std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".edges";
             serializeBuffer(buffer_name, buffer, graph->getEdgesBuffer()->size());
             out << YAML::Key << GEOMETRY_EDGES_NAME << YAML::Value << buffer_name;
             graph->getEdgesBuffer()->unmapHostPointers();
@@ -340,5 +357,192 @@ void Serializer::serialize(const std::string& file_path)
     fout << out.c_str();
 }
 
-void Serializer::deserialize(const std::string& file_path) {}
+void Serializer::deserialize(const std::string& file_path)
+{
+    YAML::Node data;
+
+    try
+    {
+        data = YAML::LoadFile(file_path);
+    }
+    catch(const std::exception& e)
+    {
+        ATCG_ERROR("Failed to load scene file '{0}'\n   {1}", file_path, e.what());
+        return;
+    }
+
+    if(!data["Scene"]) return;
+
+    auto entities = data["Entities"];
+    if(entities)
+    {
+        for(auto entity: entities)
+        {
+            uint64_t uuid = entity["Entity"].as<uint64_t>();
+
+            Entity deserializedEntity = _scene->createEntity();
+            auto& idComponent         = deserializedEntity.getComponent<IDComponent>();
+            idComponent.ID            = uuid;
+
+            auto transformComponent = entity[TRANSFORM_COMPONENT_NAME];
+            if(transformComponent)
+            {
+                auto& transform = deserializedEntity.addComponent<TransformComponent>();
+                transform.setPosition(transformComponent[TRANSFORM_POSITION_NAME].as<glm::vec3>());
+                transform.setScale(transformComponent[TRANSFORM_SCALE_NAME].as<glm::vec3>());
+                transform.setRotation(transformComponent[TRANSFORM_ROTATION_NAME].as<glm::vec3>());
+            }
+
+            auto cameraComponent = entity[CAMERA_COMPONENT_NAME];
+            if(cameraComponent)
+            {
+                glm::vec3 position = cameraComponent[CAMERA_POSITION_NAME].as<glm::vec3>();
+                glm::vec3 lookat   = cameraComponent[CAMERA_LOOKAT_NAME].as<glm::vec3>();
+                auto& window       = atcg::Application::get()->getWindow();
+                float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
+                auto& camera       = deserializedEntity.addComponent<CameraComponent>(
+                    atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, position, lookat));
+            }
+
+            auto geometryComponent = entity[GEOMETRY_COMPONENT_NAME];
+            if(geometryComponent)
+            {
+                auto& geometry       = deserializedEntity.addComponent<GeometryComponent>();
+                atcg::GraphType type = (atcg::GraphType)geometryComponent[GEOMETRY_TYPE_NAME].as<int>();
+
+                switch(type)
+                {
+                    case atcg::GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH:
+                    {
+                        std::string vertex_path         = geometryComponent[GEOMETRY_VERTICES_NAME].as<std::string>();
+                        std::string faces_path          = geometryComponent[GEOMETRY_FACES_NAME].as<std::string>();
+                        std::vector<Vertex> vertices    = detail::deserializeBuffer<Vertex>(vertex_path);
+                        std::vector<glm::u32vec3> faces = detail::deserializeBuffer<glm::u32vec3>(faces_path);
+
+                        geometry.graph = Graph::createTriangleMesh(vertices, faces);
+                    }
+                    break;
+                    case atcg::GraphType::ATCG_GRAPH_TYPE_POINTCLOUD:
+                    {
+                        std::string vertex_path      = geometryComponent[GEOMETRY_VERTICES_NAME].as<std::string>();
+                        std::vector<Vertex> vertices = detail::deserializeBuffer<Vertex>(vertex_path);
+
+                        geometry.graph = Graph::createPointCloud(vertices);
+                    }
+                    break;
+                    case atcg::GraphType::ATCG_GRAPH_TYPE_GRAPH:
+                    {
+                        std::string vertex_path      = geometryComponent[GEOMETRY_VERTICES_NAME].as<std::string>();
+                        std::string edges_path       = geometryComponent[GEOMETRY_EDGES_NAME].as<std::string>();
+                        std::vector<Vertex> vertices = detail::deserializeBuffer<Vertex>(vertex_path);
+                        std::vector<Edge> edges      = detail::deserializeBuffer<Edge>(edges_path);
+
+                        geometry.graph = Graph::createGraph(vertices, edges);
+                    }
+                    break;
+                    default:
+                    {
+                        ATCG_ERROR("Unknown graph type: {0}", (int)type);
+                    }
+                    break;
+                }
+            }
+
+            auto renderers = entity[RENDER_COMPONENT_NAME];
+            if(!renderers) continue;
+
+            for(auto renderer: renderers)
+            {
+                atcg::DrawMode mode = (atcg::DrawMode)renderer[RENDER_TYPE_NAME].as<int>();
+
+                switch(mode)
+                {
+                    case atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE:
+                    {
+                        auto& renderComponent     = deserializedEntity.addComponent<MeshRenderComponent>();
+                        renderComponent.draw_mode = mode;
+                        renderComponent.color     = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
+                        std::string vertex_path   = renderer[RENDER_VERTEX_SHADER_NAME].as<std::string>();
+                        std::string fragment_path = renderer[RENDER_FRAGMENT_SHADER_NAME].as<std::string>();
+                        std::string geometry_path = renderer[RENDER_GEOMETRY_SHADER_NAME].as<std::string>();
+
+                        std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
+                        shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
+
+                        if(ShaderManager::hasShader(shader_name))
+                        {
+                            renderComponent.shader = ShaderManager::getShader(shader_name);
+                        }
+                        else if(geometry_path != "")
+                        {
+                            renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
+                        }
+                        else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+                    }
+                    break;
+                    case atcg::DrawMode::ATCG_DRAW_MODE_POINTS:
+                    {
+                        auto& renderComponent     = deserializedEntity.addComponent<PointRenderComponent>();
+                        renderComponent.draw_mode = mode;
+                        renderComponent.color     = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
+                        std::string vertex_path   = renderer[RENDER_VERTEX_SHADER_NAME].as<std::string>();
+                        std::string fragment_path = renderer[RENDER_FRAGMENT_SHADER_NAME].as<std::string>();
+                        std::string geometry_path = renderer[RENDER_GEOMETRY_SHADER_NAME].as<std::string>();
+
+                        std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
+                        shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
+
+                        if(ShaderManager::hasShader(shader_name))
+                        {
+                            renderComponent.shader = ShaderManager::getShader(shader_name);
+                        }
+                        else if(geometry_path != "")
+                        {
+                            renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
+                        }
+                        else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+                    }
+                    break;
+                    case atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE:
+                    {
+                        auto& renderComponent     = deserializedEntity.addComponent<PointSphereRenderComponent>();
+                        renderComponent.draw_mode = mode;
+                        renderComponent.color     = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
+                        std::string vertex_path   = renderer[RENDER_VERTEX_SHADER_NAME].as<std::string>();
+                        std::string fragment_path = renderer[RENDER_FRAGMENT_SHADER_NAME].as<std::string>();
+                        std::string geometry_path = renderer[RENDER_GEOMETRY_SHADER_NAME].as<std::string>();
+
+                        std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
+                        shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
+
+                        if(ShaderManager::hasShader(shader_name))
+                        {
+                            renderComponent.shader = ShaderManager::getShader(shader_name);
+                        }
+                        else if(geometry_path != "")
+                        {
+                            renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
+                        }
+                        else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+                    }
+                    break;
+                    case atcg::DrawMode::ATCG_DRAW_MODE_EDGES:
+                    {
+                        auto& renderComponent     = deserializedEntity.addComponent<EdgeRenderComponent>();
+                        renderComponent.draw_mode = mode;
+                        renderComponent.color     = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
+                    }
+                    break;
+                    case atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER:
+                    {
+                        auto& renderComponent     = deserializedEntity.addComponent<EdgeCylinderRenderComponent>();
+                        renderComponent.draw_mode = mode;
+                        renderComponent.color     = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
+                    }
+                    break;
+                }
+            }
+        }
+    }
+}
 }    // namespace atcg
