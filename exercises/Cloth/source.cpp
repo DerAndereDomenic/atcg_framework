@@ -131,6 +131,41 @@ public:
     {
         ImGui::BeginMainMenuBar();
 
+        if(ImGui::BeginMenu("File"))
+        {
+            if(ImGui::MenuItem("Save"))
+            {
+                atcg::Serializer serializer(scene);
+                serializer.serialize("res/Scene.yaml");
+            }
+
+            if(ImGui::MenuItem("Load"))
+            {
+                scene = atcg::make_ref<atcg::Scene>();
+                atcg::Serializer serializer(scene);
+                serializer.deserialize("res/Scene.yaml");
+
+                for(auto e: scene->getAllEntitiesWith<atcg::MeshRenderComponent>())
+                {
+                    atcg::Entity entity = {e, scene.get()};
+                    auto& comp          = entity.getComponent<atcg::MeshRenderComponent>();
+                    comp.shader->setFloat("checker_size", 0.1f);
+                }
+
+                for(auto e: scene->getAllEntitiesWith<atcg::CameraComponent>())
+                {
+                    atcg::Entity entity = {e, scene.get()};
+                    auto& camera        = entity.getComponent<atcg::CameraComponent>();
+                    camera_controller   = atcg::make_ref<atcg::FocusedController>(camera.camera);
+                }
+
+                hovered_entity = {entt::null, scene.get()};
+            }
+
+
+            ImGui::EndMenu();
+        }
+
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
