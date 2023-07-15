@@ -22,3 +22,6 @@
 [submodule "external/openmesh"]
 	path = external/openmesh
 	url = https://github.com/DerAndereDomenic/OpenMesh.git
+[submodule "external/yaml-cpp"]
+	path = external/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git

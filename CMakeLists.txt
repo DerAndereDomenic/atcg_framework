@@ -15,6 +15,9 @@ find_package(OpenGL REQUIRED)
 add_subdirectory(external/glfw)
 add_subdirectory(external/openmesh)
 
+set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable parse tools")
+add_subdirectory(external/yaml-cpp)
+
 add_library(imguizmo STATIC "external/imguizmo/GraphEditor.cpp"
                             "external/imguizmo/GraphEditor.h"
                             "external/imguizmo/ImCurveEdit.cpp"
@@ -45,7 +48,6 @@ add_library(implot STATIC "external/implot/implot.cpp"
 
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
-    #TODO
     set(CMAKE_CUDA_ARCHITECTURES "native")
     set(BACKEND "cuda")
     file (GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "atcg_lib/platform/cuda/**.c*"
@@ -64,7 +66,7 @@ file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform
 
 add_library(atcg_lib STATIC "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_renderer_files}") 
 
-target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
+target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD YAML_CPP_STATIC_DEFINE)
 target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
 target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 
@@ -90,7 +92,8 @@ include_directories(atcg_lib/include
                     external/spdlog/include
                     external/imguizmo
                     external/nanort
-                    external/entt/include)
+                    external/entt/include
+                    external/yaml-cpp/include)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
@@ -110,6 +113,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
         OpenGL::GL
         OpenMeshCore
         OpenMeshTools
+        yaml-cpp
         ${CUDA_LIBRARIES}
     )
 
