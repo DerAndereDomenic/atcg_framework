@@ -53,3 +53,4 @@
 #include <Scene/Components.h>
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
+#include <Scene/Serializer.h>
