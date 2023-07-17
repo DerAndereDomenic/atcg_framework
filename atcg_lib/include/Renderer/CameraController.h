@@ -152,9 +152,9 @@ private:
     float _velocity_forward   = 0.0f;
     float _velocity_right     = 0.0f;
     float _velocity_up        = 0.0f;
-    float _velocity_threshold = 0.005f;
-    float _max_velocity       = 0.1f;
-    float _acceleration       = 0.004f;
+    float _velocity_threshold = 0.3f;
+    float _max_velocity       = 3.0f;
+    float _acceleration       = 5.0f;
     float _rotation_speed     = 0.005f;
     float _lastX = 0, _lastY = 0;
     float _currentX = 0, _currentY = 0;
