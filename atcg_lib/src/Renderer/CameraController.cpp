@@ -52,8 +52,8 @@ void FocusedController::onUpdate(float delta_time)
 
         if(offsetX != 0 || offsetY != 0)
         {
-            float yDelta = -offsetY * /*delta_time */ _rotation_speed * _camera->getAspectRatio();
-            float xDelta = -offsetX * /*delta_time */ _rotation_speed;
+            float yDelta = 0.1f * -offsetY * /*delta_time */ _rotation_speed * _distance * _camera->getAspectRatio();
+            float xDelta = 0.1f * -offsetX * /*delta_time */ _rotation_speed * _distance;
 
             glm::vec3 forward = glm::normalize(_camera->getPosition() - _camera->getLookAt());
 
@@ -126,8 +126,8 @@ void FirstPersonController::onUpdate(float delta_time)
 
         if(offsetX != 0 || offsetY != 0)
         {
-            float pitchDelta = offsetY * /** delta_time*/ _rotation_speed * _camera->getAspectRatio();
-            float yawDelta   = offsetX * /** delta_time*/ _rotation_speed;
+            float pitchDelta = offsetY * _rotation_speed * _camera->getAspectRatio();
+            float yawDelta   = offsetX * _rotation_speed;
 
             glm::vec3 forward        = glm::normalize(_camera->getLookAt() - _camera->getPosition());
             glm::vec3 rightDirection = glm::cross(forward, _camera->getUp());
@@ -140,8 +140,8 @@ void FirstPersonController::onUpdate(float delta_time)
         }
     }
 
-    float delta_velocity  = _acceleration /** delta_time*/;
-    float max_velocity    = _max_velocity /** delta_time*/;
+    float delta_velocity  = _acceleration * delta_time;
+    float max_velocity    = _max_velocity;
     auto restoring_factor = [](float relative_velocity)
     {
         return 6.0f * glm::sign(relative_velocity) * (relative_velocity * relative_velocity + 0.1);
@@ -225,6 +225,10 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_up -= delta_velocity * restoring_factor(_velocity_up / max_velocity);
     }
 
+    _velocity_forward = glm::clamp(_velocity_forward, -max_velocity, max_velocity);
+    _velocity_right   = glm::clamp(_velocity_right, -max_velocity, max_velocity);
+    _velocity_up      = glm::clamp(_velocity_up, -max_velocity, max_velocity);
+
     // update camera position
     glm::vec3 forwardDirection = _camera->getLookAt() - _camera->getPosition();
     forwardDirection[1]        = 0.0f;    // only horizontal movement
@@ -234,8 +238,8 @@ void FirstPersonController::onUpdate(float delta_time)
 
     glm::vec3 total_velocity =
         _speed * (forwardDirection * _velocity_forward + rightDirection * _velocity_right + upDirection * _velocity_up);
-    _camera->setPosition(_camera->getPosition() + total_velocity /** delta_time*/);
-    _camera->setLookAt(_camera->getLookAt() + total_velocity /** delta_time*/);
+    _camera->setPosition(_camera->getPosition() + total_velocity * delta_time);
+    _camera->setLookAt(_camera->getLookAt() + total_velocity * delta_time);
 
     // update mouse position
     _lastX = _currentX;
