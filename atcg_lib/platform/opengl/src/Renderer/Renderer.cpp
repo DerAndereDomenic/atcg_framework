@@ -469,7 +469,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     if(entity.hasComponent<EdgeCylinderRenderComponent>())
     {
         EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
-        ShaderManager::getShader("edge")->setInt("entityID", entity_id);
+        ShaderManager::getShader("cylinder_edge")->setInt("entityID", entity_id);
         Renderer::draw(geometry.graph,
                        camera,
                        transform.getModel(),
