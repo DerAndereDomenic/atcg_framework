@@ -25,12 +25,6 @@ public:
     atcg::ref_ptr<VertexBuffer> quad_vbo;
     atcg::ref_ptr<IndexBuffer> quad_ibo;
 
-    void initCube();
-    atcg::ref_ptr<VertexArray> cube_vao;
-    atcg::ref_ptr<VertexBuffer> cube_vbo;
-
-    atcg::ref_ptr<VertexBuffer> grid_vbo;
-
     atcg::ref_ptr<Framebuffer> screen_fbo;
 
     atcg::ref_ptr<Graph> sphere_mesh;
@@ -91,9 +85,6 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
         quad_vao->setIndexBuffer(quad_ibo);
     }
 
-    // Generate cube
-    initCube();
-
     // Load a sphere
     sphere_mesh = atcg::IO::read_mesh("res/sphere_low.obj");
 
@@ -104,36 +95,6 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     screen_fbo->attachTexture(Texture2D::createIntTexture(width, height));
     screen_fbo->attachDepth();
     screen_fbo->complete();
-}
-
-void Renderer::Impl::initCube()
-{
-    cube_vao = atcg::make_ref<VertexArray>();
-
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f,
-        0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
-
-        -0.5f, -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
-        0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, -0.5f, 0.5f,
-
-        -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,
-
-        0.5f,  0.5f,  0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f,
-        0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,  0.5f,
-
-        -0.5f, -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, 0.5f,
-        0.5f,  -0.5f, 0.5f,  -0.5f, -0.5f, 0.5f,  -0.5f, -0.5f, -0.5f,
-
-        -0.5f, 0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  0.5f,
-        0.5f,  0.5f,  0.5f,  -0.5f, 0.5f,  0.5f,  -0.5f, 0.5f,  -0.5f,
-    };
-
-    cube_vbo = atcg::make_ref<VertexBuffer>(vertices, sizeof(vertices));
-    cube_vbo->setLayout({{ShaderDataType::Float3, "aPosition"}});
-
-    cube_vao->pushVertexBuffer(cube_vbo);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
