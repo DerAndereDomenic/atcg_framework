@@ -308,6 +308,13 @@ public:
      */
     GraphType type() const;
 
+    /**
+     * @brief Get the default edge radius if a triangle mesh was created
+     *
+     * @return The edge radius
+     */
+    float edge_radius() const;
+
 private:
     class Impl;
     atcg::scope_ptr<Impl> impl;

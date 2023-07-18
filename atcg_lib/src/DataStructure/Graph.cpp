@@ -364,6 +364,11 @@ GraphType Graph::type() const
     return impl->type;
 }
 
+float Graph::edge_radius() const
+{
+    return impl->edge_radius;
+}
+
 atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Options options)
 {
     // TODO: Replace this with dedicated obj loader
