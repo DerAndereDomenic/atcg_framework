@@ -11,6 +11,7 @@ Entities:
       EulerAngles: [-0, 0, -0]
     Geometry:
       Type: 1
+      EdgeRadius: 0.1
       Vertices: res/Cloth/Scene.yaml.11321595665421148368.vertices
       Faces: res/Cloth/Scene.yaml.11321595665421148368.faces
       Edges: res/Cloth/Scene.yaml.11321595665421148368.edges
@@ -27,6 +28,7 @@ Entities:
       EulerAngles: [0.994062543, 0, 0]
     Geometry:
       Type: 2
+      EdgeRadius: 0.1
       Vertices: res/Cloth/Scene.yaml.5914046139043569560.vertices
       Edges: res/Cloth/Scene.yaml.5914046139043569560.edges
     Renderer:
