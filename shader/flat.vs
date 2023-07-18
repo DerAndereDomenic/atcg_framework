@@ -8,6 +8,7 @@ layout (location = 3) in vec3 aInstanceOffset;
 layout (location = 5) in vec3 aInstanceColor;
 
 out vec3 frag_color;
+out vec3 frag_pos;
 
 uniform mat4 M, V, P;
 uniform float point_size;
@@ -28,7 +29,7 @@ void main()
     scale_primitive[1][1] = scale_point.y;
     scale_primitive[2][2] = scale_point.z;
 
-    vec3 frag_pos = vec3(M * inv_scale_model * scale_primitive * vec4(aPosition, 1) + instanced * M * vec4(aInstanceOffset, 0));
+    frag_pos = vec3(M * inv_scale_model * scale_primitive * vec4(aPosition, 1) + instanced * M * vec4(aInstanceOffset, 0));
 
     gl_Position = P * V * vec4(frag_pos, 1);
 

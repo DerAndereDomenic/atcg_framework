@@ -26,6 +26,7 @@ void main()
 
     vec3 color = color_combined / 3.14159f * light_radiance * max(0.0f, dot(frag_normal, light_dir)) + ambient;
 
-    outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)),1);
+    float frag_dist = length(camera_pos - frag_pos);
+    outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), 1.0 - pow(1.01, frag_dist - 1000));
     outEntityID = entityID;
 }
