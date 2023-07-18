@@ -1,10 +1,12 @@
 Scene: Untitled
 Entities:
   - Entity: 5905187068440045987
+    Name: "Camera"
     PerspectiveCamera:
       Translation: [-37.0499725, 61.3200493, -35.9613724]
       LookAt: [-0.904254317, 11.3465595, 8.6339283]
   - Entity: 11321595665421148368
+    Name: "Plane"
     Transform:
       Translation: [0, 0, 0]
       Scale: [100, 100, 100]
@@ -22,6 +24,7 @@ Entities:
         FragmentShaderPath: exercises/Cloth/checkerboard.fs
         GeometryShaderPath: ""
   - Entity: 5914046139043569560
+    Name: "Cloth"
     Transform:
       Translation: [0, 27.6573601, 0]
       Scale: [1, 1.00000012, 1.00000012]

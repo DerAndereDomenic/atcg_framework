@@ -173,9 +173,12 @@ std::vector<T> deserializeBuffer(const std::string& file_name)
 
 void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_path)
 {
-    IDComponent id = entity.getComponent<IDComponent>();
+    // Every entity should have these components
+    IDComponent id     = entity.getComponent<IDComponent>();
+    NameComponent name = entity.getComponent<NameComponent>();
     out << YAML::BeginMap;
     out << YAML::Key << "Entity" << YAML::Value << id.ID;
+    out << YAML::Key << "Name" << YAML::Value << name.name;
 
     if(entity.hasComponent<TransformComponent>())
     {
@@ -380,9 +383,10 @@ void Serializer::deserialize(const std::string& file_path)
     {
         for(auto entity: entities)
         {
-            uint64_t uuid = entity["Entity"].as<uint64_t>();
+            uint64_t uuid    = entity["Entity"].as<uint64_t>();
+            std::string name = entity["Name"].as<std::string>();
 
-            Entity deserializedEntity = _scene->createEntity();
+            Entity deserializedEntity = _scene->createEntity(name);
             auto& idComponent         = deserializedEntity.getComponent<IDComponent>();
             idComponent.ID            = uuid;
 
