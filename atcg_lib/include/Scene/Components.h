@@ -79,6 +79,14 @@ struct IDComponent
     UUID ID;
 };
 
+struct NameComponent
+{
+    NameComponent() = default;
+    NameComponent(const std::string& name) : name(name) {}
+
+    std::string name;
+};
+
 struct GeometryComponent
 {
     GeometryComponent() = default;
