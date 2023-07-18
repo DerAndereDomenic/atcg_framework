@@ -136,6 +136,7 @@ namespace detail
 #define GEOMETRY_VERTICES_NAME  "Vertices"
 #define GEOMETRY_EDGES_NAME     "Edges"
 #define GEOMETRY_FACES_NAME     "Faces"
+#define GEOMETRY_RADIUS_NAME    "EdgeRadius"
 
 #define RENDER_COMPONENT_NAME       "Renderer"
 #define RENDER_TYPE_NAME            "RenderType"
@@ -212,6 +213,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         atcg::ref_ptr<Graph> graph = geometry.graph;
 
         out << YAML::Key << GEOMETRY_TYPE_NAME << YAML::Value << (int)graph->type();
+        out << YAML::Key << GEOMETRY_RADIUS_NAME << YAML::Value << graph->edge_radius();
 
         if(graph->getVerticesBuffer())
         {
@@ -409,6 +411,7 @@ void Serializer::deserialize(const std::string& file_path)
             {
                 auto& geometry       = deserializedEntity.addComponent<GeometryComponent>();
                 atcg::GraphType type = (atcg::GraphType)geometryComponent[GEOMETRY_TYPE_NAME].as<int>();
+                float edge_radius    = geometryComponent[GEOMETRY_RADIUS_NAME].as<float>();
 
                 switch(type)
                 {
@@ -419,7 +422,7 @@ void Serializer::deserialize(const std::string& file_path)
                         std::vector<Vertex> vertices    = detail::deserializeBuffer<Vertex>(vertex_path);
                         std::vector<glm::u32vec3> faces = detail::deserializeBuffer<glm::u32vec3>(faces_path);
 
-                        geometry.graph = Graph::createTriangleMesh(vertices, faces);
+                        geometry.graph = Graph::createTriangleMesh(vertices, faces, edge_radius);
                     }
                     break;
                     case atcg::GraphType::ATCG_GRAPH_TYPE_POINTCLOUD:
