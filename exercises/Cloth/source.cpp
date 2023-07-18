@@ -91,19 +91,13 @@ public:
         atcg::Serializer serializer(scene);
         serializer.deserialize("res/Cloth/Scene.yaml");
 
-        for(auto e: scene->getAllEntitiesWith<atcg::MeshRenderComponent>())
-        {
-            atcg::Entity entity = {e, scene.get()};
-            auto& comp          = entity.getComponent<atcg::MeshRenderComponent>();
-            comp.shader->setFloat("checker_size", 0.1f);
-        }
+        auto entities     = scene->getEntitiesByName("Camera");
+        auto& camera      = entities[0].getComponent<atcg::CameraComponent>();
+        camera_controller = atcg::make_ref<atcg::FocusedController>(camera.camera);
 
-        for(auto e: scene->getAllEntitiesWith<atcg::CameraComponent>())
-        {
-            atcg::Entity entity = {e, scene.get()};
-            auto& camera        = entity.getComponent<atcg::CameraComponent>();
-            camera_controller   = atcg::make_ref<atcg::FocusedController>(camera.camera);
-        }
+        entities   = scene->getEntitiesByName("Plane");
+        auto& comp = entities[0].getComponent<atcg::MeshRenderComponent>();
+        comp.shader->setFloat("checker_size", 0.1f);
     }
 
     // This gets called each frame
@@ -145,19 +139,13 @@ public:
                 atcg::Serializer serializer(scene);
                 serializer.deserialize("res/Cloth/Scene.yaml");
 
-                for(auto e: scene->getAllEntitiesWith<atcg::MeshRenderComponent>())
-                {
-                    atcg::Entity entity = {e, scene.get()};
-                    auto& comp          = entity.getComponent<atcg::MeshRenderComponent>();
-                    comp.shader->setFloat("checker_size", 0.1f);
-                }
+                auto entities     = scene->getEntitiesByName("Camera");
+                auto& camera      = entities[0].getComponent<atcg::CameraComponent>();
+                camera_controller = atcg::make_ref<atcg::FocusedController>(camera.camera);
 
-                for(auto e: scene->getAllEntitiesWith<atcg::CameraComponent>())
-                {
-                    atcg::Entity entity = {e, scene.get()};
-                    auto& camera        = entity.getComponent<atcg::CameraComponent>();
-                    camera_controller   = atcg::make_ref<atcg::FocusedController>(camera.camera);
-                }
+                entities   = scene->getEntitiesByName("Plane");
+                auto& comp = entities[0].getComponent<atcg::MeshRenderComponent>();
+                comp.shader->setFloat("checker_size", 0.1f);
 
                 hovered_entity = {entt::null, scene.get()};
             }
