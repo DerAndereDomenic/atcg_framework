@@ -28,6 +28,9 @@ public:
     void initGrid();
     atcg::ref_ptr<Graph> grid;
 
+    void initCross();
+    atcg::ref_ptr<Graph> cross;
+
     atcg::ref_ptr<Framebuffer> screen_fbo;
 
     atcg::ref_ptr<Graph> sphere_mesh;
@@ -96,6 +99,7 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
 
     // Generate CAD grid
     initGrid();
+    initCross();
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -123,6 +127,22 @@ void Renderer::Impl::initGrid()
     for(int i = 0; i < 4 * grid_size; i += 2) { edges.push_back({glm::vec2(i, i + 1), glm::vec3(1), 0.1f}); }
 
     grid = atcg::Graph::createGraph(host_points, edges);
+}
+
+void Renderer::Impl::initCross()
+{
+    std::vector<atcg::Vertex> points;
+    points.push_back({glm::vec3(-1000.0f, 0.0f, 0.0f), glm::vec3(1), glm::vec3(1)});
+    points.push_back({glm::vec3(1000.0f, 0.0f, 0.0f), glm::vec3(1), glm::vec3(1)});
+
+    points.push_back({glm::vec3(0.0f, 0.0f, -1000.0f), glm::vec3(1), glm::vec3(1)});
+    points.push_back({glm::vec3(0.0f, 0.0f, 1000.0f), glm::vec3(1), glm::vec3(1)});
+
+    std::vector<atcg::Edge> edges;
+    edges.push_back({glm::vec2(0, 1), glm::vec3(1, 0, 0), 0.1f});
+    edges.push_back({glm::vec2(2, 3), glm::vec3(0, 0, 1), 0.1f});
+
+    cross = atcg::Graph::createGraph(points, edges);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
@@ -579,7 +599,10 @@ void Renderer::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
 
 void Renderer::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency)
 {
-    float distance = glm::abs(camera->getPosition().y);
+    float distance     = glm::abs(camera->getPosition().y);
+    float current_size = s_renderer->impl->line_size;
+
+    setLineSize(1.0f);
 
     auto& shader = atcg::ShaderManager::getShader("edge");
     shader->setInt("entityID", -1);
@@ -668,11 +691,16 @@ void Renderer::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& tra
             }
         }
     }
-    toggleDepthTesting(true);
 
     // Reset shader for normal rendering
     shader->setFloat("base_transparency", 1.0f);
+
+    setLineSize(2.0f);
+    draw(s_renderer->impl->cross, camera, glm::mat4(1), glm::vec3(1), shader, atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+    setLineSize(current_size);
+
     shader->setFloat("fall_off_edge", 1000.0f);
+    toggleDepthTesting(true);
 }
 
 int Renderer::getEntityIndex(const glm::vec2& mouse)
