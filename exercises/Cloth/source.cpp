@@ -22,8 +22,6 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        atcg::Renderer::setPointSize(0.25f);
-
         /*std::vector<atcg::Vertex> host_points;
         for(int i = 0; i < grid_size; ++i)
         {
@@ -103,7 +101,6 @@ public:
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
-        ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
         camera_controller->onUpdate(delta_time);
 
         atcg::Renderer::clear();

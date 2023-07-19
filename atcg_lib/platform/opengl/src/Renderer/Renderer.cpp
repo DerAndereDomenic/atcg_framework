@@ -444,6 +444,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     {
         PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
         renderer.shader->setInt("entityID", entity_id);
+        setPointSize(renderer.point_size);
         Renderer::draw(geometry.graph,
                        camera,
                        transform.getModel(),
@@ -456,6 +457,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     {
         PointSphereRenderComponent renderer = entity.getComponent<PointSphereRenderComponent>();
         renderer.shader->setInt("entityID", entity_id);
+        setPointSize(renderer.point_size);
         Renderer::draw(geometry.graph,
                        camera,
                        transform.getModel(),
