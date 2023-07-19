@@ -4,9 +4,10 @@
 
 extern atcg::Application* atcg::createApplication();
 
-int main(int argc, char** argv)
+namespace atcg
 {
-    atcg::Application* app = atcg::createApplication();
+int atcg_main(Application* app)
+{
     app->run();
 
     {
@@ -34,4 +35,11 @@ int main(int argc, char** argv)
               dev_bytes_allocated - dev_bytes_deallocated);
 
     return 0;
+}
+}    // namespace atcg
+
+int main(int argc, char** argv)
+{
+    atcg::Application* app = atcg::createApplication();
+    return atcg::atcg_main(app);
 }

@@ -43,7 +43,7 @@ atcg::Application* atcg::createApplication()
     return new PythonApplication;
 }
 
-int entry_point(atcg::Layer* layer)
+int python_main(atcg::Layer* layer)
 {
     atcg::Application* app = atcg::createApplication();
     app->pushLayer(layer);

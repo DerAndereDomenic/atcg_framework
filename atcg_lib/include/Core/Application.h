@@ -9,8 +9,12 @@
 
 #include <Core/Memory.h>
 
-int main(int argc, char** argv);
-int entry_point(atcg::Layer* layer);
+namespace atcg
+{
+class Application;
+int atcg_main(Application* app);
+}    // namespace atcg
+int python_main(atcg::Layer* layer);
 
 namespace atcg
 {
@@ -78,8 +82,8 @@ private:
     ImGuiLayer* _imgui_layer;
     LayerStack _layer_stack;
 
-    friend int ::main(int argc, char** argv);
-    friend int ::entry_point(atcg::Layer* layer);    // Entry point for python bindings
+    friend int atcg::atcg_main(Application* app);
+    friend int ::python_main(atcg::Layer* layer);    // Entry point for python bindings
     static Application* s_instance;
 };
 
