@@ -131,14 +131,16 @@ if(ATCG_PYTHON_BINDINGS)
     pybind11_add_module(pyatcg python/pyatcg.cpp)
     target_compile_definitions(pyatcg PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
     target_link_libraries( pyatcg PRIVATE
-        glad
         atcg_lib
         glfw
         imgui
         imguizmo
+        implot
+        glad
         OpenGL::GL
         OpenMeshCore
         OpenMeshTools
+        yaml-cpp
         ${CUDA_LIBRARIES}
         #stdc++
     )

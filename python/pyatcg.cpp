@@ -1,6 +1,8 @@
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
+#include <pybind11/numpy.h>
+#include <Core/EntryPoint.h>
 #include <ATCG.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -47,11 +49,7 @@ int python_main(atcg::Layer* layer)
 {
     atcg::Application* app = atcg::createApplication();
     app->pushLayer(layer);
-    app->run();
-
-    delete app;
-
-    return 0;
+    return atcg::atcg_main(app);
 }
 
 namespace py = pybind11;
@@ -68,27 +66,8 @@ PYBIND11_MODULE(pyatcg, m)
            :toctree: _generate
     )pbdoc";
 
-    m.def("start", &entry_point, "Start the application.");
-    m.def("width",
-          []()
-          {
-              const auto& window = atcg::Application::get()->getWindow();
-              return (float)window->getWidth();
-          });
-
-    m.def("height",
-          []()
-          {
-              const auto& window = atcg::Application::get()->getWindow();
-              return (float)window->getHeight();
-          });
-
-    m.def("setSize",
-          [](uint32_t width, uint32_t height)
-          {
-              const auto& window = atcg::Application::get()->getWindow();
-              window->resize(width, height);
-          });
+    // ---------------- CORE ---------------------
+    m.def("show", &python_main, "Start the application.");
 
     py::class_<atcg::Layer, PythonLayer>(m, "Layer")
         .def(py::init<>())
@@ -99,39 +78,18 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::Event>(m, "Event");
 
-    py::class_<atcg::Input>(m, "Input")
-        .def_static("isKeyPressed", &atcg::Input::isKeyPressed)
-        .def_static("isMouseButtonPressed", &atcg::Input::isMouseButtonPressed)
-        .def("getMousePosition",
-             []()
-             {
-                 glm::vec2 mouse_position = atcg::Input::getMousePosition();
-                 return py::array(2, reinterpret_cast<float*>(&mouse_position));
-             });
-
     py::class_<atcg::Application, atcg::ref_ptr<atcg::Application>>(m, "Application");
 
-    py::class_<glm::vec3>(m, "Vector3", py::buffer_protocol())
+    // ---------------- MATH -------------------------
+    py::class_<glm::vec3>(m, "vec3", py::buffer_protocol())
         .def(py::init<float, float, float>())
         .def(py::init(
-            [](py::buffer b)
+            [](py::array_t<float> b)
             {
                 py::buffer_info info = b.request();
 
                 // Copy for now, is there a better method?
-                glm::vec3 v;
-                if(info.format == py::format_descriptor<float>::format())
-                {
-                    v = glm::make_vec3(static_cast<float*>(info.ptr));
-                }
-                else if(info.format == py::format_descriptor<double>::format())
-                {
-                    v = glm::make_vec3(static_cast<double*>(info.ptr));
-                }
-                else if(info.format == py::format_descriptor<int>::format())
-                {
-                    v = glm::make_vec3(static_cast<int*>(info.ptr));
-                }
+                glm::vec3 v = glm::make_vec3(static_cast<float*>(info.ptr));
 
                 return v;
             }))
@@ -146,26 +104,14 @@ PYBIND11_MODULE(pyatcg, m)
                                        {sizeof(float)});
             });
 
-    py::class_<glm::vec4>(m, "Vector4", py::buffer_protocol())
+    py::class_<glm::vec4>(m, "vec4", py::buffer_protocol())
         .def(py::init(
-            [](py::buffer b)
+            [](py::array_t<float> b)
             {
                 py::buffer_info info = b.request();
 
                 // Copy for now, is there a better method?
-                glm::vec4 v;
-                if(info.format == py::format_descriptor<float>::format())
-                {
-                    v = glm::make_vec4(static_cast<float*>(info.ptr));
-                }
-                else if(info.format == py::format_descriptor<double>::format())
-                {
-                    v = glm::make_vec4(static_cast<double*>(info.ptr));
-                }
-                else if(info.format == py::format_descriptor<int>::format())
-                {
-                    v = glm::make_vec4(static_cast<int*>(info.ptr));
-                }
+                glm::vec4 v = glm::make_vec4(static_cast<float*>(info.ptr));
 
                 return v;
             }))
@@ -180,26 +126,13 @@ PYBIND11_MODULE(pyatcg, m)
                                        {sizeof(float)});
             });
 
-    py::class_<glm::mat3>(m, "Matrix3", py::buffer_protocol())
+    py::class_<glm::mat3>(m, "mat3", py::buffer_protocol())
         .def(py::init(
-            [](py::buffer b)
+            [](py::array_t<float> b)
             {
                 py::buffer_info info = b.request();
 
-                glm::mat3 M;
-
-                if(info.format == py::format_descriptor<float>::format())
-                {
-                    M = glm::make_mat3(static_cast<float*>(info.ptr));
-                }
-                else if(info.format == py::format_descriptor<double>::format())
-                {
-                    M = glm::make_mat3(static_cast<double*>(info.ptr));
-                }
-                else if(info.format == py::format_descriptor<int>::format())
-                {
-                    M = glm::make_mat3(static_cast<int*>(info.ptr));
-                }
+                glm::mat3 M = glm::make_mat3(static_cast<float*>(info.ptr));
 
                 return M;
             }))
@@ -214,28 +147,15 @@ PYBIND11_MODULE(pyatcg, m)
                                        {sizeof(float), sizeof(float) * 3});
             });
 
-    py::class_<glm::mat4>(m, "Matrix4", py::buffer_protocol())
+    py::class_<glm::mat4>(m, "mat4", py::buffer_protocol())
         .def(py::init(
-            [](py::buffer b)
+            [](py::array_t<float> b)
             {
                 py::buffer_info info = b.request();
 
-                glm::mat4 M;
+                glm::mat4 M = glm::make_mat4(static_cast<float*>(info.ptr));
 
-                if(info.format == py::format_descriptor<float>::format())
-                {
-                    M = glm::make_mat4(static_cast<float*>(info.ptr));
-                }
-                else if(info.format == py::format_descriptor<double>::format())
-                {
-                    M = glm::make_mat4(static_cast<double*>(info.ptr));
-                }
-                else if(info.format == py::format_descriptor<int>::format())
-                {
-                    M = glm::make_mat4(static_cast<int*>(info.ptr));
-                }
-
-                return glm::transpose(M);
+                return M;
             }))
         .def_buffer(
             [](glm::mat4& M) -> py::buffer_info
@@ -248,109 +168,284 @@ PYBIND11_MODULE(pyatcg, m)
                                        {sizeof(float), sizeof(float) * 4});
             });
 
-
-    py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
-        .def(py::init<float>())
-        .def("getPosition", &atcg::PerspectiveCamera::getPosition)
-        .def("setPosition", &atcg::PerspectiveCamera::setPosition)
-        .def("getView", &atcg::PerspectiveCamera::getView)
-        .def("setView", &atcg::PerspectiveCamera::setView)
-        .def("getProjection", &atcg::PerspectiveCamera::getProjection)
-        .def("setProjection", &atcg::PerspectiveCamera::setProjection);
-
-    py::class_<atcg::CameraController>(m, "CameraController")
-        .def(py::init<float>())
-        .def("onUpdate", &atcg::CameraController::onUpdate)
-        .def("onEvent", &atcg::CameraController::onEvent)
-        .def("getCamera", &atcg::CameraController::getCamera);
-
-    py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
-        .def(py::init<std::string, std::string>())
-        .def(py::init<std::string, std::string, std::string>())
-        .def("use", &atcg::Shader::use)
-        .def("setInt", &atcg::Shader::setInt)
-        .def("setFloat", &atcg::Shader::setFloat)
-        .def("setVec3", &atcg::Shader::setVec3)
-        .def("setVec4", &atcg::Shader::setVec4)
-        .def("setMat4", &atcg::Shader::setMat4)
-        .def("setMVP", &atcg::Shader::setMVP);
-
-    py::class_<atcg::ShaderManager>(m, "ShaderManager")
-        .def_static("getShader", &atcg::ShaderManager::getShader)
-        .def_static("addShader", &atcg::ShaderManager::addShader)
-        .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName);
-
-    py::class_<atcg::Mesh, atcg::ref_ptr<atcg::Mesh>>(m, "Mesh")
-        .def("uploadData", &atcg::Mesh::uploadData)
-        .def("setPosition", &atcg::Mesh::setPosition)
-        .def("setScale", &atcg::Mesh::setScale)
-        .def("setColor", &atcg::Mesh::setColor)
-        .def("setColors", &atcg::Mesh::setColors)
-        .def("requestVertexColors", &atcg::Mesh::request_vertex_colors)
-        .def("requestVertexNormals", &atcg::Mesh::request_vertex_normals);
-    py::class_<atcg::PointCloud, atcg::ref_ptr<atcg::PointCloud>>(m, "PointCloud")
-        .def("uploadData", &atcg::PointCloud::uploadData)
-        .def("asMatrix", &atcg::PointCloud::asMatrix)
-        .def("fromMatrix", &atcg::PointCloud::fromMatrix)
-        .def("setColor", &atcg::PointCloud::setColor);
-
-    m.def("readMesh", &atcg::IO::read_mesh);
-    m.def("readPointCloud", &atcg::IO::read_pointcloud);
-
-    m.def("rayMeshIntersection", &atcg::Tracing::rayMeshIntersection);
-
-    py::enum_<atcg::DrawMode>(m, "DrawMode")
-        .value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
-        .value("ATCG_DRAW_MODE_POINTS", atcg::DrawMode::ATCG_DRAW_MODE_POINTS)
-        .value("ATCG_DRAW_MODE_POINTS_SPHERE", atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE)
-        .value("ATCG_DRAW_MODE_EDGES", atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
-
+    // ------------------- RENDERER ---------------------------------
     py::class_<atcg::Renderer>(m, "Renderer")
-        .def("init",
-             [](uint32_t width, uint32_t height)
-             {
-                 atcg::ref_ptr<atcg::Application> app = atcg::make_ref<atcg::Application>();
-                 const auto& window                   = app->getWindow();
+        .def_static("setClearColor", &atcg::Renderer::setClearColor)
+        .def_static("clear", &atcg::Renderer::clear);
 
-                 window->hide();
-                 window->resize(width, height);
+    // m.def("width",
+    //       []()
+    //       {
+    //           const auto& window = atcg::Application::get()->getWindow();
+    //           return (float)window->getWidth();
+    //       });
 
-                 atcg::Renderer::useScreenBuffer();
-                 return app;
-             })
-        .def("setClearColor",
-             [](const float r, const float g, const float b, const float a)
-             { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
-        .def_static("setPointSize", &atcg::Renderer::setPointSize)
-        .def_static("clear", &atcg::Renderer::clear)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::Mesh>& mesh,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-               const glm::vec3& color,
-               const atcg::ref_ptr<atcg::Shader>& shader,
-               atcg::DrawMode draw_mode) { atcg::Renderer::draw(mesh, camera, color, shader, draw_mode); },
-            py::return_value_policy::automatic_reference)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::PointCloud>& cloud,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-               const glm::vec3& color,
-               const atcg::ref_ptr<atcg::Shader>& shader)
-            { atcg::Renderer::draw(cloud, camera, color, shader, atcg::DrawMode::ATCG_DRAW_MODE_POINTS); },
-            py::return_value_policy::automatic_reference)
-        .def("getFrame",
-             []()
-             {
-                 std::vector<uint8_t> buffer = atcg::Renderer::getFrame();
-                 return py::array(buffer.size(), buffer.data());
-             })
-        .def("getZBuffer",
-             []()
-             {
-                 std::vector<float> buffer = atcg::Renderer::getZBuffer();
-                 return py::array(buffer.size(), buffer.data());
-             });
+    // m.def("height",
+    //       []()
+    //       {
+    //           const auto& window = atcg::Application::get()->getWindow();
+    //           return (float)window->getHeight();
+    //       });
+
+    // m.def("setSize",
+    //       [](uint32_t width, uint32_t height)
+    //       {
+    //           const auto& window = atcg::Application::get()->getWindow();
+    //           window->resize(width, height);
+    //       });
+
+
+    // py::class_<atcg::Input>(m, "Input")
+    //     .def_static("isKeyPressed", &atcg::Input::isKeyPressed)
+    //     .def_static("isMouseButtonPressed", &atcg::Input::isMouseButtonPressed)
+    //     .def("getMousePosition",
+    //          []()
+    //          {
+    //              glm::vec2 mouse_position = atcg::Input::getMousePosition();
+    //              return py::array(2, reinterpret_cast<float*>(&mouse_position));
+    //          });
+
+
+    // py::class_<glm::vec3>(m, "Vector3", py::buffer_protocol())
+    //     .def(py::init<float, float, float>())
+    //     .def(py::init(
+    //         [](py::buffer b)
+    //         {
+    //             py::buffer_info info = b.request();
+
+    //             // Copy for now, is there a better method?
+    //             glm::vec3 v;
+    //             if(info.format == py::format_descriptor<float>::format())
+    //             {
+    //                 v = glm::make_vec3(static_cast<float*>(info.ptr));
+    //             }
+    //             else if(info.format == py::format_descriptor<double>::format())
+    //             {
+    //                 v = glm::make_vec3(static_cast<double*>(info.ptr));
+    //             }
+    //             else if(info.format == py::format_descriptor<int>::format())
+    //             {
+    //                 v = glm::make_vec3(static_cast<int*>(info.ptr));
+    //             }
+
+    //             return v;
+    //         }))
+    //     .def_buffer(
+    //         [](glm::vec3& v) -> py::buffer_info
+    //         {
+    //             return py::buffer_info(glm::value_ptr(v),
+    //                                    sizeof(float),
+    //                                    py::format_descriptor<float>::format(),
+    //                                    1,
+    //                                    {3},
+    //                                    {sizeof(float)});
+    //         });
+
+    // py::class_<glm::vec4>(m, "Vector4", py::buffer_protocol())
+    //     .def(py::init(
+    //         [](py::buffer b)
+    //         {
+    //             py::buffer_info info = b.request();
+
+    //             // Copy for now, is there a better method?
+    //             glm::vec4 v;
+    //             if(info.format == py::format_descriptor<float>::format())
+    //             {
+    //                 v = glm::make_vec4(static_cast<float*>(info.ptr));
+    //             }
+    //             else if(info.format == py::format_descriptor<double>::format())
+    //             {
+    //                 v = glm::make_vec4(static_cast<double*>(info.ptr));
+    //             }
+    //             else if(info.format == py::format_descriptor<int>::format())
+    //             {
+    //                 v = glm::make_vec4(static_cast<int*>(info.ptr));
+    //             }
+
+    //             return v;
+    //         }))
+    //     .def_buffer(
+    //         [](glm::vec4& v) -> py::buffer_info
+    //         {
+    //             return py::buffer_info(glm::value_ptr(v),
+    //                                    sizeof(float),
+    //                                    py::format_descriptor<float>::format(),
+    //                                    1,
+    //                                    {4},
+    //                                    {sizeof(float)});
+    //         });
+
+    // py::class_<glm::mat3>(m, "Matrix3", py::buffer_protocol())
+    //     .def(py::init(
+    //         [](py::buffer b)
+    //         {
+    //             py::buffer_info info = b.request();
+
+    //             glm::mat3 M;
+
+    //             if(info.format == py::format_descriptor<float>::format())
+    //             {
+    //                 M = glm::make_mat3(static_cast<float*>(info.ptr));
+    //             }
+    //             else if(info.format == py::format_descriptor<double>::format())
+    //             {
+    //                 M = glm::make_mat3(static_cast<double*>(info.ptr));
+    //             }
+    //             else if(info.format == py::format_descriptor<int>::format())
+    //             {
+    //                 M = glm::make_mat3(static_cast<int*>(info.ptr));
+    //             }
+
+    //             return M;
+    //         }))
+    //     .def_buffer(
+    //         [](glm::mat3& M) -> py::buffer_info
+    //         {
+    //             return py::buffer_info(glm::value_ptr(M),
+    //                                    sizeof(float),
+    //                                    py::format_descriptor<float>::format(),
+    //                                    2,
+    //                                    {3, 3},
+    //                                    {sizeof(float), sizeof(float) * 3});
+    //         });
+
+    // py::class_<glm::mat4>(m, "Matrix4", py::buffer_protocol())
+    //     .def(py::init(
+    //         [](py::buffer b)
+    //         {
+    //             py::buffer_info info = b.request();
+
+    //             glm::mat4 M;
+
+    //             if(info.format == py::format_descriptor<float>::format())
+    //             {
+    //                 M = glm::make_mat4(static_cast<float*>(info.ptr));
+    //             }
+    //             else if(info.format == py::format_descriptor<double>::format())
+    //             {
+    //                 M = glm::make_mat4(static_cast<double*>(info.ptr));
+    //             }
+    //             else if(info.format == py::format_descriptor<int>::format())
+    //             {
+    //                 M = glm::make_mat4(static_cast<int*>(info.ptr));
+    //             }
+
+    //             return glm::transpose(M);
+    //         }))
+    //     .def_buffer(
+    //         [](glm::mat4& M) -> py::buffer_info
+    //         {
+    //             return py::buffer_info(glm::value_ptr(M),
+    //                                    sizeof(float),
+    //                                    py::format_descriptor<float>::format(),
+    //                                    2,
+    //                                    {4, 4},
+    //                                    {sizeof(float), sizeof(float) * 4});
+    //         });
+
+
+    // py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
+    //     .def(py::init<float>())
+    //     .def("getPosition", &atcg::PerspectiveCamera::getPosition)
+    //     .def("setPosition", &atcg::PerspectiveCamera::setPosition)
+    //     .def("getView", &atcg::PerspectiveCamera::getView)
+    //     .def("setView", &atcg::PerspectiveCamera::setView)
+    //     .def("getProjection", &atcg::PerspectiveCamera::getProjection)
+    //     .def("setProjection", &atcg::PerspectiveCamera::setProjection);
+
+    // py::class_<atcg::CameraController>(m, "CameraController")
+    //     .def(py::init<float>())
+    //     .def("onUpdate", &atcg::CameraController::onUpdate)
+    //     .def("onEvent", &atcg::CameraController::onEvent)
+    //     .def("getCamera", &atcg::CameraController::getCamera);
+
+    // py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
+    //     .def(py::init<std::string, std::string>())
+    //     .def(py::init<std::string, std::string, std::string>())
+    //     .def("use", &atcg::Shader::use)
+    //     .def("setInt", &atcg::Shader::setInt)
+    //     .def("setFloat", &atcg::Shader::setFloat)
+    //     .def("setVec3", &atcg::Shader::setVec3)
+    //     .def("setVec4", &atcg::Shader::setVec4)
+    //     .def("setMat4", &atcg::Shader::setMat4)
+    //     .def("setMVP", &atcg::Shader::setMVP);
+
+    // py::class_<atcg::ShaderManager>(m, "ShaderManager")
+    //     .def_static("getShader", &atcg::ShaderManager::getShader)
+    //     .def_static("addShader", &atcg::ShaderManager::addShader)
+    //     .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName);
+
+    // py::class_<atcg::Mesh, atcg::ref_ptr<atcg::Mesh>>(m, "Mesh")
+    //     .def("uploadData", &atcg::Mesh::uploadData)
+    //     .def("setPosition", &atcg::Mesh::setPosition)
+    //     .def("setScale", &atcg::Mesh::setScale)
+    //     .def("setColor", &atcg::Mesh::setColor)
+    //     .def("setColors", &atcg::Mesh::setColors)
+    //     .def("requestVertexColors", &atcg::Mesh::request_vertex_colors)
+    //     .def("requestVertexNormals", &atcg::Mesh::request_vertex_normals);
+    // py::class_<atcg::PointCloud, atcg::ref_ptr<atcg::PointCloud>>(m, "PointCloud")
+    //     .def("uploadData", &atcg::PointCloud::uploadData)
+    //     .def("asMatrix", &atcg::PointCloud::asMatrix)
+    //     .def("fromMatrix", &atcg::PointCloud::fromMatrix)
+    //     .def("setColor", &atcg::PointCloud::setColor);
+
+    // m.def("readMesh", &atcg::IO::read_mesh);
+    // m.def("readPointCloud", &atcg::IO::read_pointcloud);
+
+    // m.def("rayMeshIntersection", &atcg::Tracing::rayMeshIntersection);
+
+    // py::enum_<atcg::DrawMode>(m, "DrawMode")
+    //     .value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+    //     .value("ATCG_DRAW_MODE_POINTS", atcg::DrawMode::ATCG_DRAW_MODE_POINTS)
+    //     .value("ATCG_DRAW_MODE_POINTS_SPHERE", atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE)
+    //     .value("ATCG_DRAW_MODE_EDGES", atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+
+    // py::class_<atcg::Renderer>(m, "Renderer")
+    //     .def("init",
+    //          [](uint32_t width, uint32_t height)
+    //          {
+    //              atcg::ref_ptr<atcg::Application> app = atcg::make_ref<atcg::Application>();
+    //              const auto& window                   = app->getWindow();
+
+    //              window->hide();
+    //              window->resize(width, height);
+
+    //              atcg::Renderer::useScreenBuffer();
+    //              return app;
+    //          })
+    //     .def("setClearColor",
+    //          [](const float r, const float g, const float b, const float a)
+    //          { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
+    //     .def_static("setPointSize", &atcg::Renderer::setPointSize)
+    //     .def_static("clear", &atcg::Renderer::clear)
+    //     .def(
+    //         "draw",
+    //         [](const atcg::ref_ptr<atcg::Mesh>& mesh,
+    //            const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+    //            const glm::vec3& color,
+    //            const atcg::ref_ptr<atcg::Shader>& shader,
+    //            atcg::DrawMode draw_mode) { atcg::Renderer::draw(mesh, camera, color, shader, draw_mode); },
+    //         py::return_value_policy::automatic_reference)
+    //     .def(
+    //         "draw",
+    //         [](const atcg::ref_ptr<atcg::PointCloud>& cloud,
+    //            const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+    //            const glm::vec3& color,
+    //            const atcg::ref_ptr<atcg::Shader>& shader)
+    //         { atcg::Renderer::draw(cloud, camera, color, shader, atcg::DrawMode::ATCG_DRAW_MODE_POINTS); },
+    //         py::return_value_policy::automatic_reference)
+    //     .def("getFrame",
+    //          []()
+    //          {
+    //              std::vector<uint8_t> buffer = atcg::Renderer::getFrame();
+    //              return py::array(buffer.size(), buffer.data());
+    //          })
+    //     .def("getZBuffer",
+    //          []()
+    //          {
+    //              std::vector<float> buffer = atcg::Renderer::getZBuffer();
+    //              return py::array(buffer.size(), buffer.data());
+    //          });
 
     // IMGUI BINDINGS
 
