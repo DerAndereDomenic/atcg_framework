@@ -179,6 +179,14 @@ public:
                            const atcg::ref_ptr<Camera>& camera = {});
 
     /**
+     * @brief Draws a CAD grid with three resolutions (0.1, 1, 10)
+     *
+     * @param camera The camera
+     * @param transparency The transparency of the grid
+     */
+    static void drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency = 0.6f);
+
+    /**
      * @brief Get the framebuffer object that is used by the renderer
      *
      * @return The fbo

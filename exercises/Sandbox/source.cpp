@@ -59,7 +59,7 @@ public:
 
         atcg::Renderer::clear();
 
-
+        atcg::Renderer::drawCADGrid(camera_controller->getCamera());
         glm::vec3 light_pos = light_entity.getComponent<atcg::TransformComponent>().getPosition();
         atcg::ShaderManager::getShader("volume")->setInt("noise_texture", 0);
         atcg::ShaderManager::getShader("volume")->setVec3("light_position", light_pos);

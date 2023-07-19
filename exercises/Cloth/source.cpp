@@ -103,12 +103,17 @@ public:
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
-        // ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
+        ATCG_TRACE("{0} s | {1} fps", delta_time, 1.0f / delta_time);
         camera_controller->onUpdate(delta_time);
 
         atcg::Renderer::clear();
 
         time += delta_time;
+
+        atcg::Timer timer;
+        atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+
+        // ATCG_TRACE("{0} ms", timer.elapsedMillis());
 
         for(auto e: scene->getAllEntitiesWith<atcg::EdgeCylinderRenderComponent>())
         {

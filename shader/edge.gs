@@ -13,7 +13,7 @@ uniform mat4 M,V,P;
 
 void main()
 {
-    vec3 frag_pos = vec3(M * vec4(start[0], 1));
+    frag_pos = vec3(M * vec4(start[0], 1));
     gl_Position = P * V * vec4(frag_pos, 1);
     frag_color = color[0];
     EmitVertex();

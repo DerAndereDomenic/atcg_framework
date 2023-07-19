@@ -25,6 +25,9 @@ public:
     atcg::ref_ptr<VertexBuffer> quad_vbo;
     atcg::ref_ptr<IndexBuffer> quad_ibo;
 
+    void initGrid();
+    atcg::ref_ptr<Graph> grid;
+
     atcg::ref_ptr<Framebuffer> screen_fbo;
 
     atcg::ref_ptr<Graph> sphere_mesh;
@@ -33,6 +36,7 @@ public:
     bool cylinder_has_instance = false;
 
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+    glm::vec3 clear_color;
 
     float point_size = 1.0f;
     float line_size  = 1.0f;
@@ -90,11 +94,35 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
 
     cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj");
 
+    // Generate CAD grid
+    initGrid();
+
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
     screen_fbo->attachTexture(Texture2D::createIntTexture(width, height));
     screen_fbo->attachDepth();
     screen_fbo->complete();
+}
+
+void Renderer::Impl::initGrid()
+{
+    int32_t grid_size = 1001;
+
+    std::vector<atcg::Vertex> host_points;
+    for(int i = 0; i < grid_size; ++i)
+    {
+        host_points.push_back({glm::vec3(-(grid_size - 1) / 2 + i, 0.0f, -grid_size / 2), glm::vec3(1), glm::vec3(1)});
+        host_points.push_back({glm::vec3(-(grid_size - 1) / 2 + i, 0.0f, grid_size / 2), glm::vec3(1), glm::vec3(1)});
+
+        host_points.push_back({glm::vec3(-grid_size / 2, 0.0f, -(grid_size - 1) / 2 + i), glm::vec3(1), glm::vec3(1)});
+        host_points.push_back({glm::vec3(grid_size / 2, 0.0f, -(grid_size - 1) / 2 + i), glm::vec3(1), glm::vec3(1)});
+    }
+
+    std::vector<atcg::Edge> edges;
+
+    for(int i = 0; i < 4 * grid_size; i += 2) { edges.push_back({glm::vec2(i, i + 1), glm::vec3(1), 0.1f}); }
+
+    grid = atcg::Graph::createGraph(host_points, edges);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
@@ -132,6 +160,7 @@ void Renderer::finishFrame()
 
 void Renderer::setClearColor(const glm::vec4& color)
 {
+    s_renderer->impl->clear_color = color;
     glClearColor(color.r, color.g, color.b, color.a);
 }
 
@@ -546,6 +575,104 @@ void Renderer::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
     uint32_t num_edges = indices->size() / (sizeof(Edge));
     points->bindStorage(0);
     drawVAO(vao_cylinder, camera, color, shader, model, GL_TRIANGLES, cylinder_mesh->n_vertices(), num_edges);
+}
+
+void Renderer::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency)
+{
+    float distance = glm::abs(camera->getPosition().y);
+
+    auto& shader = atcg::ShaderManager::getShader("edge");
+    shader->setInt("entityID", -1);
+    shader->setFloat("fall_off_edge", distance);
+
+    float edge1 = 1, edge2 = 15;
+
+    toggleDepthTesting(false);
+
+    float base_transparency = transparency;
+    {
+        float transparency = 1.0f - glm::smoothstep(edge1 - 1.0f, edge1 + 1.0f, distance);
+
+        if(transparency > 0.0f)
+        {
+            glm::vec3 center = camera->getPosition();
+            int32_t x        = static_cast<int32_t>(floor(center.x / 100.0f + 0.5f));
+            int32_t z        = static_cast<int32_t>(floor(center.z / 100.0f + 0.5f));
+
+            shader->setFloat("base_transparency", base_transparency * transparency);
+
+            for(int32_t i = -1; i < 2; ++i)
+            {
+                for(int32_t j = -1; j < 2; ++j)
+                {
+                    draw(s_renderer->impl->grid,
+                         camera,
+                         glm::translate(100.0f * glm::vec3(x + i, 0, z + j)) * glm::scale(glm::vec3(0.1, 0.1, 0.1)),
+                         glm::vec3(1),
+                         shader,
+                         atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+                }
+            }
+        }
+    }
+
+    {
+        float transparency = glm::smoothstep(edge1 - 2.0f, edge1 + 0.0f, distance) -
+                             glm::smoothstep(edge2 - 10.0f, edge2 + 10.0f, distance);
+
+        if(transparency > 0.0f)
+        {
+            glm::vec3 center = camera->getPosition();
+            int32_t x        = static_cast<int32_t>((center.x / 1000.0f + 0.5f));
+            int32_t z        = static_cast<int32_t>((center.z / 1000.0f + 0.5f));
+
+            shader->setFloat("base_transparency", base_transparency * transparency);
+
+            for(int32_t i = -1; i < 2; ++i)
+            {
+                for(int32_t j = -1; j < 2; ++j)
+                {
+                    draw(s_renderer->impl->grid,
+                         camera,
+                         glm::translate(1000.0f * glm::vec3(x + i, 0, z + j)) * glm::scale(glm::vec3(1, 1, 1)),
+                         glm::vec3(1),
+                         shader,
+                         atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+                }
+            }
+        }
+    }
+
+    {
+        float transparency = glm::smoothstep(edge2 - 17.0f, edge2 + 3.0f, distance);
+
+        if(transparency > 0.0f)
+        {
+            glm::vec3 center = camera->getPosition();
+            int32_t x        = static_cast<int32_t>((center.x / 10000.0f + 0.5f));
+            int32_t z        = static_cast<int32_t>((center.z / 10000.0f + 0.5f));
+
+            shader->setFloat("base_transparency", base_transparency * transparency);
+
+            for(int32_t i = -1; i < 2; ++i)
+            {
+                for(int32_t j = -1; j < 2; ++j)
+                {
+                    draw(s_renderer->impl->grid,
+                         camera,
+                         glm::translate(10000.0f * glm::vec3(x + i, 0, z + j)) * glm::scale(glm::vec3(10, 10, 10)),
+                         glm::vec3(1),
+                         shader,
+                         atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+                }
+            }
+        }
+    }
+    toggleDepthTesting(true);
+
+    // Reset shader for normal rendering
+    shader->setFloat("base_transparency", 1.0f);
+    shader->setFloat("fall_off_edge", 1000.0f);
 }
 
 int Renderer::getEntityIndex(const glm::vec2& mouse)
