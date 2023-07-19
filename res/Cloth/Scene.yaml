@@ -37,6 +37,7 @@ Entities:
     Renderer:
       - RenderType: 2
         Color: [1, 1, 1]
+        PointSize: 0.25
         VertexShaderPath: shader/base.vs
         FragmentShaderPath: shader/base.fs
         GeometryShaderPath: ""
