@@ -31,7 +31,10 @@ Window::Window(const WindowProps& props)
     _data.width  = props.width;
     _data.height = props.height;
 
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     _window = (void*)glfwCreateWindow((int)props.width, (int)props.height, props.title.c_str(), nullptr, nullptr);
+
+    if(props.pos_x != -1 && props.pos_y != -1) { glfwSetWindowPos((GLFWwindow*)_window, props.pos_x, props.pos_y); }
 
     _context = atcg::make_ref<Context>();
     _context->init(_window);
@@ -149,6 +152,7 @@ Window::Window(const WindowProps& props)
                         });
 
     toggleVSync(props.vsync);
+    glfwShowWindow((GLFWwindow*)_window);
 }
 
 Window::~Window()

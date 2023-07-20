@@ -16,12 +16,21 @@ struct WindowProps
     std::string title;
     uint32_t width;
     uint32_t height;
+    uint32_t pos_x;
+    uint32_t pos_y;
     bool vsync;
 
-    WindowProps(const std::string& title = "ATCG", uint32_t width = 1600, uint32_t height = 900, bool vsync = true)
+    WindowProps(const std::string& title = "ATCG",
+                uint32_t width           = 1600,
+                uint32_t height          = 900,
+                uint32_t pos_x           = -1,
+                uint32_t pos_y           = -1,
+                bool vsync               = true)
         : title(title),
           width(width),
           height(height),
+          pos_x(pos_x),
+          pos_y(pos_y),
           vsync(vsync)
     {
     }
