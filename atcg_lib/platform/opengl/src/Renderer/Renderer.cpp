@@ -420,7 +420,8 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                               PointRenderComponent,
                               PointSphereRenderComponent,
                               EdgeRenderComponent,
-                              EdgeCylinderRenderComponent>())
+                              EdgeCylinderRenderComponent,
+                              InstanceRenderComponent>())
     {
         if(!entity.hasComponent<TransformComponent>())
         {
@@ -501,6 +502,24 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                        transform.getModel(),
                        renderer.color,
                        ShaderManager::getShader("cylinder_edge"),
+                       renderer.draw_mode);
+    }
+
+    if(entity.hasComponent<InstanceRenderComponent>())
+    {
+        InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
+
+        if(geometry.graph->getVerticesArray()->peekVertexBuffer() != renderer.instance_vbo)
+        {
+            geometry.graph->getVerticesArray()->pushInstanceBuffer(renderer.instance_vbo);
+        }
+
+        ShaderManager::getShader("instanced")->setInt("entityID", entity_id);
+        Renderer::draw(geometry.graph,
+                       camera,
+                       transform.getModel(),
+                       glm::vec3(1),
+                       ShaderManager::getShader("instanced"),
                        renderer.draw_mode);
     }
 }

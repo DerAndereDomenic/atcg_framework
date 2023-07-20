@@ -46,11 +46,11 @@ public:
             instances.push_back(instance);
         }
 
-        atcg::ref_ptr<atcg::VertexBuffer> vbo =
-            atcg::make_ref<atcg::VertexBuffer>((void*)instances.data(), instances.size() * sizeof(atcg::Instance));
-        vbo->setLayout({{atcg::ShaderDataType::Mat4, "aModel"}, {atcg::ShaderDataType::Float3, "aColor"}});
-
-        cube->getVerticesArray()->pushInstanceBuffer(vbo);
+        scene               = atcg::make_ref<atcg::Scene>();
+        atcg::Entity entity = scene->createEntity();
+        entity.addComponent<atcg::TransformComponent>();
+        entity.addComponent<atcg::GeometryComponent>(cube);
+        entity.addComponent<atcg::InstanceRenderComponent>(instances);
     }
 
     // This gets called each frame
@@ -62,12 +62,7 @@ public:
 
         atcg::Renderer::drawCADGrid(camera_controller->getCamera());
 
-        atcg::Renderer::draw(cube,
-                             camera_controller->getCamera(),
-                             glm::mat4(1),
-                             glm::vec3(1),
-                             atcg::ShaderManager::getShader("instanced"),
-                             atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED);
+        atcg::Renderer::draw(scene, camera_controller->getCamera());
 
         dt = delta_time;
     }
@@ -141,6 +136,7 @@ public:
     }
 
 private:
+    atcg::ref_ptr<atcg::Scene> scene;
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Graph> cube;
 
