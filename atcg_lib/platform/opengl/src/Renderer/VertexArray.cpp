@@ -156,6 +156,7 @@ void VertexArray::pushInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
     markInstance(1);
 }
 
+// TODO: FIXME: Matrix is not handled correctly
 void VertexArray::markInstance(uint32_t divisor)
 {
     uint32_t curr_divisor = _vertex_buffer_index.back().divisor;

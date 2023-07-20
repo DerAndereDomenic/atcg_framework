@@ -36,6 +36,7 @@ void Application::init(const WindowProps& props)
 
     ShaderManager::addShaderFromName("base");
     ShaderManager::addShaderFromName("flat");
+    ShaderManager::addShaderFromName("instanced");
     ShaderManager::addShaderFromName("edge");
     ShaderManager::addShaderFromName("circle");
     ShaderManager::addShaderFromName("grid");
