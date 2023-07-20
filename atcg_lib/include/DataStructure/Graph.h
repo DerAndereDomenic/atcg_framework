@@ -251,7 +251,7 @@ public:
      *
      * @param vertices The new vertex information
      */
-    void updateVertices(const Vertex* vertices, uint32_t num_vertices);
+    void updateVertices(const atcg::ref_ptr<Vertex, device_allocator>& vertices);
 
     /**
      * @brief Update the faces.
@@ -275,7 +275,7 @@ public:
      *
      * @param edges The new edge information
      */
-    void updateEdges(const Edge* edges, uint32_t num_edges);
+    void updateEdges(const atcg::ref_ptr<Edge, device_allocator>& edges);
 
     /**
      * @brief Get the number of vertices

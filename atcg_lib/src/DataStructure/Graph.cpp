@@ -265,7 +265,7 @@ atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, con
 atcg::ref_ptr<Graph> Graph::createPointCloud(const atcg::ref_ptr<Vertex, device_allocator>& vertices)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->updateVertices(vertices.get(), vertices.size());
+    result->updateVertices(vertices);
 
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
     return result;
@@ -285,8 +285,8 @@ atcg::ref_ptr<Graph> Graph::createGraph(const atcg::ref_ptr<Vertex, device_alloc
                                         const atcg::ref_ptr<Edge, device_allocator>& edges)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->updateVertices(vertices.get(), vertices.size());
-    result->updateEdges(edges.get(), edges.size());
+    result->updateVertices(vertices);
+    result->updateEdges(edges);
 
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_GRAPH;
     return result;
@@ -334,33 +334,34 @@ void Graph::updateEdges(const std::vector<Edge>& edges)
     impl->createEdgeBuffer(edges.data(), edges.size());
 }
 
-void Graph::updateVertices(const Vertex* vertices, uint32_t num_vertices)
+void Graph::updateVertices(const atcg::ref_ptr<Vertex, device_allocator>& vertices)
 {
-    impl->createVertexBuffer(nullptr, num_vertices);
+    impl->createVertexBuffer(nullptr, vertices.size());
 
 #ifdef ATCG_CUDA_BACKEND
     bool mapped   = impl->vertices->isDeviceMapped();
     void* dev_ptr = impl->vertices->getDevicePointer();
-    CUDA_SAFE_CALL(cudaMemcpy(dev_ptr, (void*)vertices, sizeof(Vertex) * num_vertices, cudaMemcpyDeviceToDevice));
+    CUDA_SAFE_CALL(
+        cudaMemcpy(dev_ptr, (void*)vertices.get(), sizeof(Vertex) * vertices.size(), cudaMemcpyDeviceToDevice));
     if(!mapped) { impl->vertices->unmapDevicePointers(); }
 #else
-    impl->vertices->setData(vertices, num_vertices * sizeof(Vertex));
+    impl->vertices->setData(vertices.get(), vertices.size() * sizeof(Vertex));
 #endif
 }
 
 // void Graph::updateFaces(const glm::u32vec3* faces, uint32_t num_faces) {}
 
-void Graph::updateEdges(const Edge* edges, uint32_t num_edges)
+void Graph::updateEdges(const atcg::ref_ptr<Edge, device_allocator>& edges)
 {
-    impl->createEdgeBuffer(nullptr, num_edges);
+    impl->createEdgeBuffer(nullptr, edges.size());
 
 #ifdef ATCG_CUDA_BACKEND
     bool mapped   = impl->edges->isDeviceMapped();
     void* dev_ptr = impl->edges->getDevicePointer();
-    CUDA_SAFE_CALL(cudaMemcpy(dev_ptr, (void*)edges, sizeof(Edge) * num_edges, cudaMemcpyDeviceToDevice));
+    CUDA_SAFE_CALL(cudaMemcpy(dev_ptr, (void*)edges.get(), sizeof(Edge) * edges.size(), cudaMemcpyDeviceToDevice));
     if(!mapped) { impl->edges->unmapDevicePointers(); }
 #else
-    impl->edges->setData(edges, num_edges * sizeof(Edge));
+    impl->edges->setData(edges.get(), edges.size() * sizeof(Edge));
 #endif
 }
 
