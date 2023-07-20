@@ -500,6 +500,8 @@ template<typename T>
 using scope_ptr = std::unique_ptr<T>;
 template<typename T, typename allocator = host_allocator>
 using ref_ptr = DeviceBuffer<T, allocator>;
+template<typename T>
+using dref_ptr = DeviceBuffer<T, device_allocator>;
 
 template<typename T, typename... Args>
 constexpr scope_ptr<T> make_scope(Args&&... args)
