@@ -184,6 +184,18 @@ struct EdgeCylinderRenderComponent : public RenderComponent
     glm::vec3 color = glm::vec3(1);
 };
 
+struct InstanceRenderComponent : public RenderComponent
+{
+    InstanceRenderComponent() = default;
+    InstanceRenderComponent(const std::vector<atcg::Instance>& instances)
+    {
+        instance_vbo = atcg::make_ref<VertexBuffer>((void*)instances.data(), instances.size() * sizeof(atcg::Instance));
+        instance_vbo->setLayout({{atcg::ShaderDataType::Mat4, "aModel"}, {atcg::ShaderDataType::Float3, "aColor"}});
+    }
+
+    atcg::ref_ptr<VertexBuffer> instance_vbo;
+};
+
 struct CustomRenderComponent : public RenderComponent
 {
     using RenderCallbackFn = std::function<void(Entity, const atcg::ref_ptr<Camera>& camera)>;
