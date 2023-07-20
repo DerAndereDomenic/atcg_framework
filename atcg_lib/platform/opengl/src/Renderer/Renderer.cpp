@@ -328,6 +328,11 @@ void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
             throw std::logic_error {"Not implemented"};
         }
         break;
+        case ATCG_DRAW_MODE_INSTANCED:
+        {
+            throw std::logic_error {"Not implemented"};
+        }
+        break;
     }
 }
 
@@ -389,6 +394,15 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
                                        camera,
                                        model,
                                        color);
+        }
+        break;
+        case ATCG_DRAW_MODE_INSTANCED:
+        {
+            atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
+            atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
+            uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
+            s_renderer->impl
+                ->drawVAO(vao_mesh, camera, color, shader, model, GL_TRIANGLES, mesh->n_vertices(), n_instances);
         }
         break;
     }
