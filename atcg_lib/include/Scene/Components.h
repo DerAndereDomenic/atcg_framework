@@ -149,16 +149,17 @@ struct PointSphereRenderComponent : public RenderComponent
 {
     PointSphereRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
                                const glm::vec3& color              = glm::vec3(1),
-                               const float& point_size             = 0.25f)
+                               const float& point_size             = 0.1f)
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE),
           shader(shader),
-          color(color)
+          color(color),
+          point_size(point_size)
     {
     }
 
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     glm::vec3 color              = glm::vec3(1);
-    float point_size             = 0.25f;
+    float point_size             = 0.1f;
 };
 
 struct EdgeRenderComponent : public RenderComponent
