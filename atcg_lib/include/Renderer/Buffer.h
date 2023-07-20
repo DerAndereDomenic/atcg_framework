@@ -307,6 +307,18 @@ public:
     void unmapPointers() const;
 
     /**
+     * @brief Check if the device pointer is mapped (valid).
+     * @return True if the pointer is valid
+     */
+    bool isDeviceMapped() const;
+
+    /**
+     * @brief Check if the host pointer is mapped (valid).
+     * @return True if the host is valid
+     */
+    bool isHostMapped() const;
+
+    /**
      * @brief Get the Layout
      *
      * @return const BufferLayout& The layout of the buffer

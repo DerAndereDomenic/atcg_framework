@@ -188,6 +188,16 @@ void VertexBuffer::unmapPointers() const
     unmapDevicePointers();
 }
 
+bool VertexBuffer::isDeviceMapped() const
+{
+    return impl->mapped_device;
+}
+
+bool VertexBuffer::isHostMapped() const
+{
+    return impl->mapped_host;
+}
+
 IndexBuffer::IndexBuffer(const uint32_t* indices, size_t count) : VertexBuffer((void*)indices, count * sizeof(uint32_t))
 {
     _size = count * sizeof(uint32_t);
