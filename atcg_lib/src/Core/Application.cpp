@@ -13,9 +13,21 @@ Application* Application::s_instance = nullptr;
 
 Application::Application()
 {
+    init(WindowProps());
+}
+
+Application::Application(const WindowProps& props)
+{
+    init(props);
+}
+
+Application::~Application() {}
+
+void Application::init(const WindowProps& props)
+{
     Log::init();
 
-    _window = atcg::make_scope<Window>(WindowProps());
+    _window = atcg::make_scope<Window>(props);
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
     Renderer::init(_window->getWidth(), _window->getHeight());
@@ -40,8 +52,6 @@ Application::Application()
     _layer_stack.pushOverlay(_imgui_layer);
     _imgui_layer->onAttach();
 }
-
-Application::~Application() {}
 
 void Application::pushLayer(Layer* layer)
 {

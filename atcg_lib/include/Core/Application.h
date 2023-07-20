@@ -32,6 +32,13 @@ public:
     Application();
 
     /**
+     * @brief Construct a new Application object
+     *
+     * @param props The window properties
+     */
+    Application(const WindowProps& props);
+
+    /**
      * @brief Destroy the Application object
      *
      */
@@ -75,6 +82,7 @@ private:
     void run();
     bool onWindowClose(WindowCloseEvent* e);
     bool onWindowResize(WindowResizeEvent* e);
+    void init(const WindowProps& props);
 
 private:
     bool _running = false;
