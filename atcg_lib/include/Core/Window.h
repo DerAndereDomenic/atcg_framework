@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <functional>
+#include <numeric>
 
 #include <Events/Event.h>
 #include <Renderer/Context.h>
@@ -16,15 +17,15 @@ struct WindowProps
     std::string title;
     uint32_t width;
     uint32_t height;
-    uint32_t pos_x;
-    uint32_t pos_y;
+    int32_t pos_x;
+    int32_t pos_y;
     bool vsync;
 
     WindowProps(const std::string& title = "ATCG",
                 uint32_t width           = 1600,
                 uint32_t height          = 900,
-                uint32_t pos_x           = -1,
-                uint32_t pos_y           = -1,
+                int32_t pos_x            = std::numeric_limits<int32_t>::max(),
+                int32_t pos_y            = std::numeric_limits<int32_t>::max(),
                 bool vsync               = true)
         : title(title),
           width(width),

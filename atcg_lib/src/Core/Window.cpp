@@ -34,7 +34,20 @@ Window::Window(const WindowProps& props)
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     _window = (void*)glfwCreateWindow((int)props.width, (int)props.height, props.title.c_str(), nullptr, nullptr);
 
-    if(props.pos_x != -1 && props.pos_y != -1) { glfwSetWindowPos((GLFWwindow*)_window, props.pos_x, props.pos_y); }
+    int pos_x = props.pos_x;
+    int pos_y = props.pos_y;
+    if(pos_x == std::numeric_limits<int32_t>::max() || pos_y == std::numeric_limits<int32_t>::max())
+    {
+        int monitorX, monitorY;
+        GLFWmonitor* monitor         = glfwGetPrimaryMonitor();
+        const GLFWvidmode* videoMode = glfwGetVideoMode(monitor);
+        glfwGetMonitorPos(monitor, &monitorX, &monitorY);
+
+        pos_x = monitorX + (videoMode->width - _data.width) / 2;
+        pos_y = monitorY + (videoMode->height - _data.height) / 2;
+    }
+
+    glfwSetWindowPos((GLFWwindow*)_window, pos_x, pos_y);
 
     _context = atcg::make_ref<Context>();
     _context->init(_window);
