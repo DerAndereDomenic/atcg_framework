@@ -118,6 +118,7 @@ public:
             auto& geometry        = entity.getComponent<atcg::GeometryComponent>();
             atcg::Vertex* dev_ptr = geometry.graph->getVerticesBuffer()->getDevicePointer<atcg::Vertex>();
             simulate(dev_ptr, grid_size * grid_size, time);
+            geometry.graph->getVerticesBuffer()->unmapPointers();
         }
 
         atcg::Renderer::draw(scene, camera_controller->getCamera());
