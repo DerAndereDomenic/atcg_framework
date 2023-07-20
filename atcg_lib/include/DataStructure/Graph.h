@@ -59,6 +59,12 @@ public:
     ~Graph();
 
     /**
+     * @brief Create an empty point cloud
+     * @return The graph
+     */
+    static atcg::ref_ptr<Graph> createPointCloud();
+
+    /**
      * @brief Create a point cloud.
      * The data gets directly uploaded to the GPU for rendering
      *
@@ -67,6 +73,15 @@ public:
      * @return The graph
      */
     static atcg::ref_ptr<Graph> createPointCloud(const std::vector<Vertex>& vertices);
+
+    /**
+     * @brief Create an empty mesh
+     *
+     * @param edge_radius The edge radius
+     *
+     * @return The graph
+     */
+    static atcg::ref_ptr<Graph> createTriangleMesh(float edge_radius = 0.1f);
 
     /**
      * @brief Create a triangle mesh.
@@ -92,6 +107,12 @@ public:
      * @return The graph
      */
     static atcg::ref_ptr<Graph> createTriangleMesh(const atcg::ref_ptr<TriMesh>& trimesh, float edge_radius = 0.1f);
+
+    /**
+     * @brief Create an empty graph
+     * @return The graph
+     */
+    static atcg::ref_ptr<Graph> createGraph();
 
     /**
      * @brief Create a graph.

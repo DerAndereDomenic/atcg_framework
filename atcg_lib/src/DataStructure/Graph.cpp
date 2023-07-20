@@ -162,6 +162,14 @@ Graph::Graph()
 
 Graph::~Graph() {}
 
+atcg::ref_ptr<Graph> Graph::createPointCloud()
+{
+    atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
+
+    result->impl->type = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
+    return result;
+}
+
 atcg::ref_ptr<Graph> Graph::createPointCloud(const std::vector<Vertex>& vertices)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
@@ -170,6 +178,16 @@ atcg::ref_ptr<Graph> Graph::createPointCloud(const std::vector<Vertex>& vertices
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
     return result;
 }
+
+atcg::ref_ptr<Graph> Graph::createTriangleMesh(float edge_radius)
+{
+    atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
+    result->impl->edge_radius   = edge_radius;
+
+    result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
+    return result;
+}
+
 
 atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertices,
                                                const std::vector<glm::u32vec3>& face_indices,
@@ -224,6 +242,14 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mes
     }
 
     return createTriangleMesh(vertex_data, indices_data, edge_radius);
+}
+
+atcg::ref_ptr<Graph> Graph::createGraph()
+{
+    atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
+
+    result->impl->type = GraphType::ATCG_GRAPH_TYPE_GRAPH;
+    return result;
 }
 
 atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, const std::vector<Edge>& edges)
