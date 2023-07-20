@@ -145,6 +145,7 @@ namespace detail
 #define RENDER_GEOMETRY_SHADER_NAME "GeometryShaderPath"
 #define RENDER_COLOR_NAME           "Color"
 #define RENDER_POINT_SIZE_NAME      "PointSize"
+#define RENDER_INSTANCE_BUFFER_NAME "Instances"
 
 #define CAMERA_COMPONENT_NAME "PerspectiveCamera"
 #define CAMERA_POSITION_NAME  "Translation"
@@ -253,7 +254,8 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
                                PointRenderComponent,
                                PointSphereRenderComponent,
                                EdgeRenderComponent,
-                               EdgeCylinderRenderComponent>())
+                               EdgeCylinderRenderComponent,
+                               InstanceRenderComponent>())
     {
         out << YAML::EndMap;
         return;
@@ -329,6 +331,23 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
 
         out << YAML::Key << RENDER_TYPE_NAME << YAML::Value << renderer.draw_mode;
         out << YAML::Key << RENDER_COLOR_NAME << YAML::Value << renderer.color;
+
+        out << YAML::EndMap;
+    }
+
+    if(entity.hasComponent<InstanceRenderComponent>())
+    {
+        out << YAML::BeginMap;
+
+        auto& renderer = entity.getComponent<InstanceRenderComponent>();
+
+        out << YAML::Key << RENDER_TYPE_NAME << YAML::Value << renderer.draw_mode;
+
+        const char* buffer      = renderer.instance_vbo->getHostPointer<char>();
+        std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".instances";
+        serializeBuffer(buffer_name, buffer, renderer.instance_vbo->size());
+        out << YAML::Key << RENDER_INSTANCE_BUFFER_NAME << YAML::Value << buffer_name;
+        renderer.instance_vbo->unmapHostPointers();
 
         out << YAML::EndMap;
     }
@@ -550,6 +569,15 @@ void Serializer::deserialize(const std::string& file_path)
                         auto& renderComponent     = deserializedEntity.addComponent<EdgeCylinderRenderComponent>();
                         renderComponent.draw_mode = mode;
                         renderComponent.color     = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
+                    }
+                    break;
+                    case atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED:
+                    {
+                        std::string buffer_path      = renderer[RENDER_INSTANCE_BUFFER_NAME].as<std::string>();
+                        std::vector<Instance> buffer = detail::deserializeBuffer<Instance>(buffer_path);
+
+                        auto& renderComponent     = deserializedEntity.addComponent<InstanceRenderComponent>(buffer);
+                        renderComponent.draw_mode = mode;
                     }
                     break;
                 }
