@@ -26,31 +26,49 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
-        cube = atcg::IO::read_mesh("res/cube.obj");
+        atcg::ref_ptr<atcg::Graph> grain = atcg::IO::read_mesh("../Meshes/rice_low.obj");
+        atcg::ref_ptr<atcg::Graph> bowl  = atcg::IO::read_mesh("../Meshes/bowl.obj");
 
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_real_distribution<float> distrib(0.0f, 1.0f);
+        std::ifstream transform_file("../CVAE/data/Transforms_big.bin", std::ios::in | std::ios::binary);
+        std::vector<char> transform_buffer(std::istreambuf_iterator<char>(transform_file), {});
+        float* transforms = reinterpret_cast<float*>(transform_buffer.data());
+
+        size_t num_instances =
+            transform_buffer.size() / (sizeof(float) * 4 * 4);    // 16 floats for a transformation matrix
 
         std::vector<atcg::Instance> instances;
-        for(int i = 0; i < 20; ++i)
-        {
-            glm::vec3 color = glm::vec3(distrib(gen), distrib(gen), distrib(gen));
-            glm::mat4 model =
-                glm::translate(glm::vec3(20 * distrib(gen) - 10, 20 * distrib(gen) - 10, 20 * distrib(gen) - 10)) *
-                glm::rotate(distrib(gen) * 2 * glm::pi<float>(),
-                            glm::normalize(glm::vec3(distrib(gen), distrib(gen), distrib(gen)))) *
-                glm::scale(glm::vec3(distrib(gen)));
 
-            atcg::Instance instance = {model, color};
+        for(int i = 0; i < num_instances; ++i)
+        {
+            float* current_transform = transforms + 4 * 4 * i;
+            glm::mat4 transform      = glm::transpose(glm::make_mat4(current_transform));
+
+            transform[0] *= 10.0f;
+            transform[1] *= 10.0f;
+            transform[2] *= 10.0f;
+
+            atcg::Instance instance = {transform, glm::vec3(1.2903, 0.558, 0.1328)};
+
             instances.push_back(instance);
         }
 
-        scene               = atcg::make_ref<atcg::Scene>();
-        atcg::Entity entity = scene->createEntity();
-        entity.addComponent<atcg::TransformComponent>();
-        entity.addComponent<atcg::GeometryComponent>(cube);
-        entity.addComponent<atcg::InstanceRenderComponent>(instances);
+        scene = atcg::make_ref<atcg::Scene>();
+
+        {
+            atcg::Entity entity = scene->createEntity();
+            auto& transform     = entity.addComponent<atcg::TransformComponent>();
+            transform.setPosition(glm::vec3(0, 50, 0));
+            entity.addComponent<atcg::GeometryComponent>(grain);
+            entity.addComponent<atcg::InstanceRenderComponent>(instances);
+        }
+
+        {
+            atcg::Entity entity = scene->createEntity();
+            auto& transform     = entity.addComponent<atcg::TransformComponent>();
+            transform.setPosition(glm::vec3(0, 50, 0));
+            entity.addComponent<atcg::GeometryComponent>(bowl);
+            entity.addComponent<atcg::MeshRenderComponent>();
+        }
     }
 
     // This gets called each frame
@@ -138,7 +156,6 @@ public:
 private:
     atcg::ref_ptr<atcg::Scene> scene;
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
-    atcg::ref_ptr<atcg::Graph> cube;
 
     bool show_render_settings = true;
 
