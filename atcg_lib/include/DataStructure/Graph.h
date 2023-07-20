@@ -43,6 +43,15 @@ struct Edge
 };
 
 /**
+ * @brief A struct that holds instance information
+ */
+struct Instance
+{
+    glm::mat4 model = glm::mat4(1);
+    glm::vec3 color = glm::vec3(1);
+};
+
+/**
  * @brief A structure to model different geometries
  */
 class Graph

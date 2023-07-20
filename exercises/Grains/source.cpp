@@ -18,12 +18,6 @@ class GrainLayer : public atcg::Layer
 public:
     GrainLayer(const std::string& name) : atcg::Layer(name) {}
 
-    struct Instance
-    {
-        glm::mat4 transform = glm::mat4(1);
-        glm::vec3 color     = glm::vec3(1);
-    };
-
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -38,7 +32,7 @@ public:
         std::mt19937 gen(rd());
         std::uniform_real_distribution<float> distrib(0.0f, 1.0f);
 
-        std::vector<Instance> instances;
+        std::vector<atcg::Instance> instances;
         for(int i = 0; i < 20; ++i)
         {
             glm::vec3 color = glm::vec3(distrib(gen), distrib(gen), distrib(gen));
@@ -48,12 +42,12 @@ public:
                             glm::normalize(glm::vec3(distrib(gen), distrib(gen), distrib(gen)))) *
                 glm::scale(glm::vec3(distrib(gen)));
 
-            Instance instance = {model, color};
+            atcg::Instance instance = {model, color};
             instances.push_back(instance);
         }
 
         atcg::ref_ptr<atcg::VertexBuffer> vbo =
-            atcg::make_ref<atcg::VertexBuffer>((void*)instances.data(), instances.size() * sizeof(Instance));
+            atcg::make_ref<atcg::VertexBuffer>((void*)instances.data(), instances.size() * sizeof(atcg::Instance));
         vbo->setLayout({{atcg::ShaderDataType::Mat4, "aModel"}, {atcg::ShaderDataType::Float3, "aColor"}});
 
         cube->getVerticesArray()->pushInstanceBuffer(vbo);
