@@ -339,8 +339,10 @@ void Graph::updateVertices(const Vertex* vertices, uint32_t num_vertices)
     impl->createVertexBuffer(nullptr, num_vertices);
 
 #ifdef ATCG_CUDA_BACKEND
+    bool mapped   = impl->vertices->isDeviceMapped();
     void* dev_ptr = impl->vertices->getDevicePointer();
     CUDA_SAFE_CALL(cudaMemcpy(dev_ptr, (void*)vertices, sizeof(Vertex) * num_vertices, cudaMemcpyDeviceToDevice));
+    if(!mapped) { impl->vertices->unmapDevicePointers(); }
 #else
     impl->vertices->setData(vertices, num_vertices * sizeof(Vertex));
 #endif
@@ -353,8 +355,10 @@ void Graph::updateEdges(const Edge* edges, uint32_t num_edges)
     impl->createEdgeBuffer(nullptr, num_edges);
 
 #ifdef ATCG_CUDA_BACKEND
+    bool mapped   = impl->edges->isDeviceMapped();
     void* dev_ptr = impl->edges->getDevicePointer();
     CUDA_SAFE_CALL(cudaMemcpy(dev_ptr, (void*)edges, sizeof(Edge) * num_edges, cudaMemcpyDeviceToDevice));
+    if(!mapped) { impl->edges->unmapDevicePointers(); }
 #else
     impl->edges->setData(edges, num_edges * sizeof(Edge));
 #endif
