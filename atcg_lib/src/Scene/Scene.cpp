@@ -40,7 +40,7 @@ Entity Scene::getEntityByID(UUID id) const
 std::vector<Entity> Scene::getEntitiesByName(const std::string& name)
 {
     std::vector<Entity> entities;
-    auto& view = _registry.view<NameComponent>();
+    auto view = _registry.view<NameComponent>();
     for(auto e: view)
     {
         Entity entity(e, this);
