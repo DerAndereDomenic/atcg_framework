@@ -135,9 +135,8 @@ public:
      * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
      *
      * @param vertices The vertices
-     * @param num_vertices The number of vertices
      */
-    static atcg::ref_ptr<Graph> createPointCloud(const Vertex* vertices, uint32_t num_vertices);
+    static atcg::ref_ptr<Graph> createPointCloud(const atcg::ref_ptr<Vertex, device_allocator>& vertices);
 
     /**
      * @brief Create a triangle mesh from a device buffer.
@@ -172,14 +171,12 @@ public:
      * If num_edges is smaller than capacity_edges() the buffer will be reused without a new allocation.
      *
      * @param vertices The vertices
-     * @param num_vertices The number of vertices
-     * @param indices The edges
-     * @param num_faces The number of edges
+     * @param edges The edges
      *
      * @return The graph
      */
-    static atcg::ref_ptr<Graph>
-    createGraph(const Vertex* vertices, uint32_t num_vertices, const Edge* edges, uint32_t num_edges);
+    static atcg::ref_ptr<Graph> createGraph(const atcg::ref_ptr<Vertex, device_allocator>& vertices,
+                                            const atcg::ref_ptr<Edge, device_allocator>& edges);
 
     /**
      * @brief Get the vertex buffer that stores the vertex information

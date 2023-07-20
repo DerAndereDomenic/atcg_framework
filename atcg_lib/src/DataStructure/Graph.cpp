@@ -262,10 +262,10 @@ atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, con
     return result;
 }
 
-atcg::ref_ptr<Graph> Graph::createPointCloud(const Vertex* vertices, uint32_t num_vertices)
+atcg::ref_ptr<Graph> Graph::createPointCloud(const atcg::ref_ptr<Vertex, device_allocator>& vertices)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->updateVertices(vertices, num_vertices);
+    result->updateVertices(vertices.get(), vertices.size());
 
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
     return result;
@@ -281,12 +281,12 @@ atcg::ref_ptr<Graph> Graph::createPointCloud(const Vertex* vertices, uint32_t nu
 //     return nullptr;
 // }
 
-atcg::ref_ptr<Graph>
-Graph::createGraph(const Vertex* vertices, uint32_t num_vertices, const Edge* edges, uint32_t num_edges)
+atcg::ref_ptr<Graph> Graph::createGraph(const atcg::ref_ptr<Vertex, device_allocator>& vertices,
+                                        const atcg::ref_ptr<Edge, device_allocator>& edges)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->updateVertices(vertices, num_vertices);
-    result->updateEdges(edges, num_edges);
+    result->updateVertices(vertices.get(), vertices.size());
+    result->updateEdges(edges.get(), edges.size());
 
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_GRAPH;
     return result;
