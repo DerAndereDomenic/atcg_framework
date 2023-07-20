@@ -52,7 +52,9 @@ Graph::Impl::~Impl() {}
 
 void Graph::Impl::createVertexBuffer(const Vertex* vertices, uint32_t num_vertices)
 {
-    if(n_vertices < num_vertices)
+    if(num_vertices == 0) return;
+
+    if(cap_vertices < num_vertices)
     {
         this->vertices = atcg::make_ref<VertexBuffer>((void*)vertices, num_vertices * sizeof(Vertex));
         this->vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
@@ -75,7 +77,9 @@ void Graph::Impl::createVertexBuffer(const Vertex* vertices, uint32_t num_vertic
 
 void Graph::Impl::createEdgeBuffer(const Edge* edges, uint32_t num_edges)
 {
-    if(n_edges < num_edges)
+    if(num_edges == 0) return;
+
+    if(cap_edges < num_edges)
     {
         this->edges = atcg::make_ref<VertexBuffer>((void*)edges, num_edges * sizeof(Edge));
         this->edges->setLayout({{ShaderDataType::Float2, "aIndex"},
@@ -86,8 +90,8 @@ void Graph::Impl::createEdgeBuffer(const Edge* edges, uint32_t num_edges)
         edges_array = atcg::make_ref<VertexArray>();
         edges_array->pushVertexBuffer(this->edges);
 
-        n_edges      = num_edges;
-        cap_vertices = num_edges;
+        n_edges   = num_edges;
+        cap_edges = num_edges;
     }
     else
     {
@@ -98,7 +102,8 @@ void Graph::Impl::createEdgeBuffer(const Edge* edges, uint32_t num_edges)
 
 void Graph::Impl::createFaceBuffer(const glm::u32vec3* face_indices, uint32_t num_faces)
 {
-    if(n_faces < num_faces)
+    if(num_faces == 0) return;
+    if(cap_faces < num_faces)
     {
         indices = atcg::make_ref<IndexBuffer>((uint32_t*)face_indices, num_faces * 3);
         vertices_array->setIndexBuffer(indices);
