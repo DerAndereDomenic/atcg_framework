@@ -186,6 +186,7 @@ struct EdgeCylinderRenderComponent : public RenderComponent
 
 struct InstanceRenderComponent : public RenderComponent
 {
+    InstanceRenderComponent() : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED) {}
     InstanceRenderComponent(const std::vector<atcg::Instance>& instances)
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED)
     {
