@@ -210,7 +210,8 @@ public:
     void bindStorage(uint32_t slot = 0) const;
 
     /**
-     * @brief Set the Data of the buffer
+     * @brief Set the Data of the buffer. The data gets copied if size < capacity(). Otherwise a buffer with capacity()
+     * = size will be allocated.
      *
      * @note Invalidades the device pointer obtained by "getDevicePointer"
      *
@@ -333,11 +334,18 @@ public:
     inline void setLayout(const BufferLayout& layout) { _layout = layout; }
 
     /**
-     * @brief Get the size that is allocated in bytes
+     * @brief Get the size in use in bytes
      *
      * @return The size
      */
-    inline std::size_t size() const { return _size; }
+    std::size_t size() const;
+
+    /**
+     * @brief Get the capacity of the buffer in bytes
+     *
+     * @return The capacity
+     */
+    std::size_t capacity() const;
 
     /**
      * @brief Get the internal rendering ID of this buffer
@@ -351,7 +359,6 @@ protected:
     atcg::scope_ptr<Impl> impl;
     uint32_t _ID;
     BufferLayout _layout;
-    std::size_t _size;
 };
 
 /**
@@ -392,7 +399,8 @@ public:
     void use() const;
 
     /**
-     * @brief Set the Data of the buffer
+     * @brief Set the Data of the buffer. The data gets copied if size < capacity(). Otherwise a buffer with capacity()
+     * = size will be allocated.
      *
      * @param data The data
      * @param size The count
@@ -404,7 +412,7 @@ public:
      *
      * @return uint32_t The count
      */
-    inline size_t getCount() const { return _size / sizeof(uint32_t); }
+    inline size_t getCount() const { return size() / sizeof(uint32_t); }
 
 private:
 };

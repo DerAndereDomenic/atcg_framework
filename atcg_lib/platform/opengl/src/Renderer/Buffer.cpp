@@ -33,6 +33,9 @@ public:
 
     void* dev_ptr = nullptr;
 
+    std::size_t size;
+    std::size_t capacity;
+
 #ifdef ATCG_CUDA_BACKEND
     cudaGraphicsResource* resource = nullptr;
 #endif
@@ -107,22 +110,26 @@ void VertexBuffer::Impl::unmapResourceHost()
     }
 }
 
-VertexBuffer::VertexBuffer(size_t size) : _size(size)
+VertexBuffer::VertexBuffer(size_t size)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
 
-    impl = atcg::make_scope<Impl>(_ID);
+    impl           = atcg::make_scope<Impl>(_ID);
+    impl->size     = size;
+    impl->capacity = size;
 }
 
-VertexBuffer::VertexBuffer(const void* data, size_t size) : _size(size)
+VertexBuffer::VertexBuffer(const void* data, size_t size)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
 
-    impl = atcg::make_scope<Impl>(_ID);
+    impl           = atcg::make_scope<Impl>(_ID);
+    impl->size     = size;
+    impl->capacity = size;
 }
 
 VertexBuffer::~VertexBuffer()
@@ -149,9 +156,14 @@ void VertexBuffer::bindStorage(uint32_t slot) const
 void VertexBuffer::setData(const void* data, size_t size)
 {
     unmapPointers();
-    _size = size;
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+    if(size <= impl->capacity) { glBufferSubData(GL_ARRAY_BUFFER, 0, size, data); }
+    else
+    {
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+        impl->capacity = size;
+    }
+    impl->size = size;
 }
 
 void* VertexBuffer::getDevicePointer() const
@@ -198,15 +210,21 @@ bool VertexBuffer::isHostMapped() const
     return impl->mapped_host;
 }
 
-IndexBuffer::IndexBuffer(const uint32_t* indices, size_t count) : VertexBuffer((void*)indices, count * sizeof(uint32_t))
+std::size_t VertexBuffer::size() const
 {
-    _size = count * sizeof(uint32_t);
+    return impl->size;
 }
 
-IndexBuffer::IndexBuffer(size_t count) : VertexBuffer(count * sizeof(uint32_t))
+std::size_t VertexBuffer::capacity() const
 {
-    _size = count * sizeof(uint32_t);
+    return impl->capacity;
 }
+
+IndexBuffer::IndexBuffer(const uint32_t* indices, size_t count) : VertexBuffer((void*)indices, count * sizeof(uint32_t))
+{
+}
+
+IndexBuffer::IndexBuffer(size_t count) : VertexBuffer(count * sizeof(uint32_t)) {}
 
 IndexBuffer::~IndexBuffer() {}
 
@@ -219,9 +237,17 @@ void IndexBuffer::use() const
 void IndexBuffer::setData(const uint32_t* data, size_t count)
 {
     unmapPointers();
-    _size = count * sizeof(uint32_t);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(uint32_t), data);
+    if(count * sizeof(uint32_t) <= impl->capacity)
+    {
+        glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(uint32_t), data);
+    }
+    else
+    {
+        glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), data, GL_DYNAMIC_DRAW);
+        impl->capacity = count * sizeof(uint32_t);
+    }
+    impl->size = count * sizeof(uint32_t);
 }
 
 }    // namespace atcg
