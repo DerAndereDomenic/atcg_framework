@@ -33,8 +33,8 @@ public:
 
     void* dev_ptr = nullptr;
 
-    std::size_t size;
-    std::size_t capacity;
+    std::size_t size     = 0;
+    std::size_t capacity = 0;
 
 #ifdef ATCG_CUDA_BACKEND
     cudaGraphicsResource* resource = nullptr;
@@ -108,6 +108,16 @@ void VertexBuffer::Impl::unmapResourceHost()
         glUnmapBuffer(GL_ARRAY_BUFFER);
         mapped_host = false;
     }
+}
+
+VertexBuffer::VertexBuffer()
+{
+    glGenBuffers(1, &_ID);
+    glBindBuffer(GL_ARRAY_BUFFER, _ID);
+
+    impl           = atcg::make_scope<Impl>(_ID);
+    impl->size     = 0;
+    impl->capacity = 0;
 }
 
 VertexBuffer::VertexBuffer(size_t size)
@@ -219,6 +229,8 @@ std::size_t VertexBuffer::capacity() const
 {
     return impl->capacity;
 }
+
+IndexBuffer::IndexBuffer() : VertexBuffer() {}
 
 IndexBuffer::IndexBuffer(const uint32_t* indices, size_t count) : VertexBuffer((void*)indices, count * sizeof(uint32_t))
 {

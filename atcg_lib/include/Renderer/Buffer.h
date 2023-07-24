@@ -171,7 +171,7 @@ public:
     /**
      * @brief Construct a new Vertex Buffer object
      */
-    VertexBuffer() = default;
+    VertexBuffer();
 
     /**
      * @brief Construct a new empty Vertex Buffer object
@@ -371,7 +371,7 @@ public:
     /**
      * @brief Construct a new Index Buffer object
      */
-    IndexBuffer() = default;
+    IndexBuffer();
 
     /**
      * @brief Construct a new Index Buffer object
