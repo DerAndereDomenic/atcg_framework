@@ -21,6 +21,7 @@ public:
     ~Impl();
 
     void initResource(uint32_t ID);
+    void deinitResource();
 
     void mapResourceDevice();
     void unmapResourceDevice();
@@ -28,8 +29,9 @@ public:
     void mapResourceHost();
     void unmapResourceHost();
 
-    bool mapped_device = false;
-    bool mapped_host   = false;
+    bool mapped_device  = false;
+    bool mapped_host    = false;
+    bool resource_ready = false;
 
     void* dev_ptr = nullptr;
 
@@ -54,7 +56,17 @@ void VertexBuffer::Impl::initResource(uint32_t ID)
 #ifdef ATCG_CUDA_BACKEND
     CUDA_SAFE_CALL(cudaGraphicsGLRegisterBuffer(&resource, ID, cudaGraphicsRegisterFlagsNone));
 #endif
-    this->ID = ID;
+    this->ID       = ID;
+    resource_ready = true;
+}
+
+void VertexBuffer::Impl::deinitResource()
+{
+#ifdef ATCG_CUDA_BACKEND
+    CUDA_SAFE_CALL(cudaGraphicsUnregisterResource(resource));
+#endif
+    this->ID       = 0;
+    resource_ready = false;
 }
 
 void VertexBuffer::Impl::mapResourceDevice()
@@ -115,7 +127,7 @@ VertexBuffer::VertexBuffer()
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
 
-    impl           = atcg::make_scope<Impl>(_ID);
+    impl           = atcg::make_scope<Impl>();
     impl->size     = 0;
     impl->capacity = 0;
 }
@@ -145,9 +157,7 @@ VertexBuffer::VertexBuffer(const void* data, size_t size)
 VertexBuffer::~VertexBuffer()
 {
     unmapPointers();
-#ifdef ATCG_CUDA_BACKEND
-    CUDA_SAFE_CALL(cudaGraphicsUnregisterResource(impl->resource));
-#endif
+    impl->deinitResource();
     glDeleteBuffers(1, &_ID);
 }
 
@@ -170,8 +180,10 @@ void VertexBuffer::setData(const void* data, size_t size)
     if(size <= impl->capacity) { glBufferSubData(GL_ARRAY_BUFFER, 0, size, data); }
     else
     {
+        if(impl->resource_ready) { impl->deinitResource(); }
         glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
         impl->capacity = size;
+        impl->initResource(_ID);
     }
     impl->size = size;
 }
@@ -256,8 +268,10 @@ void IndexBuffer::setData(const uint32_t* data, size_t count)
     }
     else
     {
+        if(impl->resource_ready) { impl->deinitResource(); }
         glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), data, GL_DYNAMIC_DRAW);
         impl->capacity = count * sizeof(uint32_t);
+        impl->initResource(_ID);
     }
     impl->size = count * sizeof(uint32_t);
 }
