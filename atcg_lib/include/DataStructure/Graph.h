@@ -225,7 +225,7 @@ public:
     /**
      * @brief Update the vertices.
      *
-     * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
+     * If num_vertices is smaller than vertices.capacity() the buffer will be reused without a new allocation.
      *
      * @param vertices The new vertex information
      */
@@ -234,7 +234,7 @@ public:
     /**
      * @brief Update the faces.
      *
-     * If num_faces is smaller than capacity_faces() the buffer will be reused without a new allocation.
+     * If num_faces is smaller than faces.capacity() the buffer will be reused without a new allocation.
      *
      * @param vertices The vertices of the new faces
      * @param faces The new face information
@@ -244,7 +244,7 @@ public:
     /**
      * @brief Update the edges.
      *
-     * If num_edges is smaller than capacity_edges() the buffer will be reused without a new allocation.
+     * If num_edges is smaller than edges.capacity() the buffer will be reused without a new allocation.
      *
      * @param edges The new edge information
      */
@@ -256,7 +256,7 @@ public:
      * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is defined,
      * it is assumed to be a CUDA pointer and a memcpy from device (CUDA) to device (OpenGL) is performed.
      *
-     * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
+     * If num_vertices is smaller than vertices.capacity() the buffer will be reused without a new allocation.
      *
      * @param vertices The new vertex information
      */
@@ -268,7 +268,7 @@ public:
      * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is defined,
      * it is assumed to be a CUDA pointer and a memcpy from device (CUDA) to device (OpenGL) is performed.
      *
-     * If num_faces is smaller than capacity_faces() the buffer will be reused without a new allocation.
+     * If num_faces is smaller than faces.capacity() the buffer will be reused without a new allocation.
      *
      * @param faces The new facce information
      */
@@ -280,7 +280,7 @@ public:
      * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is defined,
      * it is assumed to be a CUDA pointer and a memcpy from device (CUDA) to device (OpenGL) is performed.
      *
-     * If num_edges is smaller than capacity_edges() the buffer will be reused without a new allocation.
+     * If num_edges is smaller than edges.capacity() the buffer will be reused without a new allocation.
      *
      * @param edges The new edge information
      */
@@ -306,27 +306,6 @@ public:
      * @return Number of faces
      */
     uint32_t n_faces() const;
-
-    /**
-     * @brief Get the number of vertices
-     *
-     * @return Number of vertices
-     */
-    uint32_t capacity_vertices() const;
-
-    /**
-     * @brief Get the number of edges
-     *
-     * @return Number of edges
-     */
-    uint32_t capacity_edges() const;
-
-    /**
-     * @brief Get the number of faces
-     *
-     * @return Number of faces
-     */
-    uint32_t capacity_faces() const;
 
     /**
      * @brief Get the type of the graph
