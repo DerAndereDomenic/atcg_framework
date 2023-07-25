@@ -244,6 +244,19 @@ public:
     }
 
     /**
+     * @brief Copy data on the device
+     *
+     * @param data The data to copy from
+     * @param n The size to be copied in bytes
+     *
+     */
+    void copy(const void* src_data, std::size_t n)
+    {
+        allocator alloc;
+        alloc.memcpy_dev2dev(_buffer, n);
+    }
+
+    /**
      * @brief The size of the container, i.e., bytes of the buffer
      *
      * @return The size in bytes
@@ -465,6 +478,30 @@ public:
      * @param n The number of elements
      */
     void download(T* host_data, size_t n) { _container->download(reinterpret_cast<void*>(host_data), sizeof(T) * n); }
+
+    /**
+     * @brief Copy to the buffer
+     * Copies buffer->size() many elements.
+     *
+     * @param src_data The source buffer
+     */
+    void copy(T* src_data) { _container->copy(reinterpret_cast<void*>(src_data), _container->size()); }
+
+    /**
+     * @brief Copy to the buffer
+     *
+     * @param src_data The source buffer
+     * @param n The number of elements
+     */
+    void copy(T* src_data, std::size_t n) { _container->copy(reinterpret_cast<void*>(src_data), sizeof(T) * n); }
+
+    /**
+     * @brief Copy to the buffer.
+     * This allocates src.size() many objects. *this has to be the correct size beforehand
+     *
+     * @param src The source pointer
+     */
+    void copy(const DeviceBuffer<T, allocator>& src) { _container->copy(src.get(), src.size() * sizeof(T)); }
 
     /**
      * @brief Reset this shared_ptr, i.e. decrement the ref counter of the underlying shared_ptr
