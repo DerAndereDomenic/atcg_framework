@@ -177,11 +177,17 @@ void VertexBuffer::setData(const void* data, size_t size)
 {
     unmapPointers();
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    if(size <= impl->capacity) { glBufferSubData(GL_ARRAY_BUFFER, 0, size, data); }
-    else
+    resize(size);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
+    impl->size = size;
+}
+
+void VertexBuffer::resize(std::size_t size)
+{
+    if(size <= impl->capacity)
     {
         if(impl->resource_ready) { impl->deinitResource(); }
-        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
         impl->capacity = size;
         impl->initResource(_ID);
     }
@@ -262,18 +268,8 @@ void IndexBuffer::setData(const uint32_t* data, size_t count)
 {
     unmapPointers();
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    if(count * sizeof(uint32_t) <= impl->capacity)
-    {
-        glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(uint32_t), data);
-    }
-    else
-    {
-        if(impl->resource_ready) { impl->deinitResource(); }
-        glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), data, GL_DYNAMIC_DRAW);
-        impl->capacity = count * sizeof(uint32_t);
-        impl->initResource(_ID);
-    }
-    impl->size = count * sizeof(uint32_t);
+    resize(count * sizeof(uint32_t));
+    glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(uint32_t), data);
 }
 
 }    // namespace atcg

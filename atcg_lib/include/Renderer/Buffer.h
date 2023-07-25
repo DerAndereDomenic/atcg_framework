@@ -184,7 +184,7 @@ public:
      * @brief Construct a new Vertex Buffer object
      *
      * @param data The data to fill the buffer with
-     * @param size The size
+     * @param size The size in bytes
      */
     VertexBuffer(const void* data, size_t size);
 
@@ -216,9 +216,17 @@ public:
      * @note Invalidades the device pointer obtained by "getDevicePointer"
      *
      * @param data The data
-     * @param size The size
+     * @param size The size in bytes
      */
     void setData(const void* data, size_t size);
+
+    /**
+     * @brief Resize the buffer.
+     * If size <= capacity(), there will be no new allocation but excessive memory is not freed.
+     *
+     * @param size The new size in bytes
+     */
+    void resize(std::size_t size);
 
     /**
      * @brief Get the underlying data as a device pointer.
