@@ -56,6 +56,7 @@ public:
     void blockEvents(bool block) { _block_events = block; }
 
 private:
-    bool _block_events = true;
+    bool _block_events      = true;
+    bool _enable_dock_space = false;
 };
 }    // namespace atcg
