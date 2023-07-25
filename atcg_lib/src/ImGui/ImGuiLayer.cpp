@@ -9,6 +9,8 @@
 #include <GLFW/glfw3.h>
 #include <Core/Application.h>
 
+#include <Renderer/Renderer.h>
+
 namespace atcg
 {
 ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer") {}
@@ -97,6 +99,34 @@ void ImGuiLayer::onEvent(Event* event)
         event->handled |= event->isInCategory(EventCategoryMouse) & io.WantCaptureMouse;
         event->handled |= event->isInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
     }
+}
+
+void ImGuiLayer::onImGuiRender()
+{
+    if(!_enable_dock_space) return;
+
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
+    ImGui::Begin("Viewport");
+    ImGui::PopStyleVar();
+
+    // auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+    // auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+    // auto viewportOffset    = ImGui::GetWindowPos();
+    // m_ViewportBounds[0]    = {viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y};
+    // m_ViewportBounds[1]    = {viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y};
+
+    // m_ViewportFocused = ImGui::IsWindowFocused();
+    bool viewport_hovered = ImGui::IsWindowHovered();
+
+    _block_events = !viewport_hovered;
+
+    ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+    _viewport_size           = glm::ivec2(viewportPanelSize.x, viewportPanelSize.y);
+
+    uint64_t textureID = Renderer::getFramebuffer()->getColorAttachement(0)->getID();
+    ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2 {0, 1}, ImVec2 {1, 0});
+
+    ImGui::End();
 }
 
 void ImGuiLayer::begin()

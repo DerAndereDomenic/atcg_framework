@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Layer.h>
+#include <Core/glm.h>
 
 namespace atcg
 {
@@ -39,6 +40,11 @@ public:
     virtual void onEvent(Event* event) override;
 
     /**
+     * @brief This function should only handle imgui code
+     */
+    virtual void onImGuiRender() override;
+
+    /**
      * @brief Start a new ImGui Frame
      */
     void begin();
@@ -62,8 +68,16 @@ public:
      */
     inline void enableDockSpace(bool enable) { _enable_dock_space = enable; }
 
+    /**
+     * @brief Get the current viewport size
+     *
+     * @return The viewport size
+     */
+    glm::ivec2 getViewportSize() const { return _viewport_size; }
+
 private:
-    bool _block_events      = true;
-    bool _enable_dock_space = false;
+    bool _block_events        = true;
+    bool _enable_dock_space   = false;
+    glm::ivec2 _viewport_size = glm::vec2(0);
 };
 }    // namespace atcg
