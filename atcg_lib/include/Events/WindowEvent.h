@@ -27,6 +27,27 @@ private:
     unsigned int _width, _height;
 };
 
+class ViewportResizeEvent : public Event
+{
+public:
+    ViewportResizeEvent(unsigned int width, unsigned int height) : _width(width), _height(height) {}
+
+    unsigned int getWidth() const { return _width; }
+    unsigned int getHeight() const { return _height; }
+
+    std::string toString() const override
+    {
+        std::stringstream ss;
+        ss << "ViewportResizeEvent: " << _width << ", " << _height;
+        return ss.str();
+    }
+
+    EVENT_CLASS_TYPE(ViewportResize)
+    EVENT_CLASS_CATEGORY(EventCategoryApplication)
+private:
+    unsigned int _width, _height;
+};
+
 class WindowCloseEvent : public Event
 {
 public:

@@ -13,6 +13,7 @@ enum class EventType
     WindowFocus,
     WindowLostFocus,
     WindowMoved,
+    ViewportResize,
     KeyPressed,
     KeyReleased,
     KeyTyped,
