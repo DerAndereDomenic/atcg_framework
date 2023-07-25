@@ -89,6 +89,7 @@ private:
     void run();
     bool onWindowClose(WindowCloseEvent* e);
     bool onWindowResize(WindowResizeEvent* e);
+    bool onViewportResize(ViewportResizeEvent* e);
     void init(const WindowProps& props);
 
 private:

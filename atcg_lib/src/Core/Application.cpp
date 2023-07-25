@@ -70,6 +70,7 @@ void Application::onEvent(Event* e)
     EventDispatcher dispatcher(e);
     dispatcher.dispatch<WindowCloseEvent>(ATCG_BIND_EVENT_FN(Application::onWindowClose));
     dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(Application::onWindowResize));
+    dispatcher.dispatch<ViewportResizeEvent>(ATCG_BIND_EVENT_FN(Application::onViewportResize));
 
     for(auto it = _layer_stack.rbegin(); it != _layer_stack.rend(); ++it)
     {
@@ -99,6 +100,13 @@ void Application::run()
         _imgui_layer->end();
 
         _window->onUpdate();
+        glm::ivec2 viewport_size = _imgui_layer->getViewportSize();
+        if(viewport_size.x != Renderer::getFramebuffer()->width() ||
+           viewport_size.y != Renderer::getFramebuffer()->height())
+        {
+            ViewportResizeEvent event(viewport_size.x, viewport_size.y);
+            onEvent(&event);
+        }
 
         current_time = std::chrono::high_resolution_clock::now();
 
@@ -124,6 +132,12 @@ bool Application::onWindowClose(WindowCloseEvent* e)
 }
 
 bool Application::onWindowResize(WindowResizeEvent* e)
+{
+    Renderer::resize(e->getWidth(), e->getHeight());
+    return false;
+}
+
+bool Application::onViewportResize(ViewportResizeEvent* e)
 {
     Renderer::resize(e->getWidth(), e->getHeight());
     return false;
