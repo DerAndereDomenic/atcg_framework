@@ -22,14 +22,15 @@ public:
     virtual void onAttach() override
     {
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
+        atcg::Renderer::toggleCulling(false);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
+        camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
 
-        atcg::ref_ptr<atcg::Graph> grain = atcg::IO::read_mesh("../Meshes/rice_low.obj");
+        atcg::ref_ptr<atcg::Graph> grain = atcg::IO::read_mesh("../Meshes/rice_real.obj");
         atcg::ref_ptr<atcg::Graph> bowl  = atcg::IO::read_mesh("../Meshes/bowl.obj");
 
-        std::ifstream transform_file("../CVAE/data/Transforms_big.bin", std::ios::in | std::ios::binary);
+        std::ifstream transform_file("../CVAE/data/Transforms_rice_real.bin", std::ios::in | std::ios::binary);
         std::vector<char> transform_buffer(std::istreambuf_iterator<char>(transform_file), {});
         float* transforms = reinterpret_cast<float*>(transform_buffer.data());
 
@@ -43,9 +44,9 @@ public:
             float* current_transform = transforms + 4 * 4 * i;
             glm::mat4 transform      = glm::transpose(glm::make_mat4(current_transform));
 
-            transform[0] *= 10.0f;
-            transform[1] *= 10.0f;
-            transform[2] *= 10.0f;
+            // transform[0] *= 10.0f;
+            // transform[1] *= 10.0f;
+            // transform[2] *= 10.0f;
 
             atcg::Instance instance = {transform, glm::vec3(1.2903, 0.558, 0.1328)};
 
@@ -65,7 +66,8 @@ public:
         {
             atcg::Entity entity = scene->createEntity();
             auto& transform     = entity.addComponent<atcg::TransformComponent>();
-            transform.setPosition(glm::vec3(0, 50, 0));
+            transform.setPosition(glm::vec3(0, 20, 0));
+            transform.setScale(glm::vec3(0.4));
             entity.addComponent<atcg::GeometryComponent>(bowl);
             entity.addComponent<atcg::MeshRenderComponent>();
         }
@@ -104,6 +106,10 @@ public:
             std::stringstream ss;
             ss << "FPS: " << 1.0f / dt << " | " << dt << " ms\n";
             ImGui::Text(ss.str().c_str());
+
+            ImGui::Separator();
+            ImGui::InputFloat3("Camera Position",
+                               (float*)glm::value_ptr(camera_controller->getCamera()->getPosition()));
 
             ImGui::End();
         }
@@ -155,7 +161,7 @@ public:
 
 private:
     atcg::ref_ptr<atcg::Scene> scene;
-    atcg::ref_ptr<atcg::FocusedController> camera_controller;
+    atcg::ref_ptr<atcg::FirstPersonController> camera_controller;
 
     bool show_render_settings = true;
 

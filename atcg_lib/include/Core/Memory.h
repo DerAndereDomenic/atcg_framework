@@ -486,6 +486,20 @@ public:
     }
 
     /**
+     * @brief Reset this buffer and make it manage different memory.
+     * @tparam U The type of the new data
+     * @param ptr Pointer to the new object.
+     * @param size The size
+     */
+    template<typename U>
+    void reset(U* ptr, std::size_t size)
+    {
+        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, size);
+
+        _container = std::shared_ptr<MemoryContainer<allocator>>(obj, ContainerDeleter<T, allocator>());
+    }
+
+    /**
      * @brief Get the number of pointers that point to the memory owned by this object
      *
      * @return The use count
