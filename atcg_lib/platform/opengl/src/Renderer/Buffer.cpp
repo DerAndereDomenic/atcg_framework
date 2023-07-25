@@ -176,7 +176,6 @@ void VertexBuffer::bindStorage(uint32_t slot) const
 void VertexBuffer::setData(const void* data, size_t size)
 {
     unmapPointers();
-    glBindBuffer(GL_ARRAY_BUFFER, _ID);
     resize(size);
     glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
     impl->size = size;
@@ -184,6 +183,7 @@ void VertexBuffer::setData(const void* data, size_t size)
 
 void VertexBuffer::resize(std::size_t size)
 {
+    glBindBuffer(GL_ARRAY_BUFFER, _ID);
     if(size > impl->capacity)
     {
         if(impl->resource_ready) { impl->deinitResource(); }
@@ -267,7 +267,6 @@ void IndexBuffer::use() const
 void IndexBuffer::setData(const uint32_t* data, size_t count)
 {
     unmapPointers();
-    glBindBuffer(GL_ARRAY_BUFFER, _ID);
     resize(count * sizeof(uint32_t));
     glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(uint32_t), data);
 }
