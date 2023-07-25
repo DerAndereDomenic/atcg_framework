@@ -101,8 +101,8 @@ void Application::run()
 
         _window->onUpdate();
         glm::ivec2 viewport_size = _imgui_layer->getViewportSize();
-        if(viewport_size.x != Renderer::getFramebuffer()->width() ||
-           viewport_size.y != Renderer::getFramebuffer()->height())
+        if(_imgui_layer->dockspaceEnabled() && (viewport_size.x != Renderer::getFramebuffer()->width() ||
+                                                viewport_size.y != Renderer::getFramebuffer()->height()))
         {
             ViewportResizeEvent event(viewport_size.x, viewport_size.y);
             onEvent(&event);

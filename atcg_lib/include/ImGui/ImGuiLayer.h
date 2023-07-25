@@ -69,6 +69,13 @@ public:
     inline void enableDockSpace(bool enable) { _enable_dock_space = enable; }
 
     /**
+     * @brief Check if dockspaces are enabled
+     *
+     * @return True if enabled
+     */
+    inline bool dockspaceEnabled() const { return _enable_dock_space; }
+
+    /**
      * @brief Get the current viewport size
      *
      * @return The viewport size
