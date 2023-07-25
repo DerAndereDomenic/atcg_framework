@@ -22,6 +22,6 @@ void main()
 
     // This could eventually lead to problems if we allow the client to do instance rendering of arbitrary meshes
     // frag_normal = normalize(vec3(inverse(transpose((1-instanced) * M + instanced * M)) * vec4(aNormal, 0)));
-    frag_normal = normalize(vec3(M * aInstanceModel * vec4(aNormal, 0)));
+    frag_normal = normalize(vec3(transpose(inverse(M * aInstanceModel)) * vec4(aNormal, 0)));
     frag_color = aColor * aInstanceColor;
 }
