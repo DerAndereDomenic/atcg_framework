@@ -21,14 +21,16 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
+        atcg::Application::get()->enableDockSpace(true);
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
         atcg::Renderer::toggleCulling(false);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
 
-        atcg::ref_ptr<atcg::Graph> grain = atcg::IO::read_mesh("../Meshes/rice_real.obj");
-        atcg::ref_ptr<atcg::Graph> bowl  = atcg::IO::read_mesh("../Meshes/bowl.obj");
+        atcg::ref_ptr<atcg::Graph> grain     = atcg::IO::read_mesh("../Meshes/rice_real.obj");
+        atcg::ref_ptr<atcg::Graph> bowl      = atcg::IO::read_mesh("../Meshes/bowl.obj");
+        atcg::ref_ptr<atcg::Graph> aggregate = atcg::IO::read_mesh("../Meshes/aggregate_rice_real.obj");
 
         std::ifstream transform_file("../CVAE/data/Transforms_rice_real.bin", std::ios::in | std::ios::binary);
         std::vector<char> transform_buffer(std::istreambuf_iterator<char>(transform_file), {});
@@ -69,6 +71,14 @@ public:
             transform.setPosition(glm::vec3(0, 20, 0));
             transform.setScale(glm::vec3(0.4));
             entity.addComponent<atcg::GeometryComponent>(bowl);
+            entity.addComponent<atcg::MeshRenderComponent>();
+        }
+
+        {
+            atcg::Entity entity = scene->createEntity();
+            auto& transform     = entity.addComponent<atcg::TransformComponent>();
+            transform.setPosition(glm::vec3(0, 50, 0));
+            entity.addComponent<atcg::GeometryComponent>(aggregate);
             entity.addComponent<atcg::MeshRenderComponent>();
         }
     }
@@ -147,6 +157,7 @@ public:
 
         atcg::EventDispatcher dispatcher(event);
         dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(GrainLayer::onKeyPressed));
+        dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(GrainLayer::onViewportResized));
     }
 
     bool onKeyPressed(atcg::KeyPressedEvent* event)
@@ -157,6 +168,13 @@ public:
         // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;
+    }
+
+    bool onViewportResized(atcg::ViewportResizeEvent* event)
+    {
+        atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
+        camera_controller->onEvent(&resize_event);
+        return false;
     }
 
 private:
