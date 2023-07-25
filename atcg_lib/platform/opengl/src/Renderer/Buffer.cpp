@@ -157,7 +157,7 @@ VertexBuffer::VertexBuffer(const void* data, size_t size)
 VertexBuffer::~VertexBuffer()
 {
     unmapPointers();
-    impl->deinitResource();
+    if(impl->resource_ready) { impl->deinitResource(); }
     glDeleteBuffers(1, &_ID);
 }
 
@@ -184,13 +184,13 @@ void VertexBuffer::setData(const void* data, size_t size)
 
 void VertexBuffer::resize(std::size_t size)
 {
-    if(size <= impl->capacity)
+    if(size > impl->capacity)
     {
         if(impl->resource_ready) { impl->deinitResource(); }
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
         impl->capacity = size;
-        impl->initResource(_ID);
     }
+    if(!impl->resource_ready) { impl->initResource(_ID); }
     impl->size = size;
 }
 

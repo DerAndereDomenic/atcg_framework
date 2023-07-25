@@ -21,9 +21,9 @@ public:
 
     ~Impl();
 
-    void createVertexBuffer(const Vertex* vertices, uint32_t num_vertices);
-    void createEdgeBuffer(const Edge* edges, uint32_t num_edges);
-    void createFaceBuffer(const glm::u32vec3* face_indices, uint32_t num_faces);
+    void updateVertexBuffer(const Vertex* vertices, uint32_t num_vertices);
+    void updateEdgeBuffer(const Edge* edges, uint32_t num_edges);
+    void updateFaceBuffer(const glm::u32vec3* face_indices, uint32_t num_faces);
     std::vector<Edge> edgesFromIndices(const std::vector<glm::u32vec3>& face_indices);
 
     atcg::ref_ptr<VertexBuffer> vertices = nullptr;
@@ -42,73 +42,53 @@ public:
     GraphType type;
 };
 
-Graph::Impl::Impl() {}
+Graph::Impl::Impl()
+{
+    // Create necessary buffers always on init
+    this->vertices = atcg::make_ref<VertexBuffer>();
+    this->vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
+                               {ShaderDataType::Float3, "aNormal"},
+                               {ShaderDataType::Float3, "aColor"}});
+
+
+    vertices_array = atcg::make_ref<VertexArray>();
+    vertices_array->pushVertexBuffer(this->vertices);
+
+    this->edges = atcg::make_ref<VertexBuffer>();
+    this->edges->setLayout(
+        {{ShaderDataType::Float2, "aIndex"}, {ShaderDataType::Float3, "aColor"}, {ShaderDataType::Float, "aRadius"}});
+
+
+    edges_array = atcg::make_ref<VertexArray>();
+    edges_array->pushVertexBuffer(this->edges);
+
+    indices = atcg::make_ref<IndexBuffer>();
+    vertices_array->setIndexBuffer(indices);
+}
 
 Graph::Impl::~Impl() {}
 
-void Graph::Impl::createVertexBuffer(const Vertex* vertices, uint32_t num_vertices)
+void Graph::Impl::updateVertexBuffer(const Vertex* vertices, uint32_t num_vertices)
 {
     if(num_vertices == 0) return;
 
-    if(n_vertices == 0)
-    {
-        this->vertices = atcg::make_ref<VertexBuffer>((void*)vertices, num_vertices * sizeof(Vertex));
-        this->vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
-                                   {ShaderDataType::Float3, "aNormal"},
-                                   {ShaderDataType::Float3, "aColor"}});
-
-
-        vertices_array = atcg::make_ref<VertexArray>();
-        vertices_array->pushVertexBuffer(this->vertices);
-
-        n_vertices = num_vertices;
-    }
-    else
-    {
-        this->vertices->setData((void*)vertices, sizeof(Vertex) * num_vertices);
-        n_vertices = num_vertices;
-    }
+    this->vertices->setData((void*)vertices, sizeof(Vertex) * num_vertices);
+    n_vertices = num_vertices;
 }
 
-void Graph::Impl::createEdgeBuffer(const Edge* edges, uint32_t num_edges)
+void Graph::Impl::updateEdgeBuffer(const Edge* edges, uint32_t num_edges)
 {
     if(num_edges == 0) return;
 
-    if(n_edges == 0)
-    {
-        this->edges = atcg::make_ref<VertexBuffer>((void*)edges, num_edges * sizeof(Edge));
-        this->edges->setLayout({{ShaderDataType::Float2, "aIndex"},
-                                {ShaderDataType::Float3, "aColor"},
-                                {ShaderDataType::Float, "aRadius"}});
-
-
-        edges_array = atcg::make_ref<VertexArray>();
-        edges_array->pushVertexBuffer(this->edges);
-
-        n_edges = num_edges;
-    }
-    else
-    {
-        this->edges->setData((void*)edges, sizeof(Edge) * num_edges);
-        n_edges = num_edges;
-    }
+    this->edges->setData((void*)edges, sizeof(Edge) * num_edges);
+    n_edges = num_edges;
 }
 
-void Graph::Impl::createFaceBuffer(const glm::u32vec3* face_indices, uint32_t num_faces)
+void Graph::Impl::updateFaceBuffer(const glm::u32vec3* face_indices, uint32_t num_faces)
 {
     if(num_faces == 0) return;
-    if(n_faces == 0)
-    {
-        indices = atcg::make_ref<IndexBuffer>((uint32_t*)face_indices, num_faces * 3);
-        vertices_array->setIndexBuffer(indices);
-
-        n_faces = num_faces;
-    }
-    else
-    {
-        indices->setData((uint32_t*)face_indices, num_faces * 3);
-        n_faces = num_faces;
-    }
+    indices->setData((uint32_t*)face_indices, num_faces * 3);
+    n_faces = num_faces;
 }
 
 std::vector<Edge> Graph::Impl::edgesFromIndices(const std::vector<glm::u32vec3>& face_indices)
@@ -166,7 +146,7 @@ atcg::ref_ptr<Graph> Graph::createPointCloud()
 atcg::ref_ptr<Graph> Graph::createPointCloud(const std::vector<Vertex>& vertices)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->impl->createVertexBuffer(vertices.data(), vertices.size());
+    result->impl->updateVertexBuffer(vertices.data(), vertices.size());
 
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
     return result;
@@ -187,11 +167,11 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
                                                float edge_radius)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->impl->createVertexBuffer(vertices.data(), vertices.size());
-    result->impl->createFaceBuffer(face_indices.data(), face_indices.size());
+    result->impl->updateVertexBuffer(vertices.data(), vertices.size());
+    result->impl->updateFaceBuffer(face_indices.data(), face_indices.size());
     result->impl->edge_radius     = edge_radius;
     std::vector<Edge> edge_buffer = result->impl->edgesFromIndices(face_indices);
-    result->impl->createEdgeBuffer(edge_buffer.data(), edge_buffer.size());
+    result->impl->updateEdgeBuffer(edge_buffer.data(), edge_buffer.size());
 
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
     return result;
@@ -248,8 +228,8 @@ atcg::ref_ptr<Graph> Graph::createGraph()
 atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, const std::vector<Edge>& edges)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->impl->createVertexBuffer(vertices.data(), vertices.size());
-    result->impl->createEdgeBuffer(edges.data(), edges.size());
+    result->impl->updateVertexBuffer(vertices.data(), vertices.size());
+    result->impl->updateEdgeBuffer(edges.data(), edges.size());
 
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_GRAPH;
     return result;
@@ -312,24 +292,24 @@ const atcg::ref_ptr<VertexArray>& Graph::getEdgesArray() const
 
 void Graph::updateVertices(const std::vector<Vertex>& vertices)
 {
-    impl->createVertexBuffer(vertices.data(), vertices.size());
+    impl->updateVertexBuffer(vertices.data(), vertices.size());
 }
 
 void Graph::updateFaces(const std::vector<glm::u32vec3>& faces)
 {
-    impl->createFaceBuffer(faces.data(), faces.size());
+    impl->updateFaceBuffer(faces.data(), faces.size());
     std::vector<Edge> edges = impl->edgesFromIndices(faces);
-    impl->createEdgeBuffer(edges.data(), edges.size());
+    impl->updateEdgeBuffer(edges.data(), edges.size());
 }
 
 void Graph::updateEdges(const std::vector<Edge>& edges)
 {
-    impl->createEdgeBuffer(edges.data(), edges.size());
+    impl->updateEdgeBuffer(edges.data(), edges.size());
 }
 
 void Graph::updateVertices(const atcg::ref_ptr<Vertex, device_allocator>& vertices)
 {
-    impl->createVertexBuffer(nullptr, vertices.size());
+    impl->updateVertexBuffer(nullptr, vertices.size());
 
 #ifdef ATCG_CUDA_BACKEND
     bool mapped   = impl->vertices->isDeviceMapped();
@@ -346,7 +326,7 @@ void Graph::updateVertices(const atcg::ref_ptr<Vertex, device_allocator>& vertic
 
 void Graph::updateEdges(const atcg::ref_ptr<Edge, device_allocator>& edges)
 {
-    impl->createEdgeBuffer(nullptr, edges.size());
+    impl->updateEdgeBuffer(nullptr, edges.size());
 
 #ifdef ATCG_CUDA_BACKEND
     bool mapped   = impl->edges->isDeviceMapped();
@@ -360,17 +340,17 @@ void Graph::updateEdges(const atcg::ref_ptr<Edge, device_allocator>& edges)
 
 void Graph::resizeVertices(uint32_t size)
 {
-    impl->createVertexBuffer(nullptr, size);
+    impl->updateVertexBuffer(nullptr, size);
 }
 
 void Graph::resizeFaces(uint32_t size)
 {
-    impl->createFaceBuffer(nullptr, size);
+    impl->updateFaceBuffer(nullptr, size);
 }
 
 void Graph::resizeEdges(uint32_t size)
 {
-    impl->createEdgeBuffer(nullptr, size);
+    impl->updateEdgeBuffer(nullptr, size);
 }
 
 uint32_t Graph::n_vertices() const
