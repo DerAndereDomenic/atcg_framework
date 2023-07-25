@@ -358,6 +358,21 @@ void Graph::updateEdges(const atcg::ref_ptr<Edge, device_allocator>& edges)
 #endif
 }
 
+void Graph::resizeVertices(uint32_t size)
+{
+    impl->createVertexBuffer(nullptr, size);
+}
+
+void Graph::resizeFaces(uint32_t size)
+{
+    impl->createFaceBuffer(nullptr, size);
+}
+
+void Graph::resizeEdges(uint32_t size)
+{
+    impl->createEdgeBuffer(nullptr, size);
+}
+
 uint32_t Graph::n_vertices() const
 {
     return impl->n_vertices;

@@ -287,6 +287,30 @@ public:
     void updateEdges(const atcg::ref_ptr<Edge, device_allocator>& edges);
 
     /**
+     * @brief Update the number of vertices.
+     * Old data is lost
+     *
+     * @param size The new size
+     */
+    void resizeVertices(uint32_t size);
+
+    /**
+     * @brief Update the number of faces.
+     * Old data is lost
+     *
+     * @param size The new size
+     */
+    void resizeFaces(uint32_t size);
+
+    /**
+     * @brief Update the number of edges.
+     * Old data is lost
+     *
+     * @param size The new size
+     */
+    void resizeEdges(uint32_t size);
+
+    /**
      * @brief Get the number of vertices
      *
      * @return Number of vertices
