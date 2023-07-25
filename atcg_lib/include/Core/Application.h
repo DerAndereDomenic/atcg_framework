@@ -78,6 +78,13 @@ public:
      */
     inline static Application* get() { return s_instance; }
 
+    /**
+     * @brief Enable or disable Dock spaces
+     *
+     * @param enable If dockspaces should be enabled
+     */
+    inline void enableDockSpace(bool enable) { _imgui_layer->enableDockSpace(enable); }
+
 private:
     void run();
     bool onWindowClose(WindowCloseEvent* e);

@@ -53,7 +53,14 @@ public:
      *
      * @param block If events should be blocked
      */
-    void blockEvents(bool block) { _block_events = block; }
+    inline void blockEvents(bool block) { _block_events = block; }
+
+    /**
+     * @brief Enable or disable Dock spaces
+     *
+     * @param enable If dockspaces should be enabled
+     */
+    inline void enableDockSpace(bool enable) { _enable_dock_space = enable; }
 
 private:
     bool _block_events      = true;
