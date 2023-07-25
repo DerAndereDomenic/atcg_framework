@@ -336,10 +336,26 @@ public:
      * @brief Construct a device buffer from a pointer.
      * The pointer already has to be on the right device.
      * The memory will be assumed to be exactly the size of on object (no arrays)
+     *
+     * @param ptr The pointer
      */
     DeviceBuffer(T* ptr)
     {
         MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, sizeof(T));
+
+        _container = std::shared_ptr<MemoryContainer<allocator>>(obj, ContainerDeleter<T, allocator>());
+    }
+
+    /**
+     * @brief Construct a device buffer from a pointer.
+     * The pointer already has to be on the right device.
+     *
+     * @param ptr The pointer
+     * @param size The number of elements
+     */
+    DeviceBuffer(T* ptr, std::size_t size)
+    {
+        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, size);
 
         _container = std::shared_ptr<MemoryContainer<allocator>>(obj, ContainerDeleter<T, allocator>());
     }
