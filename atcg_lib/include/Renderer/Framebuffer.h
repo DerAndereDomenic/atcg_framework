@@ -80,6 +80,20 @@ public:
     inline uint32_t getID() const { return _ID; }
 
     /**
+     * @brief Get the width of the framebuffer
+     *
+     * @return The width
+     */
+    inline uint32_t width() const { return _width; }
+
+    /**
+     * @brief Get the height of the framebuffer
+     *
+     * @return The height
+     */
+    inline uint32_t height() const { return _height; }
+
+    /**
      * @brief Get the currently bound fbo
      *
      * @return ID of the fbo
