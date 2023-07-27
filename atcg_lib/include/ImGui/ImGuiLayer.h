@@ -76,15 +76,23 @@ public:
     inline bool dockspaceEnabled() const { return _enable_dock_space; }
 
     /**
-     * @brief Get the current viewport size
+     * @brief Get the current viewport size (frame size, without title bar)
      *
      * @return The viewport size
      */
     glm::ivec2 getViewportSize() const { return _viewport_size; }
 
+    /**
+     * @brief Get the current viewport position (without title bar)
+     *
+     * @return The viewport position
+     */
+    glm::ivec2 getViewportPosition() const { return _viewport_position; }
+
 private:
-    bool _block_events        = true;
-    bool _enable_dock_space   = false;
-    glm::ivec2 _viewport_size = glm::vec2(0);
+    bool _block_events            = true;
+    bool _enable_dock_space       = false;
+    glm::ivec2 _viewport_size     = glm::vec2(0);
+    glm::ivec2 _viewport_position = glm::vec2(0);
 };
 }    // namespace atcg

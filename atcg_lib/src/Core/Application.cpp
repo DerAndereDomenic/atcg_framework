@@ -79,6 +79,20 @@ void Application::onEvent(Event* e)
     }
 }
 
+glm::ivec2 Application::getViewportSize() const
+{
+    if(_imgui_layer->dockspaceEnabled()) { return _imgui_layer->getViewportSize(); }
+
+    return glm::ivec2(_window->getWidth(), _window->getHeight());
+}
+
+glm::ivec2 Application::getViewportPosition() const
+{
+    if(_imgui_layer->dockspaceEnabled()) { return _imgui_layer->getViewportPosition(); }
+
+    return glm::ivec2(0);
+}
+
 void Application::run()
 {
     _running          = true;

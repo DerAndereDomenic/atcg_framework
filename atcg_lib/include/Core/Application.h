@@ -65,6 +65,22 @@ public:
     void close();
 
     /**
+     * @brief Get the viewport size (without title bar).
+     * If docking is not enabled, this is the same as window->width() and window->height()
+     *
+     * @return The viewport size
+     */
+    glm::ivec2 getViewportSize() const;
+
+    /**
+     * @brief Get the viewport posititon (without title bar).
+     * If docking is not enabled, this is (0,0)
+     *
+     * @return The viewport position
+     */
+    glm::ivec2 getViewportPosition() const;
+
+    /**
      * @brief Get the Window object
      *
      * @return const atcg::scope_ptr<Window>& The window

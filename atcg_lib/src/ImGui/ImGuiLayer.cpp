@@ -109,11 +109,12 @@ void ImGuiLayer::onImGuiRender()
     ImGui::Begin("Viewport");
     ImGui::PopStyleVar();
 
-    // auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
-    // auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
-    // auto viewportOffset    = ImGui::GetWindowPos();
-    // m_ViewportBounds[0]    = {viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y};
-    // m_ViewportBounds[1]    = {viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y};
+    glm::vec2 window_pos   = Application::get()->getWindow()->getPosition();
+    auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+    auto viewportOffset    = ImGui::GetWindowPos();
+
+    _viewport_position = glm::ivec2(viewportMinRegion.x + viewportOffset.x - window_pos.x,
+                                    viewportMinRegion.y + viewportOffset.y - window_pos.y);
 
     bool viewport_focused = ImGui::IsWindowFocused();
     bool viewport_hovered = ImGui::IsWindowHovered();
