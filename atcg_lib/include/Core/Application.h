@@ -101,6 +101,13 @@ public:
      */
     inline void enableDockSpace(bool enable) { _imgui_layer->enableDockSpace(enable); }
 
+    /**
+     * @brief Get the imgui layer.
+     *
+     * @return The imgui layer
+     */
+    inline ImGuiLayer* getImGuiLayer() const { return _imgui_layer; }
+
 private:
     void run();
     bool onWindowClose(WindowCloseEvent* e);
