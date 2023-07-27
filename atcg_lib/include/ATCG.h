@@ -54,3 +54,4 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 #include <Scene/Serializer.h>
+#include <Scene/SceneHierarchyPanel.h>
