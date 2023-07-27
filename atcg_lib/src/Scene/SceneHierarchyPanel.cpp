@@ -36,6 +36,27 @@ void SceneHierarchyPanel::drawEntityNode(Entity entity)
     // }
 }
 
+void SceneHierarchyPanel::drawComponents(Entity entity)
+{
+    auto& tag = entity.getComponent<NameComponent>().name;
+
+    char buffer[256];
+    memset(buffer, 0, sizeof(buffer));
+    // TODO: This is kind of clunky if we keep the box selected
+    strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
+    if(ImGui::InputText("Name", buffer, sizeof(buffer))) { tag = std::string(buffer); }
+
+    if(entity.hasComponent<TransformComponent>())
+    {
+        auto& transform    = entity.getComponent<TransformComponent>();
+        glm::vec3 position = transform.getPosition();
+        if(ImGui::InputFloat3("Position", glm::value_ptr(position))) { transform.setPosition(position); }
+        glm::vec3 scale = transform.getScale();
+        if(ImGui::InputFloat3("Scale", glm::value_ptr(scale))) { transform.setScale(scale); }
+        glm::vec3 rotation = transform.getRotation();
+        if(ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) { transform.setRotation(rotation); }
+    }
+}
 
 SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
 
@@ -52,6 +73,8 @@ void SceneHierarchyPanel::renderPanel()
     ImGui::End();
 
     ImGui::Begin("Properties");
+
+    if(_selected_entity) { drawComponents(_selected_entity); }
 
     ImGui::End();
 }

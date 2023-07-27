@@ -46,6 +46,7 @@ public:
 
 private:
     void drawEntityNode(Entity entity);
+    void drawComponents(Entity entity);
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
 };
