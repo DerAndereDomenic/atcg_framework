@@ -11,7 +11,7 @@ void SceneHierarchyPanel::drawEntityNode(Entity entity)
     auto& tag = entity.getComponent<NameComponent>().name;
 
     ImGuiTreeNodeFlags flags =
-        ((_selected_entity.getComponent<IDComponent>().ID == entity.getComponent<IDComponent>().ID)
+        ((_selected_entity && _selected_entity.getComponent<IDComponent>().ID == entity.getComponent<IDComponent>().ID)
              ? ImGuiTreeNodeFlags_Selected
              : 0) |
         ImGuiTreeNodeFlags_Bullet;
