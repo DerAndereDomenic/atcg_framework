@@ -2,21 +2,22 @@
 
 #include <imgui.h>
 #include <Scene/Components.h>
-#include <Scene/Entity.h>
 
 namespace atcg
 {
 
-namespace detail
-{
-void drawEntityNode(Entity entity)
+void SceneHierarchyPanel::drawEntityNode(Entity entity)
 {
     auto& tag = entity.getComponent<NameComponent>().name;
 
-    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Bullet;
+    ImGuiTreeNodeFlags flags =
+        ((_selected_entity.getComponent<IDComponent>().ID == entity.getComponent<IDComponent>().ID)
+             ? ImGuiTreeNodeFlags_Selected
+             : 0) |
+        ImGuiTreeNodeFlags_Bullet;
     flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-    bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, tag.c_str());
-    // if(ImGui::IsItemClicked()) { m_SelectionContext = entity; }
+    bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity.getComponent<IDComponent>().ID, flags, tag.c_str());
+    if(ImGui::IsItemClicked()) { _selected_entity = entity; }
 
     // bool entityDeleted = false;
     // if(ImGui::BeginPopupContextItem())
@@ -34,19 +35,18 @@ void drawEntityNode(Entity entity)
     //     if(m_SelectionContext == entity) m_SelectionContext = {};
     // }
 }
-}    // namespace detail
 
 
 SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
 
-void SceneHierarchyPanel::renderPanel() const
+void SceneHierarchyPanel::renderPanel()
 {
     ImGui::Begin("Scene Hierarchy");
 
     for(auto e: _scene->getAllEntitiesWith<NameComponent>())
     {
         Entity entity(e, _scene.get());
-        detail::drawEntityNode(entity);
+        drawEntityNode(entity);
     }
 
     ImGui::End();

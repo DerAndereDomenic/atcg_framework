@@ -2,6 +2,7 @@
 
 #include <Core/Memory.h>
 #include <Scene/Scene.h>
+#include <Scene/Entity.h>
 
 namespace atcg
 {
@@ -27,9 +28,25 @@ public:
      * @brief Should be called in onImGuiRender.
      * Renders the panel
      */
-    void renderPanel() const;
+    void renderPanel();
+
+    /**
+     * @brief Set an entity as selected
+     *
+     * @param entity The entity
+     */
+    inline void selectEntity(Entity entity) { _selected_entity = entity; }
+
+    /**
+     * @brief Get the currently selected entity
+     *
+     * @return The selected entity
+     */
+    inline Entity getSelectedEntity() const { return _selected_entity; }
 
 private:
+    void drawEntityNode(Entity entity);
+    Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
 };
 }    // namespace atcg
