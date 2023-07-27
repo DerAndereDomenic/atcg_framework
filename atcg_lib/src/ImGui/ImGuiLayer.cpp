@@ -101,34 +101,7 @@ void ImGuiLayer::onEvent(Event* event)
     }
 }
 
-void ImGuiLayer::onImGuiRender()
-{
-    if(!_enable_dock_space) return;
-
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
-    ImGui::Begin("Viewport");
-    ImGui::PopStyleVar();
-
-    glm::vec2 window_pos   = Application::get()->getWindow()->getPosition();
-    auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
-    auto viewportOffset    = ImGui::GetWindowPos();
-
-    _viewport_position = glm::ivec2(viewportMinRegion.x + viewportOffset.x - window_pos.x,
-                                    viewportMinRegion.y + viewportOffset.y - window_pos.y);
-
-    bool viewport_focused = ImGui::IsWindowFocused();
-    bool viewport_hovered = ImGui::IsWindowHovered();
-
-    _block_events = !(viewport_hovered || viewport_focused);
-
-    ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
-    _viewport_size           = glm::ivec2(viewportPanelSize.x, viewportPanelSize.y);
-
-    uint64_t textureID = Renderer::getFramebuffer()->getColorAttachement(0)->getID();
-    ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2 {0, 1}, ImVec2 {1, 0});
-
-    ImGui::End();
-}
+void ImGuiLayer::onImGuiRender() {}
 
 void ImGuiLayer::begin()
 {
@@ -155,6 +128,31 @@ void ImGuiLayer::begin()
 
         ImGuiID dockspace_id = ImGui::GetID("atcg_MainDockSpace");
         ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
+        ImGui::Begin("Viewport");
+        ImGui::PopStyleVar();
+
+        glm::vec2 window_pos   = Application::get()->getWindow()->getPosition();
+        auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+        auto viewportOffset    = ImGui::GetWindowPos();
+
+        _viewport_position = glm::ivec2(viewportMinRegion.x + viewportOffset.x - window_pos.x,
+                                        viewportMinRegion.y + viewportOffset.y - window_pos.y);
+
+        bool viewport_focused = ImGui::IsWindowFocused();
+        bool viewport_hovered = ImGui::IsWindowHovered();
+
+        _block_events = !(viewport_hovered || viewport_focused);
+
+        ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
+        _viewport_size           = glm::ivec2(viewportPanelSize.x, viewportPanelSize.y);
+
+        uint64_t textureID = Renderer::getFramebuffer()->getColorAttachement(0)->getID();
+        ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2 {0, 1}, ImVec2 {1, 0});
+
+        ImGui::End();
     }
 }
 
