@@ -126,6 +126,42 @@ public:
         recalculateProjection();
     }
 
+    /**
+     * @brief Get the near plane
+     *
+     * @return The near plane
+     */
+    inline float getNear() const { return _near; }
+
+    /**
+     * @brief Get the far plane
+     *
+     * @return The far plane
+     */
+    inline float getFar() const { return _far; }
+
+    /**
+     * @brief Set the near plane
+     *
+     * @param near_plane The near plane
+     */
+    inline void setNear(float near_plane)
+    {
+        _near = near_plane;
+        recalculateProjection();
+    }
+
+    /**
+     * @brief Set the far plane
+     *
+     * @param far_plane The far plane
+     */
+    inline void setFar(float far_plane)
+    {
+        _far = far_plane;
+        recalculateProjection();
+    }
+
 protected:
     virtual void recalculateView() override;
     virtual void recalculateProjection() override;
@@ -136,5 +172,7 @@ private:
     glm::vec3 _look_at;
 
     float _aspect_ratio;
+    float _near;
+    float _far;
 };
 }    // namespace atcg
