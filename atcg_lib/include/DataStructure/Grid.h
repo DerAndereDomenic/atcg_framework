@@ -218,7 +218,10 @@ typename SelectionFunctor::value_type Grid<VoxelT>::readInterpolated(const glm::
     typename SelectionFunctor::value_type values[8];
     for(uint32_t i = 0; i < 8; ++i)
     {
-        if(insideVolume(lookups[i])) values[i] = selector.select(operator()(lookups[i]));
+        if(insideVolume(lookups[i]))
+            values[i] = selector.select(operator()(lookups[i]));
+        else
+            return std::numeric_limits<typename SelectionFunctor::value_type>::max();
     }
 
     glm::vec3 corner_voxel = voxel_center(lookups[0]);
@@ -286,9 +289,9 @@ template<class VoxelT>
 bool Grid<VoxelT>::insideVolume(const glm::vec3& position)
 {
     glm::ivec3 voxel = position2voxel(position);
-    int32_t idx      = voxel2index(voxel);
 
-    return idx >= 0 && idx < voxels_per_volume();
+    return voxel.x >= 0 && voxel.x < _dim.num_voxels && voxel.y >= 0 && voxel.y < _dim.num_voxels && voxel.z >= 0 &&
+           voxel.z < _dim.num_voxels;
 }
 
 template<class VoxelT>
