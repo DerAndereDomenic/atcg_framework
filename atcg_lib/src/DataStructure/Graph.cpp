@@ -37,8 +37,6 @@ public:
     uint32_t n_edges    = 0;
     uint32_t n_faces    = 0;
 
-    float edge_radius = 0.1f;
-
     GraphType type;
 };
 
@@ -120,7 +118,7 @@ std::vector<Edge> Graph::Impl::edgesFromIndices(const std::vector<glm::u32vec3>&
             if(edge_set.find(edges[i]) == edge_set.end())
             {
                 edge_set.insert(edges[i]);
-                edge_buffer.push_back({edges[i], glm::vec3(1), edge_radius});
+                edge_buffer.push_back({edges[i], glm::vec3(1), 1.0f});
             }
         }
     }
@@ -152,10 +150,9 @@ atcg::ref_ptr<Graph> Graph::createPointCloud(const std::vector<Vertex>& vertices
     return result;
 }
 
-atcg::ref_ptr<Graph> Graph::createTriangleMesh(float edge_radius)
+atcg::ref_ptr<Graph> Graph::createTriangleMesh()
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
-    result->impl->edge_radius   = edge_radius;
 
     result->impl->vertices_array->setIndexBuffer(result->impl->indices);
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
@@ -164,13 +161,11 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(float edge_radius)
 
 
 atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertices,
-                                               const std::vector<glm::u32vec3>& face_indices,
-                                               float edge_radius)
+                                               const std::vector<glm::u32vec3>& face_indices)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->impl->updateVertexBuffer(vertices.data(), vertices.size());
     result->impl->updateFaceBuffer(face_indices.data(), face_indices.size());
-    result->impl->edge_radius     = edge_radius;
     std::vector<Edge> edge_buffer = result->impl->edgesFromIndices(face_indices);
     result->impl->updateEdgeBuffer(edge_buffer.data(), edge_buffer.size());
     result->impl->vertices_array->setIndexBuffer(result->impl->indices);
@@ -179,7 +174,7 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
     return result;
 }
 
-atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mesh, float edge_radius)
+atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mesh)
 {
     mesh->request_vertex_normals();
     mesh->request_face_normals();
@@ -216,7 +211,7 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mes
         ++face_id;
     }
 
-    return createTriangleMesh(vertex_data, indices_data, edge_radius);
+    return createTriangleMesh(vertex_data, indices_data);
 }
 
 atcg::ref_ptr<Graph> Graph::createGraph()
@@ -375,11 +370,6 @@ GraphType Graph::type() const
     return impl->type;
 }
 
-float Graph::edge_radius() const
-{
-    return impl->edge_radius;
-}
-
 atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Options options)
 {
     // TODO: Replace this with dedicated obj loader
@@ -392,7 +382,7 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Option
 
     OpenMesh::IO::read_mesh(*mesh.get(), path, options);
 
-    return Graph::createTriangleMesh(mesh, 0.01f);
+    return Graph::createTriangleMesh(mesh);
 }
 
 }    // namespace atcg

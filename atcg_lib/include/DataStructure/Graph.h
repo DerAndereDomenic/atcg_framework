@@ -86,11 +86,9 @@ public:
     /**
      * @brief Create an empty mesh
      *
-     * @param edge_radius The edge radius
-     *
      * @return The graph
      */
-    static atcg::ref_ptr<Graph> createTriangleMesh(float edge_radius = 0.1f);
+    static atcg::ref_ptr<Graph> createTriangleMesh();
 
     /**
      * @brief Create a triangle mesh.
@@ -98,24 +96,21 @@ public:
      *
      * @param vertices The vertices
      * @param face_indices The faces
-     * @param edge_radius The default radius of edges
      *
      * @return The graph
      */
     static atcg::ref_ptr<Graph> createTriangleMesh(const std::vector<Vertex>& vertices,
-                                                   const std::vector<glm::u32vec3>& face_indices,
-                                                   float edge_radius = 0.1f);
+                                                   const std::vector<glm::u32vec3>& face_indices);
 
     /**
      * @brief Create a triangle mesh from a half edge structure.
      * The data gets directly uploaded to the GPU for rendering
      *
      * @param trimesh The halfedge structure
-     * @param edge_radius The default radius of edges
      *
      * @return The graph
      */
-    static atcg::ref_ptr<Graph> createTriangleMesh(const atcg::ref_ptr<TriMesh>& trimesh, float edge_radius = 0.1f);
+    static atcg::ref_ptr<Graph> createTriangleMesh(const atcg::ref_ptr<TriMesh>& trimesh);
 
     /**
      * @brief Create an empty graph
@@ -337,13 +332,6 @@ public:
      * @return The type
      */
     GraphType type() const;
-
-    /**
-     * @brief Get the default edge radius if a triangle mesh was created
-     *
-     * @return The edge radius
-     */
-    float edge_radius() const;
 
 private:
     class Impl;
