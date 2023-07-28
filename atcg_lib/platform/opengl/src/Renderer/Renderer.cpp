@@ -513,13 +513,10 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
-            ShaderManager::getShader("cylinder_edge")->setInt("entityID", entity_id);
-            Renderer::draw(geometry.graph,
-                           camera,
-                           transform.getModel(),
-                           renderer.color,
-                           ShaderManager::getShader("cylinder_edge"),
-                           renderer.draw_mode);
+            auto& shader = ShaderManager::getShader("cylinder_edge");
+            shader->setInt("entityID", entity_id);
+            shader->setFloat("edge_radius", renderer.radius);
+            Renderer::draw(geometry.graph, camera, transform.getModel(), renderer.color, shader, renderer.draw_mode);
         }
     }
 

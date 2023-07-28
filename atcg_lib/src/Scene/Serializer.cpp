@@ -145,6 +145,7 @@ namespace detail
 #define RENDER_COLOR_NAME           "Color"
 #define RENDER_POINT_SIZE_NAME      "PointSize"
 #define RENDER_INSTANCE_BUFFER_NAME "Instances"
+#define RENDER_RADIUS_NAME          "EdgeRadius"
 
 #define CAMERA_COMPONENT_NAME "PerspectiveCamera"
 #define CAMERA_POSITION_NAME  "Translation"
@@ -329,6 +330,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
 
         out << YAML::Key << RENDER_TYPE_NAME << YAML::Value << renderer.draw_mode;
         out << YAML::Key << RENDER_COLOR_NAME << YAML::Value << renderer.color;
+        out << YAML::Key << RENDER_RADIUS_NAME << YAML::Value << renderer.radius;
 
         out << YAML::EndMap;
     }
@@ -566,6 +568,7 @@ void Serializer::deserialize(const std::string& file_path)
                         auto& renderComponent     = deserializedEntity.addComponent<EdgeCylinderRenderComponent>();
                         renderComponent.draw_mode = mode;
                         renderComponent.color     = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
+                        renderComponent.radius    = renderer[RENDER_RADIUS_NAME].as<float>();
                     }
                     break;
                     case atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED:

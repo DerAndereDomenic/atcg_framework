@@ -222,6 +222,10 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             label.str(std::string());
             label << "Base Color##edgecylinder" << id;
             if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color))) { component.color = color; }
+            label.str(std::string());
+            label << "Radius##edgecylinder" << id;
+            float radius = component.radius;
+            if(ImGui::InputFloat(label.str().c_str(), &radius)) { component.radius = radius; }
         });
 }
 

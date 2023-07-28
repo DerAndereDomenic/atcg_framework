@@ -176,13 +176,15 @@ struct EdgeRenderComponent : public RenderComponent
 
 struct EdgeCylinderRenderComponent : public RenderComponent
 {
-    EdgeCylinderRenderComponent(const glm::vec3& color = glm::vec3(1))
+    EdgeCylinderRenderComponent(const glm::vec3& color = glm::vec3(1), float radius = 1.0f)
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER),
-          color(color)
+          color(color),
+          radius(radius)
     {
     }
 
     glm::vec3 color = glm::vec3(1);
+    float radius    = 1.0f;
 };
 
 struct InstanceRenderComponent : public RenderComponent
