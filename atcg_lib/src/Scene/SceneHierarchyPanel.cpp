@@ -38,23 +38,32 @@ void SceneHierarchyPanel::drawEntityNode(Entity entity)
 
 void SceneHierarchyPanel::drawComponents(Entity entity)
 {
-    auto& tag = entity.getComponent<NameComponent>().name;
+    auto& tag      = entity.getComponent<NameComponent>().name;
+    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+    std::stringstream label;
 
     char buffer[256];
     memset(buffer, 0, sizeof(buffer));
     // TODO: This is kind of clunky if we keep the box selected
     strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
-    if(ImGui::InputText("Name", buffer, sizeof(buffer))) { tag = std::string(buffer); }
+    label << "Name##" << id;
+    if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer))) { tag = std::string(buffer); }
 
     if(entity.hasComponent<TransformComponent>())
     {
         auto& transform    = entity.getComponent<TransformComponent>();
         glm::vec3 position = transform.getPosition();
-        if(ImGui::InputFloat3("Position", glm::value_ptr(position))) { transform.setPosition(position); }
+        label.str(std::string());
+        label << "Position##" << id;
+        if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(position))) { transform.setPosition(position); }
         glm::vec3 scale = transform.getScale();
-        if(ImGui::InputFloat3("Scale", glm::value_ptr(scale))) { transform.setScale(scale); }
+        label.str(std::string());
+        label << "Scale##" << id;
+        if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(scale))) { transform.setScale(scale); }
         glm::vec3 rotation = transform.getRotation();
-        if(ImGui::InputFloat3("Rotation", glm::value_ptr(rotation))) { transform.setRotation(rotation); }
+        label.str(std::string());
+        label << "Rotation##" << id;
+        if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(rotation))) { transform.setRotation(rotation); }
     }
 }
 
