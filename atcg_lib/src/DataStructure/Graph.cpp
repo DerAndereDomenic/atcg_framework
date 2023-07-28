@@ -63,7 +63,7 @@ Graph::Impl::Impl()
     edges_array->pushVertexBuffer(this->edges);
 
     indices = atcg::make_ref<IndexBuffer>();
-    vertices_array->setIndexBuffer(indices);
+    // vertices_array->setIndexBuffer(indices);
 }
 
 Graph::Impl::~Impl() {}
@@ -157,6 +157,7 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(float edge_radius)
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->impl->edge_radius   = edge_radius;
 
+    result->impl->vertices_array->setIndexBuffer(result->impl->indices);
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
     return result;
 }
@@ -172,6 +173,7 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const std::vector<Vertex>& vertic
     result->impl->edge_radius     = edge_radius;
     std::vector<Edge> edge_buffer = result->impl->edgesFromIndices(face_indices);
     result->impl->updateEdgeBuffer(edge_buffer.data(), edge_buffer.size());
+    result->impl->vertices_array->setIndexBuffer(result->impl->indices);
 
     result->impl->type = GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
     return result;
