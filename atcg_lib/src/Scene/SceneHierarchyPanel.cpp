@@ -22,11 +22,25 @@ void drawComponent(const std::string& name, Entity entity, UIFunction uiFunction
         auto& component = entity.getComponent<T>();
         bool open       = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
 
+        ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+        ImGui::SameLine(contentRegionAvailable.x);
+        if(ImGui::Button("+")) { ImGui::OpenPopup("ComponentSettings"); }
+
+        bool removeComponent = false;
+        if(ImGui::BeginPopup("ComponentSettings"))
+        {
+            if(ImGui::MenuItem("Remove component")) removeComponent = true;
+
+            ImGui::EndPopup();
+        }
+
         if(open)
         {
             uiFunction(component);
             ImGui::TreePop();
         }
+
+        if(removeComponent) entity.removeComponent<T>();
     }
 }
 
