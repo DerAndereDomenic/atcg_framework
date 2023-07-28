@@ -83,6 +83,17 @@ public:
     }
 
     /**
+     * @brief Remove a component
+     *
+     * @tparam T The component type
+     */
+    template<typename T>
+    void removeComponent()
+    {
+        _scene->_registry.remove<T>(_entity_handle);
+    }
+
+    /**
      * @brief Check if this is an empty entity
      *
      * @return Whether this is an empty entity
