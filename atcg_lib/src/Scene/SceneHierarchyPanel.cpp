@@ -3,6 +3,8 @@
 #include <imgui.h>
 #include <Scene/Components.h>
 
+#include <string.h>
+
 namespace atcg
 {
 
