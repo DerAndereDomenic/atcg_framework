@@ -128,21 +128,21 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                   glm::vec3 position = transform.getPosition();
                                                   label.str(std::string());
                                                   label << "Position##" << id;
-                                                  if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(position)))
+                                                  if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position)))
                                                   {
                                                       transform.setPosition(position);
                                                   }
                                                   glm::vec3 scale = transform.getScale();
                                                   label.str(std::string());
                                                   label << "Scale##" << id;
-                                                  if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(scale)))
+                                                  if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale)))
                                                   {
                                                       transform.setScale(scale);
                                                   }
                                                   glm::vec3 rotation = glm::degrees(transform.getRotation());
                                                   label.str(std::string());
                                                   label << "Rotation##" << id;
-                                                  if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(rotation)))
+                                                  if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation)))
                                                   {
                                                       transform.setRotation(glm::radians(rotation));
                                                   }
@@ -176,7 +176,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                     float point_size = component.point_size;
                                                     label.str(std::string());
                                                     label << "Point Size##point" << id;
-                                                    if(ImGui::InputFloat(label.str().c_str(), &point_size))
+                                                    if(ImGui::DragFloat(label.str().c_str(), &point_size))
                                                     {
                                                         component.point_size = point_size;
                                                     }
@@ -195,7 +195,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             float point_size = component.point_size;
             label.str(std::string());
             label << "Point Size##pointsphere" << id;
-            if(ImGui::InputFloat(label.str().c_str(), &point_size)) { component.point_size = point_size; }
+            if(ImGui::DragFloat(label.str().c_str(), &point_size)) { component.point_size = point_size; }
         });
 
     detail::drawComponent<EdgeRenderComponent>("Edge Renderer",
@@ -225,7 +225,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             label.str(std::string());
             label << "Radius##edgecylinder" << id;
             float radius = component.radius;
-            if(ImGui::InputFloat(label.str().c_str(), &radius)) { component.radius = radius; }
+            if(ImGui::DragFloat(label.str().c_str(), &radius)) { component.radius = radius; }
         });
 }
 
