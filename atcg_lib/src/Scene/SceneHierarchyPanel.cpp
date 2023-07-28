@@ -8,6 +8,29 @@
 namespace atcg
 {
 
+namespace detail
+{
+template<typename T, typename UIFunction>
+void drawComponent(const std::string& name, Entity entity, UIFunction uiFunction)
+{
+    const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
+                                             ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
+                                             ImGuiTreeNodeFlags_FramePadding;
+
+    if(entity.hasComponent<T>())
+    {
+        auto& component = entity.getComponent<T>();
+        bool open       = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
+
+        if(open)
+        {
+            uiFunction(component);
+            ImGui::TreePop();
+        }
+    }
+}
+}    // namespace detail
+
 void SceneHierarchyPanel::drawEntityNode(Entity entity)
 {
     auto& tag = entity.getComponent<NameComponent>().name;
@@ -40,36 +63,121 @@ void SceneHierarchyPanel::drawEntityNode(Entity entity)
 
 void SceneHierarchyPanel::drawComponents(Entity entity)
 {
-    auto& tag      = entity.getComponent<NameComponent>().name;
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
     std::stringstream label;
 
-    char buffer[256];
-    memset(buffer, 0, sizeof(buffer));
-    // TODO: This is kind of clunky if we keep the box selected
-    strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
-    label << "Name##" << id;
-    if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer))) { tag = std::string(buffer); }
+    detail::drawComponent<NameComponent>("Name",
+                                         entity,
+                                         [&](NameComponent& component)
+                                         {
+                                             std::string tag = component.name;
+                                             char buffer[256];
+                                             memset(buffer, 0, sizeof(buffer));
+                                             strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
+                                             label << "Name##" << id;
+                                             if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer)))
+                                             {
+                                                 tag = std::string(buffer);
+                                             }
+                                         });
 
-    if(entity.hasComponent<TransformComponent>())
-    {
-        auto& transform    = entity.getComponent<TransformComponent>();
-        glm::vec3 position = transform.getPosition();
-        label.str(std::string());
-        label << "Position##" << id;
-        if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(position))) { transform.setPosition(position); }
-        glm::vec3 scale = transform.getScale();
-        label.str(std::string());
-        label << "Scale##" << id;
-        if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(scale))) { transform.setScale(scale); }
-        glm::vec3 rotation = glm::degrees(transform.getRotation());
-        label.str(std::string());
-        label << "Rotation##" << id;
-        if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(rotation)))
+    detail::drawComponent<TransformComponent>("Transform",
+                                              entity,
+                                              [&](TransformComponent& transform)
+                                              {
+                                                  glm::vec3 position = transform.getPosition();
+                                                  label.str(std::string());
+                                                  label << "Position##" << id;
+                                                  if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(position)))
+                                                  {
+                                                      transform.setPosition(position);
+                                                  }
+                                                  glm::vec3 scale = transform.getScale();
+                                                  label.str(std::string());
+                                                  label << "Scale##" << id;
+                                                  if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(scale)))
+                                                  {
+                                                      transform.setScale(scale);
+                                                  }
+                                                  glm::vec3 rotation = glm::degrees(transform.getRotation());
+                                                  label.str(std::string());
+                                                  label << "Rotation##" << id;
+                                                  if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(rotation)))
+                                                  {
+                                                      transform.setRotation(glm::radians(rotation));
+                                                  }
+                                              });
+    detail::drawComponent<MeshRenderComponent>("Mesh Renderer",
+                                               entity,
+                                               [&](MeshRenderComponent& component)
+                                               {
+                                                   glm::vec3 color = component.color;
+                                                   label.str(std::string());
+                                                   label << "Base Color##mesh" << id;
+                                                   if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color)))
+                                                   {
+                                                       component.color = color;
+                                                   }
+                                               });
+    detail::drawComponent<PointRenderComponent>("Point Renderer",
+                                                entity,
+                                                [&](PointRenderComponent& component)
+                                                {
+                                                    glm::vec3 color = component.color;
+                                                    label.str(std::string());
+                                                    label << "Base Color##point" << id;
+                                                    if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color)))
+                                                    {
+                                                        component.color = color;
+                                                    }
+
+                                                    float point_size = component.point_size;
+                                                    label.str(std::string());
+                                                    label << "Point Size##point" << id;
+                                                    if(ImGui::InputFloat(label.str().c_str(), &point_size))
+                                                    {
+                                                        component.point_size = point_size;
+                                                    }
+                                                });
+    detail::drawComponent<PointSphereRenderComponent>(
+        "Point Sphere Renderer",
+        entity,
+        [&](PointSphereRenderComponent& component)
         {
-            transform.setRotation(glm::radians(rotation));
-        }
-    }
+            glm::vec3 color = component.color;
+            label.str(std::string());
+            label << "Base Color##pointsphere" << id;
+            if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color))) { component.color = color; }
+
+            float point_size = component.point_size;
+            label.str(std::string());
+            label << "Point Size##pointsphere" << id;
+            if(ImGui::InputFloat(label.str().c_str(), &point_size)) { component.point_size = point_size; }
+        });
+
+    detail::drawComponent<EdgeRenderComponent>("Edge Renderer",
+                                               entity,
+                                               [&](EdgeRenderComponent& component)
+                                               {
+                                                   glm::vec3 color = component.color;
+                                                   label.str(std::string());
+                                                   label << "Base Color##edge" << id;
+                                                   if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color)))
+                                                   {
+                                                       component.color = color;
+                                                   }
+                                               });
+
+    detail::drawComponent<EdgeCylinderRenderComponent>(
+        "Edge Cylinder Renderer",
+        entity,
+        [&](EdgeCylinderRenderComponent& component)
+        {
+            glm::vec3 color = component.color;
+            label.str(std::string());
+            label << "Base Color##edgecylinder" << id;
+            if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color))) { component.color = color; }
+        });
 }
 
 SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
