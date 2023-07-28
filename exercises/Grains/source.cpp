@@ -279,13 +279,13 @@ public:
 
         scene = atcg::make_ref<atcg::Scene>();
 
-        // {
-        //     atcg::Entity entity = scene->createEntity("Bottle");
-        //     auto& transform     = entity.addComponent<atcg::TransformComponent>();
-        //     // transform.setRotation(glm::vec3(0.0f, -glm::pi<float>() / 2.0f, 0.0f));
-        //     entity.addComponent<atcg::GeometryComponent>(atcg::IO::read_mesh("../Meshes/bottle_200.obj"));
-        //     auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
-        // }
+        {
+            atcg::Entity entity = scene->createEntity("Bottle");
+            auto& transform     = entity.addComponent<atcg::TransformComponent>();
+            // transform.setRotation(glm::vec3(0.0f, -glm::pi<float>() / 2.0f, 0.0f));
+            entity.addComponent<atcg::GeometryComponent>(atcg::IO::read_mesh("../Meshes/bottle_100.obj"));
+            auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
+        }
 
         std::ifstream input("../Meshes/bottle_inner_sdf.bin", std::ios::binary);
 
@@ -299,20 +299,21 @@ public:
         std::vector<atcg::Vertex> vertices;
         std::vector<glm::mat4> models;
 
-        for(int k = -2; k < 3; ++k)
+        for(int k = -1; k < 2; ++k)
         {
-            for(int j = -4; j < 5; ++j)
+            for(int j = -1; j < 2; ++j)
             {
-                for(int l = -2; l < 3; ++l)
+                for(int l = -1; l < 2; ++l)
                 {
                     for(uint32_t i = 0; i < m_positions.size(); ++i)
                     {
                         glm::vec3 grain_pos = m_positions[i] + glm::vec3(k, j, l) * m_voxel_length;
-                        glm::vec3 p         = glm::scale(glm::vec3(1.0f / 500.0f)) *
+                        glm::vec3 p         = glm::scale(glm::vec3(1.0f / 100.0f)) *
                                       glm::rotate(-glm::pi<float>() / 2.0f, glm::vec3(0, 1, 0)) *
                                       glm::vec4(grain_pos, 1.0f);
+                        if(!grid.insideVolume(p)) continue;
                         float sdf = grid.readInterpolated<Selector>(p, Selector());
-                        if(sdf + 2.0f / 500.0f <= 0.0f)
+                        if(sdf + 2.0f / 100.0f <= 0.0f)
                         {
                             vertices.push_back(atcg::Vertex {grain_pos, glm::vec3(1), glm::vec3(1)});
                             models.push_back(glm::transpose(glm::translate(grain_pos)));
