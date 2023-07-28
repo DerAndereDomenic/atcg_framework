@@ -60,10 +60,13 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
         label.str(std::string());
         label << "Scale##" << id;
         if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(scale))) { transform.setScale(scale); }
-        glm::vec3 rotation = transform.getRotation();
+        glm::vec3 rotation = glm::degrees(transform.getRotation());
         label.str(std::string());
         label << "Rotation##" << id;
-        if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(rotation))) { transform.setRotation(rotation); }
+        if(ImGui::InputFloat3(label.str().c_str(), glm::value_ptr(rotation)))
+        {
+            transform.setRotation(glm::radians(rotation));
+        }
     }
 }
 
