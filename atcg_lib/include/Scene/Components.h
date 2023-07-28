@@ -112,6 +112,7 @@ struct RenderComponent
     RenderComponent(atcg::DrawMode draw_mode) : draw_mode(draw_mode) {}
 
     atcg::DrawMode draw_mode;
+    bool visible = true;
 };
 
 struct MeshRenderComponent : public RenderComponent

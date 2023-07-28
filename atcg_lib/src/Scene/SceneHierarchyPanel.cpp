@@ -151,6 +151,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                entity,
                                                [&](MeshRenderComponent& component)
                                                {
+                                                   ImGui::Checkbox("Visible##visiblemesh", &component.visible);
                                                    glm::vec3 color = component.color;
                                                    label.str(std::string());
                                                    label << "Base Color##mesh" << id;
@@ -163,6 +164,8 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                 entity,
                                                 [&](PointRenderComponent& component)
                                                 {
+                                                    ImGui::Checkbox("Visible##visiblepoints", &component.visible);
+                                                    glm::vec3 color = component.color;
                                                     glm::vec3 color = component.color;
                                                     label.str(std::string());
                                                     label << "Base Color##point" << id;
@@ -184,6 +187,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
         entity,
         [&](PointSphereRenderComponent& component)
         {
+            ImGui::Checkbox("Visible##visiblepointsphere", &component.visible);
             glm::vec3 color = component.color;
             label.str(std::string());
             label << "Base Color##pointsphere" << id;
@@ -199,6 +203,8 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                entity,
                                                [&](EdgeRenderComponent& component)
                                                {
+                                                   ImGui::Checkbox("Visible##visibleedge", &component.visible);
+                                                   glm::vec3 color = component.color;
                                                    glm::vec3 color = component.color;
                                                    label.str(std::string());
                                                    label << "Base Color##edge" << id;
@@ -213,6 +219,8 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
         entity,
         [&](EdgeCylinderRenderComponent& component)
         {
+            ImGui::Checkbox("Visible##visibleedgecylinder", &component.visible);
+            glm::vec3 color = component.color;
             glm::vec3 color = component.color;
             label.str(std::string());
             label << "Base Color##edgecylinder" << id;

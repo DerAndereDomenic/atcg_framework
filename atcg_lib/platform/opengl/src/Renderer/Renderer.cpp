@@ -446,81 +446,102 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     if(entity.hasComponent<MeshRenderComponent>())
     {
         MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
-        renderer.shader->setInt("entityID", entity_id);
-        Renderer::draw(geometry.graph,
-                       camera,
-                       transform.getModel(),
-                       renderer.color,
-                       renderer.shader,
-                       renderer.draw_mode);
+        if(renderer.visible)
+        {
+            renderer.shader->setInt("entityID", entity_id);
+            Renderer::draw(geometry.graph,
+                           camera,
+                           transform.getModel(),
+                           renderer.color,
+                           renderer.shader,
+                           renderer.draw_mode);
+        }
     }
 
     if(entity.hasComponent<PointRenderComponent>())
     {
         PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
-        renderer.shader->setInt("entityID", entity_id);
-        setPointSize(renderer.point_size);
-        Renderer::draw(geometry.graph,
-                       camera,
-                       transform.getModel(),
-                       renderer.color,
-                       renderer.shader,
-                       renderer.draw_mode);
+        if(renderer.visible)
+        {
+            renderer.shader->setInt("entityID", entity_id);
+            setPointSize(renderer.point_size);
+            Renderer::draw(geometry.graph,
+                           camera,
+                           transform.getModel(),
+                           renderer.color,
+                           renderer.shader,
+                           renderer.draw_mode);
+        }
     }
 
     if(entity.hasComponent<PointSphereRenderComponent>())
     {
         PointSphereRenderComponent renderer = entity.getComponent<PointSphereRenderComponent>();
-        renderer.shader->setInt("entityID", entity_id);
-        setPointSize(renderer.point_size);
-        Renderer::draw(geometry.graph,
-                       camera,
-                       transform.getModel(),
-                       renderer.color,
-                       renderer.shader,
-                       renderer.draw_mode);
+
+        if(renderer.visible)
+        {
+            renderer.shader->setInt("entityID", entity_id);
+            setPointSize(renderer.point_size);
+            Renderer::draw(geometry.graph,
+                           camera,
+                           transform.getModel(),
+                           renderer.color,
+                           renderer.shader,
+                           renderer.draw_mode);
+        }
     }
 
     if(entity.hasComponent<EdgeRenderComponent>())
     {
         EdgeRenderComponent renderer = entity.getComponent<EdgeRenderComponent>();
-        ShaderManager::getShader("edge")->setInt("entityID", entity_id);
-        Renderer::draw(geometry.graph,
-                       camera,
-                       transform.getModel(),
-                       renderer.color,
-                       ShaderManager::getShader("edge"),
-                       renderer.draw_mode);
+
+        if(renderer.visible)
+        {
+            ShaderManager::getShader("edge")->setInt("entityID", entity_id);
+            Renderer::draw(geometry.graph,
+                           camera,
+                           transform.getModel(),
+                           renderer.color,
+                           ShaderManager::getShader("edge"),
+                           renderer.draw_mode);
+        }
     }
 
     if(entity.hasComponent<EdgeCylinderRenderComponent>())
     {
         EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
-        ShaderManager::getShader("cylinder_edge")->setInt("entityID", entity_id);
-        Renderer::draw(geometry.graph,
-                       camera,
-                       transform.getModel(),
-                       renderer.color,
-                       ShaderManager::getShader("cylinder_edge"),
-                       renderer.draw_mode);
+
+        if(renderer.visible)
+        {
+            ShaderManager::getShader("cylinder_edge")->setInt("entityID", entity_id);
+            Renderer::draw(geometry.graph,
+                           camera,
+                           transform.getModel(),
+                           renderer.color,
+                           ShaderManager::getShader("cylinder_edge"),
+                           renderer.draw_mode);
+        }
     }
 
     if(entity.hasComponent<InstanceRenderComponent>())
     {
         InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
 
-        if(geometry.graph->getVerticesArray()->peekVertexBuffer() != renderer.instance_vbo)
+        if(renderer.visible)
         {
-            geometry.graph->getVerticesArray()->pushInstanceBuffer(renderer.instance_vbo);
-        }
+            if(geometry.graph->getVerticesArray()->peekVertexBuffer() != renderer.instance_vbo)
+            {
+                geometry.graph->getVerticesArray()->pushInstanceBuffer(renderer.instance_vbo);
+            }
 
-        ShaderManager::getShader("instanced")->setInt("entityID", entity_id);
-        Renderer::draw(geometry.graph,
-                       camera,
-                       transform.getModel(),
-                       glm::vec3(1),
-                       ShaderManager::getShader("instanced"),
-                       renderer.draw_mode);
+            ShaderManager::getShader("instanced")->setInt("entityID", entity_id);
+            Renderer::draw(geometry.graph,
+                           camera,
+                           transform.getModel(),
+                           glm::vec3(1),
+                           ShaderManager::getShader("instanced"),
+                           renderer.draw_mode);
+        }
     }
 }
 
