@@ -29,6 +29,20 @@ void drawComponent(const std::string& name, Entity entity, UIFunction uiFunction
         }
     }
 }
+
+template<typename T>
+void displayAddComponentEntry(const std::string& name, Entity entity)
+{
+    if(!entity.hasComponent<T>())
+    {
+        if(ImGui::MenuItem(name.c_str()))
+        {
+            entity.addComponent<T>();
+            ImGui::CloseCurrentPopup();
+        }
+    }
+}
+
 }    // namespace detail
 
 void SceneHierarchyPanel::drawEntityNode(Entity entity)
@@ -66,20 +80,32 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
     std::stringstream label;
 
-    detail::drawComponent<NameComponent>("Name",
-                                         entity,
-                                         [&](NameComponent& component)
-                                         {
-                                             std::string tag = component.name;
-                                             char buffer[256];
-                                             memset(buffer, 0, sizeof(buffer));
-                                             strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
-                                             label << "Name##" << id;
-                                             if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer)))
-                                             {
-                                                 tag = std::string(buffer);
-                                             }
-                                         });
+    NameComponent& component = entity.getComponent<NameComponent>();
+    {
+        std::string tag = component.name;
+        char buffer[256];
+        memset(buffer, 0, sizeof(buffer));
+        strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
+        label << "##" << id;
+        if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer))) { tag = std::string(buffer); }
+
+        ImGui::SameLine();
+        ImGui::PushItemWidth(-1);
+
+        if(ImGui::Button("Add Component")) { ImGui::OpenPopup("AddComponent"); }
+
+        if(ImGui::BeginPopup("AddComponent"))
+        {
+            detail::displayAddComponentEntry<MeshRenderComponent>("Mesh Renderer", entity);
+            detail::displayAddComponentEntry<PointRenderComponent>("Point Renderer", entity);
+            detail::displayAddComponentEntry<PointSphereRenderComponent>("Point Sphere Renderer", entity);
+            detail::displayAddComponentEntry<EdgeRenderComponent>("Edge Renderer", entity);
+            detail::displayAddComponentEntry<EdgeCylinderRenderComponent>("Edge Cylinder Renderer", entity);
+            ImGui::EndPopup();
+        }
+
+        ImGui::PopItemWidth();
+    }
 
     detail::drawComponent<TransformComponent>("Transform",
                                               entity,
