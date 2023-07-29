@@ -186,7 +186,7 @@ public:
         glm::ivec2 viewport_pos  = atcg::Application::get()->getViewportPosition();
         glm::ivec2 viewport_size = atcg::Application::get()->getViewportSize();
         ImGui::Begin("Viewport");
-        if(hovered_entity)
+        if(hovered_entity && hovered_entity.hasComponent<atcg::TransformComponent>())
         {
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::BeginFrame();
