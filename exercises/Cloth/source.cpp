@@ -98,6 +98,8 @@ public:
         entities   = scene->getEntitiesByName("Plane");
         auto& comp = entities[0].getComponent<atcg::MeshRenderComponent>();
         comp.shader->setFloat("checker_size", 0.1f);
+
+        panel = atcg::SceneHierarchyPanel(scene);
     }
 
     // This gets called each frame
@@ -174,6 +176,10 @@ public:
             ImGui::End();
         }
 
+        panel.renderPanel();
+        hovered_entity = panel.getSelectedEntity();
+
+        // Guizmos
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
         const auto& window       = atcg::Application::get()->getWindow();
         glm::ivec2 window_pos    = window->getPosition();
@@ -234,7 +240,7 @@ public:
         {
             int id         = atcg::Renderer::getEntityIndex(mouse_pos);
             hovered_entity = id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, scene.get());
-            // panel.selectEntity(hovered_entity);
+            panel.selectEntity(hovered_entity);
         }
         return true;
     }
@@ -262,6 +268,8 @@ private:
 
     atcg::ref_ptr<atcg::Graph> plane;
     atcg::ref_ptr<atcg::Shader> checkerboard_shader;
+
+    atcg::SceneHierarchyPanel panel;
 
     float time       = 0.0f;
     bool in_viewport = false;
