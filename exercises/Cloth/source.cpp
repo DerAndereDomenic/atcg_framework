@@ -22,6 +22,8 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
+        atcg::Application::get()->enableDockSpace(true);
+
         /*std::vector<atcg::Vertex> host_points;
         for(int i = 0; i < grid_size; ++i)
         {
@@ -172,21 +174,28 @@ public:
             ImGui::End();
         }
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
+        const auto& window       = atcg::Application::get()->getWindow();
+        glm::ivec2 window_pos    = window->getPosition();
+        glm::ivec2 viewport_pos  = atcg::Application::get()->getViewportPosition();
+        glm::ivec2 viewport_size = atcg::Application::get()->getViewportSize();
+        ImGui::Begin("Viewport");
         if(hovered_entity)
         {
             ImGuizmo::SetOrthographic(false);
             ImGuizmo::BeginFrame();
+            ImGuizmo::SetDrawlist();
 
-            const auto& window   = atcg::Application::get()->getWindow();
-            glm::vec2 window_pos = window->getPosition();
-            ImGuizmo::SetRect(window_pos.x, window_pos.y, (float)window->getWidth(), (float)window->getHeight());
+            ImGuizmo::SetRect(window_pos.x + viewport_pos.x,
+                              window_pos.y + viewport_pos.y,
+                              viewport_size.x,
+                              viewport_size.y);
 
             glm::mat4 camera_projection = camera_controller->getCamera()->getProjection();
             glm::mat4 camera_view       = camera_controller->getCamera()->getView();
 
             atcg::TransformComponent& transform = hovered_entity.getComponent<atcg::TransformComponent>();
             glm::mat4 model                     = transform.getModel();
-
             ImGuizmo::Manipulate(glm::value_ptr(camera_view),
                                  glm::value_ptr(camera_projection),
                                  current_operation,
@@ -194,6 +203,8 @@ public:
                                  glm::value_ptr(model));
             transform.setModel(model);
         }
+        ImGui::End();
+        ImGui::PopStyleVar();
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
@@ -219,18 +230,24 @@ public:
 
     bool onMousePressed(atcg::MouseButtonPressedEvent* event)
     {
-        if(event->getMouseButton() == GLFW_MOUSE_BUTTON_LEFT)
+        if(in_viewport && event->getMouseButton() == GLFW_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
         {
             int id         = atcg::Renderer::getEntityIndex(mouse_pos);
             hovered_entity = id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, scene.get());
+            // panel.selectEntity(hovered_entity);
         }
         return true;
     }
 
     bool onMouseMoved(atcg::MouseMovedEvent* event)
     {
-        const auto& window = atcg::Application::get()->getWindow();
-        mouse_pos          = glm::vec2(event->getX(), window->getHeight() - event->getY());
+        const atcg::Application* app = atcg::Application::get();
+        glm::ivec2 offset            = app->getViewportPosition();
+        int height                   = app->getViewportSize().y;
+        mouse_pos                    = glm::vec2(event->getX() - offset.x, height - (event->getY() - offset.y));
+
+        in_viewport =
+            mouse_pos.x >= 0 && mouse_pos.y >= 0 && mouse_pos.y < height && mouse_pos.x < app->getViewportSize().x;
 
         return false;
     }
@@ -246,7 +263,8 @@ private:
     atcg::ref_ptr<atcg::Graph> plane;
     atcg::ref_ptr<atcg::Shader> checkerboard_shader;
 
-    float time = 0.0f;
+    float time       = 0.0f;
+    bool in_viewport = false;
 
     glm::vec2 mouse_pos;
 
