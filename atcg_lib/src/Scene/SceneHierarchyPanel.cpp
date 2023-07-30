@@ -146,6 +146,9 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                         atcg::Renderer::getFramebuffer()->height());
 
             uint64_t textureID = _camera_preview->getColorAttachement(0)->getID();
+
+            ImVec2 window_size = ImGui::GetWindowSize();
+            ImGui::SetCursorPos(ImVec2((window_size.x - 128) * 0.5f, ImGui::GetCursorPosY()));
             ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(128, 128), ImVec2 {0, 1}, ImVec2 {1, 0});
             atcg::Framebuffer::useDefault();
         });
