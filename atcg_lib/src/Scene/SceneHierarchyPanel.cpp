@@ -274,6 +274,7 @@ void SceneHierarchyPanel::renderPanel()
     for(auto e: _scene->getAllEntitiesWith<NameComponent>())
     {
         Entity entity(e, _scene.get());
+        if(entity.getComponent<NameComponent>().name == "EditorCamera") continue;
         drawEntityNode(entity);
     }
 
