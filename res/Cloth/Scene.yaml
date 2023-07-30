@@ -5,6 +5,7 @@ Entities:
     PerspectiveCamera:
       Translation: [-37.0499725, 61.3200493, -35.9613724]
       LookAt: [-0.904254317, 11.3465595, 8.6339283]
+      AspectRatio: 1.7777778
   - Entity: 11321595665421148368
     Name: "Plane"
     Transform:

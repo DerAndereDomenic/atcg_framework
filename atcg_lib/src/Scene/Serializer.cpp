@@ -147,9 +147,10 @@ namespace detail
 #define RENDER_INSTANCE_BUFFER_NAME "Instances"
 #define RENDER_RADIUS_NAME          "EdgeRadius"
 
-#define CAMERA_COMPONENT_NAME "PerspectiveCamera"
-#define CAMERA_POSITION_NAME  "Translation"
-#define CAMERA_LOOKAT_NAME    "LookAt"
+#define CAMERA_COMPONENT_NAME    "PerspectiveCamera"
+#define CAMERA_POSITION_NAME     "Translation"
+#define CAMERA_LOOKAT_NAME       "LookAt"
+#define CAMERA_ASPECT_RATIO_NAME "AspectRatio"
 
 void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -205,6 +206,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
 
         out << YAML::Key << CAMERA_POSITION_NAME << YAML::Value << cam->getPosition();
         out << YAML::Key << CAMERA_LOOKAT_NAME << YAML::Value << cam->getLookAt();
+        out << YAML::Key << CAMERA_ASPECT_RATIO_NAME << YAML::Value << cam->getAspectRatio();
 
         out << YAML::EndMap;
     }
@@ -426,8 +428,7 @@ void Serializer::deserialize(const std::string& file_path)
             {
                 glm::vec3 position = cameraComponent[CAMERA_POSITION_NAME].as<glm::vec3>();
                 glm::vec3 lookat   = cameraComponent[CAMERA_LOOKAT_NAME].as<glm::vec3>();
-                auto& window       = atcg::Application::get()->getWindow();
-                float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
+                float aspect_ratio = cameraComponent[CAMERA_ASPECT_RATIO_NAME].as<float>();
                 auto& camera       = deserializedEntity.addComponent<CameraComponent>(
                     atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, position, lookat));
             }
