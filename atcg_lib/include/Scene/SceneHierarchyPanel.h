@@ -4,6 +4,8 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 
+#include <Renderer/Framebuffer.h>
+
 namespace atcg
 {
 /**
@@ -44,10 +46,18 @@ public:
      */
     inline Entity getSelectedEntity() const { return _selected_entity; }
 
+    /**
+     * @brief Get the framebuffer that is responsible for generating camera previews
+     *
+     * @return The framebuffer
+     */
+    inline atcg::ref_ptr<Framebuffer> getPreviewFramebuffer() const { return _camera_preview; }
+
 private:
     void drawEntityNode(Entity entity);
     void drawComponents(Entity entity);
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
+    atcg::ref_ptr<atcg::Framebuffer> _camera_preview;
 };
 }    // namespace atcg

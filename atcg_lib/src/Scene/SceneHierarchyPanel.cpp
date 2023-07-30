@@ -121,6 +121,35 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
         ImGui::PopItemWidth();
     }
 
+    detail::drawComponent<CameraComponent>(
+        "Camera View",
+        entity,
+        [&](CameraComponent& camera_component)
+        {
+            if(entity.hasComponent<atcg::TransformComponent>())
+            {
+                auto& transform_component = entity.getComponent<atcg::TransformComponent>();
+
+                atcg::ref_ptr<atcg::PerspectiveCamera> camera = camera_component.camera;
+                camera->setView(glm::inverse(transform_component.getModel()));
+            }
+
+            _camera_preview->use();
+
+            atcg::Renderer::clear();
+            atcg::Renderer::setViewport(0, 0, 128, 128);
+            atcg::Renderer::draw(_scene, camera_component.camera);
+            atcg::Renderer::getFramebuffer()->use();
+            atcg::Renderer::setViewport(0,
+                                        0,
+                                        atcg::Renderer::getFramebuffer()->width(),
+                                        atcg::Renderer::getFramebuffer()->height());
+
+            uint64_t textureID = _camera_preview->getColorAttachement(0)->getID();
+            ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(128, 128), ImVec2 {0, 1}, ImVec2 {1, 0});
+            atcg::Framebuffer::useDefault();
+        });
+
     detail::drawComponent<TransformComponent>("Transform",
                                               entity,
                                               [&](TransformComponent& transform)
@@ -229,7 +258,14 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
         });
 }
 
-SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
+SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene)
+    : _scene(scene),
+      _camera_preview(atcg::make_ref<atcg::Framebuffer>(128, 128))
+{
+    _camera_preview->attachColor();
+    _camera_preview->attachDepth();
+    _camera_preview->complete();
+}
 
 void SceneHierarchyPanel::renderPanel()
 {
