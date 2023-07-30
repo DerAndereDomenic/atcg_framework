@@ -100,9 +100,12 @@ public:
      */
     static uint32_t currentFramebuffer();
 
-private:
-    friend class Renderer;
+    /**
+     * @brief Use the default framebuffer
+     */
     static void useDefault();
+
+private:
     static uint32_t s_current_fbo;
     uint32_t _ID;
     uint32_t _width, _height;
