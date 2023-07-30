@@ -126,18 +126,35 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
         entity,
         [&](CameraComponent& camera_component)
         {
+            atcg::ref_ptr<atcg::PerspectiveCamera> camera = camera_component.camera;
             if(entity.hasComponent<atcg::TransformComponent>())
             {
                 auto& transform_component = entity.getComponent<atcg::TransformComponent>();
-
-                atcg::ref_ptr<atcg::PerspectiveCamera> camera = camera_component.camera;
                 camera->setView(glm::inverse(transform_component.getModel()));
             }
 
-            _camera_preview->use();
+            float aspect_ratio = camera->getAspectRatio();
 
+            label.str(std::string());
+            label << "Aspect Ratio##" << id;
+            ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f);
+
+            float fbo_aspect_ratio = (float)_camera_preview->width() / (float)_camera_preview->height();
+            uint32_t height        = 128;
+            uint32_t width         = (uint32_t)(aspect_ratio * 128.0f);
+
+            if(fbo_aspect_ratio != aspect_ratio)
+            {
+                camera->setAspectRatio((float)width / (float)height);
+                _camera_preview = atcg::make_ref<atcg::Framebuffer>(width, height);
+                _camera_preview->attachColor();
+                _camera_preview->attachDepth();
+                _camera_preview->complete();
+            }
+
+            _camera_preview->use();
             atcg::Renderer::clear();
-            atcg::Renderer::setViewport(0, 0, 128, 128);
+            atcg::Renderer::setViewport(0, 0, width, height);
             atcg::Renderer::draw(_scene, camera_component.camera);
             atcg::Renderer::getFramebuffer()->use();
             atcg::Renderer::setViewport(0,
@@ -148,8 +165,8 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             uint64_t textureID = _camera_preview->getColorAttachement(0)->getID();
 
             ImVec2 window_size = ImGui::GetWindowSize();
-            ImGui::SetCursorPos(ImVec2((window_size.x - 128) * 0.5f, ImGui::GetCursorPosY()));
-            ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(128, 128), ImVec2 {0, 1}, ImVec2 {1, 0});
+            ImGui::SetCursorPos(ImVec2((window_size.x - width) * 0.5f, ImGui::GetCursorPosY()));
+            ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
             atcg::Framebuffer::useDefault();
         });
 
