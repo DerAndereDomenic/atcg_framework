@@ -221,7 +221,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
 
         out << YAML::Key << GEOMETRY_TYPE_NAME << YAML::Value << (int)graph->type();
 
-        if(graph->getVerticesBuffer())
+        if(graph->n_vertices() != 0)
         {
             const char* buffer      = graph->getVerticesBuffer()->getHostPointer<char>();
             std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".vertices";
@@ -230,7 +230,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
             graph->getVerticesBuffer()->unmapHostPointers();
         }
 
-        if(graph->getFaceIndexBuffer())
+        if(graph->n_faces() != 0)
         {
             const char* buffer      = graph->getFaceIndexBuffer()->getHostPointer<char>();
             std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".faces";
@@ -239,7 +239,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
             graph->getFaceIndexBuffer()->unmapHostPointers();
         }
 
-        if(graph->getEdgesBuffer())
+        if(graph->n_edges() != 0)
         {
             const char* buffer      = graph->getEdgesBuffer()->getHostPointer<char>();
             std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".edges";

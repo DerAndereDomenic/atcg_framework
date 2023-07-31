@@ -155,7 +155,7 @@ public:
                 atcg::Serializer serializer(scene);
                 serializer.deserialize("res/Cloth/Scene.yaml");
 
-                auto entities     = scene->getEntitiesByName("Camera");
+                auto entities     = scene->getEntitiesByName("EditorCamera");
                 auto& camera      = entities[0].getComponent<atcg::CameraComponent>();
                 camera_controller = atcg::make_ref<atcg::FocusedController>(camera.camera);
 
@@ -164,6 +164,7 @@ public:
                 comp.shader->setFloat("checker_size", 0.1f);
 
                 hovered_entity = {entt::null, scene.get()};
+                panel.selectEntity(hovered_entity);
             }
 
 
