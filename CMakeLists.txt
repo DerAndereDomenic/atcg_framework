@@ -14,6 +14,7 @@ find_package(OpenGL REQUIRED)
 
 add_subdirectory(external/glfw)
 add_subdirectory(external/openmesh)
+add_subdirectory(external/stbimage)
 
 set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "Enable parse tools")
 add_subdirectory(external/yaml-cpp)
@@ -93,7 +94,8 @@ include_directories(atcg_lib/include
                     external/imguizmo
                     external/nanort
                     external/entt/include
-                    external/yaml-cpp/include)
+                    external/yaml-cpp/include
+                    external/stbimage)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
@@ -114,6 +116,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
         OpenMeshCore
         OpenMeshTools
         yaml-cpp
+        stb_image
         ${CUDA_LIBRARIES}
     )
 
