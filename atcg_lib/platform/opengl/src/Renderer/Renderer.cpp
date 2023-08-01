@@ -31,6 +31,9 @@ public:
     void initCross();
     atcg::ref_ptr<Graph> cross;
 
+    void initCameraFrustrum();
+    atcg::ref_ptr<Graph> camera_frustrum;
+
     atcg::ref_ptr<Framebuffer> screen_fbo;
 
     atcg::ref_ptr<Graph> sphere_mesh;
@@ -101,6 +104,8 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     initGrid();
     initCross();
 
+    initCameraFrustrum();
+
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
     screen_fbo->attachTexture(Texture2D::createIntTexture(width, height));
@@ -143,6 +148,32 @@ void Renderer::Impl::initCross()
     edges.push_back({glm::vec2(2, 3), glm::vec3(0, 0, 1), 0.1f});
 
     cross = atcg::Graph::createGraph(points, edges);
+}
+
+void Renderer::Impl::initCameraFrustrum()
+{
+    glm::vec3 eye = glm::vec3(0);
+
+    std::vector<atcg::Vertex> points;
+    points.push_back({eye, glm::vec3(1), glm::vec3(1)});
+    //  0.8660254 approx 0.5/tan(30)
+    points.push_back({eye + glm::vec3(-0.5, -0.5, -0.8660254), glm::vec3(1), glm::vec3(1)});
+    points.push_back({eye + glm::vec3(0.5, -0.5, -0.8660254), glm::vec3(1), glm::vec3(1)});
+    points.push_back({eye + glm::vec3(0.5, 0.5, -0.8660254), glm::vec3(1), glm::vec3(1)});
+    points.push_back({eye + glm::vec3(-0.5, 0.5, -0.8660254), glm::vec3(1), glm::vec3(1)});
+
+    std::vector<atcg::Edge> edges;
+    edges.push_back({glm::vec2(0, 1), glm::vec3(1), 0.01f});
+    edges.push_back({glm::vec2(0, 2), glm::vec3(1), 0.01f});
+    edges.push_back({glm::vec2(0, 3), glm::vec3(1), 0.01f});
+    edges.push_back({glm::vec2(0, 4), glm::vec3(1), 0.01f});
+
+    edges.push_back({glm::vec2(1, 2), glm::vec3(1), 0.01f});
+    edges.push_back({glm::vec2(2, 3), glm::vec3(1), 0.01f});
+    edges.push_back({glm::vec2(3, 4), glm::vec3(1), 0.01f});
+    edges.push_back({glm::vec2(4, 1), glm::vec3(1), 0.01f});
+
+    camera_frustrum = atcg::Graph::createGraph(points, edges);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
@@ -553,6 +584,28 @@ void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camer
     }
 }
 
+void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
+{
+    const auto& view = scene->getAllEntitiesWith<atcg::CameraComponent>();
+
+    for(auto e: view)
+    {
+        Entity entity(e, scene.get());
+        setLineSize(1.0f);
+        atcg::ShaderManager::getShader("edge")->setInt("entityID", -1);
+        atcg::ref_ptr<PerspectiveCamera> cam = entity.getComponent<CameraComponent>().camera;
+        float aspect_ratio                   = cam->getAspectRatio();
+        glm::mat4 scale                      = glm::scale(glm::vec3(aspect_ratio, 1.0f, 1.0f));
+        glm::mat4 model                      = glm::inverse(cam->getView()) * scale;
+        Renderer::draw(s_renderer->impl->camera_frustrum,
+                       camera,
+                       model,
+                       glm::vec3(1),
+                       atcg::ShaderManager::getShader("edge"),
+                       atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+    }
+}
+
 void Renderer::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
                                            const atcg::ref_ptr<Camera>& camera,
                                            const glm::mat4& model,
@@ -728,12 +781,17 @@ int Renderer::getEntityIndex(const glm::vec2& mouse)
 
 std::vector<uint8_t> Renderer::getFrame()
 {
-    auto frame      = s_renderer->impl->screen_fbo->getColorAttachement();
+    return getFrame(s_renderer->impl->screen_fbo);
+}
+
+std::vector<uint8_t> Renderer::getFrame(const atcg::ref_ptr<Framebuffer>& fbo)
+{
+    auto frame      = fbo->getColorAttachement();
     uint32_t width  = frame->width();
     uint32_t height = frame->height();
     std::vector<uint8_t> buffer(width * height * 4);
 
-    useScreenBuffer();
+    fbo->use();
 
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (void*)buffer.data());
 

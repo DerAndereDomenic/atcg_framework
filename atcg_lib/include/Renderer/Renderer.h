@@ -165,6 +165,14 @@ public:
     static void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
 
     /**
+     * @brief Draw camera frustrums
+     *
+     * @param scene The scene
+     * @param camera The camera
+     */
+    static void drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
+
+    /**
      * @brief Draw Circle
      *
      * @param position The position
@@ -203,12 +211,22 @@ public:
     static int getEntityIndex(const glm::vec2& mouse);
 
     /**
-     * @brief Get a buffer representing the color attachement of the frame buffer.
+     * @brief Get a buffer representing the color attachement of the screen frame buffer.
      * @note This copies memory between GPU and CPU
      *
      * @return The buffer containing the frame image.
      */
     static std::vector<uint8_t> getFrame();
+
+    /**
+     * @brief Get a buffer representing the color attachement of given frame buffer
+     * @note This copies memory between GPU and CPU
+     *
+     * @param fbo The framebuffer holding the image information
+     *
+     * @return The buffer containing the frame image.
+     */
+    static std::vector<uint8_t> getFrame(const atcg::ref_ptr<Framebuffer>& fbo);
 
     /**
      * @brief Generate a Z-Buffer buffer.
