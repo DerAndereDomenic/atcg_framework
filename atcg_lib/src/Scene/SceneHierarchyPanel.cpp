@@ -5,6 +5,8 @@
 
 #include <string.h>
 
+#include <stb_image_write.h>
+
 namespace atcg
 {
 
@@ -95,31 +97,29 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
     std::stringstream label;
 
     NameComponent& component = entity.getComponent<NameComponent>();
+    std::string tag          = component.name;
+    char buffer[256];
+    memset(buffer, 0, sizeof(buffer));
+    strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
+    label << "##" << id;
+    if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer))) { tag = std::string(buffer); }
+
+    ImGui::SameLine();
+    ImGui::PushItemWidth(-1);
+
+    if(ImGui::Button("Add Component")) { ImGui::OpenPopup("AddComponent"); }
+
+    if(ImGui::BeginPopup("AddComponent"))
     {
-        std::string tag = component.name;
-        char buffer[256];
-        memset(buffer, 0, sizeof(buffer));
-        strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
-        label << "##" << id;
-        if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer))) { tag = std::string(buffer); }
-
-        ImGui::SameLine();
-        ImGui::PushItemWidth(-1);
-
-        if(ImGui::Button("Add Component")) { ImGui::OpenPopup("AddComponent"); }
-
-        if(ImGui::BeginPopup("AddComponent"))
-        {
-            detail::displayAddComponentEntry<MeshRenderComponent>("Mesh Renderer", entity);
-            detail::displayAddComponentEntry<PointRenderComponent>("Point Renderer", entity);
-            detail::displayAddComponentEntry<PointSphereRenderComponent>("Point Sphere Renderer", entity);
-            detail::displayAddComponentEntry<EdgeRenderComponent>("Edge Renderer", entity);
-            detail::displayAddComponentEntry<EdgeCylinderRenderComponent>("Edge Cylinder Renderer", entity);
-            ImGui::EndPopup();
-        }
-
-        ImGui::PopItemWidth();
+        detail::displayAddComponentEntry<MeshRenderComponent>("Mesh Renderer", entity);
+        detail::displayAddComponentEntry<PointRenderComponent>("Point Renderer", entity);
+        detail::displayAddComponentEntry<PointSphereRenderComponent>("Point Sphere Renderer", entity);
+        detail::displayAddComponentEntry<EdgeRenderComponent>("Edge Renderer", entity);
+        detail::displayAddComponentEntry<EdgeCylinderRenderComponent>("Edge Cylinder Renderer", entity);
+        ImGui::EndPopup();
     }
+
+    ImGui::PopItemWidth();
 
     detail::drawComponent<CameraComponent>(
         "Camera View",
@@ -167,6 +167,35 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             ImVec2 window_size = ImGui::GetWindowSize();
             ImGui::SetCursorPos(ImVec2((window_size.x - width) * 0.5f, ImGui::GetCursorPosY()));
             ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
+
+            if(ImGui::Button("Screenshot"))
+            {
+                // Create temporary framebuffer
+                float width                                  = 1920.0f;
+                float height                                 = width / aspect_ratio;
+                atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
+                screenshot_buffer->attachColor();
+                screenshot_buffer->attachDepth();
+                screenshot_buffer->complete();
+
+                screenshot_buffer->use();
+                atcg::Renderer::clear();
+                atcg::Renderer::setViewport(0, 0, width, height);
+                atcg::Renderer::draw(_scene, camera_component.camera);
+                atcg::Renderer::getFramebuffer()->use();
+                atcg::Renderer::setViewport(0,
+                                            0,
+                                            atcg::Renderer::getFramebuffer()->width(),
+                                            atcg::Renderer::getFramebuffer()->height());
+
+                auto t  = std::time(nullptr);
+                auto tm = *std::localtime(&t);
+                std::ostringstream oss;
+                oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
+                std::vector<uint8_t> buffer = atcg::Renderer::getFrame(screenshot_buffer);
+                stbi_flip_vertically_on_write(true);
+                stbi_write_png(oss.str().c_str(), (int)width, (int)height, 4, (void*)buffer.data(), 4 * (int)width);
+            }
             atcg::Framebuffer::useDefault();
         });
 
