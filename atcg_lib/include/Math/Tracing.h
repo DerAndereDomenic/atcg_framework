@@ -1,8 +1,8 @@
 #pragma once
 
-#include <Eigen/Dense>
-
 #include <Core/Memory.h>
+
+#include <Eigen/Dense>
 #include <vector>
 
 namespace atcg

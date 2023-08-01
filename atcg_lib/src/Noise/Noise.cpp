@@ -1,6 +1,7 @@
 #include <Noise/Noise.h>
 
 #include <Renderer/ShaderManager.h>
+#include <Renderer/Shader.h>
 
 namespace atcg
 {

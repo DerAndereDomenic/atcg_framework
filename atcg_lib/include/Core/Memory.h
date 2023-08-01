@@ -1,11 +1,11 @@
 #pragma once
 
 #include <Core/CUDA.h>
+#include <Core/Log.h>
+
 #include <memory>
 #include <cstring>
 #include <cstdlib>
-
-#include <Core/Log.h>
 
 namespace atcg
 {

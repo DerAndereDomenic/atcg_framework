@@ -1,10 +1,10 @@
 #pragma once
 
+#include <Core/Memory.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
-
-#include <Core/Memory.h>
 
 namespace atcg
 {

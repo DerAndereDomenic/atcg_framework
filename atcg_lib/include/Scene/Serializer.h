@@ -1,10 +1,10 @@
 #pragma once
 
 #include <Core/Memory.h>
-#include <Scene/Scene.h>
 
 namespace atcg
 {
+class Scene;
 
 /**
  * @brief A class that handles scene serialization

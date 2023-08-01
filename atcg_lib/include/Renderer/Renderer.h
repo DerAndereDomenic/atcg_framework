@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/glm.h>
+#include <Core/Memory.h>
 #include <Renderer/Buffer.h>
 #include <Renderer/VertexArray.h>
 #include <Renderer/Shader.h>
@@ -8,9 +10,6 @@
 #include <Renderer/Framebuffer.h>
 #include <DataStructure/Graph.h>
 
-#include <Core/Memory.h>
-
-#include <Core/glm.h>
 
 namespace atcg
 {

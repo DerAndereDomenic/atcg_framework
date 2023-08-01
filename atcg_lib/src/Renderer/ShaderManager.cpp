@@ -1,4 +1,5 @@
 #include <Renderer/ShaderManager.h>
+#include <Renderer/Shader.h>
 
 #include <iostream>
 

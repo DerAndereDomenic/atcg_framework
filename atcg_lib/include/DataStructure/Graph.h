@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 
 #include <Core/Memory.h>
 #include <Core/glm.h>
@@ -8,6 +7,7 @@
 #include <Renderer/VertexArray.h>
 
 #include <OpenMesh/OpenMesh.h>
+#include <vector>
 
 namespace atcg
 {

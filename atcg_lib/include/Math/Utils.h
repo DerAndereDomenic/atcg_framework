@@ -1,9 +1,9 @@
 #pragma once
 
-#include <numeric>
-
 #include <Core/Memory.h>
 #include <DataStructure/Graph.h>
+
+#include <numeric>
 
 namespace atcg
 {

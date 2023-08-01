@@ -1,8 +1,8 @@
 #pragma once
 
-#include <entt.hpp>
-
 #include <Scene/Scene.h>
+
+#include <entt.hpp>
 
 namespace atcg
 {

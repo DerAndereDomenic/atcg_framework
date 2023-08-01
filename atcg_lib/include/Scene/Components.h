@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 
 #include <Core/glm.h>
 #include <Core/UUID.h>
@@ -9,6 +8,7 @@
 #include <Renderer/Renderer.h>
 #include <DataStructure/Graph.h>
 
+#include <vector>
 namespace atcg
 {
 struct TransformComponent

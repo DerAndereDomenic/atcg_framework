@@ -1,13 +1,13 @@
 #pragma once
 
 #include <Core/Memory.h>
-#include <Scene/Scene.h>
 #include <Scene/Entity.h>
-
-#include <Renderer/Framebuffer.h>
 
 namespace atcg
 {
+class Scene;
+class Framebuffer;
+
 /**
  * @brief A Scene hierarchy panel
  */

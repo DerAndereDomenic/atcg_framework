@@ -1,10 +1,9 @@
 #pragma once
 
-#include <Renderer/Shader.h>
-#include <unordered_map>
-#include <string>
 #include <Core/Memory.h>
 
+#include <string>
+#include <unordered_map>
 #include <filesystem>
 
 /**
@@ -14,6 +13,8 @@
  */
 namespace atcg
 {
+class Shader;
+
 /**
  * @brief This class handles all shaders
  */

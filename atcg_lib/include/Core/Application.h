@@ -1,13 +1,11 @@
 #pragma once
 
+#include <Core/Memory.h>
 #include <Core/LayerStack.h>
 #include <Core/Window.h>
-
 #include <Events/WindowEvent.h>
-
 #include <ImGui/ImGuiLayer.h>
 
-#include <Core/Memory.h>
 
 namespace atcg
 {

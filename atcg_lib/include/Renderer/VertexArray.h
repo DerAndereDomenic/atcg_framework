@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Renderer/Buffer.h>
 #include <Core/Memory.h>
+#include <Renderer/Buffer.h>
 
 namespace atcg
 {

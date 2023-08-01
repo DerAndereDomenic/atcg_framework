@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstdint>
 #include <Core/Memory.h>
 
+#include <cstdint>
 namespace atcg
 {
 

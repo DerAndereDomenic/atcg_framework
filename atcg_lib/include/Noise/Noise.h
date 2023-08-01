@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Core/Memory.h>
-#include <Renderer/Texture.h>
 #include <Core/glm.h>
+#include <Renderer/Texture.h>
 
 namespace atcg
 {

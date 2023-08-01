@@ -1,17 +1,19 @@
 #pragma once
 
+
+#include <Core/glm.h>
+#include <Core/Memory.h>
+#include <Events/Event.h>
+
 #include <sstream>
 #include <functional>
 #include <numeric>
 
-#include <Events/Event.h>
-#include <Renderer/Context.h>
-#include <Core/Memory.h>
-
-#include <Core/glm.h>
-
 namespace atcg
 {
+
+class Context;
+
 struct WindowProps
 {
     std::string title;

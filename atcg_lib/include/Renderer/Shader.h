@@ -1,10 +1,9 @@
 #pragma once
 
-#include <string>
 #include <Core/glm.h>
-
 #include <Renderer/Buffer.h>
 
+#include <string>
 #include <variant>
 #include <unordered_map>
 
