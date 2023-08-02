@@ -215,6 +215,24 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                 stbi_write_png(oss.str().c_str(), (int)width, (int)height, 4, (void*)buffer.data(), 4 * (int)width);
             }
             atcg::Framebuffer::useDefault();
+
+            if(ImGui::Button("Set from View"))
+            {
+                auto view = _scene->getAllEntitiesWith<EditorCameraComponent>();
+                for(auto e: view)
+                {
+                    // Should only be one
+                    Entity camera_entity(e, _scene.get());
+                    atcg::ref_ptr<PerspectiveCamera> cam = camera_entity.getComponent<EditorCameraComponent>().camera;
+                    camera->setView(cam->getView());
+                    camera->setAspectRatio(cam->getAspectRatio());
+                    if(entity.hasComponent<atcg::TransformComponent>())
+                    {
+                        auto& transform_component = entity.getComponent<atcg::TransformComponent>();
+                        transform_component.setModel(glm::inverse(camera->getView()));
+                    }
+                }
+            }
         });
 
     detail::drawComponent<TransformComponent>("Transform",
