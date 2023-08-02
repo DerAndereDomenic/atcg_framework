@@ -1,4 +1,5 @@
 /build/*
+/build_linux/*
 /bin/*
 imgui.ini
 .vscode/*
