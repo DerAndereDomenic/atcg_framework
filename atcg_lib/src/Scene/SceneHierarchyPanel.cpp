@@ -57,6 +57,24 @@ void displayAddComponentEntry(const std::string& name, Entity entity)
     }
 }
 
+template<>
+void displayAddComponentEntry<CameraComponent>(const std::string& name, Entity entity)
+{
+    if(!entity.hasComponent<CameraComponent>())
+    {
+        if(ImGui::MenuItem(name.c_str()))
+        {
+            auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>(1.0f));
+            if(entity.hasComponent<TransformComponent>())
+            {
+                atcg::ref_ptr<PerspectiveCamera> cam = camera_component.camera;
+                cam->setView(glm::inverse(entity.getComponent<TransformComponent>().getModel()));
+            }
+            ImGui::CloseCurrentPopup();
+        }
+    }
+}
+
 }    // namespace detail
 
 void SceneHierarchyPanel::drawEntityNode(Entity entity)
@@ -114,6 +132,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
         detail::displayAddComponentEntry<PointSphereRenderComponent>("Point Sphere Renderer", entity);
         detail::displayAddComponentEntry<EdgeRenderComponent>("Edge Renderer", entity);
         detail::displayAddComponentEntry<EdgeCylinderRenderComponent>("Edge Cylinder Renderer", entity);
+        detail::displayAddComponentEntry<CameraComponent>("Camera Component", entity);
         ImGui::EndPopup();
     }
 
