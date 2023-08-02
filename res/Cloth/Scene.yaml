@@ -2,7 +2,7 @@ Scene: Untitled
 Entities:
   - Entity: 5905187068440045987
     Name: "EditorCamera"
-    PerspectiveCamera:
+    EditorCamera:
       Translation: [-37.0499725, 61.3200493, -35.9613724]
       LookAt: [-0.904254317, 11.3465595, 8.6339283]
       AspectRatio: 1.7777778

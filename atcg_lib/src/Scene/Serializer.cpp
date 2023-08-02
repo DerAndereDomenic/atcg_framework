@@ -147,10 +147,11 @@ namespace detail
 #define RENDER_INSTANCE_BUFFER_NAME "Instances"
 #define RENDER_RADIUS_NAME          "EdgeRadius"
 
-#define CAMERA_COMPONENT_NAME    "PerspectiveCamera"
-#define CAMERA_POSITION_NAME     "Translation"
-#define CAMERA_LOOKAT_NAME       "LookAt"
-#define CAMERA_ASPECT_RATIO_NAME "AspectRatio"
+#define CAMERA_COMPONENT_NAME     "PerspectiveCamera"
+#define EDITOR_CAM_COMPONENT_NAME "EditorCamera"
+#define CAMERA_POSITION_NAME      "Translation"
+#define CAMERA_LOOKAT_NAME        "LookAt"
+#define CAMERA_ASPECT_RATIO_NAME  "AspectRatio"
 
 void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -204,6 +205,23 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         auto& camera                         = entity.getComponent<CameraComponent>();
         atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
 
+        // * The camera component should always be used together with a transform.
+        // out << YAML::Key << CAMERA_POSITION_NAME << YAML::Value << cam->getPosition();
+        // out << YAML::Key << CAMERA_LOOKAT_NAME << YAML::Value << cam->getLookAt();
+        out << YAML::Key << CAMERA_ASPECT_RATIO_NAME << YAML::Value << cam->getAspectRatio();
+
+        out << YAML::EndMap;
+    }
+
+    if(entity.hasComponent<EditorCameraComponent>())
+    {
+        out << YAML::Key << EDITOR_CAM_COMPONENT_NAME;
+        out << YAML::BeginMap;
+
+        auto& camera                         = entity.getComponent<EditorCameraComponent>();
+        atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
+
+        // ? Should the editor camera also hold a transform component? For now it stores position and lookat
         out << YAML::Key << CAMERA_POSITION_NAME << YAML::Value << cam->getPosition();
         out << YAML::Key << CAMERA_LOOKAT_NAME << YAML::Value << cam->getLookAt();
         out << YAML::Key << CAMERA_ASPECT_RATIO_NAME << YAML::Value << cam->getAspectRatio();
@@ -426,10 +444,24 @@ void Serializer::deserialize(const std::string& file_path)
             auto cameraComponent = entity[CAMERA_COMPONENT_NAME];
             if(cameraComponent)
             {
-                glm::vec3 position = cameraComponent[CAMERA_POSITION_NAME].as<glm::vec3>();
-                glm::vec3 lookat   = cameraComponent[CAMERA_LOOKAT_NAME].as<glm::vec3>();
                 float aspect_ratio = cameraComponent[CAMERA_ASPECT_RATIO_NAME].as<float>();
                 auto& camera       = deserializedEntity.addComponent<CameraComponent>(
+                    atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, glm::vec3(0), glm::vec3(0, 0, 1)));
+                // Should always have a transform, otherwise construct default camera
+                if(deserializedEntity.hasComponent<TransformComponent>())
+                {
+                    atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
+                    cam->setView(glm::inverse(deserializedEntity.getComponent<TransformComponent>().getModel()));
+                }
+            }
+
+            auto editorCameraComponent = entity[EDITOR_CAM_COMPONENT_NAME];
+            if(editorCameraComponent)
+            {
+                glm::vec3 position = editorCameraComponent[CAMERA_POSITION_NAME].as<glm::vec3>();
+                glm::vec3 lookat   = editorCameraComponent[CAMERA_LOOKAT_NAME].as<glm::vec3>();
+                float aspect_ratio = editorCameraComponent[CAMERA_ASPECT_RATIO_NAME].as<float>();
+                auto& camera       = deserializedEntity.addComponent<EditorCameraComponent>(
                     atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, position, lookat));
             }
 
