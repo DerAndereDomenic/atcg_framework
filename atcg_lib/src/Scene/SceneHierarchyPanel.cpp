@@ -346,6 +346,16 @@ void SceneHierarchyPanel::renderPanel()
 
     if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) { _selected_entity = {}; }
 
+    if(ImGui::BeginPopupContextWindow(0, 1))
+    {
+        if(ImGui::MenuItem("Create Empty Entity"))
+        {
+            Entity entity    = _scene->createEntity("Empty Entity");
+            _selected_entity = entity;
+        }
+        ImGui::EndPopup();
+    }
+
     ImGui::End();
 
     ImGui::Begin("Properties");
