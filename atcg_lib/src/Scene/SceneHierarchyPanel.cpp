@@ -116,7 +116,8 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
     std::string& tag         = component.name;
     char buffer[256];
     memset(buffer, 0, sizeof(buffer));
-    strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
+    // ? strncpy_s not available in gcc. Is this unsafe?
+    memcpy(buffer, tag.c_str(), sizeof(buffer));
     label << "##" << id;
     if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer))) { tag = std::string(buffer); }
 
