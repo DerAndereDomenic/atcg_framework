@@ -113,7 +113,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
     std::stringstream label;
 
     NameComponent& component = entity.getComponent<NameComponent>();
-    std::string tag          = component.name;
+    std::string& tag         = component.name;
     char buffer[256];
     memset(buffer, 0, sizeof(buffer));
     strncpy_s(buffer, sizeof(buffer), tag.c_str(), sizeof(buffer));
