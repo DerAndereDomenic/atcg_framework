@@ -344,6 +344,8 @@ void SceneHierarchyPanel::renderPanel()
         drawEntityNode(entity);
     }
 
+    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) { _selected_entity = {}; }
+
     ImGui::End();
 
     ImGui::Begin("Properties");
