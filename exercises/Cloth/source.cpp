@@ -92,21 +92,21 @@ public:
         serializer.deserialize("res/Cloth/Scene.yaml");
 
         auto entities     = scene->getEntitiesByName("EditorCamera");
-        auto& camera      = entities[0].getComponent<atcg::CameraComponent>();
+        auto& camera      = entities[0].getComponent<atcg::EditorCameraComponent>();
         camera_controller = atcg::make_ref<atcg::FocusedController>(camera.camera);
 
         entities   = scene->getEntitiesByName("Plane");
         auto& comp = entities[0].getComponent<atcg::MeshRenderComponent>();
         comp.shader->setFloat("checker_size", 0.1f);
 
-        atcg::Entity entity     = scene->createEntity("Test Camera");
-        auto& camera_component  = entity.addComponent<atcg::CameraComponent>();
-        camera_component.camera = atcg::make_ref<atcg::PerspectiveCamera>(1.0f, glm::vec3(0, 0, -1));
-        auto& transform         = entity.addComponent<atcg::TransformComponent>();
-        transform.setPosition(camera_component.camera->getPosition());
-        glm::vec3 rotation;
-        glm::extractEulerAngleXYZ(camera_component.camera->getView(), rotation.x, rotation.y, rotation.z);
-        transform.setRotation(rotation);
+        // atcg::Entity entity     = scene->createEntity("Test Camera");
+        // auto& camera_component  = entity.addComponent<atcg::CameraComponent>();
+        // camera_component.camera = atcg::make_ref<atcg::PerspectiveCamera>(1.0f, glm::vec3(0, 0, -1));
+        // auto& transform         = entity.addComponent<atcg::TransformComponent>();
+        // transform.setPosition(camera_component.camera->getPosition());
+        // glm::vec3 rotation;
+        // glm::extractEulerAngleXYZ(camera_component.camera->getView(), rotation.x, rotation.y, rotation.z);
+        // transform.setRotation(rotation);
 
         panel = atcg::SceneHierarchyPanel(scene);
     }
@@ -135,6 +135,8 @@ public:
         }
 
         atcg::Renderer::draw(scene, camera_controller->getCamera());
+
+        atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
@@ -156,7 +158,7 @@ public:
                 serializer.deserialize("res/Cloth/Scene.yaml");
 
                 auto entities     = scene->getEntitiesByName("EditorCamera");
-                auto& camera      = entities[0].getComponent<atcg::CameraComponent>();
+                auto& camera      = entities[0].getComponent<atcg::EditorCameraComponent>();
                 camera_controller = atcg::make_ref<atcg::FocusedController>(camera.camera);
 
                 entities   = scene->getEntitiesByName("Plane");
@@ -164,6 +166,7 @@ public:
                 comp.shader->setFloat("checker_size", 0.1f);
 
                 hovered_entity = {entt::null, scene.get()};
+                panel          = atcg::SceneHierarchyPanel(scene);
                 panel.selectEntity(hovered_entity);
             }
 
