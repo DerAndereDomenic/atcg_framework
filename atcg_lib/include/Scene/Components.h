@@ -107,6 +107,12 @@ struct CameraComponent
     bool perspective = false;
 };
 
+struct EditorCameraComponent : public CameraComponent
+{
+    EditorCameraComponent() = default;
+    EditorCameraComponent(const atcg::ref_ptr<Camera>& camera) : CameraComponent(camera) {}
+};
+
 struct RenderComponent
 {
     RenderComponent(atcg::DrawMode draw_mode) : draw_mode(draw_mode) {}
