@@ -1,9 +1,5 @@
 #include <Renderer/CameraController.h>
 
-#include <Core/Input.h>
-#include <Core/API.h>
-
-#include <iostream>
 #include <GLFW/glfw3.h>
 
 namespace atcg

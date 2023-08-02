@@ -70,6 +70,7 @@ add_library(atcg_lib STATIC "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_
 target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD YAML_CPP_STATIC_DEFINE)
 target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
 target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
+target_precompile_headers(atcg_lib PRIVATE atcg_lib/include/atcgpch.h)
 
 if(ATCG_CUDA_BACKEND)
     include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})

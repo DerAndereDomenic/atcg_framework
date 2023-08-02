@@ -1,8 +1,5 @@
 #include <Renderer/Renderer.h>
 #include <glad/glad.h>
-#include <iostream>
-
-#include <Core/Log.h>
 
 #include <Renderer/ShaderManager.h>
 #include <Scene/Components.h>

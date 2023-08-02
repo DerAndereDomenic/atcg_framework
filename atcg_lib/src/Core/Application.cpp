@@ -1,10 +1,7 @@
 #include <Core/Application.h>
 
-#include <Core/API.h>
-#include <Core/Log.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/ShaderManager.h>
-#include <chrono>
 
 
 namespace atcg

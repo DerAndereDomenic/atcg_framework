@@ -1,11 +1,7 @@
 #include <Renderer/Context.h>
 
-#include <iostream>
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
-#include <Core/Log.h>
 
 namespace atcg
 {

@@ -3,8 +3,6 @@
 #include <imgui.h>
 #include <Scene/Components.h>
 
-#include <string.h>
-
 #include <stb_image_write.h>
 
 namespace atcg

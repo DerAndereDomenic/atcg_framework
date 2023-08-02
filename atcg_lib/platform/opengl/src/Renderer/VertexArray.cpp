@@ -2,8 +2,6 @@
 
 #include <glad/glad.h>
 
-#include <iostream>
-
 namespace atcg
 {
 static GLenum shaderDataTypeToOpenGLBaseType(ShaderDataType type)

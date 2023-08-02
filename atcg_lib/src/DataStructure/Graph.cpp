@@ -1,7 +1,5 @@
 #include <DataStructure/Graph.h>
 
-#include <unordered_set>
-
 namespace atcg
 {
 

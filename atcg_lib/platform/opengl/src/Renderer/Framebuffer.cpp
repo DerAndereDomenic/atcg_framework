@@ -1,7 +1,6 @@
 #include <Renderer/Framebuffer.h>
 
 #include <glad/glad.h>
-#include <iostream>
 
 namespace atcg
 {

@@ -2,8 +2,6 @@
 
 #include <glad/glad.h>
 
-#include <Core/CUDA.h>
-
 #ifdef ATCG_CUDA_BACKEND
     #include <cuda_gl_interop.h>
 #endif

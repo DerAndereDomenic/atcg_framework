@@ -2,11 +2,6 @@
 
 #include <GLFW/glfw3.h>
 
-#include <iostream>
-
-#include <Events/KeyEvent.h>
-#include <Events/WindowEvent.h>
-#include <Events/MouseEvent.h>
 #include <Renderer/Context.h>
 
 namespace atcg

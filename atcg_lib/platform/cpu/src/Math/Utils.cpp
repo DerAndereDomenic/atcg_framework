@@ -1,7 +1,5 @@
 #include <Math/Utils.h>
 
-#include <Core/glm.h>
-
 namespace atcg
 {
 

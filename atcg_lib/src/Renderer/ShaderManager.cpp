@@ -1,8 +1,6 @@
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Shader.h>
 
-#include <iostream>
-
 namespace atcg
 {
 ShaderManager* ShaderManager::s_instance = new ShaderManager;
