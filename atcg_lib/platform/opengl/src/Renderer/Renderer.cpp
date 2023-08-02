@@ -588,8 +588,9 @@ void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     for(auto e: view)
     {
         Entity entity(e, scene.get());
-        setLineSize(1.0f);
-        atcg::ShaderManager::getShader("edge")->setInt("entityID", -1);
+        setLineSize(2.0f);
+        uint32_t entity_id = (uint32_t)entity._entity_handle;
+        atcg::ShaderManager::getShader("edge")->setInt("entityID", entity_id);
         atcg::ref_ptr<PerspectiveCamera> cam = entity.getComponent<CameraComponent>().camera;
         float aspect_ratio                   = cam->getAspectRatio();
         glm::mat4 scale                      = glm::scale(glm::vec3(aspect_ratio, 1.0f, 1.0f));
