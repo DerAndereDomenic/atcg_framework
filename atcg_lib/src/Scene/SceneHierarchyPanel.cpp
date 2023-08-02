@@ -127,6 +127,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
 
     if(ImGui::BeginPopup("AddComponent"))
     {
+        detail::displayAddComponentEntry<TransformComponent>("Transform", entity);
         detail::displayAddComponentEntry<MeshRenderComponent>("Mesh Renderer", entity);
         detail::displayAddComponentEntry<PointRenderComponent>("Point Renderer", entity);
         detail::displayAddComponentEntry<PointSphereRenderComponent>("Point Sphere Renderer", entity);
