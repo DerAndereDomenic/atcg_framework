@@ -253,7 +253,7 @@ public:
     void copy(const void* src_data, std::size_t n)
     {
         allocator alloc;
-        alloc.memcpy_dev2dev(_buffer, n);
+        alloc.memcpy_dev2dev(_buffer, src_data, n);
     }
 
     /**
