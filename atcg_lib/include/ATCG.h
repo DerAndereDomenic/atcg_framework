@@ -40,6 +40,7 @@
 #include <DataStructure/Laplacian.h>
 #include <DataStructure/Timer.h>
 #include <DataStructure/Statistics.h>
+#include <DataStructure/BufferView.h>
 
 //-------- Math -----------
 #include <Math/Functions.h>
