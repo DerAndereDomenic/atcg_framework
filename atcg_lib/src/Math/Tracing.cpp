@@ -56,10 +56,10 @@ void Tracing::prepateAccelerationStructure(Entity entity)
 
     nanort::BVHBuildStatistics stats = acc_component.accel.GetStatistics();
 
-    printf("  BVH statistics:\n");
-    printf("    # of leaf   nodes: %d\n", stats.num_leaf_nodes);
-    printf("    # of branch nodes: %d\n", stats.num_branch_nodes);
-    printf("  Max tree depth     : %d\n", stats.max_tree_depth);
+    ATCG_INFO("BVH statistics:");
+    ATCG_INFO("\t# of leaf   nodes: {0}", stats.num_leaf_nodes);
+    ATCG_INFO("\t# of branch nodes: {0}", stats.num_branch_nodes);
+    ATCG_INFO("\tMax tree depth   : {0}", stats.max_tree_depth);
 }
 
 Tracing::HitInfo
