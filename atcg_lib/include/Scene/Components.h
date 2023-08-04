@@ -7,6 +7,7 @@
 #include <Renderer/Camera.h>
 #include <Renderer/Renderer.h>
 #include <DataStructure/Graph.h>
+#include <nanort.h>
 
 #include <vector>
 namespace atcg
@@ -93,6 +94,16 @@ struct GeometryComponent
     GeometryComponent(const atcg::ref_ptr<Graph>& graph) : graph(graph) {}
 
     atcg::ref_ptr<Graph> graph;
+};
+
+struct AccelerationStructureComponent
+{
+    AccelerationStructureComponent() = default;
+
+    // Don't retrieve this from opengl each time used
+    atcg::ref_ptr<glm::vec3> vertices;
+    atcg::ref_ptr<glm::u32vec3> faces;
+    nanort::BVHAccel<float> accel;
 };
 
 struct CameraComponent
