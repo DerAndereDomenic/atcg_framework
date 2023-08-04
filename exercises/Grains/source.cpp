@@ -12,6 +12,10 @@
 
 #include <random>
 
+#include <nanort.h>
+
+#include <glm/gtc/random.hpp>
+
 namespace detail
 {
 glm::ivec3 position2index(const glm::vec3& x0, const float& voxel_size, const uint32_t& num_cells)
@@ -250,11 +254,11 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
 
-        atcg::ref_ptr<atcg::Graph> grain     = atcg::IO::read_mesh("../Meshes/rice_real.obj");
+        atcg::ref_ptr<atcg::Graph> grain     = atcg::IO::read_mesh("../Meshes/sphere_low.obj");
         atcg::ref_ptr<atcg::Graph> bowl      = atcg::IO::read_mesh("../Meshes/bowl.obj");
         atcg::ref_ptr<atcg::Graph> aggregate = atcg::IO::read_mesh("../Meshes/aggregate_rice_real.obj");
 
-        std::ifstream transform_file("../CVAE/data/Transforms_rice_real.bin", std::ios::in | std::ios::binary);
+        std::ifstream transform_file("../CVAE/data/Transforms_salt_spheres.bin", std::ios::in | std::ios::binary);
         std::vector<char> transform_buffer(std::istreambuf_iterator<char>(transform_file), {});
         float* transforms = reinterpret_cast<float*>(transform_buffer.data());
 
@@ -279,44 +283,87 @@ public:
 
         scene = atcg::make_ref<atcg::Scene>();
 
+        std::ifstream input1("C:/Users/zingsheim/Downloads/packing.xyzd", std::ios::binary | std::ios::in);
+        std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(input1), {});
+        glm::dvec4* data = reinterpret_cast<glm::dvec4*>(buffer.data());
+
+        std::cout << buffer.size() / (sizeof(double) * 4) << "\n";
+        for(uint32_t i = 0; i < buffer.size() / (sizeof(double) * 4); ++i)
         {
-            atcg::Entity entity = scene->createEntity("Bottle");
-            auto& transform     = entity.addComponent<atcg::TransformComponent>();
-            // transform.setRotation(glm::vec3(0.0f, -glm::pi<float>() / 2.0f, 0.0f));
-            entity.addComponent<atcg::GeometryComponent>(atcg::IO::read_mesh("../Meshes/bottle_100.obj"));
-            auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
+            glm::vec3 current_point = data[i];
+            current_point = glm::scale(glm::vec3(2.0f)) * glm::translate(glm::vec3(-20.0823593086113f / 2.0f)) *
+                            glm::vec4(current_point, 1.0f);
+            m_positions.push_back(current_point);
         }
 
-        std::ifstream input("../Meshes/bottle_inner_sdf.bin", std::ios::binary);
+        // Create acc structure for bottle
+        atcg::ref_ptr<atcg::TriMesh> bottle_mesh = atcg::make_ref<atcg::TriMesh>();
+        OpenMesh::IO::read_mesh(*bottle_mesh.get(), "../Meshes/bottle_inner_100.obj");
+
+        for(auto vit = bottle_mesh->vertices_begin(); vit != bottle_mesh->vertices_end(); ++vit)
+        {
+            bottle_mesh->set_point(*vit, glm::scale(glm::vec3(5.0f)) * glm::vec4(bottle_mesh->point(*vit), 1.0f));
+        }
+
+        atcg::Entity bottle_entity = scene->createEntity("Bottle");
+        {
+            auto& transform = bottle_entity.addComponent<atcg::TransformComponent>();
+            // transform.setRotation(glm::vec3(0.0f, -glm::pi<float>() / 2.0f, 0.0f));
+            // transform.setScale(glm::vec3(5.0f));
+            bottle_entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createTriangleMesh(bottle_mesh));
+            auto& renderer = bottle_entity.addComponent<atcg::MeshRenderComponent>();
+
+            atcg::Tracing::prepateAccelerationStructure(bottle_entity);
+        }
+
+
+        std::ifstream input2("../Meshes/bottle_inner_sdf.bin", std::ios::binary);
 
         // copies all data into buffer
-        std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(input), {});
+        std::vector<unsigned char> buffer2(std::istreambuf_iterator<char>(input2), {});
 
         atcg::Grid<float> grid(glm::vec3(0), 128, 2.0f / 127.0f);
-        grid.setData(reinterpret_cast<float*>(buffer.data()));
+        grid.setData(reinterpret_cast<float*>(buffer2.data()));
 
-        poisson_sample();
-        std::vector<atcg::Vertex> vertices;
+        // poisson_sample();
+        std::vector<atcg::Vertex> vertices_cloud;
         std::vector<glm::mat4> models;
 
-        for(int k = -1; k < 2; ++k)
+        for(int k = -3; k < 4; ++k)
         {
-            for(int j = -1; j < 2; ++j)
+            for(int j = -12; j < 13; ++j)
             {
-                for(int l = -1; l < 2; ++l)
+                for(int l = -3; l < 4; ++l)
                 {
                     for(uint32_t i = 0; i < m_positions.size(); ++i)
                     {
                         glm::vec3 grain_pos = m_positions[i] + glm::vec3(k, j, l) * m_voxel_length;
-                        glm::vec3 p         = glm::scale(glm::vec3(1.0f / 100.0f)) *
-                                      glm::rotate(-glm::pi<float>() / 2.0f, glm::vec3(0, 1, 0)) *
-                                      glm::vec4(grain_pos, 1.0f);
-                        if(!grid.insideVolume(p)) continue;
-                        float sdf = grid.readInterpolated<Selector>(p, Selector());
-                        if(sdf + 2.0f / 100.0f <= 0.0f)
+                        // glm::vec3 p         = glm::scale(glm::vec3(1.0f / 500.0f)) *
+                        //               glm::rotate(-glm::pi<float>() / 2.0f, glm::vec3(0, 1, 0)) *
+                        //               glm::vec4(grain_pos, 1.0f);
+                        // if(!grid.insideVolume(p)) continue;
+                        // float sdf = grid.readInterpolated<Selector>(p, Selector());
+                        // if(sdf + 2.0f / 500.0f <= 0.0f)
+                        // {
+                        //     vertices_cloud.push_back(atcg::Vertex {grain_pos, glm::vec3(1), glm::vec3(1)});
+                        //     models.push_back(glm::transpose(glm::translate(grain_pos)));
+                        // }
+                        glm::vec3 dir = glm::normalize(glm::vec3(1.0f));
+                        atcg::Tracing::HitInfo isect =
+                            atcg::Tracing::traceRay(bottle_entity, grain_pos, dir, 0.0f, 1e6f);
+
+                        if(isect.hit)
                         {
-                            vertices.push_back(atcg::Vertex {grain_pos, glm::vec3(1), glm::vec3(1)});
-                            models.push_back(glm::transpose(glm::translate(grain_pos)));
+                            glm::vec3 triangle_normal =
+                                bottle_mesh->calc_face_normal(atcg::TriMesh::FaceHandle(isect.primitive_idx));
+                            if(glm::dot(triangle_normal, dir) > 0.0f)
+                            {
+                                vertices_cloud.push_back(atcg::Vertex {grain_pos, glm::vec3(1), glm::vec3(1)});
+                                glm::vec3 rotation_axis = glm::sphericalRand(1.0f);
+                                float angle             = glm::linearRand(0.0f, 2.0f * glm::pi<float>());
+                                glm::mat4 rotation      = glm::rotate(angle, rotation_axis);
+                                models.push_back(glm::transpose(glm::translate(grain_pos) * rotation));
+                            }
                         }
                     }
                 }
@@ -333,18 +380,17 @@ public:
         //     if(sdf <= 0.0f) { vertices.push_back(atcg::Vertex {p, glm::vec3(1), glm::vec3(1)}); }
         // }
 
-        std::cout << (vertices.size()) << "\n";
+        std::cout << (vertices_cloud.size()) << "\n";
 
-        atcg::ref_ptr<atcg::Graph> pc = atcg::Graph::createPointCloud(vertices);
+        atcg::ref_ptr<atcg::Graph> pc = atcg::Graph::createPointCloud(vertices_cloud);
         {
             atcg::Entity entity = scene->createEntity("Grains");
             auto& transform     = entity.addComponent<atcg::TransformComponent>();
             entity.addComponent<atcg::GeometryComponent>(pc);
-            auto& renderer      = entity.addComponent<atcg::PointSphereRenderComponent>();
+            auto& renderer      = entity.addComponent<atcg::PointRenderComponent>();
             renderer.point_size = 1.0f;
             // renderer.shader     = atcg::ShaderManager::getShader("flat");
             renderer.color = glm::vec3(1, 0, 0);
-            hovered_entity = entity;
         }
 
         // {
@@ -361,7 +407,7 @@ public:
         // {
         //     atcg::Entity entity = scene->createEntity();
         //     auto& transform     = entity.addComponent<atcg::TransformComponent>();
-        //     transform.setPosition(glm::vec3(0, 50, 0));
+        //     // transform.setPosition(glm::vec3(0, 50, 0));
         //     entity.addComponent<atcg::GeometryComponent>(grain);
         //     entity.addComponent<atcg::InstanceRenderComponent>(instances);
         // }
@@ -529,7 +575,7 @@ private:
     std::vector<glm::vec3> m_positions;
     std::vector<glm::vec3> m_rotations;
     float m_grain_size   = 1.0f;
-    float m_voxel_length = 100.0f;
+    float m_voxel_length = 2.0f * 20.0823593086113f;
     int m_num_grains     = 0;
 
     bool show_render_settings = true;
