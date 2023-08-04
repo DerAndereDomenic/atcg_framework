@@ -130,7 +130,8 @@ public:
             atcg::Entity entity   = {e, scene.get()};
             auto& geometry        = entity.getComponent<atcg::GeometryComponent>();
             atcg::Vertex* dev_ptr = geometry.graph->getVerticesBuffer()->getDevicePointer<atcg::Vertex>();
-            simulate(dev_ptr, grid_size * grid_size, time);
+            atcg::BufferView<glm::vec3> positions((uint8_t*)dev_ptr, sizeof(atcg::Vertex));
+            simulate(positions, grid_size * grid_size, time);
             geometry.graph->getVerticesBuffer()->unmapPointers();
         }
 
