@@ -1,29 +1,43 @@
 #pragma once
 
-#include <Core/Memory.h>
-
-#include <Eigen/Dense>
-#include <vector>
+#include <Scene/Entity.h>
 
 namespace atcg
 {
 namespace Tracing
 {
+
+struct HitInfo
+{
+    bool hit = false;
+    glm::vec3 p;
+    uint32_t primitive_idx;
+};
+
 /**
- * @brief Compute ray mesh intersections
+ * @brief Prepare the acceleration structure.
+ * If it does not already have a AccelerationStructureComponent, a new one is created.
+ * The entity needs to have a GeometryComponent
  *
- * @param mesh The mesh
- * @param origin Vector with starting positions
- * @param direction Vector with starting directions
- * @param tmin The starting offset
- * @param tmax Maximum ray length
+ * @param entity The entity to prepare the BVH structure for
  *
- * @return vector with depth to the first intersection point
  */
-// Eigen::VectorXf rayMeshIntersection(const atcg::ref_ptr<Mesh>& mesh,
-//                                     const Eigen::MatrixX3f& origin,
-//                                     const Eigen::MatrixX3f& direction,
-//                                     const float tmin,
-//                                     const float tmax);
+void prepateAccelerationStructure(Entity entity);
+
+/**
+ * @brief Trace a ray agains the geometry
+ *
+ * @param entity The entity. Needs to have a AccelerationStructureComponent that was created using
+ * prepareAccelerationStructure.
+ * @param ray_origin The ray origin
+ * @param ray_dir The normalized ray direction
+ * @param t_min The start of the ray
+ * @param t_max Th end of the ray
+ *
+ * @return HitInfo of the intersection
+ */
+HitInfo traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max);
+
+
 }    // namespace Tracing
 }    // namespace atcg

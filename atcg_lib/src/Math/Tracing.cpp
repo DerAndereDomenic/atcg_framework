@@ -1,80 +1,97 @@
 #include <Math/Tracing.h>
+#include <Scene/Components.h>
 
 namespace atcg
 {
 
-// namespace detail
-// {
-// float rayTriangleIntersection(const Eigen::Vector3f vertices[3],
-//                               const Eigen::Vector3f& origin,
-//                               const Eigen::Vector3f& direction,
-//                               const float tmin,
-//                               const float tmax)
-// {
-//     Eigen::Vector3f vertex0 = vertices[0];
-//     Eigen::Vector3f vertex1 = vertices[1];
-//     Eigen::Vector3f vertex2 = vertices[2];
-//     Eigen::Vector3f edge1, edge2, h, s, q;
-//     float a, f, u, v;
-//     edge1 = vertex1 - vertex0;
-//     edge2 = vertex2 - vertex0;
-//     h     = direction.cross(edge2);
-//     a     = edge1.dot(h);
-//     if(std::abs(a) < 1e-5f) return tmax;
-//     f = 1.0f / a;
-//     s = origin - vertex0;
-//     u = f * s.dot(h);
-//     if(u < 0.0f || u > 1.0f) return tmax;
-//     q = s.cross(edge1);
-//     v = f * direction.dot(q);
-//     if(v < 0.0f || u + v > 1.0f) return tmax;
-//     float t = f * edge2.dot(q);
-//     if(t > tmin) { return t; }
-//     else { return tmax; }
-// }
+void Tracing::prepateAccelerationStructure(Entity entity)
+{
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have a geometry component. Cancel BVH build...");
+        return;
+    }
 
-// float rayMeshIntersection(const atcg::ref_ptr<Mesh>& mesh,
-//                           const Eigen::Vector3f& origin,
-//                           const Eigen::Vector3f& direction,
-//                           const float tmin,
-//                           const float tmax)
-// {
-//     float best_hit = tmax;
-//     for(auto f_it = mesh->faces_begin(); f_it != mesh->faces_end(); ++f_it)
-//     {
-//         Eigen::Vector3f vertices[3];
-//         int idx = 0;
-//         for(auto v_it = f_it->vertices().begin(); v_it != f_it->vertices().end(); ++v_it)
-//         {
-//             glm::vec3 p     = mesh->point(*v_it);
-//             vertices[idx++] = Eigen::Vector3f(p.x, p.y, p.z);
-//         }
+    if(!entity.hasComponent<AccelerationStructureComponent>())
+    {
+        entity.addComponent<AccelerationStructureComponent>();
+    }
 
-//         float hit = rayTriangleIntersection(vertices, origin, direction, tmin, tmax);
+    auto& acc_component = entity.getComponent<AccelerationStructureComponent>();
 
-//         if(hit < tmax && hit < best_hit) { best_hit = hit; }
-//     }
+    auto& geometry_component  = entity.getComponent<GeometryComponent>();
+    atcg::ref_ptr<Graph> mesh = geometry_component.graph;
+    if(mesh->type() != GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH)
+    {
+        ATCG_WARN("Can only create BVH for triangles. Aborting...");
+        return;
+    }
 
-//     return best_hit;
-// }
-// }    // namespace detail
+    bool vertices_mapped = mesh->getVerticesBuffer()->isHostMapped();
+    bool faces_mapped    = mesh->getFaceIndexBuffer()->isHostMapped();
 
-// Eigen::VectorXf Tracing::rayMeshIntersection(const atcg::ref_ptr<Mesh>& mesh,
-//                                              const Eigen::MatrixX3f& origin,
-//                                              const Eigen::MatrixX3f& direction,
-//                                              const float tmin,
-//                                              const float tmax)
-// {
-//     size_t num_paths = origin.rows();
+    Vertex* vertices    = mesh->getVerticesBuffer()->getHostPointer<Vertex>();
+    glm::u32vec3* faces = mesh->getFaceIndexBuffer()->getHostPointer<glm::u32vec3>();
 
-//     Eigen::VectorXf result(num_paths);
+    acc_component.vertices = atcg::ref_ptr<glm::vec3>(mesh->n_vertices());
+    acc_component.faces    = atcg::ref_ptr<glm::u32vec3>(mesh->n_faces());
 
-//     for(uint32_t i = 0; i < num_paths; ++i)
-//     {
-//         result[i] = detail::rayMeshIntersection(mesh, origin.row(i), direction.row(i), tmin, tmax);
-//     }
+    std::vector<glm::vec3> temp_vertices(mesh->n_vertices());
+    for(uint32_t i = 0; i < mesh->n_vertices(); ++i) { temp_vertices[i] = vertices[i].position; }
+    acc_component.vertices.copy(temp_vertices.data());
+    acc_component.faces.copy(faces);
 
-//     return result;
-// }
+    // Restore original mapping relation
+    if(!vertices_mapped) { mesh->getVerticesBuffer()->unmapHostPointers(); }
+    if(!faces_mapped) { mesh->getFaceIndexBuffer()->unmapHostPointers(); }
 
+    nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.get()),
+                                              reinterpret_cast<const uint32_t*>(acc_component.faces.get()),
+                                              sizeof(float) * 3);
+    nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const float*>(acc_component.vertices.get()),
+                                                 reinterpret_cast<const uint32_t*>(acc_component.faces.get()),
+                                                 sizeof(float) * 3);
+    bool ret = acc_component.accel.Build(mesh->n_faces(), triangle_mesh, triangle_pred);
+    assert(ret);
+
+    nanort::BVHBuildStatistics stats = acc_component.accel.GetStatistics();
+
+    printf("  BVH statistics:\n");
+    printf("    # of leaf   nodes: %d\n", stats.num_leaf_nodes);
+    printf("    # of branch nodes: %d\n", stats.num_branch_nodes);
+    printf("  Max tree depth     : %d\n", stats.max_tree_depth);
+}
+
+Tracing::HitInfo
+Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max)
+{
+    HitInfo result = {};
+
+    if(!entity.hasComponent<AccelerationStructureComponent>())
+    {
+        ATCG_WARN("Entity does not have an acceleration structure. Aborting...");
+        return result;
+    }
+
+    auto& acc_component = entity.getComponent<AccelerationStructureComponent>();
+    nanort::Ray<float> ray;
+    memcpy(ray.org, glm::value_ptr(ray_origin), sizeof(glm::vec3));
+    memcpy(ray.dir, glm::value_ptr(ray_dir), sizeof(glm::vec3));
+
+    ray.min_t = t_min;
+    ray.max_t = t_max;
+
+    nanort::TriangleIntersector<> triangle_intersector(reinterpret_cast<const float*>(acc_component.vertices.get()),
+                                                       reinterpret_cast<const uint32_t*>(acc_component.faces.get()),
+                                                       sizeof(float) * 3);
+    nanort::TriangleIntersection<> isect;
+    bool hit = acc_component.accel.Traverse(ray, triangle_intersector, &isect);
+
+    if(!hit) return result;
+
+    result.hit           = true;
+    result.p             = ray_origin + isect.t * ray_dir;
+    result.primitive_idx = isect.prim_id;
+    return result;
+}
 }    // namespace atcg
