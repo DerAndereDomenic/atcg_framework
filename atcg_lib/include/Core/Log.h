@@ -32,7 +32,7 @@ private:
 #ifdef NDEBUG
     #define ATCG_ERROR(...)
     #define ATCG_WARN(...)
-    #define ATCG_INFO(...)
+    #define ATCG_INFO(...) atcg::Log::getLogger()->info(__VA_ARGS__)
     #define ATCG_TRACE(...)
 #else
     #define ATCG_ERROR(...) atcg::Log::getLogger()->error(__VA_ARGS__)
