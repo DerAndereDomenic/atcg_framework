@@ -29,13 +29,35 @@ Shader::Shader(const std::string& compute_path)
 
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
 {
+    recompile(vertexPath, fragmentPath);
+}
+
+Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath)
+{
+    recompile(vertexPath, fragmentPath, geometryPath);
+}
+
+Shader::~Shader()
+{
+    glDeleteProgram(_ID);
+    _ID = 0;
+}
+
+void Shader::recompile(const std::string& vertex_path, const std::string& fragment_path)
+{
+    if(_ID != 0)
+    {
+        glDeleteProgram(_ID);
+        _ID = 0;
+    }
+
     // File reading
     std::string vertex_buffer, fragment_buffer;
 
-    readShaderCode(vertexPath, &vertex_buffer);
+    readShaderCode(vertex_path, &vertex_buffer);
     const char* vShaderCode = vertex_buffer.c_str();
 
-    readShaderCode(fragmentPath, &fragment_buffer);
+    readShaderCode(fragment_path, &fragment_buffer);
     const char* fShaderCode = fragment_buffer.c_str();
 
     // Compiling
@@ -52,22 +74,30 @@ Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
     glDeleteShader(fragment);
 
     _has_geometry  = false;
-    _vertex_path   = vertexPath;
-    _fragment_path = fragmentPath;
+    _vertex_path   = vertex_path;
+    _fragment_path = fragment_path;
 }
 
-Shader::Shader(const std::string& vertexPath, const std::string& geometryPath, const std::string& fragmentPath)
+void Shader::recompile(const std::string& vertex_path,
+                       const std::string& fragment_path,
+                       const std::string& geometry_path)
 {
+    if(_ID != 0)
+    {
+        glDeleteProgram(_ID);
+        _ID = 0;
+    }
+
     // File reading
     std::string vertex_buffer, fragment_buffer, geometry_buffer;
 
-    readShaderCode(vertexPath, &vertex_buffer);
+    readShaderCode(vertex_path, &vertex_buffer);
     const char* vShaderCode = vertex_buffer.c_str();
 
-    readShaderCode(fragmentPath, &fragment_buffer);
+    readShaderCode(fragment_path, &fragment_buffer);
     const char* fShaderCode = fragment_buffer.c_str();
 
-    readShaderCode(geometryPath, &geometry_buffer);
+    readShaderCode(geometry_path, &geometry_buffer);
     const char* gShaderCode = geometry_buffer.c_str();
 
     // Compiling
@@ -86,14 +116,9 @@ Shader::Shader(const std::string& vertexPath, const std::string& geometryPath, c
     glDeleteShader(geometry);
 
     _has_geometry  = true;
-    _vertex_path   = vertexPath;
-    _geometry_path = geometryPath;
-    _fragment_path = fragmentPath;
-}
-
-Shader::~Shader()
-{
-    glDeleteProgram(_ID);
+    _vertex_path   = vertex_path;
+    _geometry_path = geometry_path;
+    _fragment_path = fragment_path;
 }
 
 void Shader::readShaderCode(const std::string& path, std::string* code)

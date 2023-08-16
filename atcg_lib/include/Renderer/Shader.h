@@ -41,14 +41,31 @@ public:
      *
      * @param vertex_path The path to the vertex shader
      * @param fragment_path The path to the fragment shader
-     * @param geometry_shader The path to the geometry shader
+     * @param geometry_path The path to the geometry shader
      */
-    Shader(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_shader);
+    Shader(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path);
 
     /**
      * @brief Destroy the Shader object
      */
     ~Shader();
+
+    /**
+     * @brief Recompile a shader with new source
+     *
+     * @param vertex_path The path to the vertex shader
+     * @param fragment_path The path to the fragment shader
+     */
+    void recompile(const std::string& vertex_path, const std::string& fragment_path);
+
+    /**
+     * @brief Recompile a shader with new source
+     *
+     * @param vertex_path The path to the vertex shader
+     * @param fragment_path The path to the fragment shader
+     * @param geometry_path The path to the geometry shader
+     */
+    void recompile(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path);
 
     /**
      * @brief Use the shader.
