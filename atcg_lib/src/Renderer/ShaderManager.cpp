@@ -39,7 +39,7 @@ void ShaderManager::addShaderFromNameImpl(const std::string& name)
     atcg::ref_ptr<Shader> shader;
     if(std::filesystem::exists(geometry_path))
     {
-        shader = atcg::make_ref<Shader>(vertex_path, geometry_path, fragment_path);
+        shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
     }
     else { shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
 
@@ -110,7 +110,7 @@ void ShaderManager::onUpdateImpl()
         if(recompile)
         {
             if(has_geoemtry)
-                shader.second->recompile(vertex_path, geometry_path, fragment_path);
+                shader.second->recompile(vertex_path, fragment_path, geometry_path);
             else
                 shader.second->recompile(vertex_path, fragment_path);
         }
