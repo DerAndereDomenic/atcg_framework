@@ -76,6 +76,12 @@ void Shader::recompile(const std::string& vertex_path, const std::string& fragme
     _has_geometry  = false;
     _vertex_path   = vertex_path;
     _fragment_path = fragment_path;
+
+    // Update uniform locations
+    for(auto it = _uniforms.begin(); it != _uniforms.end(); ++it)
+    {
+        it->second.location = glGetUniformLocation(_ID, it->first.c_str());
+    }
 }
 
 void Shader::recompile(const std::string& vertex_path,
@@ -119,6 +125,12 @@ void Shader::recompile(const std::string& vertex_path,
     _vertex_path   = vertex_path;
     _geometry_path = geometry_path;
     _fragment_path = fragment_path;
+
+    // Update uniform locations
+    for(auto it = _uniforms.begin(); it != _uniforms.end(); ++it)
+    {
+        it->second.location = glGetUniformLocation(_ID, it->first.c_str());
+    }
 }
 
 void Shader::readShaderCode(const std::string& path, std::string* code)
