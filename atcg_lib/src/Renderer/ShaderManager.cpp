@@ -109,12 +109,10 @@ void ShaderManager::onUpdateImpl()
 
         if(recompile)
         {
-            atcg::host_allocator allocator;
-            Shader* shader_buffer = static_cast<Shader*>(allocator.allocate(sizeof(Shader)));
             if(has_geoemtry)
-                shader.second.reset(new(shader_buffer) Shader(vertex_path, geometry_path, fragment_path));
+                shader.second->recompile(vertex_path, geometry_path, fragment_path);
             else
-                shader.second.reset(new(shader_buffer) Shader(vertex_path, fragment_path));
+                shader.second->recompile(vertex_path, fragment_path);
         }
     }
 }
