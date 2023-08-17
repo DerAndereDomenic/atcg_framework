@@ -68,8 +68,9 @@ PYBIND11_MODULE(pyatcg, m)
 
     // ---------------- CORE ---------------------
     m.def("show", &python_main, "Start the application.");
+    m.def("print_statistics", &atcg::print_statistics);
 
-    py::class_<atcg::Layer, PythonLayer>(m, "Layer")
+    py::class_<atcg::Layer, PythonLayer, std::unique_ptr<atcg::Layer, py::nodelete>>(m, "Layer")
         .def(py::init<>())
         .def("onAttach", &atcg::Layer::onAttach)
         .def("onUpdate", &atcg::Layer::onUpdate)
@@ -190,7 +191,7 @@ PYBIND11_MODULE(pyatcg, m)
     m.def("read_mesh", [](const std::string& path) { return atcg::IO::read_mesh(path); });
 
     py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
-        .def(py::init<float>())
+        .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio); }))
         .def("getPosition", &atcg::PerspectiveCamera::getPosition)
         .def("setPosition", &atcg::PerspectiveCamera::setPosition)
         .def("getView", &atcg::PerspectiveCamera::getView)
@@ -198,8 +199,8 @@ PYBIND11_MODULE(pyatcg, m)
         .def("getProjection", &atcg::PerspectiveCamera::getProjection)
         .def("setProjection", &atcg::PerspectiveCamera::setProjection);
 
-    py::class_<atcg::FirstPersonController>(m, "FirstPersonController")
-        .def(py::init<float>())
+    py::class_<atcg::FirstPersonController, atcg::ref_ptr<atcg::FirstPersonController>>(m, "FirstPersonController")
+        .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::FirstPersonController>(aspect_ratio); }))
         .def("onUpdate", &atcg::FirstPersonController::onUpdate)
         .def("onEvent", &atcg::FirstPersonController::onEvent)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
@@ -236,7 +237,7 @@ PYBIND11_MODULE(pyatcg, m)
              { entity.addComponent<atcg::EdgeCylinderRenderComponent>(color, radius); });
 
     py::class_<atcg::Scene, atcg::ref_ptr<atcg::Scene>>(m, "Scene")
-        .def(py::init<>())
+        .def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
         .def("createEntity", &atcg::Scene::createEntity, py::arg("name") = "Entity");
 
     py::class_<atcg::TransformComponent>(m, "TransformComponent")
@@ -244,11 +245,11 @@ PYBIND11_MODULE(pyatcg, m)
         .def(py::init<glm::mat4>())
         .def("setPosition", &atcg::TransformComponent::setPosition)
         .def("setRotation", &atcg::TransformComponent::setRotation)
-        .def("setSclae", &atcg::TransformComponent::setScale)
+        .def("setScale", &atcg::TransformComponent::setScale)
         .def("setModel", &atcg::TransformComponent::setModel)
         .def("getPosition", &atcg::TransformComponent::getPosition)
         .def("getRotation", &atcg::TransformComponent::getRotation)
-        .def("getSclae", &atcg::TransformComponent::getScale)
+        .def("getScale", &atcg::TransformComponent::getScale)
         .def("getModel", &atcg::TransformComponent::getModel);
 
     py::class_<atcg::GeometryComponent>(m, "GeometryComponent")
@@ -279,7 +280,7 @@ PYBIND11_MODULE(pyatcg, m)
              { atcg::Renderer::draw(scene, camera); })
         .def("drawCADGrid",
              [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-             { atcg::Renderer::drawCADGrid(camera); });    // ? Addint this function introduced a memory leak?
+             { atcg::Renderer::drawCADGrid(camera); });    // ? Adding this function introduced a memory leak?
 
     py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
         .def(py::init<std::string, std::string>())
