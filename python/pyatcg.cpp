@@ -284,21 +284,37 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::GeometryComponent>(m, "GeometryComponent")
         .def(py::init<>())
-        .def(py::init<const atcg::ref_ptr<atcg::Graph>&>());
+        .def(py::init<const atcg::ref_ptr<atcg::Graph>&>())
+        .def_readwrite("graph", &atcg::GeometryComponent::graph);
 
     py::class_<atcg::MeshRenderComponent>(m, "MeshRenderComponent")
         .def(py::init<>())
-        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3>());
+        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3>())
+        .def_readwrite("visible", &atcg::MeshRenderComponent::visible)
+        .def_readwrite("color", &atcg::MeshRenderComponent::color)
+        .def_readwrite("shader", &atcg::MeshRenderComponent::shader);
 
     py::class_<atcg::PointRenderComponent>(m, "PointRenderComponent")
-        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>());
+        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>())
+        .def_readwrite("visible", &atcg::PointRenderComponent::visible)
+        .def_readwrite("color", &atcg::PointRenderComponent::color)
+        .def_readwrite("shader", &atcg::PointRenderComponent::shader);
 
     py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent")
-        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>());
+        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>())
+        .def_readwrite("visible", &atcg::PointSphereRenderComponent::visible)
+        .def_readwrite("color", &atcg::PointSphereRenderComponent::color)
+        .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader);
 
-    py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent").def(py::init<glm::vec3>());
+    py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent")
+        .def(py::init<glm::vec3>())
+        .def_readwrite("visible", &atcg::EdgeRenderComponent::visible)
+        .def_readwrite("color", &atcg::EdgeRenderComponent::color);
 
-    py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent").def(py::init<glm::vec3>());
+    py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent")
+        .def(py::init<glm::vec3>())
+        .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
+        .def_readwrite("color", &atcg::EdgeCylinderRenderComponent::color);
 
 
     // ------------------- RENDERER ---------------------------------
