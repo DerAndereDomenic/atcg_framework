@@ -78,6 +78,18 @@ PYBIND11_MODULE(pyatcg, m)
         .def("onEvent", &atcg::Layer::onEvent);
 
     py::class_<atcg::Event>(m, "Event");
+    py::class_<atcg::WindowCloseEvent, atcg::Event>(m, "WindowCloseEvent");
+    py::class_<atcg::WindowResizeEvent, atcg::Event>(m, "WindowResizeEvent");
+    py::class_<atcg::MouseButtonEvent, atcg::Event>(m, "MouseButtonEvent");
+    py::class_<atcg::MouseButtonPressedEvent, atcg::MouseButtonEvent>(m, "MouseButtonPressedEvent");
+    py::class_<atcg::MouseButtonReleasedEvent, atcg::MouseButtonEvent>(m, "MouseButtonReleasedEvent");
+    py::class_<atcg::MouseMovedEvent, atcg::Event>(m, "MouseMovedEvent");
+    py::class_<atcg::MouseScrolledEvent, atcg::Event>(m, "MouseScrolledEvent");
+    py::class_<atcg::KeyEvent, atcg::Event>(m, "KeyEvent");
+    py::class_<atcg::KeyPressedEvent, atcg::KeyEvent>(m, "KeyPressedEvent");
+    py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent");
+    py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent");
+    py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent");
 
     py::class_<atcg::Application, atcg::ref_ptr<atcg::Application>>(m, "Application");
 
