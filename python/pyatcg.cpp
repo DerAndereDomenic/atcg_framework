@@ -95,6 +95,8 @@ PYBIND11_MODULE(pyatcg, m)
               return (float)window->getHeight();
           });
 
+    m.def("enableDockSpace", [](bool enable) { atcg::Application::get()->enableDockSpace(enable); });
+
     // ---------------- MATH -------------------------
     py::class_<glm::vec3>(m, "vec3", py::buffer_protocol())
         .def(py::init<float, float, float>())
@@ -315,6 +317,11 @@ PYBIND11_MODULE(pyatcg, m)
         .def(py::init<glm::vec3>())
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
         .def_readwrite("color", &atcg::EdgeCylinderRenderComponent::color);
+
+    py::class_<atcg::SceneHierarchyPanel>(m, "SceneHierarchyPanel")
+        .def(py::init<>())
+        .def(py::init<const atcg::ref_ptr<atcg::Scene>&>())
+        .def("renderPanel", &atcg::SceneHierarchyPanel::renderPanel);
 
 
     // ------------------- RENDERER ---------------------------------
