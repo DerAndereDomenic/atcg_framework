@@ -80,6 +80,20 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::Application, atcg::ref_ptr<atcg::Application>>(m, "Application");
 
+    m.def("width",
+          []()
+          {
+              const auto& window = atcg::Application::get()->getWindow();
+              return (float)window->getWidth();
+          });
+
+    m.def("height",
+          []()
+          {
+              const auto& window = atcg::Application::get()->getWindow();
+              return (float)window->getHeight();
+          });
+
     // ---------------- MATH -------------------------
     py::class_<glm::vec3>(m, "vec3", py::buffer_protocol())
         .def(py::init<float, float, float>())
@@ -168,10 +182,89 @@ PYBIND11_MODULE(pyatcg, m)
                                        {sizeof(float), sizeof(float) * 4});
             });
 
+    // ------------------- Datastructure ---------------------------------
+    py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph").def(py::init<>());
+    m.def("read_mesh", [](const std::string& path) { return atcg::IO::read_mesh(path); });
+
+    py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
+        .def(py::init<float>())
+        .def("getPosition", &atcg::PerspectiveCamera::getPosition)
+        .def("setPosition", &atcg::PerspectiveCamera::setPosition)
+        .def("getView", &atcg::PerspectiveCamera::getView)
+        .def("setView", &atcg::PerspectiveCamera::setView)
+        .def("getProjection", &atcg::PerspectiveCamera::getProjection)
+        .def("setProjection", &atcg::PerspectiveCamera::setProjection);
+
+    py::class_<atcg::FirstPersonController>(m, "FirstPersonController")
+        .def(py::init<float>())
+        .def("onUpdate", &atcg::FirstPersonController::onUpdate)
+        .def("onEvent", &atcg::FirstPersonController::onEvent)
+        .def("getCamera", &atcg::FirstPersonController::getCamera);
+
+    // ------------------- Scene ---------------------------------
+    py::class_<entt::entity>(m, "EntityHandle").def(py::init<uint32_t>());
+    py::class_<atcg::Entity>(m, "Entity")
+        .def(py::init<>())
+        .def(py::init<entt::entity, atcg::Scene*>())
+        .def("addTransformComponent",
+             [](atcg::Entity& entity, const glm::vec3& position, const glm::vec3& scale, const glm::vec3& rotation)
+             { entity.addComponent<atcg::TransformComponent>(position, scale, rotation); })
+        .def("addGeometryComponent",
+             [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Graph>& graph)
+             { entity.addComponent<atcg::GeometryComponent>(graph); })
+        .def("addMeshRenderComponent",
+             [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader, const glm::vec3& color)
+             { entity.addComponent<atcg::MeshRenderComponent>(shader, color); });
+    py::class_<atcg::Scene, atcg::ref_ptr<atcg::Scene>>(m, "Scene")
+        .def(py::init<>())
+        .def("createEntity", &atcg::Scene::createEntity, py::arg("name") = "Entity");
+    py::class_<atcg::TransformComponent>(m, "TransformComponent")
+        .def(py::init<glm::vec3, glm::vec3, glm::vec3>())
+        .def(py::init<glm::mat4>())
+        .def("setPosition", &atcg::TransformComponent::setPosition)
+        .def("setRotation", &atcg::TransformComponent::setRotation)
+        .def("setSclae", &atcg::TransformComponent::setScale)
+        .def("setModel", &atcg::TransformComponent::setModel)
+        .def("getPosition", &atcg::TransformComponent::getPosition)
+        .def("getRotation", &atcg::TransformComponent::getRotation)
+        .def("getSclae", &atcg::TransformComponent::getScale)
+        .def("getModel", &atcg::TransformComponent::getModel);
+
+    py::class_<atcg::GeometryComponent>(m, "GeometryComponent")
+        .def(py::init<>())
+        .def(py::init<const atcg::ref_ptr<atcg::Graph>&>());
+
+    py::class_<atcg::MeshRenderComponent>(m, "MeshRenderComponent")
+        .def(py::init<>())
+        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3>());
+
+
     // ------------------- RENDERER ---------------------------------
     py::class_<atcg::Renderer>(m, "Renderer")
         .def_static("setClearColor", &atcg::Renderer::setClearColor)
-        .def_static("clear", &atcg::Renderer::clear);
+        .def_static("clear", &atcg::Renderer::clear)
+        .def("draw",
+             [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+             { atcg::Renderer::draw(scene, camera); })
+        .def("drawCADGrid",
+             [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+             { atcg::Renderer::drawCADGrid(camera); });    // ? Addint this function introduced a memory leak?
+
+    py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
+        .def(py::init<std::string, std::string>())
+        .def(py::init<std::string, std::string, std::string>())
+        .def("use", &atcg::Shader::use)
+        .def("setInt", &atcg::Shader::setInt)
+        .def("setFloat", &atcg::Shader::setFloat)
+        .def("setVec3", &atcg::Shader::setVec3)
+        .def("setVec4", &atcg::Shader::setVec4)
+        .def("setMat4", &atcg::Shader::setMat4)
+        .def("setMVP", &atcg::Shader::setMVP);
+
+    py::class_<atcg::ShaderManager>(m, "ShaderManager")
+        .def_static("getShader", &atcg::ShaderManager::getShader)
+        .def_static("addShader", &atcg::ShaderManager::addShader)
+        .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName);
 
     // m.def("width",
     //       []()
