@@ -355,7 +355,9 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::SceneHierarchyPanel>(m, "SceneHierarchyPanel")
         .def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>())
-        .def("renderPanel", &atcg::SceneHierarchyPanel::renderPanel);
+        .def("renderPanel", &atcg::SceneHierarchyPanel::renderPanel)
+        .def("selectEntity", &atcg::SceneHierarchyPanel::selectEntity)
+        .def("getSelectedEntity", &atcg::SceneHierarchyPanel::getSelectedEntity);
 
 
     // ------------------- RENDERER ---------------------------------
@@ -752,6 +754,13 @@ PYBIND11_MODULE(pyatcg, m)
         },
         py::arg("fmt"),
         py::return_value_policy::automatic_reference);
+
+    py::enum_<ImGuizmo::OPERATION>(m, "GuizmoOperation")
+        .value("TRANSLATE", ImGuizmo::OPERATION::TRANSLATE)
+        .value("ROTATE", ImGuizmo::OPERATION::ROTATE)
+        .value("SCALE", ImGuizmo::OPERATION::SCALE)
+        .export_values();
+    m.def("drawGuizmo", atcg::drawGuizmo);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
