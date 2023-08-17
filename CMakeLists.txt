@@ -150,6 +150,7 @@ if(ATCG_PYTHON_BINDINGS)
             OpenMeshCore
             OpenMeshTools
             yaml-cpp
+            stb_image
             ${CUDA_LIBRARIES}
             #stdc++
         )
