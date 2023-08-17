@@ -77,19 +77,41 @@ PYBIND11_MODULE(pyatcg, m)
         .def("onImGuiRender", &atcg::Layer::onImGuiRender)
         .def("onEvent", &atcg::Layer::onEvent);
 
-    py::class_<atcg::Event>(m, "Event");
+    py::class_<atcg::Event>(m, "Event")
+        .def("getName", &atcg::Event::getName)
+        .def_readwrite("handled", &atcg::Event::handled);
     py::class_<atcg::WindowCloseEvent, atcg::Event>(m, "WindowCloseEvent");
-    py::class_<atcg::WindowResizeEvent, atcg::Event>(m, "WindowResizeEvent");
-    py::class_<atcg::MouseButtonEvent, atcg::Event>(m, "MouseButtonEvent");
-    py::class_<atcg::MouseButtonPressedEvent, atcg::MouseButtonEvent>(m, "MouseButtonPressedEvent");
-    py::class_<atcg::MouseButtonReleasedEvent, atcg::MouseButtonEvent>(m, "MouseButtonReleasedEvent");
-    py::class_<atcg::MouseMovedEvent, atcg::Event>(m, "MouseMovedEvent");
-    py::class_<atcg::MouseScrolledEvent, atcg::Event>(m, "MouseScrolledEvent");
-    py::class_<atcg::KeyEvent, atcg::Event>(m, "KeyEvent");
-    py::class_<atcg::KeyPressedEvent, atcg::KeyEvent>(m, "KeyPressedEvent");
-    py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent");
-    py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent");
-    py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent");
+    py::class_<atcg::WindowResizeEvent, atcg::Event>(m, "WindowResizeEvent")
+        .def(py::init<unsigned int, unsigned int>())
+        .def("getWidth", &atcg::WindowResizeEvent::getWidth)
+        .def("getHeight", &atcg::WindowResizeEvent::getHeight);
+    py::class_<atcg::MouseButtonEvent, atcg::Event>(m, "MouseButtonEvent")
+        .def("getMouseButton", &atcg::MouseButtonEvent::getMouseButton)
+        .def("getX", &atcg::MouseButtonEvent::getX)
+        .def("getY", &atcg::MouseButtonEvent::getY);
+    py::class_<atcg::MouseButtonPressedEvent, atcg::MouseButtonEvent>(m, "MouseButtonPressedEvent")
+        .def(py::init<int32_t, float, float>());
+    py::class_<atcg::MouseButtonReleasedEvent, atcg::MouseButtonEvent>(m, "MouseButtonReleasedEvent")
+        .def(py::init<int32_t, float, float>());
+    py::class_<atcg::MouseMovedEvent, atcg::Event>(m, "MouseMovedEvent")
+        .def(py::init<float, float>())
+        .def("getX", &atcg::MouseMovedEvent::getX)
+        .def("getY", &atcg::MouseMovedEvent::getY);
+    py::class_<atcg::MouseScrolledEvent, atcg::Event>(m, "MouseScrolledEvent")
+        .def(py::init<float, float>())
+        .def("getXOffset", &atcg::MouseScrolledEvent::getXOffset)
+        .def("getYOffset", &atcg::MouseScrolledEvent::getYOffset);
+    py::class_<atcg::KeyEvent, atcg::Event>(m, "KeyEvent").def("getKeyCode", &atcg::KeyEvent::getKeyCode);
+    py::class_<atcg::KeyPressedEvent, atcg::KeyEvent>(m, "KeyPressedEvent")
+        .def(py::init<int32_t, bool>())
+        .def("isRepeat", &atcg::KeyPressedEvent::IsRepeat)
+        .def("getCode", &atcg::KeyPressedEvent::getCode);
+    py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent").def(py::init<int32_t>());
+    py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent").def(py::init<int32_t>());
+    py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent")
+        .def(py::init<unsigned int, unsigned int>())
+        .def("getWidth", &atcg::ViewportResizeEvent::getWidth)
+        .def("getHeight", &atcg::ViewportResizeEvent::getHeight);
 
     py::class_<atcg::Application, atcg::ref_ptr<atcg::Application>>(m, "Application");
 
