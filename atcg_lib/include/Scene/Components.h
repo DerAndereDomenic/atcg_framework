@@ -132,6 +132,13 @@ struct RenderComponent
     bool visible = true;
 };
 
+struct TextureComponent
+{
+    TextureComponent(const atcg::ref_ptr<atcg::Texture2D>& texture) : texture(texture) {}
+
+    atcg::ref_ptr<atcg::Texture2D> texture;
+};
+
 struct MeshRenderComponent : public RenderComponent
 {
     MeshRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
