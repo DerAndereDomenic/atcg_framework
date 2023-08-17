@@ -212,29 +212,52 @@ PYBIND11_MODULE(pyatcg, m)
         .def(py::init<entt::entity, atcg::Scene*>())
         .def("addTransformComponent",
              [](atcg::Entity& entity, const glm::vec3& position, const glm::vec3& scale, const glm::vec3& rotation)
-             { entity.addComponent<atcg::TransformComponent>(position, scale, rotation); })
+             { return entity.addComponent<atcg::TransformComponent>(position, scale, rotation); })
+        .def("addTransformComponent",
+             [](atcg::Entity& entity, const atcg::TransformComponent& transform)
+             { return entity.addComponent<atcg::TransformComponent>(transform); })
         .def("addGeometryComponent",
              [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Graph>& graph)
-             { entity.addComponent<atcg::GeometryComponent>(graph); })
+             { return entity.addComponent<atcg::GeometryComponent>(graph); })
+        .def("addGeometryComponent",
+             [](atcg::Entity& entity, const atcg::GeometryComponent& geometry)
+             { return entity.addComponent<atcg::GeometryComponent>(geometry); })
         .def("addMeshRenderComponent",
              [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader, const glm::vec3& color)
-             { entity.addComponent<atcg::MeshRenderComponent>(shader, color); })
+             { return entity.addComponent<atcg::MeshRenderComponent>(shader, color); })
+        .def("addMeshRenderComponent",
+             [](atcg::Entity& entity, const atcg::MeshRenderComponent& component)
+             { return entity.addComponent<atcg::MeshRenderComponent>(component); })
         .def("addPointRenderComponent",
              [](atcg::Entity& entity,
                 const atcg::ref_ptr<atcg::Shader>& shader,
                 const glm::vec3& color,
-                float point_size) { entity.addComponent<atcg::PointRenderComponent>(shader, color, point_size); })
+                float point_size)
+             { return entity.addComponent<atcg::PointRenderComponent>(shader, color, point_size); })
+        .def("addPointRenderComponent",
+             [](atcg::Entity& entity, const atcg::PointRenderComponent& component)
+             { return entity.addComponent<atcg::PointRenderComponent>(component); })
         .def("addPointSphereRenderComponent",
              [](atcg::Entity& entity,
                 const atcg::ref_ptr<atcg::Shader>& shader,
                 const glm::vec3& color,
-                float point_size) { entity.addComponent<atcg::PointSphereRenderComponent>(shader, color, point_size); })
+                float point_size)
+             { return entity.addComponent<atcg::PointSphereRenderComponent>(shader, color, point_size); })
+        .def("addPointSphereRenderComponent",
+             [](atcg::Entity& entity, const atcg::PointSphereRenderComponent& component)
+             { return entity.addComponent<atcg::PointSphereRenderComponent>(component); })
         .def("addEdgeRenderComponent",
              [](atcg::Entity& entity, const glm::vec3& color)
-             { entity.addComponent<atcg::EdgeRenderComponent>(color); })
+             { return entity.addComponent<atcg::EdgeRenderComponent>(color); })
+        .def("addEdgeRenderComponent",
+             [](atcg::Entity& entity, const atcg::EdgeRenderComponent& component)
+             { return entity.addComponent<atcg::EdgeRenderComponent>(component); })
         .def("addEdgeCylinderRenderComponent",
              [](atcg::Entity& entity, const glm::vec3& color, float radius)
-             { entity.addComponent<atcg::EdgeCylinderRenderComponent>(color, radius); });
+             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(color, radius); })
+        .def("addEdgeCylinderRenderComponent",
+             [](atcg::Entity& entity, const atcg::EdgeCylinderRenderComponent& component)
+             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(component); });
 
     py::class_<atcg::Scene, atcg::ref_ptr<atcg::Scene>>(m, "Scene")
         .def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
