@@ -132,20 +132,26 @@ add_subdirectory(exercises)
 # PYTHON BINDINGS
 
 if(ATCG_PYTHON_BINDINGS)
-    pybind11_add_module(pyatcg python/pyatcg.cpp)
-    target_compile_definitions(pyatcg PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
-    target_link_libraries( pyatcg PRIVATE
-        atcg_lib
-        glfw
-        imgui
-        imguizmo
-        implot
-        glad
-        OpenGL::GL
-        OpenMeshCore
-        OpenMeshTools
-        yaml-cpp
-        ${CUDA_LIBRARIES}
-        #stdc++
-    )
+
+    find_package(charonload)
+
+    if(charonload_FOUND)
+        charonload_add_torch_library(${TORCH_EXTENSION_NAME} MODULE)
+        target_sources(${TORCH_EXTENSION_NAME} PRIVATE python/pyatcg.cpp)
+        target_compile_definitions(${TORCH_EXTENSION_NAME} PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
+        target_link_libraries( ${TORCH_EXTENSION_NAME} PRIVATE
+            atcg_lib
+            glfw
+            imgui
+            imguizmo
+            implot
+            glad
+            OpenGL::GL
+            OpenMeshCore
+            OpenMeshTools
+            yaml-cpp
+            ${CUDA_LIBRARIES}
+            #stdc++
+        )
+    endif()
 endif()
