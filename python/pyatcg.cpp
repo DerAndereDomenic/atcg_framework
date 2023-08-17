@@ -257,7 +257,14 @@ PYBIND11_MODULE(pyatcg, m)
              { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(color, radius); })
         .def("addEdgeCylinderRenderComponent",
              [](atcg::Entity& entity, const atcg::EdgeCylinderRenderComponent& component)
-             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(component); });
+             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(component); })
+        .def("hasTransformComponent", &atcg::Entity::hasComponent<atcg::TransformComponent>)
+        .def("hasGeometryComponent", &atcg::Entity::hasComponent<atcg::GeometryComponent>)
+        .def("hasMeshRenderComponent", &atcg::Entity::hasComponent<atcg::MeshRenderComponent>)
+        .def("hasPointRenderComponent", &atcg::Entity::hasComponent<atcg::PointRenderComponent>)
+        .def("hasPointSphereRenderComponent", &atcg::Entity::hasComponent<atcg::PointSphereRenderComponent>)
+        .def("hasEdgeRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeRenderComponent>)
+        .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>);
 
     py::class_<atcg::Scene, atcg::ref_ptr<atcg::Scene>>(m, "Scene")
         .def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
