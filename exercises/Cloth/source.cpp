@@ -205,6 +205,14 @@ public:
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onMouseMoved));
         dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onMousePressed));
         dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onKeyPressed));
+        dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onViewportResized));
+    }
+
+    bool onViewportResized(atcg::ViewportResizeEvent* event)
+    {
+        atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
+        camera_controller->onEvent(&resize_event);
+        return false;
     }
 
     bool onKeyPressed(atcg::KeyPressedEvent* event)
