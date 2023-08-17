@@ -193,38 +193,7 @@ public:
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
 
-        // Guizmos
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
-        const auto& window       = atcg::Application::get()->getWindow();
-        glm::ivec2 window_pos    = window->getPosition();
-        glm::ivec2 viewport_pos  = atcg::Application::get()->getViewportPosition();
-        glm::ivec2 viewport_size = atcg::Application::get()->getViewportSize();
-        ImGui::Begin("Viewport");
-        if(hovered_entity && hovered_entity.hasComponent<atcg::TransformComponent>())
-        {
-            ImGuizmo::SetOrthographic(false);
-            ImGuizmo::BeginFrame();
-            ImGuizmo::SetDrawlist();
-
-            ImGuizmo::SetRect(window_pos.x + viewport_pos.x,
-                              window_pos.y + viewport_pos.y,
-                              viewport_size.x,
-                              viewport_size.y);
-
-            glm::mat4 camera_projection = camera_controller->getCamera()->getProjection();
-            glm::mat4 camera_view       = camera_controller->getCamera()->getView();
-
-            atcg::TransformComponent& transform = hovered_entity.getComponent<atcg::TransformComponent>();
-            glm::mat4 model                     = transform.getModel();
-            ImGuizmo::Manipulate(glm::value_ptr(camera_view),
-                                 glm::value_ptr(camera_projection),
-                                 current_operation,
-                                 ImGuizmo::LOCAL,
-                                 glm::value_ptr(model));
-            transform.setModel(model);
-        }
-        ImGui::End();
-        ImGui::PopStyleVar();
+        atcg::drawGuizmo(hovered_entity, current_operation, camera_controller->getCamera());
     }
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered

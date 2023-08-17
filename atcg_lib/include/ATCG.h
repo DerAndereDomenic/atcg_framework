@@ -50,6 +50,9 @@
 //-------- Utility -----------
 #include <Noise/Noise.h>
 
+//-------- ImGui -----------
+#include <ImGui/Guizmo.h>
+
 //-------- Scene -----------
 #include <Scene/Components.h>
 #include <Scene/Scene.h>
