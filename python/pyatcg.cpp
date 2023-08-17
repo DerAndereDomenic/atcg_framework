@@ -97,6 +97,7 @@ PYBIND11_MODULE(pyatcg, m)
     // ---------------- MATH -------------------------
     py::class_<glm::vec3>(m, "vec3", py::buffer_protocol())
         .def(py::init<float, float, float>())
+        .def(py::init<float>())
         .def(py::init(
             [](py::array_t<float> b)
             {
@@ -129,6 +130,8 @@ PYBIND11_MODULE(pyatcg, m)
 
                 return v;
             }))
+        .def(py::init<float, float, float, float>())
+        .def(py::init<float>())
         .def_buffer(
             [](glm::vec4& v) -> py::buffer_info
             {
