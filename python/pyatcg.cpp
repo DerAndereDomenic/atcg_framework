@@ -217,10 +217,28 @@ PYBIND11_MODULE(pyatcg, m)
              { entity.addComponent<atcg::GeometryComponent>(graph); })
         .def("addMeshRenderComponent",
              [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader, const glm::vec3& color)
-             { entity.addComponent<atcg::MeshRenderComponent>(shader, color); });
+             { entity.addComponent<atcg::MeshRenderComponent>(shader, color); })
+        .def("addPointRenderComponent",
+             [](atcg::Entity& entity,
+                const atcg::ref_ptr<atcg::Shader>& shader,
+                const glm::vec3& color,
+                float point_size) { entity.addComponent<atcg::PointRenderComponent>(shader, color, point_size); })
+        .def("addPointSphereRenderComponent",
+             [](atcg::Entity& entity,
+                const atcg::ref_ptr<atcg::Shader>& shader,
+                const glm::vec3& color,
+                float point_size) { entity.addComponent<atcg::PointSphereRenderComponent>(shader, color, point_size); })
+        .def("addEdgeRenderComponent",
+             [](atcg::Entity& entity, const glm::vec3& color)
+             { entity.addComponent<atcg::EdgeRenderComponent>(color); })
+        .def("addEdgeCylinderRenderComponent",
+             [](atcg::Entity& entity, const glm::vec3& color, float radius)
+             { entity.addComponent<atcg::EdgeCylinderRenderComponent>(color, radius); });
+
     py::class_<atcg::Scene, atcg::ref_ptr<atcg::Scene>>(m, "Scene")
         .def(py::init<>())
         .def("createEntity", &atcg::Scene::createEntity, py::arg("name") = "Entity");
+
     py::class_<atcg::TransformComponent>(m, "TransformComponent")
         .def(py::init<glm::vec3, glm::vec3, glm::vec3>())
         .def(py::init<glm::mat4>())
@@ -240,6 +258,16 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::MeshRenderComponent>(m, "MeshRenderComponent")
         .def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3>());
+
+    py::class_<atcg::PointRenderComponent>(m, "PointRenderComponent")
+        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>());
+
+    py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent")
+        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>());
+
+    py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent").def(py::init<glm::vec3>());
+
+    py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent").def(py::init<glm::vec3>());
 
 
     // ------------------- RENDERER ---------------------------------
