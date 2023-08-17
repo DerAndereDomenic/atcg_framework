@@ -1,23 +1,15 @@
 Scene: Untitled
 Entities:
-  - Entity: 9129869165859832091
-    Name: Test Camera
-    Transform:
-      Translation: [-2.30066439e-06, 26.3165092, -35.0206108]
-      Scale: [1, 1.00000012, 1.00000012]
-      EulerAngles: [-2.92334366, -1.89288212e-08, 3.1415925]
-    PerspectiveCamera:
-      AspectRatio: 2.5
-  - Entity: 5914046139043569560
+  - Entity: 14869007893118507165
     Name: Cloth
     Transform:
-      Translation: [0, 27.6573601, 0]
-      Scale: [1, 1.00000012, 1.00000012]
-      EulerAngles: [0.994062543, 0, 0]
+      Translation: [0, 31.8091087, 0]
+      Scale: [1, 1.00000024, 1.00000024]
+      EulerAngles: [0.788450837, 0, 0]
     Geometry:
       Type: 2
-      Vertices: res/Cloth/Scene.yaml.5914046139043569560.vertices
-      Edges: res/Cloth/Scene.yaml.5914046139043569560.edges
+      Vertices: res/Cloth/Scene.yaml.14869007893118507165.vertices
+      Edges: res/Cloth/Scene.yaml.14869007893118507165.edges
     Renderer:
       - RenderType: 2
         Color: [1, 1, 1]
@@ -28,7 +20,7 @@ Entities:
       - RenderType: 4
         Color: [1, 1, 1]
         EdgeRadius: 1
-  - Entity: 11321595665421148368
+  - Entity: 3891223852780586477
     Name: Plane
     Transform:
       Translation: [0, 0, 0]
@@ -36,18 +28,26 @@ Entities:
       EulerAngles: [-0, 0, -0]
     Geometry:
       Type: 1
-      Vertices: res/Cloth/Scene.yaml.11321595665421148368.vertices
-      Faces: res/Cloth/Scene.yaml.11321595665421148368.faces
-      Edges: res/Cloth/Scene.yaml.11321595665421148368.edges
+      Vertices: res/Cloth/Scene.yaml.3891223852780586477.vertices
+      Faces: res/Cloth/Scene.yaml.3891223852780586477.faces
+      Edges: res/Cloth/Scene.yaml.3891223852780586477.edges
     Renderer:
       - RenderType: 0
         Color: [1, 1, 1]
         VertexShaderPath: exercises/Cloth/checkerboard.vs
         FragmentShaderPath: exercises/Cloth/checkerboard.fs
         GeometryShaderPath: ""
-  - Entity: 5905187068440045987
+  - Entity: 7929540945220162990
     Name: EditorCamera
     EditorCamera:
-      Translation: [-37.0499725, 61.3200493, -35.9613724]
-      LookAt: [-0.904254317, 11.3465595, 8.6339283]
-      AspectRatio: 1.77777779
+      Translation: [-47.0556374, 47.1916313, -45.9422112]
+      LookAt: [10.8206053, 16.8190098, 16.6663589]
+      AspectRatio: 1.48467648
+  - Entity: 7357564886508785528
+    Name: Test Camera
+    Transform:
+      Translation: [-2.29563602e-06, 26.259016, -36.6801033]
+      Scale: [1, 1, 1]
+      EulerAngles: [-3.1415925, 0, 3.1415925]
+    PerspectiveCamera:
+      AspectRatio: 2.03125
