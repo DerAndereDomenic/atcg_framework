@@ -366,8 +366,10 @@ PYBIND11_MODULE(pyatcg, m)
              [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
              { atcg::Renderer::draw(scene, camera); })
         .def("drawCADGrid",
-             [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-             { atcg::Renderer::drawCADGrid(camera); });    // ? Adding this function introduced a memory leak?
+             [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::drawCADGrid(camera); })
+        .def("drawCameras",
+             [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+             { atcg::Renderer::drawCameras(scene, camera); });
 
     py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
         .def(py::init<std::string, std::string>())
