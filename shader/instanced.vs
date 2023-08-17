@@ -3,10 +3,11 @@
 layout (location = 0) in vec3 aPosition;
 layout (location = 1) in vec3 aNormal;
 layout (location = 2) in vec3 aColor;
+layout (location = 3) in vec2 aUV;
 
 // Instance variables
-layout (location = 3) in mat4 aInstanceModel;
-layout (location = 7) in vec3 aInstanceColor;
+layout (location = 4) in mat4 aInstanceModel;
+layout (location = 8) in vec3 aInstanceColor;
 
 uniform mat4 M, V, P;
 

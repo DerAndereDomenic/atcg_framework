@@ -44,7 +44,8 @@ Graph::Impl::Impl()
     this->vertices = atcg::make_ref<VertexBuffer>();
     this->vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
                                {ShaderDataType::Float3, "aNormal"},
-                               {ShaderDataType::Float3, "aColor"}});
+                               {ShaderDataType::Float3, "aColor"},
+                               {ShaderDataType::Float2, "aUV"}});
 
 
     vertices_array = atcg::make_ref<VertexArray>();
