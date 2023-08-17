@@ -6,16 +6,9 @@ extern atcg::Application* atcg::createApplication();
 
 namespace atcg
 {
-int atcg_main(Application* app)
+
+void print_statistics()
 {
-    app->run();
-
-    {
-        atcg::ShaderManager::destroy();
-        atcg::Renderer::destroy();
-        delete app;
-    }
-
     atcg::host_allocator alloc_host;
     std::size_t host_bytes_allocated   = alloc_host.bytes_allocated;
     std::size_t host_bytes_deallocated = alloc_host.bytes_deallocated;
@@ -33,6 +26,17 @@ int atcg_main(Application* app)
               dev_bytes_deallocated,
               dev_bytes_allocated,
               dev_bytes_allocated - dev_bytes_deallocated);
+}
+
+int atcg_main(Application* app)
+{
+    app->run();
+
+    {
+        atcg::ShaderManager::destroy();
+        atcg::Renderer::destroy();
+        delete app;
+    }
 
     return 0;
 }
@@ -41,5 +45,7 @@ int atcg_main(Application* app)
 int main(int argc, char** argv)
 {
     atcg::Application* app = atcg::createApplication();
-    return atcg::atcg_main(app);
+    int ret                = atcg::atcg_main(app);
+    atcg::print_statistics();
+    return ret;
 }
