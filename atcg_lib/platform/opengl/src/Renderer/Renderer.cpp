@@ -38,6 +38,8 @@ public:
     bool sphere_has_instance   = false;
     bool cylinder_has_instance = false;
 
+    atcg::ref_ptr<Texture2D> white_pixel;
+
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
     glm::vec3 clear_color;
 
@@ -102,6 +104,9 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     initCross();
 
     initCameraFrustrum();
+
+    glm::u8vec4 white = glm::u8vec4(255);
+    white_pixel       = atcg::Texture2D::createColorTexture(&white, 1, 1);
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -641,6 +646,8 @@ void Renderer::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
 {
     vao->use();
     shader->setVec3("flat_color", color);
+    white_pixel->use(0);
+    shader->setInt("tex", 0);
     shader->setInt("instanced", static_cast<int>(instances > 1));
     if(camera)
     {

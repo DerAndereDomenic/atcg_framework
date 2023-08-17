@@ -80,6 +80,15 @@ public:
     static atcg::ref_ptr<Texture2D> createColorTexture(uint32_t width, uint32_t height);
 
     /**
+     * @brief Create a RGBA color texture
+     *
+     * @param data The texture data
+     * @param width The width
+     * @param height The height
+     */
+    static atcg::ref_ptr<Texture2D> createColorTexture(const glm::u8vec4* data, uint32_t width, uint32_t height);
+
+    /**
      * @brief Create a depth texture
      *
      * @param width The width

@@ -6,15 +6,17 @@ layout (location = 1) out int outEntityID;
 in vec3 frag_normal;
 in vec3 frag_pos;
 in vec3 frag_color;
+in vec2 frag_uv;
 
 uniform vec3 camera_pos;
 uniform vec3 camera_dir;
 uniform vec3 flat_color;
 uniform int entityID;
+uniform sampler2D tex;
 
 void main()
 {
-    vec3 color_combined = frag_color * flat_color;
+    vec3 color_combined = frag_color * flat_color * texture(tex, frag_uv).rgb;
     vec3 ambient = vec3(0.1f) * color_combined;
     vec3 light_radiance = vec3(2.0);
     float light_distance = 1.0f;

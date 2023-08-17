@@ -18,6 +18,11 @@ void Texture::useForCompute(const uint32_t& slot) const
 
 atcg::ref_ptr<Texture2D> Texture2D::createColorTexture(uint32_t width, uint32_t height)
 {
+    return createColorTexture(nullptr, width, height);
+}
+
+atcg::ref_ptr<Texture2D> Texture2D::createColorTexture(const glm::u8vec4* data, uint32_t width, uint32_t height)
+{
     atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
 
     result->_width  = width;
@@ -28,10 +33,10 @@ atcg::ref_ptr<Texture2D> Texture2D::createColorTexture(uint32_t width, uint32_t 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_2D, result->_ID);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)data);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

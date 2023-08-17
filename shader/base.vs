@@ -16,6 +16,7 @@ uniform int instanced;
 out vec3 frag_normal;
 out vec3 frag_pos;
 out vec3 frag_color;
+out vec2 frag_uv;
 
 void main()
 {
@@ -40,4 +41,6 @@ void main()
     // frag_normal = normalize(vec3(inverse(transpose((1-instanced) * M + instanced * M)) * vec4(aNormal, 0)));
     frag_normal = normalize(vec3(M * vec4(aNormal, 0)));
     frag_color = aColor * (instanced * aInstanceColor + (1 - instanced) * vec3(1));
+
+    frag_uv = aUV;
 }
