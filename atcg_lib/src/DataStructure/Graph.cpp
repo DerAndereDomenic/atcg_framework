@@ -185,7 +185,8 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mes
     std::vector<glm::u32vec3> indices_data;
     indices_data.resize(mesh->n_faces());
 
-    bool has_color = mesh->has_vertex_colors();
+    bool has_color     = mesh->has_vertex_colors();
+    bool has_texcoords = mesh->has_vertex_texcoords2D();
 
     for(auto vertex = mesh->vertices_begin(); vertex != mesh->vertices_end(); ++vertex)
     {
@@ -193,9 +194,11 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mes
         glm::vec3 pos                   = mesh->point(*vertex);
         glm::vec3 normal                = mesh->calc_vertex_normal(*vertex);
         glm::vec3 col                   = has_color ? mesh->color(*vertex) : glm::vec3(1);
+        glm::vec2 uv                    = has_texcoords ? mesh->texcoord2D(*vertex) : glm::vec2(0);
         vertex_data[vertex_id].position = pos;
         vertex_data[vertex_id].normal   = normal;
         vertex_data[vertex_id].color    = has_color ? col / 255.0f : glm::vec3(1.0f);
+        vertex_data[vertex_id].uv       = uv;
     }
 
     int32_t face_id = 0;
@@ -378,6 +381,7 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Option
 
     if(options.vertex_has_color()) { mesh->request_vertex_colors(); }
     if(options.face_has_color()) { mesh->request_face_colors(); }
+    if(options.vertex_has_texcoord()) { mesh->request_vertex_texcoords2D(); }
 
     OpenMesh::IO::read_mesh(*mesh.get(), path, options);
 
