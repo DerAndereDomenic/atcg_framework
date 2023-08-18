@@ -135,7 +135,7 @@ PYBIND11_MODULE(pyatcg, m)
     m.def("enableDockSpace", [](bool enable) { atcg::Application::get()->enableDockSpace(enable); });
 
     // ---------------- MATH -------------------------
-    py::class_<glm::vec3>(m, "vec2", py::buffer_protocol())
+    py::class_<glm::vec2>(m, "vec2", py::buffer_protocol())
         .def(py::init<float, float>())
         .def(py::init<float>())
         .def(py::init(
@@ -692,11 +692,13 @@ PYBIND11_MODULE(pyatcg, m)
 
     // IMGUI BINDINGS
 
-    m.def("BeginMainMenuBar", &ImGui::BeginMainMenuBar);
-    m.def("EndMainMenuBar", &ImGui::EndMainMenuBar);
-    m.def("BeginMenu", &ImGui::BeginMenu, py::arg("label"), py::arg("enabled") = true);
-    m.def("EndMenu", &ImGui::EndMenu);
-    m.def(
+    auto mimgui = m.def_submodule("ImGui");
+
+    mimgui.def("BeginMainMenuBar", &ImGui::BeginMainMenuBar);
+    mimgui.def("EndMainMenuBar", &ImGui::EndMainMenuBar);
+    mimgui.def("BeginMenu", &ImGui::BeginMenu, py::arg("label"), py::arg("enabled") = true);
+    mimgui.def("EndMenu", &ImGui::EndMenu);
+    mimgui.def(
         "MenuItem",
         [](const char* label, const char* shortcut, bool* p_selected, bool enabled)
         {
@@ -708,7 +710,7 @@ PYBIND11_MODULE(pyatcg, m)
         py::arg("p_selected"),
         py::arg("enabled") = true,
         py::return_value_policy::automatic_reference);
-    m.def(
+    mimgui.def(
         "Begin",
         [](const char* name, bool* p_open, ImGuiWindowFlags flags)
         {
@@ -719,8 +721,8 @@ PYBIND11_MODULE(pyatcg, m)
         py::arg("p_open") = nullptr,
         py::arg("flags")  = 0,
         py::return_value_policy::automatic_reference);
-    m.def("End", &ImGui::End);
-    m.def(
+    mimgui.def("End", &ImGui::End);
+    mimgui.def(
         "Checkbox",
         [](const char* label, bool* v)
         {
@@ -730,7 +732,7 @@ PYBIND11_MODULE(pyatcg, m)
         py::arg("label"),
         py::arg("v"),
         py::return_value_policy::automatic_reference);
-    m.def(
+    mimgui.def(
         "Button",
         [](const char* label)
         {
@@ -739,7 +741,7 @@ PYBIND11_MODULE(pyatcg, m)
         },
         py::arg("label"),
         py::return_value_policy::automatic_reference);
-    m.def(
+    mimgui.def(
         "SliderInt",
         [](const char* label, int* v, int v_min, int v_max, const char* format = "%d", ImGuiSliderFlags flags = 0)
         {
@@ -753,7 +755,7 @@ PYBIND11_MODULE(pyatcg, m)
         py::arg("format") = "%d",
         py::arg("flags")  = 0,
         py::return_value_policy::automatic_reference);
-    m.def(
+    mimgui.def(
         "SliderFloat",
         [](const char* label,
            float* v,
@@ -772,7 +774,7 @@ PYBIND11_MODULE(pyatcg, m)
         py::arg("format") = "%.3f",
         py::arg("flags")  = 0,
         py::return_value_policy::automatic_reference);
-    m.def(
+    mimgui.def(
         "Text",
         [](const char* fmt)
         {
@@ -787,7 +789,7 @@ PYBIND11_MODULE(pyatcg, m)
         .value("ROTATE", ImGuizmo::OPERATION::ROTATE)
         .value("SCALE", ImGuizmo::OPERATION::SCALE)
         .export_values();
-    m.def("drawGuizmo", atcg::drawGuizmo);
+    mimgui.def("drawGuizmo", atcg::drawGuizmo);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
