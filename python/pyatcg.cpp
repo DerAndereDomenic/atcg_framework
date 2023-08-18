@@ -363,6 +363,8 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::Entity>(m, "Entity")
         .def(py::init<>())
         .def(py::init<entt::entity, atcg::Scene*>())
+        .def(py::init<>([](entt::entity e, const atcg::ref_ptr<atcg::Scene>& scene)
+                        { return atcg::Entity(e, scene.get()); }))
         .def("addTransformComponent",
              [](atcg::Entity& entity, const glm::vec3& position, const glm::vec3& scale, const glm::vec3& rotation)
              { return entity.addComponent<atcg::TransformComponent>(position, scale, rotation); })
@@ -488,7 +490,8 @@ PYBIND11_MODULE(pyatcg, m)
              [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::drawCADGrid(camera); })
         .def("drawCameras",
              [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-             { atcg::Renderer::drawCameras(scene, camera); });
+             { atcg::Renderer::drawCameras(scene, camera); })
+        .def_static("getEntityIndex", &atcg::Renderer::getEntityIndex);
 
     py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
         .def(py::init<std::string, std::string>())
