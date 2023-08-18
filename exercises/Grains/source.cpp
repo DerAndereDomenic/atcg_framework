@@ -298,42 +298,51 @@ public:
 
         // Create acc structure for bottle
         atcg::ref_ptr<atcg::TriMesh> bottle_mesh = atcg::make_ref<atcg::TriMesh>();
-        OpenMesh::IO::read_mesh(*bottle_mesh.get(), "../Meshes/bottle_inner_100.obj");
+        OpenMesh::IO::read_mesh(*bottle_mesh.get(), "../Meshes/salt_inner_300.obj");
 
-        for(auto vit = bottle_mesh->vertices_begin(); vit != bottle_mesh->vertices_end(); ++vit)
-        {
-            bottle_mesh->set_point(*vit, glm::scale(glm::vec3(5.0f)) * glm::vec4(bottle_mesh->point(*vit), 1.0f));
-        }
+        // for(auto vit = bottle_mesh->vertices_begin(); vit != bottle_mesh->vertices_end(); ++vit)
+        // {
+        //     bottle_mesh->set_point(*vit, glm::scale(glm::vec3(5.0f)) * glm::vec4(bottle_mesh->point(*vit), 1.0f));
+        // }
 
-        atcg::Entity bottle_entity = scene->createEntity("Bottle");
+        atcg::Entity bottle_entity = scene->createEntity("BottleInner");
         {
             auto& transform = bottle_entity.addComponent<atcg::TransformComponent>();
             // transform.setRotation(glm::vec3(0.0f, -glm::pi<float>() / 2.0f, 0.0f));
             // transform.setScale(glm::vec3(5.0f));
             bottle_entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createTriangleMesh(bottle_mesh));
-            auto& renderer = bottle_entity.addComponent<atcg::MeshRenderComponent>();
-
+            auto& renderer   = bottle_entity.addComponent<atcg::MeshRenderComponent>();
+            renderer.visible = false;
             atcg::Tracing::prepateAccelerationStructure(bottle_entity);
         }
 
+        {
+            atcg::Entity entity = scene->createEntity("Bottle");
+            auto& transform     = entity.addComponent<atcg::TransformComponent>();
+            // transform.setRotation(glm::vec3(0.0f, -glm::pi<float>() / 2.0f, 0.0f));
+            // transform.setScale(glm::vec3(5.0f));
+            entity.addComponent<atcg::GeometryComponent>(atcg::IO::read_mesh("../Meshes/salt_300.obj"));
+            auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
+        }
 
-        std::ifstream input2("../Meshes/bottle_inner_sdf.bin", std::ios::binary);
 
-        // copies all data into buffer
-        std::vector<unsigned char> buffer2(std::istreambuf_iterator<char>(input2), {});
+        // std::ifstream input2("../Meshes/bottle_inner_sdf.bin", std::ios::binary);
 
-        atcg::Grid<float> grid(glm::vec3(0), 128, 2.0f / 127.0f);
-        grid.setData(reinterpret_cast<float*>(buffer2.data()));
+        // // copies all data into buffer
+        // std::vector<unsigned char> buffer2(std::istreambuf_iterator<char>(input2), {});
+
+        // atcg::Grid<float> grid(glm::vec3(0), 128, 2.0f / 127.0f);
+        // grid.setData(reinterpret_cast<float*>(buffer2.data()));
 
         // poisson_sample();
         std::vector<atcg::Vertex> vertices_cloud;
         std::vector<glm::mat4> models;
 
-        for(int k = -3; k < 4; ++k)
+        for(int k = -6; k < 7; ++k)
         {
-            for(int j = -12; j < 13; ++j)
+            for(int j = -15; j < 16; ++j)
             {
-                for(int l = -3; l < 4; ++l)
+                for(int l = -6; l < 7; ++l)
                 {
                     for(uint32_t i = 0; i < m_positions.size(); ++i)
                     {
