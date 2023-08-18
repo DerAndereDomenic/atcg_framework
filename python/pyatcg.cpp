@@ -129,8 +129,8 @@ PYBIND11_MODULE(pyatcg, m)
               return (float)window->getHeight();
           });
 
-    m.def("viewportSize()", []() { return atcg::Application::get()->getViewportSize(); });
-    m.def("viewportPositions()", []() { return atcg::Application::get()->getViewportPosition(); });
+    m.def("getViewportSize", []() { return atcg::Application::get()->getViewportSize(); });
+    m.def("getViewportPosition", []() { return atcg::Application::get()->getViewportPosition(); });
 
     m.def("enableDockSpace", [](bool enable) { atcg::Application::get()->enableDockSpace(enable); });
 
@@ -157,7 +157,35 @@ PYBIND11_MODULE(pyatcg, m)
                                        1,
                                        {2},
                                        {sizeof(float)});
-            });
+            })
+        .def_readwrite("x", &glm::vec2::x)
+        .def_readwrite("y", &glm::vec2::y);
+
+    py::class_<glm::ivec2>(m, "ivec2", py::buffer_protocol())
+        .def(py::init<int, int>())
+        .def(py::init<int>())
+        .def(py::init(
+            [](py::array_t<int> b)
+            {
+                py::buffer_info info = b.request();
+
+                // Copy for now, is there a better method?
+                glm::ivec2 v = glm::make_vec2(static_cast<int*>(info.ptr));
+
+                return v;
+            }))
+        .def_buffer(
+            [](glm::ivec2& v) -> py::buffer_info
+            {
+                return py::buffer_info(glm::value_ptr(v),
+                                       sizeof(int),
+                                       py::format_descriptor<int>::format(),
+                                       1,
+                                       {2},
+                                       {sizeof(int)});
+            })
+        .def_readwrite("x", &glm::ivec2::x)
+        .def_readwrite("y", &glm::ivec2::y);
 
     py::class_<glm::vec3>(m, "vec3", py::buffer_protocol())
         .def(py::init<float, float, float>())
@@ -181,7 +209,37 @@ PYBIND11_MODULE(pyatcg, m)
                                        1,
                                        {3},
                                        {sizeof(float)});
-            });
+            })
+        .def_readwrite("x", &glm::vec3::x)
+        .def_readwrite("y", &glm::vec3::y)
+        .def_readwrite("z", &glm::vec3::z);
+
+    py::class_<glm::ivec3>(m, "ivec3", py::buffer_protocol())
+        .def(py::init<int, int, int>())
+        .def(py::init<int>())
+        .def(py::init(
+            [](py::array_t<int> b)
+            {
+                py::buffer_info info = b.request();
+
+                // Copy for now, is there a better method?
+                glm::ivec3 v = glm::make_vec3(static_cast<int*>(info.ptr));
+
+                return v;
+            }))
+        .def_buffer(
+            [](glm::ivec3& v) -> py::buffer_info
+            {
+                return py::buffer_info(glm::value_ptr(v),
+                                       sizeof(int),
+                                       py::format_descriptor<int>::format(),
+                                       1,
+                                       {3},
+                                       {sizeof(int)});
+            })
+        .def_readwrite("x", &glm::ivec3::x)
+        .def_readwrite("y", &glm::ivec3::y)
+        .def_readwrite("z", &glm::ivec3::z);
 
     py::class_<glm::vec4>(m, "vec4", py::buffer_protocol())
         .def(py::init(
@@ -205,7 +263,39 @@ PYBIND11_MODULE(pyatcg, m)
                                        1,
                                        {4},
                                        {sizeof(float)});
-            });
+            })
+        .def_readwrite("x", &glm::vec4::x)
+        .def_readwrite("y", &glm::vec4::y)
+        .def_readwrite("z", &glm::vec4::z)
+        .def_readwrite("w", &glm::vec4::w);
+
+    py::class_<glm::ivec4>(m, "ivec4", py::buffer_protocol())
+        .def(py::init<int, int, int, int>())
+        .def(py::init<int>())
+        .def(py::init(
+            [](py::array_t<int> b)
+            {
+                py::buffer_info info = b.request();
+
+                // Copy for now, is there a better method?
+                glm::ivec4 v = glm::make_vec4(static_cast<int*>(info.ptr));
+
+                return v;
+            }))
+        .def_buffer(
+            [](glm::ivec4& v) -> py::buffer_info
+            {
+                return py::buffer_info(glm::value_ptr(v),
+                                       sizeof(int),
+                                       py::format_descriptor<int>::format(),
+                                       1,
+                                       {4},
+                                       {sizeof(int)});
+            })
+        .def_readwrite("x", &glm::ivec4::x)
+        .def_readwrite("y", &glm::ivec4::y)
+        .def_readwrite("z", &glm::ivec4::z)
+        .def_readwrite("w", &glm::ivec4::w);
 
     py::class_<glm::mat3>(m, "mat3", py::buffer_protocol())
         .def(py::init(
@@ -784,7 +874,9 @@ PYBIND11_MODULE(pyatcg, m)
         py::arg("fmt"),
         py::return_value_policy::automatic_reference);
 
-    py::enum_<ImGuizmo::OPERATION>(m, "GuizmoOperation")
+    mimgui.def("isUsing", &ImGuizmo::IsUsing);
+
+    py::enum_<ImGuizmo::OPERATION>(mimgui, "GuizmoOperation")
         .value("TRANSLATE", ImGuizmo::OPERATION::TRANSLATE)
         .value("ROTATE", ImGuizmo::OPERATION::ROTATE)
         .value("SCALE", ImGuizmo::OPERATION::SCALE)
