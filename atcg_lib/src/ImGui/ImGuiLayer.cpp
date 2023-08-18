@@ -141,10 +141,9 @@ void ImGuiLayer::begin()
         _viewport_position = glm::ivec2(viewportMinRegion.x + viewportOffset.x - window_pos.x,
                                         viewportMinRegion.y + viewportOffset.y - window_pos.y);
 
-        bool viewport_focused = ImGui::IsWindowFocused();
         bool viewport_hovered = ImGui::IsWindowHovered();
 
-        _block_events = !(viewport_hovered || viewport_focused);
+        _block_events = !(viewport_hovered);
 
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         _viewport_size           = glm::ivec2(viewportPanelSize.x, viewportPanelSize.y);
