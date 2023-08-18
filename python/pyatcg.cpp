@@ -129,9 +129,36 @@ PYBIND11_MODULE(pyatcg, m)
               return (float)window->getHeight();
           });
 
+    m.def("viewportSize()", []() { return atcg::Application::get()->getViewportSize(); });
+    m.def("viewportPositions()", []() { return atcg::Application::get()->getViewportPosition(); });
+
     m.def("enableDockSpace", [](bool enable) { atcg::Application::get()->enableDockSpace(enable); });
 
     // ---------------- MATH -------------------------
+    py::class_<glm::vec3>(m, "vec2", py::buffer_protocol())
+        .def(py::init<float, float>())
+        .def(py::init<float>())
+        .def(py::init(
+            [](py::array_t<float> b)
+            {
+                py::buffer_info info = b.request();
+
+                // Copy for now, is there a better method?
+                glm::vec2 v = glm::make_vec2(static_cast<float*>(info.ptr));
+
+                return v;
+            }))
+        .def_buffer(
+            [](glm::vec2& v) -> py::buffer_info
+            {
+                return py::buffer_info(glm::value_ptr(v),
+                                       sizeof(float),
+                                       py::format_descriptor<float>::format(),
+                                       1,
+                                       {2},
+                                       {sizeof(float)});
+            });
+
     py::class_<glm::vec3>(m, "vec3", py::buffer_protocol())
         .def(py::init<float, float, float>())
         .def(py::init<float>())
