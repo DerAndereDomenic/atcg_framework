@@ -476,14 +476,14 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
     // renderer.shader->setInt("entityID", entity_id);
     s_renderer->impl->white_pixel->use(0);
-    if(entity.hasComponent<TextureComponent>())
-    {
-        TextureComponent texture = entity.getComponent<TextureComponent>();
-        texture.texture->use(0);
-    }
 
     if(entity.hasComponent<MeshRenderComponent>())
     {
+        if(entity.hasComponent<TextureComponent>())
+        {
+            TextureComponent texture = entity.getComponent<TextureComponent>();
+            texture.texture->use(0);
+        }
         MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
         if(renderer.visible)
         {
