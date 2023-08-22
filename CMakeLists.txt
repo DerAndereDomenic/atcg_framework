@@ -4,8 +4,10 @@ project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
 
 option(ATCG_CUDA_BACKEND "Compile cuda backend" OFF)
 option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
+option(ATCG_BUILD_DOCS "Build documentation" ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -155,4 +157,10 @@ if(ATCG_PYTHON_BINDINGS)
             #stdc++
         )
     endif()
+endif()
+
+# DOCS
+
+if(ATCG_BUILD_DOCS)
+    add_subdirectory(docs)
 endif()
