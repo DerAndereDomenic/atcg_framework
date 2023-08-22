@@ -2,6 +2,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
+#include <pybind11/cast.h>
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 #include <glm/glm.hpp>
@@ -53,6 +54,7 @@ int python_main(atcg::Layer* layer)
 }
 
 namespace py = pybind11;
+using namespace pybind11::literals;
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
 
@@ -83,19 +85,20 @@ PYBIND11_MODULE(pyatcg, m)
     auto m_mat3   = py::class_<glm::mat3>(m, "mat3", py::buffer_protocol());
     auto m_mat4   = py::class_<glm::mat4>(m, "mat4", py::buffer_protocol());
 
-    m.def("show", &python_main, "Start the application.");
+    m.def("show", &python_main, "layer"_a, "Start the application.");
     m.def("print_statistics", &atcg::print_statistics);
     m_layer.def(py::init<>())
+        .def(py::init<std::string>(), "name"_a)
         .def("onAttach", &atcg::Layer::onAttach)
-        .def("onUpdate", &atcg::Layer::onUpdate)
+        .def("onUpdate", &atcg::Layer::onUpdate, "delta_time"_a)
         .def("onImGuiRender", &atcg::Layer::onImGuiRender)
-        .def("onEvent", &atcg::Layer::onEvent);
+        .def("onEvent", &atcg::Layer::onEvent, "event"_a);
 
     m_event.def("getName", &atcg::Event::getName).def_readwrite("handled", &atcg::Event::handled);
 
     py::class_<atcg::WindowCloseEvent, atcg::Event>(m, "WindowCloseEvent");
     py::class_<atcg::WindowResizeEvent, atcg::Event>(m, "WindowResizeEvent")
-        .def(py::init<unsigned int, unsigned int>())
+        .def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
         .def("getWidth", &atcg::WindowResizeEvent::getWidth)
         .def("getHeight", &atcg::WindowResizeEvent::getHeight);
     py::class_<atcg::MouseButtonEvent, atcg::Event>(m, "MouseButtonEvent")
@@ -103,26 +106,26 @@ PYBIND11_MODULE(pyatcg, m)
         .def("getX", &atcg::MouseButtonEvent::getX)
         .def("getY", &atcg::MouseButtonEvent::getY);
     py::class_<atcg::MouseButtonPressedEvent, atcg::MouseButtonEvent>(m, "MouseButtonPressedEvent")
-        .def(py::init<int32_t, float, float>());
+        .def(py::init<int32_t, float, float>(), "button"_a, "x"_a, "y"_a);
     py::class_<atcg::MouseButtonReleasedEvent, atcg::MouseButtonEvent>(m, "MouseButtonReleasedEvent")
-        .def(py::init<int32_t, float, float>());
+        .def(py::init<int32_t, float, float>(), "button"_a, "x"_a, "y"_a);
     py::class_<atcg::MouseMovedEvent, atcg::Event>(m, "MouseMovedEvent")
-        .def(py::init<float, float>())
+        .def(py::init<float, float>(), "x"_a, "y"_a)
         .def("getX", &atcg::MouseMovedEvent::getX)
         .def("getY", &atcg::MouseMovedEvent::getY);
     py::class_<atcg::MouseScrolledEvent, atcg::Event>(m, "MouseScrolledEvent")
-        .def(py::init<float, float>())
+        .def(py::init<float, float>(), "x"_a, "y"_a)
         .def("getXOffset", &atcg::MouseScrolledEvent::getXOffset)
         .def("getYOffset", &atcg::MouseScrolledEvent::getYOffset);
     py::class_<atcg::KeyEvent, atcg::Event>(m, "KeyEvent").def("getKeyCode", &atcg::KeyEvent::getKeyCode);
     py::class_<atcg::KeyPressedEvent, atcg::KeyEvent>(m, "KeyPressedEvent")
-        .def(py::init<int32_t, bool>())
+        .def(py::init<int32_t, bool>(), "key"_a, "key_pressed"_a)
         .def("isRepeat", &atcg::KeyPressedEvent::IsRepeat)
         .def("getCode", &atcg::KeyPressedEvent::getCode);
     py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent").def(py::init<int32_t>());
     py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent").def(py::init<int32_t>());
     py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent")
-        .def(py::init<unsigned int, unsigned int>())
+        .def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
         .def("getWidth", &atcg::ViewportResizeEvent::getWidth)
         .def("getHeight", &atcg::ViewportResizeEvent::getHeight);
 
@@ -145,21 +148,25 @@ PYBIND11_MODULE(pyatcg, m)
     m.def("getViewportSize", []() { return atcg::Application::get()->getViewportSize(); });
     m.def("getViewportPosition", []() { return atcg::Application::get()->getViewportPosition(); });
 
-    m.def("enableDockSpace", [](bool enable) { atcg::Application::get()->enableDockSpace(enable); });
+    m.def(
+        "enableDockSpace",
+        [](bool enable) { atcg::Application::get()->enableDockSpace(enable); },
+        "enable"_a);
 
     // ---------------- MATH -------------------------
-    m_vec2.def(py::init<float, float>())
-        .def(py::init<float>())
+    m_vec2.def(py::init<float, float>(), "x"_a, "y"_a)
+        .def(py::init<float>(), "value"_a)
         .def(py::init(
-            [](py::array_t<float> b)
-            {
-                py::buffer_info info = b.request();
+                 [](py::array_t<float> b)
+                 {
+                     py::buffer_info info = b.request();
 
-                // Copy for now, is there a better method?
-                glm::vec2 v = glm::make_vec2(static_cast<float*>(info.ptr));
+                     // Copy for now, is there a better method?
+                     glm::vec2 v = glm::make_vec2(static_cast<float*>(info.ptr));
 
-                return v;
-            }))
+                     return v;
+                 }),
+             "array"_a)
         .def_buffer(
             [](glm::vec2& v) -> py::buffer_info
             {
@@ -173,18 +180,19 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("x", &glm::vec2::x)
         .def_readwrite("y", &glm::vec2::y);
 
-    m_ivec2.def(py::init<int, int>())
-        .def(py::init<int>())
+    m_ivec2.def(py::init<int, int>(), "x"_a, "y"_a)
+        .def(py::init<int>(), "value"_a)
         .def(py::init(
-            [](py::array_t<int> b)
-            {
-                py::buffer_info info = b.request();
+                 [](py::array_t<int> b)
+                 {
+                     py::buffer_info info = b.request();
 
-                // Copy for now, is there a better method?
-                glm::ivec2 v = glm::make_vec2(static_cast<int*>(info.ptr));
+                     // Copy for now, is there a better method?
+                     glm::ivec2 v = glm::make_vec2(static_cast<int*>(info.ptr));
 
-                return v;
-            }))
+                     return v;
+                 }),
+             "array"_a)
         .def_buffer(
             [](glm::ivec2& v) -> py::buffer_info
             {
@@ -198,18 +206,19 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("x", &glm::ivec2::x)
         .def_readwrite("y", &glm::ivec2::y);
 
-    m_vec3.def(py::init<float, float, float>())
-        .def(py::init<float>())
+    m_vec3.def(py::init<float, float, float>(), "x"_a, "y"_a, "z"_a)
+        .def(py::init<float>(), "value"_a)
         .def(py::init(
-            [](py::array_t<float> b)
-            {
-                py::buffer_info info = b.request();
+                 [](py::array_t<float> b)
+                 {
+                     py::buffer_info info = b.request();
 
-                // Copy for now, is there a better method?
-                glm::vec3 v = glm::make_vec3(static_cast<float*>(info.ptr));
+                     // Copy for now, is there a better method?
+                     glm::vec3 v = glm::make_vec3(static_cast<float*>(info.ptr));
 
-                return v;
-            }))
+                     return v;
+                 }),
+             "array"_a)
         .def_buffer(
             [](glm::vec3& v) -> py::buffer_info
             {
@@ -224,18 +233,19 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("y", &glm::vec3::y)
         .def_readwrite("z", &glm::vec3::z);
 
-    m_ivec3.def(py::init<int, int, int>())
-        .def(py::init<int>())
+    m_ivec3.def(py::init<int, int, int>(), "x"_a, "y"_a, "z"_a)
+        .def(py::init<int>(), "value"_a)
         .def(py::init(
-            [](py::array_t<int> b)
-            {
-                py::buffer_info info = b.request();
+                 [](py::array_t<int> b)
+                 {
+                     py::buffer_info info = b.request();
 
-                // Copy for now, is there a better method?
-                glm::ivec3 v = glm::make_vec3(static_cast<int*>(info.ptr));
+                     // Copy for now, is there a better method?
+                     glm::ivec3 v = glm::make_vec3(static_cast<int*>(info.ptr));
 
-                return v;
-            }))
+                     return v;
+                 }),
+             "array"_a)
         .def_buffer(
             [](glm::ivec3& v) -> py::buffer_info
             {
@@ -252,17 +262,18 @@ PYBIND11_MODULE(pyatcg, m)
 
     m_vec4
         .def(py::init(
-            [](py::array_t<float> b)
-            {
-                py::buffer_info info = b.request();
+                 [](py::array_t<float> b)
+                 {
+                     py::buffer_info info = b.request();
 
-                // Copy for now, is there a better method?
-                glm::vec4 v = glm::make_vec4(static_cast<float*>(info.ptr));
+                     // Copy for now, is there a better method?
+                     glm::vec4 v = glm::make_vec4(static_cast<float*>(info.ptr));
 
-                return v;
-            }))
-        .def(py::init<float, float, float, float>())
-        .def(py::init<float>())
+                     return v;
+                 }),
+             "array"_a)
+        .def(py::init<float, float, float, float>(), "x"_a, "y"_a, "z"_a, "w"_a)
+        .def(py::init<float>(), "value"_a)
         .def_buffer(
             [](glm::vec4& v) -> py::buffer_info
             {
@@ -278,18 +289,19 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("z", &glm::vec4::z)
         .def_readwrite("w", &glm::vec4::w);
 
-    m_ivec4.def(py::init<int, int, int, int>())
-        .def(py::init<int>())
+    m_ivec4.def(py::init<int, int, int, int>(), "x"_a, "y"_a, "z"_a, "w"_a)
+        .def(py::init<int>(), "value"_a)
         .def(py::init(
-            [](py::array_t<int> b)
-            {
-                py::buffer_info info = b.request();
+                 [](py::array_t<int> b)
+                 {
+                     py::buffer_info info = b.request();
 
-                // Copy for now, is there a better method?
-                glm::ivec4 v = glm::make_vec4(static_cast<int*>(info.ptr));
+                     // Copy for now, is there a better method?
+                     glm::ivec4 v = glm::make_vec4(static_cast<int*>(info.ptr));
 
-                return v;
-            }))
+                     return v;
+                 }),
+             "array"_a)
         .def_buffer(
             [](glm::ivec4& v) -> py::buffer_info
             {
@@ -307,14 +319,15 @@ PYBIND11_MODULE(pyatcg, m)
 
     m_mat3
         .def(py::init(
-            [](py::array_t<float> b)
-            {
-                py::buffer_info info = b.request();
+                 [](py::array_t<float> b)
+                 {
+                     py::buffer_info info = b.request();
 
-                glm::mat3 M = glm::make_mat3(static_cast<float*>(info.ptr));
+                     glm::mat3 M = glm::make_mat3(static_cast<float*>(info.ptr));
 
-                return M;
-            }))
+                     return M;
+                 }),
+             "array"_a)
         .def_buffer(
             [](glm::mat3& M) -> py::buffer_info
             {
@@ -328,14 +341,15 @@ PYBIND11_MODULE(pyatcg, m)
 
     m_mat4
         .def(py::init(
-            [](py::array_t<float> b)
-            {
-                py::buffer_info info = b.request();
+                 [](py::array_t<float> b)
+                 {
+                     py::buffer_info info = b.request();
 
-                glm::mat4 M = glm::make_mat4(static_cast<float*>(info.ptr));
+                     glm::mat4 M = glm::make_mat4(static_cast<float*>(info.ptr));
 
-                return M;
-            }))
+                     return M;
+                 }),
+             "array"_a)
         .def_buffer(
             [](glm::mat4& M) -> py::buffer_info
             {
@@ -350,9 +364,14 @@ PYBIND11_MODULE(pyatcg, m)
     // ------------------- Datastructure ---------------------------------
 
     py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph").def(py::init<>());
-    m.def("read_mesh", [](const std::string& path) { return atcg::IO::read_mesh(path); });
+    m.def(
+        "read_mesh",
+        [](const std::string& path) { return atcg::IO::read_mesh(path); },
+        "path"_a);
 
-    m_camera.def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio); }))
+    m_camera
+        .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio); }),
+             "aspect_ratio"_a)
         .def("getPosition", &atcg::PerspectiveCamera::getPosition)
         .def("setPosition", &atcg::PerspectiveCamera::setPosition)
         .def("getView", &atcg::PerspectiveCamera::getView)
@@ -362,50 +381,58 @@ PYBIND11_MODULE(pyatcg, m)
 
     m_controller
         .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::FirstPersonController>(aspect_ratio); }))
-        .def("onUpdate", &atcg::FirstPersonController::onUpdate)
-        .def("onEvent", &atcg::FirstPersonController::onEvent)
+        .def("onUpdate", &atcg::FirstPersonController::onUpdate, "delta_time"_a)
+        .def("onEvent", &atcg::FirstPersonController::onEvent, "event"_a)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
 
     // ------------------- RENDERER ---------------------------------
     py::class_<atcg::Renderer>(m, "Renderer")
-        .def_static("setClearColor", &atcg::Renderer::setClearColor)
+        .def_static("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
         .def_static("clear", &atcg::Renderer::clear)
-        .def_static("draw",
-                    [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-                    { atcg::Renderer::draw(scene, camera); })
-        .def_static("drawCADGrid",
-                    [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::drawCADGrid(camera); })
-        .def_static("drawCameras",
-                    [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-                    { atcg::Renderer::drawCameras(scene, camera); })
-        .def_static("getEntityIndex", &atcg::Renderer::getEntityIndex);
+        .def_static(
+            "draw",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            { atcg::Renderer::draw(scene, camera); },
+            "scene"_a,
+            "camera"_a)
+        .def_static(
+            "drawCADGrid",
+            [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::drawCADGrid(camera); },
+            "camera"_a)
+        .def_static(
+            "drawCameras",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            { atcg::Renderer::drawCameras(scene, camera); },
+            "scene"_a,
+            "camera"_a)
+        .def_static("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a);
 
     py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
-        .def(py::init<std::string, std::string>())
-        .def(py::init<std::string, std::string, std::string>())
+        .def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
+        .def(py::init<std::string, std::string, std::string>(), "vertex_path"_a, "fragment_path"_a, "geometry_path"_a)
         .def("use", &atcg::Shader::use)
-        .def("setInt", &atcg::Shader::setInt)
-        .def("setFloat", &atcg::Shader::setFloat)
-        .def("setVec3", &atcg::Shader::setVec3)
-        .def("setVec4", &atcg::Shader::setVec4)
-        .def("setMat4", &atcg::Shader::setMat4)
-        .def("setMVP", &atcg::Shader::setMVP);
+        .def("setInt", &atcg::Shader::setInt, "uniform_name"_a, "value"_a)
+        .def("setFloat", &atcg::Shader::setFloat, "uniform_name"_a, "value"_a)
+        .def("setVec3", &atcg::Shader::setVec3, "uniform_name"_a, "value"_a)
+        .def("setVec4", &atcg::Shader::setVec4, "uniform_name"_a, "value"_a)
+        .def("setMat4", &atcg::Shader::setMat4, "uniform_name"_a, "value"_a)
+        .def("setMVP", &atcg::Shader::setMVP, "model"_a, "view"_a, "projection"_a);
 
     py::class_<atcg::ShaderManager>(m, "ShaderManager")
-        .def_static("getShader", &atcg::ShaderManager::getShader)
-        .def_static("addShader", &atcg::ShaderManager::addShader)
-        .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName);
+        .def_static("getShader", &atcg::ShaderManager::getShader, "name"_a)
+        .def_static("addShader", &atcg::ShaderManager::addShader, "name"_a, "shader"_a)
+        .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
 
     // ------------------- Scene ---------------------------------
-    py::class_<entt::entity>(m, "EntityHandle").def(py::init<uint32_t>());
+    py::class_<entt::entity>(m, "EntityHandle").def(py::init<uint32_t>(), "handle"_a);
 
     py::class_<atcg::TransformComponent>(m, "TransformComponent")
-        .def(py::init<glm::vec3, glm::vec3, glm::vec3>())
-        .def(py::init<glm::mat4>())
-        .def("setPosition", &atcg::TransformComponent::setPosition)
-        .def("setRotation", &atcg::TransformComponent::setRotation)
-        .def("setScale", &atcg::TransformComponent::setScale)
-        .def("setModel", &atcg::TransformComponent::setModel)
+        .def(py::init<glm::vec3, glm::vec3, glm::vec3>(), "position"_a, "scale"_a, "rotation"_a)
+        .def(py::init<glm::mat4>(), "model"_a)
+        .def("setPosition", &atcg::TransformComponent::setPosition, "position"_a)
+        .def("setRotation", &atcg::TransformComponent::setRotation, "rotation"_a)
+        .def("setScale", &atcg::TransformComponent::setScale, "scale"_a)
+        .def("setModel", &atcg::TransformComponent::setModel, "model"_a)
         .def("getPosition", &atcg::TransformComponent::getPosition)
         .def("getRotation", &atcg::TransformComponent::getRotation)
         .def("getScale", &atcg::TransformComponent::getScale)
@@ -413,90 +440,127 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::GeometryComponent>(m, "GeometryComponent")
         .def(py::init<>())
-        .def(py::init<const atcg::ref_ptr<atcg::Graph>&>())
+        .def(py::init<const atcg::ref_ptr<atcg::Graph>&>(), "graph"_a)
         .def_readwrite("graph", &atcg::GeometryComponent::graph);
 
     py::class_<atcg::MeshRenderComponent>(m, "MeshRenderComponent")
         .def(py::init<>())
-        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3>())
+        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3>(), "shader"_a, "color"_a)
         .def_readwrite("visible", &atcg::MeshRenderComponent::visible)
         .def_readwrite("color", &atcg::MeshRenderComponent::color)
         .def_readwrite("shader", &atcg::MeshRenderComponent::shader);
 
     py::class_<atcg::PointRenderComponent>(m, "PointRenderComponent")
-        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>())
+        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointRenderComponent::visible)
         .def_readwrite("color", &atcg::PointRenderComponent::color)
         .def_readwrite("shader", &atcg::PointRenderComponent::shader);
 
     py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent")
-        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>())
+        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointSphereRenderComponent::visible)
         .def_readwrite("color", &atcg::PointSphereRenderComponent::color)
         .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader);
 
     py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent")
-        .def(py::init<glm::vec3>())
+        .def(py::init<glm::vec3>(), "color"_a)
         .def_readwrite("visible", &atcg::EdgeRenderComponent::visible)
         .def_readwrite("color", &atcg::EdgeRenderComponent::color);
 
     py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent")
-        .def(py::init<glm::vec3>())
+        .def(py::init<glm::vec3>(), "color"_a)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
         .def_readwrite("color", &atcg::EdgeCylinderRenderComponent::color);
 
     m_entity.def(py::init<>())
-        .def(py::init<entt::entity, atcg::Scene*>())
+        .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)
         .def(py::init<>([](entt::entity e, const atcg::ref_ptr<atcg::Scene>& scene)
-                        { return atcg::Entity(e, scene.get()); }))
-        .def("addTransformComponent",
-             [](atcg::Entity& entity, const glm::vec3& position, const glm::vec3& scale, const glm::vec3& rotation)
-             { return entity.addComponent<atcg::TransformComponent>(position, scale, rotation); })
-        .def("addTransformComponent",
-             [](atcg::Entity& entity, const atcg::TransformComponent& transform)
-             { return entity.addComponent<atcg::TransformComponent>(transform); })
-        .def("addGeometryComponent",
-             [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Graph>& graph)
-             { return entity.addComponent<atcg::GeometryComponent>(graph); })
-        .def("addGeometryComponent",
-             [](atcg::Entity& entity, const atcg::GeometryComponent& geometry)
-             { return entity.addComponent<atcg::GeometryComponent>(geometry); })
-        .def("addMeshRenderComponent",
-             [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader, const glm::vec3& color)
-             { return entity.addComponent<atcg::MeshRenderComponent>(shader, color); })
-        .def("addMeshRenderComponent",
-             [](atcg::Entity& entity, const atcg::MeshRenderComponent& component)
-             { return entity.addComponent<atcg::MeshRenderComponent>(component); })
-        .def("addPointRenderComponent",
-             [](atcg::Entity& entity,
-                const atcg::ref_ptr<atcg::Shader>& shader,
-                const glm::vec3& color,
-                float point_size)
-             { return entity.addComponent<atcg::PointRenderComponent>(shader, color, point_size); })
-        .def("addPointRenderComponent",
-             [](atcg::Entity& entity, const atcg::PointRenderComponent& component)
-             { return entity.addComponent<atcg::PointRenderComponent>(component); })
-        .def("addPointSphereRenderComponent",
-             [](atcg::Entity& entity,
-                const atcg::ref_ptr<atcg::Shader>& shader,
-                const glm::vec3& color,
-                float point_size)
-             { return entity.addComponent<atcg::PointSphereRenderComponent>(shader, color, point_size); })
-        .def("addPointSphereRenderComponent",
-             [](atcg::Entity& entity, const atcg::PointSphereRenderComponent& component)
-             { return entity.addComponent<atcg::PointSphereRenderComponent>(component); })
-        .def("addEdgeRenderComponent",
-             [](atcg::Entity& entity, const glm::vec3& color)
-             { return entity.addComponent<atcg::EdgeRenderComponent>(color); })
-        .def("addEdgeRenderComponent",
-             [](atcg::Entity& entity, const atcg::EdgeRenderComponent& component)
-             { return entity.addComponent<atcg::EdgeRenderComponent>(component); })
-        .def("addEdgeCylinderRenderComponent",
-             [](atcg::Entity& entity, const glm::vec3& color, float radius)
-             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(color, radius); })
-        .def("addEdgeCylinderRenderComponent",
-             [](atcg::Entity& entity, const atcg::EdgeCylinderRenderComponent& component)
-             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(component); })
+                        { return atcg::Entity(e, scene.get()); }),
+             "handle"_a,
+             "scene"_a)
+        .def(
+            "addTransformComponent",
+            [](atcg::Entity& entity, const glm::vec3& position, const glm::vec3& scale, const glm::vec3& rotation)
+            { return entity.addComponent<atcg::TransformComponent>(position, scale, rotation); },
+            "positiona"_a,
+            "scale"_a,
+            "rotation"_a)
+        .def(
+            "addTransformComponent",
+            [](atcg::Entity& entity, const atcg::TransformComponent& transform)
+            { return entity.addComponent<atcg::TransformComponent>(transform); },
+            "transform"_a)
+        .def(
+            "addGeometryComponent",
+            [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Graph>& graph)
+            { return entity.addComponent<atcg::GeometryComponent>(graph); },
+            "graph"_a)
+        .def(
+            "addGeometryComponent",
+            [](atcg::Entity& entity, const atcg::GeometryComponent& geometry)
+            { return entity.addComponent<atcg::GeometryComponent>(geometry); },
+            "geometry"_a)
+        .def(
+            "addMeshRenderComponent",
+            [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader, const glm::vec3& color)
+            { return entity.addComponent<atcg::MeshRenderComponent>(shader, color); },
+            "shader"_a,
+            "color"_a)
+        .def(
+            "addMeshRenderComponent",
+            [](atcg::Entity& entity, const atcg::MeshRenderComponent& component)
+            { return entity.addComponent<atcg::MeshRenderComponent>(component); },
+            "component"_a)
+        .def(
+            "addPointRenderComponent",
+            [](atcg::Entity& entity,
+               const atcg::ref_ptr<atcg::Shader>& shader,
+               const glm::vec3& color,
+               float point_size) { return entity.addComponent<atcg::PointRenderComponent>(shader, color, point_size); },
+            "shader"_a,
+            "color"_a,
+            "point_size"_a)
+        .def(
+            "addPointRenderComponent",
+            [](atcg::Entity& entity, const atcg::PointRenderComponent& component)
+            { return entity.addComponent<atcg::PointRenderComponent>(component); },
+            "component_a")
+        .def(
+            "addPointSphereRenderComponent",
+            [](atcg::Entity& entity,
+               const atcg::ref_ptr<atcg::Shader>& shader,
+               const glm::vec3& color,
+               float point_size)
+            { return entity.addComponent<atcg::PointSphereRenderComponent>(shader, color, point_size); },
+            "shader"_a,
+            "color"_a,
+            "point_size"_a)
+        .def(
+            "addPointSphereRenderComponent",
+            [](atcg::Entity& entity, const atcg::PointSphereRenderComponent& component)
+            { return entity.addComponent<atcg::PointSphereRenderComponent>(component); },
+            "component"_a)
+        .def(
+            "addEdgeRenderComponent",
+            [](atcg::Entity& entity, const glm::vec3& color)
+            { return entity.addComponent<atcg::EdgeRenderComponent>(color); },
+            "color"_a)
+        .def(
+            "addEdgeRenderComponent",
+            [](atcg::Entity& entity, const atcg::EdgeRenderComponent& component)
+            { return entity.addComponent<atcg::EdgeRenderComponent>(component); },
+            "component"_a)
+        .def(
+            "addEdgeCylinderRenderComponent",
+            [](atcg::Entity& entity, const glm::vec3& color, float radius)
+            { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(color, radius); },
+            "color"_a,
+            "radius"_a)
+        .def(
+            "addEdgeCylinderRenderComponent",
+            [](atcg::Entity& entity, const atcg::EdgeCylinderRenderComponent& component)
+            { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(component); },
+            "component"_a)
         .def("hasTransformComponent", &atcg::Entity::hasComponent<atcg::TransformComponent>)
         .def("hasGeometryComponent", &atcg::Entity::hasComponent<atcg::GeometryComponent>)
         .def("hasMeshRenderComponent", &atcg::Entity::hasComponent<atcg::MeshRenderComponent>)
@@ -506,13 +570,13 @@ PYBIND11_MODULE(pyatcg, m)
         .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>);
 
     m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
-        .def("createEntity", &atcg::Scene::createEntity, py::arg("name") = "Entity");
+        .def("createEntity", &atcg::Scene::createEntity, "name"_a = "Entity");
 
     py::class_<atcg::SceneHierarchyPanel>(m, "SceneHierarchyPanel")
         .def(py::init<>())
-        .def(py::init<const atcg::ref_ptr<atcg::Scene>&>())
+        .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
         .def("renderPanel", &atcg::SceneHierarchyPanel::renderPanel)
-        .def("selectEntity", &atcg::SceneHierarchyPanel::selectEntity)
+        .def("selectEntity", &atcg::SceneHierarchyPanel::selectEntity, "entity"_a)
         .def("getSelectedEntity", &atcg::SceneHierarchyPanel::getSelectedEntity);
 
     // m.def("width",
