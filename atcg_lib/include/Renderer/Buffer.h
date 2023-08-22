@@ -196,14 +196,14 @@ public:
     /**
      * @brief Use this vbo
      *
-     * @note Invalidades the device pointer obtained by "getDevicePointer"
+     * @note Invalidades the device pointer obtained by getDevicePointer()
      */
     void use() const;
 
     /**
      * @brief Bind the buffer as Shader Storage Buffer
      *
-     * @note Invalidades the device pointer obtained by "getDevicePointer"
+     * @note Invalidades the device pointer obtained by getDevicePointer()
      *
      * @param slot The slot to bind to
      */
@@ -213,7 +213,7 @@ public:
      * @brief Set the Data of the buffer. The data gets copied if size < capacity(). Otherwise a buffer with capacity()
      * = size will be allocated.
      *
-     * @note Invalidades the device pointer obtained by "getDevicePointer"
+     * @note Invalidades the device pointer obtained by getDevicePointer()
      *
      * @param data The data
      * @param size The size in bytes
@@ -235,9 +235,9 @@ public:
      *
      * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
      * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
-     * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
-     * If the buffer does not get explicitly binded again (because a Vertex array for example only points to this
-     * buffer), the client has to manually unmap the pointers using "unmapPointers()" before any further rendering calls
+     * gets mapped and unmapped automatically. Every call to use(), bindStorage() or setData() invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a VertexArray for example only points to this
+     * buffer), the client has to manually unmap the pointers using unmapPointers() before any further rendering calls
      * can be done.
      *
      * @return The pointer
@@ -251,9 +251,9 @@ public:
      *
      * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
      * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
-     * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
-     * If the buffer does not get explicitly binded again (because a Vertex array for example only points to this
-     * buffer), the client has to manually unmap the pointers using "unmapPointers()" before any further rendering calls
+     * gets mapped and unmapped automatically. Every call to use(), bindStorage() or setData() invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a VertexArray for example only points to this
+     * buffer), the client has to manually unmap the pointers using unmapPointers() before any further rendering calls
      * can be done..
      *
      * \tparam T The type on how to interpret the data
@@ -271,9 +271,9 @@ public:
      *
      * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
      * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
-     * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
-     * If the buffer does not get explicitly binded again (because a Vertex array for example only points to this
-     * buffer), the client has to manually unmap the pointers using "unmapPointers()" before any further rendering calls
+     * gets mapped and unmapped automatically. Every call to use(), bindStorage() or setData() invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a VertexArray for example only points to this
+     * buffer), the client has to manually unmap the pointers using unmapPointers() before any further rendering calls
      * can be done.
      *
      * @return The pointer
@@ -285,9 +285,9 @@ public:
      *
      * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
      * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
-     * gets mapped and unmapped automatically. Every call to "use", "bindStorage" or "setData" invalidates the pointer.
-     * If the buffer does not get explicitly binded again (because a Vertex array for example only points to this
-     * buffer), the client has to manually unmap the pointers using "unmapPointers()" before any further rendering calls
+     * gets mapped and unmapped automatically. Every call to use(), bindStorage() or setData() invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a VertexArray for example only points to this
+     * buffer), the client has to manually unmap the pointers using unmapPointers() before any further rendering calls
      * can be done.
      *
      * \tparam T The type on how to interpret the data

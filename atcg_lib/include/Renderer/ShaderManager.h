@@ -6,17 +6,14 @@
 #include <unordered_map>
 #include <filesystem>
 
-/**
- * @brief This class manages all shaders used for the application
- * When using custom shaders, you have to add them via 'addShader' to get hot reloading or
- * use addShaderFromPath to also handle direct shader loading
- */
 namespace atcg
 {
 class Shader;
 
 /**
- * @brief This class handles all shaders
+ * @brief This class manages all shaders used for the application
+ * When using custom shaders, you have to add them via 'addShader' to get hot reloading or
+ * use addShaderFromPath to also handle direct shader loading
  */
 class ShaderManager
 {

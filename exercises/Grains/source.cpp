@@ -313,7 +313,7 @@ public:
             bottle_entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createTriangleMesh(bottle_mesh));
             auto& renderer   = bottle_entity.addComponent<atcg::MeshRenderComponent>();
             renderer.visible = false;
-            atcg::Tracing::prepateAccelerationStructure(bottle_entity);
+            atcg::Tracing::prepareAccelerationStructure(bottle_entity);
         }
 
         {

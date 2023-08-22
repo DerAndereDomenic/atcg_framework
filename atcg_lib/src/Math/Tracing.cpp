@@ -4,7 +4,7 @@
 namespace atcg
 {
 
-void Tracing::prepateAccelerationStructure(Entity entity)
+void Tracing::prepareAccelerationStructure(Entity entity)
 {
     if(!entity.hasComponent<GeometryComponent>())
     {

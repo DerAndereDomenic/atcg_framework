@@ -45,7 +45,7 @@ public:
 
     /**
      * @brief Get entities with a given name.
-     * @note: Entity names don't have to be unique, therefore this function returns a vector with all entities with the
+     * @note Entity names don't have to be unique, therefore this function returns a vector with all entities with the
      * same name. Can be empty. The runtime of this function is O(#entities in Scene).
      *
      * @param name The name to search

@@ -22,7 +22,7 @@ struct HitInfo
  * @param entity The entity to prepare the BVH structure for
  *
  */
-void prepateAccelerationStructure(Entity entity);
+void prepareAccelerationStructure(Entity entity);
 
 /**
  * @brief Trace a ray agains the geometry

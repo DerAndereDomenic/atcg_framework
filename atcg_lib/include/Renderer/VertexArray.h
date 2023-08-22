@@ -6,18 +6,18 @@
 namespace atcg
 {
 /**
- * @brief A class to model a vertex array
+ * @brief A class to model a VertexArray
  */
 class VertexArray
 {
 public:
     /**
-     * @brief Construct a new Vertex Array object
+     * @brief Construct a new VertexArray object
      */
     VertexArray();
 
     /**
-     * @brief Destroy the Vertex Array object
+     * @brief Destroy the VertexArray object
      */
     ~VertexArray();
 
@@ -27,30 +27,30 @@ public:
     void use() const;
 
     /**
-     * @brief Push a vertex buffer to the vbo stack
+     * @brief Push a VertexBuffer to the vbo stack
      *
-     * @param vbo The vertex buffer to add
+     * @param vbo The VertexBuffer to add
      */
     void pushVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo);
 
     /**
-     * @brief Pop a vertex buffer from the vbo stack
+     * @brief Pop a VertexBuffer from the vbo stack
      *
-     * @return The Vertex buffer that was removed
+     * @return The VertexBuffer that was removed
      */
     atcg::ref_ptr<VertexBuffer> popVertexBuffer();
 
     /**
-     * @brief Get the top vertex buffer on the stack
+     * @brief Get the top VertexBuffer on the stack
      *
-     * @return The vertex buffer
+     * @return The VertexBuffer
      */
     const atcg::ref_ptr<VertexBuffer>& peekVertexBuffer() const;
 
     /**
-     * @brief Set the Index Buffer
+     * @brief Set the IndexBuffer
      *
-     * @param ibo The index buffer
+     * @param ibo The IndexBuffer
      */
     void setIndexBuffer(const atcg::ref_ptr<IndexBuffer>& ibo);
 
@@ -62,15 +62,15 @@ public:
     void pushInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& vbo);
 
     /**
-     * @brief Get the Index Buffer object
+     * @brief Get the IndexBuffer object
      *
-     * @return const atcg::ref_ptr<IndexBuffer>& The index buffer
+     * @return const atcg::ref_ptr<IndexBuffer>& The IndexBuffer
      */
     inline const atcg::ref_ptr<IndexBuffer>& getIndexBuffer() const { return _ibo; }
 
 private:
     /**
-     * @brief Changes how the underlying vertex buffer is interpreted for instance rendering.
+     * @brief Changes how the underlying VertexBuffer is interpreted for instance rendering.
      * It's always applied on the top element of the stack
      *
      * @param divisor When the buffer should be updated (default = 0, it is updated on every iteration of the vertex
@@ -86,7 +86,7 @@ private:
     };
 
     uint32_t _ID;
-    // This vector stores the last index buffer (exclusive) that is used by the i-th vertex buffer. For example: If the
+    // This vector stores the last IndexBuffer (exclusive) that is used by the i-th VertexBuffer. For example: If the
     // first vbo has attributes 0,1,2, the first element of this vector will be 3. If the second vbo manages 3 and 4, it
     // will store a 5 and so on.
     std::vector<VertexBufferIndexing> _vertex_buffer_index = {};    // Stack
