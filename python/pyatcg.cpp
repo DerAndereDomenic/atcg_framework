@@ -363,11 +363,40 @@ PYBIND11_MODULE(pyatcg, m)
 
     // ------------------- Datastructure ---------------------------------
 
-    py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph").def(py::init<>());
+    py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph")
+        .def(py::init<>())
+        .def("getPositions",
+             [](const atcg::ref_ptr<atcg::Graph>& graph)
+             {
+                 atcg::Vertex* vertices = graph->getVerticesBuffer()->getHostPointer<atcg::Vertex>();
+                 return py::memoryview::from_buffer((void*)vertices,
+                                                    sizeof(float),
+                                                    py::format_descriptor<float>::value,
+                                                    {(int)graph->n_vertices(), 3},
+                                                    {sizeof(atcg::Vertex), sizeof(float)});
+             })
+        .def("getFaces",
+             [](const atcg::ref_ptr<atcg::Graph>& graph)
+             {
+                 uint32_t* faces = graph->getFaceIndexBuffer()->getHostPointer<uint32_t>();
+                 return py::memoryview::from_buffer((void*)faces,
+                                                    sizeof(uint32_t),
+                                                    py::format_descriptor<uint32_t>::value,
+                                                    {(int)graph->n_faces(), 3},
+                                                    {sizeof(uint32_t) * 3, sizeof(uint32_t)});
+             })
+        .def("unmapPointers",
+             [](const atcg::ref_ptr<atcg::Graph>& graph)
+             {
+                 graph->getVerticesBuffer()->unmapPointers();
+                 graph->getFaceIndexBuffer()->unmapPointers();
+                 graph->getEdgesBuffer()->unmapPointers();
+             });
     m.def(
         "read_mesh",
         [](const std::string& path) { return atcg::IO::read_mesh(path); },
         "path"_a);
+
 
     m_camera
         .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio); }),
