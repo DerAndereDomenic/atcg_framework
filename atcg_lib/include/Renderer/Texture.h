@@ -18,6 +18,13 @@ public:
     virtual ~Texture() {}
 
     /**
+     * @brief Set the data of the texture.
+     *
+     * @param data The data
+     */
+    virtual void setData(const void* data) = 0;
+
+    /**
      * @brief Get the width of the texture
      *
      * @return The width
@@ -116,6 +123,13 @@ public:
      *  @brief Destructor
      */
     virtual ~Texture2D();
+
+    /**
+     * @brief Set the data of the texture.
+     *
+     * @param data The data
+     */
+    virtual void setData(const void* data) override;
 };
 
 /**
@@ -145,5 +159,12 @@ public:
      *  @brief Destructor
      */
     virtual ~Texture3D();
+
+    /**
+     * @brief Set the data of the texture.
+     *
+     * @param data The data
+     */
+    virtual void setData(const void* data) override;
 };
 }    // namespace atcg

@@ -114,6 +114,13 @@ Texture2D::~Texture2D()
     glDeleteTextures(1, &_ID);
 }
 
+void Texture2D::setData(const void* data)
+{
+    glBindTexture(GL_TEXTURE_2D, _ID);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, _width, _height, 0, GL_RED, GL_FLOAT, data);
+}
+
 atcg::ref_ptr<Texture3D> Texture3D::createColorTexture(uint32_t width, uint32_t height, uint32_t depth)
 {
     atcg::ref_ptr<Texture3D> result = atcg::make_ref<Texture3D>();
@@ -163,6 +170,13 @@ atcg::ref_ptr<Texture3D> Texture3D::createFloatTexture(uint32_t width, uint32_t 
 Texture3D::~Texture3D()
 {
     glDeleteTextures(1, &_ID);
+}
+
+void Texture3D::setData(const void* data)
+{
+    glBindTexture(GL_TEXTURE_3D, _ID);
+
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, _width, _height, _depth, 0, GL_RED, GL_FLOAT, data);
 }
 
 }    // namespace atcg
