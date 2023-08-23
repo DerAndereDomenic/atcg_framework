@@ -452,6 +452,22 @@ PYBIND11_MODULE(pyatcg, m)
         .def_static("addShader", &atcg::ShaderManager::addShader, "name"_a, "shader"_a)
         .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
 
+    py::class_<atcg::Texture2D, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D")
+        .def_static(
+            "createColorTexture",
+            [](uint32_t width, uint32_t height) { return atcg::Texture2D::createColorTexture(width, height); },
+            "width"_a,
+            "height"_a)
+        .def("getID", &atcg::Texture2D::getID)
+        .def(
+            "setData",
+            [](const atcg::ref_ptr<atcg::Texture2D>& texture, py::array_t<uint8_t> b)
+            {
+                py::buffer_info info = b.request();
+                texture->setData(info.ptr);
+            },
+            "data"_a);
+
     // ------------------- Scene ---------------------------------
     py::class_<entt::entity>(m, "EntityHandle").def(py::init<uint32_t>(), "handle"_a);
 
