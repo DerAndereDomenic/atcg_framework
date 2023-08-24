@@ -118,7 +118,7 @@ void Texture2D::setData(const void* data)
 {
     glBindTexture(GL_TEXTURE_2D, _ID);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, _width, _height, 0, GL_RED, GL_FLOAT, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)data);
 }
 
 atcg::ref_ptr<Texture3D> Texture3D::createColorTexture(uint32_t width, uint32_t height, uint32_t depth)
