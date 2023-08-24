@@ -992,6 +992,18 @@ PYBIND11_MODULE(pyatcg, m)
         py::arg("fmt"),
         py::return_value_policy::automatic_reference);
 
+    mimgui.def(
+        "Image",
+        [](uint32_t textureID, uint32_t width, uint32_t height)
+        {
+            ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
+            return;
+        },
+        py::arg("textureID"),
+        py::arg("width"),
+        py::arg("height"),
+        py::return_value_policy::automatic_reference);
+
     mimgui.def("isUsing", &ImGuizmo::IsUsing);
 
     py::enum_<ImGuizmo::OPERATION>(mimgui, "GuizmoOperation")
