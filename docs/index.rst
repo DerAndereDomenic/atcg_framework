@@ -23,18 +23,25 @@ Core
 
 .. doxygenclass:: atcg::Application
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Input
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Layer
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::LayerStack
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::host_allocator
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::MemoryContainer
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::DeviceBuffer
    :members:
+   :undoc-members:
 .. doxygentypedef:: atcg::scope_ptr
    :project: ATCGLIB
 .. doxygentypedef:: atcg::ref_ptr
@@ -45,10 +52,13 @@ Core
    :project: ATCGLIB
 .. doxygenclass:: atcg::UUID
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::WindowProps
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Window
    :members:
+   :undoc-members:
 
 Events
 ======
@@ -58,34 +68,49 @@ Events
    :project: ATCGLIB
 .. doxygenclass:: atcg::EventDispatcher
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Event
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::KeyEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::KeyPressedEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::KeyReleasedEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::KeyTypedEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::MouseMovedEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::MouseScrolledEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::MouseButtonEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::MouseButtonPressedEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::MouseButtonReleasedEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::WindowResizeEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::ViewportResizeEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::WindowCloseEvent
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::FileDroppedEvent
    :members:
+   :undoc-members:
 
 DataStructure
 =============
@@ -96,20 +121,27 @@ DataStructure
    :project: ATCGLIB
 .. doxygenstruct:: atcg::Vertex
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::Edge
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::Instance
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Graph
    :members:
+   :undoc-members:
 .. doxygenfunction:: atcg::IO::read_mesh
    :project: ATCGLIB
 .. doxygenclass:: atcg::Grid
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Statistic
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Timer
    :members:
+   :undoc-members:
 
 ImGui
 =====
@@ -117,6 +149,7 @@ ImGui
    :project: ATCGLIB
 .. doxygenclass:: atcg::ImGuiLayer
    :members:
+   :undoc-members:
 
 Math
 ====
@@ -124,6 +157,7 @@ Math
    :project: ATCGLIB
 .. doxygenstruct:: atcg::Tracing::HitInfo
    :members:
+   :undoc-members:
 .. doxygenfunction:: atcg::Tracing::prepareAccelerationStructure
    :project: ATCGLIB
 .. doxygenfunction:: atcg::Tracing::traceRay
@@ -161,84 +195,122 @@ Renderer
    :project: ATCGLIB
 .. doxygenstruct:: atcg::BufferElement
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::BufferLayout
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::VertexBuffer
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::IndexBuffer
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::VertexArray
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Camera
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::OrthographicCamera
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::PerspectiveCamera
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::CameraController
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::FocusedController
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::FirstPersonController
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Framebuffer
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Texture
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Texture2D
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Texture3D
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Shader
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::ShaderManager
    :members:
+   :undoc-members:
 .. doxygenenum:: atcg::DrawMode
    :project: ATCGLIB
 .. doxygenenum:: atcg::CullMode
    :project: ATCGLIB
 .. doxygenclass:: atcg::Renderer
    :members:
+   :undoc-members:
 
 Scene
 =====
 .. doxygenstruct:: atcg::TransformComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::IDComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::NameComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::GeometryComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::AccelerationStructureComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::CameraComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::EditorCameraComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::RenderComponent
    :members:
-.. doxygenstruct:: atcg::TextureComponent
-   :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::MeshRenderComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::PointRenderComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::PointSphereRenderComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::EdgeRenderComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::EdgeCylinderRenderComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::InstanceRenderComponent
    :members:
+   :undoc-members:
 .. doxygenstruct:: atcg::CustomRenderComponent
    :members:
+   :undoc-members:
+.. doxygenstruct:: atcg::TextureComponent
+   :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Entity
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Scene
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::SceneHierarchyPanel
    :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Serializer
    :members:
+   :undoc-members:
