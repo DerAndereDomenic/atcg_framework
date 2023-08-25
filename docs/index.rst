@@ -229,6 +229,16 @@ Renderer
 .. doxygenclass:: atcg::Framebuffer
    :members:
    :undoc-members:
+.. doxygenenum:: atcg::TextureWrapMode
+   :project: ATCGLIB
+.. doxygenenum:: atcg::TextureFilterMode
+   :project: ATCGLIB
+.. doxygenstruct:: atcg::TextureSampler
+   :members:
+   :undoc-members:
+.. doxygenstruct:: atcg::TextureSpecification
+   :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Texture
    :members:
    :undoc-members:
