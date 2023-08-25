@@ -42,7 +42,11 @@ bool Framebuffer::complete() const
 void Framebuffer::attachColor()
 {
     use();
-    atcg::ref_ptr<Texture2D> texture = Texture2D::createColorTexture(_width, _height);
+
+    TextureSpecification spec;
+    spec.width                       = _width;
+    spec.height                      = _height;
+    atcg::ref_ptr<Texture2D> texture = Texture2D::create(spec);
     glFramebufferTexture2D(GL_FRAMEBUFFER,
                            GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
                            GL_TEXTURE_2D,
@@ -67,7 +71,11 @@ void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
 void Framebuffer::attachDepth()
 {
     use();
-    _depth_attachement = Texture2D::createDepthTexture(_width, _height);
+    TextureSpecification spec;
+    spec.width         = _width;
+    spec.height        = _height;
+    spec.format        = TextureFormat::DEPTH;
+    _depth_attachement = Texture2D::create(spec);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depth_attachement->getID(), 0);
     useDefault();
 }

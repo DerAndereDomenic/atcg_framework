@@ -106,11 +106,18 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     initCameraFrustrum();
 
     glm::u8vec4 white = glm::u8vec4(255);
-    white_pixel       = atcg::Texture2D::createColorTexture(&white, 1, 1);
+    TextureSpecification spec_color;
+    spec_color.width  = 1;
+    spec_color.height = 1;
+    white_pixel       = atcg::Texture2D::create(&white, spec_color);
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
-    screen_fbo->attachTexture(Texture2D::createIntTexture(width, height));
+    TextureSpecification spec_int;
+    spec_int.width  = width;
+    spec_int.height = height;
+    spec_int.format = TextureFormat::RINT;
+    screen_fbo->attachTexture(Texture2D::create(spec_int));
     screen_fbo->attachDepth();
     screen_fbo->complete();
 }
@@ -239,7 +246,11 @@ void Renderer::resize(const uint32_t& width, const uint32_t& height)
     setViewport(0, 0, width, height);
     s_renderer->impl->screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     s_renderer->impl->screen_fbo->attachColor();
-    s_renderer->impl->screen_fbo->attachTexture(Texture2D::createIntTexture(width, height));
+    TextureSpecification spec_int;
+    spec_int.width  = width;
+    spec_int.height = height;
+    spec_int.format = TextureFormat::RINT;
+    s_renderer->impl->screen_fbo->attachTexture(Texture2D::create(spec_int));
     s_renderer->impl->screen_fbo->attachDepth();
     s_renderer->impl->screen_fbo->complete();
 }
