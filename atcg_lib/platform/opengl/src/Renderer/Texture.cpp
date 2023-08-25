@@ -5,106 +5,165 @@
 namespace atcg
 {
 
-void Texture::use(const uint32_t& slot) const
+namespace detail
 {
-    glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(_target, _ID);
+GLint to2GLinternalFormat(TextureFormat format)
+{
+    switch(format)
+    {
+        case TextureFormat::RGBA:
+        {
+            return GL_RGBA;
+        }
+        case TextureFormat::RINT:
+        {
+            return GL_R32I;
+        }
+        case TextureFormat::RFLOAT:
+        {
+            return GL_R32F;
+        }
+        case TextureFormat::DEPTH:
+        {
+            return GL_DEPTH_COMPONENT;
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
+            return -1;
+        }
+    }
 }
+
+GLenum toGLformat(TextureFormat format)
+{
+    switch(format)
+    {
+        case TextureFormat::RGBA:
+        {
+            return GL_RGBA;
+        }
+        case TextureFormat::RINT:
+        {
+            return GL_RED_INTEGER;
+        }
+        case TextureFormat::RFLOAT:
+        {
+            return GL_RED;
+        }
+        case TextureFormat::DEPTH:
+        {
+            return GL_DEPTH_COMPONENT;
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
+            return -1;
+        }
+    }
+}
+
+GLenum toGLtype(TextureFormat format)
+{
+    switch(format)
+    {
+        case TextureFormat::RGBA:
+        {
+            return GL_UNSIGNED_BYTE;
+        }
+        case TextureFormat::RINT:
+        {
+            return GL_UNSIGNED_BYTE;
+        }
+        case TextureFormat::RFLOAT:
+        {
+            return GL_FLOAT;
+        }
+        case TextureFormat::DEPTH:
+        {
+            return GL_FLOAT;
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
+            return -1;
+        }
+    }
+}
+
+GLint toGLWrapMode(TextureWrapMode wrap_mode)
+{
+    switch(wrap_mode)
+    {
+        case TextureWrapMode::CLAMP_TO_EDGE:
+        {
+            return GL_CLAMP_TO_EDGE;
+        }
+        case TextureWrapMode::REPEAT:
+        {
+            return GL_REPEAT;
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureWrapMode {0}", (int)wrap_mode);
+            return -1;
+        }
+    }
+}
+
+GLint toGLFilterMode(TextureFilterMode filter_mode)
+{
+    switch(filter_mode)
+    {
+        case TextureFilterMode::LINEAR:
+        {
+            return GL_LINEAR;
+        }
+        case TextureFilterMode::NEAREST:
+        {
+            return GL_NEAREST;
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureFilterMode {0}", (int)filter_mode);
+            return -1;
+        }
+    }
+}
+}    // namespace detail
 
 void Texture::useForCompute(const uint32_t& slot) const
 {
-    glBindImageTexture(slot, _ID, 0, GL_TRUE, 0, GL_WRITE_ONLY, GL_R32F);
+    glBindImageTexture(slot, _ID, 0, GL_TRUE, 0, GL_WRITE_ONLY, detail::to2GLinternalFormat(_spec.format));
 }
 
-atcg::ref_ptr<Texture2D> Texture2D::createColorTexture(uint32_t width, uint32_t height)
+atcg::ref_ptr<Texture2D> Texture2D::create(const TextureSpecification& spec)
 {
-    return createColorTexture(nullptr, width, height);
+    return create(nullptr, spec);
 }
 
-atcg::ref_ptr<Texture2D> Texture2D::createColorTexture(const glm::u8vec4* data, uint32_t width, uint32_t height)
+atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecification& spec)
 {
     atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
-
-    result->_width  = width;
-    result->_height = height;
-    result->_depth  = 1;
-    result->_target = GL_TEXTURE_2D;
+    result->_spec                   = spec;
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_2D, result->_ID);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)data);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 detail::to2GLinternalFormat(spec.format),
+                 spec.width,
+                 spec.height,
+                 0,
+                 detail::toGLformat(spec.format),
+                 detail::toGLtype(spec.format),
+                 (void*)data);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    return result;
-}
-
-atcg::ref_ptr<Texture2D> Texture2D::createDepthTexture(uint32_t width, uint32_t height)
-{
-    atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
-
-    result->_width  = width;
-    result->_height = height;
-    result->_depth  = 1;
-    result->_target = GL_TEXTURE_2D;
-
-    glGenTextures(1, &(result->_ID));
-    glBindTexture(GL_TEXTURE_2D, result->_ID);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    return result;
-}
-
-atcg::ref_ptr<Texture2D> Texture2D::createIntTexture(uint32_t width, uint32_t height)
-{
-    atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
-
-    result->_width  = width;
-    result->_height = height;
-    result->_depth  = 1;
-    result->_target = GL_TEXTURE_2D;
-
-    glGenTextures(1, &(result->_ID));
-    glBindTexture(GL_TEXTURE_2D, result->_ID);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width, height, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    return result;
-}
-
-atcg::ref_ptr<Texture2D> Texture2D::createFloatTexture(uint32_t width, uint32_t height)
-{
-    atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
-
-    result->_width  = width;
-    result->_height = height;
-    result->_depth  = 1;
-    result->_target = GL_TEXTURE_2D;
-
-    glGenTextures(1, &(result->_ID));
-    glBindTexture(GL_TEXTURE_2D, result->_ID);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, width, height, 0, GL_RED, GL_FLOAT, nullptr);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
 
     return result;
 }
@@ -118,51 +177,52 @@ void Texture2D::setData(const void* data)
 {
     glBindTexture(GL_TEXTURE_2D, _ID);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _width, _height, 0, GL_RGBA, GL_UNSIGNED_BYTE, (void*)data);
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)data);
 }
 
-atcg::ref_ptr<Texture3D> Texture3D::createColorTexture(uint32_t width, uint32_t height, uint32_t depth)
+void Texture2D::use(const uint32_t& slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, _ID);
+}
+
+atcg::ref_ptr<Texture3D> Texture3D::create(const TextureSpecification& spec)
+{
+    return create(nullptr, spec);
+}
+
+atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecification& spec)
 {
     atcg::ref_ptr<Texture3D> result = atcg::make_ref<Texture3D>();
-
-    result->_width  = width;
-    result->_height = height;
-    result->_depth  = depth;
-    result->_target = GL_TEXTURE_3D;
+    result->_spec                   = spec;
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_3D, result->_ID);
 
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width, height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+    glTexImage3D(GL_TEXTURE_3D,
+                 0,
+                 detail::to2GLinternalFormat(spec.format),
+                 spec.width,
+                 spec.height,
+                 spec.depth,
+                 0,
+                 detail::toGLformat(spec.format),
+                 detail::toGLtype(spec.format),
+                 (void*)data);
 
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    return result;
-}
-
-atcg::ref_ptr<Texture3D> Texture3D::createFloatTexture(uint32_t width, uint32_t height, uint32_t depth)
-{
-    atcg::ref_ptr<Texture3D> result = atcg::make_ref<Texture3D>();
-
-    result->_width  = width;
-    result->_height = height;
-    result->_depth  = depth;
-    result->_target = GL_TEXTURE_3D;
-
-    glGenTextures(1, &(result->_ID));
-    glBindTexture(GL_TEXTURE_3D, result->_ID);
-
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, width, height, depth, 0, GL_RED, GL_FLOAT, nullptr);
-
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
 
     return result;
 }
@@ -176,7 +236,22 @@ void Texture3D::setData(const void* data)
 {
     glBindTexture(GL_TEXTURE_3D, _ID);
 
-    glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, _width, _height, _depth, 0, GL_RED, GL_FLOAT, data);
+    glTexImage3D(GL_TEXTURE_3D,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 _spec.depth,
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)data);
+}
+
+void Texture3D::use(const uint32_t& slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_3D, _ID);
 }
 
 }    // namespace atcg
