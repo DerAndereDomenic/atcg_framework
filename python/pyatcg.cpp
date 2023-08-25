@@ -455,7 +455,13 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::Texture2D, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D")
         .def_static(
             "createColorTexture",
-            [](uint32_t width, uint32_t height) { return atcg::Texture2D::createColorTexture(width, height); },
+            [](uint32_t width, uint32_t height)
+            {
+                atcg::TextureSpecification spec;
+                spec.width  = width;
+                spec.height = height;
+                return atcg::Texture2D::create(spec);
+            },
             "width"_a,
             "height"_a)
         .def("getID", &atcg::Texture2D::getID)
