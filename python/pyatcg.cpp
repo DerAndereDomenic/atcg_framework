@@ -452,18 +452,68 @@ PYBIND11_MODULE(pyatcg, m)
         .def_static("addShader", &atcg::ShaderManager::addShader, "name"_a, "shader"_a)
         .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
 
+    py::enum_<atcg::TextureFormat>(m, "TextureFormat")
+        .value("RGBA", atcg::TextureFormat::RGBA)
+        .value("RINT", atcg::TextureFormat::RINT)
+        .value("RFLOAT", atcg::TextureFormat::RFLOAT)
+        .value("DEPTH", atcg::TextureFormat::DEPTH);
+
+    py::enum_<atcg::TextureWrapMode>(m, "TextureWrapMode")
+        .value("REPEAT", atcg::TextureWrapMode::REPEAT)
+        .value("CLAMP_TO_EDGE", atcg::TextureWrapMode::CLAMP_TO_EDGE);
+
+    py::enum_<atcg::TextureFilterMode>(m, "TextureFilterMode")
+        .value("NEAREST", atcg::TextureFilterMode::NEAREST)
+        .value("LINEAR", atcg::TextureFilterMode::LINEAR);
+
+    py::class_<atcg::TextureSampler>(m, "TextureSampler")
+        .def(py::init<>())
+        .def(py::init<>(
+                 [](atcg::TextureFilterMode filter_mode, atcg::TextureWrapMode wrap_mode)
+                 {
+                     atcg::TextureSampler sampler;
+                     sampler.filter_mode = filter_mode;
+                     sampler.wrap_mode   = wrap_mode;
+                     return sampler;
+                 }),
+             "filter_mode"_a = atcg::TextureFilterMode::LINEAR,
+             "wrap_mode"_a   = atcg::TextureWrapMode::REPEAT)
+        .def_readwrite("wrap_mode", &atcg::TextureSampler::wrap_mode)
+        .def_readwrite("filter_mode", &atcg::TextureSampler::filter_mode);
+
+    py::class_<atcg::TextureSpecification>(m, "TextureSpecification")
+        .def(py::init<>())
+        .def(py::init<>(
+                 [](uint32_t width,
+                    uint32_t height,
+                    uint32_t depth,
+                    atcg::TextureSampler sampler,
+                    atcg::TextureFormat format)
+                 {
+                     atcg::TextureSpecification spec;
+                     spec.width   = width;
+                     spec.height  = height;
+                     spec.depth   = depth;
+                     spec.sampler = sampler;
+                     spec.format  = format;
+                     return spec;
+                 }),
+             "width"_a,
+             "height"_a,
+             "depth"_a,
+             "sampler"_a,
+             "format"_a)
+        .def_readwrite("width", &atcg::TextureSpecification::width)
+        .def_readwrite("height", &atcg::TextureSpecification::height)
+        .def_readwrite("depth", &atcg::TextureSpecification::depth)
+        .def_readwrite("sampler", &atcg::TextureSpecification::sampler)
+        .def_readwrite("format", &atcg::TextureSpecification::format);
+
     py::class_<atcg::Texture2D, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D")
         .def_static(
-            "createColorTexture",
-            [](uint32_t width, uint32_t height)
-            {
-                atcg::TextureSpecification spec;
-                spec.width  = width;
-                spec.height = height;
-                return atcg::Texture2D::create(spec);
-            },
-            "width"_a,
-            "height"_a)
+            "create",
+            [](atcg::TextureSpecification spec) { return atcg::Texture2D::create(spec); },
+            "specification"_a)
         .def("getID", &atcg::Texture2D::getID)
         .def(
             "setData",
