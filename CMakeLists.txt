@@ -4,7 +4,7 @@ project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
 
 option(ATCG_CUDA_BACKEND "Compile cuda backend" OFF)
 option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
-option(ATCG_BUILD_DOCS "Build documentation" ON)
+option(ATCG_BUILD_DOCS "Build documentation" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -103,6 +103,10 @@ include_directories(atcg_lib/include
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
     set( ${target_name_var} ${target_name} PARENT_SCOPE )
+
+    if(ATCG_PYTHON_BINDINGS)
+        return()
+    endif()
 
     add_executable(${target_name}
         ${source}
