@@ -3,6 +3,7 @@
 #include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/cast.h>
+#include <pybind11/stl.h>
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 #include <glm/glm.hpp>
