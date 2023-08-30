@@ -575,6 +575,11 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
         .def_readwrite("color", &atcg::EdgeCylinderRenderComponent::color);
 
+    py::class_<atcg::NameComponent>(m, "NameComponent")
+        .def(py::init<>())
+        .def(py::init<std::string>(), "name"_a)
+        .def_readwrite("name", &atcg::NameComponent::name);
+
     m_entity.def(py::init<>())
         .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)
         .def(py::init<>([](entt::entity e, const atcg::ref_ptr<atcg::Scene>& scene)
@@ -664,13 +669,28 @@ PYBIND11_MODULE(pyatcg, m)
             [](atcg::Entity& entity, const atcg::EdgeCylinderRenderComponent& component)
             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(component); },
             "component"_a)
+        .def("addNameComponent",
+             [](atcg::Entity& entity, const std::string& name)
+             { return entity.addComponent<atcg::NameComponent>(name); })
+        .def("addNameComponent",
+             [](atcg::Entity& entity, const atcg::NameComponent& component)
+             { return entity.addComponent<atcg::NameComponent>(component); })
         .def("hasTransformComponent", &atcg::Entity::hasComponent<atcg::TransformComponent>)
         .def("hasGeometryComponent", &atcg::Entity::hasComponent<atcg::GeometryComponent>)
         .def("hasMeshRenderComponent", &atcg::Entity::hasComponent<atcg::MeshRenderComponent>)
         .def("hasPointRenderComponent", &atcg::Entity::hasComponent<atcg::PointRenderComponent>)
         .def("hasPointSphereRenderComponent", &atcg::Entity::hasComponent<atcg::PointSphereRenderComponent>)
         .def("hasEdgeRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeRenderComponent>)
-        .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>);
+        .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>)
+        .def("hasNameComponent", &atcg::Entity::hasComponent<atcg::NameComponent>)
+        .def("getTransformComponent", &atcg::Entity::getComponent<atcg::TransformComponent>)
+        .def("getGeometryComponent", &atcg::Entity::getComponent<atcg::GeometryComponent>)
+        .def("getMeshRenderComponent", &atcg::Entity::getComponent<atcg::MeshRenderComponent>)
+        .def("getPointRenderComponent", &atcg::Entity::getComponent<atcg::PointRenderComponent>)
+        .def("getPointSphereRenderComponent", &atcg::Entity::getComponent<atcg::PointSphereRenderComponent>)
+        .def("getEdgeRenderComponent", &atcg::Entity::getComponent<atcg::EdgeRenderComponent>)
+        .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
+        .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>);
 
     m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
         .def("createEntity", &atcg::Scene::createEntity, "name"_a = "Entity")
