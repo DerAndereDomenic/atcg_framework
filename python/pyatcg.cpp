@@ -671,7 +671,16 @@ PYBIND11_MODULE(pyatcg, m)
         .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>);
 
     m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
-        .def("createEntity", &atcg::Scene::createEntity, "name"_a = "Entity");
+        .def("createEntity", &atcg::Scene::createEntity, "name"_a = "Entity")
+        .def("getEntityByName", &atcg::Scene::getEntitiesByName, "name"_a)
+        .def("getEntities",
+             [](const atcg::ref_ptr<atcg::Scene>& scene)
+             {
+                 std::vector<atcg::Entity> entities;
+                 auto view = scene->getAllEntitiesWith<atcg::IDComponent>();
+                 for(auto e: view) { entities.push_back(atcg::Entity(e, scene.get())); }
+                 return entities;
+             });
 
     py::class_<atcg::SceneHierarchyPanel>(m, "SceneHierarchyPanel")
         .def(py::init<>())
