@@ -69,6 +69,10 @@ file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform
 
 add_library(atcg_lib STATIC "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_renderer_files}") 
 
+if(NOT MSVC)
+    add_definitions(-DFMT_USE_CONSTEXPR)
+endif()
+
 target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD YAML_CPP_STATIC_DEFINE)
 target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
 target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
