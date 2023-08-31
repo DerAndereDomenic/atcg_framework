@@ -364,7 +364,7 @@ PYBIND11_MODULE(pyatcg, m)
 
     // ------------------- Datastructure ---------------------------------
 
-    py::class_<atcg::Timer>()
+    py::class_<atcg::Timer>(m, "Timer")
         .def(py::init<>())
         .def("ellapsedMillis", &atcg::Timer::elapsedMillis)
         .def("ellapsedSeconds", &atcg::Timer::elapsedSeconds)
