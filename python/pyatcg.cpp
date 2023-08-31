@@ -364,6 +364,12 @@ PYBIND11_MODULE(pyatcg, m)
 
     // ------------------- Datastructure ---------------------------------
 
+    py::class_<atcg::Timer>()
+        .def(py::init<>())
+        .def("ellapsedMillis", &atcg::Timer::elapsedMillis)
+        .def("ellapsedSeconds", &atcg::Timer::elapsedSeconds)
+        .def("reset", &atcg::Timer::reset);
+
     py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph")
         .def(py::init<>())
         .def("getPositions",
