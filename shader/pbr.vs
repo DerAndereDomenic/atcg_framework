@@ -17,6 +17,7 @@ out vec3 frag_normal;
 out vec3 frag_pos;
 out vec3 frag_color;
 out vec2 frag_uv;
+out mat3 frag_tbn;
 
 void main()
 {
@@ -39,7 +40,15 @@ void main()
 
     // This could eventually lead to problems if we allow the client to do instance rendering of arbitrary meshes
     // frag_normal = normalize(vec3(inverse(transpose((1-instanced) * M + instanced * M)) * vec4(aNormal, 0)));
-    frag_normal = normalize(vec3(M * vec4(aNormal, 0)));
+
+    // Calculate tangent vectors
+
+    vec3 axis = normalize(vec3(M * vec4(aNormal, 0)));
+    vec3 tangent = normalize(cross(vec3(0, axis.z, 1.0-axis.z), axis));
+    vec3 bitangent = normalize(cross(tangent, axis));
+    mat3 tbn = mat3(tangent, bitangent, axis);
+    frag_tbn = tbn;
+    frag_normal = axis;
     frag_color = aColor * (instanced * aInstanceColor + (1 - instanced) * vec3(1));
 
     frag_uv = aUV;

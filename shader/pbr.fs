@@ -9,6 +9,7 @@ in vec3 frag_normal;
 in vec3 frag_pos;
 in vec3 frag_color;
 in vec2 frag_uv;
+in mat3 frag_tbn;
 
 uniform vec3 camera_pos;
 uniform vec3 camera_dir;
@@ -17,6 +18,7 @@ uniform int entityID;
 
 // Material textures
 uniform sampler2D texture_diffuse;
+uniform sampler2D texture_normal;
 uniform sampler2D texture_roughness;
 uniform sampler2D texture_metallic;
 
@@ -73,18 +75,20 @@ void main()
     vec3 color_diffuse = frag_color * flat_color * texture(texture_diffuse, frag_uv).rgb;
     float roughness = texture(texture_roughness, frag_uv).r;
     float metallic = texture(texture_metallic, frag_uv).r;
+    vec3 texture_normal = normalize(texture(texture_normal, frag_uv).rgb * 2.0 - 1.0);
 
     // PBR material shader
+    vec3 normal = frag_tbn * texture_normal;
     vec3 F0 = vec3(0.04);
 	F0 = mix(F0, color_diffuse, metallic);
 
     vec3 H = normalize(light_dir + view_dir);
-    float NDF = distributionGGX(frag_normal, H, roughness);
-    float G = geometrySmith(frag_normal, view_dir, light_dir, roughness);
+    float NDF = distributionGGX(normal, H, roughness);
+    float G = geometrySmith(normal, view_dir, light_dir, roughness);
     vec3 F = fresnel_schlick(F0, max(dot(H, view_dir), 0.0));
 
     vec3 numerator = NDF * G * F;
-    float denominator = 4.0 * max(dot(frag_normal, view_dir), 0.0) * max(dot(frag_normal, light_dir), 0.0) + 0.0001;
+    float denominator = 4.0 * max(dot(normal, view_dir), 0.0) * max(dot(normal, light_dir), 0.0) + 0.0001;
     vec3 specular = numerator/denominator;
 
     vec3 kS = F;
@@ -93,7 +97,7 @@ void main()
 
     vec3 brdf = specular + kD * color_diffuse / PI;
 
-    vec3 color = brdf * light_radiance * max(0.0f, dot(frag_normal, light_dir));
+    vec3 color = brdf * light_radiance * max(0.0f, dot(normal, light_dir));
 
     float frag_dist = length(camera_pos - frag_pos);
     outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), 1.0 - pow(1.01, frag_dist - 1000));
