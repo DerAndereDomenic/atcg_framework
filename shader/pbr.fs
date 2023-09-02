@@ -1,0 +1,30 @@
+#version 330 core
+
+layout (location = 0) out vec4 outColor;
+layout (location = 1) out int outEntityID;
+
+in vec3 frag_normal;
+in vec3 frag_pos;
+in vec3 frag_color;
+in vec2 frag_uv;
+
+uniform vec3 camera_pos;
+uniform vec3 camera_dir;
+uniform vec3 flat_color;
+uniform int entityID;
+uniform sampler2D tex;
+
+void main()
+{
+    vec3 color_combined = frag_color * flat_color * texture(tex, frag_uv).rgb;
+    vec3 ambient = vec3(0.1f) * color_combined;
+    vec3 light_radiance = vec3(2.0);
+    float light_distance = 1.0f;
+    vec3 light_dir = normalize(camera_dir);
+
+    vec3 color = color_combined / 3.14159f * light_radiance * max(0.0f, dot(frag_normal, light_dir)) + ambient;
+
+    float frag_dist = length(camera_pos - frag_pos);
+    outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), 1.0 - pow(1.01, frag_dist - 1000));
+    outEntityID = entityID;
+}

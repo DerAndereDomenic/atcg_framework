@@ -31,7 +31,9 @@ void Application::init(const WindowProps& props)
 
     Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 
+    // TODO: Move this to the renderer
     ShaderManager::addShaderFromName("base");
+    ShaderManager::addShaderFromName("pbr");
     ShaderManager::addShaderFromName("flat");
     ShaderManager::addShaderFromName("instanced");
     ShaderManager::addShaderFromName("edge");
