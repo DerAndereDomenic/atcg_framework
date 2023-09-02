@@ -490,12 +490,28 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
     if(entity.hasComponent<MeshRenderComponent>())
     {
+        MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
+
         if(entity.hasComponent<MaterialComponent>())
         {
-            MaterialComponent texture = entity.getComponent<MaterialComponent>();
-            texture.getDiffuseTexture()->use(0);
+            MaterialComponent material = entity.getComponent<MaterialComponent>();
+            material.getDiffuseTexture()->use(0);
+            renderer.shader->setInt("texture_diffuse", 0);
+
+            material.getNormalTexture()->use(1);
+            renderer.shader->setInt("texture_normal", 1);
+
+            material.getRoughnessTexture()->use(2);
+            renderer.shader->setInt("texture_roughness", 2);
+
+            material.getMetallicTexture()->use(3);
+            renderer.shader->setInt("texture_metallic", 3);
+
+            material.getDisplacementTexture()->use(4);
+            renderer.shader->setInt("texture_displacement", 4);
         }
-        MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
+
+
         if(renderer.visible)
         {
             renderer.shader->setInt("entityID", entity_id);
