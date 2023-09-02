@@ -490,10 +490,10 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
     if(entity.hasComponent<MeshRenderComponent>())
     {
-        if(entity.hasComponent<TextureComponent>())
+        if(entity.hasComponent<MaterialComponent>())
         {
-            TextureComponent texture = entity.getComponent<TextureComponent>();
-            texture.texture->use(0);
+            MaterialComponent texture = entity.getComponent<MaterialComponent>();
+            texture.getDiffuseTexture()->use(0);
         }
         MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
         if(renderer.visible)
