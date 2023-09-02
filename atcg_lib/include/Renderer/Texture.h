@@ -15,6 +15,8 @@ enum class TextureFormat
     RGBA,
     // Red channel unsigned int texture.
     RINT,
+    // Red channel byte texture.
+    RINT8,
     // Red channel float 32 texture.
     RFLOAT,
     // Depth texture.

@@ -19,6 +19,10 @@ GLint to2GLinternalFormat(TextureFormat format)
         {
             return GL_R32I;
         }
+        case TextureFormat::RINT8:
+        {
+            return GL_RED;
+        }
         case TextureFormat::RFLOAT:
         {
             return GL_R32F;
@@ -47,6 +51,10 @@ GLenum toGLformat(TextureFormat format)
         {
             return GL_RED_INTEGER;
         }
+        case TextureFormat::RINT8:
+        {
+            return GL_RED;
+        }
         case TextureFormat::RFLOAT:
         {
             return GL_RED;
@@ -72,6 +80,10 @@ GLenum toGLtype(TextureFormat format)
             return GL_UNSIGNED_BYTE;
         }
         case TextureFormat::RINT:
+        {
+            return GL_UNSIGNED_BYTE;
+        }
+        case TextureFormat::RINT8:
         {
             return GL_UNSIGNED_BYTE;
         }
