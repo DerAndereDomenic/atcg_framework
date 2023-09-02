@@ -11,11 +11,12 @@
 #include <ImGuizmo.h>
 
 #include <random>
+#include <stb_image.h>
 
-class ClothLayer : public atcg::Layer
+class PBRLayer : public atcg::Layer
 {
 public:
-    ClothLayer(const std::string& name) : atcg::Layer(name) {}
+    PBRLayer(const std::string& name) : atcg::Layer(name) {}
 
     // This is run at the start of the program
     virtual void onAttach() override
@@ -27,6 +28,80 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
 
+        // Load textures
+        atcg::ref_ptr<atcg::Texture2D> diffuse_textue;
+        {
+            int x, y, n;
+            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_diff_1k.png", &x, &y, &n, 4);
+            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+
+            atcg::TextureSpecification spec;
+            spec.width     = x;
+            spec.height    = y;
+            diffuse_textue = atcg::Texture2D::create(image, spec);
+
+            stbi_image_free(image);
+        }
+
+        atcg::ref_ptr<atcg::Texture2D> normal_texture;
+        {
+            int x, y, n;
+            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_nor_gl_1k.png", &x, &y, &n, 4);
+            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+
+            atcg::TextureSpecification spec;
+            spec.width     = x;
+            spec.height    = y;
+            normal_texture = atcg::Texture2D::create(image, spec);
+
+            stbi_image_free(image);
+        }
+
+        atcg::ref_ptr<atcg::Texture2D> roughness_texture;
+        {
+            int x, y, n;
+            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_rough_1k.png", &x, &y, &n, 1);
+            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+
+            atcg::TextureSpecification spec;
+            spec.width        = x;
+            spec.height       = y;
+            spec.format       = atcg::TextureFormat::RINT;
+            roughness_texture = atcg::Texture2D::create(image, spec);
+
+            stbi_image_free(image);
+        }
+
+        atcg::ref_ptr<atcg::Texture2D> metallic_texture;
+        {
+            int x, y, n;
+            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_arm_1k.png", &x, &y, &n, 1);
+            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+
+            atcg::TextureSpecification spec;
+            spec.width       = x;
+            spec.height      = y;
+            spec.format      = atcg::TextureFormat::RINT;
+            metallic_texture = atcg::Texture2D::create(image, spec);
+
+            stbi_image_free(image);
+        }
+
+        atcg::ref_ptr<atcg::Texture2D> displacement_texture;
+        {
+            int x, y, n;
+            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_diff_1k.png", &x, &y, &n, 1);
+            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+
+            atcg::TextureSpecification spec;
+            spec.width           = x;
+            spec.height          = y;
+            spec.format          = atcg::TextureFormat::RINT;
+            displacement_texture = atcg::Texture2D::create(image, spec);
+
+            stbi_image_free(image);
+        }
+
         scene = atcg::make_ref<atcg::Scene>();
 
         auto options = OpenMesh::IO::Options(OpenMesh::IO::Options::VertexTexCoord);
@@ -35,7 +110,14 @@ public:
         auto entity = scene->createEntity("Plane");
         entity.addComponent<atcg::TransformComponent>();
         entity.addComponent<atcg::GeometryComponent>(plane);
-        entity.addComponent<atcg::MeshRenderComponent>();
+        auto& renderer  = entity.addComponent<atcg::MeshRenderComponent>();
+        renderer.shader = atcg::ShaderManager::getShader("pbr");
+        auto& material  = entity.addComponent<atcg::MaterialComponent>();
+        material.setDiffuseTexture(diffuse_textue);
+        material.setNormalTexture(normal_texture);
+        material.setRoughnessTexture(roughness_texture);
+        material.setMetallicTexture(metallic_texture);
+        material.setDisplacementTexture(displacement_texture);
 
         panel = atcg::SceneHierarchyPanel(scene);
     }
@@ -87,10 +169,10 @@ public:
         camera_controller->onEvent(event);
 
         atcg::EventDispatcher dispatcher(event);
-        dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onMouseMoved));
-        dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onMousePressed));
-        dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onKeyPressed));
-        dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(ClothLayer::onViewportResized));
+        dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMouseMoved));
+        dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMousePressed));
+        dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onKeyPressed));
+        dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onViewportResized));
     }
 
     bool onViewportResized(atcg::ViewportResizeEvent* event)
@@ -153,15 +235,15 @@ private:
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 };
 
-class Cloth : public atcg::Application
+class PBR : public atcg::Application
 {
 public:
-    Cloth() : atcg::Application() { pushLayer(new ClothLayer("Layer")); }
+    PBR() : atcg::Application() { pushLayer(new PBRLayer("Layer")); }
 
-    ~Cloth() {}
+    ~PBR() {}
 };
 
 atcg::Application* atcg::createApplication()
 {
-    return new Cloth;
+    return new PBR;
 }
