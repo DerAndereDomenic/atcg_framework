@@ -66,7 +66,7 @@ public:
             atcg::TextureSpecification spec;
             spec.width        = x;
             spec.height       = y;
-            spec.format       = atcg::TextureFormat::RINT;
+            spec.format       = atcg::TextureFormat::RINT8;
             roughness_texture = atcg::Texture2D::create(image, spec);
 
             stbi_image_free(image);
@@ -81,7 +81,7 @@ public:
             atcg::TextureSpecification spec;
             spec.width       = x;
             spec.height      = y;
-            spec.format      = atcg::TextureFormat::RINT;
+            spec.format      = atcg::TextureFormat::RINT8;
             metallic_texture = atcg::Texture2D::create(image, spec);
 
             stbi_image_free(image);
@@ -96,7 +96,7 @@ public:
             atcg::TextureSpecification spec;
             spec.width           = x;
             spec.height          = y;
-            spec.format          = atcg::TextureFormat::RINT;
+            spec.format          = atcg::TextureFormat::RINT8;
             displacement_texture = atcg::Texture2D::create(image, spec);
 
             stbi_image_free(image);

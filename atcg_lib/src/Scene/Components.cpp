@@ -39,21 +39,21 @@ MaterialComponent::MaterialComponent()
     TextureSpecification spec_roughness;
     spec_roughness.width  = 1;
     spec_roughness.height = 1;
-    spec_roughness.format = TextureFormat::RINT;
+    spec_roughness.format = TextureFormat::RINT8;
     uint8_t roughness     = 255;
     _roughness_texture    = atcg::Texture2D::create(&roughness, spec_roughness);
 
     TextureSpecification spec_metallic;
     spec_metallic.width  = 1;
     spec_metallic.height = 1;
-    spec_metallic.format = TextureFormat::RINT;
+    spec_metallic.format = TextureFormat::RINT8;
     uint8_t metallic     = 0;
     _metallic_texture    = atcg::Texture2D::create(&metallic, spec_metallic);
 
     TextureSpecification spec_displacement;
     spec_displacement.width  = 1;
     spec_displacement.height = 1;
-    spec_displacement.format = TextureFormat::RINT;
+    spec_displacement.format = TextureFormat::RINT8;
     uint8_t displacement     = 0;
     _displacement_texture    = atcg::Texture2D::create(&displacement, spec_displacement);
 }
@@ -71,7 +71,7 @@ void MaterialComponent::setRoughness(const float roughness)
     TextureSpecification spec_roughness;
     spec_roughness.width  = 1;
     spec_roughness.height = 1;
-    spec_roughness.format = TextureFormat::RINT;
+    spec_roughness.format = TextureFormat::RINT8;
     _roughness_texture    = atcg::Texture2D::create(&roughness, spec_roughness);
 }
 
@@ -80,7 +80,7 @@ void MaterialComponent::setMetallic(const float metallic)
     TextureSpecification spec_metallic;
     spec_metallic.width  = 1;
     spec_metallic.height = 1;
-    spec_metallic.format = TextureFormat::RINT;
+    spec_metallic.format = TextureFormat::RINT8;
     _metallic_texture    = atcg::Texture2D::create(&metallic, spec_metallic);
 }
 
