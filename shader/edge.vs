@@ -1,7 +1,7 @@
 #version 430 core
 
-// POSITION + NORMAL + COLOR + UV
-#define VERTEX_DIM (3 + 3 + 3 + 2)
+// POSITION + NORMAL + TANGENT + COLOR + UV
+#define VERTEX_DIM (3 + 3 + 3 + 3 + 3)
 
 layout (location = 0) in vec2 aEdge;
 layout (location = 1) in vec3 aColor; 

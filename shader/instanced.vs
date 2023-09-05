@@ -1,13 +1,14 @@
 #version 330 core
 
 layout (location = 0) in vec3 aPosition;
-layout (location = 1) in vec3 aNormal;
-layout (location = 2) in vec3 aColor;
-layout (location = 3) in vec2 aUV;
+layout (location = 1) in vec3 aColor;
+layout (location = 2) in vec3 aNormal;
+layout (location = 3) in vec3 aTangent;
+layout (location = 4) in vec3 aUV;
 
 // Instance variables
-layout (location = 4) in mat4 aInstanceModel;
-layout (location = 8) in vec3 aInstanceColor;
+layout (location = 5) in mat4 aInstanceModel;
+layout (location = 9) in vec3 aInstanceColor;
 
 uniform mat4 M, V, P;
 

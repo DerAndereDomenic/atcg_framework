@@ -43,9 +43,10 @@ Graph::Impl::Impl()
     // Create necessary buffers always on init
     this->vertices = atcg::make_ref<VertexBuffer>();
     this->vertices->setLayout({{ShaderDataType::Float3, "aPosition"},
-                               {ShaderDataType::Float3, "aNormal"},
                                {ShaderDataType::Float3, "aColor"},
-                               {ShaderDataType::Float2, "aUV"}});
+                               {ShaderDataType::Float3, "aNormal"},
+                               {ShaderDataType::Float3, "aTangent"},
+                               {ShaderDataType::Float3, "aUV"}});
 
 
     vertices_array = atcg::make_ref<VertexArray>();
@@ -198,7 +199,8 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mes
         vertex_data[vertex_id].position = pos;
         vertex_data[vertex_id].normal   = normal;
         vertex_data[vertex_id].color    = has_color ? col / 255.0f : glm::vec3(1.0f);
-        vertex_data[vertex_id].uv       = uv;
+        vertex_data[vertex_id].uv       = glm::vec3(uv, 0);
+        vertex_data[vertex_id].tangent  = glm::vec3(0);    // TODO
     }
 
     int32_t face_id = 0;

@@ -1,17 +1,18 @@
 #version 430 core
 
-// POSITION + NORMAL + COLOR + UV
-#define VERTEX_DIM (3 + 3 + 3 + 2)
+// POSITION + NORMAL + TANGENT + COLOR + UV
+#define VERTEX_DIM (3 + 3 + 3 + 3 + 3)
 
 layout (location = 0) in vec3 aPosition;
-layout (location = 1) in vec3 aNormal;
-layout (location = 2) in vec3 aColor;
-layout (location = 3) in vec2 aUV;
+layout (location = 1) in vec3 aColor;
+layout (location = 2) in vec3 aNormal;
+layout (location = 3) in vec3 aTangent;
+layout (location = 4) in vec3 aUV;
 
 // Instance variables
-layout (location = 4) in vec2 aEdge;
-layout (location = 5) in vec3 aEdgeColor;
-layout (location = 6) in float aRadius;
+layout (location = 5) in vec2 aEdge;
+layout (location = 6) in vec3 aEdgeColor;
+layout (location = 7) in float aRadius;
 
 uniform mat4 M, V, P;
 uniform int instanced;

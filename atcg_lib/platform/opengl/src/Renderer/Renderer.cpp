@@ -129,11 +129,11 @@ void Renderer::Impl::initGrid()
     std::vector<atcg::Vertex> host_points;
     for(int i = 0; i < grid_size; ++i)
     {
-        host_points.push_back({glm::vec3(-(grid_size - 1) / 2 + i, 0.0f, -grid_size / 2), glm::vec3(1), glm::vec3(1)});
-        host_points.push_back({glm::vec3(-(grid_size - 1) / 2 + i, 0.0f, grid_size / 2), glm::vec3(1), glm::vec3(1)});
+        host_points.push_back(atcg::Vertex(glm::vec3(-(grid_size - 1) / 2 + i, 0.0f, -grid_size / 2), glm::vec3(1)));
+        host_points.push_back(atcg::Vertex(glm::vec3(-(grid_size - 1) / 2 + i, 0.0f, grid_size / 2), glm::vec3(1)));
 
-        host_points.push_back({glm::vec3(-grid_size / 2, 0.0f, -(grid_size - 1) / 2 + i), glm::vec3(1), glm::vec3(1)});
-        host_points.push_back({glm::vec3(grid_size / 2, 0.0f, -(grid_size - 1) / 2 + i), glm::vec3(1), glm::vec3(1)});
+        host_points.push_back(atcg::Vertex(glm::vec3(-grid_size / 2, 0.0f, -(grid_size - 1) / 2 + i), glm::vec3(1)));
+        host_points.push_back(atcg::Vertex(glm::vec3(grid_size / 2, 0.0f, -(grid_size - 1) / 2 + i), glm::vec3(1)));
     }
 
     std::vector<atcg::Edge> edges;
@@ -146,11 +146,11 @@ void Renderer::Impl::initGrid()
 void Renderer::Impl::initCross()
 {
     std::vector<atcg::Vertex> points;
-    points.push_back({glm::vec3(-10000.0f, 0.0f, 0.0f), glm::vec3(1), glm::vec3(1)});
-    points.push_back({glm::vec3(10000.0f, 0.0f, 0.0f), glm::vec3(1), glm::vec3(1)});
+    points.push_back(atcg::Vertex(glm::vec3(-10000.0f, 0.0f, 0.0f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(glm::vec3(10000.0f, 0.0f, 0.0f), glm::vec3(1)));
 
-    points.push_back({glm::vec3(0.0f, 0.0f, -10000.0f), glm::vec3(1), glm::vec3(1)});
-    points.push_back({glm::vec3(0.0f, 0.0f, 10000.0f), glm::vec3(1), glm::vec3(1)});
+    points.push_back(atcg::Vertex(glm::vec3(0.0f, 0.0f, -10000.0f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(glm::vec3(0.0f, 0.0f, 10000.0f), glm::vec3(1)));
 
     std::vector<atcg::Edge> edges;
     edges.push_back({glm::vec2(0, 1), glm::vec3(1, 0, 0), 0.1f});
@@ -164,12 +164,12 @@ void Renderer::Impl::initCameraFrustrum()
     glm::vec3 eye = glm::vec3(0);
 
     std::vector<atcg::Vertex> points;
-    points.push_back({eye, glm::vec3(1), glm::vec3(1)});
+    points.push_back(atcg::Vertex(eye, glm::vec3(1)));
     //  0.8660254 approx 0.5/tan(30)
-    points.push_back({eye + glm::vec3(-0.5, -0.5, -0.8660254), glm::vec3(1), glm::vec3(1)});
-    points.push_back({eye + glm::vec3(0.5, -0.5, -0.8660254), glm::vec3(1), glm::vec3(1)});
-    points.push_back({eye + glm::vec3(0.5, 0.5, -0.8660254), glm::vec3(1), glm::vec3(1)});
-    points.push_back({eye + glm::vec3(-0.5, 0.5, -0.8660254), glm::vec3(1), glm::vec3(1)});
+    points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, -0.5, -0.8660254), glm::vec3(1)));
+    points.push_back(atcg::Vertex(eye + glm::vec3(0.5, -0.5, -0.8660254), glm::vec3(1)));
+    points.push_back(atcg::Vertex(eye + glm::vec3(0.5, 0.5, -0.8660254), glm::vec3(1)));
+    points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, 0.5, -0.8660254), glm::vec3(1)));
 
     std::vector<atcg::Edge> edges;
     edges.push_back({glm::vec2(0, 1), glm::vec3(1), 0.01f});

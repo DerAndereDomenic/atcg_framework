@@ -27,10 +27,26 @@ enum class GraphType
  */
 struct Vertex
 {
-    glm::vec3 position;
-    glm::vec3 normal;
-    glm::vec3 color = glm::vec3(1);
-    glm::vec2 uv    = glm::vec2(0);
+    Vertex() = default;
+
+    Vertex(const glm::vec3& position,
+           const glm::vec3& color   = glm::vec3(1),
+           const glm::vec3& normal  = glm::vec3(0),
+           const glm::vec3& tangent = glm::vec3(0),
+           const glm::vec3& uv      = glm::vec3(0))
+        : position(position),
+          color(color),
+          normal(normal),
+          tangent(tangent),
+          uv(uv)
+    {
+    }
+
+    glm::vec3 position = glm::vec3(0);
+    glm::vec3 color    = glm::vec3(1);
+    glm::vec3 normal   = glm::vec3(0);
+    glm::vec3 tangent  = glm::vec3(0);
+    glm::vec3 uv       = glm::vec3(0);
 };
 
 /**

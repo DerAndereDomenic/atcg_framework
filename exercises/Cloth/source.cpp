@@ -23,14 +23,17 @@ public:
     virtual void onAttach() override
     {
         atcg::Application::get()->enableDockSpace(true);
+        /*const auto& window = atcg::Application::get()->getWindow();
+        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
+        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
-        /*std::vector<atcg::Vertex> host_points;
+        std::vector<atcg::Vertex> host_points;
         for(int i = 0; i < grid_size; ++i)
         {
             for(int j = 0; j < grid_size; ++j)
             {
                 host_points.push_back(
-                    {glm::vec3(-grid_size / 2 + j, -grid_size / 2 + i, 0.0f), glm::vec3(1), glm::vec3(1)});
+                    atcg::Vertex(glm::vec3(-grid_size / 2 + j, -grid_size / 2 + i, 0.0f), glm::vec3(1)));
             }
         }
 
@@ -72,20 +75,20 @@ public:
 
         scene = atcg::make_ref<atcg::Scene>();
 
-        atcg::Entity grid_entity = scene->createEntity();
+        atcg::Entity grid_entity = scene->createEntity("Cloth");
         grid_entity.addComponent<atcg::GeometryComponent>(grid);
         grid_entity.addComponent<atcg::PointSphereRenderComponent>();
         grid_entity.addComponent<atcg::EdgeCylinderRenderComponent>();
         grid_entity.addComponent<atcg::TransformComponent>();
 
-        atcg::Entity plane_entity = scene->createEntity();
+        atcg::Entity plane_entity = scene->createEntity("Plane");
         plane_entity.addComponent<atcg::GeometryComponent>(plane);
         plane_entity.addComponent<atcg::MeshRenderComponent>(checkerboard_shader);
         auto& transform = plane_entity.addComponent<atcg::TransformComponent>();
         transform.setScale(glm::vec3(100, 100, 100));
 
-        atcg::Entity camera_entity = scene->createEntity();
-        camera_entity.addComponent<atcg::CameraComponent>(camera_controller->getCamera());*/
+        atcg::Entity camera_entity = scene->createEntity("EditorCamera");
+        camera_entity.addComponent<atcg::EditorCameraComponent>(camera_controller->getCamera());*/
 
         scene = atcg::make_ref<atcg::Scene>();
         atcg::Serializer serializer(scene);
