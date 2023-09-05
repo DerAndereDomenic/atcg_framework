@@ -20,24 +20,6 @@ out vec3 frag_color;
 out vec2 frag_uv;
 out mat3 frag_tbn;
 
-mat3 compute_local_frame(vec3 localZ)
-{
-    float x  = localZ.x;
-    float y  = localZ.y;
-    float z  = localZ.z;
-    float sz = (z >= 0) ? 1 : -1;
-    float a  = 1 / (sz + z);
-    float ya = y * a;
-    float b  = x * ya;
-    float c  = x * sz;
-
-    vec3 localX = vec3(c * x * a - 1, sz * b, c);
-    vec3 localY = vec3(b, y * ya - sz, y);
-
-    mat3 frame = mat3(localX, localY, localZ);
-    return frame;
-}
-
 void main()
 {
     vec3 scale_model = vec3(length(M[0]), length(M[1]), length(M[2]));
@@ -61,11 +43,11 @@ void main()
     // frag_normal = normalize(vec3(inverse(transpose((1-instanced) * M + instanced * M)) * vec4(aNormal, 0)));
 
     // Calculate tangent vectors
-
-    vec3 axis = normalize(vec3(M * vec4(aNormal, 0)));
-    vec3 tangent = normalize(cross(vec3(0, axis.z, 1.0-axis.z), axis));
-    vec3 bitangent = normalize(cross(tangent, axis));
-    mat3 tbn = compute_local_frame(axis); //mat3(tangent, bitangent, axis);
+    mat4 normal_matrix = transpose(inverse(M)); //TODO: Compute on host
+    vec3 axis = normalize(vec3(normal_matrix * vec4(aNormal, 0)));
+    vec3 tangent = normalize(vec3(normal_matrix * vec4(aTangent, 0)));
+    vec3 bitangent = normalize(cross(axis, tangent));
+    mat3 tbn = mat3(tangent, bitangent, axis);
     frag_tbn = tbn;
     frag_normal = axis;
     frag_color = aColor * (instanced * aInstanceColor + (1 - instanced) * vec3(1));
