@@ -32,7 +32,7 @@ public:
         atcg::ref_ptr<atcg::Texture2D> diffuse_textue;
         {
             int x, y, n;
-            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_diff_1k.png", &x, &y, &n, 4);
+            void* image = stbi_load("res/pbr/diffuse.png", &x, &y, &n, 4);
             ATCG_INFO("{0} x {1} x {2}", x, y, n);
 
             atcg::TextureSpecification spec;
@@ -42,11 +42,11 @@ public:
 
             stbi_image_free(image);
         }
-
+        //
         atcg::ref_ptr<atcg::Texture2D> normal_texture;
         {
             int x, y, n;
-            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_nor_gl_1k.png", &x, &y, &n, 4);
+            void* image = stbi_load("res/pbr/normals.png", &x, &y, &n, 4);
             ATCG_INFO("{0} x {1} x {2}", x, y, n);
 
             atcg::TextureSpecification spec;
@@ -60,7 +60,7 @@ public:
         atcg::ref_ptr<atcg::Texture2D> roughness_texture;
         {
             int x, y, n;
-            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_rough_1k.png", &x, &y, &n, 1);
+            void* image = stbi_load("res/pbr/roughness.png", &x, &y, &n, 1);
             ATCG_INFO("{0} x {1} x {2}", x, y, n);
 
             atcg::TextureSpecification spec;
@@ -75,7 +75,7 @@ public:
         atcg::ref_ptr<atcg::Texture2D> metallic_texture;
         {
             int x, y, n;
-            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_arm_1k.png", &x, &y, &n, 1);
+            void* image = stbi_load("res/pbr/metallic.png", &x, &y, &n, 1);
             ATCG_INFO("{0} x {1} x {2}", x, y, n);
 
             atcg::TextureSpecification spec;
@@ -90,7 +90,7 @@ public:
         atcg::ref_ptr<atcg::Texture2D> displacement_texture;
         {
             int x, y, n;
-            void* image = stbi_load("res/patterned_brick/patterned_brick_floor_diff_1k.png", &x, &y, &n, 1);
+            void* image = stbi_load("res/pbr/displacement.png", &x, &y, &n, 1);
             ATCG_INFO("{0} x {1} x {2}", x, y, n);
 
             atcg::TextureSpecification spec;
