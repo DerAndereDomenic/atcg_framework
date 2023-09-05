@@ -207,13 +207,46 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mes
     for(auto face = mesh->faces_begin(); face != mesh->faces_end(); ++face)
     {
         int32_t vertex_id = 0;
+        int32_t vertices[3];    // Local copy of vertex indices for tangent calculation
         for(auto vertex = face->vertices().begin(); vertex != face->vertices().end(); ++vertex)
         {
             glm::value_ptr(indices_data[face_id])[vertex_id] = vertex->idx();
+            vertices[vertex_id]                              = vertex->idx();
             ++vertex_id;
         }
+
+        // Calculate tangent vector
+        glm::vec3 pos1 = vertex_data[vertices[0]].position;
+        glm::vec3 pos2 = vertex_data[vertices[1]].position;
+        glm::vec3 pos3 = vertex_data[vertices[2]].position;
+
+        glm::vec2 uv1 = vertex_data[vertices[0]].uv;
+        glm::vec2 uv2 = vertex_data[vertices[1]].uv;
+        glm::vec2 uv3 = vertex_data[vertices[2]].uv;
+
+        glm::vec3 edge1 = pos2 - pos1;
+        glm::vec3 edge2 = pos3 - pos1;
+
+        glm::vec2 deltaUV1 = uv2 - uv1;
+        glm::vec2 deltaUV2 = uv3 - uv1;
+
+        float det = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+        glm::vec3 tangent;
+        tangent.x = det * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+        tangent.y = det * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+        tangent.z = det * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+        tangent   = glm::normalize(tangent);
+
+        vertex_data[vertices[0]].tangent += tangent;
+        vertex_data[vertices[1]].tangent += tangent;
+        vertex_data[vertices[2]].tangent += tangent;
+
         ++face_id;
     }
+
+    // TODO: Find better structure so we don't have to iterate over everything again
+    for(auto& vtx: vertex_data) { vtx.tangent = glm::normalize(vtx.tangent); }
 
     return createTriangleMesh(vertex_data, indices_data);
 }
