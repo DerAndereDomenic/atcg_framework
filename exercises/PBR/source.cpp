@@ -31,75 +31,60 @@ public:
         // Load textures
         atcg::ref_ptr<atcg::Texture2D> diffuse_textue;
         {
-            int x, y, n;
-            void* image = stbi_load("res/pbr/diffuse.png", &x, &y, &n, 4);
-            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+            auto image = atcg::IO::imread("res/pbr/diffuse.png");
+            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
 
             atcg::TextureSpecification spec;
-            spec.width     = x;
-            spec.height    = y;
-            diffuse_textue = atcg::Texture2D::create(image, spec);
-
-            stbi_image_free(image);
+            spec.width     = image->width();
+            spec.height    = image->height();
+            diffuse_textue = atcg::Texture2D::create(image->data(), spec);
         }
         //
         atcg::ref_ptr<atcg::Texture2D> normal_texture;
         {
-            int x, y, n;
-            void* image = stbi_load("res/pbr/normals.png", &x, &y, &n, 4);
-            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+            auto image = atcg::IO::imread("res/pbr/normals.png");
+            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
 
             atcg::TextureSpecification spec;
-            spec.width     = x;
-            spec.height    = y;
-            normal_texture = atcg::Texture2D::create(image, spec);
-
-            stbi_image_free(image);
+            spec.width     = image->width();
+            spec.height    = image->height();
+            normal_texture = atcg::Texture2D::create(image->data(), spec);
         }
 
         atcg::ref_ptr<atcg::Texture2D> roughness_texture;
         {
-            int x, y, n;
-            void* image = stbi_load("res/pbr/roughness.png", &x, &y, &n, 1);
-            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+            auto image = atcg::IO::imread("res/pbr/roughness.png");
+            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
 
             atcg::TextureSpecification spec;
-            spec.width        = x;
-            spec.height       = y;
+            spec.width        = image->width();
+            spec.height       = image->height();
             spec.format       = atcg::TextureFormat::RINT8;
-            roughness_texture = atcg::Texture2D::create(image, spec);
-
-            stbi_image_free(image);
+            roughness_texture = atcg::Texture2D::create(image->data(), spec);
         }
 
         atcg::ref_ptr<atcg::Texture2D> metallic_texture;
         {
-            int x, y, n;
-            void* image = stbi_load("res/pbr/metallic.png", &x, &y, &n, 1);
-            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+            auto image = atcg::IO::imread("res/pbr/metallic.png");
+            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
 
             atcg::TextureSpecification spec;
-            spec.width       = x;
-            spec.height      = y;
+            spec.width       = image->width();
+            spec.height      = image->height();
             spec.format      = atcg::TextureFormat::RINT8;
-            metallic_texture = atcg::Texture2D::create(image, spec);
-
-            stbi_image_free(image);
+            metallic_texture = atcg::Texture2D::create(image->data(), spec);
         }
 
         atcg::ref_ptr<atcg::Texture2D> displacement_texture;
         {
-            int x, y, n;
-            void* image = stbi_load("res/pbr/displacement.png", &x, &y, &n, 1);
-            ATCG_INFO("{0} x {1} x {2}", x, y, n);
+            auto image = atcg::IO::imread("res/pbr/displacement.png");
+            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
 
             atcg::TextureSpecification spec;
-            spec.width           = x;
-            spec.height          = y;
+            spec.width           = image->width();
+            spec.height          = image->height();
             spec.format          = atcg::TextureFormat::RINT8;
-            displacement_texture = atcg::Texture2D::create(image, spec);
-
-            stbi_image_free(image);
+            displacement_texture = atcg::Texture2D::create(image->data(), spec);
         }
 
         scene = atcg::make_ref<atcg::Scene>();
