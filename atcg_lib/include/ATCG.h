@@ -41,6 +41,7 @@
 #include <DataStructure/Timer.h>
 #include <DataStructure/Statistics.h>
 #include <DataStructure/BufferView.h>
+#include <DataStructure/Image.h>
 
 //-------- Math -----------
 #include <Math/Functions.h>
