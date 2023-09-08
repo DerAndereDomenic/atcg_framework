@@ -18,6 +18,34 @@ public:
     Image() = default;
 
     /**
+     * @brief Create an one byte per channel image from external data.
+     * The data is copied.
+     *
+     * @note This interface only supports 1 or 4 channel images. If channels is 2 or three, the memory will be padded.
+     *
+     * @param img_data The data
+     * @param width The image width
+     * @param height The image height
+     * @param channels The number of channels between 1 and 4
+     *
+     */
+    Image(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
+
+    /**
+     * @brief Create a floating point image from external data.
+     * The data is copied.
+     *
+     * @note This interface only supports 1 or 4 channel images. If channels is 2 or three, the memory will be padded.
+     *
+     * @param img_data The data
+     * @param width The image width
+     * @param height The image height
+     * @param channels The number of channels between 1 and 4
+     *
+     */
+    Image(const float* data, uint32_t width, uint32_t height, uint32_t channels);
+
+    /**
      * @brief Destructor
      */
     ~Image();

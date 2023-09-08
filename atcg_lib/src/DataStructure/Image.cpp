@@ -6,6 +6,67 @@
 namespace atcg
 {
 
+Image::Image(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels)
+{
+    _width  = width;
+    _height = height;
+
+    if(channels == 1 || channels == 4)
+    {
+        _img_data = (uint8_t*)malloc(width * height * channels *
+                                     sizeof(uint8_t));    // We use malloc here for compatibility with stbi
+        memcpy(_img_data, data, width * height * channels * sizeof(uint8_t));
+        _channels = channels;
+    }
+    else
+    {
+        // Padding
+        _img_data = (uint8_t*)malloc(width * height * 4 * sizeof(uint8_t));
+
+        for(uint32_t i = 0; i < width * height; ++i)    // Iterate through each rg or rgb pixel
+        {
+            uint8_t padded[4] = {data[channels * i],
+                                 data[channels * i + 1],
+                                 channels == 3 ? data[channels * i + 2] : 0,
+                                 255};
+            memcpy(_img_data + channels * i, padded, sizeof(padded));
+        }
+
+        _channels = 4;
+    }
+}
+
+Image::Image(const float* data, uint32_t width, uint32_t height, uint32_t channels)
+{
+    _width  = width;
+    _height = height;
+
+    if(channels == 1 || channels == 4)
+    {
+        _img_data = (uint8_t*)malloc(width * height * channels *
+                                     sizeof(float));    // We use malloc here for compatibility with stbi
+        memcpy(_img_data, data, width * height * channels * sizeof(float));
+        _channels = channels;
+    }
+    else
+    {
+        _img_data = (uint8_t*)malloc(width * height * 4 * sizeof(float));
+
+        float* data_float = (float*)data;
+
+        for(uint32_t i = 0; i < width * height; ++i)    // Iterate through each rg or rgb pixel
+        {
+            float padded[4] = {data_float[channels * i],
+                               data_float[channels * i + 1],
+                               channels == 3 ? data_float[channels * i + 2] : 0.0f,
+                               1.0f};
+            memcpy(data_float + channels * i, padded, sizeof(padded));
+        }
+        // Padding
+        _channels = 4;
+    }
+}
+
 Image::~Image()
 {
     if(_img_data)
