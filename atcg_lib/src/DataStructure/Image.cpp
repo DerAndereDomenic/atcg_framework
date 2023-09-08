@@ -88,7 +88,11 @@ void Image::loadLDR(const std::string& filename)
     stbi_info(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels);
 
     if(_channels == 1) { _img_data = stbi_load(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0); }
-    else { _img_data = stbi_load(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 4); }
+    else
+    {
+        _img_data = stbi_load(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 4);
+        _channels = 4;
+    }
 }
 
 void Image::loadHDR(const std::string& filename)
@@ -102,6 +106,7 @@ void Image::loadHDR(const std::string& filename)
     else
     {
         _img_data = (unsigned char*)stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 4);
+        _channels = 4;
     }
 }
 
