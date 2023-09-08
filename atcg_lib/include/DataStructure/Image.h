@@ -53,7 +53,7 @@ public:
      *
      * @param data The image data
      */
-    void setData(const unsigned char* data);
+    void setData(const uint8_t* data);
 
     /**
      * @brief Get the width of the image
@@ -88,7 +88,7 @@ public:
      *
      * @return The data
      */
-    inline const unsigned char* data() const { return _img_data; }
+    inline const uint8_t* data() const { return _img_data; }
 
     /**
      * @brief Get the image data interpreted in a specific format.
@@ -107,7 +107,7 @@ private:
     void loadLDR(const std::string& filename);
     void loadHDR(const std::string& filename);
 
-    unsigned char* _img_data;
+    uint8_t* _img_data;
     uint32_t _width    = 0;
     uint32_t _height   = 0;
     uint32_t _channels = 0;

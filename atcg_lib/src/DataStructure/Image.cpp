@@ -10,8 +10,8 @@ Image::~Image()
 {
     if(_img_data)
     {
-        stbi_image_free(_img_data);
-        unsigned char* _img_data;
+        free(_img_data);
+        uint8_t* _img_data;
         uint32_t _width    = 0;
         uint32_t _height   = 0;
         uint32_t _channels = 0;
@@ -40,7 +40,7 @@ void Image::store(const std::string& filename)
                        (int)_height,
                        (int)_channels,
                        (const void*)_img_data,
-                       _channels * _width * sizeof(unsigned char));
+                       _channels * _width * sizeof(uint8_t));
     }
     else if(file_ending == "bmp")
     {
@@ -69,17 +69,17 @@ void Image::applyGamma(const float gamma)
     }
     else
     {
-        unsigned char* data = _img_data;
+        uint8_t* data = _img_data;
         for(uint32_t i = 0; i < _width * _height * _channels; ++i)
         {
-            data[i] = (unsigned char)(255.0f * glm::pow((float)data[i] / 255.0f, gamma));
+            data[i] = (uint8_t)(255.0f * glm::pow((float)data[i] / 255.0f, gamma));
         }
     }
 }
 
-void Image::setData(const unsigned char* data)
+void Image::setData(const uint8_t* data)
 {
-    size_t size = stbi_is_hdr(_filename.c_str()) ? sizeof(float) : sizeof(unsigned char);
+    size_t size = stbi_is_hdr(_filename.c_str()) ? sizeof(float) : sizeof(uint8_t);
     memcpy((void*)_img_data, (const void*)data, _width * _height * _channels * size);
 }
 
@@ -101,11 +101,11 @@ void Image::loadHDR(const std::string& filename)
 
     if(_channels == 1)
     {
-        _img_data = (unsigned char*)stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0);
+        _img_data = (uint8_t*)stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0);
     }
     else
     {
-        _img_data = (unsigned char*)stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 4);
+        _img_data = (uint8_t*)stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 4);
         _channels = 4;
     }
 }
