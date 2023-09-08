@@ -180,6 +180,11 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
     return result;
 }
 
+atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img, const TextureSpecification& spec)
+{
+    return create(img->data(), spec);
+}
+
 Texture2D::~Texture2D()
 {
     glDeleteTextures(1, &_ID);

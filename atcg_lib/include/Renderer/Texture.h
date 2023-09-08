@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Memory.h>
+#include <DataStructure/Image.h>
 
 #include <cstdint>
 namespace atcg
@@ -152,6 +153,16 @@ public:
      * @return The resulting texture
      */
     static atcg::ref_ptr<Texture2D> create(const void* data, const TextureSpecification& spec);
+
+    /**
+     * @brief Create a 2D texture.
+     *
+     * @param data The image
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<Texture2D> create(const atcg::ref_ptr<Image> img, const TextureSpecification& spec);
 
     /**
      *  @brief Destructor

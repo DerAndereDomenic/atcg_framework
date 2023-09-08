@@ -37,7 +37,7 @@ public:
             atcg::TextureSpecification spec;
             spec.width     = image->width();
             spec.height    = image->height();
-            diffuse_textue = atcg::Texture2D::create(image->data(), spec);
+            diffuse_textue = atcg::Texture2D::create(image, spec);
         }
         //
         atcg::ref_ptr<atcg::Texture2D> normal_texture;
@@ -48,7 +48,7 @@ public:
             atcg::TextureSpecification spec;
             spec.width     = image->width();
             spec.height    = image->height();
-            normal_texture = atcg::Texture2D::create(image->data(), spec);
+            normal_texture = atcg::Texture2D::create(image, spec);
         }
 
         atcg::ref_ptr<atcg::Texture2D> roughness_texture;
@@ -59,7 +59,7 @@ public:
             atcg::TextureSpecification spec;
             spec.width        = image->width();
             spec.height       = image->height();
-            roughness_texture = atcg::Texture2D::create(image->data(), spec);
+            roughness_texture = atcg::Texture2D::create(image, spec);
         }
 
         atcg::ref_ptr<atcg::Texture2D> metallic_texture;
@@ -71,7 +71,7 @@ public:
             spec.width       = image->width();
             spec.height      = image->height();
             spec.format      = atcg::TextureFormat::RINT8;
-            metallic_texture = atcg::Texture2D::create(image->data(), spec);
+            metallic_texture = atcg::Texture2D::create(image, spec);
         }
 
         atcg::ref_ptr<atcg::Texture2D> displacement_texture;
@@ -83,7 +83,7 @@ public:
             spec.width           = image->width();
             spec.height          = image->height();
             spec.format          = atcg::TextureFormat::RINT8;
-            displacement_texture = atcg::Texture2D::create(image->data(), spec);
+            displacement_texture = atcg::Texture2D::create(image, spec);
         }
 
         scene = atcg::make_ref<atcg::Scene>();
