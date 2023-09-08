@@ -31,7 +31,7 @@ public:
         // Load textures
         atcg::ref_ptr<atcg::Texture2D> diffuse_textue;
         {
-            auto image = atcg::IO::imread("res/pbr/diffuse.png");
+            auto image = atcg::IO::imread("res/pbr/diffuse.png", 2.2f);
             ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
 
             atcg::TextureSpecification spec;
@@ -59,7 +59,6 @@ public:
             atcg::TextureSpecification spec;
             spec.width        = image->width();
             spec.height       = image->height();
-            spec.format       = atcg::TextureFormat::RINT8;
             roughness_texture = atcg::Texture2D::create(image->data(), spec);
         }
 
