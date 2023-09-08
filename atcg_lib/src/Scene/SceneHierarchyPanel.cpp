@@ -3,8 +3,6 @@
 #include <imgui.h>
 #include <Scene/Components.h>
 
-#include <stb_image_write.h>
-
 namespace atcg
 {
 
@@ -212,8 +210,10 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                 std::ostringstream oss;
                 oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
                 std::vector<uint8_t> buffer = atcg::Renderer::getFrame(screenshot_buffer);
-                stbi_flip_vertically_on_write(true);
-                stbi_write_png(oss.str().c_str(), (int)width, (int)height, 4, (void*)buffer.data(), 4 * (int)width);
+
+                Image img = Image(buffer.data(), width, height, 4);
+
+                img.store(oss.str());
             }
             atcg::Framebuffer::useDefault();
 
