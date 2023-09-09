@@ -40,6 +40,8 @@ public:
 
     atcg::ref_ptr<Texture2D> white_pixel;
 
+    MaterialComponent default_material;
+
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
     glm::vec3 clear_color;
 
@@ -190,24 +192,22 @@ void Renderer::Impl::initCameraFrustrum()
 
 void Renderer::Impl::setMaterial(Entity entity, const atcg::ref_ptr<Shader>& shader)
 {
-    if(entity.hasComponent<MaterialComponent>())
-    {
-        MaterialComponent material = entity.getComponent<MaterialComponent>();
-        material.getDiffuseTexture()->use(0);
-        shader->setInt("texture_diffuse", 0);
+    MaterialComponent material = default_material;
+    if(entity.hasComponent<MaterialComponent>()) { material = entity.getComponent<MaterialComponent>(); }
+    material.getDiffuseTexture()->use(0);
+    shader->setInt("texture_diffuse", 0);
 
-        material.getNormalTexture()->use(1);
-        shader->setInt("texture_normal", 1);
+    material.getNormalTexture()->use(1);
+    shader->setInt("texture_normal", 1);
 
-        material.getRoughnessTexture()->use(2);
-        shader->setInt("texture_roughness", 2);
+    material.getRoughnessTexture()->use(2);
+    shader->setInt("texture_roughness", 2);
 
-        material.getMetallicTexture()->use(3);
-        shader->setInt("texture_metallic", 3);
+    material.getMetallicTexture()->use(3);
+    shader->setInt("texture_metallic", 3);
 
-        material.getDisplacementTexture()->use(4);
-        shader->setInt("texture_displacement", 4);
-    }
+    material.getDisplacementTexture()->use(4);
+    shader->setInt("texture_displacement", 4);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
