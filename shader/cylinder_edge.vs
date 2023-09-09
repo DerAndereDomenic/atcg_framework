@@ -21,6 +21,8 @@ uniform float edge_radius;
 out vec3 frag_normal;
 out vec3 frag_pos;
 out vec3 frag_color;
+out vec2 frag_uv;
+out mat3 frag_tbn;
 
 layout(std430, binding = 0) buffer points_layout
 {
@@ -57,8 +59,16 @@ void main()
 
     mat4 model_edge = model_translate * model_rotation * model_scale;
 
-    gl_Position = P * V * (model_edge * vec4(aPosition, 1));// + vec4(instanced * aInstanceStart, 0));
     frag_pos = vec3(model_edge * vec4(aPosition, 1));
-    frag_normal = normalize(vec3(inverse(transpose(model_edge)) * vec4(aNormal, 0)));
+    gl_Position = P * V * vec4(frag_pos, 1);// + vec4(instanced * aInstanceStart, 0));
+    mat4 normal_matrix = inverse(transpose(model_edge));
+    frag_normal = normalize(vec3(normal_matrix * vec4(aNormal, 0)));
+    vec3 tangent = normalize(vec3(normal_matrix * vec4(aTangent, 0)));
+    vec3 bitangent = normalize(cross(frag_normal, tangent));
+    mat3 tbn = mat3(tangent, bitangent, frag_normal);
+    
+    frag_tbn = tbn;
     frag_color = aColor * aEdgeColor;
+
+    frag_uv = aUV.xy;
 }
