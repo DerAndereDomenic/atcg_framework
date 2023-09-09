@@ -69,6 +69,8 @@ public:
                   const atcg::ref_ptr<Camera>& camera = {},
                   const glm::mat4& model              = glm::mat4(1),
                   const glm::vec3& color              = glm::vec3(1));
+
+    void setMaterial(Entity entity, const atcg::ref_ptr<Shader>& shader);
 };
 
 Renderer::Renderer() {}
@@ -95,9 +97,10 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     }
 
     // Load a sphere
-    sphere_mesh = atcg::IO::read_mesh("res/sphere_low.obj");
+    auto options = OpenMesh::IO::Options(OpenMesh::IO::Options(OpenMesh::IO::Options::VertexTexCoord));
+    sphere_mesh  = atcg::IO::read_mesh("res/sphere_low.obj", options);
 
-    cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj");
+    cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj", options);
 
     // Generate CAD grid
     initGrid();
@@ -183,6 +186,28 @@ void Renderer::Impl::initCameraFrustrum()
     edges.push_back({glm::vec2(4, 1), glm::vec3(1), 0.01f});
 
     camera_frustrum = atcg::Graph::createGraph(points, edges);
+}
+
+void Renderer::Impl::setMaterial(Entity entity, const atcg::ref_ptr<Shader>& shader)
+{
+    if(entity.hasComponent<MaterialComponent>())
+    {
+        MaterialComponent material = entity.getComponent<MaterialComponent>();
+        material.getDiffuseTexture()->use(0);
+        shader->setInt("texture_diffuse", 0);
+
+        material.getNormalTexture()->use(1);
+        shader->setInt("texture_normal", 1);
+
+        material.getRoughnessTexture()->use(2);
+        shader->setInt("texture_roughness", 2);
+
+        material.getMetallicTexture()->use(3);
+        shader->setInt("texture_metallic", 3);
+
+        material.getDisplacementTexture()->use(4);
+        shader->setInt("texture_displacement", 4);
+    }
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
@@ -492,28 +517,10 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     {
         MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
 
-        if(entity.hasComponent<MaterialComponent>())
-        {
-            MaterialComponent material = entity.getComponent<MaterialComponent>();
-            material.getDiffuseTexture()->use(0);
-            renderer.shader->setInt("texture_diffuse", 0);
-
-            material.getNormalTexture()->use(1);
-            renderer.shader->setInt("texture_normal", 1);
-
-            material.getRoughnessTexture()->use(2);
-            renderer.shader->setInt("texture_roughness", 2);
-
-            material.getMetallicTexture()->use(3);
-            renderer.shader->setInt("texture_metallic", 3);
-
-            material.getDisplacementTexture()->use(4);
-            renderer.shader->setInt("texture_displacement", 4);
-        }
-
 
         if(renderer.visible)
         {
+            s_renderer->impl->setMaterial(entity, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             Renderer::draw(geometry.graph,
                            camera,
@@ -546,6 +553,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
+            s_renderer->impl->setMaterial(entity, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
             Renderer::draw(geometry.graph,
@@ -577,9 +585,11 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     {
         EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
 
+
         if(renderer.visible)
         {
             auto& shader = ShaderManager::getShader("cylinder_edge");
+            s_renderer->impl->setMaterial(entity, shader);
             shader->setInt("entityID", entity_id);
             shader->setFloat("edge_radius", renderer.radius);
             Renderer::draw(geometry.graph, camera, transform.getModel(), renderer.color, shader, renderer.draw_mode);
