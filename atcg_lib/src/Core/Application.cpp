@@ -33,7 +33,6 @@ void Application::init(const WindowProps& props)
 
     // TODO: Move this to the renderer
     ShaderManager::addShaderFromName("base");
-    ShaderManager::addShaderFromName("pbr");
     ShaderManager::addShaderFromName("flat");
     ShaderManager::addShaderFromName("instanced");
     ShaderManager::addShaderFromName("edge");
