@@ -27,13 +27,13 @@ MaterialComponent::MaterialComponent()
     TextureSpecification spec_diffuse;
     spec_diffuse.width  = 1;
     spec_diffuse.height = 1;
-    glm::u8vec3 white(255);
+    glm::u8vec4 white(255);
     _diffuse_texture = atcg::Texture2D::create(&white, spec_diffuse);
 
     TextureSpecification spec_normal;
     spec_normal.width  = 1;
     spec_normal.height = 1;
-    glm::u8vec3 normal(0, 0, 255);
+    glm::u8vec4 normal(128, 128, 255, 255);
     _normal_texture = atcg::Texture2D::create(&normal, spec_normal);
 
     TextureSpecification spec_roughness;
@@ -58,7 +58,7 @@ MaterialComponent::MaterialComponent()
     _displacement_texture    = atcg::Texture2D::create(&displacement, spec_displacement);
 }
 
-void MaterialComponent::setDiffuseColor(const glm::vec3& color)
+void MaterialComponent::setDiffuseColor(const glm::vec4& color)
 {
     TextureSpecification spec_diffuse;
     spec_diffuse.width  = 1;

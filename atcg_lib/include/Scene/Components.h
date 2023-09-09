@@ -155,7 +155,7 @@ struct MaterialComponent
         _displacement_texture = texture;
     }
 
-    void setDiffuseColor(const glm::vec3& color);
+    void setDiffuseColor(const glm::vec4& color);
 
     void setRoughness(const float roughness);
 
