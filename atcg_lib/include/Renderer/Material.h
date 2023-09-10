@@ -27,6 +27,8 @@ struct Material
 
     void setMetallic(const float metallic);
 
+    void removeNormalMap();
+
 private:
     atcg::ref_ptr<atcg::Texture2D> _diffuse_texture;
     atcg::ref_ptr<atcg::Texture2D> _normal_texture;
