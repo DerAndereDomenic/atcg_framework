@@ -42,6 +42,158 @@ void drawComponent(const std::string& name, Entity entity, UIFunction uiFunction
     }
 }
 
+void displayMaterial(const std::string& key, Material& material)
+{
+    ImGui::Separator();
+
+    ImGui::Text("Material");
+
+    {
+        auto spec        = material.getDiffuseTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto diffuse = material.getDiffuseTexture()->getData();
+
+            float color[3] = {(float)diffuse[0] / 255.0f, (float)diffuse[1] / 255.0f, (float)diffuse[2] / 255.0f};
+
+            if(ImGui::ColorEdit3(("Diffuse##" + key).c_str(), color))
+            {
+                glm::vec4 new_color = glm::vec4(glm::make_vec3(color), 1.0f);
+                material.setDiffuseColor(new_color);
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##diffuse" + key).c_str()))
+            {
+                auto img = IO::imread("res/pbr/diffuse.png", 2.2f);
+                TextureSpecification spec;
+                spec.width   = img->width();
+                spec.height  = img->height();
+                auto texture = atcg::Texture2D::create(img, spec);
+                material.setDiffuseTexture(texture);
+            }
+        }
+        else
+        {
+            ImGui::Text("Diffuse Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##diffuse" + key).c_str())) { material.setDiffuseColor(glm::vec4(1)); }
+            else
+                ImGui::Image((void*)(uint64_t)material.getDiffuseTexture()->getID(), ImVec2(128, 128));
+        }
+    }
+
+    {
+        auto spec        = material.getNormalTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            ImGui::Text("Normals");
+            ImGui::SameLine();
+            if(ImGui::Button(("...##normals" + key).c_str()))
+            {
+                auto img = IO::imread("res/pbr/normals.png");
+                TextureSpecification spec;
+                spec.width   = img->width();
+                spec.height  = img->height();
+                auto texture = atcg::Texture2D::create(img, spec);
+                material.setNormalTexture(texture);
+            }
+        }
+        else
+        {
+            ImGui::Text("Normal Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##normal" + key).c_str())) { material.removeNormalMap(); }
+            else
+                ImGui::Image((void*)(uint64_t)material.getNormalTexture()->getID(), ImVec2(128, 128));
+        }
+    }
+
+    {
+        auto spec        = material.getRoughnessTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto data       = material.getRoughnessTexture()->getData();
+            float roughness = *((float*)data.data());
+
+            if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
+            {
+                material.setRoughness(roughness);
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##roughness" + key).c_str()))
+            {
+                auto img = IO::imread("res/pbr/roughness.png");
+                TextureSpecification spec;
+                spec.width   = img->width();
+                spec.height  = img->height();
+                spec.format  = TextureFormat::RINT8;
+                auto texture = atcg::Texture2D::create(img, spec);
+                material.setRoughnessTexture(texture);
+            }
+        }
+        else
+        {
+            ImGui::Text("Roughness Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##roughness" + key).c_str())) { material.setRoughness(1.0f); }
+            else
+                ImGui::Image((void*)(uint64_t)material.getRoughnessTexture()->getID(), ImVec2(128, 128));
+        }
+    }
+
+
+    {
+        auto spec        = material.getMetallicTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto data      = material.getMetallicTexture()->getData();
+            float metallic = *((float*)data.data());
+
+            if(ImGui::DragFloat(("Metallic##" + key).c_str(), &metallic, 0.005f, 0.0f, 1.0f))
+            {
+                material.setMetallic(metallic);
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##metallic" + key).c_str()))
+            {
+                auto img = IO::imread("res/pbr/metallic.png");
+                TextureSpecification spec;
+                spec.width   = img->width();
+                spec.height  = img->height();
+                spec.format  = TextureFormat::RINT8;
+                auto texture = atcg::Texture2D::create(img, spec);
+                material.setMetallicTexture(texture);
+            }
+        }
+        else
+        {
+            ImGui::Text("Metallic Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##metallic" + key).c_str())) { material.setMetallic(0.0f); }
+            else
+                ImGui::Image((void*)(uint64_t)material.getMetallicTexture()->getID(), ImVec2(128, 128));
+        }
+    }
+}
+
 template<typename T>
 void displayAddComponentEntry(const std::string& name, Entity entity)
 {
@@ -274,6 +426,11 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                    {
                                                        component.color = color;
                                                    }
+
+                                                   // Material
+                                                   Material& material = component.material;
+
+                                                   detail::displayMaterial("mesh", material);
                                                });
     detail::drawComponent<PointRenderComponent>("Point Renderer",
                                                 entity,
@@ -311,6 +468,11 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             label.str(std::string());
             label << "Point Size##pointsphere" << id;
             if(ImGui::DragFloat(label.str().c_str(), &point_size)) { component.point_size = point_size; }
+
+            // Material
+            Material& material = component.material;
+
+            detail::displayMaterial("pointsphere", material);
         });
 
     detail::drawComponent<EdgeRenderComponent>("Edge Renderer",
@@ -341,6 +503,11 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             label << "Radius##edgecylinder" << id;
             float radius = component.radius;
             if(ImGui::DragFloat(label.str().c_str(), &radius)) { component.radius = radius; }
+
+            // Material
+            Material& material = component.material;
+
+            detail::displayMaterial("edgecylinder", material);
         });
 }
 
