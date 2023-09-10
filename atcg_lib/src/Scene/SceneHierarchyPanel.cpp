@@ -2,6 +2,7 @@
 
 #include <imgui.h>
 #include <Scene/Components.h>
+#include <portable-file-dialogs.h>
 
 namespace atcg
 {
@@ -68,12 +69,27 @@ void displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("...##diffuse" + key).c_str()))
             {
-                auto img = IO::imread("res/pbr/diffuse.png", 2.2f);
-                TextureSpecification spec;
-                spec.width   = img->width();
-                spec.height  = img->height();
-                auto texture = atcg::Texture2D::create(img, spec);
-                material.setDiffuseTexture(texture);
+                auto f     = pfd::open_file("Choose files to read",
+                                        pfd::path::home(),
+                                            {"PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP FIles (.bmp)",
+                                             "*.bmp",
+                                             "All Files",
+                                             "*"},
+                                        pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img = IO::imread(files[0], 2.2f);
+                    TextureSpecification spec;
+                    spec.width   = img->width();
+                    spec.height  = img->height();
+                    auto texture = atcg::Texture2D::create(img, spec);
+                    material.setDiffuseTexture(texture);
+                }
             }
         }
         else
@@ -97,12 +113,27 @@ void displayMaterial(const std::string& key, Material& material)
             ImGui::SameLine();
             if(ImGui::Button(("...##normals" + key).c_str()))
             {
-                auto img = IO::imread("res/pbr/normals.png");
-                TextureSpecification spec;
-                spec.width   = img->width();
-                spec.height  = img->height();
-                auto texture = atcg::Texture2D::create(img, spec);
-                material.setNormalTexture(texture);
+                auto f     = pfd::open_file("Choose files to read",
+                                        pfd::path::home(),
+                                            {"PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP FIles (.bmp)",
+                                             "*.bmp",
+                                             "All Files",
+                                             "*"},
+                                        pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img = IO::imread(files[0]);
+                    TextureSpecification spec;
+                    spec.width   = img->width();
+                    spec.height  = img->height();
+                    auto texture = atcg::Texture2D::create(img, spec);
+                    material.setNormalTexture(texture);
+                }
             }
         }
         else
@@ -134,13 +165,28 @@ void displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("...##roughness" + key).c_str()))
             {
-                auto img = IO::imread("res/pbr/roughness.png");
-                TextureSpecification spec;
-                spec.width   = img->width();
-                spec.height  = img->height();
-                spec.format  = TextureFormat::RINT8;
-                auto texture = atcg::Texture2D::create(img, spec);
-                material.setRoughnessTexture(texture);
+                auto f     = pfd::open_file("Choose files to read",
+                                        pfd::path::home(),
+                                            {"PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP FIles (.bmp)",
+                                             "*.bmp",
+                                             "All Files",
+                                             "*"},
+                                        pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img = IO::imread(files[0]);
+                    TextureSpecification spec;
+                    spec.width   = img->width();
+                    spec.height  = img->height();
+                    spec.format  = TextureFormat::RINT8;
+                    auto texture = atcg::Texture2D::create(img, spec);
+                    material.setRoughnessTexture(texture);
+                }
             }
         }
         else
@@ -173,13 +219,28 @@ void displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("...##metallic" + key).c_str()))
             {
-                auto img = IO::imread("res/pbr/metallic.png");
-                TextureSpecification spec;
-                spec.width   = img->width();
-                spec.height  = img->height();
-                spec.format  = TextureFormat::RINT8;
-                auto texture = atcg::Texture2D::create(img, spec);
-                material.setMetallicTexture(texture);
+                auto f     = pfd::open_file("Choose files to read",
+                                        pfd::path::home(),
+                                            {"PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP FIles (.bmp)",
+                                             "*.bmp",
+                                             "All Files",
+                                             "*"},
+                                        pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img = IO::imread(files[0]);
+                    TextureSpecification spec;
+                    spec.width   = img->width();
+                    spec.height  = img->height();
+                    spec.format  = TextureFormat::RINT8;
+                    auto texture = atcg::Texture2D::create(img, spec);
+                    material.setMetallicTexture(texture);
+                }
             }
         }
         else
