@@ -59,6 +59,7 @@ public:
             atcg::TextureSpecification spec;
             spec.width        = image->width();
             spec.height       = image->height();
+            spec.format       = atcg::TextureFormat::RINT8;
             roughness_texture = atcg::Texture2D::create(image, spec);
         }
 
@@ -74,34 +75,19 @@ public:
             metallic_texture = atcg::Texture2D::create(image, spec);
         }
 
-        atcg::ref_ptr<atcg::Texture2D> displacement_texture;
-        {
-            auto image = atcg::IO::imread("res/pbr/displacement.png");
-            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
-
-            atcg::TextureSpecification spec;
-            spec.width           = image->width();
-            spec.height          = image->height();
-            spec.format          = atcg::TextureFormat::RINT8;
-            displacement_texture = atcg::Texture2D::create(image, spec);
-        }
-
         scene = atcg::make_ref<atcg::Scene>();
 
         auto options = OpenMesh::IO::Options(OpenMesh::IO::Options::VertexTexCoord);
-        plane        = atcg::IO::read_mesh("res/plane.obj", options);
+        plane        = atcg::IO::read_mesh("res/sphere_high.obj", options);
 
         auto entity = scene->createEntity("Plane");
         entity.addComponent<atcg::TransformComponent>();
         entity.addComponent<atcg::GeometryComponent>(plane);
-        auto& renderer  = entity.addComponent<atcg::MeshRenderComponent>();
-        renderer.shader = atcg::ShaderManager::getShader("pbr");
-        auto& material  = entity.addComponent<atcg::MaterialComponent>();
-        material.setDiffuseTexture(diffuse_textue);
-        material.setNormalTexture(normal_texture);
-        material.setRoughnessTexture(roughness_texture);
-        material.setMetallicTexture(metallic_texture);
-        material.setDisplacementTexture(displacement_texture);
+        auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
+        // renderer.material.setDiffuseTexture(diffuse_textue);
+        // renderer.material.setNormalTexture(normal_texture);
+        // renderer.material.setRoughnessTexture(roughness_texture);
+        // renderer.material.setMetallicTexture(metallic_texture);
 
         panel = atcg::SceneHierarchyPanel(scene);
     }
