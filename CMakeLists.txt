@@ -102,7 +102,8 @@ include_directories(atcg_lib/include
                     external/nanort
                     external/entt/include
                     external/yaml-cpp/include
-                    external/stbimage)
+                    external/stbimage
+                    external/portable-file-dialogs)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
