@@ -40,8 +40,6 @@ public:
 
     atcg::ref_ptr<Texture2D> white_pixel;
 
-    MaterialComponent default_material;
-
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
     glm::vec3 clear_color;
 
@@ -72,7 +70,7 @@ public:
                   const glm::mat4& model              = glm::mat4(1),
                   const glm::vec3& color              = glm::vec3(1));
 
-    void setMaterial(Entity entity, const atcg::ref_ptr<Shader>& shader);
+    void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
 };
 
 Renderer::Renderer() {}
@@ -190,10 +188,8 @@ void Renderer::Impl::initCameraFrustrum()
     camera_frustrum = atcg::Graph::createGraph(points, edges);
 }
 
-void Renderer::Impl::setMaterial(Entity entity, const atcg::ref_ptr<Shader>& shader)
+void Renderer::Impl::setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader)
 {
-    MaterialComponent material = default_material;
-    if(entity.hasComponent<MaterialComponent>()) { material = entity.getComponent<MaterialComponent>(); }
     material.getDiffuseTexture()->use(0);
     shader->setInt("texture_diffuse", 0);
 
@@ -517,7 +513,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
-            s_renderer->impl->setMaterial(entity, renderer.shader);
+            s_renderer->impl->setMaterial(renderer.material, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             Renderer::draw(geometry.graph,
                            camera,
@@ -550,7 +546,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
-            s_renderer->impl->setMaterial(entity, renderer.shader);
+            s_renderer->impl->setMaterial(renderer.material, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
             Renderer::draw(geometry.graph,
@@ -586,7 +582,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             auto& shader = ShaderManager::getShader("cylinder_edge");
-            s_renderer->impl->setMaterial(entity, shader);
+            s_renderer->impl->setMaterial(renderer.material, shader);
             shader->setInt("entityID", entity_id);
             shader->setFloat("edge_radius", renderer.radius);
             Renderer::draw(geometry.graph, camera, transform.getModel(), renderer.color, shader, renderer.draw_mode);

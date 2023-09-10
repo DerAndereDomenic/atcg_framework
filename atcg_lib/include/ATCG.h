@@ -30,6 +30,7 @@
 #include <Renderer/VertexArray.h>
 #include <Renderer/Texture.h>
 #include <Renderer/Framebuffer.h>
+#include <Renderer/Material.h>
 
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
