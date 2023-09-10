@@ -205,9 +205,6 @@ void Renderer::Impl::setMaterial(Entity entity, const atcg::ref_ptr<Shader>& sha
 
     material.getMetallicTexture()->use(3);
     shader->setInt("texture_metallic", 3);
-
-    material.getDisplacementTexture()->use(4);
-    shader->setInt("texture_displacement", 4);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)

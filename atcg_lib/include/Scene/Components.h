@@ -140,7 +140,6 @@ struct MaterialComponent
     inline atcg::ref_ptr<atcg::Texture2D> getNormalTexture() const { return _normal_texture; }
     inline atcg::ref_ptr<atcg::Texture2D> getRoughnessTexture() const { return _roughness_texture; }
     inline atcg::ref_ptr<atcg::Texture2D> getMetallicTexture() const { return _metallic_texture; }
-    inline atcg::ref_ptr<atcg::Texture2D> getDisplacementTexture() const { return _displacement_texture; }
 
     inline void setDiffuseTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _diffuse_texture = texture; }
 
@@ -149,11 +148,6 @@ struct MaterialComponent
     inline void setRoughnessTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _roughness_texture = texture; }
 
     inline void setMetallicTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _metallic_texture = texture; }
-
-    inline void setDisplacementTexture(const atcg::ref_ptr<atcg::Texture2D>& texture)
-    {
-        _displacement_texture = texture;
-    }
 
     void setDiffuseColor(const glm::vec4& color);
 
@@ -166,7 +160,6 @@ private:
     atcg::ref_ptr<atcg::Texture2D> _normal_texture;
     atcg::ref_ptr<atcg::Texture2D> _roughness_texture;
     atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
-    atcg::ref_ptr<atcg::Texture2D> _displacement_texture;
 };
 
 struct MeshRenderComponent : public RenderComponent
