@@ -49,6 +49,8 @@ add_library(imgui STATIC "external/imgui/imgui.cpp"
 add_library(implot STATIC "external/implot/implot.cpp"
                           "external/implot/implot_items.cpp")
 
+add_library(tinyobjloader STATIC "external/tinyobjloader/tiny_obj_loader.cc")
+
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
     set(CMAKE_CUDA_ARCHITECTURES "native")
@@ -103,7 +105,8 @@ include_directories(atcg_lib/include
                     external/entt/include
                     external/yaml-cpp/include
                     external/stbimage
-                    external/portable-file-dialogs)
+                    external/portable-file-dialogs
+                    external/tinyobjloader)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set( target_name ${target_name_base} )
@@ -129,6 +132,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
         OpenMeshTools
         yaml-cpp
         stb_image
+        tinyobjloader
         ${CUDA_LIBRARIES}
     )
 
@@ -162,6 +166,7 @@ if(ATCG_PYTHON_BINDINGS)
             OpenMeshTools
             yaml-cpp
             stb_image
+            tinyobjloader
             ${CUDA_LIBRARIES}
             #stdc++
         )
