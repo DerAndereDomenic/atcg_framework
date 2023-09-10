@@ -45,7 +45,7 @@ void main()
     // Calculate tangent vectors
     mat4 normal_matrix = transpose(inverse(M)); //TODO: Compute on host
     vec3 axis = normalize(vec3(normal_matrix * vec4(aNormal, 0)));
-    vec3 tangent = normalize(vec3(normal_matrix * vec4(aTangent, 0)));
+    vec3 tangent = normalize(vec3(normal_matrix * vec4(aTangent + 1e-5, 0))); // Numerical stability
     vec3 bitangent = normalize(cross(axis, tangent));
     mat3 tbn = mat3(tangent, bitangent, axis);
     frag_tbn = tbn;

@@ -13,7 +13,7 @@ Material::Material()
     TextureSpecification spec_normal;
     spec_normal.width  = 1;
     spec_normal.height = 1;
-    glm::u8vec4 normal(128, 128, 255, 255);
+    glm::u8vec4 normal(127, 127, 255, 255);
     _normal_texture = atcg::Texture2D::create(&normal, spec_normal);
 
     TextureSpecification spec_roughness;
@@ -66,7 +66,7 @@ void Material::removeNormalMap()
     TextureSpecification spec_normal;
     spec_normal.width  = 1;
     spec_normal.height = 1;
-    glm::u8vec4 normal(128, 128, 255, 255);
+    glm::u8vec4 normal(127, 127, 255, 255);
     _normal_texture = atcg::Texture2D::create(&normal, spec_normal);
 }
 

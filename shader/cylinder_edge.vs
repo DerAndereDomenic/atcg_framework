@@ -63,7 +63,7 @@ void main()
     gl_Position = P * V * vec4(frag_pos, 1);// + vec4(instanced * aInstanceStart, 0));
     mat4 normal_matrix = inverse(transpose(model_edge));
     frag_normal = normalize(vec3(normal_matrix * vec4(aNormal, 0)));
-    vec3 tangent = normalize(vec3(normal_matrix * vec4(aTangent, 0)));
+    vec3 tangent = normalize(vec3(normal_matrix * vec4(aTangent + 1e5, 0)));
     vec3 bitangent = normalize(cross(frag_normal, tangent));
     mat3 tbn = mat3(tangent, bitangent, frag_normal);
     
