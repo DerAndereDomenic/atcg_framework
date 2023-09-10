@@ -103,6 +103,38 @@ GLenum toGLtype(TextureFormat format)
     }
 }
 
+std::size_t toSize(TextureFormat format)
+{
+    switch(format)
+    {
+        case TextureFormat::RGBA:
+        {
+            return 4 * sizeof(uint8_t);
+        }
+        case TextureFormat::RINT:
+        {
+            return sizeof(uint32_t);
+        }
+        case TextureFormat::RINT8:
+        {
+            return sizeof(uint8_t);
+        }
+        case TextureFormat::RFLOAT:
+        {
+            return sizeof(float);
+        }
+        case TextureFormat::DEPTH:
+        {
+            return sizeof(float);
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
+            return -1;
+        }
+    }
+}
+
 GLint toGLWrapMode(TextureWrapMode wrap_mode)
 {
     switch(wrap_mode)
@@ -205,6 +237,16 @@ void Texture2D::setData(const void* data)
                  (void*)data);
 }
 
+std::vector<uint8_t> Texture2D::getData() const
+{
+    std::size_t size = detail::toSize(_spec.format) * _spec.width * _spec.height;
+
+    std::vector<uint8_t> pixels(size);
+    use();
+    glGetTexImage(GL_TEXTURE_2D, 0, detail::toGLformat(_spec.format), detail::toGLtype(_spec.format), pixels.data());
+    return pixels;
+}
+
 void Texture2D::use(const uint32_t& slot) const
 {
     glActiveTexture(GL_TEXTURE0 + slot);
@@ -263,6 +305,16 @@ void Texture3D::setData(const void* data)
                  detail::toGLformat(_spec.format),
                  detail::toGLtype(_spec.format),
                  (void*)data);
+}
+
+std::vector<uint8_t> Texture3D::getData() const
+{
+    std::size_t size = detail::toSize(_spec.format) * _spec.width * _spec.height * _spec.depth;
+
+    std::vector<uint8_t> pixels(size);
+    use();
+    glGetTexImage(GL_TEXTURE_3D, 0, detail::toGLformat(_spec.format), detail::toGLtype(_spec.format), pixels.data());
+    return pixels;
 }
 
 void Texture3D::use(const uint32_t& slot) const

@@ -83,6 +83,14 @@ public:
     virtual void setData(const void* data) = 0;
 
     /**
+     * @brief Get the data in the texture.
+     * This copies between CPU and GPU memory.
+     *
+     * @return The data
+     */
+    virtual std::vector<uint8_t> getData() const = 0;
+
+    /**
      * @brief Get the width of the texture
      *
      * @return The width
@@ -109,6 +117,13 @@ public:
      * @return The id
      */
     inline uint32_t getID() const { return _ID; }
+
+    /**
+     * @brief Get the texture specification.
+     *
+     * @return The specification
+     */
+    inline TextureSpecification getSpecification() const { return _spec; }
 
     /**
      * @brief Use this texture
@@ -177,6 +192,14 @@ public:
     virtual void setData(const void* data) override;
 
     /**
+     * @brief Get the data in the texture.
+     * This copies between CPU and GPU memory.
+     *
+     * @return The data
+     */
+    virtual std::vector<uint8_t> getData() const override;
+
+    /**
      * @brief Use this texture
      *
      * @param slot The used texture slot
@@ -220,6 +243,14 @@ public:
      * @param data The data
      */
     virtual void setData(const void* data) override;
+
+    /**
+     * @brief Get the data in the texture.
+     * This copies between CPU and GPU memory.
+     *
+     * @return The data
+     */
+    virtual std::vector<uint8_t> getData() const override;
 
     /**
      * @brief Use this texture
