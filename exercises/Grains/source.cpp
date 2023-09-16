@@ -464,7 +464,7 @@ public:
             // transform.setPosition(glm::vec3(0, 50, 0));
             cylinder_entity.addComponent<atcg::GeometryComponent>(cylinder);
             auto& renderer = cylinder_entity.addComponent<atcg::MeshRenderComponent>();
-            renderer.color = glm::vec3(19.0f / 255.0f, 9.0f / 255.0f, 0.0f);
+            renderer.material.setDiffuseColor(glm::vec4(19.0f / 255.0f, 9.0f / 255.0f, 0.0f, 1.0f));
 
             float branch_radius = radius - glm::cos(elevation) - 0.01f;
             float branch_height = height * distance;

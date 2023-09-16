@@ -518,7 +518,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
             Renderer::draw(geometry.graph,
                            camera,
                            transform.getModel(),
-                           renderer.color,
+                           glm::vec3(1),
                            renderer.shader,
                            renderer.draw_mode);
         }
@@ -552,7 +552,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
             Renderer::draw(geometry.graph,
                            camera,
                            transform.getModel(),
-                           renderer.color,
+                           glm::vec3(1),
                            renderer.shader,
                            renderer.draw_mode);
         }
@@ -585,7 +585,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
             s_renderer->impl->setMaterial(renderer.material, shader);
             shader->setInt("entityID", entity_id);
             shader->setFloat("edge_radius", renderer.radius);
-            Renderer::draw(geometry.graph, camera, transform.getModel(), renderer.color, shader, renderer.draw_mode);
+            Renderer::draw(geometry.graph, camera, transform.getModel(), glm::vec3(1), shader, renderer.draw_mode);
         }
     }
 

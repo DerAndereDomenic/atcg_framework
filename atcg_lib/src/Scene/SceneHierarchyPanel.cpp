@@ -480,13 +480,6 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                [&](MeshRenderComponent& component)
                                                {
                                                    ImGui::Checkbox("Visible##visiblemesh", &component.visible);
-                                                   glm::vec3 color = component.color;
-                                                   label.str(std::string());
-                                                   label << "Base Color##mesh" << id;
-                                                   if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color)))
-                                                   {
-                                                       component.color = color;
-                                                   }
 
                                                    // Material
                                                    Material& material = component.material;
@@ -514,27 +507,26 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                         component.point_size = point_size;
                                                     }
                                                 });
-    detail::drawComponent<PointSphereRenderComponent>(
-        "Point Sphere Renderer",
-        entity,
-        [&](PointSphereRenderComponent& component)
-        {
-            ImGui::Checkbox("Visible##visiblepointsphere", &component.visible);
-            glm::vec3 color = component.color;
-            label.str(std::string());
-            label << "Base Color##pointsphere" << id;
-            if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color))) { component.color = color; }
+    detail::drawComponent<PointSphereRenderComponent>("Point Sphere Renderer",
+                                                      entity,
+                                                      [&](PointSphereRenderComponent& component)
+                                                      {
+                                                          ImGui::Checkbox("Visible##visiblepointsphere",
+                                                                          &component.visible);
 
-            float point_size = component.point_size;
-            label.str(std::string());
-            label << "Point Size##pointsphere" << id;
-            if(ImGui::DragFloat(label.str().c_str(), &point_size)) { component.point_size = point_size; }
+                                                          float point_size = component.point_size;
+                                                          label.str(std::string());
+                                                          label << "Point Size##pointsphere" << id;
+                                                          if(ImGui::DragFloat(label.str().c_str(), &point_size))
+                                                          {
+                                                              component.point_size = point_size;
+                                                          }
 
-            // Material
-            Material& material = component.material;
+                                                          // Material
+                                                          Material& material = component.material;
 
-            detail::displayMaterial("pointsphere", material);
-        });
+                                                          detail::displayMaterial("pointsphere", material);
+                                                      });
 
     detail::drawComponent<EdgeRenderComponent>("Edge Renderer",
                                                entity,
@@ -550,26 +542,25 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                    }
                                                });
 
-    detail::drawComponent<EdgeCylinderRenderComponent>(
-        "Edge Cylinder Renderer",
-        entity,
-        [&](EdgeCylinderRenderComponent& component)
-        {
-            ImGui::Checkbox("Visible##visibleedgecylinder", &component.visible);
-            glm::vec3 color = component.color;
-            label.str(std::string());
-            label << "Base Color##edgecylinder" << id;
-            if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color))) { component.color = color; }
-            label.str(std::string());
-            label << "Radius##edgecylinder" << id;
-            float radius = component.radius;
-            if(ImGui::DragFloat(label.str().c_str(), &radius)) { component.radius = radius; }
+    detail::drawComponent<EdgeCylinderRenderComponent>("Edge Cylinder Renderer",
+                                                       entity,
+                                                       [&](EdgeCylinderRenderComponent& component)
+                                                       {
+                                                           ImGui::Checkbox("Visible##visibleedgecylinder",
+                                                                           &component.visible);
+                                                           label.str(std::string());
+                                                           label << "Radius##edgecylinder" << id;
+                                                           float radius = component.radius;
+                                                           if(ImGui::DragFloat(label.str().c_str(), &radius))
+                                                           {
+                                                               component.radius = radius;
+                                                           }
 
-            // Material
-            Material& material = component.material;
+                                                           // Material
+                                                           Material& material = component.material;
 
-            detail::displayMaterial("edgecylinder", material);
-        });
+                                                           detail::displayMaterial("edgecylinder", material);
+                                                       });
 }
 
 SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene)

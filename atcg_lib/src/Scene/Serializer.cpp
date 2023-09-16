@@ -290,7 +290,6 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         auto& renderer = entity.getComponent<MeshRenderComponent>();
 
         out << YAML::Key << RENDER_TYPE_NAME << YAML::Value << renderer.draw_mode;
-        out << YAML::Key << RENDER_COLOR_NAME << YAML::Value << renderer.color;
         out << YAML::Key << RENDER_VERTEX_SHADER_NAME << YAML::Value << renderer.shader->getVertexPath();
         out << YAML::Key << RENDER_FRAGMENT_SHADER_NAME << YAML::Value << renderer.shader->getFragmentPath();
         out << YAML::Key << RENDER_GEOMETRY_SHADER_NAME << YAML::Value << renderer.shader->getGeometryPath();
@@ -321,7 +320,6 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         auto& renderer = entity.getComponent<PointSphereRenderComponent>();
 
         out << YAML::Key << RENDER_TYPE_NAME << YAML::Value << renderer.draw_mode;
-        out << YAML::Key << RENDER_COLOR_NAME << YAML::Value << renderer.color;
         out << YAML::Key << RENDER_POINT_SIZE_NAME << YAML::Value << renderer.point_size;
         out << YAML::Key << RENDER_VERTEX_SHADER_NAME << YAML::Value << renderer.shader->getVertexPath();
         out << YAML::Key << RENDER_FRAGMENT_SHADER_NAME << YAML::Value << renderer.shader->getFragmentPath();
@@ -349,7 +347,6 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         auto& renderer = entity.getComponent<EdgeCylinderRenderComponent>();
 
         out << YAML::Key << RENDER_TYPE_NAME << YAML::Value << renderer.draw_mode;
-        out << YAML::Key << RENDER_COLOR_NAME << YAML::Value << renderer.color;
         out << YAML::Key << RENDER_RADIUS_NAME << YAML::Value << renderer.radius;
 
         out << YAML::EndMap;
@@ -522,7 +519,6 @@ void Serializer::deserialize(const std::string& file_path)
                     {
                         auto& renderComponent     = deserializedEntity.addComponent<MeshRenderComponent>();
                         renderComponent.draw_mode = mode;
-                        renderComponent.color     = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
                         std::string vertex_path   = renderer[RENDER_VERTEX_SHADER_NAME].as<std::string>();
                         std::string fragment_path = renderer[RENDER_FRAGMENT_SHADER_NAME].as<std::string>();
                         std::string geometry_path = renderer[RENDER_GEOMETRY_SHADER_NAME].as<std::string>();
@@ -569,7 +565,6 @@ void Serializer::deserialize(const std::string& file_path)
                     {
                         auto& renderComponent      = deserializedEntity.addComponent<PointSphereRenderComponent>();
                         renderComponent.draw_mode  = mode;
-                        renderComponent.color      = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
                         renderComponent.point_size = renderer[RENDER_POINT_SIZE_NAME].as<float>();
                         std::string vertex_path    = renderer[RENDER_VERTEX_SHADER_NAME].as<std::string>();
                         std::string fragment_path  = renderer[RENDER_FRAGMENT_SHADER_NAME].as<std::string>();
@@ -600,7 +595,6 @@ void Serializer::deserialize(const std::string& file_path)
                     {
                         auto& renderComponent     = deserializedEntity.addComponent<EdgeCylinderRenderComponent>();
                         renderComponent.draw_mode = mode;
-                        renderComponent.color     = renderer[RENDER_COLOR_NAME].as<glm::vec3>();
                         renderComponent.radius    = renderer[RENDER_RADIUS_NAME].as<float>();
                     }
                     break;

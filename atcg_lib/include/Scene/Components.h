@@ -135,16 +135,13 @@ struct RenderComponent
 
 struct MeshRenderComponent : public RenderComponent
 {
-    MeshRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                        const glm::vec3& color              = glm::vec3(1))
+    MeshRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"))
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE),
-          shader(shader),
-          color(color)
+          shader(shader)
     {
     }
 
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
-    glm::vec3 color              = glm::vec3(1);
     Material material;
 };
 
@@ -168,17 +165,14 @@ struct PointRenderComponent : public RenderComponent
 struct PointSphereRenderComponent : public RenderComponent
 {
     PointSphereRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                               const glm::vec3& color              = glm::vec3(1),
                                const float& point_size             = 0.1f)
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE),
           shader(shader),
-          color(color),
           point_size(point_size)
     {
     }
 
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
-    glm::vec3 color              = glm::vec3(1);
     float point_size             = 0.1f;
     Material material;
 };
@@ -196,15 +190,13 @@ struct EdgeRenderComponent : public RenderComponent
 
 struct EdgeCylinderRenderComponent : public RenderComponent
 {
-    EdgeCylinderRenderComponent(const glm::vec3& color = glm::vec3(1), float radius = 1.0f)
+    EdgeCylinderRenderComponent(float radius = 1.0f)
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER),
-          color(color),
           radius(radius)
     {
     }
 
-    glm::vec3 color = glm::vec3(1);
-    float radius    = 1.0f;
+    float radius = 1.0f;
     Material material;
 };
 
