@@ -15,6 +15,10 @@ GLint to2GLinternalFormat(TextureFormat format)
         {
             return GL_RGBA;
         }
+        case TextureFormat::RGBAFLOAT:
+        {
+            return GL_RGBA32F;
+        }
         case TextureFormat::RINT:
         {
             return GL_R32I;
@@ -44,6 +48,10 @@ GLenum toGLformat(TextureFormat format)
     switch(format)
     {
         case TextureFormat::RGBA:
+        {
+            return GL_RGBA;
+        }
+        case TextureFormat::RGBAFLOAT:
         {
             return GL_RGBA;
         }
@@ -79,6 +87,10 @@ GLenum toGLtype(TextureFormat format)
         {
             return GL_UNSIGNED_BYTE;
         }
+        case TextureFormat::RGBAFLOAT:
+        {
+            return GL_FLOAT;
+        }
         case TextureFormat::RINT:
         {
             return GL_UNSIGNED_BYTE;
@@ -110,6 +122,10 @@ std::size_t toSize(TextureFormat format)
         case TextureFormat::RGBA:
         {
             return 4 * sizeof(uint8_t);
+        }
+        case TextureFormat::RGBAFLOAT:
+        {
+            return 4 * sizeof(float);
         }
         case TextureFormat::RINT:
         {

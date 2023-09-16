@@ -14,6 +14,8 @@ enum class TextureFormat
 {
     // RGBA unsigned byte color texture.
     RGBA,
+    // RGBA float color texture.
+    RGBAFLOAT,
     // Red channel unsigned int texture.
     RINT,
     // Red channel byte texture.
