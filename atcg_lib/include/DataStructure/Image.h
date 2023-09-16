@@ -119,6 +119,13 @@ public:
     inline const uint8_t* data() const { return _img_data; }
 
     /**
+     * @brief If this image is a HDR texture
+     *
+     * @return True if it's an hdr image
+     */
+    inline bool isHDR() const { return _hdr; }
+
+    /**
      * @brief Get the image data interpreted in a specific format.
      *
      * @tparam T The type
@@ -139,6 +146,7 @@ private:
     uint32_t _width    = 0;
     uint32_t _height   = 0;
     uint32_t _channels = 0;
+    bool _hdr          = false;
     std::string _filename;
 };
 

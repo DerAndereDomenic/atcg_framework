@@ -40,6 +40,7 @@ Image::Image(const float* data, uint32_t width, uint32_t height, uint32_t channe
 {
     _width  = width;
     _height = height;
+    _hdr    = true;
 
     if(channels == 1 || channels == 4)
     {
@@ -76,14 +77,15 @@ Image::~Image()
         uint32_t _width    = 0;
         uint32_t _height   = 0;
         uint32_t _channels = 0;
+        _hdr               = false;
     }
 }
 
 void Image::load(const std::string& filename)
 {
     stbi_set_flip_vertically_on_load(true);
-    bool hdr = stbi_is_hdr(filename.c_str());
-    if(hdr)
+    _hdr = stbi_is_hdr(filename.c_str());
+    if(_hdr)
         loadHDR(filename);
     else
         loadLDR(filename);
