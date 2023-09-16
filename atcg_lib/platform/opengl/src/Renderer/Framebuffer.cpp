@@ -80,6 +80,12 @@ void Framebuffer::attachDepth()
     useDefault();
 }
 
+void Framebuffer::bindByID(uint32_t fbo_id)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
+    s_current_fbo = fbo_id;
+}
+
 void Framebuffer::useDefault()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

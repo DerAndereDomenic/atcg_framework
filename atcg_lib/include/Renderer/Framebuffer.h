@@ -101,6 +101,13 @@ public:
     static uint32_t currentFramebuffer();
 
     /**
+     * @brief Bind a specific framebuffer by ID
+     *
+     * @param ID The id to bind
+     */
+    static void bindByID(uint32_t fbo_id);
+
+    /**
      * @brief Use the default framebuffer
      */
     static void useDefault();
