@@ -75,8 +75,10 @@ void displayMaterial(const std::string& key, Material& material)
                                              "*.png",
                                              "JPG Files (.jpg, .jpeg)",
                                              "*jpg, *jpeg",
-                                             "BMP FIles (.bmp)",
+                                             "BMP Files (.bmp)",
                                              "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr",
                                              "All Files",
                                              "*"},
                                         pfd::opt::none);
@@ -87,6 +89,9 @@ void displayMaterial(const std::string& key, Material& material)
                     TextureSpecification spec;
                     spec.width   = img->width();
                     spec.height  = img->height();
+                    spec.format  = img->channels() == 1
+                                       ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
+                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
                     auto texture = atcg::Texture2D::create(img, spec);
                     material.setDiffuseTexture(texture);
                 }
@@ -119,8 +124,10 @@ void displayMaterial(const std::string& key, Material& material)
                                              "*.png",
                                              "JPG Files (.jpg, .jpeg)",
                                              "*jpg, *jpeg",
-                                             "BMP FIles (.bmp)",
+                                             "BMP Files (.bmp)",
                                              "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr",
                                              "All Files",
                                              "*"},
                                         pfd::opt::none);
@@ -131,6 +138,9 @@ void displayMaterial(const std::string& key, Material& material)
                     TextureSpecification spec;
                     spec.width   = img->width();
                     spec.height  = img->height();
+                    spec.format  = img->channels() == 1
+                                       ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
+                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
                     auto texture = atcg::Texture2D::create(img, spec);
                     material.setNormalTexture(texture);
                 }
@@ -171,8 +181,10 @@ void displayMaterial(const std::string& key, Material& material)
                                              "*.png",
                                              "JPG Files (.jpg, .jpeg)",
                                              "*jpg, *jpeg",
-                                             "BMP FIles (.bmp)",
+                                             "BMP Files (.bmp)",
                                              "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr",
                                              "All Files",
                                              "*"},
                                         pfd::opt::none);
@@ -183,7 +195,9 @@ void displayMaterial(const std::string& key, Material& material)
                     TextureSpecification spec;
                     spec.width   = img->width();
                     spec.height  = img->height();
-                    spec.format  = TextureFormat::RINT8;
+                    spec.format  = img->channels() == 1
+                                       ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
+                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
                     auto texture = atcg::Texture2D::create(img, spec);
                     material.setRoughnessTexture(texture);
                 }
@@ -225,8 +239,10 @@ void displayMaterial(const std::string& key, Material& material)
                                              "*.png",
                                              "JPG Files (.jpg, .jpeg)",
                                              "*jpg, *jpeg",
-                                             "BMP FIles (.bmp)",
+                                             "BMP Files (.bmp)",
                                              "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr",
                                              "All Files",
                                              "*"},
                                         pfd::opt::none);
@@ -237,7 +253,9 @@ void displayMaterial(const std::string& key, Material& material)
                     TextureSpecification spec;
                     spec.width   = img->width();
                     spec.height  = img->height();
-                    spec.format  = TextureFormat::RINT8;
+                    spec.format  = img->channels() == 1
+                                       ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
+                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
                     auto texture = atcg::Texture2D::create(img, spec);
                     material.setMetallicTexture(texture);
                 }
