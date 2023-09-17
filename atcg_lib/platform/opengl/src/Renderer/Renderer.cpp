@@ -124,8 +124,8 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     white_pixel       = atcg::Texture2D::create(&white, spec_color);
 
     TextureSpecification spec_skybox;
-    spec_skybox.width             = 512;
-    spec_skybox.height            = 512;
+    spec_skybox.width             = 1024;
+    spec_skybox.height            = 1024;
     spec_skybox.format            = TextureFormat::RGBAFLOAT;
     spec_skybox.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     skybox_cubemap                = atcg::TextureCube::create(spec_skybox);
@@ -334,10 +334,12 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     int old_viewport[4];
     glGetIntegerv(GL_VIEWPORT, old_viewport);
 
-    Framebuffer captureFBO(512, 512);
+    float width  = s_renderer->impl->skybox_cubemap->width();
+    float height = s_renderer->impl->skybox_cubemap->height();
+    Framebuffer captureFBO(width, height);
     captureFBO.attachDepth();
 
-    glViewport(0, 0, 512, 512);    // don't forget to configure the viewport to the capture dimensions.
+    glViewport(0, 0, width, height);    // don't forget to configure the viewport to the capture dimensions.
     captureFBO.use();
 
     shader->use();
