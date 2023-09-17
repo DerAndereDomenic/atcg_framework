@@ -92,6 +92,13 @@ public:
     static void setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height);
 
     /**
+     * @brief Set a skybox
+     *
+     * @param skybox An equirectangular representation of the skybox
+     */
+    static void setSkybox(const atcg::ref_ptr<Image>& skybox);
+
+    /**
      * @brief Change the size of the renderer
      *
      * @param width The width

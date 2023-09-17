@@ -28,8 +28,14 @@ public:
     void initCross();
     atcg::ref_ptr<Graph> cross;
 
+    void initCube();
+    atcg::ref_ptr<Graph> cube;
+
     void initCameraFrustrum();
     atcg::ref_ptr<Graph> camera_frustrum;
+
+    atcg::ref_ptr<TextureCube> skybox_cubemap;
+    atcg::ref_ptr<Texture2D> skybox_texture;
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
 
@@ -37,6 +43,7 @@ public:
     atcg::ref_ptr<Graph> cylinder_mesh;
     bool sphere_has_instance   = false;
     bool cylinder_has_instance = false;
+    bool culling_enabled       = false;
 
     atcg::ref_ptr<Texture2D> white_pixel;
 
@@ -106,6 +113,8 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     initGrid();
     initCross();
 
+    initCube();
+
     initCameraFrustrum();
 
     glm::u8vec4 white = glm::u8vec4(255);
@@ -113,6 +122,12 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     spec_color.width  = 1;
     spec_color.height = 1;
     white_pixel       = atcg::Texture2D::create(&white, spec_color);
+
+    TextureSpecification spec_skybox;
+    spec_skybox.width  = 512;
+    spec_skybox.height = 512;
+    spec_skybox.format = TextureFormat::RGBAFLOAT;
+    skybox_cubemap     = atcg::TextureCube::create(spec_skybox);
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -160,6 +175,35 @@ void Renderer::Impl::initCross()
     edges.push_back({glm::vec2(2, 3), glm::vec3(0, 0, 1), 0.1f});
 
     cross = atcg::Graph::createGraph(points, edges);
+}
+
+void Renderer::Impl::initCube()
+{
+    std::vector<atcg::Vertex> points;
+    points.push_back(atcg::Vertex(glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(1)));
+
+    std::vector<glm::u32vec3> faces;
+    faces.push_back(glm::u32vec3(4, 2, 0));
+    faces.push_back(glm::u32vec3(2, 7, 3));
+    faces.push_back(glm::u32vec3(6, 5, 7));
+    faces.push_back(glm::u32vec3(1, 7, 5));
+    faces.push_back(glm::u32vec3(0, 3, 1));
+    faces.push_back(glm::u32vec3(4, 1, 5));
+    faces.push_back(glm::u32vec3(4, 6, 2));
+    faces.push_back(glm::u32vec3(2, 6, 7));
+    faces.push_back(glm::u32vec3(6, 4, 5));
+    faces.push_back(glm::u32vec3(1, 3, 7));
+    faces.push_back(glm::u32vec3(0, 2, 3));
+    faces.push_back(glm::u32vec3(4, 0, 1));
+
+    cube = atcg::Graph::createTriangleMesh(points, faces);
 }
 
 void Renderer::Impl::initCameraFrustrum()
@@ -259,6 +303,63 @@ void Renderer::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t&
     glViewport(x, y, width, height);
 }
 
+void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
+{
+    bool culling = s_renderer->impl->culling_enabled;
+    toggleCulling(false);
+    atcg::ref_ptr<PerspectiveCamera> capture_cam = atcg::make_ref<atcg::PerspectiveCamera>(1.0f);
+    glm::mat4 captureProjection                  = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
+    glm::mat4 captureViews[]                     = {
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f)),
+        glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, -1.0f, 0.0f))};
+
+
+    capture_cam->setProjection(captureProjection);
+    atcg::ref_ptr<Shader> shader = ShaderManager::getShader("equirectangularToCubemap");
+    // convert HDR equirectangular environment map to cubemap equivalent
+
+    TextureSpecification spec;
+    spec.width                       = skybox->width();
+    spec.height                      = skybox->height();
+    spec.format                      = skybox->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA;
+    s_renderer->impl->skybox_texture = atcg::Texture2D::create(skybox, spec);
+
+    uint32_t current_fbo = atcg::Framebuffer::currentFramebuffer();
+    int old_viewport[4];
+    glGetIntegerv(GL_VIEWPORT, old_viewport);
+
+    Framebuffer captureFBO(512, 512);
+    captureFBO.attachDepth();
+
+    glViewport(0, 0, 512, 512);    // don't forget to configure the viewport to the capture dimensions.
+    captureFBO.use();
+
+    shader->use();
+    s_renderer->impl->skybox_texture->use();
+    shader->setInt("equirectangularMap", 0);
+    for(unsigned int i = 0; i < 6; ++i)
+    {
+        capture_cam->setView(captureViews[i]);
+        glFramebufferTexture2D(GL_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                               s_renderer->impl->skybox_cubemap->getID(),
+                               0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), shader);
+        // renderCube();    // renders a 1x1 cube
+    }
+
+    Framebuffer::bindByID(current_fbo);
+    setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
+    toggleCulling(culling);
+}
+
 void Renderer::resize(const uint32_t& width, const uint32_t& height)
 {
     setViewport(0, 0, width, height);
@@ -319,6 +420,7 @@ void Renderer::toggleDepthTesting(bool enable)
 
 void Renderer::toggleCulling(bool enable)
 {
+    s_renderer->impl->culling_enabled = enable;
     switch(enable)
     {
         case true:
