@@ -261,4 +261,52 @@ public:
      */
     virtual void use(const uint32_t& slot = 0) const override;
 };
+
+/**
+ * @brief A class to model a cube map
+ * @note This class has no setData or getData metods. It's also not possible to create cubemaps from existing data. It
+ * is for now only filled by converting equicrectangular environment maps.
+ */
+class TextureCube : public Texture
+{
+public:
+    /**
+     * @brief Create an empty 2D texture.
+     *
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureCube> create(const TextureSpecification& spec);
+
+    /**
+     *  @brief Destructor
+     */
+    virtual ~TextureCube();
+
+    /**
+     * @brief Set the data of the texture.
+     * @note This is not implemented for cube maps
+     *
+     * @param data The data
+     */
+    virtual void setData(const void* data) override {};
+
+    /**
+     * @brief Get the data in the texture.
+     * This copies between CPU and GPU memory.
+     * @note This is not implemented for cube maps
+     *
+     * @return The data
+     */
+    virtual std::vector<uint8_t> getData() const override { return {}; }
+
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+};
+
 }    // namespace atcg

@@ -339,4 +339,45 @@ void Texture3D::use(const uint32_t& slot) const
     glBindTexture(GL_TEXTURE_3D, _ID);
 }
 
+
+atcg::ref_ptr<TextureCube> TextureCube::create(const TextureSpecification& spec)
+{
+    atcg::ref_ptr<TextureCube> result = atcg::make_ref<TextureCube>();
+    result->_spec                     = spec;
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_CUBE_MAP, result->_ID);
+
+    for(uint32_t i = 0; i < 6; ++i)
+    {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                     0,
+                     detail::to2GLinternalFormat(spec.format),
+                     spec.width,
+                     spec.height,
+                     0,
+                     detail::toGLformat(spec.format),
+                     detail::toGLtype(spec.format),
+                     nullptr);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
+
+    return result;
+}
+
+TextureCube::~TextureCube()
+{
+    glDeleteTextures(1, &_ID);
+}
+
+void TextureCube::use(const uint32_t& slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, _ID);
+}
+
 }    // namespace atcg
