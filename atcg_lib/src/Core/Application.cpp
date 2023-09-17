@@ -41,6 +41,7 @@ void Application::init(const WindowProps& props)
     ShaderManager::addShaderFromName("screen");
     ShaderManager::addShaderFromName("cylinder_edge");
     ShaderManager::addShaderFromName("equirectangularToCubemap");
+    ShaderManager::addShaderFromName("skybox");
     ShaderManager::addComputerShaderFromName("white_noise_2D");
     ShaderManager::addComputerShaderFromName("white_noise_3D");
     ShaderManager::addComputerShaderFromName("worly_noise_2D");
