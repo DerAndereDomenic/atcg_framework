@@ -35,7 +35,7 @@ public:
     atcg::ref_ptr<Graph> camera_frustrum;
 
     atcg::ref_ptr<TextureCube> skybox_cubemap;
-    atcg::ref_ptr<Texture2D> skybox_texture;
+    bool has_skybox = false;
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
 
@@ -124,10 +124,11 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     white_pixel       = atcg::Texture2D::create(&white, spec_color);
 
     TextureSpecification spec_skybox;
-    spec_skybox.width  = 512;
-    spec_skybox.height = 512;
-    spec_skybox.format = TextureFormat::RGBAFLOAT;
-    skybox_cubemap     = atcg::TextureCube::create(spec_skybox);
+    spec_skybox.width             = 512;
+    spec_skybox.height            = 512;
+    spec_skybox.format            = TextureFormat::RGBAFLOAT;
+    spec_skybox.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+    skybox_cubemap                = atcg::TextureCube::create(spec_skybox);
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -305,7 +306,8 @@ void Renderer::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t&
 
 void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
 {
-    bool culling = s_renderer->impl->culling_enabled;
+    bool culling                 = s_renderer->impl->culling_enabled;
+    s_renderer->impl->has_skybox = true;
     toggleCulling(false);
     atcg::ref_ptr<PerspectiveCamera> capture_cam = atcg::make_ref<atcg::PerspectiveCamera>(1.0f);
     glm::mat4 captureProjection                  = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -323,10 +325,10 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     // convert HDR equirectangular environment map to cubemap equivalent
 
     TextureSpecification spec;
-    spec.width                       = skybox->width();
-    spec.height                      = skybox->height();
-    spec.format                      = skybox->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA;
-    s_renderer->impl->skybox_texture = atcg::Texture2D::create(skybox, spec);
+    spec.width          = skybox->width();
+    spec.height         = skybox->height();
+    spec.format         = skybox->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA;
+    auto skybox_texture = atcg::Texture2D::create(skybox, spec);
 
     uint32_t current_fbo = atcg::Framebuffer::currentFramebuffer();
     int old_viewport[4];
@@ -339,7 +341,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     captureFBO.use();
 
     shader->use();
-    s_renderer->impl->skybox_texture->use();
+    skybox_texture->use();
     shader->setInt("equirectangularMap", 0);
     for(unsigned int i = 0; i < 6; ++i)
     {
@@ -722,6 +724,20 @@ void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camer
         Entity entity(e, scene.get());
         Renderer::draw(entity, camera);
     }
+
+    // TODO: Just raw opengl rendering code here
+    glDepthMask(GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
+    bool culling = s_renderer->impl->culling_enabled;
+    toggleCulling(false);
+    ShaderManager::getShader("skybox")->use();
+    s_renderer->impl->skybox_cubemap->use();
+
+    draw(s_renderer->impl->cube, camera, glm::mat4(1), glm::vec3(1), ShaderManager::getShader("skybox"));
+
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
+    toggleCulling(culling);
 }
 
 void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
