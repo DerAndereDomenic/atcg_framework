@@ -9,5 +9,5 @@ uniform mat4 V;
 void main()
 {
     frag_tex = aPosition;
-    gl_Position = P * V * vec4(aPosition, 1.0);
+    gl_Position = (P * V * vec4(aPosition, 0.0)).xyww;
 } 
