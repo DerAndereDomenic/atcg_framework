@@ -363,6 +363,7 @@ atcg::ref_ptr<TextureCube> TextureCube::create(const TextureSpecification& spec)
 
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, detail::toGLWrapMode(spec.sampler.wrap_mode));
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
 
