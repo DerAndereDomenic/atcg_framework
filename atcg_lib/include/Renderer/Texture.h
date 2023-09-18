@@ -45,7 +45,9 @@ enum class TextureFilterMode
     // Nearest neighbor filter.
     NEAREST,
     // Linear interpolation.
-    LINEAR
+    LINEAR,
+    // Trilinear interpolation using mipmaps (Needs to have a TextureSampler with mip_map = true)
+    MIPMAP_LINEAR
 };
 
 /**
@@ -55,6 +57,7 @@ struct TextureSampler
 {
     TextureWrapMode wrap_mode     = TextureWrapMode::REPEAT;
     TextureFilterMode filter_mode = TextureFilterMode::LINEAR;
+    bool mip_map                  = false;
 };
 
 struct TextureSpecification

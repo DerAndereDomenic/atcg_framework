@@ -175,6 +175,10 @@ GLint toGLFilterMode(TextureFilterMode filter_mode)
 {
     switch(filter_mode)
     {
+        case TextureFilterMode::MIPMAP_LINEAR:
+        {
+            return GL_LINEAR_MIPMAP_LINEAR;
+        }
         case TextureFilterMode::LINEAR:
         {
             return GL_LINEAR;
@@ -220,10 +224,15 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
                  detail::toGLtype(spec.format),
                  (void*)data);
 
+    auto filtermode = detail::toGLFilterMode(spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filtermode);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+
+    if(spec.sampler.mip_map) { glGenerateMipmap(GL_TEXTURE_2D); }
 
     return result;
 }
@@ -293,11 +302,16 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
                  detail::toGLtype(spec.format),
                  (void*)data);
 
+    auto filtermode = detail::toGLFilterMode(spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, detail::toGLWrapMode(spec.sampler.wrap_mode));
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, filtermode);
+    glTexParameteri(GL_TEXTURE_3D,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+
+    if(spec.sampler.mip_map) { glGenerateMipmap(GL_TEXTURE_3D); }
 
     return result;
 }
@@ -361,11 +375,16 @@ atcg::ref_ptr<TextureCube> TextureCube::create(const TextureSpecification& spec)
                      nullptr);
     }
 
+    auto filtermode = detail::toGLFilterMode(spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, detail::toGLWrapMode(spec.sampler.wrap_mode));
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, detail::toGLFilterMode(spec.sampler.filter_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, filtermode);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+
+    if(spec.sampler.mip_map) { glGenerateMipmap(GL_TEXTURE_CUBE_MAP); }
 
     return result;
 }
