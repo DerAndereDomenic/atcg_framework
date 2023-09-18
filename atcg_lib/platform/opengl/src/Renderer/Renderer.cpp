@@ -36,6 +36,7 @@ public:
 
     atcg::ref_ptr<TextureCube> skybox_cubemap;
     atcg::ref_ptr<TextureCube> irradiance_cubemap;
+    atcg::ref_ptr<TextureCube> prefiltered_cubemap;
     bool has_skybox = false;
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
@@ -137,6 +138,15 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     spec_irradiance_cubemap.format            = TextureFormat::RGBAFLOAT;
     spec_irradiance_cubemap.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     irradiance_cubemap                        = atcg::TextureCube::create(spec_irradiance_cubemap);
+
+    TextureSpecification spec_prefiltered_cubemap;
+    spec_prefiltered_cubemap.width               = 128;
+    spec_prefiltered_cubemap.height              = 128;
+    spec_prefiltered_cubemap.format              = TextureFormat::RGBAFLOAT;
+    spec_prefiltered_cubemap.sampler.wrap_mode   = TextureWrapMode::CLAMP_TO_EDGE;
+    spec_prefiltered_cubemap.sampler.filter_mode = TextureFilterMode::MIPMAP_LINEAR;
+    spec_prefiltered_cubemap.sampler.mip_map     = true;
+    prefiltered_cubemap                          = atcg::TextureCube::create(spec_prefiltered_cubemap);
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -275,6 +285,7 @@ void Renderer::init(uint32_t width, uint32_t height)
     setCullFace(ATCG_BACK_FACE_CULLING);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 }
 
 void Renderer::finishFrame()
@@ -399,6 +410,47 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
 
             draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), cubeconv_shader);
             // renderCube();    // renders a 1x1 cube
+        }
+    }
+
+    // * Prefilter environment map
+    {
+        atcg::ref_ptr<Shader> prefilter_shader = ShaderManager::getShader("prefilter_cubemap");
+        float width                            = s_renderer->impl->prefiltered_cubemap->width();
+        float height                           = s_renderer->impl->prefiltered_cubemap->height();
+
+        prefilter_shader->use();
+        prefilter_shader->setInt("skybox", 0);
+        unsigned int max_mip_levels = 5;
+        for(unsigned int mip = 0; mip < max_mip_levels; ++mip)
+        {
+            unsigned int mip_width  = s_renderer->impl->prefiltered_cubemap->width() * std::pow(0.5, mip);
+            unsigned int mip_height = s_renderer->impl->prefiltered_cubemap->height() * std::pow(0.5, mip);
+
+            // Recreate captureFBO with new resolution
+            Framebuffer captureFBO(mip_width, mip_height);
+            captureFBO.attachDepth();
+            captureFBO.use();
+
+            s_renderer->impl->skybox_cubemap->use();
+
+            glViewport(0, 0, mip_width, mip_height);
+
+            float roughness = (float)mip / (float)(max_mip_levels - 1);
+            prefilter_shader->setFloat("roughness", roughness);
+            for(unsigned int i = 0; i < 6; ++i)
+            {
+                capture_cam->setView(captureViews[i]);
+                glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                       GL_COLOR_ATTACHMENT0,
+                                       GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                                       s_renderer->impl->prefiltered_cubemap->getID(),
+                                       mip);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+                draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), prefilter_shader);
+                // renderCube();    // renders a 1x1 cube
+            }
         }
     }
 
