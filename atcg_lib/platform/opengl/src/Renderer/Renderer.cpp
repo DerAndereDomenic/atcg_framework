@@ -35,6 +35,7 @@ public:
     atcg::ref_ptr<Graph> camera_frustrum;
 
     atcg::ref_ptr<TextureCube> skybox_cubemap;
+    atcg::ref_ptr<TextureCube> irradiance_cubemap;
     bool has_skybox = false;
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
@@ -129,6 +130,13 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     spec_skybox.format            = TextureFormat::RGBAFLOAT;
     spec_skybox.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     skybox_cubemap                = atcg::TextureCube::create(spec_skybox);
+
+    TextureSpecification spec_irradiance_cubemap;
+    spec_irradiance_cubemap.width             = 32;
+    spec_irradiance_cubemap.height            = 32;
+    spec_irradiance_cubemap.format            = TextureFormat::RGBAFLOAT;
+    spec_irradiance_cubemap.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+    irradiance_cubemap                        = atcg::TextureCube::create(spec_irradiance_cubemap);
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -246,6 +254,9 @@ void Renderer::Impl::setMaterial(const Material& material, const atcg::ref_ptr<S
 
     material.getMetallicTexture()->use(3);
     shader->setInt("texture_metallic", 3);
+
+    irradiance_cubemap->use(4);
+    shader->setInt("irradiance_map", 4);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
@@ -321,7 +332,6 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
 
 
     capture_cam->setProjection(captureProjection);
-    atcg::ref_ptr<Shader> shader = ShaderManager::getShader("equirectangularToCubemap");
     // convert HDR equirectangular environment map to cubemap equivalent
 
     TextureSpecification spec;
@@ -334,29 +344,62 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     int old_viewport[4];
     glGetIntegerv(GL_VIEWPORT, old_viewport);
 
-    float width  = s_renderer->impl->skybox_cubemap->width();
-    float height = s_renderer->impl->skybox_cubemap->height();
-    Framebuffer captureFBO(width, height);
-    captureFBO.attachDepth();
-
-    glViewport(0, 0, width, height);    // don't forget to configure the viewport to the capture dimensions.
-    captureFBO.use();
-
-    shader->use();
-    skybox_texture->use();
-    shader->setInt("equirectangularMap", 0);
-    for(unsigned int i = 0; i < 6; ++i)
+    // * Create a cubemap from the equirectangular map
     {
-        capture_cam->setView(captureViews[i]);
-        glFramebufferTexture2D(GL_FRAMEBUFFER,
-                               GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                               s_renderer->impl->skybox_cubemap->getID(),
-                               0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        atcg::ref_ptr<Shader> equirect_shader = ShaderManager::getShader("equirectangularToCubemap");
+        float width                           = s_renderer->impl->skybox_cubemap->width();
+        float height                          = s_renderer->impl->skybox_cubemap->height();
+        Framebuffer captureFBO(width, height);
+        captureFBO.attachDepth();
 
-        draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), shader);
-        // renderCube();    // renders a 1x1 cube
+        glViewport(0, 0, width, height);    // don't forget to configure the viewport to the capture dimensions.
+        captureFBO.use();
+
+        equirect_shader->use();
+        skybox_texture->use();
+        equirect_shader->setInt("equirectangularMap", 0);
+        for(unsigned int i = 0; i < 6; ++i)
+        {
+            capture_cam->setView(captureViews[i]);
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                                   s_renderer->impl->skybox_cubemap->getID(),
+                                   0);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), equirect_shader);
+            // renderCube();    // renders a 1x1 cube
+        }
+    }
+
+    // * Convolution of cube map for irradiance map
+    {
+        atcg::ref_ptr<Shader> cubeconv_shader = ShaderManager::getShader("cubeMapConvolution");
+        float width                           = s_renderer->impl->irradiance_cubemap->width();
+        float height                          = s_renderer->impl->irradiance_cubemap->height();
+        Framebuffer captureFBO(width, height);
+        captureFBO.attachDepth();
+
+        glViewport(0, 0, width, height);    // don't forget to configure the viewport to the capture dimensions.
+        captureFBO.use();
+
+        cubeconv_shader->use();
+        s_renderer->impl->skybox_cubemap->use();
+        cubeconv_shader->setInt("skybox", 0);
+        for(unsigned int i = 0; i < 6; ++i)
+        {
+            capture_cam->setView(captureViews[i]);
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                                   s_renderer->impl->irradiance_cubemap->getID(),
+                                   0);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), cubeconv_shader);
+            // renderCube();    // renders a 1x1 cube
+        }
     }
 
     Framebuffer::bindByID(current_fbo);
