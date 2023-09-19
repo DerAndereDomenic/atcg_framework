@@ -600,6 +600,12 @@ void SceneHierarchyPanel::drawSceneProperties()
         }
         else
         {
+            glm::vec4 clear_color = Renderer::getClearColor();
+            if(ImGui::ColorEdit4("Background color#skybox", glm::value_ptr(clear_color)))
+            {
+                Renderer::setClearColor(clear_color);
+            }
+
             if(ImGui::Button("Add Skybox..."))
             {
                 auto f     = pfd::open_file("Choose files to read",
