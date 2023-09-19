@@ -37,6 +37,7 @@ public:
     atcg::ref_ptr<TextureCube> skybox_cubemap;
     atcg::ref_ptr<TextureCube> irradiance_cubemap;
     atcg::ref_ptr<TextureCube> prefiltered_cubemap;
+    atcg::ref_ptr<Texture2D> lut;
     bool has_skybox = false;
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
@@ -147,6 +148,14 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     spec_prefiltered_cubemap.sampler.filter_mode = TextureFilterMode::MIPMAP_LINEAR;
     spec_prefiltered_cubemap.sampler.mip_map     = true;
     prefiltered_cubemap                          = atcg::TextureCube::create(spec_prefiltered_cubemap);
+
+    auto img = IO::imread("res/lut.hdr");
+    TextureSpecification spec_lut;
+    spec_lut.width             = img->width();
+    spec_lut.height            = img->height();
+    spec_lut.format            = TextureFormat::RGBAFLOAT;
+    spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+    lut                        = atcg::Texture2D::create(img, spec_lut);
 
     screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     screen_fbo->attachColor();
@@ -267,6 +276,12 @@ void Renderer::Impl::setMaterial(const Material& material, const atcg::ref_ptr<S
 
     irradiance_cubemap->use(4);
     shader->setInt("irradiance_map", 4);
+
+    prefiltered_cubemap->use(5);
+    shader->setInt("prefilter_map", 5);
+
+    lut->use(6);
+    shader->setInt("lut", 6);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
