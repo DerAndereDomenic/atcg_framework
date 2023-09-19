@@ -985,7 +985,8 @@ void Renderer::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& tra
 
     float edge1 = 1, edge2 = 15;
 
-    toggleDepthTesting(false);
+    glDepthMask(GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
 
     float base_transparency = transparency_;
     float resolution        = 0.1f;
@@ -1036,7 +1037,8 @@ void Renderer::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& tra
     setLineSize(current_size);
 
     shader->setFloat("fall_off_edge", 1000.0f);
-    toggleDepthTesting(true);
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LESS);
 }
 
 int Renderer::getEntityIndex(const glm::vec2& mouse)

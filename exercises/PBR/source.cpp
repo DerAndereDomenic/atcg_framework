@@ -52,11 +52,11 @@ public:
 
         atcg::Renderer::clear();
 
-        atcg::Renderer::drawCADGrid(camera_controller->getCamera());
-
         atcg::Renderer::draw(scene, camera_controller->getCamera());
 
         atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
+
+        atcg::Renderer::drawCADGrid(camera_controller->getCamera());
     }
 
     virtual void onImGuiRender() override
