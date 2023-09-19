@@ -858,18 +858,21 @@ void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camer
     }
 
     // TODO: Just raw opengl rendering code here
-    glDepthMask(GL_FALSE);
-    glDepthFunc(GL_LEQUAL);
-    bool culling = s_renderer->impl->culling_enabled;
-    toggleCulling(false);
-    ShaderManager::getShader("skybox")->use();
-    s_renderer->impl->skybox_cubemap->use();
+    if(s_renderer->impl->has_skybox)
+    {
+        glDepthMask(GL_FALSE);
+        glDepthFunc(GL_LEQUAL);
+        bool culling = s_renderer->impl->culling_enabled;
+        toggleCulling(false);
+        ShaderManager::getShader("skybox")->use();
+        s_renderer->impl->skybox_cubemap->use();
 
-    draw(s_renderer->impl->cube, camera, glm::mat4(1), glm::vec3(1), ShaderManager::getShader("skybox"));
+        draw(s_renderer->impl->cube, camera, glm::mat4(1), glm::vec3(1), ShaderManager::getShader("skybox"));
 
-    glDepthMask(GL_TRUE);
-    glDepthFunc(GL_LESS);
-    toggleCulling(culling);
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
+        toggleCulling(culling);
+    }
 }
 
 void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
