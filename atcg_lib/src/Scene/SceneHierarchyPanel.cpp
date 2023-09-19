@@ -581,6 +581,52 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                        });
 }
 
+void SceneHierarchyPanel::drawSceneProperties()
+{
+    const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
+                                             ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
+                                             ImGuiTreeNodeFlags_FramePadding;
+
+    bool open = ImGui::TreeNodeEx((void*)typeid(atcg::Scene).hash_code(), treeNodeFlags, "Skybox");
+
+    ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+
+    if(open)
+    {
+        if(Renderer::hasSkybox())
+        {
+            ImGui::Image((void*)(uint64_t)Renderer::getSkyboxTexture()->getID(), ImVec2(128, 64));
+            if(ImGui::Button("Remove skybox##skybox")) { Renderer::removeSkybox(); }
+        }
+        else
+        {
+            if(ImGui::Button("Add Skybox..."))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                        pfd::path::home(),
+                                            {"PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr",
+                                             "All Files",
+                                             "*"},
+                                        pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img = IO::imread(files[0]);
+                    Renderer::setSkybox(img);
+                }
+            }
+        }
+        ImGui::TreePop();
+    }
+}
+
 SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene)
     : _scene(scene),
       _camera_preview(atcg::make_ref<atcg::Framebuffer>(128, 128))
@@ -617,7 +663,23 @@ void SceneHierarchyPanel::renderPanel()
 
     ImGui::Begin("Properties");
 
-    if(_selected_entity) { drawComponents(_selected_entity); }
+    if(ImGui::BeginTabBar("TabBarComponents"))
+    {
+        if(ImGui::BeginTabItem("Components"))
+        {
+            if(_selected_entity) { drawComponents(_selected_entity); }
+            ImGui::EndTabItem();
+        }
+
+
+        if(ImGui::BeginTabItem("Scene"))
+        {
+            drawSceneProperties();
+            ImGui::EndTabItem();
+        }
+
+        ImGui::EndTabBar();
+    }
 
     ImGui::End();
 }
