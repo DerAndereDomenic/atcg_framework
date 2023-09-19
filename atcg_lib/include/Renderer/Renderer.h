@@ -99,6 +99,18 @@ public:
     static void setSkybox(const atcg::ref_ptr<Image>& skybox);
 
     /**
+     * @brief If a skybox is set.
+     *
+     * @return True if there is a skybox set.
+     */
+    static bool hasSkybox();
+
+    /**
+     * @brief Remove the skybox
+     */
+    static void removeSkybox();
+
+    /**
      * @brief Change the size of the renderer
      *
      * @param width The width

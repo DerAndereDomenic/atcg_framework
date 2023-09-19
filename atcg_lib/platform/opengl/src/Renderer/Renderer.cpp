@@ -476,6 +476,16 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     toggleCulling(culling);
 }
 
+bool Renderer::hasSkybox()
+{
+    return s_renderer->impl->has_skybox;
+}
+
+void Renderer::removeSkybox()
+{
+    s_renderer->impl->has_skybox = false;
+}
+
 void Renderer::resize(const uint32_t& width, const uint32_t& height)
 {
     setViewport(0, 0, width, height);
