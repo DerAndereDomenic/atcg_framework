@@ -34,6 +34,7 @@ public:
     void initCameraFrustrum();
     atcg::ref_ptr<Graph> camera_frustrum;
 
+    atcg::ref_ptr<Texture2D> skybox_texture;
     atcg::ref_ptr<TextureCube> skybox_cubemap;
     atcg::ref_ptr<TextureCube> irradiance_cubemap;
     atcg::ref_ptr<TextureCube> prefiltered_cubemap;
@@ -363,10 +364,10 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     // convert HDR equirectangular environment map to cubemap equivalent
 
     TextureSpecification spec;
-    spec.width          = skybox->width();
-    spec.height         = skybox->height();
-    spec.format         = skybox->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA;
-    auto skybox_texture = atcg::Texture2D::create(skybox, spec);
+    spec.width                       = skybox->width();
+    spec.height                      = skybox->height();
+    spec.format                      = skybox->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA;
+    s_renderer->impl->skybox_texture = atcg::Texture2D::create(skybox, spec);
 
     uint32_t current_fbo = atcg::Framebuffer::currentFramebuffer();
     int old_viewport[4];
@@ -384,7 +385,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
         captureFBO.use();
 
         equirect_shader->use();
-        skybox_texture->use();
+        s_renderer->impl->skybox_texture->use();
         equirect_shader->setInt("equirectangularMap", 0);
         for(unsigned int i = 0; i < 6; ++i)
         {
@@ -484,6 +485,11 @@ bool Renderer::hasSkybox()
 void Renderer::removeSkybox()
 {
     s_renderer->impl->has_skybox = false;
+}
+
+atcg::ref_ptr<Texture2D> Renderer::getSkyboxTexture()
+{
+    return s_renderer->impl->skybox_texture;
 }
 
 void Renderer::resize(const uint32_t& width, const uint32_t& height)

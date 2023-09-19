@@ -111,6 +111,13 @@ public:
     static void removeSkybox();
 
     /**
+     * @brief Return the equirectangular skybox texture
+     *
+     * @return A pointer to the texture (only is valid if hasSkybox() == true)
+     */
+    static atcg::ref_ptr<Texture2D> getSkyboxTexture();
+
+    /**
      * @brief Change the size of the renderer
      *
      * @param width The width
