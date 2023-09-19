@@ -282,6 +282,8 @@ void Renderer::Impl::setMaterial(const Material& material, const atcg::ref_ptr<S
 
     lut->use(6);
     shader->setInt("lut", 6);
+
+    shader->setInt("use_ibl", has_skybox);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
@@ -686,6 +688,7 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
     }
 }
 
+// drawEntity
 void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 {
     if(entity.hasComponent<CustomRenderComponent>())
@@ -827,6 +830,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     }
 }
 
+// drawScene
 void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
 {
     const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();

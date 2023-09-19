@@ -15,6 +15,7 @@ uniform vec3 camera_pos;
 uniform vec3 camera_dir;
 uniform vec3 flat_color;
 uniform int entityID;
+uniform int use_ibl;
 
 // Material textures
 uniform sampler2D texture_diffuse;
@@ -119,7 +120,7 @@ void main()
     specular = prefilteredColor * (F * lutbrdf.x + lutbrdf.y);
     vec3 ambient = (kD * diffuse + specular);
 
-    vec3 color = /*brdf * light_radiance * max(0.0f, dot(normal, light_dir))*/ + ambient;
+    vec3 color = (1.0 - float(use_ibl)) * brdf * light_radiance * max(0.0f, dot(normal, light_dir)) + (float(use_ibl)) * ambient;
     
     float frag_dist = length(camera_pos - frag_pos);
     outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), 1.0 - pow(1.01, frag_dist - 1000));
