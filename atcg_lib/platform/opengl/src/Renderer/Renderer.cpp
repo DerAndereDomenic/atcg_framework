@@ -52,7 +52,7 @@ public:
     atcg::ref_ptr<Texture2D> white_pixel;
 
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
-    glm::vec3 clear_color;
+    glm::vec4 clear_color;
 
     float point_size = 1.0f;
     float line_size  = 1.0f;
@@ -325,6 +325,11 @@ void Renderer::setClearColor(const glm::vec4& color)
 {
     s_renderer->impl->clear_color = color;
     glClearColor(color.r, color.g, color.b, color.a);
+}
+
+glm::vec4 Renderer::getClearColor()
+{
+    return s_renderer->impl->clear_color;
 }
 
 void Renderer::setPointSize(const float& size)

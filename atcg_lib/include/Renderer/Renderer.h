@@ -68,6 +68,13 @@ public:
     static void setClearColor(const glm::vec4& color);
 
     /**
+     * @brief Get the current clear color
+     *
+     * @return The clear color
+     */
+    static glm::vec4 getClearColor();
+
+    /**
      * @brief Set the size of rendered points
      *
      * @param size The size
