@@ -21,6 +21,9 @@ uniform sampler2D texture_diffuse;
 uniform sampler2D texture_normal;
 uniform sampler2D texture_roughness;
 uniform sampler2D texture_metallic;
+uniform samplerCube irradiance_map;
+uniform samplerCube prefilter_map;
+uniform sampler2D lut;
 
 float distributionGGX(vec3 N, vec3 H, float roughness)
 {
@@ -64,6 +67,11 @@ vec3 fresnel_schlick(const vec3 F0, const float VdotH)
 	return F0 + (1 - F0) * p * p * p * p * p;
 }
 
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
+{
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
+} 
+
 void main()
 {
     // Define colocated direction light
@@ -97,8 +105,22 @@ void main()
 
     vec3 brdf = specular + kD * color_diffuse / PI;
 
-    vec3 color = brdf * light_radiance * max(0.0f, dot(normal, light_dir));
+    // IBL
+    kS = fresnelSchlickRoughness(max(dot(normal, view_dir), 0.0), F0, roughness);
+    kD = 1.0 - kS;
+    kD *= (1.0 - metallic);
+    vec3 irradiance = texture(irradiance_map, normal).rgb;
+    vec3 diffuse = irradiance * color_diffuse;
 
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 R = reflect(-view_dir, normal);
+    vec3 prefilteredColor = textureLod(prefilter_map, R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 lutbrdf = texture(lut, vec2(max(dot(normal, view_dir), 0.0), roughness)).rg;
+    specular = prefilteredColor * (F * lutbrdf.x + lutbrdf.y);
+    vec3 ambient = (kD * diffuse + specular);
+
+    vec3 color = /*brdf * light_radiance * max(0.0f, dot(normal, light_dir))*/ + ambient;
+    
     float frag_dist = length(camera_pos - frag_pos);
     outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), 1.0 - pow(1.01, frag_dist - 1000));
     outEntityID = entityID;
