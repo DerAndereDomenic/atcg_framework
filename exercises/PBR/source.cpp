@@ -28,52 +28,9 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
 
-        // Load textures
-        atcg::ref_ptr<atcg::Texture2D> diffuse_textue;
-        {
-            auto image = atcg::IO::imread("res/pbr/diffuse.png", 2.2f);
-            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
-
-            atcg::TextureSpecification spec;
-            spec.width     = image->width();
-            spec.height    = image->height();
-            diffuse_textue = atcg::Texture2D::create(image, spec);
-        }
-        //
-        atcg::ref_ptr<atcg::Texture2D> normal_texture;
-        {
-            auto image = atcg::IO::imread("res/pbr/normals.png");
-            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
-
-            atcg::TextureSpecification spec;
-            spec.width     = image->width();
-            spec.height    = image->height();
-            normal_texture = atcg::Texture2D::create(image, spec);
-        }
-
-        atcg::ref_ptr<atcg::Texture2D> roughness_texture;
-        {
-            auto image = atcg::IO::imread("res/pbr/roughness.png");
-            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
-
-            atcg::TextureSpecification spec;
-            spec.width        = image->width();
-            spec.height       = image->height();
-            spec.format       = atcg::TextureFormat::RINT8;
-            roughness_texture = atcg::Texture2D::create(image, spec);
-        }
-
-        atcg::ref_ptr<atcg::Texture2D> metallic_texture;
-        {
-            auto image = atcg::IO::imread("res/pbr/metallic.png");
-            ATCG_INFO("{0} x {1} x {2}", image->width(), image->height(), image->channels());
-
-            atcg::TextureSpecification spec;
-            spec.width       = image->width();
-            spec.height      = image->height();
-            spec.format      = atcg::TextureFormat::RINT8;
-            metallic_texture = atcg::Texture2D::create(image, spec);
-        }
+        auto skybox = atcg::IO::imread("res/pbr/skybox.hdr");
+        ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
+        atcg::Renderer::setSkybox(skybox);
 
         scene = atcg::make_ref<atcg::Scene>();
 
@@ -84,10 +41,6 @@ public:
         entity.addComponent<atcg::TransformComponent>();
         entity.addComponent<atcg::GeometryComponent>(plane);
         auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
-        // renderer.material.setDiffuseTexture(diffuse_textue);
-        // renderer.material.setNormalTexture(normal_texture);
-        // renderer.material.setRoughnessTexture(roughness_texture);
-        // renderer.material.setMetallicTexture(metallic_texture);
 
         panel = atcg::SceneHierarchyPanel(scene);
     }
