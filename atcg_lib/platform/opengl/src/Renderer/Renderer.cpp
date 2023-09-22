@@ -128,11 +128,12 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     white_pixel       = atcg::Texture2D::create(&white, spec_color);
 
     TextureSpecification spec_skybox;
-    spec_skybox.width             = 1024;
-    spec_skybox.height            = 1024;
-    spec_skybox.format            = TextureFormat::RGBAFLOAT;
-    spec_skybox.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
-    skybox_cubemap                = atcg::TextureCube::create(spec_skybox);
+    spec_skybox.width               = 1024;
+    spec_skybox.height              = 1024;
+    spec_skybox.format              = TextureFormat::RGBAFLOAT;
+    spec_skybox.sampler.wrap_mode   = TextureWrapMode::CLAMP_TO_EDGE;
+    spec_skybox.sampler.filter_mode = TextureFilterMode::MIPMAP_LINEAR;
+    skybox_cubemap                  = atcg::TextureCube::create(spec_skybox);
 
     TextureSpecification spec_irradiance_cubemap;
     spec_irradiance_cubemap.width             = 32;
@@ -405,6 +406,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
             draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), equirect_shader);
             // renderCube();    // renders a 1x1 cube
         }
+
+        s_renderer->impl->skybox_cubemap->generateMipmaps();
     }
 
     // * Convolution of cube map for irradiance map
