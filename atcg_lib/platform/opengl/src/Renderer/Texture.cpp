@@ -278,6 +278,17 @@ void Texture2D::use(const uint32_t& slot) const
     glBindTexture(GL_TEXTURE_2D, _ID);
 }
 
+void Texture2D::generateMipmaps()
+{
+    use();
+    _spec.sampler.mip_map = true;
+    auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_2D,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+    glGenerateMipmap(GL_TEXTURE_2D);
+}
+
 atcg::ref_ptr<Texture3D> Texture3D::create(const TextureSpecification& spec)
 {
     return create(nullptr, spec);
@@ -353,6 +364,16 @@ void Texture3D::use(const uint32_t& slot) const
     glBindTexture(GL_TEXTURE_3D, _ID);
 }
 
+void Texture3D::generateMipmaps()
+{
+    use();
+    _spec.sampler.mip_map = true;
+    auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_3D,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+    glGenerateMipmap(GL_TEXTURE_3D);
+}
 
 atcg::ref_ptr<TextureCube> TextureCube::create(const TextureSpecification& spec)
 {
@@ -398,6 +419,17 @@ void TextureCube::use(const uint32_t& slot) const
 {
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_CUBE_MAP, _ID);
+}
+
+void TextureCube::generateMipmaps()
+{
+    use();
+    _spec.sampler.mip_map = true;
+    auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
 }    // namespace atcg

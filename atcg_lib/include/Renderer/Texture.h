@@ -144,6 +144,11 @@ public:
      */
     void useForCompute(const uint32_t& slot = 0) const;
 
+    /**
+     * @brief Generate mipmap levels
+     */
+    virtual void generateMipmaps() = 0;
+
 protected:
     uint32_t _ID;
     TextureSpecification _spec;
@@ -210,6 +215,11 @@ public:
      * @param slot The used texture slot
      */
     virtual void use(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Generate mipmap levels
+     */
+    virtual void generateMipmaps() override;
 };
 
 /**
@@ -263,6 +273,11 @@ public:
      * @param slot The used texture slot
      */
     virtual void use(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Generate mipmap levels
+     */
+    virtual void generateMipmaps() override;
 };
 
 /**
@@ -310,6 +325,11 @@ public:
      * @param slot The used texture slot
      */
     virtual void use(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Generate mipmap levels
+     */
+    virtual void generateMipmaps() override;
 };
 
 }    // namespace atcg
