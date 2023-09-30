@@ -137,15 +137,22 @@ namespace detail
 #define GEOMETRY_EDGES_NAME     "Edges"
 #define GEOMETRY_FACES_NAME     "Faces"
 
-#define RENDER_COMPONENT_NAME       "Renderer"
-#define RENDER_TYPE_NAME            "RenderType"
-#define RENDER_VERTEX_SHADER_NAME   "VertexShaderPath"
-#define RENDER_FRAGMENT_SHADER_NAME "FragmentShaderPath"
-#define RENDER_GEOMETRY_SHADER_NAME "GeometryShaderPath"
-#define RENDER_COLOR_NAME           "Color"
-#define RENDER_POINT_SIZE_NAME      "PointSize"
-#define RENDER_INSTANCE_BUFFER_NAME "Instances"
-#define RENDER_RADIUS_NAME          "EdgeRadius"
+#define RENDER_COMPONENT_NAME             "Renderer"
+#define RENDER_TYPE_NAME                  "RenderType"
+#define RENDER_VERTEX_SHADER_NAME         "VertexShaderPath"
+#define RENDER_FRAGMENT_SHADER_NAME       "FragmentShaderPath"
+#define RENDER_GEOMETRY_SHADER_NAME       "GeometryShaderPath"
+#define RENDER_COLOR_NAME                 "Color"
+#define RENDER_POINT_SIZE_NAME            "PointSize"
+#define RENDER_INSTANCE_BUFFER_NAME       "Instances"
+#define RENDER_RADIUS_NAME                "EdgeRadius"
+#define RENDER_MATERIAL_DIFFUSE           "Diffuse"
+#define RENDER_MATERIAL_METALLIC          "Metallic"
+#define RENDER_MATERIAL_ROUGHNESS         "Roughness"
+#define RENDER_MATERIAL_DIFFUSE_TEXTURE   "DiffuseTexture"
+#define RENDER_MATERIAL_METALLIC_TEXTURE  "MetallicTexture"
+#define RENDER_MATERIAL_ROUGHNESS_TEXTURE "RoughnessTexture"
+#define RENDER_MATERIAL_NORMAL_TEXTURE    "NormalTexture"
 
 #define CAMERA_COMPONENT_NAME     "PerspectiveCamera"
 #define EDITOR_CAM_COMPONENT_NAME "EditorCamera"
@@ -173,6 +180,110 @@ std::vector<T> deserializeBuffer(const std::string& file_name)
     for(uint32_t i = 0; i < buffer_char.size() / sizeof(T); ++i) { buffer[i] = data[i]; }
 
     return buffer;
+}
+
+void seriualizeTexture(const atcg::ref_ptr<Texture2D>& texture, const std::string& path, float gamma = 1.0f)
+{
+    uint32_t channels = texture->getSpecification().format == TextureFormat::RGBA ||
+                                texture->getSpecification().format == TextureFormat::RGBAFLOAT
+                            ? 4
+                            : 1;
+    bool hdr          = texture->getSpecification().format == TextureFormat::RGBAFLOAT ||
+               texture->getSpecification().format == TextureFormat::RFLOAT;
+    std::string file_ending = hdr ? ".hdr" : ".png";
+
+    auto img_data = texture->getData();
+    atcg::ref_ptr<Image> img;
+    if(hdr)
+    {
+        img = atcg::make_ref<Image>(reinterpret_cast<const float*>(img_data.data()),
+                                    texture->width(),
+                                    texture->height(),
+                                    channels);
+    }
+    else { img = atcg::make_ref<Image>(img_data.data(), texture->width(), texture->height(), channels); }
+
+    IO::imwrite(img, path + file_ending, gamma);
+}
+
+void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& material, const std::string& file_path)
+{
+    out << YAML::Key << "Material";
+    out << YAML::BeginMap;
+
+    auto diffuse_texture   = material.getDiffuseTexture();
+    auto normal_texture    = material.getNormalTexture();
+    auto metallic_texture  = material.getMetallicTexture();
+    auto roughness_texture = material.getRoughnessTexture();
+
+    bool use_diffuse_texture   = !(diffuse_texture->width() == 1 && diffuse_texture->height() == 1);
+    bool use_normal_texture    = !(normal_texture->width() == 1 && normal_texture->height() == 1);
+    bool use_metallic_texture  = !(metallic_texture->width() == 1 && metallic_texture->height() == 1);
+    bool use_roughness_texture = !(roughness_texture->width() == 1 && roughness_texture->height() == 1);
+
+    auto entity_id = entity.getComponent<IDComponent>().ID;
+
+    if(use_diffuse_texture)
+    {
+        std::string img_path = file_path + "_" + std::to_string(entity_id) + "_diffuse";
+
+        detail::seriualizeTexture(diffuse_texture, img_path, 1.0f / 2.2f);
+
+        out << YAML::Key << RENDER_MATERIAL_DIFFUSE_TEXTURE << YAML::Value << img_path;
+    }
+    else
+    {
+        auto data         = diffuse_texture->getData();
+        glm::u8vec3 color = *((glm::u8vec4*)(data.data()));
+
+        glm::vec3 c(color);
+        c = c / 255.0f;
+
+        out << YAML::Key << RENDER_MATERIAL_DIFFUSE << YAML::Value << c;
+    }
+
+    if(use_normal_texture)
+    {
+        std::string img_path = file_path + "_" + std::to_string(entity_id) + "_normal";
+
+        detail::seriualizeTexture(normal_texture, img_path);
+
+        out << YAML::Key << RENDER_MATERIAL_NORMAL_TEXTURE << YAML::Value << img_path;
+    }
+
+    if(use_metallic_texture)
+    {
+        std::string img_path = file_path + "_" + std::to_string(entity_id) + "_metallic";
+
+        detail::seriualizeTexture(metallic_texture, img_path);
+
+        out << YAML::Key << RENDER_MATERIAL_METALLIC_TEXTURE << YAML::Value << img_path;
+    }
+    else
+    {
+        auto data   = metallic_texture->getData();
+        float color = *((float*)(data.data()));
+
+        out << YAML::Key << RENDER_MATERIAL_METALLIC << YAML::Value << color;
+    }
+
+    if(use_roughness_texture)
+    {
+        std::string img_path = file_path + "_" + std::to_string(entity_id) + "_roughness";
+
+        detail::seriualizeTexture(roughness_texture, img_path, 1.0f / 2.2f);
+
+        out << YAML::Key << RENDER_MATERIAL_ROUGHNESS_TEXTURE << YAML::Value << img_path;
+    }
+    else
+    {
+        auto data   = roughness_texture->getData();
+        float color = *((float*)(data.data()));
+
+        out << YAML::Key << RENDER_MATERIAL_ROUGHNESS << YAML::Value << color;
+    }
+
+    out << YAML::EndMap;
 }
 
 void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_path)
@@ -294,6 +405,8 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         out << YAML::Key << RENDER_FRAGMENT_SHADER_NAME << YAML::Value << renderer.shader->getFragmentPath();
         out << YAML::Key << RENDER_GEOMETRY_SHADER_NAME << YAML::Value << renderer.shader->getGeometryPath();
 
+        detail::serializeMaterial(out, entity, renderer.material, file_path);
+
         out << YAML::EndMap;
     }
 
@@ -325,6 +438,8 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         out << YAML::Key << RENDER_FRAGMENT_SHADER_NAME << YAML::Value << renderer.shader->getFragmentPath();
         out << YAML::Key << RENDER_GEOMETRY_SHADER_NAME << YAML::Value << renderer.shader->getGeometryPath();
 
+        detail::serializeMaterial(out, entity, renderer.material, file_path);
+
         out << YAML::EndMap;
     }
 
@@ -348,6 +463,8 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
 
         out << YAML::Key << RENDER_TYPE_NAME << YAML::Value << renderer.draw_mode;
         out << YAML::Key << RENDER_RADIUS_NAME << YAML::Value << renderer.radius;
+
+        detail::serializeMaterial(out, entity, renderer.material, file_path);
 
         out << YAML::EndMap;
     }
