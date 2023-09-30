@@ -182,7 +182,7 @@ std::vector<T> deserializeBuffer(const std::string& file_name)
     return buffer;
 }
 
-void seriualizeTexture(const atcg::ref_ptr<Texture2D>& texture, const std::string& path, float gamma = 1.0f)
+void serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path, float gamma = 1.0f)
 {
     uint32_t channels = texture->getSpecification().format == TextureFormat::RGBA ||
                                 texture->getSpecification().format == TextureFormat::RGBAFLOAT
@@ -203,7 +203,8 @@ void seriualizeTexture(const atcg::ref_ptr<Texture2D>& texture, const std::strin
     }
     else { img = atcg::make_ref<Image>(img_data.data(), texture->width(), texture->height(), channels); }
 
-    IO::imwrite(img, path + file_ending, gamma);
+    path = path + file_ending;
+    IO::imwrite(img, path, gamma);
 }
 
 void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& material, const std::string& file_path)
@@ -227,7 +228,7 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     {
         std::string img_path = file_path + "_" + std::to_string(entity_id) + "_diffuse";
 
-        detail::seriualizeTexture(diffuse_texture, img_path, 1.0f / 2.2f);
+        detail::serializeTexture(diffuse_texture, img_path, 1.0f / 2.2f);
 
         out << YAML::Key << RENDER_MATERIAL_DIFFUSE_TEXTURE << YAML::Value << img_path;
     }
@@ -246,7 +247,7 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     {
         std::string img_path = file_path + "_" + std::to_string(entity_id) + "_normal";
 
-        detail::seriualizeTexture(normal_texture, img_path);
+        detail::serializeTexture(normal_texture, img_path);
 
         out << YAML::Key << RENDER_MATERIAL_NORMAL_TEXTURE << YAML::Value << img_path;
     }
@@ -255,7 +256,7 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     {
         std::string img_path = file_path + "_" + std::to_string(entity_id) + "_metallic";
 
-        detail::seriualizeTexture(metallic_texture, img_path);
+        detail::serializeTexture(metallic_texture, img_path);
 
         out << YAML::Key << RENDER_MATERIAL_METALLIC_TEXTURE << YAML::Value << img_path;
     }
@@ -271,7 +272,7 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     {
         std::string img_path = file_path + "_" + std::to_string(entity_id) + "_roughness";
 
-        detail::seriualizeTexture(roughness_texture, img_path, 1.0f / 2.2f);
+        detail::serializeTexture(roughness_texture, img_path, 1.0f / 2.2f);
 
         out << YAML::Key << RENDER_MATERIAL_ROUGHNESS_TEXTURE << YAML::Value << img_path;
     }
@@ -284,6 +285,85 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     }
 
     out << YAML::EndMap;
+}
+
+Material deserializeMaterial(const YAML::Node& material_node)
+{
+    Material material;
+
+    // Diffuse
+    if(material_node[RENDER_MATERIAL_DIFFUSE])
+    {
+        glm::vec3 diffuse_color = material_node[RENDER_MATERIAL_DIFFUSE].as<glm::vec3>();
+        material.setDiffuseColor(glm::vec4(diffuse_color, 1.0f));
+    }
+    else
+    {
+        std::string diffuse_path = material_node[RENDER_MATERIAL_DIFFUSE_TEXTURE].as<std::string>();
+        ATCG_TRACE(diffuse_path);
+        auto img = IO::imread(diffuse_path, 2.2f);
+        TextureSpecification spec;
+        spec.width           = img->width();
+        spec.height          = img->height();
+        spec.format          = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
+                                                    : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        auto diffuse_texture = atcg::Texture2D::create(img, spec);
+        material.setDiffuseTexture(diffuse_texture);
+    }
+
+    // Normals
+    if(material_node[RENDER_MATERIAL_NORMAL_TEXTURE])
+    {
+        std::string normal_path = material_node[RENDER_MATERIAL_NORMAL_TEXTURE].as<std::string>();
+        auto img                = IO::imread(normal_path);
+        TextureSpecification spec;
+        spec.width          = img->width();
+        spec.height         = img->height();
+        spec.format         = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
+                                                   : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        auto normal_texture = atcg::Texture2D::create(img, spec);
+        material.setNormalTexture(normal_texture);
+    }
+
+    // Roughness
+    if(material_node[RENDER_MATERIAL_ROUGHNESS])
+    {
+        float roughness = material_node[RENDER_MATERIAL_ROUGHNESS].as<float>();
+        material.setRoughness(roughness);
+    }
+    else
+    {
+        std::string roughness_path = material_node[RENDER_MATERIAL_ROUGHNESS_TEXTURE].as<std::string>();
+        auto img                   = IO::imread(roughness_path);
+        TextureSpecification spec;
+        spec.width             = img->width();
+        spec.height            = img->height();
+        spec.format            = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
+                                                      : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        auto roughness_texture = atcg::Texture2D::create(img, spec);
+        material.setRoughnessTexture(roughness_texture);
+    }
+
+    // Metallic
+    if(material_node[RENDER_MATERIAL_METALLIC])
+    {
+        float metallic = material_node[RENDER_MATERIAL_METALLIC].as<float>();
+        material.setMetallic(metallic);
+    }
+    else
+    {
+        std::string metallic_path = material_node[RENDER_MATERIAL_METALLIC_TEXTURE].as<std::string>();
+        auto img                  = IO::imread(metallic_path);
+        TextureSpecification spec;
+        spec.width            = img->width();
+        spec.height           = img->height();
+        spec.format           = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
+                                                     : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        auto metallic_texture = atcg::Texture2D::create(img, spec);
+        material.setMetallicTexture(metallic_texture);
+    }
+
+    return material;
 }
 
 void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_path)
@@ -652,6 +732,14 @@ void Serializer::deserialize(const std::string& file_path)
                             renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
                         }
                         else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+
+                        auto material_node = renderer["Material"];
+
+                        if(material_node)
+                        {
+                            Material material        = detail::deserializeMaterial(material_node);
+                            renderComponent.material = material;
+                        }
                     }
                     break;
                     case atcg::DrawMode::ATCG_DRAW_MODE_POINTS:
@@ -699,6 +787,14 @@ void Serializer::deserialize(const std::string& file_path)
                             renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
                         }
                         else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+
+                        auto material_node = renderer["Material"];
+
+                        if(material_node)
+                        {
+                            Material material        = detail::deserializeMaterial(material_node);
+                            renderComponent.material = material;
+                        }
                     }
                     break;
                     case atcg::DrawMode::ATCG_DRAW_MODE_EDGES:
@@ -713,6 +809,14 @@ void Serializer::deserialize(const std::string& file_path)
                         auto& renderComponent     = deserializedEntity.addComponent<EdgeCylinderRenderComponent>();
                         renderComponent.draw_mode = mode;
                         renderComponent.radius    = renderer[RENDER_RADIUS_NAME].as<float>();
+
+                        auto material_node = renderer["Material"];
+
+                        if(material_node)
+                        {
+                            Material material        = detail::deserializeMaterial(material_node);
+                            renderComponent.material = material;
+                        }
                     }
                     break;
                     case atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED:
