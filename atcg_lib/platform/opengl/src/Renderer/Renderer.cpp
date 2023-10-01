@@ -84,6 +84,19 @@ public:
                   const glm::vec3& color              = glm::vec3(1));
 
     void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
+
+    enum TextureBindings
+    {
+        DIFFUSE_TEXTURE   = 0,
+        NORMAL_TEXTURE    = 1,
+        ROUGHNESS_TEXTURE = 2,
+        METALLIC_TEXTURE  = 3,
+        IRRADIANCE_MAP    = 4,
+        PREFILTER_MAP     = 5,
+        LUT_TEXTURE       = 6,
+        SKYBOX_TEXTURE    = 7,
+        COUNT
+    };
 };
 
 Renderer::Renderer() {}
@@ -266,26 +279,26 @@ void Renderer::Impl::initCameraFrustrum()
 
 void Renderer::Impl::setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader)
 {
-    material.getDiffuseTexture()->use(0);
-    shader->setInt("texture_diffuse", 0);
+    material.getDiffuseTexture()->use(Renderer::Impl::TextureBindings::DIFFUSE_TEXTURE);
+    shader->setInt("texture_diffuse", Renderer::Impl::TextureBindings::DIFFUSE_TEXTURE);
 
-    material.getNormalTexture()->use(1);
-    shader->setInt("texture_normal", 1);
+    material.getNormalTexture()->use(Renderer::Impl::TextureBindings::NORMAL_TEXTURE);
+    shader->setInt("texture_normal", Renderer::Impl::TextureBindings::NORMAL_TEXTURE);
 
-    material.getRoughnessTexture()->use(2);
-    shader->setInt("texture_roughness", 2);
+    material.getRoughnessTexture()->use(Renderer::Impl::TextureBindings::ROUGHNESS_TEXTURE);
+    shader->setInt("texture_roughness", Renderer::Impl::TextureBindings::ROUGHNESS_TEXTURE);
 
-    material.getMetallicTexture()->use(3);
-    shader->setInt("texture_metallic", 3);
+    material.getMetallicTexture()->use(Renderer::Impl::TextureBindings::METALLIC_TEXTURE);
+    shader->setInt("texture_metallic", Renderer::Impl::TextureBindings::METALLIC_TEXTURE);
 
-    irradiance_cubemap->use(4);
-    shader->setInt("irradiance_map", 4);
+    irradiance_cubemap->use(Renderer::Impl::TextureBindings::IRRADIANCE_MAP);
+    shader->setInt("irradiance_map", Renderer::Impl::TextureBindings::IRRADIANCE_MAP);
 
-    prefiltered_cubemap->use(5);
-    shader->setInt("prefilter_map", 5);
+    prefiltered_cubemap->use(Renderer::Impl::TextureBindings::PREFILTER_MAP);
+    shader->setInt("prefilter_map", Renderer::Impl::TextureBindings::PREFILTER_MAP);
 
-    lut->use(6);
-    shader->setInt("lut", 6);
+    lut->use(Renderer::Impl::TextureBindings::LUT_TEXTURE);
+    shader->setInt("lut", Renderer::Impl::TextureBindings::LUT_TEXTURE);
 
     shader->setInt("use_ibl", has_skybox);
 }
@@ -409,8 +422,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
         captureFBO.use();
 
         equirect_shader->use();
-        s_renderer->impl->skybox_texture->use();
-        equirect_shader->setInt("equirectangularMap", 0);
+        s_renderer->impl->skybox_texture->use(Renderer::Impl::TextureBindings::COUNT);
+        equirect_shader->setInt("equirectangularMap", Renderer::Impl::TextureBindings::COUNT);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -440,8 +453,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
         captureFBO.use();
 
         cubeconv_shader->use();
-        s_renderer->impl->skybox_cubemap->use();
-        cubeconv_shader->setInt("skybox", 0);
+        s_renderer->impl->skybox_cubemap->use(Renderer::Impl::TextureBindings::COUNT);
+        cubeconv_shader->setInt("skybox", Renderer::Impl::TextureBindings::COUNT);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -464,7 +477,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
         float height                           = s_renderer->impl->prefiltered_cubemap->height();
 
         prefilter_shader->use();
-        prefilter_shader->setInt("skybox", 0);
+        prefilter_shader->setInt("skybox", Renderer::Impl::TextureBindings::COUNT);
         unsigned int max_mip_levels = 5;
         for(unsigned int mip = 0; mip < max_mip_levels; ++mip)
         {
@@ -476,7 +489,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
             captureFBO.attachDepth();
             captureFBO.use();
 
-            s_renderer->impl->skybox_cubemap->use();
+            s_renderer->impl->skybox_cubemap->use(Renderer::Impl::TextureBindings::COUNT);
 
             glViewport(0, 0, mip_width, mip_height);
 
@@ -616,48 +629,6 @@ void Renderer::setCullFace(CullMode mode)
     }
 }
 
-void Renderer::draw(const atcg::ref_ptr<VertexArray>& vao,
-                    const atcg::ref_ptr<Camera>& camera,
-                    const glm::mat4& model,
-                    const glm::vec3& color,
-                    const atcg::ref_ptr<Shader>& shader,
-                    DrawMode draw_mode)
-{
-    switch(draw_mode)
-    {
-        case ATCG_DRAW_MODE_TRIANGLE:
-        {
-            s_renderer->impl->drawVAO(vao, camera, color, shader, model, GL_TRIANGLES, 1e6);    // TODO
-        }
-        break;
-        case ATCG_DRAW_MODE_POINTS:
-        {
-            s_renderer->impl->drawVAO(vao, camera, color, shader, model, GL_POINTS, 1e6);
-        }
-        break;
-        case ATCG_DRAW_MODE_POINTS_SPHERE:
-        {
-            throw std::logic_error {"Not implemented"};
-        }
-        break;
-        case ATCG_DRAW_MODE_EDGES:
-        {
-            s_renderer->impl->drawVAO(vao, camera, color, ShaderManager::getShader("edge"), model, GL_LINE_STRIP, 1e6);
-        }
-        break;
-        case ATCG_DRAW_MODE_EDGES_CYLINDER:
-        {
-            throw std::logic_error {"Not implemented"};
-        }
-        break;
-        case ATCG_DRAW_MODE_INSTANCED:
-        {
-            throw std::logic_error {"Not implemented"};
-        }
-        break;
-    }
-}
-
 void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
                     const atcg::ref_ptr<Camera>& camera,
                     const glm::mat4& model,
@@ -669,6 +640,8 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
     {
         case ATCG_DRAW_MODE_TRIANGLE:
         {
+            shader->setInt("entityID", -1);
+            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, shader);
             s_renderer->impl->drawVAO(mesh->getVerticesArray(),
                                       camera,
                                       color,
@@ -680,12 +653,16 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
         case ATCG_DRAW_MODE_POINTS:
         {
+            shader->setInt("entityID", -1);
+            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, shader);
             s_renderer->impl
                 ->drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
+            shader->setInt("entityID", -1);
+            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, shader);
             s_renderer->impl->drawPointCloudSpheres(mesh->getVerticesArray()->peekVertexBuffer(),
                                                     camera,
                                                     model,
@@ -696,30 +673,28 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
         case ATCG_DRAW_MODE_EDGES:
         {
+            auto edge_shader = ShaderManager::getShader("edge");
+            edge_shader->setInt("entityID", -1);
+            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, edge_shader);
             atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
             points->bindStorage(0);
-            s_renderer->impl->drawVAO(mesh->getEdgesArray(),
-                                      camera,
-                                      color,
-                                      ShaderManager::getShader("edge"),
-                                      model,
-                                      GL_POINTS,
-                                      mesh->n_edges(),
-                                      1);
+            s_renderer->impl
+                ->drawVAO(mesh->getEdgesArray(), camera, color, edge_shader, model, GL_POINTS, mesh->n_edges(), 1);
         }
         break;
         case ATCG_DRAW_MODE_EDGES_CYLINDER:
         {
-            s_renderer->impl->drawGrid(mesh->getVerticesBuffer(),
-                                       mesh->getEdgesBuffer(),
-                                       ShaderManager::getShader("cylinder_edge"),
-                                       camera,
-                                       model,
-                                       color);
+            auto edge_shader = ShaderManager::getShader("cylinder_edge");
+            edge_shader->setInt("entityID", -1);
+            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, edge_shader);
+            s_renderer->impl
+                ->drawGrid(mesh->getVerticesBuffer(), mesh->getEdgesBuffer(), edge_shader, camera, model, color);
         }
         break;
         case ATCG_DRAW_MODE_INSTANCED:
         {
+            shader->setInt("entityID", -1);
+            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, shader);
             atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
             atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
             uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
@@ -907,7 +882,8 @@ void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camer
         bool culling = s_renderer->impl->culling_enabled;
         toggleCulling(false);
         ShaderManager::getShader("skybox")->use();
-        s_renderer->impl->skybox_cubemap->use();
+        ShaderManager::getShader("skybox")->setInt("skybox", Renderer::Impl::TextureBindings::SKYBOX_TEXTURE);
+        s_renderer->impl->skybox_cubemap->use(Renderer::Impl::TextureBindings::SKYBOX_TEXTURE);
 
         draw(s_renderer->impl->cube, camera, glm::mat4(1), glm::vec3(1), ShaderManager::getShader("skybox"));
 
