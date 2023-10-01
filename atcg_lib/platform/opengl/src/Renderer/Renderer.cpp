@@ -776,12 +776,13 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         {
             s_renderer->impl->setMaterial(renderer.material, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
-            Renderer::draw(geometry.graph,
-                           camera,
-                           transform.getModel(),
-                           glm::vec3(1),
-                           renderer.shader,
-                           renderer.draw_mode);
+            s_renderer->impl->drawVAO(geometry.graph->getVerticesArray(),
+                                      camera,
+                                      glm::vec3(1),
+                                      renderer.shader,
+                                      transform.getModel(),
+                                      GL_TRIANGLES,
+                                      geometry.graph->n_vertices());
         }
     }
 
@@ -792,12 +793,13 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         {
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
-            Renderer::draw(geometry.graph,
-                           camera,
-                           transform.getModel(),
-                           renderer.color,
-                           renderer.shader,
-                           renderer.draw_mode);
+            s_renderer->impl->drawVAO(geometry.graph->getVerticesArray(),
+                                      camera,
+                                      renderer.color,
+                                      renderer.shader,
+                                      transform.getModel(),
+                                      GL_POINTS,
+                                      geometry.graph->n_vertices());
         }
     }
 
@@ -810,12 +812,12 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
             s_renderer->impl->setMaterial(renderer.material, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
-            Renderer::draw(geometry.graph,
-                           camera,
-                           transform.getModel(),
-                           glm::vec3(1),
-                           renderer.shader,
-                           renderer.draw_mode);
+            s_renderer->impl->drawPointCloudSpheres(geometry.graph->getVerticesArray()->peekVertexBuffer(),
+                                                    camera,
+                                                    transform.getModel(),
+                                                    glm::vec3(1),
+                                                    renderer.shader,
+                                                    geometry.graph->n_vertices());
         }
     }
 
@@ -826,12 +828,16 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             ShaderManager::getShader("edge")->setInt("entityID", entity_id);
-            Renderer::draw(geometry.graph,
-                           camera,
-                           transform.getModel(),
-                           renderer.color,
-                           ShaderManager::getShader("edge"),
-                           renderer.draw_mode);
+            atcg::ref_ptr<VertexBuffer> points = geometry.graph->getVerticesBuffer();
+            points->bindStorage(0);
+            s_renderer->impl->drawVAO(geometry.graph->getEdgesArray(),
+                                      camera,
+                                      renderer.color,
+                                      ShaderManager::getShader("edge"),
+                                      transform.getModel(),
+                                      GL_POINTS,
+                                      geometry.graph->n_edges(),
+                                      1);
         }
     }
 
@@ -846,7 +852,12 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
             s_renderer->impl->setMaterial(renderer.material, shader);
             shader->setInt("entityID", entity_id);
             shader->setFloat("edge_radius", renderer.radius);
-            Renderer::draw(geometry.graph, camera, transform.getModel(), glm::vec3(1), shader, renderer.draw_mode);
+            s_renderer->impl->drawGrid(geometry.graph->getVerticesBuffer(),
+                                       geometry.graph->getEdgesBuffer(),
+                                       ShaderManager::getShader("cylinder_edge"),
+                                       camera,
+                                       transform.getModel(),
+                                       glm::vec3(1));
         }
     }
 
@@ -862,12 +873,17 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
             }
 
             ShaderManager::getShader("instanced")->setInt("entityID", entity_id);
-            Renderer::draw(geometry.graph,
-                           camera,
-                           transform.getModel(),
-                           glm::vec3(1),
-                           ShaderManager::getShader("instanced"),
-                           renderer.draw_mode);
+            atcg::ref_ptr<VertexArray> vao_mesh      = geometry.graph->getVerticesArray();
+            atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
+            uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
+            s_renderer->impl->drawVAO(vao_mesh,
+                                      camera,
+                                      glm::vec3(1),
+                                      ShaderManager::getShader("instanced"),
+                                      transform.getModel(),
+                                      GL_TRIANGLES,
+                                      geometry.graph->n_vertices(),
+                                      n_instances);
         }
     }
 }
