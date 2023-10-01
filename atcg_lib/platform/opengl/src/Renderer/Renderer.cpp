@@ -313,7 +313,6 @@ void Renderer::init(uint32_t width, uint32_t height)
     ShaderManager::addShaderFromName("instanced");
     ShaderManager::addShaderFromName("edge");
     ShaderManager::addShaderFromName("circle");
-    ShaderManager::addShaderFromName("grid");
     ShaderManager::addShaderFromName("screen");
     ShaderManager::addShaderFromName("cylinder_edge");
     ShaderManager::addShaderFromName("equirectangularToCubemap");
