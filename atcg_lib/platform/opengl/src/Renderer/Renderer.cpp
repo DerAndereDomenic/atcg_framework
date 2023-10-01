@@ -34,6 +34,8 @@ public:
     void initCameraFrustrum();
     atcg::ref_ptr<Graph> camera_frustrum;
 
+    Material standard_material;
+
     atcg::ref_ptr<Texture2D> skybox_texture;
     atcg::ref_ptr<TextureCube> skybox_cubemap;
     atcg::ref_ptr<TextureCube> irradiance_cubemap;
@@ -305,6 +307,23 @@ void Renderer::init(uint32_t width, uint32_t height)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+    ShaderManager::addShaderFromName("base");
+    ShaderManager::addShaderFromName("flat");
+    ShaderManager::addShaderFromName("instanced");
+    ShaderManager::addShaderFromName("edge");
+    ShaderManager::addShaderFromName("circle");
+    ShaderManager::addShaderFromName("grid");
+    ShaderManager::addShaderFromName("screen");
+    ShaderManager::addShaderFromName("cylinder_edge");
+    ShaderManager::addShaderFromName("equirectangularToCubemap");
+    ShaderManager::addShaderFromName("skybox");
+    ShaderManager::addShaderFromName("cubeMapConvolution");
+    ShaderManager::addShaderFromName("prefilter_cubemap");
+    ShaderManager::addComputerShaderFromName("white_noise_2D");
+    ShaderManager::addComputerShaderFromName("white_noise_3D");
+    ShaderManager::addComputerShaderFromName("worly_noise_2D");
+    ShaderManager::addComputerShaderFromName("worly_noise_3D");
 }
 
 void Renderer::finishFrame()
