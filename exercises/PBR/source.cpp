@@ -35,7 +35,7 @@ public:
         scene = atcg::make_ref<atcg::Scene>();
 
         auto options = OpenMesh::IO::Options(OpenMesh::IO::Options::VertexTexCoord);
-        plane        = atcg::IO::read_mesh("res/plane.obj", options);
+        plane        = atcg::IO::read_mesh("res/sphere_high.obj", options);
 
         auto entity = scene->createEntity("Plane");
         entity.addComponent<atcg::TransformComponent>();
@@ -63,7 +63,28 @@ public:
     {
         ImGui::BeginMainMenuBar();
 
-        if(ImGui::BeginMenu("File")) { ImGui::EndMenu(); }
+        if(ImGui::BeginMenu("File"))
+        {
+            if(ImGui::MenuItem("Save"))
+            {
+                atcg::Serializer serializer(scene);
+
+                serializer.serialize("../Scene/Scene.yaml");
+            }
+
+            if(ImGui::MenuItem("Load"))
+            {
+                scene = atcg::make_ref<atcg::Scene>();
+                atcg::Serializer serializer(scene);
+
+                serializer.deserialize("../Scene/Scene.yaml");
+
+                hovered_entity = atcg::Entity();
+                panel.selectEntity(hovered_entity);
+            }
+
+            ImGui::EndMenu();
+        }
 
         if(ImGui::BeginMenu("Rendering"))
         {
