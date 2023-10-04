@@ -556,7 +556,6 @@ PYBIND11_MODULE(pyatcg, m)
         .def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3>(), "shader"_a, "color"_a)
         .def_readwrite("visible", &atcg::MeshRenderComponent::visible)
-        .def_readwrite("color", &atcg::MeshRenderComponent::color)
         .def_readwrite("shader", &atcg::MeshRenderComponent::shader);
 
     py::class_<atcg::PointRenderComponent>(m, "PointRenderComponent")
@@ -568,7 +567,6 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent")
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointSphereRenderComponent::visible)
-        .def_readwrite("color", &atcg::PointSphereRenderComponent::color)
         .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader);
 
     py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent")
@@ -578,8 +576,7 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent")
         .def(py::init<glm::vec3>(), "color"_a)
-        .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
-        .def_readwrite("color", &atcg::EdgeCylinderRenderComponent::color);
+        .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible);
 
     py::class_<atcg::NameComponent>(m, "NameComponent")
         .def(py::init<>())
