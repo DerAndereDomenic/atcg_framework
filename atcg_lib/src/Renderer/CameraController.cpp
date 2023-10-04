@@ -136,11 +136,17 @@ void FirstPersonController::onUpdate(float delta_time)
         }
     }
 
-    float delta_velocity  = _acceleration * delta_time;
-    float max_velocity    = _max_velocity;
-    auto restoring_factor = [](float relative_velocity)
+    float delta_velocity = _acceleration * delta_time;
+    float max_velocity   = _max_velocity;
+    auto deceleration    = [](float delta_velocity, float current_velocity, float max_velocity)
     {
-        return 6.0f * glm::sign(relative_velocity) * (relative_velocity * relative_velocity + 0.1);
+        float relative_velocity = current_velocity / max_velocity;
+        float deceleration_factor =
+            delta_velocity * (6.0f * glm::sign(relative_velocity) * (relative_velocity * relative_velocity + 0.1));
+        if(deceleration_factor / current_velocity > 1.0f)
+            return current_velocity;
+        else
+            return deceleration_factor;
     };
 
     if(Input::isKeyPressed(GLFW_KEY_W) && !Input::isKeyPressed(GLFW_KEY_S))    // forward
@@ -150,7 +156,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(0.0f < _velocity_forward && _velocity_forward <= max_velocity)
             _velocity_forward += delta_velocity;
         else if(_velocity_forward < 0.0f)
-            _velocity_forward -= delta_velocity * (restoring_factor(_velocity_forward / max_velocity) - 1.0f);
+            _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) - delta_velocity;
     }
     else if(Input::isKeyPressed(GLFW_KEY_S) && !Input::isKeyPressed(GLFW_KEY_W))    // backward
     {
@@ -159,14 +165,14 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(-max_velocity <= _velocity_forward && _velocity_forward < 0.0f)
             _velocity_forward -= delta_velocity;
         else if(0.0f < _velocity_forward)
-            _velocity_forward -= delta_velocity * (restoring_factor(_velocity_forward / max_velocity) + 1.0f);
+            _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) + delta_velocity;
     }
     else
     {
         if(-_velocity_threshold < _velocity_forward && _velocity_forward < _velocity_threshold)
             _velocity_forward = 0.0f;
         else
-            _velocity_forward -= delta_velocity * restoring_factor(_velocity_forward / max_velocity);
+            _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity);
     }
 
     if(Input::isKeyPressed(GLFW_KEY_A) && !Input::isKeyPressed(GLFW_KEY_D))    // left
@@ -176,7 +182,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(-max_velocity <= _velocity_right && _velocity_right < 0.0f)
             _velocity_right -= delta_velocity;
         else if(0.0f < _velocity_right)
-            _velocity_right -= delta_velocity * (restoring_factor(_velocity_right / max_velocity) + 1.0f);
+            _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) + delta_velocity;
     }
     else if(Input::isKeyPressed(GLFW_KEY_D) && !Input::isKeyPressed(GLFW_KEY_A))    // right
     {
@@ -185,14 +191,14 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(0.0 < _velocity_right && _velocity_right <= max_velocity)
             _velocity_right += delta_velocity;
         else if(_velocity_right < 0.0)
-            _velocity_right -= delta_velocity * (restoring_factor(_velocity_right / max_velocity) - 1.0f);
+            _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) - delta_velocity;
     }
     else
     {
         if(-_velocity_threshold < _velocity_right && _velocity_right < _velocity_threshold)
             _velocity_right = 0.0f;
         else
-            _velocity_right -= delta_velocity * restoring_factor(_velocity_right / max_velocity);
+            _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity);
     }
 
     if(Input::isKeyPressed(GLFW_KEY_E) && !Input::isKeyPressed(GLFW_KEY_Q))    // up
@@ -202,7 +208,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(0.0f < _velocity_up && _velocity_up <= max_velocity)
             _velocity_up += delta_velocity;
         else if(_velocity_up < 0.0)
-            _velocity_up -= delta_velocity * (restoring_factor(_velocity_up / max_velocity) - 1.0f);
+            _velocity_up -= deceleration(delta_velocity, _velocity_up, max_velocity) - delta_velocity;
     }
     else if(Input::isKeyPressed(GLFW_KEY_Q) && !Input::isKeyPressed(GLFW_KEY_E))    // down
     {
@@ -211,14 +217,14 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(-max_velocity <= _velocity_up && _velocity_up < 0.0f)
             _velocity_up -= delta_velocity;
         else if(0.0f < _velocity_up)
-            _velocity_up -= delta_velocity * (restoring_factor(_velocity_up / max_velocity) + 1.0f);
+            _velocity_up -= deceleration(delta_velocity, _velocity_up, max_velocity) + delta_velocity;
     }
     else
     {
         if(-_velocity_threshold < _velocity_up && _velocity_up < _velocity_threshold)
             _velocity_up = 0.0f;
         else
-            _velocity_up -= delta_velocity * restoring_factor(_velocity_up / max_velocity);
+            _velocity_up -= deceleration(delta_velocity, _velocity_up, max_velocity);
     }
 
     _velocity_forward = glm::clamp(_velocity_forward, -max_velocity, max_velocity);
