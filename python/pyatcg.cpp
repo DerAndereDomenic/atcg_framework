@@ -615,8 +615,7 @@ PYBIND11_MODULE(pyatcg, m)
             "addMeshRenderComponent",
             [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader)
             { return entity.addComponent<atcg::MeshRenderComponent>(shader); },
-            "shader"_a,
-            "color"_a)
+            "shader"_a)
         .def(
             "addMeshRenderComponent",
             [](atcg::Entity& entity, const atcg::MeshRenderComponent& component)
@@ -641,7 +640,6 @@ PYBIND11_MODULE(pyatcg, m)
             [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader, float point_size)
             { return entity.addComponent<atcg::PointSphereRenderComponent>(shader, point_size); },
             "shader"_a,
-            "color"_a,
             "point_size"_a)
         .def(
             "addPointSphereRenderComponent",
@@ -662,7 +660,6 @@ PYBIND11_MODULE(pyatcg, m)
             "addEdgeCylinderRenderComponent",
             [](atcg::Entity& entity, float radius)
             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(radius); },
-            "color"_a,
             "radius"_a)
         .def(
             "addEdgeCylinderRenderComponent",
