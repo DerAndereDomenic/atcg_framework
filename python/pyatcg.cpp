@@ -575,7 +575,7 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("color", &atcg::EdgeRenderComponent::color);
 
     py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent")
-        .def(py::init<>())
+        .def(py::init<float>(), "radius"_a)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible);
 
     py::class_<atcg::NameComponent>(m, "NameComponent")
@@ -613,8 +613,8 @@ PYBIND11_MODULE(pyatcg, m)
             "geometry"_a)
         .def(
             "addMeshRenderComponent",
-            [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader, const glm::vec3& color)
-            { return entity.addComponent<atcg::MeshRenderComponent>(shader, color); },
+            [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader)
+            { return entity.addComponent<atcg::MeshRenderComponent>(shader); },
             "shader"_a,
             "color"_a)
         .def(
@@ -638,11 +638,8 @@ PYBIND11_MODULE(pyatcg, m)
             "component_a")
         .def(
             "addPointSphereRenderComponent",
-            [](atcg::Entity& entity,
-               const atcg::ref_ptr<atcg::Shader>& shader,
-               const glm::vec3& color,
-               float point_size)
-            { return entity.addComponent<atcg::PointSphereRenderComponent>(shader, color, point_size); },
+            [](atcg::Entity& entity, const atcg::ref_ptr<atcg::Shader>& shader, float point_size)
+            { return entity.addComponent<atcg::PointSphereRenderComponent>(shader, point_size); },
             "shader"_a,
             "color"_a,
             "point_size"_a)
@@ -663,8 +660,8 @@ PYBIND11_MODULE(pyatcg, m)
             "component"_a)
         .def(
             "addEdgeCylinderRenderComponent",
-            [](atcg::Entity& entity, const glm::vec3& color, float radius)
-            { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(color, radius); },
+            [](atcg::Entity& entity, float radius)
+            { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(radius); },
             "color"_a,
             "radius"_a)
         .def(
