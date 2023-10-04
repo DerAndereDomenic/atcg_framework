@@ -847,14 +847,16 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                 geometry.graph->getVerticesArray()->pushInstanceBuffer(renderer.instance_vbo);
             }
 
-            ShaderManager::getShader("instanced")->setInt("entityID", entity_id);
+            auto instance_shader = ShaderManager::getShader("instanced");
+            instance_shader->setInt("entityID", entity_id);
+            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, instance_shader);
             atcg::ref_ptr<VertexArray> vao_mesh      = geometry.graph->getVerticesArray();
             atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
             uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
             s_renderer->impl->drawVAO(vao_mesh,
                                       camera,
                                       glm::vec3(1),
-                                      ShaderManager::getShader("instanced"),
+                                      instance_shader,
                                       transform.getModel(),
                                       GL_TRIANGLES,
                                       geometry.graph->n_vertices(),
