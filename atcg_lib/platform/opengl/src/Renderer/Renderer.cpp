@@ -739,6 +739,12 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
 
+    if(!geometry.graph)
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
     // renderer.shader->setInt("entityID", entity_id);
     s_renderer->impl->white_pixel->use(0);
 
