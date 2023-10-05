@@ -358,6 +358,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
     if(ImGui::BeginPopup("AddComponent"))
     {
         detail::displayAddComponentEntry<TransformComponent>("Transform", entity);
+        detail::displayAddComponentEntry<GeometryComponent>("Geometry", entity);
         detail::displayAddComponentEntry<MeshRenderComponent>("Mesh Renderer", entity);
         detail::displayAddComponentEntry<PointRenderComponent>("Point Renderer", entity);
         detail::displayAddComponentEntry<PointSphereRenderComponent>("Point Sphere Renderer", entity);
@@ -493,6 +494,26 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                       transform.setRotation(glm::radians(rotation));
                                                   }
                                               });
+
+    detail::drawComponent<GeometryComponent>("Geometry",
+                                             entity,
+                                             [&](GeometryComponent& component)
+                                             {
+                                                 if(ImGui::Button("Import Mesh##GeometryComponent"))
+                                                 {
+                                                     auto f     = pfd::open_file("Choose files to read",
+                                                                             pfd::path::home(),
+                                                                                 {"Obj Files (.obj)", "*.obj"},
+                                                                             pfd::opt::none);
+                                                     auto files = f.result();
+                                                     if(!files.empty())
+                                                     {
+                                                         auto mesh       = IO::read_mesh(files[0]);
+                                                         component.graph = mesh;
+                                                     }
+                                                 }
+                                             });
+
     detail::drawComponent<MeshRenderComponent>("Mesh Renderer",
                                                entity,
                                                [&](MeshRenderComponent& component)
