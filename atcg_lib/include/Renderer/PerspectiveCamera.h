@@ -20,7 +20,7 @@ public:
      * @param look_at The camera's look at target
      */
     PerspectiveCamera(const float& aspect_ratio,
-                      const glm::vec3& position = glm::vec3(0),
+                      const glm::vec3& position = glm::vec3(0, 0, -1),
                       const glm::vec3& look_at  = glm::vec3(0));
 
     /**
