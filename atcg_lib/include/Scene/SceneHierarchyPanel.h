@@ -2,6 +2,7 @@
 
 #include <Core/Memory.h>
 #include <Scene/Entity.h>
+#include <Renderer/PerspectiveCamera.h>
 
 namespace atcg
 {
@@ -60,5 +61,7 @@ private:
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
     atcg::ref_ptr<atcg::Framebuffer> _camera_preview;
+    atcg::ref_ptr<atcg::Framebuffer> _object_preview;
+    atcg::ref_ptr<atcg::PerspectiveCamera> _object_preview_cam;
 };
 }    // namespace atcg

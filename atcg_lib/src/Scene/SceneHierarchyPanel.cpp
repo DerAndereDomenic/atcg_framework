@@ -512,6 +512,48 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                          component.graph = mesh;
                                                      }
                                                  }
+
+                                                 // glm::vec3 target   = glm::vec3(0);
+                                                 // glm::vec3 location = glm::vec3(2, 2, -2);
+                                                 // glm::mat4 model    = glm::mat4(1);
+                                                 // bool reset_model   = false;
+                                                 // if(entity.hasComponent<TransformComponent>())
+                                                 // {
+                                                 //     auto& transform = entity.getComponent<TransformComponent>();
+                                                 //     model           = transform.getModel();
+                                                 //     transform.setModel(glm::mat4(1));
+                                                 //     reset_model = true;
+                                                 // }
+
+                                                 // _object_preview_cam->setPosition(location);
+                                                 // _object_preview_cam->setLookAt(target);
+
+                                                 // _object_preview->use();
+                                                 // atcg::Renderer::clear();
+                                                 // atcg::Renderer::setViewport(0, 0, 128, 128);
+                                                 // atcg::Renderer::draw(entity, _object_preview_cam);
+                                                 // atcg::Renderer::getFramebuffer()->use();
+                                                 // atcg::Renderer::setViewport(0,
+                                                 //                             0,
+                                                 //                             atcg::Renderer::getFramebuffer()->width(),
+                                                 //                             atcg::Renderer::getFramebuffer()->height());
+
+                                                 // uint64_t textureID =
+                                                 // _object_preview->getColorAttachement(0)->getID();
+
+                                                 // ImVec2 window_size = ImGui::GetWindowSize();
+                                                 // ImGui::SetCursorPos(ImVec2((window_size.x - 128) * 0.5f,
+                                                 // ImGui::GetCursorPosY()));
+                                                 // ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(128, 128),
+                                                 // ImVec2 {0, 1}, ImVec2 {1, 0});
+
+                                                 // atcg::Framebuffer::useDefault();
+
+                                                 // if(reset_model)
+                                                 // {
+                                                 //     auto& transform = entity.getComponent<TransformComponent>();
+                                                 //     transform.setModel(model);
+                                                 // }
                                              });
 
     detail::drawComponent<MeshRenderComponent>("Mesh Renderer",
@@ -656,11 +698,17 @@ void SceneHierarchyPanel::drawSceneProperties()
 
 SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene)
     : _scene(scene),
-      _camera_preview(atcg::make_ref<atcg::Framebuffer>(128, 128))
+      _camera_preview(atcg::make_ref<atcg::Framebuffer>(128, 128)),
+      _object_preview(atcg::make_ref<atcg::Framebuffer>(128, 128)),
+      _object_preview_cam(atcg::make_ref<atcg::PerspectiveCamera>(1.0f))
 {
     _camera_preview->attachColor();
     _camera_preview->attachDepth();
     _camera_preview->complete();
+
+    _object_preview->attachColor();
+    _object_preview->attachDepth();
+    _object_preview->complete();
 }
 
 void SceneHierarchyPanel::renderPanel()
