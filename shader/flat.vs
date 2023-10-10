@@ -12,6 +12,7 @@ layout (location = 6) in vec3 aInstanceColor;
 
 out vec3 frag_color;
 out vec3 frag_pos;
+out vec2 frag_uv;
 
 uniform mat4 M, V, P;
 uniform float point_size;
@@ -37,4 +38,6 @@ void main()
     gl_Position = P * V * vec4(frag_pos, 1);
 
     frag_color = aColor * (instanced * aInstanceColor + (1 - instanced) * vec3(1));
+
+    frag_uv = aUV.xy;
 }
