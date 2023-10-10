@@ -211,6 +211,7 @@ struct InstanceRenderComponent : public RenderComponent
     }
 
     atcg::ref_ptr<VertexBuffer> instance_vbo;
+    Material material;
 };
 
 struct CustomRenderComponent : public RenderComponent

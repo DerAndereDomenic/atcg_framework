@@ -642,6 +642,18 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
 
                                                            detail::displayMaterial("edgecylinder", material);
                                                        });
+
+    detail::drawComponent<InstanceRenderComponent>("Instance Renderer",
+                                                   entity,
+                                                   [&](InstanceRenderComponent& component)
+                                                   {
+                                                       ImGui::Checkbox("Visible##visibleinstance", &component.visible);
+
+                                                       // Material
+                                                       Material& material = component.material;
+
+                                                       detail::displayMaterial("instance", material);
+                                                   });
 }
 
 void SceneHierarchyPanel::drawSceneProperties()

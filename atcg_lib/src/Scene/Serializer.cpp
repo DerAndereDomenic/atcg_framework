@@ -563,6 +563,8 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         out << YAML::Key << RENDER_INSTANCE_BUFFER_NAME << YAML::Value << buffer_name;
         renderer.instance_vbo->unmapHostPointers();
 
+        detail::serializeMaterial(out, entity, renderer.material, file_path);
+
         out << YAML::EndMap;
     }
 
@@ -826,6 +828,14 @@ void Serializer::deserialize(const std::string& file_path)
 
                         auto& renderComponent     = deserializedEntity.addComponent<InstanceRenderComponent>(buffer);
                         renderComponent.draw_mode = mode;
+
+                        auto material_node = renderer["Material"];
+
+                        if(material_node)
+                        {
+                            Material material        = detail::deserializeMaterial(material_node);
+                            renderComponent.material = material;
+                        }
                     }
                     break;
                 }
