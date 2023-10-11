@@ -874,14 +874,6 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 // drawScene
 void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
 {
-    const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
-
-    for(auto e: view)
-    {
-        Entity entity(e, scene.get());
-        Renderer::draw(entity, camera);
-    }
-
     // TODO: Just raw opengl rendering code here
     if(s_renderer->impl->has_skybox)
     {
@@ -898,6 +890,14 @@ void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camer
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
         toggleCulling(culling);
+    }
+
+    const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
+
+    for(auto e: view)
+    {
+        Entity entity(e, scene.get());
+        Renderer::draw(entity, camera);
     }
 }
 
