@@ -755,6 +755,45 @@ PYBIND11_MODULE(pyatcg, m)
         .def("selectEntity", &atcg::SceneHierarchyPanel::selectEntity, "entity"_a)
         .def("getSelectedEntity", &atcg::SceneHierarchyPanel::getSelectedEntity);
 
+    py::class_<atcg::Tracing::HitInfo>(m, "HitInfo")
+        .def_readonly("hit", &atcg::Tracing::HitInfo::hit)
+        .def_readonly("position", &atcg::Tracing::HitInfo::p)
+        .def_readonly("triangle_index", &atcg::Tracing::HitInfo::primitive_idx);
+
+    m.def("prepareAccelerationStructure", &atcg::Tracing::prepareAccelerationStructure);
+    m.def("traceRay", atcg::Tracing::traceRay);
+    m.def("traceRay",
+          [](atcg::Entity entity, py::array_t<float> ray_origins, py::array_t<float> ray_dirs, float t_min, float t_max)
+          {
+              py::buffer_info origin_info = ray_origins.request();
+              py::buffer_info dir_info    = ray_dirs.request();
+
+              auto result_hit      = py::array_t<bool>(origin_info.shape[0]);
+              bool* result_hit_ptr = (bool*)result_hit.request().ptr;
+
+              auto result_p           = py::array_t<float>(origin_info.size);
+              glm::vec3* result_p_ptr = (glm::vec3*)result_p.request().ptr;
+
+              auto result_idx          = py::array_t<uint32_t>(origin_info.shape[0]);
+              uint32_t* result_idx_ptr = (uint32_t*)result_idx.request().ptr;
+
+              uint32_t num_rays = origin_info.shape[0];
+
+              for(int i = 0; i < num_rays; ++i)
+              {
+                  glm::vec3 o = *((glm::vec3*)origin_info.ptr + i);
+                  glm::vec3 d = *((glm::vec3*)dir_info.ptr + i);
+
+                  auto info = atcg::Tracing::traceRay(entity, o, d, t_min, t_max);
+
+                  result_hit_ptr[i] = info.hit;
+                  result_p_ptr[i]   = info.p;
+                  result_idx_ptr[i] = info.primitive_idx;
+              }
+
+              return std::make_tuple(result_hit, result_p, result_idx);
+          });
+
     // m.def("width",
     //       []()
     //       {
