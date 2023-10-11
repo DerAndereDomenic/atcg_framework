@@ -57,11 +57,14 @@ void displayMaterial(const std::string& key, Material& material)
         {
             auto diffuse = material.getDiffuseTexture()->getData();
 
-            float color[3] = {(float)diffuse[0] / 255.0f, (float)diffuse[1] / 255.0f, (float)diffuse[2] / 255.0f};
+            float color[4] = {(float)diffuse[0] / 255.0f,
+                              (float)diffuse[1] / 255.0f,
+                              (float)diffuse[2] / 255.0f,
+                              (float)diffuse[3] / 255.0f};
 
-            if(ImGui::ColorEdit3(("Diffuse##" + key).c_str(), color))
+            if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
             {
-                glm::vec4 new_color = glm::vec4(glm::make_vec3(color), 1.0f);
+                glm::vec4 new_color = glm::make_vec4(color);
                 material.setDiffuseColor(new_color);
             }
 
