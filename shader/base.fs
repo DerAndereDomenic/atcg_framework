@@ -81,7 +81,8 @@ void main()
     vec3 view_dir = normalize(camera_pos - frag_pos);
 
     // Get parameters
-    vec3 color_diffuse = frag_color * flat_color * texture(texture_diffuse, frag_uv).rgb;
+    vec4 diffuse_lookup = texture(texture_diffuse, frag_uv);
+    vec3 color_diffuse = frag_color * flat_color * diffuse_lookup.rgb;
     float roughness = texture(texture_roughness, frag_uv).r;
     float metallic = texture(texture_metallic, frag_uv).r;
     vec3 texture_normal = normalize(texture(texture_normal, frag_uv).rgb * 2.0 - 1.0);
@@ -123,6 +124,6 @@ void main()
     vec3 color = (1.0 - float(use_ibl)) * brdf * light_radiance * max(0.0f, dot(normal, light_dir)) + (float(use_ibl)) * ambient;
     
     float frag_dist = length(camera_pos - frag_pos);
-    outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), 1.0 - pow(1.01, frag_dist - 1000));
+    outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), diffuse_lookup.w *( 1.0 - pow(1.01, frag_dist - 1000)));
     outEntityID = entityID;
 }
