@@ -75,16 +75,17 @@ PYBIND11_MODULE(pyatcg, m)
     auto m_camera = py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");
     auto m_controller =
         py::class_<atcg::FirstPersonController, atcg::ref_ptr<atcg::FirstPersonController>>(m, "FirstPersonController");
-    auto m_entity = py::class_<atcg::Entity>(m, "Entity");
-    auto m_scene  = py::class_<atcg::Scene, atcg::ref_ptr<atcg::Scene>>(m, "Scene");
-    auto m_vec2   = py::class_<glm::vec2>(m, "vec2", py::buffer_protocol());
-    auto m_ivec2  = py::class_<glm::ivec2>(m, "ivec2", py::buffer_protocol());
-    auto m_vec3   = py::class_<glm::vec3>(m, "vec3", py::buffer_protocol());
-    auto m_ivec3  = py::class_<glm::ivec3>(m, "ivec3", py::buffer_protocol());
-    auto m_vec4   = py::class_<glm::vec4>(m, "vec4", py::buffer_protocol());
-    auto m_ivec4  = py::class_<glm::ivec4>(m, "ivec4", py::buffer_protocol());
-    auto m_mat3   = py::class_<glm::mat3>(m, "mat3", py::buffer_protocol());
-    auto m_mat4   = py::class_<glm::mat4>(m, "mat4", py::buffer_protocol());
+    auto m_entity  = py::class_<atcg::Entity>(m, "Entity");
+    auto m_scene   = py::class_<atcg::Scene, atcg::ref_ptr<atcg::Scene>>(m, "Scene");
+    auto m_vec2    = py::class_<glm::vec2>(m, "vec2", py::buffer_protocol());
+    auto m_ivec2   = py::class_<glm::ivec2>(m, "ivec2", py::buffer_protocol());
+    auto m_vec3    = py::class_<glm::vec3>(m, "vec3", py::buffer_protocol());
+    auto m_ivec3   = py::class_<glm::ivec3>(m, "ivec3", py::buffer_protocol());
+    auto m_u32vec3 = py::class_<glm::u32vec3>(m, "u32vec3", py::buffer_protocol());
+    auto m_vec4    = py::class_<glm::vec4>(m, "vec4", py::buffer_protocol());
+    auto m_ivec4   = py::class_<glm::ivec4>(m, "ivec4", py::buffer_protocol());
+    auto m_mat3    = py::class_<glm::mat3>(m, "mat3", py::buffer_protocol());
+    auto m_mat4    = py::class_<glm::mat4>(m, "mat4", py::buffer_protocol());
 
     m.def("show", &python_main, "layer"_a, "Start the application.");
     m.def("print_statistics", &atcg::print_statistics);
@@ -261,6 +262,33 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("y", &glm::ivec3::y)
         .def_readwrite("z", &glm::ivec3::z);
 
+    m_u32vec3.def(py::init<uint32_t, uint32_t, uint32_t>(), "x"_a, "y"_a, "z"_a)
+        .def(py::init<uint32_t>(), "value"_a)
+        .def(py::init(
+                 [](py::array_t<uint32_t> b)
+                 {
+                     py::buffer_info info = b.request();
+
+                     // Copy for now, is there a better method?
+                     glm::u32vec3 v = glm::make_vec3(static_cast<uint32_t*>(info.ptr));
+
+                     return v;
+                 }),
+             "array"_a)
+        .def_buffer(
+            [](glm::u32vec3& v) -> py::buffer_info
+            {
+                return py::buffer_info(glm::value_ptr(v),
+                                       sizeof(int),
+                                       py::format_descriptor<uint32_t>::format(),
+                                       1,
+                                       {3},
+                                       {sizeof(int)});
+            })
+        .def_readwrite("x", &glm::u32vec3::x)
+        .def_readwrite("y", &glm::u32vec3::y)
+        .def_readwrite("z", &glm::u32vec3::z);
+
     m_vec4
         .def(py::init(
                  [](py::array_t<float> b)
@@ -372,6 +400,25 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph")
         .def(py::init<>())
+        .def_static("createPointCloud", py::overload_cast<>(&atcg::Graph::createPointCloud))
+        .def_static("createPointCloud",
+                    [](py::array_t<float> vertex_data)
+                    {
+                        py::buffer_info info = vertex_data.request();
+                        std::vector<atcg::Vertex> vertices((atcg::Vertex*)info.ptr,
+                                                           (atcg::Vertex*)info.ptr +
+                                                               info.size * sizeof(float) / sizeof(atcg::Vertex));
+                        return atcg::Graph::createPointCloud(vertices);
+                    })
+        .def("updateVertices",
+             [](const atcg::ref_ptr<atcg::Graph>& graph, py::array_t<float> vertex_data)
+             {
+                 py::buffer_info info = vertex_data.request();
+                 std::vector<atcg::Vertex> vertices((atcg::Vertex*)info.ptr,
+                                                    (atcg::Vertex*)info.ptr +
+                                                        info.size * sizeof(float) / sizeof(atcg::Vertex));
+                 graph->updateVertices(vertices);
+             })
         .def("getPositions",
              [](const atcg::ref_ptr<atcg::Graph>& graph)
              {
