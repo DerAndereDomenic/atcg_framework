@@ -493,6 +493,11 @@ PYBIND11_MODULE(pyatcg, m)
         .def("onEvent", &atcg::FirstPersonController::onEvent, "event"_a)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
 
+    py::class_<atcg::Serializer>(m, "Serializer")
+        .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
+        .def("serialize", &atcg::Serializer::serialize, "file_path"_a)
+        .def("deserialize", &atcg::Serializer::deserialize, "file_path"_a);
+
     // ------------------- RENDERER ---------------------------------
     py::class_<atcg::Renderer>(m, "Renderer")
         .def_static("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
