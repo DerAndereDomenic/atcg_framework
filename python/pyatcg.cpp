@@ -410,6 +410,22 @@ PYBIND11_MODULE(pyatcg, m)
                                                                info.size * sizeof(float) / sizeof(atcg::Vertex));
                         return atcg::Graph::createPointCloud(vertices);
                     })
+        .def_static("createGraph", py::overload_cast<>(&atcg::Graph::createPointCloud))
+        .def_static("createGraph",
+                    [](py::array_t<float> vertex_data, py::array_t<float> edge_data)
+                    {
+                        py::buffer_info info_vertices = vertex_data.request();
+                        std::vector<atcg::Vertex> vertices((atcg::Vertex*)info_vertices.ptr,
+                                                           (atcg::Vertex*)info_vertices.ptr + info_vertices.size *
+                                                                                                  sizeof(float) /
+                                                                                                  sizeof(atcg::Vertex));
+
+                        py::buffer_info info_edges = edge_data.request();
+                        std::vector<atcg::Edge> edges((atcg::Edge*)info_edges.ptr,
+                                                      (atcg::Edge*)info_edges.ptr +
+                                                          info_edges.size * sizeof(float) / sizeof(atcg::Edge));
+                        return atcg::Graph::createGraph(vertices, edges);
+                    })
         .def("updateVertices",
              [](const atcg::ref_ptr<atcg::Graph>& graph, py::array_t<float> vertex_data)
              {
@@ -418,6 +434,15 @@ PYBIND11_MODULE(pyatcg, m)
                                                     (atcg::Vertex*)info.ptr +
                                                         info.size * sizeof(float) / sizeof(atcg::Vertex));
                  graph->updateVertices(vertices);
+             })
+        .def("updateEdges",
+             [](const atcg::ref_ptr<atcg::Graph>& graph, py::array_t<float> edge_data)
+             {
+                 py::buffer_info info_edges = edge_data.request();
+                 std::vector<atcg::Edge> edges((atcg::Edge*)info_edges.ptr,
+                                               (atcg::Edge*)info_edges.ptr +
+                                                   info_edges.size * sizeof(float) / sizeof(atcg::Edge));
+                 graph->updateEdges(edges);
              })
         .def("getPositions",
              [](const atcg::ref_ptr<atcg::Graph>& graph)
