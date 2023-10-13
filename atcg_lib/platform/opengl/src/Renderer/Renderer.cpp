@@ -59,6 +59,8 @@ public:
     float point_size = 1.0f;
     float line_size  = 1.0f;
 
+    uint32_t frame_counter = 0;
+
     void drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
                                const atcg::ref_ptr<Camera>& camera,
                                const glm::mat4& model,
@@ -351,6 +353,8 @@ void Renderer::finishFrame()
 
     const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
+
+    ++s_renderer->impl->frame_counter;
 }
 
 void Renderer::setClearColor(const glm::vec4& color)
@@ -627,6 +631,11 @@ void Renderer::setCullFace(CullMode mode)
         }
         break;
     }
+}
+
+uint32_t Renderer::getFrameCounter()
+{
+    return s_renderer->impl->frame_counter;
 }
 
 void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,

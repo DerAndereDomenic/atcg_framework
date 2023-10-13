@@ -272,6 +272,13 @@ public:
     static void setCullFace(CullMode mode);
 
     /**
+     * @brief Get the current frame counter
+     *
+     * @return The index of the current frame
+     */
+    static uint32_t getFrameCounter();
+
+    /**
      * @brief Destroys the renderer instance
      */
     inline static void destroy() { delete s_renderer; }
