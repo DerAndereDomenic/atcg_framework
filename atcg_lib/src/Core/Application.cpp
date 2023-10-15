@@ -1,6 +1,7 @@
 #include <Core/Application.h>
 
 #include <Renderer/Renderer.h>
+#include <Renderer/Pathtracer.h>
 #include <Renderer/ShaderManager.h>
 
 
@@ -28,6 +29,7 @@ void Application::init(const WindowProps& props)
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
     Renderer::init(_window->getWidth(), _window->getHeight());
+    Pathtracer::init();
 
     Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 

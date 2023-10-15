@@ -34,6 +34,7 @@ int atcg_main(Application* app)
 
     {
         atcg::ShaderManager::destroy();
+        atcg::Pathtracer::destroy();
         atcg::Renderer::destroy();
         delete app;
     }

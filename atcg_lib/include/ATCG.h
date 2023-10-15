@@ -21,6 +21,7 @@
 
 //-------- Renderer ------
 #include <Renderer/Renderer.h>
+#include <Renderer/Pathtracer.h>
 #include <Renderer/Shader.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/PerspectiveCamera.h>
@@ -48,6 +49,7 @@
 #include <Math/Functions.h>
 #include <Math/Utils.h>
 #include <Math/Tracing.h>
+#include <Math/Random.h>
 
 //-------- Utility -----------
 #include <Noise/Noise.h>
