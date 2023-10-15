@@ -34,13 +34,26 @@ public:
 
         scene = atcg::make_ref<atcg::Scene>();
 
-        auto options = OpenMesh::IO::Options(OpenMesh::IO::Options::VertexTexCoord);
-        plane        = atcg::IO::read_mesh("res/plane.obj", options);
+        {
+            plane = atcg::IO::read_mesh("res/plane.obj");
 
-        auto entity = scene->createEntity("Plane");
-        entity.addComponent<atcg::TransformComponent>();
-        entity.addComponent<atcg::GeometryComponent>(plane);
-        auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
+            auto entity     = scene->createEntity("Plane");
+            auto& transform = entity.addComponent<atcg::TransformComponent>();
+            transform.setPosition(glm::vec3(-2.5f, 0.0f, 2.5f));
+            transform.setScale(glm::vec3(5.0f));
+            entity.addComponent<atcg::GeometryComponent>(plane);
+            auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
+        }
+
+        {
+            auto sphere = atcg::IO::read_mesh("res/sphere_low.obj");
+
+            auto entity     = scene->createEntity("Sphere");
+            auto& transform = entity.addComponent<atcg::TransformComponent>();
+            transform.setPosition(glm::vec3(0.0f, 1.1f, 0.0f));
+            entity.addComponent<atcg::GeometryComponent>(sphere);
+            auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
+        }
 
         panel = atcg::SceneHierarchyPanel(scene);
     }
@@ -101,6 +114,14 @@ public:
             ImGui::End();
         }
 
+        atcg::ref_ptr<atcg::Texture2D> pt_texture = atcg::Pathtracer::getOutputTexture();
+
+        ImGui::Begin("Pathtracer");
+
+        ImGui::Image((void*)(uint64_t)pt_texture->getID(), ImVec2(512, 512));
+
+        ImGui::End();
+
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
 
@@ -132,6 +153,14 @@ public:
         if(event->getKeyCode() == GLFW_KEY_R) { current_operation = ImGuizmo::OPERATION::ROTATE; }
         if(event->getKeyCode() == GLFW_KEY_S) { current_operation = ImGuizmo::OPERATION::SCALE; }
         // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
+
+        if(event->getKeyCode() == GLFW_KEY_P)
+        {
+            atcg::Pathtracer::bakeScene(scene, camera_controller->getCamera());
+            atcg::Pathtracer::start();
+        }
+        if(event->getKeyCode() == GLFW_KEY_L) { atcg::Pathtracer::stop(); }
+        if(event->getKeyCode() == GLFW_KEY_B) { atcg::Pathtracer::bakeScene(scene, camera_controller->getCamera()); }
 
         return true;
     }
