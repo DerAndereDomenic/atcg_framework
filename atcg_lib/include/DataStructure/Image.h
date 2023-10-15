@@ -3,6 +3,8 @@
 namespace atcg
 {
 
+class Texture2D;
+
 /**
  * @brief A class to model an image.
  * This is mostly a convinient class for loading and storing images.
@@ -44,6 +46,13 @@ public:
      *
      */
     Image(const float* data, uint32_t width, uint32_t height, uint32_t channels);
+
+    /**
+     * @brief Create image from a texture
+     *
+     * @param texture The texture
+     */
+    Image(const atcg::ref_ptr<Texture2D>& texture);
 
     /**
      * @brief Destructor
@@ -155,6 +164,8 @@ public:
 private:
     void loadLDR(const std::string& filename);
     void loadHDR(const std::string& filename);
+    void createLDR(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
+    void createHDR(const float* data, uint32_t width, uint32_t height, uint32_t channels);
 
     uint8_t* _img_data;
     uint32_t _width    = 0;

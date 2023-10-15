@@ -3,6 +3,8 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 
+#include <Renderer/Texture.h>
+
 namespace atcg
 {
 
@@ -11,29 +13,7 @@ Image::Image(const uint8_t* data, uint32_t width, uint32_t height, uint32_t chan
     _width  = width;
     _height = height;
 
-    if(channels == 1 || channels == 4)
-    {
-        _img_data = (uint8_t*)malloc(width * height * channels *
-                                     sizeof(uint8_t));    // We use malloc here for compatibility with stbi
-        memcpy(_img_data, data, width * height * channels * sizeof(uint8_t));
-        _channels = channels;
-    }
-    else
-    {
-        // Padding
-        _img_data = (uint8_t*)malloc(width * height * 4 * sizeof(uint8_t));
-
-        for(uint32_t i = 0; i < width * height; ++i)    // Iterate through each rg or rgb pixel
-        {
-            uint8_t padded[4] = {data[channels * i],
-                                 data[channels * i + 1],
-                                 channels == 3 ? data[channels * i + 2] : 0,
-                                 255};
-            memcpy(_img_data + channels * i, padded, sizeof(padded));
-        }
-
-        _channels = 4;
-    }
+    createLDR(data, width, height, channels);
 }
 
 Image::Image(const float* data, uint32_t width, uint32_t height, uint32_t channels)
@@ -42,30 +22,26 @@ Image::Image(const float* data, uint32_t width, uint32_t height, uint32_t channe
     _height = height;
     _hdr    = true;
 
-    if(channels == 1 || channels == 4)
-    {
-        _img_data = (uint8_t*)malloc(width * height * channels *
-                                     sizeof(float));    // We use malloc here for compatibility with stbi
-        memcpy(_img_data, data, width * height * channels * sizeof(float));
-        _channels = channels;
-    }
-    else
-    {
-        _img_data = (uint8_t*)malloc(width * height * 4 * sizeof(float));
+    createHDR(data, width, height, channels);
+}
 
-        float* data_float = (float*)data;
+Image::Image(const atcg::ref_ptr<Texture2D>& texture)
+{
+    _width  = texture->width();
+    _height = texture->height();
 
-        for(uint32_t i = 0; i < width * height; ++i)    // Iterate through each rg or rgb pixel
-        {
-            float padded[4] = {data_float[channels * i],
-                               data_float[channels * i + 1],
-                               channels == 3 ? data_float[channels * i + 2] : 0.0f,
-                               1.0f};
-            memcpy(data_float + channels * i, padded, sizeof(padded));
-        }
-        // Padding
-        _channels = 4;
-    }
+    uint32_t channels = texture->getSpecification().format == TextureFormat::RGBA ||
+                                texture->getSpecification().format == TextureFormat::RGBAFLOAT
+                            ? 4
+                            : 1;
+    bool hdr          = texture->getSpecification().format == TextureFormat::RGBAFLOAT ||
+               texture->getSpecification().format == TextureFormat::RFLOAT;
+
+    _hdr = hdr;
+
+    auto img_data = texture->getData();
+    if(hdr) { createHDR((float*)img_data.data(), texture->width(), texture->height(), channels); }
+    else { createLDR(img_data.data(), texture->width(), texture->height(), channels); }
 }
 
 Image::~Image()
@@ -144,6 +120,61 @@ void Image::setData(const uint8_t* data)
 {
     size_t size = stbi_is_hdr(_filename.c_str()) ? sizeof(float) : sizeof(uint8_t);
     memcpy((void*)_img_data, (const void*)data, _width * _height * _channels * size);
+}
+
+void Image::createLDR(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels)
+{
+    if(channels == 1 || channels == 4)
+    {
+        _img_data = (uint8_t*)malloc(width * height * channels *
+                                     sizeof(uint8_t));    // We use malloc here for compatibility with stbi
+        memcpy(_img_data, data, width * height * channels * sizeof(uint8_t));
+        _channels = channels;
+    }
+    else
+    {
+        // Padding
+        _img_data = (uint8_t*)malloc(width * height * 4 * sizeof(uint8_t));
+
+        for(uint32_t i = 0; i < width * height; ++i)    // Iterate through each rg or rgb pixel
+        {
+            uint8_t padded[4] = {data[channels * i],
+                                 data[channels * i + 1],
+                                 channels == 3 ? data[channels * i + 2] : 0,
+                                 255};
+            memcpy(_img_data + channels * i, padded, sizeof(padded));
+        }
+
+        _channels = 4;
+    }
+}
+
+void Image::createHDR(const float* data, uint32_t width, uint32_t height, uint32_t channels)
+{
+    if(channels == 1 || channels == 4)
+    {
+        _img_data = (uint8_t*)malloc(width * height * channels *
+                                     sizeof(float));    // We use malloc here for compatibility with stbi
+        memcpy(_img_data, data, width * height * channels * sizeof(float));
+        _channels = channels;
+    }
+    else
+    {
+        _img_data = (uint8_t*)malloc(width * height * 4 * sizeof(float));
+
+        float* data_float = (float*)data;
+
+        for(uint32_t i = 0; i < width * height; ++i)    // Iterate through each rg or rgb pixel
+        {
+            float padded[4] = {data_float[channels * i],
+                               data_float[channels * i + 1],
+                               channels == 3 ? data_float[channels * i + 2] : 0.0f,
+                               1.0f};
+            memcpy(data_float + channels * i, padded, sizeof(padded));
+        }
+        // Padding
+        _channels = 4;
+    }
 }
 
 void Image::loadLDR(const std::string& filename)
