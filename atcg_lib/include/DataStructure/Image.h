@@ -138,6 +138,20 @@ public:
         return reinterpret_cast<T*>(_img_data);
     }
 
+    /**
+     * @brief Read the pixel at a given index
+     *
+     * @tparam T The type
+     * @param idx The index
+     *
+     * @return The pixel data interpreted as the given type
+     */
+    template<typename T>
+    inline T& dataAt(uint32_t idx) const
+    {
+        return reinterpret_cast<T*>(_img_data)[idx];
+    }
+
 private:
     void loadLDR(const std::string& filename);
     void loadHDR(const std::string& filename);
