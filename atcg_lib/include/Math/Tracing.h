@@ -21,13 +21,6 @@ struct SurfaceInteraction
 namespace Tracing
 {
 
-struct HitInfo
-{
-    bool hit = false;
-    glm::vec3 p;
-    uint32_t primitive_idx;
-};
-
 /**
  * @brief Prepare the acceleration structure.
  * If it does not already have a AccelerationStructureComponent, a new one is created.
@@ -48,9 +41,9 @@ void prepareAccelerationStructure(Entity entity);
  * @param t_min The start of the ray
  * @param t_max Th end of the ray
  *
- * @return HitInfo of the intersection
+ * @return The intersection information
  */
-HitInfo traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max);
+SurfaceInteraction traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max);
 
 /**
  * @brief Trace a ray against a mesh

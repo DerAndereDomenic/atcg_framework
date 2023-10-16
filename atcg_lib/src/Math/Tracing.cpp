@@ -67,37 +67,26 @@ void Tracing::prepareAccelerationStructure(Entity entity)
     ATCG_INFO("\tMax tree depth   : {0}", stats.max_tree_depth);
 }
 
-Tracing::HitInfo
+SurfaceInteraction
 Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max)
 {
-    HitInfo result = {};
-
     if(!entity.hasComponent<AccelerationStructureComponent>())
     {
         ATCG_WARN("Entity does not have an acceleration structure. Aborting...");
-        return result;
+        return SurfaceInteraction();
     }
 
     auto& acc_component = entity.getComponent<AccelerationStructureComponent>();
-    nanort::Ray<float> ray;
-    memcpy(ray.org, glm::value_ptr(ray_origin), sizeof(glm::vec3));
-    memcpy(ray.dir, glm::value_ptr(ray_dir), sizeof(glm::vec3));
 
-    ray.min_t = t_min;
-    ray.max_t = t_max;
-
-    nanort::TriangleIntersector<> triangle_intersector(reinterpret_cast<const float*>(acc_component.vertices.data()),
-                                                       reinterpret_cast<const uint32_t*>(acc_component.faces.data()),
-                                                       sizeof(float) * 3);
-    nanort::TriangleIntersection<> isect;
-    bool hit = acc_component.accel.Traverse(ray, triangle_intersector, &isect);
-
-    if(!hit) return result;
-
-    result.hit           = true;
-    result.p             = ray_origin + isect.t * ray_dir;
-    result.primitive_idx = isect.prim_id;
-    return result;
+    return traceRay(acc_component.accel,
+                    acc_component.vertices,
+                    acc_component.normals,
+                    acc_component.uv,
+                    acc_component.faces,
+                    ray_origin,
+                    ray_dir,
+                    t_min,
+                    t_max);
 }
 
 SurfaceInteraction Tracing::traceRay(const nanort::BVHAccel<float>& accel,
