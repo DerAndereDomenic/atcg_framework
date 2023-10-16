@@ -2,6 +2,8 @@
 
 #include <Scene/Entity.h>
 
+#include <nanort.h>
+
 namespace atcg
 {
 struct SurfaceInteraction
@@ -50,6 +52,30 @@ void prepareAccelerationStructure(Entity entity);
  */
 HitInfo traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max);
 
+/**
+ * @brief Trace a ray against a mesh
+ *
+ * @param accel The bounding volume hierarchy
+ * @param positions The positions that were used to build the BVH
+ * @param normals The vertex normals
+ * @param uvs The vertex uvs
+ * @param faces The face index list that was used to build the BVH
+ * @param origin The ray origin
+ * @param dir The ray direction
+ * @param tmin The minimal ray length
+ * @param tmax The maximal ray length
+ *
+ * @return The intersection information
+ */
+SurfaceInteraction traceRay(const nanort::BVHAccel<float>& accel,
+                            const std::vector<glm::vec3>& positions,
+                            const std::vector<glm::vec3>& normals,
+                            const std::vector<glm::vec3>& uvs,
+                            const std::vector<glm::u32vec3>& faces,
+                            const glm::vec3& origin,
+                            const glm::vec3& dir,
+                            float tmin,
+                            float tmax);
 
 }    // namespace Tracing
 }    // namespace atcg

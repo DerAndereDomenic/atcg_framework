@@ -41,8 +41,6 @@ public:
     atcg::ref_ptr<Image> skybox_image;
     glm::vec3 read_image(const atcg::ref_ptr<Image>& image, const glm::vec2& uv);
 
-    SurfaceInteraction traceRay(const glm::vec3& origin, const glm::vec3& dir, float tmin, float tmax);
-
     std::vector<glm::vec3> accumulation_buffer;
 
     // Basic swap chain
@@ -93,41 +91,6 @@ glm::vec3 Pathtracer::Impl::read_image(const atcg::ref_ptr<Image>& image, const 
     return color;
 }
 
-SurfaceInteraction Pathtracer::Impl::traceRay(const glm::vec3& origin, const glm::vec3& dir, float tmin, float tmax)
-{
-    SurfaceInteraction si;
-    si.incoming_direction = dir;
-
-    nanort::Ray<float> ray;
-    memcpy(ray.org, glm::value_ptr(origin), sizeof(glm::vec3));
-    memcpy(ray.dir, glm::value_ptr(dir), sizeof(glm::vec3));
-
-    ray.min_t = tmin;
-    ray.max_t = tmax;
-
-    nanort::TriangleIntersector<> triangle_intersector(reinterpret_cast<const float*>(positions.data()),
-                                                       reinterpret_cast<const uint32_t*>(faces.data()),
-                                                       sizeof(float) * 3);
-    nanort::TriangleIntersection<> isect;
-    bool hit = accel.Traverse(ray, triangle_intersector, &isect);
-
-    if(!hit) { return si; }
-
-    si.valid         = true;
-    si.position      = origin + isect.t * dir;
-    si.barys         = glm::vec2(isect.u, isect.v);
-    si.primitive_idx = isect.prim_id;
-
-    glm::u32vec3 face = faces[isect.prim_id];
-
-    si.normal = (1.0f - isect.u - isect.v) * normals[face.x] + isect.u * normals[face.y] + isect.v * normals[face.z];
-
-    si.uv                = (1.0f - isect.u - isect.v) * uvs[face.x] + isect.u * uvs[face.y] + isect.v * uvs[face.z];
-    si.incoming_distance = isect.t;
-
-    return si;
-}
-
 void Pathtracer::Impl::worker()
 {
     uint32_t frame_counter = 0;
@@ -143,92 +106,101 @@ void Pathtracer::Impl::worker()
 
         int max_trace_depth = 10;
 
-        std::for_each(
-            std::execution::par,
-            verticalScanLine.begin(),
-            verticalScanLine.end(),
-            [&](uint32_t y)
-            {
-                std::for_each(
-                    std::execution::par,
-                    horizontalScanLine.begin(),
-                    horizontalScanLine.end(),
-                    [&](uint32_t x)
-                    {
-                        uint64_t seed = sampleTEA64(x + 512 * y, frame_counter);
-                        atcg::PCG32 rng(seed);
+        std::for_each(std::execution::par,
+                      verticalScanLine.begin(),
+                      verticalScanLine.end(),
+                      [&](uint32_t y)
+                      {
+                          std::for_each(
+                              std::execution::par,
+                              horizontalScanLine.begin(),
+                              horizontalScanLine.end(),
+                              [&](uint32_t x)
+                              {
+                                  uint64_t seed = sampleTEA64(x + 512 * y, frame_counter);
+                                  atcg::PCG32 rng(seed);
 
-                        glm::vec2 jitter = rng.next2d();
-                        float u          = (((float)x + jitter.x) / 512.0f - 0.5f) * 2.0f;
-                        float v          = (((float)(512 - y) + jitter.y) / 512.0f - 0.5f) * 2.0f;
+                                  glm::vec2 jitter = rng.next2d();
+                                  float u          = (((float)x + jitter.x) / 512.0f - 0.5f) * 2.0f;
+                                  float v          = (((float)(512 - y) + jitter.y) / 512.0f - 0.5f) * 2.0f;
 
-                        glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
-                        glm::vec3 ray_origin = cam_eye;
-                        glm::vec3 radiance(0);
-                        glm::vec3 throughput(1);
+                                  glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
+                                  glm::vec3 ray_origin = cam_eye;
+                                  glm::vec3 radiance(0);
+                                  glm::vec3 throughput(1);
 
-                        glm::vec3 next_origin;
-                        glm::vec3 next_dir;
+                                  glm::vec3 next_origin;
+                                  glm::vec3 next_dir;
 
-                        for(int n = 0; n < max_trace_depth; ++n)
-                        {
-                            SurfaceInteraction si = s_pathtracer->impl->traceRay(ray_origin, ray_dir, 1e-3f, 1e6f);
-                            if(si.valid)
-                            {
-                                // PBR Sampling
-                                uint32_t mesh_index     = mesh_idx[si.primitive_idx];
-                                glm::vec3 diffuse_color = read_image(diffuse_images[mesh_index], si.uv);
-                                float metallic          = read_image(metallic_images[mesh_index], si.uv).x;
-                                float roughness         = read_image(roughness_images[mesh_index], si.uv).x;
+                                  for(int n = 0; n < max_trace_depth; ++n)
+                                  {
+                                      SurfaceInteraction si = Tracing::traceRay(accel,
+                                                                                positions,
+                                                                                normals,
+                                                                                uvs,
+                                                                                faces,
+                                                                                ray_origin,
+                                                                                ray_dir,
+                                                                                1e-3f,
+                                                                                1e6f);
+                                      if(si.valid)
+                                      {
+                                          // PBR Sampling
+                                          uint32_t mesh_index     = mesh_idx[si.primitive_idx];
+                                          glm::vec3 diffuse_color = read_image(diffuse_images[mesh_index], si.uv);
+                                          float metallic          = read_image(metallic_images[mesh_index], si.uv).x;
+                                          float roughness         = read_image(roughness_images[mesh_index], si.uv).x;
 
-                                glm::vec3 metallic_color =
-                                    (1.0f - metallic) * glm::vec3(0.04) + metallic * diffuse_color;
+                                          glm::vec3 metallic_color =
+                                              (1.0f - metallic) * glm::vec3(0.04) + metallic * diffuse_color;
 
-                                BSDFSamplingResult result =
-                                    sampleGGX(si, diffuse_color, metallic_color, metallic, roughness, rng);
-                                if(result.sample_probability > 0.0f)
-                                {
-                                    next_origin = si.position;
-                                    next_dir    = result.out_dir;
-                                    throughput *= result.bsdf_weight;
-                                }
-                                else { break; }
-                            }
-                            else
-                            {
-                                float theta = std::acos(ray_dir.y) / glm::pi<float>();
-                                float phi =
-                                    (std::atan2(ray_dir.z, ray_dir.x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
+                                          BSDFSamplingResult result =
+                                              sampleGGX(si, diffuse_color, metallic_color, metallic, roughness, rng);
+                                          if(result.sample_probability > 0.0f)
+                                          {
+                                              next_origin = si.position;
+                                              next_dir    = result.out_dir;
+                                              throughput *= result.bsdf_weight;
+                                          }
+                                          else { break; }
+                                      }
+                                      else
+                                      {
+                                          float theta = std::acos(ray_dir.y) / glm::pi<float>();
+                                          float phi   = (std::atan2(ray_dir.z, ray_dir.x) + glm::pi<float>()) /
+                                                      (2.0f * glm::pi<float>());
 
-                                if(hasSkybox) radiance = throughput * read_image(skybox_image, glm::vec2(phi, theta));
+                                          if(hasSkybox)
+                                              radiance = throughput * read_image(skybox_image, glm::vec2(phi, theta));
 
-                                break;
-                            }
+                                          break;
+                                      }
 
-                            ray_origin = next_origin;
-                            ray_dir    = next_dir;
-                        }
+                                      ray_origin = next_origin;
+                                      ray_dir    = next_dir;
+                                  }
 
-                        if(frame_counter > 0)
-                        {
-                            // Mix with previous subframes if present!
-                            const float a                        = 1.0f / static_cast<float>(frame_counter + 1);
-                            const glm::vec3 prev_output_radiance = accumulation_buffer[x + 512 * y];
-                            radiance                             = glm::lerp(prev_output_radiance, radiance, a);
-                        }
+                                  if(frame_counter > 0)
+                                  {
+                                      // Mix with previous subframes if present!
+                                      const float a = 1.0f / static_cast<float>(frame_counter + 1);
+                                      const glm::vec3 prev_output_radiance = accumulation_buffer[x + 512 * y];
+                                      radiance = glm::lerp(prev_output_radiance, radiance, a);
+                                  }
 
-                        accumulation_buffer[x + 512 * y] = radiance;
+                                  accumulation_buffer[x + 512 * y] = radiance;
 
-                        glm::vec3 tone_mapped = glm::clamp(glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.2f)),
-                                                           glm::vec3(0),
-                                                           glm::vec3(1));
+                                  glm::vec3 tone_mapped =
+                                      glm::clamp(glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.2f)),
+                                                 glm::vec3(0),
+                                                 glm::vec3(1));
 
-                        output_buffer[x + 512 * y] = glm::vec4((uint8_t)(tone_mapped.x * 255.0f),
-                                                               (uint8_t)(tone_mapped.y * 255.0f),
-                                                               (uint8_t)(tone_mapped.z * 255.0f),
-                                                               255);
-                    });
-            });
+                                  output_buffer[x + 512 * y] = glm::vec4((uint8_t)(tone_mapped.x * 255.0f),
+                                                                         (uint8_t)(tone_mapped.y * 255.0f),
+                                                                         (uint8_t)(tone_mapped.z * 255.0f),
+                                                                         255);
+                              });
+                      });
 
         ++frame_counter;
         std::cout << frame_time.elapsedMillis() << "\n";

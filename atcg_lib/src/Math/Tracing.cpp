@@ -99,4 +99,48 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
     result.primitive_idx = isect.prim_id;
     return result;
 }
+
+SurfaceInteraction Tracing::traceRay(const nanort::BVHAccel<float>& accel,
+                                     const std::vector<glm::vec3>& positions,
+                                     const std::vector<glm::vec3>& normals,
+                                     const std::vector<glm::vec3>& uvs,
+                                     const std::vector<glm::u32vec3>& faces,
+                                     const glm::vec3& origin,
+                                     const glm::vec3& dir,
+                                     float tmin,
+                                     float tmax)
+{
+    SurfaceInteraction si;
+    si.incoming_direction = dir;
+
+    nanort::Ray<float> ray;
+    memcpy(ray.org, glm::value_ptr(origin), sizeof(glm::vec3));
+    memcpy(ray.dir, glm::value_ptr(dir), sizeof(glm::vec3));
+
+    ray.min_t = tmin;
+    ray.max_t = tmax;
+
+    nanort::TriangleIntersector<> triangle_intersector(reinterpret_cast<const float*>(positions.data()),
+                                                       reinterpret_cast<const uint32_t*>(faces.data()),
+                                                       sizeof(float) * 3);
+    nanort::TriangleIntersection<> isect;
+    bool hit = accel.Traverse(ray, triangle_intersector, &isect);
+
+    if(!hit) { return si; }
+
+    si.valid         = true;
+    si.position      = origin + isect.t * dir;
+    si.barys         = glm::vec2(isect.u, isect.v);
+    si.primitive_idx = isect.prim_id;
+
+    glm::u32vec3 face = faces[isect.prim_id];
+
+    si.normal = (1.0f - isect.u - isect.v) * normals[face.x] + isect.u * normals[face.y] + isect.v * normals[face.z];
+
+    si.uv                = (1.0f - isect.u - isect.v) * uvs[face.x] + isect.u * uvs[face.y] + isect.v * uvs[face.z];
+    si.incoming_distance = isect.t;
+
+    return si;
+}
+
 }    // namespace atcg
