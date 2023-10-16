@@ -44,6 +44,8 @@ public:
     std::vector<glm::vec3> accumulation_buffer;
 
     // Basic swap chain
+    uint32_t width  = 512;
+    uint32_t height = 512;
     glm::u8vec4* output_buffer;
     uint8_t swap_index = 1;
     atcg::ref_ptr<glm::u8vec4> swap_chain_buffer;
@@ -117,12 +119,12 @@ void Pathtracer::Impl::worker()
                               horizontalScanLine.end(),
                               [&](uint32_t x)
                               {
-                                  uint64_t seed = sampleTEA64(x + 512 * y, frame_counter);
+                                  uint64_t seed = sampleTEA64(x + width * y, frame_counter);
                                   atcg::PCG32 rng(seed);
 
                                   glm::vec2 jitter = rng.next2d();
-                                  float u          = (((float)x + jitter.x) / 512.0f - 0.5f) * 2.0f;
-                                  float v          = (((float)(512 - y) + jitter.y) / 512.0f - 0.5f) * 2.0f;
+                                  float u          = (((float)x + jitter.x) / (float)width - 0.5f) * 2.0f;
+                                  float v          = (((float)(height - y) + jitter.y) / (float)height - 0.5f) * 2.0f;
 
                                   glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
                                   glm::vec3 ray_origin = cam_eye;
@@ -184,21 +186,21 @@ void Pathtracer::Impl::worker()
                                   {
                                       // Mix with previous subframes if present!
                                       const float a = 1.0f / static_cast<float>(frame_counter + 1);
-                                      const glm::vec3 prev_output_radiance = accumulation_buffer[x + 512 * y];
+                                      const glm::vec3 prev_output_radiance = accumulation_buffer[x + width * y];
                                       radiance = glm::lerp(prev_output_radiance, radiance, a);
                                   }
 
-                                  accumulation_buffer[x + 512 * y] = radiance;
+                                  accumulation_buffer[x + width * y] = radiance;
 
                                   glm::vec3 tone_mapped =
                                       glm::clamp(glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.2f)),
                                                  glm::vec3(0),
                                                  glm::vec3(1));
 
-                                  output_buffer[x + 512 * y] = glm::vec4((uint8_t)(tone_mapped.x * 255.0f),
-                                                                         (uint8_t)(tone_mapped.y * 255.0f),
-                                                                         (uint8_t)(tone_mapped.z * 255.0f),
-                                                                         255);
+                                  output_buffer[x + width * y] = glm::vec4((uint8_t)(tone_mapped.x * 255.0f),
+                                                                           (uint8_t)(tone_mapped.y * 255.0f),
+                                                                           (uint8_t)(tone_mapped.z * 255.0f),
+                                                                           255);
                               });
                       });
 
@@ -208,7 +210,7 @@ void Pathtracer::Impl::worker()
         // Perform swap
         {
             std::lock_guard guard(swap_chain_mutex);
-            output_buffer = swap_chain_buffer.get() + swap_index * 512 * 512;
+            output_buffer = swap_chain_buffer.get() + swap_index * width * height;
             swap_index    = (swap_index + 1) % 2;
             dirty         = true;
         }
@@ -225,27 +227,25 @@ void Pathtracer::init()
 {
     s_pathtracer->impl = std::make_unique<Impl>();
 
-    // TODO: Hard coded 512 x 512 output image for now
-    s_pathtracer->impl->swap_chain_buffer = atcg::ref_ptr<glm::u8vec4>(2 * 512 * 512);    // 2 swap chain buffers
-    s_pathtracer->impl->output_buffer     = s_pathtracer->impl->swap_chain_buffer.get();
+    s_pathtracer->impl->swap_chain_buffer = atcg::ref_ptr<glm::u8vec4>(
+        2 * s_pathtracer->impl->width * s_pathtracer->impl->height);    // 2 swap chain buffers
+    s_pathtracer->impl->output_buffer = s_pathtracer->impl->swap_chain_buffer.get();
 
-    s_pathtracer->impl->accumulation_buffer.resize(512 * 512);
+    s_pathtracer->impl->accumulation_buffer.resize(s_pathtracer->impl->width * s_pathtracer->impl->height);
     memset(s_pathtracer->impl->accumulation_buffer.data(),
            0,
            sizeof(glm::vec3) * s_pathtracer->impl->accumulation_buffer.size());
 
     TextureSpecification spec;
-    spec.width                         = 512;
-    spec.height                        = 512;
+    spec.width                         = s_pathtracer->impl->width;
+    spec.height                        = s_pathtracer->impl->height;
     s_pathtracer->impl->output_texture = atcg::Texture2D::create(spec);
 
-    s_pathtracer->impl->horizontalScanLine.resize(512);
-    s_pathtracer->impl->verticalScanLine.resize(512);
-    for(int i = 0; i < 512; ++i)
-    {
-        s_pathtracer->impl->horizontalScanLine[i] = i;
-        s_pathtracer->impl->verticalScanLine[i]   = i;
-    }
+    s_pathtracer->impl->horizontalScanLine.resize(s_pathtracer->impl->width);
+    s_pathtracer->impl->verticalScanLine.resize(s_pathtracer->impl->height);
+    for(int i = 0; i < s_pathtracer->impl->width; ++i) { s_pathtracer->impl->horizontalScanLine[i] = i; }
+
+    for(int i = 0; i < s_pathtracer->impl->height; ++i) { s_pathtracer->impl->verticalScanLine[i] = i; }
 }
 
 void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera)
@@ -379,8 +379,9 @@ atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
 
         if(s_pathtracer->impl->dirty)
         {
-            glm::u8vec4* data_ptr =
-                s_pathtracer->impl->swap_chain_buffer.get() + s_pathtracer->impl->swap_index * 512 * 512;
+            glm::u8vec4* data_ptr = s_pathtracer->impl->swap_chain_buffer.get() + s_pathtracer->impl->swap_index *
+                                                                                      s_pathtracer->impl->width *
+                                                                                      s_pathtracer->impl->height;
             s_pathtracer->impl->output_texture->setData((void*)data_ptr);
             s_pathtracer->impl->dirty = false;
         }
