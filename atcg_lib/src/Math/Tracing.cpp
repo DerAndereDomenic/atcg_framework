@@ -33,23 +33,28 @@ void Tracing::prepareAccelerationStructure(Entity entity)
     Vertex* vertices    = mesh->getVerticesBuffer()->getHostPointer<Vertex>();
     glm::u32vec3* faces = mesh->getFaceIndexBuffer()->getHostPointer<glm::u32vec3>();
 
-    acc_component.vertices = atcg::ref_ptr<glm::vec3>(mesh->n_vertices());
-    acc_component.faces    = atcg::ref_ptr<glm::u32vec3>(mesh->n_faces());
+    acc_component.vertices.resize(mesh->n_vertices());
+    acc_component.normals.resize(mesh->n_vertices());
+    acc_component.uv.resize(mesh->n_vertices());
+    acc_component.faces.resize(mesh->n_faces());
 
-    std::vector<glm::vec3> temp_vertices(mesh->n_vertices());
-    for(uint32_t i = 0; i < mesh->n_vertices(); ++i) { temp_vertices[i] = vertices[i].position; }
-    acc_component.vertices.copy(temp_vertices.data());
-    acc_component.faces.copy(faces);
+    for(uint32_t i = 0; i < mesh->n_vertices(); ++i)
+    {
+        acc_component.vertices[i] = vertices[i].position;
+        acc_component.normals[i]  = vertices[i].normal;
+        acc_component.uv[i]       = vertices[i].uv;
+    }
+    memcpy(acc_component.faces.data(), faces, sizeof(glm::u32vec3) * mesh->n_faces());
 
     // Restore original mapping relation
     if(!vertices_mapped) { mesh->getVerticesBuffer()->unmapHostPointers(); }
     if(!faces_mapped) { mesh->getFaceIndexBuffer()->unmapHostPointers(); }
 
-    nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.get()),
-                                              reinterpret_cast<const uint32_t*>(acc_component.faces.get()),
+    nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.data()),
+                                              reinterpret_cast<const uint32_t*>(acc_component.faces.data()),
                                               sizeof(float) * 3);
-    nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const float*>(acc_component.vertices.get()),
-                                                 reinterpret_cast<const uint32_t*>(acc_component.faces.get()),
+    nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const float*>(acc_component.vertices.data()),
+                                                 reinterpret_cast<const uint32_t*>(acc_component.faces.data()),
                                                  sizeof(float) * 3);
     bool ret = acc_component.accel.Build(mesh->n_faces(), triangle_mesh, triangle_pred);
     assert(ret);
@@ -81,8 +86,8 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
     ray.min_t = t_min;
     ray.max_t = t_max;
 
-    nanort::TriangleIntersector<> triangle_intersector(reinterpret_cast<const float*>(acc_component.vertices.get()),
-                                                       reinterpret_cast<const uint32_t*>(acc_component.faces.get()),
+    nanort::TriangleIntersector<> triangle_intersector(reinterpret_cast<const float*>(acc_component.vertices.data()),
+                                                       reinterpret_cast<const uint32_t*>(acc_component.faces.data()),
                                                        sizeof(float) * 3);
     nanort::TriangleIntersection<> isect;
     bool hit = acc_component.accel.Traverse(ray, triangle_intersector, &isect);
