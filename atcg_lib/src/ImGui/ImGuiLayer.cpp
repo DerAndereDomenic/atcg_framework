@@ -39,9 +39,14 @@ void ImGuiLayer::onAttach()
 
     GLFWwindow* window = (GLFWwindow*)Application::get()->getWindow()->getNativeWindow();
 
+    float xscale;
+    glfwGetWindowContentScale(window, &xscale, NULL);
+
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
+    io.FontGlobalScale = xscale;
+    style.ScaleAllSizes(xscale);
     // Hazels color theme for now (https://github.com/TheCherno/Hazel)
     auto& colors              = ImGui::GetStyle().Colors;
     colors[ImGuiCol_WindowBg] = ImVec4 {0.1f, 0.105f, 0.11f, 1.0f};

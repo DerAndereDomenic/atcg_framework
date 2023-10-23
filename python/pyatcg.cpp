@@ -39,17 +39,20 @@ class PythonApplication : public atcg::Application
 public:
     PythonApplication() : atcg::Application() {}
 
+    PythonApplication(const atcg::WindowProps& props) : atcg::Application(props) {}
+
     ~PythonApplication() {}
 };
 
+//* This function isn't called but is needed for the linker
 atcg::Application* atcg::createApplication()
 {
     return new PythonApplication;
 }
 
-int python_main(atcg::Layer* layer)
+int python_main(atcg::Layer* layer, const atcg::WindowProps& props)
 {
-    atcg::Application* app = atcg::createApplication();
+    atcg::Application* app = new PythonApplication(props);
     app->pushLayer(layer);
     return atcg::atcg_main(app);
 }
@@ -87,7 +90,17 @@ PYBIND11_MODULE(pyatcg, m)
     auto m_mat3    = py::class_<glm::mat3>(m, "mat3", py::buffer_protocol());
     auto m_mat4    = py::class_<glm::mat4>(m, "mat4", py::buffer_protocol());
 
-    m.def("show", &python_main, "layer"_a, "Start the application.");
+    py::class_<atcg::WindowProps>(m, "WindowProps")
+        .def(py::init<>([]() { return atcg::WindowProps(); }))
+        .def(py::init<const std::string&, uint32_t, uint32_t, int32_t, int32_t, bool>())
+        .def_readwrite("tile", &atcg::WindowProps::title)
+        .def_readwrite("width", &atcg::WindowProps::width)
+        .def_readwrite("height", &atcg::WindowProps::height)
+        .def_readwrite("pos_x", &atcg::WindowProps::pos_x)
+        .def_readwrite("pos_y", &atcg::WindowProps::pos_y)
+        .def_readwrite("vsync", &atcg::WindowProps::vsync);
+
+    m.def("show", &python_main, "layer"_a, py::arg("props"));
     m.def("print_statistics", &atcg::print_statistics);
     m_layer.def(py::init<>())
         .def(py::init<std::string>(), "name"_a)
