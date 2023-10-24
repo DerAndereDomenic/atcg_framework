@@ -57,6 +57,8 @@ if(ATCG_CUDA_BACKEND)
     set(BACKEND "cuda")
     file (GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "atcg_lib/platform/cuda/**.c*"
                                                             "atcg_lib/platform/cuda/**.h")
+
+    find_package(OptiX REQUIRED)
 else()
     set(BACKEND "cpu")
     file (GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "atcg_lib/platform/cpu/**.c*"
@@ -69,7 +71,35 @@ file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "atcg_lib/src/**.c*"
 file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform/opengl/**.c*"
                                                               "atcg_lib/platform/opengl/**.h")
 
-add_library(atcg_lib STATIC "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_renderer_files}") 
+set(source_files "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_renderer_files}")
+
+set(ptx_files "")
+if(ATCG_CUDA_BACKEND)
+    foreach(source_file IN LISTS source_files)
+        # Define the pragma we use to determine the value of CUDA_SOURCE_PROPERTY_FORMAT
+        set(pragma_expression "^[ \t]*#[ \t]*pragma[ \t]+cuda_source_property_format[ \t]+=[ \t]+([a-z,A-Z]+)[ \t]*$")
+        # Process any *.cu source files
+        if(${source_file} MATCHES "\\.cu$")
+            # Read all lines from the source file defining the pragma we are looking for.
+            file(STRINGS ${source_file} matched_content REGEX ${pragma_expression})
+            if (matched_content)
+                # For all pragma definitions that we found, should only be one usually...
+                foreach(line_string ${matched_content})
+                    # Filter out the defined value
+                    string(REGEX REPLACE ${pragma_expression} "\\1" source_property_format ${line_string})
+                    # Apply the property to the source file
+                    if(${source_property_format} MATCHES "PTX")
+                        list(APPEND ptx_files ${source_file})
+                    endif()
+                endforeach()
+            endif()
+        endif()
+    endforeach()
+endif()
+
+list(REMOVE_ITEM source_files ${ptx_files})
+
+add_library(atcg_lib STATIC "${source_files}") 
 
 if(NOT MSVC)
     add_definitions(-DFMT_USE_CONSTEXPR)
@@ -81,10 +111,14 @@ target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 target_precompile_headers(atcg_lib PRIVATE atcg_lib/include/atcgpch.h)
 
 if(ATCG_CUDA_BACKEND)
-    include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+    include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+                        "${OptiX_INCLUDE}")
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
     string(APPEND CUDA_LIBRARIES "cudart_static")
+
+    add_library(ptxmodules OBJECT ${ptx_files})
+    set_property(TARGET ptxmodules PROPERTY CUDA_PTX_COMPILATION ON)
 endif()
 
 include_directories(atcg_lib/include
