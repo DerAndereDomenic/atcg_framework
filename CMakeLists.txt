@@ -114,11 +114,12 @@ if(ATCG_CUDA_BACKEND)
     include_directories(${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
                         "${OptiX_INCLUDE}")
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
-    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
+    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math -lineinfo")
     string(APPEND CUDA_LIBRARIES "cudart_static")
 
     add_library(ptxmodules OBJECT ${ptx_files})
     set_property(TARGET ptxmodules PROPERTY CUDA_PTX_COMPILATION ON)
+    target_compile_definitions(ptxmodules PUBLIC ATCG_CUDA_BACKEND _USE_MATH_DEFINES)
 endif()
 
 include_directories(atcg_lib/include
