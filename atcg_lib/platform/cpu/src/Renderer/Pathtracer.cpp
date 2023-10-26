@@ -5,6 +5,7 @@
 #include <DataStructure/Timer.h>
 #include <Math/Random.h>
 #include <Renderer/BSDFModels.h>
+#include <Scene/Entity.h>
 
 #include <thread>
 #include <mutex>
