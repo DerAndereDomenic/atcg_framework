@@ -14,7 +14,7 @@ namespace atcg
  */
 void normalize(const atcg::ref_ptr<Graph>& graph);
 
-inline glm::mat3 compute_local_frame(const glm::vec3& localZ)
+inline ATCG_HOST_DEVICE glm::mat3 compute_local_frame(const glm::vec3& localZ)
 {
     float x  = localZ.x;
     float y  = localZ.y;

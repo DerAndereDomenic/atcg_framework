@@ -14,14 +14,14 @@ struct BSDFSamplingResult
     float sample_probability = 0.0f;
 };
 
-inline float D_GGX(const float NdotH, const float roughness)
+inline ATCG_HOST_DEVICE float D_GGX(const float NdotH, const float roughness)
 {
     float a2 = roughness * roughness;
     float d  = (NdotH * a2 - NdotH) * NdotH + 1.0f;
     return a2 / (glm::pi<float>() * d * d);
 }
 
-inline glm::vec3 warp_square_to_hemisphere_ggx(const glm::vec2& uv, float roughness)
+inline ATCG_HOST_DEVICE glm::vec3 warp_square_to_hemisphere_ggx(const glm::vec2& uv, float roughness)
 {
     // GGX NDF sampling
     float cos_theta = glm::sqrt((1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x));
@@ -35,13 +35,13 @@ inline glm::vec3 warp_square_to_hemisphere_ggx(const glm::vec2& uv, float roughn
     return glm::vec3(x, y, z);
 }
 
-inline float warp_square_to_hemisphere_ggx_pdf(const glm::vec3& result, float roughness)
+inline ATCG_HOST_DEVICE float warp_square_to_hemisphere_ggx_pdf(const glm::vec3& result, float roughness)
 {
     return D_GGX(result.z, roughness) * glm::max(0.0f, result.z);
 }
 
 
-inline glm::vec3 warp_square_to_hemisphere_cosine(const glm::vec2& uv)
+inline ATCG_HOST_DEVICE glm::vec3 warp_square_to_hemisphere_cosine(const glm::vec2& uv)
 {
     // Sample disk uniformly
     float r   = glm::sqrt(uv.x);
@@ -55,38 +55,39 @@ inline glm::vec3 warp_square_to_hemisphere_cosine(const glm::vec2& uv)
     return glm::vec3(x, y, z);
 }
 
-inline float warp_square_to_hemisphere_cosine_pdf(const glm::vec3& result)
+inline ATCG_HOST_DEVICE float warp_square_to_hemisphere_cosine_pdf(const glm::vec3& result)
 {
     return glm::max(0.0f, result.z) / glm::pi<float>();
 }
 
-inline float warp_normal_to_reflected_direction_pdf(const glm::vec3& reflected_dir, const glm::vec3& normal)
+inline ATCG_HOST_DEVICE float warp_normal_to_reflected_direction_pdf(const glm::vec3& reflected_dir,
+                                                                     const glm::vec3& normal)
 {
     return 1 / glm::abs(4 * glm::dot(reflected_dir, normal));
 }
 
-inline float fresnel_schlick(const float F0, const float VdotH)
+inline ATCG_HOST_DEVICE float fresnel_schlick(const float F0, const float VdotH)
 {
     return F0 + (1.0f - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
 }
 
-inline glm::vec3 fresnel_schlick(const glm::vec3& F0, const float VdotH)
+inline ATCG_HOST_DEVICE glm::vec3 fresnel_schlick(const glm::vec3& F0, const float VdotH)
 {
     return F0 + (glm::vec3(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
 }
 
-inline float geometrySchlickGGX(float NdotV, float roughness)
+inline ATCG_HOST_DEVICE float geometrySchlickGGX(float NdotV, float roughness)
 {
-    float r = (roughness + 1.0);
-    float k = (r * r) / 8.0;
+    float r = (roughness + 1.0f);
+    float k = (r * r) / 8.0f;
 
     float nom   = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
+    float denom = NdotV * (1.0f - k) + k;
 
     return nom / denom;
 }
 
-inline float geometrySmith(float NdotL, float NdotV, float roughness)
+inline ATCG_HOST_DEVICE float geometrySmith(float NdotL, float NdotV, float roughness)
 {
     float ggx2 = geometrySchlickGGX(NdotV, roughness);
     float ggx1 = geometrySchlickGGX(NdotL, roughness);
@@ -94,12 +95,12 @@ inline float geometrySmith(float NdotL, float NdotV, float roughness)
     return ggx1 * ggx2;
 }
 
-inline BSDFSamplingResult sampleGGX(const SurfaceInteraction& si,
-                                    const glm::vec3& diffuse_color,
-                                    const glm::vec3& specular_F0,
-                                    const float& metallic,
-                                    const float& roughness,
-                                    PCG32& rng)
+inline ATCG_HOST_DEVICE BSDFSamplingResult sampleGGX(const SurfaceInteraction& si,
+                                                     const glm::vec3& diffuse_color,
+                                                     const glm::vec3& specular_F0,
+                                                     const float& metallic,
+                                                     const float& roughness,
+                                                     PCG32& rng)
 {
     BSDFSamplingResult result;
 
@@ -151,7 +152,7 @@ inline BSDFSamplingResult sampleGGX(const SurfaceInteraction& si,
     float specular_pdf      = 0;
     // Only compute specular component if specular_f0 is not zero!
     glm::vec3 kD(1.0f);
-    if(glm::dot(specular_F0, specular_F0) > 1e-6)
+    if(glm::dot(specular_F0, specular_F0) > 1e-6f)
     {
         glm::vec3 halfway = glm::normalize(result.out_dir + view_dir);
         float HdotV       = glm::dot(halfway, result.out_dir);

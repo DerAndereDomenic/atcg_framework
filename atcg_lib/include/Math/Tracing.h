@@ -1,11 +1,11 @@
 #pragma once
 
-#include <Scene/Entity.h>
-
 #include <nanort.h>
 
 namespace atcg
 {
+
+class Entity;
 struct SurfaceInteraction
 {
     bool valid = false;
@@ -43,7 +43,8 @@ void prepareAccelerationStructure(Entity entity);
  *
  * @return The intersection information
  */
-SurfaceInteraction traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max);
+SurfaceInteraction
+traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max);
 
 /**
  * @brief Trace a ray against a mesh
