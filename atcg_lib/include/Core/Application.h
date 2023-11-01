@@ -120,7 +120,7 @@ private:
     LayerStack _layer_stack;
 
     friend int atcg::atcg_main(Application* app);
-    friend int ::python_main(atcg::Layer* layer, const WindowProps& props);    // Entry point for python bindings
+    friend int ::python_main(atcg::Layer* layer, const atcg::WindowProps& props);    // Entry point for python bindings
     static Application* s_instance;
 };
 
