@@ -5,6 +5,7 @@ project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
 option(ATCG_CUDA_BACKEND "Compile cuda backend" OFF)
 option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
+option(ATCG_BUILD_TESTS "Build documentation" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -177,4 +178,41 @@ endif()
 
 if(ATCG_BUILD_DOCS)
     add_subdirectory(docs)
+endif()
+
+if(ATCG_BUILD_TESTS)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    add_subdirectory(external/googletest)
+
+    enable_testing()
+
+    add_executable(atcg_lib_test tests/HostBuffer_test.cpp
+                                 tests/DeviceBuffer_test.cpp)
+
+    target_link_libraries( atcg_lib_test
+        atcg_lib
+        glfw
+        imgui
+        imguizmo
+        implot
+        glad
+        OpenGL::GL
+        OpenMeshCore
+        OpenMeshTools
+        yaml-cpp
+        stb_image
+        tinyobjloader
+        GTest::gtest_main
+        ${CUDA_LIBRARIES}
+    )
+
+    target_include_directories(atcg_lib_test PRIVATE external/googletest/googletest/include)
+
+    if(MSVC)
+		set_target_properties(atcg_lib_test PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+	endif()
+    target_compile_definitions(atcg_lib_test PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
+
+    include(GoogleTest)
+    gtest_discover_tests(atcg_lib_test)
 endif()
