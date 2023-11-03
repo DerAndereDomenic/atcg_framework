@@ -325,7 +325,11 @@ public:
      * @brief Constructor
      *
      */
-    DeviceBuffer() = default;
+    DeviceBuffer()
+    {
+        _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
+                                                                 ContainerDeleter<T, allocator>());
+    }
 
     /**
      * @brief Constructor
@@ -343,7 +347,11 @@ public:
     /**
      * @brief Assign nullptr
      */
-    constexpr DeviceBuffer(std::nullptr_t) noexcept {}
+    constexpr DeviceBuffer(std::nullptr_t) noexcept
+    {
+        _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
+                                                                 ContainerDeleter<T, allocator>());
+    }
 
     /**
      * @brief Construct a device buffer from a pointer.
@@ -368,7 +376,7 @@ public:
      */
     DeviceBuffer(T* ptr, std::size_t size)
     {
-        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, size);
+        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, size * sizeof(T));
 
         _container = std::shared_ptr<MemoryContainer<allocator>>(obj, ContainerDeleter<T, allocator>());
     }
