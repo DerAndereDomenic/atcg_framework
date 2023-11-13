@@ -157,7 +157,7 @@ public:
      *
      * @param vertices The vertices
      */
-    static atcg::ref_ptr<Graph> createPointCloud(const atcg::ref_ptr<Vertex, device_allocator>& vertices);
+    static atcg::ref_ptr<Graph> createPointCloud(const atcg::DeviceBuffer<Vertex, device_allocator>& vertices);
 
     // /**
     //  * @brief Create a triangle mesh from a device buffer.
@@ -197,8 +197,8 @@ public:
      *
      * @return The graph
      */
-    static atcg::ref_ptr<Graph> createGraph(const atcg::ref_ptr<Vertex, device_allocator>& vertices,
-                                            const atcg::ref_ptr<Edge, device_allocator>& edges);
+    static atcg::ref_ptr<Graph> createGraph(const atcg::DeviceBuffer<Vertex, device_allocator>& vertices,
+                                            const atcg::DeviceBuffer<Edge, device_allocator>& edges);
 
     /**
      * @brief Get the vertex buffer that stores the vertex information
@@ -273,7 +273,7 @@ public:
      *
      * @param vertices The new vertex information
      */
-    void updateVertices(const atcg::ref_ptr<Vertex, device_allocator>& vertices);
+    void updateVertices(const atcg::DeviceBuffer<Vertex, device_allocator>& vertices);
 
     // /**
     //  * @brief Update the faces.
@@ -298,7 +298,7 @@ public:
      *
      * @param edges The new edge information
      */
-    void updateEdges(const atcg::ref_ptr<Edge, device_allocator>& edges);
+    void updateEdges(const atcg::DeviceBuffer<Edge, device_allocator>& edges);
 
     /**
      * @brief Update the number of vertices.
