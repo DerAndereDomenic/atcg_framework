@@ -4,7 +4,7 @@
 // Demonstrate some basic assertions.
 TEST(DeviceBufferTest, DefaultConstructor)
 {
-    atcg::dref_ptr<int> a;
+    atcg::DeviceBuffer<int, atcg::device_allocator> a;
 
     EXPECT_EQ(a.size(), 0);
     EXPECT_EQ(a.capacity(), 0);
@@ -13,7 +13,7 @@ TEST(DeviceBufferTest, DefaultConstructor)
 
 TEST(DeviceBufferTest, AllocConstructor)
 {
-    atcg::dref_ptr<int> a(5);
+    atcg::DeviceBuffer<int, atcg::device_allocator> a(5);
 
     EXPECT_EQ(a.size(), 5);
     EXPECT_EQ(a.capacity(), 5);
@@ -22,7 +22,7 @@ TEST(DeviceBufferTest, AllocConstructor)
 
 TEST(DeviceBufferTest, Resize)
 {
-    atcg::dref_ptr<int> a(5);
+    atcg::DeviceBuffer<int, atcg::device_allocator> a(5);
 
     a.create(10);
 
@@ -39,7 +39,7 @@ TEST(DeviceBufferTest, Resize)
 
 TEST(DeviceBufferTest, NullptrConstructor)
 {
-    atcg::dref_ptr<int> a = nullptr;
+    atcg::DeviceBuffer<int, atcg::device_allocator> a = nullptr;
 
     EXPECT_EQ(a.size(), 0);
     EXPECT_EQ(a.capacity(), 0);
@@ -56,7 +56,7 @@ TEST(DeviceBufferTest, PtrConstructor)
     i = new int;
 #endif
 
-    atcg::dref_ptr<int> a(i);
+    atcg::DeviceBuffer<int, atcg::device_allocator> a(i);
 
     EXPECT_EQ(a.size(), 1);
     EXPECT_EQ(a.capacity(), 1);
@@ -73,7 +73,7 @@ TEST(DeviceBufferTest, PtrConstructorBuffer)
     i = new int;
 #endif
 
-    atcg::dref_ptr<int> a(i, 4);
+    atcg::DeviceBuffer<int, atcg::device_allocator> a(i, 4);
 
     EXPECT_EQ(a.size(), 4);
     EXPECT_EQ(a.capacity(), 4);
@@ -86,7 +86,7 @@ TEST(DeviceBufferTest, Destructor)
     int alloc_before   = alloc.bytes_allocated;
     int dealloc_before = alloc.bytes_deallocated;
     {
-        atcg::dref_ptr<int> a(1);
+        atcg::DeviceBuffer<int, atcg::device_allocator> a(1);
     }
 
 
@@ -100,9 +100,9 @@ TEST(DeviceBufferTest, DestructorCopy)
     int alloc_before   = alloc.bytes_allocated;
     int dealloc_before = alloc.bytes_deallocated;
 
-    atcg::dref_ptr<int> a(1);
+    atcg::DeviceBuffer<int, atcg::device_allocator> a(1);
     {
-        atcg::dref_ptr<int> b = a;
+        atcg::DeviceBuffer<int, atcg::device_allocator> b = a;
     }
 
 
@@ -112,14 +112,14 @@ TEST(DeviceBufferTest, DestructorCopy)
 
 TEST(DeviceBufferTest, UseCount)
 {
-    atcg::dref_ptr<int> a(1);
+    atcg::DeviceBuffer<int, atcg::device_allocator> a(1);
     EXPECT_EQ(a.use_count(), 1);
 
-    atcg::dref_ptr<int> b = a;
+    atcg::DeviceBuffer<int, atcg::device_allocator> b = a;
     EXPECT_EQ(a.use_count(), 2);
 
     {
-        atcg::dref_ptr<int> c = a;
+        atcg::DeviceBuffer<int, atcg::device_allocator> c = a;
         EXPECT_EQ(a.use_count(), 3);
     }
 
@@ -128,7 +128,7 @@ TEST(DeviceBufferTest, UseCount)
 
 TEST(DeviceBufferTest, UploadEqual)
 {
-    atcg::dref_ptr<int> a(5);
+    atcg::DeviceBuffer<int, atcg::device_allocator> a(5);
 
     std::vector<int> data(5);
 
@@ -143,7 +143,7 @@ TEST(DeviceBufferTest, UploadEqual)
 
 TEST(DeviceBufferTest, UploadLess)
 {
-    atcg::dref_ptr<int> a(5);
+    atcg::DeviceBuffer<int, atcg::device_allocator> a(5);
 
     std::vector<int> data(3);
 
@@ -158,7 +158,7 @@ TEST(DeviceBufferTest, UploadLess)
 
 TEST(DeviceBufferTest, UploadMore)
 {
-    atcg::dref_ptr<int> a(5);
+    atcg::DeviceBuffer<int, atcg::device_allocator> a(5);
 
     std::vector<int> data(10);
 

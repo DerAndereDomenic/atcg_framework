@@ -4,7 +4,7 @@
 // Demonstrate some basic assertions.
 TEST(HostBufferTest, DefaultConstructor)
 {
-    atcg::ref_ptr<int> a;
+    atcg::DeviceBuffer<int> a;
 
     EXPECT_EQ(a.size(), 0);
     EXPECT_EQ(a.capacity(), 0);
@@ -13,7 +13,7 @@ TEST(HostBufferTest, DefaultConstructor)
 
 TEST(HostBufferTest, AllocConstructor)
 {
-    atcg::ref_ptr<int> a(5);
+    atcg::DeviceBuffer<int> a(5);
 
     EXPECT_EQ(a.size(), 5);
     EXPECT_EQ(a.capacity(), 5);
@@ -22,7 +22,7 @@ TEST(HostBufferTest, AllocConstructor)
 
 TEST(HostBufferTest, Resize)
 {
-    atcg::ref_ptr<int> a(5);
+    atcg::DeviceBuffer<int> a(5);
 
     a.create(10);
 
@@ -39,7 +39,7 @@ TEST(HostBufferTest, Resize)
 
 TEST(HostBufferTest, NullptrConstructor)
 {
-    atcg::ref_ptr<int> a = nullptr;
+    atcg::DeviceBuffer<int> a = nullptr;
 
     EXPECT_EQ(a.size(), 0);
     EXPECT_EQ(a.capacity(), 0);
@@ -49,7 +49,7 @@ TEST(HostBufferTest, NullptrConstructor)
 TEST(HostBufferTest, PtrConstructor)
 {
     int* i = new int;
-    atcg::ref_ptr<int> a(i);
+    atcg::DeviceBuffer<int> a(i);
 
     EXPECT_EQ(a.size(), 1);
     EXPECT_EQ(a.capacity(), 1);
@@ -59,20 +59,10 @@ TEST(HostBufferTest, PtrConstructor)
 TEST(HostBufferTest, PtrConstructorBuffer)
 {
     int* i = new int[4];
-    atcg::ref_ptr<int> a(i, 4);
+    atcg::DeviceBuffer<int> a(i, 4);
 
     EXPECT_EQ(a.size(), 4);
     EXPECT_EQ(a.capacity(), 4);
-    EXPECT_EQ(a.operator bool(), true);
-}
-
-TEST(HostBufferTest, make_shared)
-{
-    atcg::ref_ptr<int> a = atcg::make_ref<int>(5);
-
-    EXPECT_EQ(*a.get(), 5);
-    EXPECT_EQ(a.size(), 1);
-    EXPECT_EQ(a.capacity(), 1);
     EXPECT_EQ(a.operator bool(), true);
 }
 
@@ -82,12 +72,12 @@ TEST(HostBufferTest, Destructor)
     int alloc_before   = alloc.bytes_allocated;
     int dealloc_before = alloc.bytes_deallocated;
     {
-        atcg::ref_ptr<int> a = atcg::make_ref<int>(5);
+        atcg::DeviceBuffer<int> a(5);
     }
 
 
-    EXPECT_EQ(alloc.bytes_allocated - alloc_before, sizeof(int));
-    EXPECT_EQ(alloc.bytes_deallocated - dealloc_before, sizeof(int));
+    EXPECT_EQ(alloc.bytes_allocated - alloc_before, 5 * sizeof(int));
+    EXPECT_EQ(alloc.bytes_deallocated - dealloc_before, 5 * sizeof(int));
 }
 
 TEST(HostBufferTest, DestructorCopy)
@@ -96,9 +86,9 @@ TEST(HostBufferTest, DestructorCopy)
     int alloc_before   = alloc.bytes_allocated;
     int dealloc_before = alloc.bytes_deallocated;
 
-    atcg::ref_ptr<int> a = atcg::make_ref<int>(5);
+    atcg::DeviceBuffer<int> a(1);
     {
-        atcg::ref_ptr<int> b = a;
+        atcg::DeviceBuffer<int> b = a;
     }
 
 
@@ -108,14 +98,14 @@ TEST(HostBufferTest, DestructorCopy)
 
 TEST(HostBufferTest, UseCount)
 {
-    atcg::ref_ptr<int> a = atcg::make_ref<int>(5);
+    atcg::DeviceBuffer<int> a(1);
     EXPECT_EQ(a.use_count(), 1);
 
-    atcg::ref_ptr<int> b = a;
+    atcg::DeviceBuffer<int> b = a;
     EXPECT_EQ(a.use_count(), 2);
 
     {
-        atcg::ref_ptr<int> c = a;
+        atcg::DeviceBuffer<int> c = a;
         EXPECT_EQ(a.use_count(), 3);
     }
 
@@ -124,7 +114,7 @@ TEST(HostBufferTest, UseCount)
 
 TEST(HostBufferTest, UploadEqual)
 {
-    atcg::ref_ptr<int> a(5);
+    atcg::DeviceBuffer<int> a(5);
 
     std::vector<int> data(5);
 
@@ -138,7 +128,7 @@ TEST(HostBufferTest, UploadEqual)
 
 TEST(HostBufferTest, UploadLess)
 {
-    atcg::ref_ptr<int> a(5);
+    atcg::DeviceBuffer<int> a(5);
 
     std::vector<int> data(3);
 
@@ -155,7 +145,7 @@ TEST(HostBufferTest, UploadLess)
 
 TEST(HostBufferTest, UploadMore)
 {
-    atcg::ref_ptr<int> a(5);
+    atcg::DeviceBuffer<int> a(5);
 
     std::vector<int> data(10);
 
@@ -175,7 +165,7 @@ TEST(HostBufferTest, UploadMore)
 TEST(HostBufferTest, DownloadEqual)
 {
     int n = 5;
-    atcg::ref_ptr<int> a(n);
+    atcg::DeviceBuffer<int> a(n);
     int* a_ptr = a.get();
     for(int i = 0; i < n; ++i) { a_ptr[i] = i; }
 
@@ -190,7 +180,7 @@ TEST(HostBufferTest, DownloadEqual)
 TEST(HostBufferTest, DownloadLess)
 {
     int n = 5;
-    atcg::ref_ptr<int> a(n);
+    atcg::DeviceBuffer<int> a(n);
     int* a_ptr = a.get();
     for(int i = 0; i < n; ++i) { a_ptr[i] = i; }
 
@@ -200,4 +190,139 @@ TEST(HostBufferTest, DownloadLess)
     a.download(data.data());
 
     for(int i = 0; i < n; ++i) { EXPECT_EQ(data[i], i); }
+}
+
+// Demonstrate some basic assertions.
+TEST(HostPointerTest, DefaultConstructor)
+{
+    atcg::ref_ptr<int> a;
+
+    EXPECT_EQ(a.operator bool(), false);
+    EXPECT_EQ(a.get(), nullptr);
+}
+
+TEST(HostPointerTest, NullptrConstructor)
+{
+    atcg::ref_ptr<int> a = nullptr;
+
+    EXPECT_EQ(a.get(), nullptr);
+    EXPECT_EQ(a.operator bool(), false);
+}
+
+TEST(HostPointerTest, PtrConstructor)
+{
+    int* i = new int;
+    *i     = 5;
+    atcg::ref_ptr<int> a(i);
+
+    EXPECT_EQ(*a.get(), 5);
+    EXPECT_EQ(a.operator bool(), true);
+}
+
+TEST(HostPointerTest, Destructor)
+{
+    atcg::host_allocator alloc;
+    int alloc_before   = alloc.bytes_allocated;
+    int dealloc_before = alloc.bytes_deallocated;
+    {
+        atcg::ref_ptr<int> a = atcg::make_ref<int>(5);
+    }
+
+
+    EXPECT_EQ(alloc.bytes_allocated - alloc_before, sizeof(int));
+    EXPECT_EQ(alloc.bytes_deallocated - dealloc_before, sizeof(int));
+}
+
+TEST(HostPointerTest, DestructorCopy)
+{
+    atcg::host_allocator alloc;
+    int alloc_before   = alloc.bytes_allocated;
+    int dealloc_before = alloc.bytes_deallocated;
+
+    atcg::ref_ptr<int> a = atcg::make_ref<int>(1);
+    {
+        atcg::ref_ptr<int> b = a;
+    }
+
+
+    EXPECT_EQ(alloc.bytes_allocated - alloc_before, sizeof(int));
+    EXPECT_EQ(alloc.bytes_deallocated - dealloc_before, 0);
+}
+
+TEST(HostPointerTest, UseCount)
+{
+    atcg::ref_ptr<int> a;
+    EXPECT_EQ(a.use_count(), 1);
+
+    atcg::ref_ptr<int> b = a;
+    EXPECT_EQ(a.use_count(), 2);
+
+    {
+        atcg::ref_ptr<int> c = a;
+        EXPECT_EQ(a.use_count(), 3);
+    }
+
+    EXPECT_EQ(a.use_count(), 2);
+}
+
+TEST(HostPointerTest, UploadEqual)
+{
+    atcg::ref_ptr<int> a;
+
+    int data = 6;
+
+    a.upload(&data);
+
+    int* a_ptr = a.get();
+    EXPECT_EQ(*a_ptr, 6);
+}
+
+TEST(HostPointerTest, DownloadEqual)
+{
+    atcg::ref_ptr<int> a = atcg::make_ref<int>(5);
+    int* a_ptr           = a.get();
+
+    int data;
+    a.download(&data);
+
+    EXPECT_EQ(data, 5);
+}
+
+TEST(HostPointerTest, make_shared)
+{
+    atcg::ref_ptr<int> a = atcg::make_ref<int>(5);
+
+    EXPECT_EQ(*a.get(), 5);
+    EXPECT_EQ(a.operator bool(), true);
+}
+
+
+TEST(HostPointerTest, Cast)
+{
+    class A
+    {
+    public:
+        A() = default;
+
+        int x;
+    };
+
+    class B : public A
+    {
+    public:
+        B() = default;
+
+        int y;
+    };
+
+    atcg::host_allocator alloc;
+    int alloc_before   = alloc.bytes_allocated;
+    int dealloc_before = alloc.bytes_deallocated;
+
+    {
+        atcg::ref_ptr<A> a = atcg::make_ref<B>();
+    }
+
+    EXPECT_EQ(alloc.bytes_allocated - alloc_before, sizeof(B));
+    EXPECT_EQ(alloc.bytes_deallocated - dealloc_before, sizeof(B));
 }
