@@ -102,8 +102,8 @@ struct AccelerationStructureComponent
     AccelerationStructureComponent() = default;
 
     // Don't retrieve this from opengl each time used
-    atcg::ref_ptr<glm::vec3> vertices;
-    atcg::ref_ptr<glm::u32vec3> faces;
+    atcg::DeviceBuffer<glm::vec3> vertices;
+    atcg::DeviceBuffer<glm::u32vec3> faces;
     nanort::BVHAccel<float> accel;
 };
 
