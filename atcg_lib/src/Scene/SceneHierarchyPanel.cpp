@@ -107,7 +107,10 @@ void displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("X##diffuse" + key).c_str())) { material.setDiffuseColor(glm::vec4(1)); }
             else
-                ImGui::Image((void*)(uint64_t)material.getDiffuseTexture()->getID(), ImVec2(128, 128));
+                ImGui::Image((void*)(uint64_t)material.getDiffuseTexture()->getID(),
+                             ImVec2(128, 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
         }
     }
 
@@ -156,7 +159,10 @@ void displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("X##normal" + key).c_str())) { material.removeNormalMap(); }
             else
-                ImGui::Image((void*)(uint64_t)material.getNormalTexture()->getID(), ImVec2(128, 128));
+                ImGui::Image((void*)(uint64_t)material.getNormalTexture()->getID(),
+                             ImVec2(128, 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
         }
     }
 
@@ -213,7 +219,10 @@ void displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("X##roughness" + key).c_str())) { material.setRoughness(1.0f); }
             else
-                ImGui::Image((void*)(uint64_t)material.getRoughnessTexture()->getID(), ImVec2(128, 128));
+                ImGui::Image((void*)(uint64_t)material.getRoughnessTexture()->getID(),
+                             ImVec2(128, 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
         }
     }
 
@@ -271,7 +280,10 @@ void displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("X##metallic" + key).c_str())) { material.setMetallic(0.0f); }
             else
-                ImGui::Image((void*)(uint64_t)material.getMetallicTexture()->getID(), ImVec2(128, 128));
+                ImGui::Image((void*)(uint64_t)material.getMetallicTexture()->getID(),
+                             ImVec2(128, 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
         }
     }
 }
@@ -673,7 +685,10 @@ void SceneHierarchyPanel::drawSceneProperties()
     {
         if(Renderer::hasSkybox())
         {
-            ImGui::Image((void*)(uint64_t)Renderer::getSkyboxTexture()->getID(), ImVec2(128, 64));
+            ImGui::Image((void*)(uint64_t)Renderer::getSkyboxTexture()->getID(),
+                         ImVec2(128, 64),
+                         ImVec2 {0, 1},
+                         ImVec2 {1, 0});
             if(ImGui::Button("Remove skybox##skybox")) { Renderer::removeSkybox(); }
         }
         else
