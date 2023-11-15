@@ -49,7 +49,7 @@ public:
     uint32_t height = 512;
     glm::u8vec4* output_buffer;
     uint8_t swap_index = 1;
-    atcg::ref_ptr<glm::u8vec4> swap_chain_buffer;
+    atcg::DeviceBuffer<glm::u8vec4> swap_chain_buffer;
     bool dirty = false;
     std::mutex swap_chain_mutex;
     std::vector<uint32_t> horizontalScanLine;
@@ -228,7 +228,7 @@ void Pathtracer::init()
 {
     s_pathtracer->impl = std::make_unique<Impl>();
 
-    s_pathtracer->impl->swap_chain_buffer = atcg::ref_ptr<glm::u8vec4>(
+    s_pathtracer->impl->swap_chain_buffer = atcg::DeviceBuffer<glm::u8vec4>(
         2 * s_pathtracer->impl->width * s_pathtracer->impl->height);    // 2 swap chain buffers
     s_pathtracer->impl->output_buffer = s_pathtracer->impl->swap_chain_buffer.get();
 
