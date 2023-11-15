@@ -133,6 +133,12 @@ public:
         recalculateProjection();
     }
 
+    inline void setFOV(const float& fov)
+    {
+        _fovy = fov;
+        recalculateProjection();
+    }
+
     /**
      * @brief Get the near plane
      *
