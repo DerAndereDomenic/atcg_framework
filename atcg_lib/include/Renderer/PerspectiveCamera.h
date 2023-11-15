@@ -148,6 +148,13 @@ public:
     inline float getFar() const { return _far; }
 
     /**
+     * @brief Get the camera fov in y direction
+     *
+     * @return The fov (in degree)
+     */
+    inline float getFOV() const { return _fovy; }
+
+    /**
      * @brief Set the near plane
      *
      * @param near_plane The near plane
@@ -179,6 +186,7 @@ private:
     glm::vec3 _look_at;
 
     float _aspect_ratio;
+    float _fovy;
     float _near;
     float _far;
 };

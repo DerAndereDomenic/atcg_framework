@@ -7,6 +7,7 @@ PerspectiveCamera::PerspectiveCamera(const float& aspect_ratio, const glm::vec3&
       _up(glm::vec3(0, 1, 0)),
       _look_at(look_at),
       _aspect_ratio(aspect_ratio),
+      _fovy(60.0f),
       _near(0.01f),
       _far(1000.0f)
 {
@@ -21,7 +22,7 @@ void PerspectiveCamera::recalculateView()
 
 void PerspectiveCamera::recalculateProjection()
 {
-    _projection = glm::perspective(glm::radians(60.0f), _aspect_ratio, _near, _far);
+    _projection = glm::perspective(glm::radians(_fovy), _aspect_ratio, _near, _far);
 }
 
 void PerspectiveCamera::setView(const glm::mat4& view)
