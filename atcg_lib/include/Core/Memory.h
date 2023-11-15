@@ -305,13 +305,178 @@ struct ContainerDeleter
     void operator()(MemoryContainer<allocator>* container)
     {
         // We are the last object that owns the memory -> call destructor first
-        if(std::is_same<allocator, host_allocator>::value)
+        if(std::is_same<allocator, host_allocator>::value && container->get() != nullptr)
         {
             T* obj = static_cast<T*>(container->get());
             obj->~T();
         }
         delete container;
     }
+};
+
+/**
+ * @brief A device buffer with managed memory
+ */
+template<typename T, typename allocator = host_allocator>
+class DevicePointer
+{
+public:
+    /**
+     * @brief Constructor
+     *
+     */
+    DevicePointer()
+    {
+        _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
+                                                                 ContainerDeleter<T, allocator>());
+    }
+
+    /**
+     * @brief Assign nullptr
+     */
+    constexpr DevicePointer(std::nullptr_t) noexcept
+    {
+        _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
+                                                                 ContainerDeleter<T, allocator>());
+    }
+
+    /**
+     * @brief Construct a device buffer from a pointer.
+     * The pointer already has to be on the right device.
+     * The memory will be assumed to be exactly the size of on object (sizeof(T))
+     *
+     * @param ptr The pointer
+     */
+    DevicePointer(T* ptr)
+    {
+        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, sizeof(T));
+
+        _container = std::shared_ptr<MemoryContainer<allocator>>(obj, ContainerDeleter<T, allocator>());
+    }
+
+    /**
+     * @brief Destructor
+     */
+    ~DevicePointer() {}
+
+    /**
+     * @brief Get the data
+     *
+     * @return Data pointer on the device
+     *
+     */
+    T* get() const { return reinterpret_cast<T*>(_container->get()); }
+
+    /**
+     * @brief Get the data
+     *
+     * @return Data pointer on the device
+     *
+     */
+    T* operator*() const { return reinterpret_cast<T*>(_container->get()); }
+
+    /**
+     * @brief Get the data
+     *
+     * @return Data pointer on the device
+     *
+     */
+    T* operator->() const { return reinterpret_cast<T*>(_container->get()); }
+
+    /**
+     * @brief operator bool
+     * @return True if this buffer manages any memory
+     */
+    explicit operator bool() const { return _container && _container->get() != nullptr; }
+
+    /**
+     * @brief Convert between different types that are holded by this buffer.
+     * After this operation, the use count of the underlying shared_ptr will be 2.
+     * Both, the original and the newly constructed object will handle the same memory
+     * just interpreted differently. This means that DeviceBuffer<float> a = DeviceBuffer<int>(5)
+     * will not cast 5 to 5.0f but will just interpet the bits of 5 as float.
+     * @tparam The type of the other object
+     */
+    template<typename U>
+    operator DevicePointer<U, allocator>() const
+    {
+        DevicePointer<U> ptr;
+        ptr._container = _container;
+        return ptr;
+    }
+
+    /**
+     * @brief Upload the data.
+     * Copies buffer->size() many elements.
+     *
+     * @param host_data The source host buffer
+     */
+    void upload(T* host_data)
+    {
+        _container->upload(reinterpret_cast<void*>(host_data), std::max(sizeof(T), _container->size()));
+    }
+
+    /**
+     * @brief Download the data.
+     * Copies buffer->size() many elements.
+     *
+     * @param host_data The target host buffer
+     */
+    void download(T* host_data)
+    {
+        _container->download(reinterpret_cast<void*>(host_data), std::max(sizeof(T), _container->size()));
+    }
+
+    /**
+     * @brief Copy to the buffer
+     * Copies buffer->size() many elements.
+     *
+     * @param src_data The source buffer
+     */
+    void copy(T* src_data)
+    {
+        _container->copy(reinterpret_cast<void*>(src_data), std::max(sizeof(T), _container->size()));
+    }
+
+    /**
+     * @brief Copy to the buffer.
+     * This allocates src.size() many objects. *this has to be the correct size beforehand
+     *
+     * @param src The source pointer
+     */
+    void copy(const DevicePointer<T, allocator>& src) { _container->copy(src.get(), src.size() * sizeof(T)); }
+
+    /**
+     * @brief Reset this shared_ptr, i.e. decrement the ref counter of the underlying shared_ptr
+     *
+     */
+    void reset() noexcept { _container.reset(); }
+
+    /**
+     * @brief Reset this buffer and make it manage different memory.
+     * @tparam U The type of the new data
+     * @param ptr Pointer to the new object. Size is assumed to be sizeof(U)
+     */
+    template<typename U>
+    void reset(U* ptr)
+    {
+        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, sizeof(U));
+
+        _container = std::shared_ptr<MemoryContainer<allocator>>(obj, ContainerDeleter<T, allocator>());
+    }
+
+    /**
+     * @brief Get the number of pointers that point to the memory owned by this object
+     *
+     * @return The use count
+     */
+    int64_t use_count() const { return _container.use_count(); }
+
+private:
+    template<typename U, typename _allocator>
+    friend class DevicePointer;
+
+    std::shared_ptr<MemoryContainer<allocator>> _container;
 };
 
 /**
@@ -325,7 +490,11 @@ public:
      * @brief Constructor
      *
      */
-    DeviceBuffer() = default;
+    DeviceBuffer()
+    {
+        _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
+                                                                 ContainerDeleter<T, allocator>());
+    }
 
     /**
      * @brief Constructor
@@ -343,7 +512,11 @@ public:
     /**
      * @brief Assign nullptr
      */
-    constexpr DeviceBuffer(std::nullptr_t) noexcept {}
+    constexpr DeviceBuffer(std::nullptr_t) noexcept
+    {
+        _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
+                                                                 ContainerDeleter<T, allocator>());
+    }
 
     /**
      * @brief Construct a device buffer from a pointer.
@@ -368,7 +541,7 @@ public:
      */
     DeviceBuffer(T* ptr, std::size_t size)
     {
-        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, size);
+        MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, size * sizeof(T));
 
         _container = std::shared_ptr<MemoryContainer<allocator>>(obj, ContainerDeleter<T, allocator>());
     }
@@ -551,6 +724,18 @@ private:
 };
 
 template<typename T, typename allocator>
+bool operator==(const DevicePointer<T, allocator>& p1, const DevicePointer<T, allocator>& p2) noexcept
+{
+    return p1.get() == p2.get();
+}
+
+template<typename T, typename allocator>
+bool operator!=(const DevicePointer<T, allocator>& p1, const DevicePointer<T, allocator>& p2) noexcept
+{
+    return p1.get() != p2.get();
+}
+
+template<typename T, typename allocator>
 bool operator==(const DeviceBuffer<T, allocator>& p1, const DeviceBuffer<T, allocator>& p2) noexcept
 {
     return p1.get() == p2.get();
@@ -566,9 +751,9 @@ bool operator!=(const DeviceBuffer<T, allocator>& p1, const DeviceBuffer<T, allo
 template<typename T>
 using scope_ptr = std::unique_ptr<T>;
 template<typename T, typename allocator = host_allocator>
-using ref_ptr = DeviceBuffer<T, allocator>;
+using ref_ptr = DevicePointer<T, allocator>;
 template<typename T>
-using dref_ptr = DeviceBuffer<T, device_allocator>;
+using dref_ptr = DevicePointer<T, device_allocator>;
 
 template<typename T, typename... Args>
 constexpr scope_ptr<T> make_scope(Args&&... args)

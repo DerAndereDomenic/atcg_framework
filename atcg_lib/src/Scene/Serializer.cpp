@@ -159,6 +159,7 @@ namespace detail
 #define CAMERA_POSITION_NAME      "Translation"
 #define CAMERA_LOOKAT_NAME        "LookAt"
 #define CAMERA_ASPECT_RATIO_NAME  "AspectRatio"
+#define CAMERA_FOV_NAME           "FOV"
 
 void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -301,13 +302,8 @@ Material deserializeMaterial(const YAML::Node& material_node)
     {
         std::string diffuse_path = material_node[RENDER_MATERIAL_DIFFUSE_TEXTURE].as<std::string>();
         ATCG_TRACE(diffuse_path);
-        auto img = IO::imread(diffuse_path, 2.2f);
-        TextureSpecification spec;
-        spec.width           = img->width();
-        spec.height          = img->height();
-        spec.format          = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                                    : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-        auto diffuse_texture = atcg::Texture2D::create(img, spec);
+        auto img             = IO::imread(diffuse_path, 2.2f);
+        auto diffuse_texture = atcg::Texture2D::create(img);
         material.setDiffuseTexture(diffuse_texture);
     }
 
@@ -316,12 +312,7 @@ Material deserializeMaterial(const YAML::Node& material_node)
     {
         std::string normal_path = material_node[RENDER_MATERIAL_NORMAL_TEXTURE].as<std::string>();
         auto img                = IO::imread(normal_path);
-        TextureSpecification spec;
-        spec.width          = img->width();
-        spec.height         = img->height();
-        spec.format         = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                                   : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-        auto normal_texture = atcg::Texture2D::create(img, spec);
+        auto normal_texture     = atcg::Texture2D::create(img);
         material.setNormalTexture(normal_texture);
     }
 
@@ -335,12 +326,7 @@ Material deserializeMaterial(const YAML::Node& material_node)
     {
         std::string roughness_path = material_node[RENDER_MATERIAL_ROUGHNESS_TEXTURE].as<std::string>();
         auto img                   = IO::imread(roughness_path);
-        TextureSpecification spec;
-        spec.width             = img->width();
-        spec.height            = img->height();
-        spec.format            = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                                      : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-        auto roughness_texture = atcg::Texture2D::create(img, spec);
+        auto roughness_texture     = atcg::Texture2D::create(img);
         material.setRoughnessTexture(roughness_texture);
     }
 
@@ -354,12 +340,7 @@ Material deserializeMaterial(const YAML::Node& material_node)
     {
         std::string metallic_path = material_node[RENDER_MATERIAL_METALLIC_TEXTURE].as<std::string>();
         auto img                  = IO::imread(metallic_path);
-        TextureSpecification spec;
-        spec.width            = img->width();
-        spec.height           = img->height();
-        spec.format           = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                                     : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-        auto metallic_texture = atcg::Texture2D::create(img, spec);
+        auto metallic_texture     = atcg::Texture2D::create(img);
         material.setMetallicTexture(metallic_texture);
     }
 
@@ -400,6 +381,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         // out << YAML::Key << CAMERA_POSITION_NAME << YAML::Value << cam->getPosition();
         // out << YAML::Key << CAMERA_LOOKAT_NAME << YAML::Value << cam->getLookAt();
         out << YAML::Key << CAMERA_ASPECT_RATIO_NAME << YAML::Value << cam->getAspectRatio();
+        out << YAML::Key << CAMERA_FOV_NAME << YAML::Value << cam->getFOV();
 
         out << YAML::EndMap;
     }
@@ -416,6 +398,7 @@ void serializeEntity(YAML::Emitter& out, Entity entity, const std::string& file_
         out << YAML::Key << CAMERA_POSITION_NAME << YAML::Value << cam->getPosition();
         out << YAML::Key << CAMERA_LOOKAT_NAME << YAML::Value << cam->getLookAt();
         out << YAML::Key << CAMERA_ASPECT_RATIO_NAME << YAML::Value << cam->getAspectRatio();
+        out << YAML::Key << CAMERA_FOV_NAME << YAML::Value << cam->getFOV();
 
         out << YAML::EndMap;
     }
@@ -641,13 +624,16 @@ void Serializer::deserialize(const std::string& file_path)
             if(cameraComponent)
             {
                 float aspect_ratio = cameraComponent[CAMERA_ASPECT_RATIO_NAME].as<float>();
+                float fov          = cameraComponent[CAMERA_FOV_NAME].as<float>();
                 auto& camera       = deserializedEntity.addComponent<CameraComponent>(
                     atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, glm::vec3(0), glm::vec3(0, 0, 1)));
+                atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
+                // TODO: Keep consistent
+                cam->setFOV(fov);
                 // Should always have a transform, otherwise construct default camera
                 if(deserializedEntity.hasComponent<TransformComponent>())
                 {
-                    atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
-                    cam->setView(glm::inverse(deserializedEntity.getComponent<TransformComponent>().getModel()));
+                    cam->setFromTransform(deserializedEntity.getComponent<TransformComponent>().getModel());
                 }
             }
 
@@ -657,8 +643,11 @@ void Serializer::deserialize(const std::string& file_path)
                 glm::vec3 position = editorCameraComponent[CAMERA_POSITION_NAME].as<glm::vec3>();
                 glm::vec3 lookat   = editorCameraComponent[CAMERA_LOOKAT_NAME].as<glm::vec3>();
                 float aspect_ratio = editorCameraComponent[CAMERA_ASPECT_RATIO_NAME].as<float>();
+                float fov          = cameraComponent[CAMERA_FOV_NAME].as<float>();
                 auto& camera       = deserializedEntity.addComponent<EditorCameraComponent>(
                     atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, position, lookat));
+                atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
+                cam->setFOV(fov);
             }
 
             auto geometryComponent = entity[GEOMETRY_COMPONENT_NAME];

@@ -183,6 +183,15 @@ public:
      * @brief Create a 2D texture.
      *
      * @param data The image
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<Texture2D> create(const atcg::ref_ptr<Image> img);
+
+    /**
+     * @brief Create a 2D texture.
+     *
+     * @param data The image
      * @param spec The texture specification
      *
      * @return The resulting texture

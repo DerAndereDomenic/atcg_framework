@@ -273,11 +273,11 @@ bool FirstPersonController::onMouseMove(MouseMovedEvent* event)
 
 bool FirstPersonController::onKeyPressed(KeyPressedEvent* event)
 {
-    if(event->getCode() == GLFW_KEY_KP_ADD)    // faster
+    if(event->getKeyCode() == GLFW_KEY_KP_ADD)    // faster
     {
         _speed *= 1.25;
     }
-    if(event->getCode() == GLFW_KEY_KP_SUBTRACT)    // slower
+    if(event->getKeyCode() == GLFW_KEY_KP_SUBTRACT)    // slower
     {
         _speed *= 0.8;
     }

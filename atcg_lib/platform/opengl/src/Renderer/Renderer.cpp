@@ -259,11 +259,10 @@ void Renderer::Impl::initCameraFrustrum()
 
     std::vector<atcg::Vertex> points;
     points.push_back(atcg::Vertex(eye, glm::vec3(1)));
-    //  0.8660254 approx 0.5/tan(30)
-    points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, -0.5, -0.8660254), glm::vec3(1)));
-    points.push_back(atcg::Vertex(eye + glm::vec3(0.5, -0.5, -0.8660254), glm::vec3(1)));
-    points.push_back(atcg::Vertex(eye + glm::vec3(0.5, 0.5, -0.8660254), glm::vec3(1)));
-    points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, 0.5, -0.8660254), glm::vec3(1)));
+    points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, -0.5, 1.0f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(eye + glm::vec3(0.5, -0.5, 1.0f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(eye + glm::vec3(0.5, 0.5, 1.0f), glm::vec3(1)));
+    points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, 0.5, 1.0f), glm::vec3(1)));
 
     std::vector<atcg::Edge> edges;
     edges.push_back({glm::vec2(0, 1), glm::vec3(1), 0.01f});
@@ -922,8 +921,9 @@ void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         atcg::ShaderManager::getShader("edge")->setInt("entityID", entity_id);
         atcg::ref_ptr<PerspectiveCamera> cam = entity.getComponent<CameraComponent>().camera;
         float aspect_ratio                   = cam->getAspectRatio();
-        glm::mat4 scale                      = glm::scale(glm::vec3(aspect_ratio, 1.0f, 1.0f));
-        glm::mat4 model                      = glm::inverse(cam->getView()) * scale;
+        glm::mat4 scale =
+            glm::scale(glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)));
+        glm::mat4 model = glm::inverse(cam->getView()) * scale;
         Renderer::draw(s_renderer->impl->camera_frustrum,
                        camera,
                        model,

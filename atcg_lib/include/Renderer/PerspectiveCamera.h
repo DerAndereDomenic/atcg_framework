@@ -82,9 +82,16 @@ public:
     /**
      *  @brief Set the view matrix
      *
-     *  @param view The new view matrix
+     *  @param view The new orthonormal view matrix
      */
     void setView(const glm::mat4& view);
+
+    /**
+     * @brief Set view and projection from transform
+     *
+     * @param model The model matrix
+     */
+    void setFromTransform(const glm::mat4& transform);
 
     /**
      *  @brief Set the projection matrix
@@ -126,6 +133,12 @@ public:
         recalculateProjection();
     }
 
+    inline void setFOV(const float& fov)
+    {
+        _fovy = fov;
+        recalculateProjection();
+    }
+
     /**
      * @brief Get the near plane
      *
@@ -139,6 +152,13 @@ public:
      * @return The far plane
      */
     inline float getFar() const { return _far; }
+
+    /**
+     * @brief Get the camera fov in y direction
+     *
+     * @return The fov (in degree)
+     */
+    inline float getFOV() const { return _fovy; }
 
     /**
      * @brief Set the near plane
@@ -172,6 +192,7 @@ private:
     glm::vec3 _look_at;
 
     float _aspect_ratio;
+    float _fovy;
     float _near;
     float _far;
 };

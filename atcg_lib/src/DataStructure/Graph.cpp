@@ -270,7 +270,7 @@ atcg::ref_ptr<Graph> Graph::createGraph(const std::vector<Vertex>& vertices, con
     return result;
 }
 
-atcg::ref_ptr<Graph> Graph::createPointCloud(const atcg::ref_ptr<Vertex, device_allocator>& vertices)
+atcg::ref_ptr<Graph> Graph::createPointCloud(const atcg::DeviceBuffer<Vertex, device_allocator>& vertices)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->updateVertices(vertices);
@@ -289,8 +289,8 @@ atcg::ref_ptr<Graph> Graph::createPointCloud(const atcg::ref_ptr<Vertex, device_
 //     return nullptr;
 // }
 
-atcg::ref_ptr<Graph> Graph::createGraph(const atcg::ref_ptr<Vertex, device_allocator>& vertices,
-                                        const atcg::ref_ptr<Edge, device_allocator>& edges)
+atcg::ref_ptr<Graph> Graph::createGraph(const atcg::DeviceBuffer<Vertex, device_allocator>& vertices,
+                                        const atcg::DeviceBuffer<Edge, device_allocator>& edges)
 {
     atcg::ref_ptr<Graph> result = atcg::make_ref<Graph>();
     result->updateVertices(vertices);
@@ -342,7 +342,7 @@ void Graph::updateEdges(const std::vector<Edge>& edges)
     impl->updateEdgeBuffer(edges.data(), edges.size());
 }
 
-void Graph::updateVertices(const atcg::ref_ptr<Vertex, device_allocator>& vertices)
+void Graph::updateVertices(const atcg::DeviceBuffer<Vertex, device_allocator>& vertices)
 {
     impl->updateVertexBuffer(nullptr, vertices.size());
 
@@ -359,7 +359,7 @@ void Graph::updateVertices(const atcg::ref_ptr<Vertex, device_allocator>& vertic
 
 // void Graph::updateFaces(const glm::u32vec3* faces, uint32_t num_faces) {}
 
-void Graph::updateEdges(const atcg::ref_ptr<Edge, device_allocator>& edges)
+void Graph::updateEdges(const atcg::DeviceBuffer<Edge, device_allocator>& edges)
 {
     impl->updateEdgeBuffer(nullptr, edges.size());
 
