@@ -370,7 +370,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             if(entity.hasComponent<atcg::TransformComponent>())
             {
                 auto& transform_component = entity.getComponent<atcg::TransformComponent>();
-                camera->setView(glm::inverse(transform_component.getModel()));
+                camera->setFromTransform(transform_component.getModel());
             }
 
             float aspect_ratio = camera->getAspectRatio();

@@ -33,4 +33,20 @@ void PerspectiveCamera::setView(const glm::mat4& view)
     _look_at           = _position - glm::vec3(inv_view[2]);
 }
 
+void PerspectiveCamera::setFromTransform(const glm::mat4& transform)
+{
+    float scale_x = glm::length(glm::vec3(transform[0]));
+    float scale_y = glm::length(glm::vec3(transform[1]));
+    float scale_z = glm::length(glm::vec3(transform[2]));
+
+    _position = transform[3];
+    _look_at  = _position - glm::vec3(transform[2] / scale_y);
+
+    _view = glm::inverse(transform * glm::scale(glm::vec3(1.0f / scale_x, 1.0f / scale_y, 1.0f / scale_z)));
+
+    _aspect_ratio = scale_x / scale_y;
+
+    recalculateProjection();
+}
+
 }    // namespace atcg

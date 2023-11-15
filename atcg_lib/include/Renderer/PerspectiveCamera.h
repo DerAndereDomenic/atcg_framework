@@ -82,9 +82,16 @@ public:
     /**
      *  @brief Set the view matrix
      *
-     *  @param view The new view matrix
+     *  @param view The new orthonormal view matrix
      */
     void setView(const glm::mat4& view);
+
+    /**
+     * @brief Set view and projection from transform
+     *
+     * @param model The model matrix
+     */
+    void setFromTransform(const glm::mat4& transform);
 
     /**
      *  @brief Set the projection matrix
