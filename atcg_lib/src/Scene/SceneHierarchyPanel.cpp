@@ -74,16 +74,16 @@ void displayMaterial(const std::string& key, Material& material)
             {
                 auto f     = pfd::open_file("Choose files to read",
                                         pfd::path::home(),
-                                            {"PNG Files (.png)",
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
                                              "*.png",
                                              "JPG Files (.jpg, .jpeg)",
                                              "*jpg, *jpeg",
                                              "BMP Files (.bmp)",
                                              "*.bmp",
                                              "HDR Files (.hdr)",
-                                             "*.hdr",
-                                             "All Files",
-                                             "*"},
+                                             "*.hdr"},
                                         pfd::opt::none);
                 auto files = f.result();
                 if(!files.empty())
@@ -123,16 +123,16 @@ void displayMaterial(const std::string& key, Material& material)
             {
                 auto f     = pfd::open_file("Choose files to read",
                                         pfd::path::home(),
-                                            {"PNG Files (.png)",
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
                                              "*.png",
                                              "JPG Files (.jpg, .jpeg)",
                                              "*jpg, *jpeg",
                                              "BMP Files (.bmp)",
                                              "*.bmp",
                                              "HDR Files (.hdr)",
-                                             "*.hdr",
-                                             "All Files",
-                                             "*"},
+                                             "*.hdr"},
                                         pfd::opt::none);
                 auto files = f.result();
                 if(!files.empty())
@@ -180,16 +180,16 @@ void displayMaterial(const std::string& key, Material& material)
             {
                 auto f     = pfd::open_file("Choose files to read",
                                         pfd::path::home(),
-                                            {"PNG Files (.png)",
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
                                              "*.png",
                                              "JPG Files (.jpg, .jpeg)",
                                              "*jpg, *jpeg",
                                              "BMP Files (.bmp)",
                                              "*.bmp",
                                              "HDR Files (.hdr)",
-                                             "*.hdr",
-                                             "All Files",
-                                             "*"},
+                                             "*.hdr"},
                                         pfd::opt::none);
                 auto files = f.result();
                 if(!files.empty())
@@ -238,16 +238,16 @@ void displayMaterial(const std::string& key, Material& material)
             {
                 auto f     = pfd::open_file("Choose files to read",
                                         pfd::path::home(),
-                                            {"PNG Files (.png)",
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
                                              "*.png",
                                              "JPG Files (.jpg, .jpeg)",
                                              "*jpg, *jpeg",
                                              "BMP Files (.bmp)",
                                              "*.bmp",
                                              "HDR Files (.hdr)",
-                                             "*.hdr",
-                                             "All Files",
-                                             "*"},
+                                             "*.hdr"},
                                         pfd::opt::none);
                 auto files = f.result();
                 if(!files.empty())
@@ -688,16 +688,16 @@ void SceneHierarchyPanel::drawSceneProperties()
             {
                 auto f     = pfd::open_file("Choose files to read",
                                         pfd::path::home(),
-                                            {"PNG Files (.png)",
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
                                              "*.png",
                                              "JPG Files (.jpg, .jpeg)",
                                              "*jpg, *jpeg",
                                              "BMP Files (.bmp)",
                                              "*.bmp",
                                              "HDR Files (.hdr)",
-                                             "*.hdr",
-                                             "All Files",
-                                             "*"},
+                                             "*.hdr"},
                                         pfd::opt::none);
                 auto files = f.result();
                 if(!files.empty())
