@@ -367,17 +367,34 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
         [&](CameraComponent& camera_component)
         {
             atcg::ref_ptr<atcg::PerspectiveCamera> camera = camera_component.camera;
+            bool has_transform                            = false;
             if(entity.hasComponent<atcg::TransformComponent>())
             {
-                auto& transform_component = entity.getComponent<atcg::TransformComponent>();
+                atcg::TransformComponent& transform_component = entity.getComponent<atcg::TransformComponent>();
                 camera->setFromTransform(transform_component.getModel());
+                has_transform = true;
             }
 
             float aspect_ratio = camera->getAspectRatio();
+            float fov          = camera->getFOV();
 
             label.str(std::string());
             label << "Aspect Ratio##" << id;
-            ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f);
+            bool change_aspect = ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f);
+            bool change_fov    = ImGui::DragFloat(("FOV##" + id).c_str(), &fov, 0.5f, 10.0f, 120.0f);
+            if(change_aspect || change_fov && has_transform)
+            {
+                atcg::TransformComponent& transform_component = entity.getComponent<atcg::TransformComponent>();
+                glm::mat4 model                               = transform_component.getModel();
+                float scale_x                                 = glm::length(model[0]);
+                float scale_y                                 = glm::length(model[1]);
+                float scale_z                                 = glm::length(model[2]);
+                model                                         = model * glm::scale(glm::vec3(aspect_ratio / scale_x,
+                                                     1.0f / scale_y,
+                                                     glm::tan(glm::radians(fov) / 2.0f) / scale_z));
+                transform_component.setModel(model);
+                camera->setFOV(fov);
+            }
 
             float fbo_aspect_ratio = (float)_camera_preview->width() / (float)_camera_preview->height();
             uint32_t height        = 128;
