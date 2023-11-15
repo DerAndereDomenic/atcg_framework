@@ -47,6 +47,8 @@ void PerspectiveCamera::setFromTransform(const glm::mat4& transform)
 
     _aspect_ratio = scale_x / scale_y;
 
+    _fovy = glm::degrees(2.0f * glm::atan(scale_z));
+
     recalculateProjection();
 }
 
