@@ -242,6 +242,16 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img, const
     return create(img->data(), spec);
 }
 
+atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img)
+{
+    TextureSpecification spec;
+    spec.width  = img->width();
+    spec.height = img->height();
+    spec.format = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
+                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+    return create(img->data(), spec);
+}
+
 Texture2D::~Texture2D()
 {
     glDeleteTextures(1, &_ID);

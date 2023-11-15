@@ -301,13 +301,8 @@ Material deserializeMaterial(const YAML::Node& material_node)
     {
         std::string diffuse_path = material_node[RENDER_MATERIAL_DIFFUSE_TEXTURE].as<std::string>();
         ATCG_TRACE(diffuse_path);
-        auto img = IO::imread(diffuse_path, 2.2f);
-        TextureSpecification spec;
-        spec.width           = img->width();
-        spec.height          = img->height();
-        spec.format          = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                                    : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-        auto diffuse_texture = atcg::Texture2D::create(img, spec);
+        auto img             = IO::imread(diffuse_path, 2.2f);
+        auto diffuse_texture = atcg::Texture2D::create(img);
         material.setDiffuseTexture(diffuse_texture);
     }
 
@@ -316,12 +311,7 @@ Material deserializeMaterial(const YAML::Node& material_node)
     {
         std::string normal_path = material_node[RENDER_MATERIAL_NORMAL_TEXTURE].as<std::string>();
         auto img                = IO::imread(normal_path);
-        TextureSpecification spec;
-        spec.width          = img->width();
-        spec.height         = img->height();
-        spec.format         = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                                   : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-        auto normal_texture = atcg::Texture2D::create(img, spec);
+        auto normal_texture     = atcg::Texture2D::create(img);
         material.setNormalTexture(normal_texture);
     }
 
@@ -335,12 +325,7 @@ Material deserializeMaterial(const YAML::Node& material_node)
     {
         std::string roughness_path = material_node[RENDER_MATERIAL_ROUGHNESS_TEXTURE].as<std::string>();
         auto img                   = IO::imread(roughness_path);
-        TextureSpecification spec;
-        spec.width             = img->width();
-        spec.height            = img->height();
-        spec.format            = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                                      : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-        auto roughness_texture = atcg::Texture2D::create(img, spec);
+        auto roughness_texture     = atcg::Texture2D::create(img);
         material.setRoughnessTexture(roughness_texture);
     }
 
@@ -354,12 +339,7 @@ Material deserializeMaterial(const YAML::Node& material_node)
     {
         std::string metallic_path = material_node[RENDER_MATERIAL_METALLIC_TEXTURE].as<std::string>();
         auto img                  = IO::imread(metallic_path);
-        TextureSpecification spec;
-        spec.width            = img->width();
-        spec.height           = img->height();
-        spec.format           = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                                     : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-        auto metallic_texture = atcg::Texture2D::create(img, spec);
+        auto metallic_texture     = atcg::Texture2D::create(img);
         material.setMetallicTexture(metallic_texture);
     }
 

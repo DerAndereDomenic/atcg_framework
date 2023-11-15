@@ -88,14 +88,8 @@ void displayMaterial(const std::string& key, Material& material)
                 auto files = f.result();
                 if(!files.empty())
                 {
-                    auto img = IO::imread(files[0], 2.2f);
-                    TextureSpecification spec;
-                    spec.width   = img->width();
-                    spec.height  = img->height();
-                    spec.format  = img->channels() == 1
-                                       ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-                    auto texture = atcg::Texture2D::create(img, spec);
+                    auto img     = IO::imread(files[0], 2.2f);
+                    auto texture = atcg::Texture2D::create(img);
                     material.setDiffuseTexture(texture);
                 }
             }
@@ -140,14 +134,8 @@ void displayMaterial(const std::string& key, Material& material)
                 auto files = f.result();
                 if(!files.empty())
                 {
-                    auto img = IO::imread(files[0]);
-                    TextureSpecification spec;
-                    spec.width   = img->width();
-                    spec.height  = img->height();
-                    spec.format  = img->channels() == 1
-                                       ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-                    auto texture = atcg::Texture2D::create(img, spec);
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
                     material.setNormalTexture(texture);
                 }
             }
@@ -200,14 +188,8 @@ void displayMaterial(const std::string& key, Material& material)
                 auto files = f.result();
                 if(!files.empty())
                 {
-                    auto img = IO::imread(files[0]);
-                    TextureSpecification spec;
-                    spec.width   = img->width();
-                    spec.height  = img->height();
-                    spec.format  = img->channels() == 1
-                                       ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-                    auto texture = atcg::Texture2D::create(img, spec);
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
                     material.setRoughnessTexture(texture);
                 }
             }
@@ -261,14 +243,8 @@ void displayMaterial(const std::string& key, Material& material)
                 auto files = f.result();
                 if(!files.empty())
                 {
-                    auto img = IO::imread(files[0]);
-                    TextureSpecification spec;
-                    spec.width   = img->width();
-                    spec.height  = img->height();
-                    spec.format  = img->channels() == 1
-                                       ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
-                    auto texture = atcg::Texture2D::create(img, spec);
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
                     material.setMetallicTexture(texture);
                 }
             }
