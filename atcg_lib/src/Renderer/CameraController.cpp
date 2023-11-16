@@ -20,6 +20,10 @@ FocusedController::FocusedController(const atcg::ref_ptr<Camera>& camera) : Came
 
 void FocusedController::onUpdate(float delta_time)
 {
+    glm::vec2 mouse_pos = Input::getMousePosition();
+    _currentX           = mouse_pos.x;
+    _currentY           = mouse_pos.y;
+
     if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_MIDDLE))
     {
         float offsetX = _lastX - _currentX;
@@ -72,7 +76,6 @@ void FocusedController::onEvent(Event* e)
     EventDispatcher dispatcher(e);
     dispatcher.dispatch<MouseScrolledEvent>(ATCG_BIND_EVENT_FN(FocusedController::onMouseZoom));
     dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(FocusedController::onWindowResize));
-    dispatcher.dispatch<MouseMovedEvent>(ATCG_BIND_EVENT_FN(FocusedController::onMouseMove));
 }
 
 bool FocusedController::onMouseZoom(MouseScrolledEvent* event)
@@ -93,14 +96,6 @@ bool FocusedController::onWindowResize(WindowResizeEvent* event)
     return false;
 }
 
-bool FocusedController::onMouseMove(MouseMovedEvent* event)
-{
-    _currentX = event->getX();
-    _currentY = event->getY();
-
-    return false;
-}
-
 
 FirstPersonController::FirstPersonController(const float& aspect_ratio,
                                              const glm::vec3& position,
@@ -115,7 +110,11 @@ FirstPersonController::FirstPersonController(const atcg::ref_ptr<Camera>& camera
 
 void FirstPersonController::onUpdate(float delta_time)
 {
-    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+    glm::vec2 mouse_pos = Input::getMousePosition();
+    _currentX           = mouse_pos.x;
+    _currentY           = mouse_pos.y;
+
+    if(_clicked_right)
     {
         float offsetX = _lastX - _currentX;
         float offsetY = _lastY - _currentY;
@@ -149,7 +148,7 @@ void FirstPersonController::onUpdate(float delta_time)
             return deceleration_factor;
     };
 
-    if(Input::isKeyPressed(GLFW_KEY_W) && !Input::isKeyPressed(GLFW_KEY_S))    // forward
+    if(_pressed_W && !_pressed_S)    // forward
     {
         if(-_velocity_threshold < _velocity_forward && _velocity_forward < _velocity_threshold)
             _velocity_forward = _velocity_threshold;
@@ -158,7 +157,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(_velocity_forward < 0.0f)
             _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) - delta_velocity;
     }
-    else if(Input::isKeyPressed(GLFW_KEY_S) && !Input::isKeyPressed(GLFW_KEY_W))    // backward
+    else if(_pressed_S && !_pressed_W)    // backward
     {
         if(-_velocity_threshold < _velocity_forward && _velocity_forward < _velocity_threshold)
             _velocity_forward = -_velocity_threshold;
@@ -175,7 +174,7 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity);
     }
 
-    if(Input::isKeyPressed(GLFW_KEY_A) && !Input::isKeyPressed(GLFW_KEY_D))    // left
+    if(_pressed_A && !_pressed_D)    // left
     {
         if(-_velocity_threshold < _velocity_right && _velocity_right < _velocity_threshold)
             _velocity_right = -_velocity_threshold;
@@ -184,7 +183,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(0.0f < _velocity_right)
             _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) + delta_velocity;
     }
-    else if(Input::isKeyPressed(GLFW_KEY_D) && !Input::isKeyPressed(GLFW_KEY_A))    // right
+    else if(_pressed_D && !_pressed_A)    // right
     {
         if(-_velocity_threshold < _velocity_right && _velocity_right < _velocity_threshold)
             _velocity_right = _velocity_threshold;
@@ -201,7 +200,7 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity);
     }
 
-    if(Input::isKeyPressed(GLFW_KEY_E) && !Input::isKeyPressed(GLFW_KEY_Q))    // up
+    if(_pressed_E && !_pressed_Q)    // up
     {
         if(-_velocity_threshold < _velocity_up && _velocity_up < _velocity_threshold)
             _velocity_up = _velocity_threshold;
@@ -210,7 +209,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(_velocity_up < 0.0)
             _velocity_up -= deceleration(delta_velocity, _velocity_up, max_velocity) - delta_velocity;
     }
-    else if(Input::isKeyPressed(GLFW_KEY_Q) && !Input::isKeyPressed(GLFW_KEY_E))    // down
+    else if(_pressed_Q && !_pressed_E)    // down
     {
         if(-_velocity_threshold < _velocity_up && _velocity_up < _velocity_threshold)
             _velocity_up = -_velocity_threshold;
@@ -246,6 +245,13 @@ void FirstPersonController::onUpdate(float delta_time)
     // update mouse position
     _lastX = _currentX;
     _lastY = _currentY;
+
+    if(!Input::isKeyPressed(GLFW_KEY_W)) _pressed_W = false;
+    if(!Input::isKeyPressed(GLFW_KEY_A)) _pressed_A = false;
+    if(!Input::isKeyPressed(GLFW_KEY_S)) _pressed_S = false;
+    if(!Input::isKeyPressed(GLFW_KEY_D)) _pressed_D = false;
+    if(!Input::isKeyPressed(GLFW_KEY_Q)) _pressed_Q = false;
+    if(!Input::isKeyPressed(GLFW_KEY_E)) _pressed_E = false;
 }
 
 void FirstPersonController::onEvent(Event* e)
@@ -254,6 +260,9 @@ void FirstPersonController::onEvent(Event* e)
     dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onWindowResize));
     dispatcher.dispatch<MouseMovedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onMouseMove));
     dispatcher.dispatch<KeyPressedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onKeyPressed));
+    dispatcher.dispatch<KeyReleasedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onKeyReleased));
+    dispatcher.dispatch<MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onMouseButtonPressed));
+    dispatcher.dispatch<MouseButtonReleasedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onMouseButtonReleased));
 }
 
 bool FirstPersonController::onWindowResize(WindowResizeEvent* event)
@@ -265,8 +274,7 @@ bool FirstPersonController::onWindowResize(WindowResizeEvent* event)
 
 bool FirstPersonController::onMouseMove(MouseMovedEvent* event)
 {
-    _currentX = event->getX();
-    _currentY = event->getY();
+    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) { _clicked_right = true; }
 
     return false;
 }
@@ -277,11 +285,46 @@ bool FirstPersonController::onKeyPressed(KeyPressedEvent* event)
     {
         _speed *= 1.25;
     }
+
     if(event->getKeyCode() == GLFW_KEY_KP_SUBTRACT)    // slower
     {
         _speed *= 0.8;
     }
 
-    return false;
+    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = true;
+    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = true;
+    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = true;
+    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = true;
+    if(event->getKeyCode() == GLFW_KEY_Q) _pressed_Q = true;
+    if(event->getKeyCode() == GLFW_KEY_E) _pressed_E = true;
+
+    return true;
 }
+
+bool FirstPersonController::onKeyReleased(KeyReleasedEvent* event)
+{
+    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = false;
+    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = false;
+    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = false;
+    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = false;
+    if(event->getKeyCode() == GLFW_KEY_Q) _pressed_Q = false;
+    if(event->getKeyCode() == GLFW_KEY_E) _pressed_E = false;
+
+    return true;
+}
+
+bool FirstPersonController::onMouseButtonPressed(MouseButtonPressedEvent* event)
+{
+    if(event->getMouseButton() == GLFW_MOUSE_BUTTON_RIGHT) _clicked_right = true;
+
+    return true;
+}
+
+bool FirstPersonController::onMouseButtonReleased(MouseButtonReleasedEvent* event)
+{
+    if(event->getMouseButton() == GLFW_MOUSE_BUTTON_RIGHT) _clicked_right = false;
+
+    return true;
+}
+
 }    // namespace atcg

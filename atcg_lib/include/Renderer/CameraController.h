@@ -100,7 +100,6 @@ public:
 private:
     bool onMouseZoom(MouseScrolledEvent* event);
     bool onWindowResize(WindowResizeEvent* event);
-    bool onMouseMove(MouseMovedEvent* event);
 
     float _distance       = 1.0f;
     float _zoom_speed     = 0.25f;
@@ -147,6 +146,9 @@ private:
     bool onWindowResize(WindowResizeEvent* event);
     bool onMouseMove(MouseMovedEvent* event);
     bool onKeyPressed(KeyPressedEvent* event);
+    bool onKeyReleased(KeyReleasedEvent* event);
+    bool onMouseButtonPressed(MouseButtonPressedEvent* event);
+    bool onMouseButtonReleased(MouseButtonReleasedEvent* event);
 
     float _speed;
     float _velocity_forward   = 0.0f;
@@ -158,6 +160,14 @@ private:
     float _rotation_speed     = 0.005f;
     float _lastX = 0, _lastY = 0;
     float _currentX = 0, _currentY = 0;
+
+    bool _pressed_W     = false;
+    bool _pressed_A     = false;
+    bool _pressed_S     = false;
+    bool _pressed_D     = false;
+    bool _pressed_Q     = false;
+    bool _pressed_E     = false;
+    bool _clicked_right = false;
 };
 
 }    // namespace atcg

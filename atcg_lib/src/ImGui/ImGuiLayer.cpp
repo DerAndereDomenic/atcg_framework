@@ -146,15 +146,21 @@ void ImGuiLayer::begin()
         _viewport_position = glm::ivec2(viewportMinRegion.x + viewportOffset.x - window_pos.x,
                                         viewportMinRegion.y + viewportOffset.y - window_pos.y);
 
-        bool viewport_hovered = ImGui::IsWindowHovered();
-
-        _block_events = !(viewport_hovered);
 
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         _viewport_size           = glm::ivec2(viewportPanelSize.x, viewportPanelSize.y);
 
         uint64_t textureID = Renderer::getFramebuffer()->getColorAttachement(0)->getID();
         ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2 {0, 1}, ImVec2 {1, 0});
+
+        if(ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered())
+        {
+            ImGui::SetWindowFocus("Viewport");
+        }
+
+        bool in_focus = ImGui::IsWindowFocused();
+
+        _block_events = !(in_focus);
 
         ImGui::End();
     }
