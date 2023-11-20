@@ -1108,6 +1108,32 @@ int Renderer::getEntityIndex(const glm::vec2& mouse)
     return pixelData;
 }
 
+void Renderer::screenshot(const atcg::ref_ptr<Scene>& scene,
+                          const atcg::ref_ptr<Camera>& camera,
+                          const std::string& path)
+{
+    atcg::ref_ptr<PerspectiveCamera> cam         = camera;
+    float width                                  = 1920.0f;
+    float height                                 = width / cam->getAspectRatio();
+    atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
+    screenshot_buffer->attachColor();
+    screenshot_buffer->attachDepth();
+    screenshot_buffer->complete();
+
+    screenshot_buffer->use();
+    atcg::Renderer::clear();
+    atcg::Renderer::setViewport(0, 0, width, height);
+    atcg::Renderer::draw(scene, cam);
+    atcg::Renderer::getFramebuffer()->use();
+    atcg::Renderer::setViewport(0, 0, getFramebuffer()->width(), getFramebuffer()->height());
+
+    std::vector<uint8_t> buffer = getFrame(screenshot_buffer);
+
+    Image img = Image(buffer.data(), width, height, 4);
+
+    img.store(path);
+}
+
 std::vector<uint8_t> Renderer::getFrame()
 {
     return getFrame(s_renderer->impl->screen_fbo);

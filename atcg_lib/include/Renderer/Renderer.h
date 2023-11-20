@@ -221,6 +221,16 @@ public:
     static int getEntityIndex(const glm::vec2& mouse);
 
     /**
+     * @brief Take a screenshot
+     *
+     * @param scene The scene
+     * @param camera The camera
+     * @param path The output path
+     */
+    static void
+    screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const std::string& path);
+
+    /**
      * @brief Get a buffer representing the color attachement of the screen frame buffer.
      * @note This copies memory between GPU and CPU
      *

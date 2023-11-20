@@ -427,33 +427,12 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
 
             if(ImGui::Button("Screenshot"))
             {
-                // Create temporary framebuffer
-                float width                                  = 1920.0f;
-                float height                                 = width / aspect_ratio;
-                atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
-                screenshot_buffer->attachColor();
-                screenshot_buffer->attachDepth();
-                screenshot_buffer->complete();
-
-                screenshot_buffer->use();
-                atcg::Renderer::clear();
-                atcg::Renderer::setViewport(0, 0, width, height);
-                atcg::Renderer::draw(_scene, camera_component.camera);
-                atcg::Renderer::getFramebuffer()->use();
-                atcg::Renderer::setViewport(0,
-                                            0,
-                                            atcg::Renderer::getFramebuffer()->width(),
-                                            atcg::Renderer::getFramebuffer()->height());
-
                 auto t  = std::time(nullptr);
                 auto tm = *std::localtime(&t);
                 std::ostringstream oss;
                 oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
-                std::vector<uint8_t> buffer = atcg::Renderer::getFrame(screenshot_buffer);
 
-                Image img = Image(buffer.data(), width, height, 4);
-
-                img.store(oss.str());
+                atcg::Renderer::screenshot(_scene, camera_component.camera, oss.str());
             }
             atcg::Framebuffer::useDefault();
 
