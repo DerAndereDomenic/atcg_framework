@@ -532,7 +532,8 @@ PYBIND11_MODULE(pyatcg, m)
             "scene"_a,
             "camera"_a)
         .def_static("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
-        .def_static("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a);
+        .def_static("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
+        .def_static("screenshot", &atcg::Renderer::screenshot, "scene"_a, "camera"_a, "path"_a);
 
     py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
         .def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
