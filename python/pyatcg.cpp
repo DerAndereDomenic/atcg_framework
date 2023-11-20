@@ -136,7 +136,7 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::KeyPressedEvent, atcg::KeyEvent>(m, "KeyPressedEvent")
         .def(py::init<int32_t, bool>(), "key"_a, "key_pressed"_a)
         .def("isRepeat", &atcg::KeyPressedEvent::IsRepeat)
-        .def("getCode", &atcg::KeyPressedEvent::getCode);
+        .def("getCode", &atcg::KeyPressedEvent::getKeyCode);
     py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent").def(py::init<int32_t>());
     py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent").def(py::init<int32_t>());
     py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent")
@@ -533,7 +533,14 @@ PYBIND11_MODULE(pyatcg, m)
             "camera"_a)
         .def_static("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
         .def_static("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
-        .def_static("screenshot", &atcg::Renderer::screenshot, "scene"_a, "camera"_a, "path"_a);
+        .def_static(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const std::string& path) {  atcg::Renderer::screenshot(scene, cam, path); },
+            "scene"_a,
+            "camera"_a,
+            "path"_a);
 
     py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
         .def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
