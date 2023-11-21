@@ -370,15 +370,15 @@ void Texture2D::setData(const void* data)
     unmapPointers();
     glBindTexture(GL_TEXTURE_2D, _ID);
 
-    glTexImage2D(GL_TEXTURE_2D,
-                 0,
-                 detail::to2GLinternalFormat(_spec.format),
-                 _spec.width,
-                 _spec.height,
-                 0,
-                 detail::toGLformat(_spec.format),
-                 detail::toGLtype(_spec.format),
-                 (void*)data);
+    glTexSubImage2D(GL_TEXTURE_2D,
+                    0,
+                    0,
+                    0,
+                    _spec.width,
+                    _spec.height,
+                    detail::toGLformat(_spec.format),
+                    detail::toGLtype(_spec.format),
+                    (void*)data);
 }
 
 std::vector<uint8_t> Texture2D::getData() const
@@ -461,16 +461,17 @@ void Texture3D::setData(const void* data)
     unmapPointers();
     glBindTexture(GL_TEXTURE_3D, _ID);
 
-    glTexImage3D(GL_TEXTURE_3D,
-                 0,
-                 detail::to2GLinternalFormat(_spec.format),
-                 _spec.width,
-                 _spec.height,
-                 _spec.depth,
-                 0,
-                 detail::toGLformat(_spec.format),
-                 detail::toGLtype(_spec.format),
-                 (void*)data);
+    glTexSubImage3D(GL_TEXTURE_3D,
+                    0,
+                    0,
+                    0,
+                    0,
+                    _spec.width,
+                    _spec.height,
+                    _spec.depth,
+                    detail::toGLformat(_spec.format),
+                    detail::toGLtype(_spec.format),
+                    (void*)data);
 }
 
 std::vector<uint8_t> Texture3D::getData() const
