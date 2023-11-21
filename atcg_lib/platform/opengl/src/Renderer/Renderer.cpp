@@ -919,7 +919,8 @@ void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         setLineSize(2.0f);
         uint32_t entity_id = (uint32_t)entity._entity_handle;
         atcg::ShaderManager::getShader("edge")->setInt("entityID", entity_id);
-        atcg::ref_ptr<PerspectiveCamera> cam = entity.getComponent<CameraComponent>().camera;
+        atcg::CameraComponent& comp          = entity.getComponent<CameraComponent>();
+        atcg::ref_ptr<PerspectiveCamera> cam = comp.camera;
         float aspect_ratio                   = cam->getAspectRatio();
         glm::mat4 scale =
             glm::scale(glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)));
@@ -927,7 +928,7 @@ void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         Renderer::draw(s_renderer->impl->camera_frustrum,
                        camera,
                        model,
-                       glm::vec3(1),
+                       comp.color,
                        atcg::ShaderManager::getShader("edge"),
                        atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
     }

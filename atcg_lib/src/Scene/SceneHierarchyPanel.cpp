@@ -453,6 +453,10 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                     }
                 }
             }
+
+            label.str(std::string());
+            label << "Color##" << id;
+            ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(camera_component.color));
         });
 
     detail::drawComponent<TransformComponent>("Transform",

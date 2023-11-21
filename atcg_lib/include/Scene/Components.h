@@ -116,6 +116,7 @@ struct CameraComponent
     }
 
     atcg::ref_ptr<Camera> camera;
+    glm::vec3 color  = glm::vec3(1);
     bool perspective = false;
 };
 
