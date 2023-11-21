@@ -76,9 +76,14 @@ class Texture
 {
 public:
     /**
+     * @brief Default constructor
+     */
+    Texture();
+
+    /**
      *  @brief Destructor
      */
-    virtual ~Texture() {}
+    virtual ~Texture();
 
     /**
      * @brief Set the data of the texture.
@@ -149,9 +154,47 @@ public:
      */
     virtual void generateMipmaps() = 0;
 
+    /**
+     * @brief Get the underlying data as a cudaArray.
+     * This only returns a valid cudaArray if the CUDA backend is enabled. Otherwise this will return the buffer
+     * mapped to host space.
+     *
+     * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
+     * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
+     * gets mapped and unmapped automatically. Every call to use(), bindStorage() or setData() invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a VertexArray for example only points to this
+     * buffer), the client has to manually unmap the pointers using unmapPointers() before any further rendering calls
+     * can be done.
+     *
+     * @param mip_level The mip level
+     *
+     * @return The pointer
+     */
+    atcg::textureArray getTextureArray(const uint32_t mip_level = 0) const;
+
+
+    /**
+     * @brief Check if the device pointer is mapped (valid).
+     * @return True if the pointer is valid
+     */
+    bool isDeviceMapped() const;
+
+    /**
+     * @brief Unmaps and invalidates all device pointers used by the application
+     */
+    void unmapDevicePointers() const;
+
+    /**
+     * @brief Unmaps and invalidates all mapped pointers used by the application.
+     */
+    void unmapPointers() const;
+
 protected:
     uint32_t _ID;
     TextureSpecification _spec;
+
+    class Impl;
+    std::unique_ptr<Impl> impl;
 };
 
 /**

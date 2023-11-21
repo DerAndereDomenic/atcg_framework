@@ -2,6 +2,10 @@
 
 #include <glad/glad.h>
 
+#ifdef ATCG_CUDA_BACKEND
+    #include <cuda_gl_interop.h>
+#endif
+
 namespace atcg
 {
 
@@ -196,8 +200,109 @@ GLint toGLFilterMode(TextureFilterMode filter_mode)
 }
 }    // namespace detail
 
+class Texture::Impl
+{
+public:
+    Impl();
+
+    ~Impl();
+
+    void initResource(GLuint ID, GLenum target);
+    void deinitResource();
+
+    void mapResourceDevice();
+    void unmapResourceDevice();
+
+#ifdef ATCG_CUDA_BACKEND
+    cudaGraphicsResource* resource = nullptr;
+#endif
+
+    atcg::textureArray dev_ptr;
+
+    GLuint ID           = 0;
+    bool resource_ready = false;
+    bool mapped_device  = false;
+};
+
+Texture::Impl::Impl() {}
+
+Texture::Impl::~Impl() {}
+
+Texture::Texture()
+{
+    impl = std::make_unique<Impl>();
+}
+
+Texture::~Texture()
+{
+    if(impl->resource_ready) impl->deinitResource();
+}
+
+void Texture::Impl::initResource(GLuint ID, GLenum target)
+{
+#ifdef ATCG_CUDA_BACKEND
+    CUDA_SAFE_CALL(cudaGraphicsGLRegisterImage(&resource, ID, target, cudaGraphicsRegisterFlagsNone));
+#endif
+    resource_ready = true;
+    this->ID       = ID;
+}
+
+void Texture::Impl::deinitResource()
+{
+#ifdef ATCG_CUDA_BACKEND
+    CUDA_SAFE_CALL(cudaGraphicsUnregisterResource(resource));
+#endif
+    this->ID       = 0;
+    resource_ready = false;
+}
+
+void Texture::Impl::mapResourceDevice()
+{
+#ifdef ATCG_CUDA_BACKEND
+    if(!mapped_device)
+    {
+        CUDA_SAFE_CALL(cudaGraphicsMapResources(1, &resource));
+        mapped_device = true;
+    }
+#endif
+}
+
+void Texture::Impl::unmapResourceDevice()
+{
+#ifdef ATCG_CUDA_BACKEND
+    if(mapped_device) { CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource)); }
+    mapped_device = false;
+#endif
+}
+
+atcg::textureArray Texture::getTextureArray(const uint32_t mip_level) const
+{
+#ifdef ATCG_CUDA_BACKEND
+    impl->mapResourceDevice();
+    std::size_t size;
+    (cudaGraphicsSubResourceGetMappedArray(&impl->dev_ptr, impl->resource, 0, mip_level));
+#endif
+    return impl->dev_ptr;
+}
+
+bool Texture::isDeviceMapped() const
+{
+    return impl->mapped_device;
+}
+
+void Texture::unmapDevicePointers() const
+{
+    impl->unmapResourceDevice();
+}
+
+void Texture::unmapPointers() const
+{
+    unmapDevicePointers();
+}
+
 void Texture::useForCompute(const uint32_t& slot) const
 {
+    unmapPointers();
     glBindImageTexture(slot, _ID, 0, GL_TRUE, 0, GL_WRITE_ONLY, detail::to2GLinternalFormat(_spec.format));
 }
 
@@ -234,6 +339,8 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
 
     if(spec.sampler.mip_map) { glGenerateMipmap(GL_TEXTURE_2D); }
 
+    if(spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_2D);
+
     return result;
 }
 
@@ -254,11 +361,13 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img)
 
 Texture2D::~Texture2D()
 {
+    unmapPointers();
     glDeleteTextures(1, &_ID);
 }
 
 void Texture2D::setData(const void* data)
 {
+    unmapPointers();
     glBindTexture(GL_TEXTURE_2D, _ID);
 
     glTexImage2D(GL_TEXTURE_2D,
@@ -274,6 +383,7 @@ void Texture2D::setData(const void* data)
 
 std::vector<uint8_t> Texture2D::getData() const
 {
+    unmapPointers();
     std::size_t size = detail::toSize(_spec.format) * _spec.width * _spec.height;
 
     std::vector<uint8_t> pixels(size);
@@ -284,6 +394,7 @@ std::vector<uint8_t> Texture2D::getData() const
 
 void Texture2D::use(const uint32_t& slot) const
 {
+    unmapPointers();
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_2D, _ID);
 }
@@ -334,16 +445,20 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
 
     if(spec.sampler.mip_map) { glGenerateMipmap(GL_TEXTURE_3D); }
 
+    if(spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_3D);
+
     return result;
 }
 
 Texture3D::~Texture3D()
 {
+    unmapPointers();
     glDeleteTextures(1, &_ID);
 }
 
 void Texture3D::setData(const void* data)
 {
+    unmapPointers();
     glBindTexture(GL_TEXTURE_3D, _ID);
 
     glTexImage3D(GL_TEXTURE_3D,
@@ -360,6 +475,7 @@ void Texture3D::setData(const void* data)
 
 std::vector<uint8_t> Texture3D::getData() const
 {
+    unmapPointers();
     std::size_t size = detail::toSize(_spec.format) * _spec.width * _spec.height * _spec.depth;
 
     std::vector<uint8_t> pixels(size);
@@ -370,6 +486,7 @@ std::vector<uint8_t> Texture3D::getData() const
 
 void Texture3D::use(const uint32_t& slot) const
 {
+    unmapPointers();
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_3D, _ID);
 }
