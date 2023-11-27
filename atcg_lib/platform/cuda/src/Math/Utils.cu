@@ -52,8 +52,8 @@ void normalize(const atcg::ref_ptr<Graph>& graph)
     std::size_t threads = 128;
     std::size_t blocks  = atcg::configure(n_points);
 
-    atcg::DeviceBuffer<glm::vec3, atcg::device_allocator> mean_point(1);
-    atcg::DeviceBuffer<float, atcg::device_allocator> max_scale(1);
+    atcg::MemoryBuffer<glm::vec3, atcg::device_allocator> mean_point(1);
+    atcg::MemoryBuffer<float, atcg::device_allocator> max_scale(1);
 
     Vertex* vertices = (Vertex*)graph->getVerticesBuffer()->getDevicePointer();
 

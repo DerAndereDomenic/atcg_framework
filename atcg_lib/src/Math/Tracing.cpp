@@ -33,8 +33,8 @@ void Tracing::prepareAccelerationStructure(Entity entity)
     Vertex* vertices    = mesh->getVerticesBuffer()->getHostPointer<Vertex>();
     glm::u32vec3* faces = mesh->getFaceIndexBuffer()->getHostPointer<glm::u32vec3>();
 
-    acc_component.vertices = atcg::DeviceBuffer<glm::vec3>(mesh->n_vertices());
-    acc_component.faces    = atcg::DeviceBuffer<glm::u32vec3>(mesh->n_faces());
+    acc_component.vertices = atcg::MemoryBuffer<glm::vec3>(mesh->n_vertices());
+    acc_component.faces    = atcg::MemoryBuffer<glm::u32vec3>(mesh->n_faces());
 
     std::vector<glm::vec3> temp_vertices(mesh->n_vertices());
     for(uint32_t i = 0; i < mesh->n_vertices(); ++i) { temp_vertices[i] = vertices[i].position; }
