@@ -59,6 +59,13 @@ public:
     inline virtual glm::mat4 getProjection() const override { return _projection; }
 
     /**
+     *  @brief Set the projection matrix
+     *
+     *  @param projection The new projection matrix
+     */
+    void setProjection(const glm::mat4& projection);
+
+    /**
      * @brief Get the View Projection matrix
      *
      * @return glm::mat4 The view-projection matrix
@@ -92,13 +99,6 @@ public:
      * @param model The model matrix
      */
     void setFromTransform(const glm::mat4& transform);
-
-    /**
-     *  @brief Set the projection matrix
-     *
-     *  @param projection The new projection matrix
-     */
-    inline void setProjection(const glm::mat4& projection) { _projection = projection; }
 
     /**
      * @brief Set the Position
@@ -187,10 +187,13 @@ protected:
     virtual void recalculateProjection() override;
 
 private:
+    // View parameters
     glm::vec3 _position;
     glm::vec3 _up;
     glm::vec3 _look_at;
 
+    // Projection parameters
+    glm::vec2 _optical_center;
     float _aspect_ratio;
     float _fovy;
     float _near;
