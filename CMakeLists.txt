@@ -69,6 +69,18 @@ file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform
 
 charonload_add_torch_library(atcg_lib STATIC)
 target_sources(atcg_lib PRIVATE "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_renderer_files}")
+target_link_libraries(atcg_lib PUBLIC glfw
+                    imgui
+                    imguizmo
+                    implot
+                    glad
+                    OpenGL::GL
+                    OpenMeshCore
+                    OpenMeshTools
+                    yaml-cpp
+                    stb_image
+                    tinyobjloader
+                    ${CUDA_LIBRARIES})
 
 if(NOT MSVC)
     add_definitions(-DFMT_USE_CONSTEXPR)
@@ -119,18 +131,6 @@ function(ATCG_add_executable target_name_base target_name_var source)
     
     target_link_libraries( ${target_name}
         atcg_lib
-        glfw
-        imgui
-        imguizmo
-        implot
-        glad
-        OpenGL::GL
-        OpenMeshCore
-        OpenMeshTools
-        yaml-cpp
-        stb_image
-        tinyobjloader
-        ${CUDA_LIBRARIES}
     )
 
 	if(MSVC)
