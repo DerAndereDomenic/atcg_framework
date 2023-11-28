@@ -33,7 +33,7 @@ add_library(imguizmo STATIC "external/imguizmo/GraphEditor.cpp"
                             "external/imguizmo/ImSequencer.h"
                             "external/imguizmo/ImZoomSlider.h")
 
-add_subdirectory("C:/Users/zingsheim/Documents/Repositories/charonload" ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+add_subdirectory(external/charonload)
 
 add_library(glad STATIC "external/glad/src/glad.c")
 add_library(imgui STATIC "external/imgui/imgui.cpp"
