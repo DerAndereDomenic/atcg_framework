@@ -32,10 +32,6 @@ add_library(imguizmo STATIC "external/imguizmo/GraphEditor.cpp"
                             "external/imguizmo/ImSequencer.cpp"
                             "external/imguizmo/ImSequencer.h"
                             "external/imguizmo/ImZoomSlider.h")
-                            
-set(PYBIND11_PYTHON_VERSION 3)
-set(PYBIND11_FINDPYTHON ON)
-add_subdirectory(external/pybind11)
 
 add_subdirectory("C:/Users/zingsheim/Documents/Repositories/charonload" ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
@@ -100,7 +96,6 @@ include_directories(atcg_lib/include
                     external/glm
                     external/openmesh/src
                     external/nanoflann/include
-                    external/pybind11/include
                     external/spdlog/include
                     external/imguizmo
                     external/nanort

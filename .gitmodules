@@ -7,9 +7,6 @@
 [submodule "external/nanoflann"]
 	path = external/nanoflann
 	url = git@github.com:jlblancoc/nanoflann.git
-[submodule "external/pybind11"]
-	path = external/pybind11
-	url = git@github.com:pybind/pybind11.git
 [submodule "external/spdlog"]
 	path = external/spdlog
 	url = git@github.com:gabime/spdlog.git
