@@ -32,10 +32,12 @@ add_library(imguizmo STATIC "external/imguizmo/GraphEditor.cpp"
                             "external/imguizmo/ImSequencer.cpp"
                             "external/imguizmo/ImSequencer.h"
                             "external/imguizmo/ImZoomSlider.h")
-
+                            
 set(PYBIND11_PYTHON_VERSION 3)
 set(PYBIND11_FINDPYTHON ON)
 add_subdirectory(external/pybind11)
+
+add_subdirectory("C:/Users/zingsheim/Documents/Repositories/charonload" ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 
 add_library(glad STATIC "external/glad/src/glad.c")
 add_library(imgui STATIC "external/imgui/imgui.cpp"
@@ -69,7 +71,8 @@ file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "atcg_lib/src/**.c*"
 file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform/opengl/**.c*"
                                                               "atcg_lib/platform/opengl/**.h")
 
-add_library(atcg_lib STATIC "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_renderer_files}") 
+charonload_add_torch_library(atcg_lib STATIC)
+target_sources(atcg_lib PRIVATE "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_renderer_files}")
 
 if(NOT MSVC)
     add_definitions(-DFMT_USE_CONSTEXPR)
@@ -137,6 +140,14 @@ function(ATCG_add_executable target_name_base target_name_var source)
     )
 
 	if(MSVC)
+        get_target_property(TORCH_LIBRARY_LOCATION torch LOCATION)
+        get_filename_component(TORCH_LIB_SEARCH_PATH ${TORCH_LIBRARY_LOCATION} DIRECTORY)
+        file(GLOB TORCH_DLLS "${TORCH_LIB_SEARCH_PATH}/*.dll")
+        add_custom_command(TARGET ${target_name}
+                 POST_BUILD
+                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                 ${TORCH_DLLS}
+                 $<TARGET_FILE_DIR:${target_name}>)
 		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 	endif()
     target_compile_definitions(${target_name} PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
