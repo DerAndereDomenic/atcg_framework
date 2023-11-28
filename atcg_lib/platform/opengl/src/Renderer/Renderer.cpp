@@ -172,7 +172,7 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     TextureSpecification spec_lut;
     spec_lut.width             = img->width();
     spec_lut.height            = img->height();
-    spec_lut.format            = TextureFormat::RGBAFLOAT;
+    spec_lut.format            = TextureFormat::RGBFLOAT;
     spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     lut                        = atcg::Texture2D::create(img, spec_lut);
 
@@ -403,11 +403,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     capture_cam->setProjection(captureProjection);
     // convert HDR equirectangular environment map to cubemap equivalent
 
-    TextureSpecification spec;
-    spec.width                       = skybox->width();
-    spec.height                      = skybox->height();
-    spec.format                      = skybox->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA;
-    s_renderer->impl->skybox_texture = atcg::Texture2D::create(skybox, spec);
+    s_renderer->impl->skybox_texture = atcg::Texture2D::create(skybox);
 
     uint32_t current_fbo = atcg::Framebuffer::currentFramebuffer();
     int old_viewport[4];

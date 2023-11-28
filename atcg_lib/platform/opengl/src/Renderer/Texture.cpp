@@ -15,9 +15,25 @@ GLint to2GLinternalFormat(TextureFormat format)
 {
     switch(format)
     {
+        case TextureFormat::RG:
+        {
+            return GL_RG;
+        }
+        case TextureFormat::RGB:
+        {
+            return GL_RGB;
+        }
         case TextureFormat::RGBA:
         {
             return GL_RGBA;
+        }
+        case TextureFormat::RGFLOAT:
+        {
+            return GL_RG32F;
+        }
+        case TextureFormat::RGBFLOAT:
+        {
+            return GL_RGB32F;
         }
         case TextureFormat::RGBAFLOAT:
         {
@@ -51,9 +67,25 @@ GLenum toGLformat(TextureFormat format)
 {
     switch(format)
     {
+        case TextureFormat::RG:
+        {
+            return GL_RG;
+        }
+        case TextureFormat::RGB:
+        {
+            return GL_RGB;
+        }
         case TextureFormat::RGBA:
         {
             return GL_RGBA;
+        }
+        case TextureFormat::RGFLOAT:
+        {
+            return GL_RG;
+        }
+        case TextureFormat::RGBFLOAT:
+        {
+            return GL_RGB;
         }
         case TextureFormat::RGBAFLOAT:
         {
@@ -87,9 +119,25 @@ GLenum toGLtype(TextureFormat format)
 {
     switch(format)
     {
+        case TextureFormat::RG:
+        {
+            return GL_UNSIGNED_BYTE;
+        }
+        case TextureFormat::RGB:
+        {
+            return GL_UNSIGNED_BYTE;
+        }
         case TextureFormat::RGBA:
         {
             return GL_UNSIGNED_BYTE;
+        }
+        case TextureFormat::RGFLOAT:
+        {
+            return GL_FLOAT;
+        }
+        case TextureFormat::RGBFLOAT:
+        {
+            return GL_FLOAT;
         }
         case TextureFormat::RGBAFLOAT:
         {
@@ -123,9 +171,25 @@ std::size_t toSize(TextureFormat format)
 {
     switch(format)
     {
+        case TextureFormat::RG:
+        {
+            return 2 * sizeof(uint8_t);
+        }
+        case TextureFormat::RGB:
+        {
+            return 3 * sizeof(uint8_t);
+        }
         case TextureFormat::RGBA:
         {
             return 4 * sizeof(uint8_t);
+        }
+        case TextureFormat::RGFLOAT:
+        {
+            return 2 * sizeof(float);
+        }
+        case TextureFormat::RGBFLOAT:
+        {
+            return 3 * sizeof(float);
         }
         case TextureFormat::RGBAFLOAT:
         {
@@ -354,8 +418,29 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img)
     TextureSpecification spec;
     spec.width  = img->width();
     spec.height = img->height();
-    spec.format = img->channels() == 1 ? (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8)
-                                       : (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+    switch(img->channels())
+    {
+        case 1:
+        {
+            spec.format = (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8);
+        }
+        break;
+        case 2:
+        {
+            spec.format = (img->isHDR() ? TextureFormat::RGFLOAT : TextureFormat::RG);
+        }
+        break;
+        case 3:
+        {
+            spec.format = (img->isHDR() ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
+        }
+        break;
+        case 4:
+        {
+            spec.format = (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        }
+        break;
+    }
     return create(img->data(), spec);
 }
 

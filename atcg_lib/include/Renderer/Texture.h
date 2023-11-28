@@ -12,8 +12,16 @@ namespace atcg
  */
 enum class TextureFormat
 {
+    // RG unsigned byte color texture.
+    RG,
+    // RGB unsigned byte color texture.
+    RGB,
     // RGBA unsigned byte color texture.
     RGBA,
+    // RG float color texture.
+    RGFLOAT,
+    // RGB float color texture.
+    RGBFLOAT,
     // RGBA float color texture.
     RGBAFLOAT,
     // Red channel unsigned int texture.
