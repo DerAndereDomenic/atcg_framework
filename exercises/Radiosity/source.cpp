@@ -14,6 +14,8 @@
 
 #include "Radiosity.h"
 
+using namespace torch::indexing;
+
 class RadiosityLayer : public atcg::Layer
 {
 public:
@@ -36,15 +38,15 @@ public:
 
 
         //   mesh->uploadData();
-
-        Eigen::MatrixX3f emission = Eigen::MatrixX3f::Zero(trimesh->n_faces(), 3);
+        uint32_t n_faces       = (uint32_t)trimesh->n_faces();
+        torch::Tensor emission = torch::zeros({n_faces, 3});
 
         for(auto ft: trimesh->faces())
         {
             glm::vec3 centroid = trimesh->calc_centroid(ft);
             if(glm::length(centroid - glm::vec3(0, 10, 0)) < 1.0f)
             {
-                emission.row(ft.idx()) = Eigen::Vector3f {50.0f, 50.0f, 50.0f};
+                emission.index_put_({ft.idx(), Slice()}, torch::tensor({50.0f, 50.0f, 50.0f}));
             }
         }
 

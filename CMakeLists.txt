@@ -97,7 +97,6 @@ include_directories(atcg_lib/include
                     external/glfw/include
                     external/imgui
                     external/implot
-                    external/eigen
                     external/glm
                     external/openmesh/src
                     external/nanoflann/include
