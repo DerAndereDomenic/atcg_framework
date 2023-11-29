@@ -65,3 +65,4 @@
 #include <torch/types.h>
 #include <ATen/cuda/ApplyGridUtils.cuh>
 #include <c10/cuda/CUDAGuard.h>
+#include <DataStructure/TorchUtils.h>
