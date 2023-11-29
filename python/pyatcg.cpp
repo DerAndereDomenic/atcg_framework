@@ -1,6 +1,5 @@
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 #include <pybind11/pybind11.h>
-#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/cast.h>
 #include <pybind11/stl.h>
@@ -537,7 +536,7 @@ PYBIND11_MODULE(pyatcg, m)
             "screenshot",
             [](const atcg::ref_ptr<atcg::Scene>& scene,
                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-               const std::string& path) {  atcg::Renderer::screenshot(scene, cam, path); },
+               const std::string& path) { atcg::Renderer::screenshot(scene, cam, path); },
             "scene"_a,
             "camera"_a,
             "path"_a);
@@ -582,8 +581,8 @@ PYBIND11_MODULE(pyatcg, m)
                      sampler.wrap_mode   = wrap_mode;
                      return sampler;
                  }),
-             "filter_mode"_a = atcg::TextureFilterMode::LINEAR,
-             "wrap_mode"_a   = atcg::TextureWrapMode::REPEAT)
+             py::arg_v("filter_mode", atcg::TextureFilterMode::LINEAR, "linear"),
+             py::arg_v("wrap_mode", atcg::TextureWrapMode::REPEAT, "size"))
         .def_readwrite("wrap_mode", &atcg::TextureSampler::wrap_mode)
         .def_readwrite("filter_mode", &atcg::TextureSampler::filter_mode);
 

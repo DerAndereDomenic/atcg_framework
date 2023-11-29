@@ -8,7 +8,7 @@ charonload.module_config["pyatcg"] = charonload.Config(
     project_directory=pathlib.Path(__file__).parent,
     build_directory=pathlib.Path(__file__).parent / "build_python",
     cmake_options={"ATCG_CUDA_BACKEND": "On", "ATCG_PYTHON_BINDINGS" : "On"},
-    generate_stubs_in_directory=VSCODE_STUBS_DIRECTORY,
+    stubs_directory=VSCODE_STUBS_DIRECTORY,
     build_type="Debug",
     verbose=True
 )
