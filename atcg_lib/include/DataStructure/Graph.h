@@ -8,6 +8,7 @@
 
 #include <OpenMesh/OpenMesh.h>
 #include <vector>
+#include <torch/types.h>
 
 namespace atcg
 {
@@ -101,6 +102,33 @@ public:
     static atcg::ref_ptr<Graph> createPointCloud(const std::vector<Vertex>& vertices);
 
     /**
+     * @brief Create a point cloud from a device buffer.
+     * @note The pointer is assumed to be a device pointer. If ATCG_CUDA_BACKEND is not defined, it is assumed to be
+     * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is defined,
+     * it is assumed to be a CUDA pointer and a memcpy from device (CUDA) to device (OpenGL) is performed.
+     *
+     * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
+     *
+     * @param vertices The vertices
+     *
+     * @return The graph
+     */
+    static atcg::ref_ptr<Graph> createPointCloud(const atcg::MemoryBuffer<Vertex, device_allocator>& vertices);
+
+    /**
+     * @brief Create a point cloud from a tensor.
+     * The tensor can contain either device or host memory.
+     *
+     * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
+     *
+     * @param vertices The vertices
+     *
+     * @return The graph
+     *
+     */
+    static atcg::ref_ptr<Graph> createPointCloud(const torch::Tensor& vertices);
+
+    /**
      * @brief Create an empty mesh
      *
      * @return The graph
@@ -118,6 +146,38 @@ public:
      */
     static atcg::ref_ptr<Graph> createTriangleMesh(const std::vector<Vertex>& vertices,
                                                    const std::vector<glm::u32vec3>& face_indices);
+
+    /**
+     * @brief Create a triangle mesh from a device buffer.
+     * @note The pointer is assumed to be a device pointer. If ATCG_CUDA_BACKEND is not defined, it is assumed to be
+     * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is defined,
+     * it is assumed to be a CUDA pointer and a memcpy from device (CUDA) to device (OpenGL) is performed.
+     *
+     * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
+     * If num_faces is smaller than capacity_faces() the buffer will be reused without a new allocation.
+     *
+     * @param vertices The vertices
+     * @param indices The indices
+     *
+     * @return The graph
+     */
+    static atcg::ref_ptr<Graph> createTriangleMesh(const atcg::MemoryBuffer<Vertex, device_allocator>& vertices,
+                                                   const atcg::MemoryBuffer<glm::u32vec3, device_allocator>& indices);
+
+    /**
+     * @brief Create a triangle mesh from a tensor.
+     * The tensor can contain either device or host memory.
+     *
+     * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
+     * If num_faces is smaller than capacity_faces() the buffer will be reused without a new allocation.
+     *
+     * @param vertices The vertices
+     * @param indices The face indices
+     *
+     * @return The graph
+     *
+     */
+    static atcg::ref_ptr<Graph> createTriangleMesh(const torch::Tensor& vertices, const torch::Tensor& indices);
 
     /**
      * @brief Create a triangle mesh from a half edge structure.
@@ -148,42 +208,6 @@ public:
     static atcg::ref_ptr<Graph> createGraph(const std::vector<Vertex>& vertices, const std::vector<Edge>& edges);
 
     /**
-     * @brief Create a point cloud from a device buffer.
-     * @note The pointer is assumed to be a device pointer. If ATCG_CUDA_BACKEND is not defined, it is assumed to be
-     * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is defined,
-     * it is assumed to be a CUDA pointer and a memcpy from device (CUDA) to device (OpenGL) is performed.
-     *
-     * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
-     *
-     * @param vertices The vertices
-     */
-    static atcg::ref_ptr<Graph> createPointCloud(const atcg::MemoryBuffer<Vertex, device_allocator>& vertices);
-
-    // /**
-    //  * @brief Create a triangle mesh from a device buffer.
-    //  * @note The pointer is assumed to be a device pointer. If ATCG_CUDA_BACKEND is not defined, it is assumed to be
-    //  * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is
-    //  defined,
-    //  * it is assumed to be a CUDA pointer and a memcpy from device (CUDA) to device (OpenGL) is performed.
-    //  *
-    //  * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
-    //  * If num_faces is smaller than capacity_faces() the buffer will be reused without a new allocation.
-    //  *
-    //  * @param vertices The vertices
-    //  * @param num_vertices The number of vertices
-    //  * @param indices The indices
-    //  * @param num_faces The number of faces
-    //  * @param edge_radius The default radius of the edges
-    //  *
-    //  * @return The graph
-    //  */
-    // // static atcg::ref_ptr<Graph> createTriangleMesh(const Vertex* vertices,
-    // //                                                uint32_t num_vertices,
-    // //                                                const glm::u32vec3* indices,
-    // //                                                uint32_t num_faces,
-    // //                                                float edge_radius = 0.1f);
-
-    /**
      * @brief Create a graph mesh from a device buffer.
      * @note The pointer is assumed to be a device pointer. If ATCG_CUDA_BACKEND is not defined, it is assumed to be
      * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is defined,
@@ -199,6 +223,21 @@ public:
      */
     static atcg::ref_ptr<Graph> createGraph(const atcg::MemoryBuffer<Vertex, device_allocator>& vertices,
                                             const atcg::MemoryBuffer<Edge, device_allocator>& edges);
+
+    /**
+     * @brief Create a graph from a tensor.
+     * The tensor can contain either device or host memory.
+     *
+     * If num_vertices is smaller than capacity_vertices() the buffer will be reused without a new allocation.
+     * If num_edges is smaller than capacity_edges() the buffer will be reused without a new allocation.
+     *
+     * @param vertices The vertices
+     * @param edges The edges
+     *
+     * @return The graph
+     *
+     */
+    static atcg::ref_ptr<Graph> createGraph(const torch::Tensor& vertices, const torch::Tensor& edges);
 
     /**
      * @brief Get the vertex buffer that stores the vertex information
@@ -245,25 +284,6 @@ public:
     void updateVertices(const std::vector<Vertex>& vertices);
 
     /**
-     * @brief Update the faces.
-     *
-     * If num_faces is smaller than faces.capacity() the buffer will be reused without a new allocation.
-     *
-     * @param vertices The vertices of the new faces
-     * @param faces The new face information
-     */
-    void updateFaces(const std::vector<glm::u32vec3>& faces);
-
-    /**
-     * @brief Update the edges.
-     *
-     * If num_edges is smaller than edges.capacity() the buffer will be reused without a new allocation.
-     *
-     * @param edges The new edge information
-     */
-    void updateEdges(const std::vector<Edge>& edges);
-
-    /**
      * @brief Update the vertices.
      * @note The pointer is assumed to be a device pointer. If ATCG_CUDA_BACKEND is not defined, it is assumed to be
      * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is defined,
@@ -275,18 +295,56 @@ public:
      */
     void updateVertices(const atcg::MemoryBuffer<Vertex, device_allocator>& vertices);
 
-    // /**
-    //  * @brief Update the faces.
-    //  * @note The pointer is assumed to be a device pointer. If ATCG_CUDA_BACKEND is not defined, it is assumed to be
-    //  * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is
-    //  defined,
-    //  * it is assumed to be a CUDA pointer and a memcpy from device (CUDA) to device (OpenGL) is performed.
-    //  *
-    //  * If num_faces is smaller than faces.capacity() the buffer will be reused without a new allocation.
-    //  *
-    //  * @param faces The new facce information
-    //  */
-    // // void updateFaces(const glm::u32vec3* faces, uint32_t num_faces);
+    /**
+     * @brief Update the vertices.
+     * The tensor can contain either device or host memory.
+     *
+     * If num_vertices is smaller than vertices.capacity() the buffer will be reused without a new allocation.
+     *
+     * @param vertices The new vertex information
+     */
+    void updateVertices(const torch::Tensor& vertices);
+
+    /**
+     * @brief Update the faces.
+     *
+     * If num_faces is smaller than faces.capacity() the buffer will be reused without a new allocation.
+     *
+     * @param vertices The vertices of the new faces
+     * @param faces The new face information
+     */
+    void updateFaces(const std::vector<glm::u32vec3>& faces);
+
+    /**
+     * @brief Update the faces.
+     * @note The pointer is assumed to be a device pointer. If ATCG_CUDA_BACKEND is not defined, it is assumed to be
+     * a standard host pointer and a memcpy from host to device (OpenGL) is performed. If ATCG_CUDA_BACKEND is defined,
+     * it is assumed to be a CUDA pointer and a memcpy from device (CUDA) to device (OpenGL) is performed.
+     *
+     * If num_faces is smaller than faces.capacity() the buffer will be reused without a new allocation.
+     *
+     * @param faces The new face information
+     */
+    void updateFaces(const atcg::MemoryBuffer<glm::u32vec3, atcg::device_allocator>& faces);
+
+    /**
+     * @brief Update the faces.
+     * The tensor can contain host or device memory
+     *
+     * If num_faces is smaller than faces.capacity() the buffer will be reused without a new allocation.
+     *
+     * @param faces The new face information
+     */
+    void updateFaces(const torch::Tensor& faces);
+
+    /**
+     * @brief Update the edges.
+     *
+     * If num_edges is smaller than edges.capacity() the buffer will be reused without a new allocation.
+     *
+     * @param edges The new edge information
+     */
+    void updateEdges(const std::vector<Edge>& edges);
 
     /**
      * @brief Update the edges.
@@ -299,6 +357,16 @@ public:
      * @param edges The new edge information
      */
     void updateEdges(const atcg::MemoryBuffer<Edge, device_allocator>& edges);
+
+    /**
+     * @brief Update the edges.
+     * The tensor can contain host or device memory
+     *
+     * If num_edges is smaller than edges.capacity() the buffer will be reused without a new allocation.
+     *
+     * @param edges The new edge information
+     */
+    void updateEdges(const torch::Tensor& edges);
 
     /**
      * @brief Update the number of vertices.
@@ -351,6 +419,171 @@ public:
      * @return The type
      */
     GraphType type() const;
+
+    /**
+     * @brief Get a tensor of vertex positions on the specified device.
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    torch::Tensor getPositions(const torch::Device& device) const;
+
+    /**
+     * @brief Get a tensor of vertex colors on the specified device.
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    torch::Tensor getColors(const torch::Device& device) const;
+
+    /**
+     * @brief Get a tensor of vertex normals on the specified device.
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    torch::Tensor getNormals(const torch::Device& device) const;
+
+    /**
+     * @brief Get a tensor of vertex tangents on the specified device.
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    torch::Tensor getTangents(const torch::Device& device) const;
+
+    /**
+     * @brief Get a tensor of vertex uvs on the specified device.
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    torch::Tensor getUVs(const torch::Device& device) const;
+
+    /**
+     * @brief Get the vertex positions as host tensor.
+     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
+     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
+     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getHostPositions() const { return getPositions(torch::Device(torch::kCPU)); }
+
+    /**
+     * @brief Get the vertex positions as device tensor.
+     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getDevicePositions() const { return getPositions(torch::Device(torch::kCUDA)); }
+
+    /**
+     * @brief Get the vertex colors as host tensor.
+     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
+     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
+     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getHostColors() const { return getColors(torch::Device(torch::kCPU)); }
+
+    /**
+     * @brief Get the vertex colors as device tensor.
+     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getDeviceColors() const { return getColors(torch::Device(torch::kCUDA)); }
+
+    /**
+     * @brief Get the vertex normals as host tensor.
+     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
+     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
+     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getHostNormals() const { return getNormals(torch::Device(torch::kCPU)); }
+
+    /**
+     * @brief Get the vertex normals as device tensor.
+     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getDeviceNormals() const { return getNormals(torch::Device(torch::kCUDA)); }
+
+    /**
+     * @brief Get the vertex tangents as host tensor.
+     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
+     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
+     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getHostTangents() const { return getTangents(torch::Device(torch::kCPU)); }
+
+    /**
+     * @brief Get the vertex tangents as device tensor.
+     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getDeviceTangents() const { return getTangents(torch::Device(torch::kCUDA)); }
+
+    /**
+     * @brief Get the vertex uvs as host tensor.
+     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
+     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
+     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getHostUVs() const { return getUVs(torch::Device(torch::kCPU)); }
+
+    /**
+     * @brief Get the vertex uvs as device tensor.
+     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
+     *
+     * @return The Tensor
+     */
+    inline torch::Tensor getDeviceUVs() const { return getUVs(torch::Device(torch::kCUDA)); }
 
 private:
     class Impl;

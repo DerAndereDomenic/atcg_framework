@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DataStructure/Graph.h>
+#include <torch/types.h>
 
 namespace atcg
 {
