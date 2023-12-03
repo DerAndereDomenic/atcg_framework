@@ -168,7 +168,7 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     spec_prefiltered_cubemap.sampler.mip_map     = true;
     prefiltered_cubemap                          = atcg::TextureCube::create(spec_prefiltered_cubemap);
 
-    auto img = IO::imread("res/lut.hdr");
+    auto img = IO::imread("res/LUT.hdr");
     TextureSpecification spec_lut;
     spec_lut.width             = img->width();
     spec_lut.height            = img->height();
