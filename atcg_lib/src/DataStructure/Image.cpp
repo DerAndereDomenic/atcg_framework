@@ -110,11 +110,15 @@ void Image::setData(const uint8_t* data)
 void Image::loadLDR(const std::string& filename)
 {
     _img_data = stbi_load(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0);
+
+    if(_img_data == nullptr) { ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename); }
 }
 
 void Image::loadHDR(const std::string& filename)
 {
     _img_data = (uint8_t*)stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0);
+
+    if(_img_data == nullptr) { ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename); }
 }
 
 
