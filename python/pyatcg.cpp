@@ -7,6 +7,7 @@
 #include <ATCG.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <torch/python.h>
 
 #include <imgui.h>
 
@@ -413,69 +414,24 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph")
         .def(py::init<>())
         .def_static("createPointCloud", py::overload_cast<>(&atcg::Graph::createPointCloud))
-        .def_static("createPointCloud",
-                    [](py::array_t<float> vertex_data)
-                    {
-                        py::buffer_info info = vertex_data.request();
-                        std::vector<atcg::Vertex> vertices((atcg::Vertex*)info.ptr,
-                                                           (atcg::Vertex*)info.ptr +
-                                                               info.size * sizeof(float) / sizeof(atcg::Vertex));
-                        return atcg::Graph::createPointCloud(vertices);
-                    })
-        .def_static("createGraph", py::overload_cast<>(&atcg::Graph::createPointCloud))
+        .def_static("createPointCloud", py::overload_cast<const torch::Tensor&>(&atcg::Graph::createPointCloud))
+        .def_static("createTriangleMesh", py::overload_cast<>(&atcg::Graph::createTriangleMesh))
+        .def_static("createTriangleMesh",
+                    py::overload_cast<const torch::Tensor&, const torch::Tensor&>(&atcg::Graph::createTriangleMesh))
+        .def_static("createGraph", py::overload_cast<>(&atcg::Graph::createGraph))
         .def_static("createGraph",
-                    [](py::array_t<float> vertex_data, py::array_t<float> edge_data)
-                    {
-                        py::buffer_info info_vertices = vertex_data.request();
-                        std::vector<atcg::Vertex> vertices((atcg::Vertex*)info_vertices.ptr,
-                                                           (atcg::Vertex*)info_vertices.ptr + info_vertices.size *
-                                                                                                  sizeof(float) /
-                                                                                                  sizeof(atcg::Vertex));
-
-                        py::buffer_info info_edges = edge_data.request();
-                        std::vector<atcg::Edge> edges((atcg::Edge*)info_edges.ptr,
-                                                      (atcg::Edge*)info_edges.ptr +
-                                                          info_edges.size * sizeof(float) / sizeof(atcg::Edge));
-                        return atcg::Graph::createGraph(vertices, edges);
-                    })
-        .def("updateVertices",
-             [](const atcg::ref_ptr<atcg::Graph>& graph, py::array_t<float> vertex_data)
-             {
-                 py::buffer_info info = vertex_data.request();
-                 std::vector<atcg::Vertex> vertices((atcg::Vertex*)info.ptr,
-                                                    (atcg::Vertex*)info.ptr +
-                                                        info.size * sizeof(float) / sizeof(atcg::Vertex));
-                 graph->updateVertices(vertices);
-             })
-        .def("updateEdges",
-             [](const atcg::ref_ptr<atcg::Graph>& graph, py::array_t<float> edge_data)
-             {
-                 py::buffer_info info_edges = edge_data.request();
-                 std::vector<atcg::Edge> edges((atcg::Edge*)info_edges.ptr,
-                                               (atcg::Edge*)info_edges.ptr +
-                                                   info_edges.size * sizeof(float) / sizeof(atcg::Edge));
-                 graph->updateEdges(edges);
-             })
-        .def("getPositions",
-             [](const atcg::ref_ptr<atcg::Graph>& graph)
-             {
-                 atcg::Vertex* vertices = graph->getVerticesBuffer()->getHostPointer<atcg::Vertex>();
-                 return py::memoryview::from_buffer((void*)vertices,
-                                                    sizeof(float),
-                                                    py::format_descriptor<float>::value,
-                                                    {(int)graph->n_vertices(), 3},
-                                                    {sizeof(atcg::Vertex), sizeof(float)});
-             })
-        .def("getFaces",
-             [](const atcg::ref_ptr<atcg::Graph>& graph)
-             {
-                 uint32_t* faces = graph->getFaceIndexBuffer()->getHostPointer<uint32_t>();
-                 return py::memoryview::from_buffer((void*)faces,
-                                                    sizeof(uint32_t),
-                                                    py::format_descriptor<uint32_t>::value,
-                                                    {(int)graph->n_faces(), 3},
-                                                    {sizeof(uint32_t) * 3, sizeof(uint32_t)});
-             })
+                    py::overload_cast<const torch::Tensor&, const torch::Tensor&>(&atcg::Graph::createGraph))
+        .def("updateVertices", py::overload_cast<const torch::Tensor&>(&atcg::Graph::updateVertices))
+        .def("updateFaces", py::overload_cast<const torch::Tensor&>(&atcg::Graph::updateFaces))
+        .def("updateEdges", py::overload_cast<const torch::Tensor&>(&atcg::Graph::updateEdges))
+        .def("getPositions", &atcg::Graph::getPositions)
+        .def("getColors", &atcg::Graph::getColors)
+        .def("getNormals", &atcg::Graph::getNormals)
+        .def("getTangents", &atcg::Graph::getTangents)
+        .def("getUVs", &atcg::Graph::getUVs)
+        .def("n_vertices", &atcg::Graph::n_vertices)
+        .def("n_faces", &atcg::Graph::n_faces)
+        .def("n_edges", &atcg::Graph::n_edges)
         .def("unmapPointers",
              [](const atcg::ref_ptr<atcg::Graph>& graph)
              {
