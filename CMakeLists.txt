@@ -125,6 +125,9 @@ file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform
 charonload_add_torch_library(atcg_lib STATIC)
 target_sources(atcg_lib PRIVATE ${atcg_lib_files} ${atcg_backend_files} ${atcg_renderer_files})
 
+# Workaround (?) for weird Windows DLL bugs in torch
+target_compile_options(atcg_lib PUBLIC $<$<COMPILE_LANG_AND_ID:CUDA,NVIDIA>:--diag-suppress 1388,1394,1390>)
+
 target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES)
 target_precompile_headers(atcg_lib PRIVATE "atcg_lib/include/atcgpch.h")
 
