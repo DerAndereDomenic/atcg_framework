@@ -134,7 +134,7 @@ VertexBuffer::VertexBuffer(size_t size)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, std::max(size_t(1), size), nullptr, GL_DYNAMIC_DRAW);
 
     impl           = atcg::make_scope<Impl>(_ID);
     impl->size     = size;
@@ -145,7 +145,7 @@ VertexBuffer::VertexBuffer(const void* data, size_t size)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, std::max(size_t(1), size), data, GL_DYNAMIC_DRAW);
 
     impl           = atcg::make_scope<Impl>(_ID);
     impl->size     = size;
