@@ -11,9 +11,14 @@ namespace atcg
  */
 namespace TensorOptions
 {
+inline torch::TensorOptions uint8HostOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt8).device(torch::kCPU);
+}
+
 inline torch::TensorOptions int8HostOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt16).device(torch::kCPU);
+    return torch::TensorOptions {}.dtype(torch::kInt8).device(torch::kCPU);
 }
 
 inline torch::TensorOptions int16HostOptions()
@@ -43,7 +48,12 @@ inline torch::TensorOptions doubleHostOptions()
 
 inline torch::TensorOptions int8DeviceOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt16).device(torch::kCUDA);
+    return torch::TensorOptions {}.dtype(torch::kInt8).device(torch::kCUDA);
+}
+
+inline torch::TensorOptions uint8DeviceOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt8).device(torch::kCUDA);
 }
 
 inline torch::TensorOptions int16DeviceOptions()
