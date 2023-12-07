@@ -526,6 +526,28 @@ torch::Tensor Graph::getUVs(const torch::Device& device) const
     else { return atcg::getUVsAsDeviceTensor(impl->vertices); }
 }
 
+void Graph::unmapVertexPointer()
+{
+    impl->vertices->unmapPointers();
+}
+
+void Graph::unmapEdgePointer()
+{
+    impl->edges->unmapPointers();
+}
+
+void Graph::unmapFacePointer()
+{
+    impl->indices->unmapPointers();
+}
+
+void Graph::unmapAllPointers()
+{
+    unmapVertexPointer();
+    unmapEdgePointer();
+    unmapFacePointer();
+}
+
 atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Options options)
 {
     // // TODO: Replace this with dedicated obj loader

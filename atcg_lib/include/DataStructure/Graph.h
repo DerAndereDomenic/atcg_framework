@@ -585,6 +585,26 @@ public:
      */
     inline torch::Tensor getDeviceUVs() const { return getUVs(torch::Device(torch::kCUDA)); }
 
+    /**
+     * @brief Unmaps all pointers of the vertex buffer
+    */
+    void unmapVertexPointer();
+
+    /**
+     * @brief Unmaps all pointers of the edge buffer
+    */
+    void unmapEdgePointer();
+
+    /**
+     * @brief Unmaps all pointers of the face buffer
+    */
+    void unmapFacePointer();
+
+    /**
+     * @brief Unmap all pointers of opengl buffers (vertex, edge and face buffers)
+    */
+    void unmapAllPointers();
+
 private:
     class Impl;
     atcg::scope_ptr<Impl> impl;
