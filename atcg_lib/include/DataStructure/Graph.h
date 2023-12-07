@@ -486,6 +486,33 @@ public:
     torch::Tensor getUVs(const torch::Device& device) const;
 
     /**
+     * @brief Get a tensor of edges the specified device. The data format is specified by atcg::Edge (i.e., (idx1, idx2,
+     * vec3(color), radius))
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    torch::Tensor getEdges(const torch::Device& device) const;
+
+    /**
+     * @brief Get a tensor of face indices on the specified device.
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    torch::Tensor getFaces(const torch::Device& device) const;
+
+    /**
      * @brief Get the vertex positions as host tensor.
      * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
      * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
@@ -586,23 +613,77 @@ public:
     inline torch::Tensor getDeviceUVs() const { return getUVs(torch::Device(torch::kCUDA)); }
 
     /**
+     * @brief Get a tensor of edges the host. The data format is specified by atcg::Edge (i.e., (idx1, idx2,
+     * vec3(color), radius))
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    inline torch::Tensor getHostEdges() const { return getEdges(torch::Device(torch::kCPU)); }
+
+    /**
+     * @brief Get a tensor of edges the host. The data format is specified by atcg::Edge (i.e., (idx1, idx2,
+     * vec3(color), radius))
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    inline torch::Tensor getDeviceEdges() const { return getEdges(torch::Device(torch::kCUDA)); }
+
+    /**
+     * @brief Get a tensor of face indices on the host.
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    inline torch::Tensor getHostFaces() const { return getFaces(torch::Device(torch::kCPU)); }
+
+    /**
+     * @brief Get a tensor of face indices on the device.
+     * @note This function maps the OpenGL buffer to a pointer. It has to be unmapped manually by the caller if the
+     * vertex buffer is used in any OpenGL operations afterward.
+     * Changes in the tensor directly translate to changes to the internal mesh structure and affect the rendering.
+     * Memory is non-contiguous.
+     *
+     * @param device The device
+     *
+     * @return A tensor that points to the vertex buffer.
+     */
+    inline torch::Tensor getDeviceFaces() const { return getFaces(torch::Device(torch::kCUDA)); }
+
+    /**
      * @brief Unmaps all pointers of the vertex buffer
-    */
+     */
     void unmapVertexPointer();
 
     /**
      * @brief Unmaps all pointers of the edge buffer
-    */
+     */
     void unmapEdgePointer();
 
     /**
      * @brief Unmaps all pointers of the face buffer
-    */
+     */
     void unmapFacePointer();
 
     /**
      * @brief Unmap all pointers of opengl buffers (vertex, edge and face buffers)
-    */
+     */
     void unmapAllPointers();
 
 private:

@@ -526,6 +526,34 @@ torch::Tensor Graph::getUVs(const torch::Device& device) const
     else { return atcg::getUVsAsDeviceTensor(impl->vertices); }
 }
 
+torch::Tensor Graph::getEdges(const torch::Device& device) const
+{
+    if(device.is_cpu())
+    {
+        float* edge_pointer = impl->edges->getHostPointer<float>();
+        return atcg::createHostTensorFromPointer<float>(edge_pointer, {n_edges(), 6});
+    }
+    else
+    {
+        float* edge_pointer = impl->edges->getDevicePointer<float>();
+        return atcg::createDeviceTensorFromPointer<float>(edge_pointer, {n_edges(), 6});
+    }
+}
+
+torch::Tensor Graph::getFaces(const torch::Device& device) const
+{
+    if(device.is_cpu())
+    {
+        int32_t* face_pointer = impl->indices->getHostPointer<int32_t>();
+        return atcg::createHostTensorFromPointer<int32_t>(face_pointer, {n_faces(), 3});
+    }
+    else
+    {
+        int32_t* face_pointer = impl->indices->getDevicePointer<int32_t>();
+        return atcg::createDeviceTensorFromPointer<int32_t>(face_pointer, {n_faces(), 3});
+    }
+}
+
 void Graph::unmapVertexPointer()
 {
     impl->vertices->unmapPointers();
