@@ -370,7 +370,7 @@ public:
 
     /**
      * @brief Update the number of vertices.
-     * Old data is lost
+     * Old data is lost if the new size is greater than the capacity of the vertex buffer.
      *
      * @param size The new size
      */
@@ -378,7 +378,7 @@ public:
 
     /**
      * @brief Update the number of faces.
-     * Old data is lost
+     * Old data is lost if the new size is greater than the capacity of the vertex buffer.
      *
      * @param size The new size
      */
@@ -386,7 +386,7 @@ public:
 
     /**
      * @brief Update the number of edges.
-     * Old data is lost
+     * Old data is lost if the new size is greater than the capacity of the vertex buffer.
      *
      * @param size The new size
      */
