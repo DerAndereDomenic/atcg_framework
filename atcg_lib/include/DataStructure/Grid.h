@@ -263,7 +263,7 @@ int32_t Grid<VoxelT>::voxel2index(const glm::ivec3& voxel)
 template<class VoxelT>
 glm::vec3 Grid<VoxelT>::voxel2position(const glm::ivec3& voxel)
 {
-    glm::vec3 center = (glm::vec3(voxel) - ((float)_dim.num_voxels - 1.0f) / 2.0f) * _dim.voxel_length;
+    glm::vec3 center = (glm::vec3(voxel) + 1.0f / 2.0f) * _dim.voxel_length;
     return center + _dim.origin;
 }
 
@@ -272,9 +272,9 @@ glm::ivec3 Grid<VoxelT>::position2voxel(const glm::vec3& position)
 {
     glm::vec3 center = position - _dim.origin;
 
-    int32_t x = static_cast<int32_t>(center.x / _dim.voxel_length + (float)_dim.num_voxels / 2.0f);
-    int32_t y = static_cast<int32_t>(center.y / _dim.voxel_length + (float)_dim.num_voxels / 2.0f);
-    int32_t z = static_cast<int32_t>(center.z / _dim.voxel_length + (float)_dim.num_voxels / 2.0f);
+    int32_t x = static_cast<int32_t>(center.x / _dim.voxel_length);
+    int32_t y = static_cast<int32_t>(center.y / _dim.voxel_length);
+    int32_t z = static_cast<int32_t>(center.z / _dim.voxel_length);
 
     return glm::ivec3(x, y, z);
 }
@@ -283,7 +283,7 @@ template<class VoxelT>
 glm::vec3 Grid<VoxelT>::voxel_center(const glm::vec3& position)
 {
     glm::ivec3 voxel = position2voxel(position);
-    return (glm::vec3(voxel) - ((float)_dim.num_voxels - 1) / 2.0f) * _dim.voxel_length + _dim.origin;
+    return voxel2position(voxel);
 }
 
 template<class VoxelT>
