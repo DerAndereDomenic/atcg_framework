@@ -344,7 +344,7 @@ atcg::textureArray Texture::getTextureArray(const uint32_t mip_level) const
 #ifdef ATCG_CUDA_BACKEND
     impl->mapResourceDevice();
     std::size_t size;
-    (cudaGraphicsSubResourceGetMappedArray(&impl->dev_ptr, impl->resource, 0, mip_level));
+    CUDA_SAFE_CALL(cudaGraphicsSubResourceGetMappedArray(&impl->dev_ptr, impl->resource, 0, mip_level));
 #endif
     return impl->dev_ptr;
 }
