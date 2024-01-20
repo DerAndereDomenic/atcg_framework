@@ -1,10 +1,19 @@
 #pragma once
 
-#include <DataStructure/Graph.h>
+#include <DataStructure/GraphDefinitions.h>
 #include <torch/types.h>
 
 namespace atcg
 {
+
+/// These types are used to easily switch between compilation with and without CUDA
+
+constexpr torch::DeviceType CPU = torch::kCPU;
+#ifdef ATCG_CUDA_BACKEND
+constexpr torch::DeviceType GPU = torch::kCUDA;
+#else
+constexpr torch::DeviceType GPU = torch::kCPU;
+#endif
 
 /**
  * @brief A namespace for quick access to commonly used tensor options
@@ -13,72 +22,72 @@ namespace TensorOptions
 {
 inline torch::TensorOptions uint8HostOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kUInt8).device(torch::kCPU);
+    return torch::TensorOptions {}.dtype(torch::kUInt8).device(atcg::CPU);
 }
 
 inline torch::TensorOptions int8HostOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt8).device(torch::kCPU);
+    return torch::TensorOptions {}.dtype(torch::kInt8).device(atcg::CPU);
 }
 
 inline torch::TensorOptions int16HostOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt16).device(torch::kCPU);
+    return torch::TensorOptions {}.dtype(torch::kInt16).device(atcg::CPU);
 }
 
 inline torch::TensorOptions int32HostOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt32).device(torch::kCPU);
+    return torch::TensorOptions {}.dtype(torch::kInt32).device(atcg::CPU);
 }
 
 inline torch::TensorOptions int64HostOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt64).device(torch::kCPU);
+    return torch::TensorOptions {}.dtype(torch::kInt64).device(atcg::CPU);
 }
 
 inline torch::TensorOptions floatHostOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kFloat32).device(torch::kCPU);
+    return torch::TensorOptions {}.dtype(torch::kFloat32).device(atcg::CPU);
 }
 
 inline torch::TensorOptions doubleHostOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kFloat64).device(torch::kCPU);
+    return torch::TensorOptions {}.dtype(torch::kFloat64).device(atcg::CPU);
 }
 
 inline torch::TensorOptions int8DeviceOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt8).device(torch::kCUDA);
+    return torch::TensorOptions {}.dtype(torch::kInt8).device(atcg::GPU);
 }
 
 inline torch::TensorOptions uint8DeviceOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kUInt8).device(torch::kCUDA);
+    return torch::TensorOptions {}.dtype(torch::kUInt8).device(atcg::GPU);
 }
 
 inline torch::TensorOptions int16DeviceOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt16).device(torch::kCUDA);
+    return torch::TensorOptions {}.dtype(torch::kInt16).device(atcg::GPU);
 }
 
 inline torch::TensorOptions int32DeviceOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt32).device(torch::kCUDA);
+    return torch::TensorOptions {}.dtype(torch::kInt32).device(atcg::GPU);
 }
 
 inline torch::TensorOptions int64DeviceOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kInt64).device(torch::kCUDA);
+    return torch::TensorOptions {}.dtype(torch::kInt64).device(atcg::GPU);
 }
 
 inline torch::TensorOptions floatDeviceOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kFloat32).device(torch::kCUDA);
+    return torch::TensorOptions {}.dtype(torch::kFloat32).device(atcg::GPU);
 }
 
 inline torch::TensorOptions doubleDeviceOptions()
 {
-    return torch::TensorOptions {}.dtype(torch::kFloat64).device(torch::kCUDA);
+    return torch::TensorOptions {}.dtype(torch::kFloat64).device(atcg::GPU);
 }
 
 template<typename T>
