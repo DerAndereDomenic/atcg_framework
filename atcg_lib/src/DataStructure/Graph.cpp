@@ -632,21 +632,8 @@ void Graph::unmapAllPointers()
     unmapFacePointer();
 }
 
-atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path, OpenMesh::IO::Options options)
+atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
 {
-    // // TODO: Replace this with dedicated obj loader
-    // atcg::ref_ptr<TriMesh> mesh = atcg::make_ref<TriMesh>();
-    // mesh->request_vertex_normals();
-    // mesh->request_face_normals();
-
-    // if(options.vertex_has_color()) { mesh->request_vertex_colors(); }
-    // if(options.face_has_color()) { mesh->request_face_colors(); }
-    // if(options.vertex_has_texcoord()) { mesh->request_vertex_texcoords2D(); }
-
-    // OpenMesh::IO::read_mesh(*mesh.get(), path, options);
-
-    // return Graph::createTriangleMesh(mesh);
-
     tinyobj::ObjReaderConfig reader_config;
     reader_config.mtl_search_path = "./";    // Path to material files
 

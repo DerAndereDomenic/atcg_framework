@@ -125,10 +125,9 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     }
 
     // Load a sphere
-    auto options = OpenMesh::IO::Options(OpenMesh::IO::Options(OpenMesh::IO::Options::VertexTexCoord));
-    sphere_mesh  = atcg::IO::read_mesh("res/sphere_low.obj", options);
+    sphere_mesh = atcg::IO::read_mesh("res/sphere_low.obj");
 
-    cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj", options);
+    cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj");
 
     // Generate CAD grid
     initGrid();

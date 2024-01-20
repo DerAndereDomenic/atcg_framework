@@ -34,8 +34,7 @@ public:
 
         scene = atcg::make_ref<atcg::Scene>();
 
-        auto options = OpenMesh::IO::Options(OpenMesh::IO::Options::VertexTexCoord);
-        plane        = atcg::IO::read_mesh("res/plane.obj", options);
+        plane = atcg::IO::read_mesh("res/plane.obj");
 
         auto entity = scene->createEntity("Plane");
         entity.addComponent<atcg::TransformComponent>();
