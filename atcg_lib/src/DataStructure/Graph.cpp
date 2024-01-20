@@ -775,4 +775,94 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
     return atcg::Graph::createTriangleMesh(vertices, faces);
 }
 
+atcg::ref_ptr<Graph> IO::read_pointcloud(const std::string& path)
+{
+    tinyobj::ObjReaderConfig reader_config;
+    reader_config.mtl_search_path = "./";    // Path to material files
+
+    tinyobj::ObjReader reader;
+
+    if(!reader.ParseFromFile(path, reader_config))
+    {
+        if(!reader.Error().empty()) { ATCG_ERROR("TinyObjReader: {0}", reader.Error()); }
+        return nullptr;
+    }
+
+    if(!reader.Warning().empty()) { ATCG_WARN("TinyObjReader: {0}", reader.Warning()); }
+
+    auto& attrib    = reader.GetAttrib();
+    auto& shapes    = reader.GetShapes();
+    auto& materials = reader.GetMaterials();
+
+    std::vector<atcg::Vertex> vertices;
+
+    struct less
+    {
+        bool operator()(const tinyobj::index_t& lhs, const tinyobj::index_t& rhs) const
+        {
+            if(lhs.vertex_index != rhs.vertex_index) return lhs.vertex_index < rhs.vertex_index;
+            if(lhs.normal_index != rhs.normal_index) return lhs.normal_index < rhs.normal_index;
+            return lhs.texcoord_index < rhs.texcoord_index;
+        }
+    };
+    std::map<tinyobj::index_t, uint32_t, less> index_map;
+
+    auto map_index = [&](const tinyobj::index_t& index)
+    {
+        auto it = index_map.find(index);
+        // Vertex not yet added
+        if(it == index_map.end())
+        {
+            it = index_map.insert({index, static_cast<uint32_t>(index_map.size())}).first;
+
+            atcg::Vertex vertex;
+            if(!attrib.vertices.empty())
+            {
+                vertex.position = glm::vec3(attrib.vertices[3 * index.vertex_index + 0],
+                                            attrib.vertices[3 * index.vertex_index + 1],
+                                            attrib.vertices[3 * index.vertex_index + 2]);
+            }
+
+            if(!attrib.normals.empty())
+            {
+                vertex.normal = glm::vec3(attrib.normals[3 * index.normal_index + 0],
+                                          attrib.normals[3 * index.normal_index + 1],
+                                          attrib.normals[3 * index.normal_index + 2]);
+            }
+
+            if(!attrib.texcoords.empty())
+            {
+                vertex.uv = glm::vec3(attrib.texcoords[2 * index.texcoord_index + 0],
+                                      attrib.texcoords[2 * index.texcoord_index + 1],
+                                      0.0f);
+            }
+
+            if(!attrib.texcoord_ws.empty()) { vertex.uv.z = attrib.texcoord_ws[index.texcoord_index]; }
+
+            if(!attrib.colors.empty())
+            {
+                vertex.color = glm::vec3(attrib.colors[3 * index.vertex_index + 0],
+                                         attrib.colors[3 * index.vertex_index + 1],
+                                         attrib.colors[3 * index.vertex_index + 2]);
+            }
+
+            vertices.push_back(vertex);
+        }
+        return it->second;
+    };
+
+    for(const auto& shape: shapes)
+    {
+        // Iterate over every vertex
+        ATCG_TRACE(shape.points.indices.size());
+        for(size_t v = 0; v < shape.mesh.indices.size(); ++v)
+        {
+            // Check if idx is already used and find appropriate index
+            size_t vertex_idx = map_index(shape.mesh.indices[v]);
+        }
+    }
+
+    return atcg::Graph::createPointCloud(vertices);
+}
+
 }    // namespace atcg
