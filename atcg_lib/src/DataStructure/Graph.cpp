@@ -69,6 +69,7 @@ void Graph::Impl::updateVertexBuffer(const torch::Tensor& pvertices)
     vertices->resize(n * sizeof(atcg::Vertex));
     if(pvertices.is_cuda())
     {
+#ifdef ATCG_CUDA_BACKEND
         float* vertex_buffer_ptr = vertices->getDevicePointer<float>();
 
         CUDA_SAFE_CALL(cudaMemcpy((void*)vertex_buffer_ptr,
@@ -77,6 +78,9 @@ void Graph::Impl::updateVertexBuffer(const torch::Tensor& pvertices)
                                   cudaMemcpyDeviceToDevice));
 
         vertices->unmapDevicePointers();
+#else
+        vertices->setData(pvertices.data_ptr(), sizeof(atcg::Vertex) * n);
+#endif
     }
     else { vertices->setData(pvertices.data_ptr(), sizeof(atcg::Vertex) * n); }
     n_vertices = n;
@@ -90,12 +94,16 @@ void Graph::Impl::updateEdgeBuffer(const torch::Tensor& pedges)
     edges->resize(sizeof(atcg::Edge) * n);
     if(pedges.is_cuda())
     {
+#ifdef ATCG_CUDA_BACKEND
         float* edge_buffer_ptr = edges->getDevicePointer<float>();
 
         CUDA_SAFE_CALL(
             cudaMemcpy((void*)edge_buffer_ptr, pedges.data_ptr(), sizeof(atcg::Edge) * n, cudaMemcpyDeviceToDevice));
 
         edges->unmapDevicePointers();
+#else
+        edges->setData(pedges.data_ptr(), sizeof(atcg::Edge) * n);
+#endif
     }
     else { edges->setData(pedges.data_ptr(), sizeof(atcg::Edge) * n); }
     n_edges = n;
@@ -109,6 +117,7 @@ void Graph::Impl::updateFaceBuffer(const torch::Tensor& pindices)
     indices->resize(sizeof(glm::u32vec3) * n);
     if(pindices.is_cuda())
     {
+#ifdef ATCG_CUDA_BACKEND
         uint32_t* face_buffer_ptr = indices->getDevicePointer<uint32_t>();
 
         CUDA_SAFE_CALL(cudaMemcpy((void*)face_buffer_ptr,
@@ -117,6 +126,9 @@ void Graph::Impl::updateFaceBuffer(const torch::Tensor& pindices)
                                   cudaMemcpyDeviceToDevice));
 
         indices->unmapDevicePointers();
+#else
+        indices->setData((const uint32_t*)pindices.data_ptr(), 3 * n);
+#endif
     }
     else { indices->setData((const uint32_t*)pindices.data_ptr(), 3 * n); }
 
