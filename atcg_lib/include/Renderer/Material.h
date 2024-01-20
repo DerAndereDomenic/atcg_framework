@@ -23,6 +23,8 @@ struct Material
 
     void setDiffuseColor(const glm::vec4& color);
 
+    void setDiffuseColor(const glm::vec3& color);
+
     void setRoughness(const float roughness);
 
     void setMetallic(const float metallic);
