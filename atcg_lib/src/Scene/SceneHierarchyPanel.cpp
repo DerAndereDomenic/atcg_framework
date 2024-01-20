@@ -571,34 +571,34 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                         component.color = color;
                                                     }
 
-                                                    float point_size = component.point_size;
+                                                    int point_size = (int)component.point_size;
                                                     label.str(std::string());
                                                     label << "Point Size##point" << id;
-                                                    if(ImGui::DragFloat(label.str().c_str(), &point_size))
+                                                    if(ImGui::DragInt(label.str().c_str(), &point_size, 1, 1, INT_MAX))
                                                     {
-                                                        component.point_size = point_size;
+                                                        component.point_size = (float)point_size;
                                                     }
                                                 });
-    detail::drawComponent<PointSphereRenderComponent>("Point Sphere Renderer",
-                                                      entity,
-                                                      [&](PointSphereRenderComponent& component)
-                                                      {
-                                                          ImGui::Checkbox("Visible##visiblepointsphere",
-                                                                          &component.visible);
+    detail::drawComponent<PointSphereRenderComponent>(
+        "Point Sphere Renderer",
+        entity,
+        [&](PointSphereRenderComponent& component)
+        {
+            ImGui::Checkbox("Visible##visiblepointsphere", &component.visible);
 
-                                                          float point_size = component.point_size;
-                                                          label.str(std::string());
-                                                          label << "Point Size##pointsphere" << id;
-                                                          if(ImGui::DragFloat(label.str().c_str(), &point_size))
-                                                          {
-                                                              component.point_size = point_size;
-                                                          }
+            float point_size = component.point_size;
+            label.str(std::string());
+            label << "Point Size##pointsphere" << id;
+            if(ImGui::DragFloat(label.str().c_str(), &point_size, 0.001f, 0.001f, FLT_MAX / INT_MAX))
+            {
+                component.point_size = point_size;
+            }
 
-                                                          // Material
-                                                          Material& material = component.material;
+            // Material
+            Material& material = component.material;
 
-                                                          detail::displayMaterial("pointsphere", material);
-                                                      });
+            detail::displayMaterial("pointsphere", material);
+        });
 
     detail::drawComponent<EdgeRenderComponent>("Edge Renderer",
                                                entity,
@@ -614,25 +614,25 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                    }
                                                });
 
-    detail::drawComponent<EdgeCylinderRenderComponent>("Edge Cylinder Renderer",
-                                                       entity,
-                                                       [&](EdgeCylinderRenderComponent& component)
-                                                       {
-                                                           ImGui::Checkbox("Visible##visibleedgecylinder",
-                                                                           &component.visible);
-                                                           label.str(std::string());
-                                                           label << "Radius##edgecylinder" << id;
-                                                           float radius = component.radius;
-                                                           if(ImGui::DragFloat(label.str().c_str(), &radius))
-                                                           {
-                                                               component.radius = radius;
-                                                           }
+    detail::drawComponent<EdgeCylinderRenderComponent>(
+        "Edge Cylinder Renderer",
+        entity,
+        [&](EdgeCylinderRenderComponent& component)
+        {
+            ImGui::Checkbox("Visible##visibleedgecylinder", &component.visible);
+            label.str(std::string());
+            label << "Radius##edgecylinder" << id;
+            float radius = component.radius;
+            if(ImGui::DragFloat(label.str().c_str(), &radius, 0.001f, 0.001f, FLT_MAX / INT_MAX))
+            {
+                component.radius = radius;
+            }
 
-                                                           // Material
-                                                           Material& material = component.material;
+            // Material
+            Material& material = component.material;
 
-                                                           detail::displayMaterial("edgecylinder", material);
-                                                       });
+            detail::displayMaterial("edgecylinder", material);
+        });
 
     detail::drawComponent<InstanceRenderComponent>("Instance Renderer",
                                                    entity,
