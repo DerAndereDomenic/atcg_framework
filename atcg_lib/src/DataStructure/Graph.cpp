@@ -566,9 +566,29 @@ torch::Tensor Graph::getFaces(const torch::Device& device) const
     }
 }
 
+void Graph::unmapHostVertexPointer()
+{
+    impl->vertices->unmapHostPointers();
+}
+
+void Graph::unmapDeviceVertexPointer()
+{
+    impl->vertices->unmapDevicePointers();
+}
+
 void Graph::unmapVertexPointer()
 {
     impl->vertices->unmapPointers();
+}
+
+void Graph::unmapHostEdgePointer()
+{
+    impl->edges->unmapHostPointers();
+}
+
+void Graph::unmapDeviceEdgePointer()
+{
+    impl->edges->unmapDevicePointers();
 }
 
 void Graph::unmapEdgePointer()
@@ -576,9 +596,33 @@ void Graph::unmapEdgePointer()
     impl->edges->unmapPointers();
 }
 
+void Graph::unmapHostFacePointer()
+{
+    impl->indices->unmapHostPointers();
+}
+
+void Graph::unmapDeviceFacePointer()
+{
+    impl->indices->unmapDevicePointers();
+}
+
 void Graph::unmapFacePointer()
 {
     impl->indices->unmapPointers();
+}
+
+void Graph::unmapAllHostPointers()
+{
+    unmapHostVertexPointer();
+    unmapHostEdgePointer();
+    unmapHostFacePointer();
+}
+
+void Graph::unmapAllDevicePointers()
+{
+    unmapDeviceVertexPointer();
+    unmapDeviceEdgePointer();
+    unmapDeviceFacePointer();
 }
 
 void Graph::unmapAllPointers()

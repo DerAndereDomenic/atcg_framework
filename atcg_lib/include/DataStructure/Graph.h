@@ -622,9 +622,29 @@ public:
     inline torch::Tensor getDeviceFaces() const { return getFaces(torch::Device(atcg::GPU)); }
 
     /**
+     * @brief Unmaps all host pointers of the vertex buffer
+     */
+    void unmapHostVertexPointer();
+
+    /**
+     * @brief Unmaps all device pointers of the vertex buffer
+     */
+    void unmapDeviceVertexPointer();
+
+    /**
      * @brief Unmaps all pointers of the vertex buffer
      */
     void unmapVertexPointer();
+
+    /**
+     * @brief Unmaps all host pointers of the edge buffer
+     */
+    void unmapHostEdgePointer();
+
+    /**
+     * @brief Unmaps all device pointers of the edge buffer
+     */
+    void unmapDeviceEdgePointer();
 
     /**
      * @brief Unmaps all pointers of the edge buffer
@@ -632,9 +652,29 @@ public:
     void unmapEdgePointer();
 
     /**
+     * @brief Unmaps all host pointers of the face buffer
+     */
+    void unmapHostFacePointer();
+
+    /**
+     * @brief Unmaps all device pointers of the face buffer
+     */
+    void unmapDeviceFacePointer();
+
+    /**
      * @brief Unmaps all pointers of the face buffer
      */
     void unmapFacePointer();
+
+    /**
+     * @brief Unmap all host pointers of opengl buffers (vertex, edge and face buffers)
+     */
+    void unmapAllHostPointers();
+
+    /**
+     * @brief Unmap all devicepointers of opengl buffers (vertex, edge and face buffers)
+     */
+    void unmapAllDevicePointers();
 
     /**
      * @brief Unmap all pointers of opengl buffers (vertex, edge and face buffers)
