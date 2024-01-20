@@ -691,6 +691,8 @@ namespace IO
 atcg::ref_ptr<Graph> read_mesh(const std::string& path);
 
 atcg::ref_ptr<Graph> read_pointcloud(const std::string& path);
+
+atcg::ref_ptr<Graph> read_lines(const std::string& path);
 }    // namespace IO
 
 }    // namespace atcg
