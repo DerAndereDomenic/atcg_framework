@@ -191,13 +191,13 @@ struct EdgeRenderComponent : public RenderComponent
 
 struct EdgeCylinderRenderComponent : public RenderComponent
 {
-    EdgeCylinderRenderComponent(float radius = 1.0f)
+    EdgeCylinderRenderComponent(float radius = 0.001f)
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER),
           radius(radius)
     {
     }
 
-    float radius = 1.0f;
+    float radius = 0.001f;
     Material material;
 };
 
