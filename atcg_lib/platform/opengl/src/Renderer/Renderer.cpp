@@ -640,6 +640,7 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
                     const atcg::ref_ptr<Shader>& shader,
                     DrawMode draw_mode)
 {
+    mesh->unmapAllPointers();
     switch(draw_mode)
     {
         case ATCG_DRAW_MODE_TRIANGLE:
@@ -751,7 +752,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
     // renderer.shader->setInt("entityID", entity_id);
     s_renderer->impl->white_pixel->use(0);
-
+    geometry.graph->unmapAllPointers();
     if(entity.hasComponent<MeshRenderComponent>())
     {
         MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
