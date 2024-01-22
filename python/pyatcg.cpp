@@ -1233,7 +1233,7 @@ PYBIND11_MODULE(pyatcg, m)
         "Image",
         [](uint32_t textureID, uint32_t width, uint32_t height)
         {
-            ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
+            ImGui::Image((void*)(uint64_t)(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
             return;
         },
         py::arg("textureID"),
