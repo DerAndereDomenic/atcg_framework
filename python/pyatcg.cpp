@@ -631,7 +631,7 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("sampler", &atcg::TextureSpecification::sampler)
         .def_readwrite("format", &atcg::TextureSpecification::format);
 
-    py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image")
+    py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image", py::buffer_protocol())
         .def(py::init<>())
         .def("load", &atcg::Image::load)
         .def("store", &atcg::Image::store)
@@ -640,7 +640,21 @@ PYBIND11_MODULE(pyatcg, m)
         .def("height", &atcg::Image::height)
         .def("channels", &atcg::Image::channels)
         .def("name", &atcg::Image::name)
-        .def("isHDR", &atcg::Image::isHDR);
+        .def("isHDR", &atcg::Image::isHDR)
+        .def_buffer(
+            [](const atcg::Image& img) -> py::buffer_info
+            {
+                bool isHDR  = img.isHDR();
+                size_t size = isHDR ? sizeof(float) : sizeof(uint8_t);
+                void* data  = (void*)img.data();
+                return py::buffer_info(data,
+                                       size,
+                                       isHDR ? py::format_descriptor<float>::format()
+                                             : py::format_descriptor<uint8_t>::format(),
+                                       3,
+                                       {img.height(), img.width(), img.channels()},
+                                       {img.width() * img.channels() * size, img.channels() * size, size});
+            });
 
     m.def("imread", &atcg::IO::imread);
     m.def("imwrite", &atcg::IO::imwrite);
