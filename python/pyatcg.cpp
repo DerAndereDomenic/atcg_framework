@@ -631,11 +631,35 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("sampler", &atcg::TextureSpecification::sampler)
         .def_readwrite("format", &atcg::TextureSpecification::format);
 
+    py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image")
+        .def(py::init<>())
+        .def("load", &atcg::Image::load)
+        .def("store", &atcg::Image::store)
+        .def("applyGamma", &atcg::Image::applyGamma)
+        .def("width", &atcg::Image::width)
+        .def("height", &atcg::Image::height)
+        .def("channels", &atcg::Image::channels)
+        .def("name", &atcg::Image::name)
+        .def("isHDR", &atcg::Image::isHDR);
+
+    m.def("imread", &atcg::IO::imread);
+    m.def("imwrite", &atcg::IO::imwrite);
+
     py::class_<atcg::Texture2D, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D")
         .def_static(
             "create",
             [](atcg::TextureSpecification spec) { return atcg::Texture2D::create(spec); },
             "specification"_a)
+        .def_static(
+            "create",
+            [](const atcg::ref_ptr<atcg::Image>& img, atcg::TextureSpecification spec)
+            { return atcg::Texture2D::create(img, spec); },
+            "img"_a,
+            "specification"_a)
+        .def_static(
+            "create",
+            [](const atcg::ref_ptr<atcg::Image>& img) { return atcg::Texture2D::create(img); },
+            "img"_a)
         .def("getID", &atcg::Texture2D::getID)
         .def(
             "setData",
