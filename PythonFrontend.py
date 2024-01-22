@@ -14,6 +14,8 @@ charonload.module_config["pyatcg"] = charonload.Config(
 )
 
 import pyatcg as atcg
+import torch
+import numpy as np
 
 class PythonLayer(atcg.Layer):
 
@@ -32,8 +34,8 @@ class PythonLayer(atcg.Layer):
         self.panel = atcg.SceneHierarchyPanel(self.scene)
 
         entity = self.scene.createEntity("Sphere")
-        graph = atcg.read_mesh("res/sphere_low.obj")
-        entity.addGeometryComponent(graph)
+        self.graph = atcg.read_mesh("res/sphere_low.obj")
+        entity.addGeometryComponent(self.graph)
         entity.addTransformComponent(atcg.vec3(0), atcg.vec3(1), atcg.vec3(0))
         entity.addMeshRenderComponent(atcg.ShaderManager.getShader("base"))
 

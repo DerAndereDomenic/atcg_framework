@@ -361,11 +361,17 @@ PYBIND11_MODULE(pyatcg, m)
 
     m_mat3
         .def(py::init(
-                 [](py::array_t<float> b)
+                 [](py::array_t<float, py::array::c_style | py::array::forcecast> b)
                  {
                      py::buffer_info info = b.request();
 
-                     glm::mat3 M = glm::make_mat3(static_cast<float*>(info.ptr));
+                     glm::mat3 M;
+
+                     const float* data = static_cast<const float*>(b.data());
+                     for(int i = 0; i < 3; ++i)
+                     {
+                         for(int j = 0; j < 3; ++j) { M[i][j] = data[b.index_at(j, i)]; }
+                     }
 
                      return M;
                  }),
@@ -373,21 +379,34 @@ PYBIND11_MODULE(pyatcg, m)
         .def_buffer(
             [](glm::mat3& M) -> py::buffer_info
             {
-                return py::buffer_info(glm::value_ptr(M),
+                float data[3][3];
+
+                for(int i = 0; i < 3; ++i)
+                {
+                    for(int j = 0; j < 3; ++j) { data[i][j] = M[j][i]; }
+                }
+
+                return py::buffer_info(data,
                                        sizeof(float),
                                        py::format_descriptor<float>::format(),
                                        2,
                                        {3, 3},
-                                       {sizeof(float), sizeof(float) * 3});
+                                       {sizeof(float) * 3, sizeof(float)});
             });
 
     m_mat4
         .def(py::init(
-                 [](py::array_t<float> b)
+                 [](py::array_t<float, py::array::c_style | py::array::forcecast> b)
                  {
                      py::buffer_info info = b.request();
 
-                     glm::mat4 M = glm::make_mat4(static_cast<float*>(info.ptr));
+                     glm::mat4 M;
+
+                     const float* data = static_cast<const float*>(b.data());
+                     for(int i = 0; i < 4; ++i)
+                     {
+                         for(int j = 0; j < 4; ++j) { M[i][j] = data[b.index_at(j, i)]; }
+                     }
 
                      return M;
                  }),
@@ -395,12 +414,19 @@ PYBIND11_MODULE(pyatcg, m)
         .def_buffer(
             [](glm::mat4& M) -> py::buffer_info
             {
-                return py::buffer_info(glm::value_ptr(M),
+                float data[4][4];
+
+                for(int i = 0; i < 4; ++i)
+                {
+                    for(int j = 0; j < 4; ++j) { data[i][j] = M[j][i]; }
+                }
+
+                return py::buffer_info(data,
                                        sizeof(float),
                                        py::format_descriptor<float>::format(),
                                        2,
                                        {4, 4},
-                                       {sizeof(float), sizeof(float) * 4});
+                                       {sizeof(float) * 4, sizeof(float)});
             });
 
     // ------------------- Datastructure ---------------------------------
@@ -425,23 +451,56 @@ PYBIND11_MODULE(pyatcg, m)
         .def("updateFaces", py::overload_cast<const torch::Tensor&>(&atcg::Graph::updateFaces))
         .def("updateEdges", py::overload_cast<const torch::Tensor&>(&atcg::Graph::updateEdges))
         .def("getPositions", &atcg::Graph::getPositions)
+        .def("getHostPositions", &atcg::Graph::getHostPositions)
+        .def("getDevicePositions", &atcg::Graph::getDevicePositions)
         .def("getColors", &atcg::Graph::getColors)
+        .def("getHostColors", &atcg::Graph::getHostColors)
+        .def("getDeviceColors", &atcg::Graph::getDeviceColors)
         .def("getNormals", &atcg::Graph::getNormals)
+        .def("getHostNormals", &atcg::Graph::getHostNormals)
+        .def("getDeviceNormals", &atcg::Graph::getDeviceNormals)
         .def("getTangents", &atcg::Graph::getTangents)
+        .def("getHostTangents", &atcg::Graph::getHostTangents)
+        .def("getDeviceTangents", &atcg::Graph::getDeviceTangents)
         .def("getUVs", &atcg::Graph::getUVs)
+        .def("getHostUVs", &atcg::Graph::getHostUVs)
+        .def("getDeviceUVs", &atcg::Graph::getDeviceUVs)
+        .def("getEdges", &atcg::Graph::getEdges)
+        .def("getHostEdges", &atcg::Graph::getHostEdges)
+        .def("getDeviceEdges", &atcg::Graph::getDeviceEdges)
         .def("n_vertices", &atcg::Graph::n_vertices)
         .def("n_faces", &atcg::Graph::n_faces)
         .def("n_edges", &atcg::Graph::n_edges)
-        .def("unmapPointers",
-             [](const atcg::ref_ptr<atcg::Graph>& graph)
-             {
-                 graph->getVerticesBuffer()->unmapPointers();
-                 graph->getFaceIndexBuffer()->unmapPointers();
-                 graph->getEdgesBuffer()->unmapPointers();
-             });
+        .def("unmapVertexPointer", &atcg::Graph::unmapVertexPointer)
+        .def("unmapHostVertexPointer", &atcg::Graph::unmapHostVertexPointer)
+        .def("unmapDeviceVertexPointer", &atcg::Graph::unmapDeviceVertexPointer)
+        .def("unmapEdgePointer", &atcg::Graph::unmapEdgePointer)
+        .def("unmapHostEdgePointer", &atcg::Graph::unmapHostEdgePointer)
+        .def("unmapDeviceEdgePointer", &atcg::Graph::unmapDeviceEdgePointer)
+        .def("unmapFacePointer", &atcg::Graph::unmapEdgePointer)
+        .def("unmapHostFacePointer", &atcg::Graph::unmapHostFacePointer)
+        .def("unmapDeviceFacePointer", &atcg::Graph::unmapDeviceFacePointer)
+        .def("unmapAllHostPointers", &atcg::Graph::unmapAllHostPointers)
+        .def("unmapAllDevicePointers", &atcg::Graph::unmapAllDevicePointers)
+        .def("unmapAllPointers", &atcg::Graph::unmapAllPointers);
     m.def(
         "read_mesh",
         [](const std::string& path) { return atcg::IO::read_mesh(path); },
+        "path"_a);
+
+    m.def(
+        "read_pointcloud",
+        [](const std::string& path) { return atcg::IO::read_pointcloud(path); },
+        "path"_a);
+
+    m.def(
+        "read_lines",
+        [](const std::string& path) { return atcg::IO::read_lines(path); },
+        "path"_a);
+
+    m.def(
+        "read_scene",
+        [](const std::string& path) { return atcg::IO::read_scene(path); },
         "path"_a);
 
 
