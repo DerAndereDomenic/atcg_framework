@@ -643,7 +643,7 @@ namespace detail
 tinyobj::ObjReader read_file(const std::string& path)
 {
     tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./";    // Path to material files
+    reader_config.mtl_search_path = "";    // Path to material files
 
     tinyobj::ObjReader reader;
 
@@ -854,9 +854,8 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
 {
     tinyobj::ObjReader reader = detail::read_file(path);
 
-    auto& attrib    = reader.GetAttrib();
-    auto& shapes    = reader.GetShapes();
-    auto& materials = reader.GetMaterials();
+    const auto& attrib = reader.GetAttrib();
+    const auto& shapes = reader.GetShapes();
 
     std::vector<atcg::Vertex> vertices;
     std::vector<glm::u32vec3> faces;
@@ -870,9 +869,8 @@ atcg::ref_ptr<Graph> IO::read_pointcloud(const std::string& path)
 {
     tinyobj::ObjReader reader = detail::read_file(path);
 
-    auto& attrib    = reader.GetAttrib();
-    auto& shapes    = reader.GetShapes();
-    auto& materials = reader.GetMaterials();
+    const auto& attrib = reader.GetAttrib();
+    const auto& shapes = reader.GetShapes();
 
     std::vector<atcg::Vertex> vertices;
 
@@ -885,9 +883,8 @@ atcg::ref_ptr<Graph> IO::read_lines(const std::string& path)
 {
     tinyobj::ObjReader reader = detail::read_file(path);
 
-    auto& attrib    = reader.GetAttrib();
-    auto& shapes    = reader.GetShapes();
-    auto& materials = reader.GetMaterials();
+    const auto& attrib = reader.GetAttrib();
+    const auto& shapes = reader.GetShapes();
 
     std::vector<atcg::Vertex> vertices;
     std::vector<atcg::Edge> edges;
@@ -903,9 +900,49 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
 
     tinyobj::ObjReader reader = detail::read_file(path);
 
-    auto& attrib    = reader.GetAttrib();
-    auto& shapes    = reader.GetShapes();
-    auto& materials = reader.GetMaterials();
+    const auto& attrib        = reader.GetAttrib();
+    const auto& shapes        = reader.GetShapes();
+    const auto& materials_obj = reader.GetMaterials();
+
+    std::vector<atcg::Material> materials(materials_obj.size());
+
+    for(uint32_t i = 0; i < materials_obj.size(); ++i)
+    {
+        const tinyobj::material_t& mat_obj = materials_obj[i];
+        atcg::Material& material           = materials[i];
+
+        if(mat_obj.diffuse_texname != "")
+        {
+            float gamma  = mat_obj.diffuse_texopt.colorspace == "linear" ? 1.0f : 2.2f;
+            auto img     = IO::imread(mat_obj.diffuse_texname, gamma);
+            auto texture = atcg::Texture2D::create(img);
+            material.setDiffuseTexture(texture);
+        }
+        else { material.setDiffuseColor(glm::make_vec3(mat_obj.diffuse)); }
+
+        if(mat_obj.metallic_texname != "")
+        {
+            auto img     = IO::imread(mat_obj.metallic_texname);
+            auto texture = atcg::Texture2D::create(img);
+            material.setMetallicTexture(texture);
+        }
+        else { material.setMetallic(mat_obj.metallic); }
+
+        if(mat_obj.roughness_texname != "")
+        {
+            auto img     = IO::imread(mat_obj.roughness_texname);
+            auto texture = atcg::Texture2D::create(img);
+            material.setRoughnessTexture(texture);
+        }
+        else { material.setRoughness(mat_obj.roughness); }
+
+        if(mat_obj.bump_texname != "")
+        {
+            auto img     = IO::imread(mat_obj.bump_texname);
+            auto texture = atcg::Texture2D::create(img);
+            material.setNormalTexture(texture);
+        }
+    }
 
     for(const auto& shape: shapes)
     {
@@ -942,7 +979,8 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             auto entity = scene->createEntity(shape.name);
             entity.addComponent<atcg::TransformComponent>();
             entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createTriangleMesh(vertices, faces));
-            entity.addComponent<atcg::MeshRenderComponent>();
+            auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
+            if(shape.mesh.material_ids[0] != -1) { renderer.material = materials[shape.mesh.material_ids[0]]; }
         }
     }
 

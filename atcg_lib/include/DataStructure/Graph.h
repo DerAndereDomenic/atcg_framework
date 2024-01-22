@@ -733,9 +733,12 @@ atcg::ref_ptr<Graph> read_lines(const std::string& path);
  * Kd - diffuse base color
  * Pr - surface roughness
  * Pm - surface metallic
- * norm -  normal map
  * map_Kd - diffuse base color texture
- * map_RMA - roughness and metallic texture (AO is not used)
+ * map_Pr - roughness texture
+ * map_Pm - metallic texture
+ * map_Bump - normal texture
+ *
+ * @note We do not use per-face materials but only per object materials
  *
  * @param path The path to the obj file
  *
