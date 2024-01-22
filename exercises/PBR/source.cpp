@@ -32,14 +32,7 @@ public:
         ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
         atcg::Renderer::setSkybox(skybox);
 
-        scene = atcg::make_ref<atcg::Scene>();
-
-        plane = atcg::IO::read_mesh("res/plane.obj");
-
-        auto entity = scene->createEntity("Plane");
-        entity.addComponent<atcg::TransformComponent>();
-        entity.addComponent<atcg::GeometryComponent>(plane);
-        auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
+        scene = atcg::IO::read_scene("res/test_scene.obj");
 
         panel = atcg::SceneHierarchyPanel(scene);
     }
