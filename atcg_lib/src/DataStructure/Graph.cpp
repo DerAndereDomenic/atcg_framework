@@ -716,6 +716,132 @@ void load_vertices(const tinyobj::attrib_t& attrib, std::vector<atcg::Vertex>& o
 
     loader(map_index);
 }
+
+void load_mesh_data(const tinyobj::attrib_t& attrib,
+                    const tinyobj::shape_t& shape,
+                    std::vector<atcg::Vertex>& out_vertices,
+                    std::vector<glm::u32vec3>& out_indices)
+{
+    // Iterate over every face
+    load_vertices(attrib,
+                  out_vertices,
+                  [&](const std::function<uint32_t(const tinyobj::index_t& index)> map_index)
+                  {
+                      size_t index_offset = 0;
+                      for(size_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f)
+                      {
+                          size_t fv = size_t(shape.mesh.num_face_vertices[f]);
+
+                          if(fv != 3) { ATCG_WARN("Detected a face with {0} vertices", fv); }
+
+                          glm::u32vec3 index;
+                          for(size_t v = 0; v < fv; ++v)
+                          {
+                              tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
+
+                              // Check if idx is already used and find appropriate index
+                              size_t vertex_idx = map_index(idx);
+                              index[v]          = vertex_idx;
+                          }
+
+                          out_indices.push_back(index);
+
+                          // Calculate tangent vector
+                          glm::vec3 pos1 = out_vertices[index[0]].position;
+                          glm::vec3 pos2 = out_vertices[index[1]].position;
+                          glm::vec3 pos3 = out_vertices[index[2]].position;
+
+                          glm::vec2 uv1 = out_vertices[index[0]].uv;
+                          glm::vec2 uv2 = out_vertices[index[1]].uv;
+                          glm::vec2 uv3 = out_vertices[index[2]].uv;
+
+                          glm::vec3 edge1 = pos2 - pos1;
+                          glm::vec3 edge2 = pos3 - pos1;
+
+                          glm::vec2 deltaUV1 = uv2 - uv1;
+                          glm::vec2 deltaUV2 = uv3 - uv1;
+
+                          float det = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+                          if(std::abs(det) >= 1e-5f)
+                          {
+                              float invdet = 1.0f / det;
+                              glm::vec3 tangent;
+                              tangent.x = det * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+                              tangent.y = det * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+                              tangent.z = det * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+                              tangent   = glm::normalize(tangent);
+
+                              out_vertices[index[0]].tangent += tangent;
+                              out_vertices[index[1]].tangent += tangent;
+                              out_vertices[index[2]].tangent += tangent;
+                          }
+
+                          index_offset += fv;
+                      }
+
+                      for(auto& vtx: out_vertices)
+                      {
+                          float len = glm::length2(vtx.tangent);
+                          if(len >= 1e-5f) { vtx.tangent = vtx.tangent / glm::sqrt(len); }
+                      }
+                  });
+}
+
+void load_pointcloud_data(const tinyobj::attrib_t& attrib,
+                          const tinyobj::shape_t& shape,
+                          std::vector<atcg::Vertex>& out_vertices)
+{
+    // Iterate over every face
+    load_vertices(attrib,
+                  out_vertices,
+                  [&](const std::function<uint32_t(const tinyobj::index_t& index)> map_index)
+                  {
+                      // Iterate over every vertex
+                      for(size_t v = 0; v < shape.mesh.indices.size(); ++v)
+                      {
+                          // Check if idx is already used and find appropriate index
+                          size_t vertex_idx = map_index(shape.mesh.indices[v]);
+                      }
+                  });
+}
+
+void load_line_data(const tinyobj::attrib_t& attrib,
+                    const tinyobj::shape_t& shape,
+                    std::vector<atcg::Vertex>& out_vertices,
+                    std::vector<atcg::Edge>& out_edges)
+{
+    // Iterate over every face
+    load_vertices(attrib,
+                  out_vertices,
+                  [&](const std::function<uint32_t(const tinyobj::index_t& index)>& map_index)
+                  {
+                      // Iterate over every vertex
+                      size_t index_offset = 0;
+                      for(size_t l = 0; l < shape.lines.num_line_vertices.size(); ++l)
+                      {
+                          // Check if idx is already used and find appropriate index
+                          size_t lv = size_t(shape.lines.num_line_vertices[l]);
+                          if(lv != 2) { ATCG_WARN("Detected a line with {0} vertices", lv); }
+
+                          glm::vec2 index;
+                          for(size_t v = 0; v < lv; ++v)
+                          {
+                              tinyobj::index_t idx = shape.lines.indices[index_offset + v];
+
+                              // Check if idx is already used and find appropriate index
+                              size_t vertex_idx = map_index(idx);
+                              index[v]          = vertex_idx;
+                          }
+
+                          atcg::Edge edge {index, glm::vec3(1), 1.0f};
+                          out_edges.push_back(edge);
+
+                          index_offset += lv;
+                      }
+                  });
+}
+
 }    // namespace detail
 }    // namespace IO
 
@@ -730,73 +856,7 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
     std::vector<atcg::Vertex> vertices;
     std::vector<glm::u32vec3> faces;
 
-    for(const auto& shape: shapes)
-    {
-        // Iterate over every face
-        detail::load_vertices(attrib,
-                              vertices,
-                              [&](const std::function<uint32_t(const tinyobj::index_t& index)> map_index)
-                              {
-                                  size_t index_offset = 0;
-                                  for(size_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f)
-                                  {
-                                      size_t fv = size_t(shape.mesh.num_face_vertices[f]);
-
-                                      if(fv != 3) { ATCG_WARN("Detected a face with {0} vertices", fv); }
-
-                                      glm::u32vec3 index;
-                                      for(size_t v = 0; v < fv; ++v)
-                                      {
-                                          tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
-
-                                          // Check if idx is already used and find appropriate index
-                                          size_t vertex_idx = map_index(idx);
-                                          index[v]          = vertex_idx;
-                                      }
-
-                                      faces.push_back(index);
-
-                                      // Calculate tangent vector
-                                      glm::vec3 pos1 = vertices[index[0]].position;
-                                      glm::vec3 pos2 = vertices[index[1]].position;
-                                      glm::vec3 pos3 = vertices[index[2]].position;
-
-                                      glm::vec2 uv1 = vertices[index[0]].uv;
-                                      glm::vec2 uv2 = vertices[index[1]].uv;
-                                      glm::vec2 uv3 = vertices[index[2]].uv;
-
-                                      glm::vec3 edge1 = pos2 - pos1;
-                                      glm::vec3 edge2 = pos3 - pos1;
-
-                                      glm::vec2 deltaUV1 = uv2 - uv1;
-                                      glm::vec2 deltaUV2 = uv3 - uv1;
-
-                                      float det = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
-
-                                      if(std::abs(det) >= 1e-5f)
-                                      {
-                                          float invdet = 1.0f / det;
-                                          glm::vec3 tangent;
-                                          tangent.x = det * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-                                          tangent.y = det * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-                                          tangent.z = det * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
-                                          tangent   = glm::normalize(tangent);
-
-                                          vertices[index[0]].tangent += tangent;
-                                          vertices[index[1]].tangent += tangent;
-                                          vertices[index[2]].tangent += tangent;
-                                      }
-
-                                      index_offset += fv;
-                                  }
-
-                                  for(auto& vtx: vertices)
-                                  {
-                                      float len = glm::length2(vtx.tangent);
-                                      if(len >= 1e-5f) { vtx.tangent = vtx.tangent / glm::sqrt(len); }
-                                  }
-                              });
-    }
+    for(const auto& shape: shapes) { detail::load_mesh_data(attrib, shape, vertices, faces); }
 
     return atcg::Graph::createTriangleMesh(vertices, faces);
 }
@@ -811,20 +871,7 @@ atcg::ref_ptr<Graph> IO::read_pointcloud(const std::string& path)
 
     std::vector<atcg::Vertex> vertices;
 
-    for(const auto& shape: shapes)
-    {
-        detail::load_vertices(attrib,
-                              vertices,
-                              [&](const std::function<uint32_t(const tinyobj::index_t& index)> map_index)
-                              {
-                                  // Iterate over every vertex
-                                  for(size_t v = 0; v < shape.mesh.indices.size(); ++v)
-                                  {
-                                      // Check if idx is already used and find appropriate index
-                                      size_t vertex_idx = map_index(shape.mesh.indices[v]);
-                                  }
-                              });
-    }
+    for(const auto& shape: shapes) { detail::load_pointcloud_data(attrib, shape, vertices); }
 
     return atcg::Graph::createPointCloud(vertices);
 }
@@ -840,37 +887,7 @@ atcg::ref_ptr<Graph> IO::read_lines(const std::string& path)
     std::vector<atcg::Vertex> vertices;
     std::vector<atcg::Edge> edges;
 
-    for(const auto& shape: shapes)
-    {
-        detail::load_vertices(attrib,
-                              vertices,
-                              [&](const std::function<uint32_t(const tinyobj::index_t& index)>& map_index)
-                              {
-                                  // Iterate over every vertex
-                                  size_t index_offset = 0;
-                                  for(size_t l = 0; l < shape.lines.num_line_vertices.size(); ++l)
-                                  {
-                                      // Check if idx is already used and find appropriate index
-                                      size_t lv = size_t(shape.lines.num_line_vertices[l]);
-                                      if(lv != 2) { ATCG_WARN("Detected a line with {0} vertices", lv); }
-
-                                      glm::vec2 index;
-                                      for(size_t v = 0; v < lv; ++v)
-                                      {
-                                          tinyobj::index_t idx = shape.lines.indices[index_offset + v];
-
-                                          // Check if idx is already used and find appropriate index
-                                          size_t vertex_idx = map_index(idx);
-                                          index[v]          = vertex_idx;
-                                      }
-
-                                      atcg::Edge edge {index, glm::vec3(1), 1.0f};
-                                      edges.push_back(edge);
-
-                                      index_offset += lv;
-                                  }
-                              });
-    }
+    for(const auto& shape: shapes) { detail::load_line_data(attrib, shape, vertices, edges); }
 
     return atcg::Graph::createGraph(vertices, edges);
 }
