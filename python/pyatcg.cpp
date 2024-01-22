@@ -37,9 +37,12 @@ private:
 class PythonApplication : public atcg::Application
 {
 public:
-    PythonApplication() : atcg::Application() {}
+    PythonApplication(atcg::Layer* layer) : atcg::Application() { pushLayer(layer); }
 
-    PythonApplication(const atcg::WindowProps& props) : atcg::Application(props) {}
+    PythonApplication(atcg::Layer* layer, const atcg::WindowProps& props) : atcg::Application(props)
+    {
+        pushLayer(layer);
+    }
 
     ~PythonApplication() {}
 };
@@ -102,7 +105,7 @@ PYBIND11_MODULE(pyatcg, m)
 
     m.def("start", &python_main, py::arg("application"));
     m.def("print_statistics", &atcg::print_statistics);
-    m_application.def(py::init<>()).def(py::init<atcg::WindowProps>()).def("pushLayer", &atcg::Application::pushLayer);
+    m_application.def(py::init<atcg::Layer*>()).def(py::init<atcg::Layer*, atcg::WindowProps>());
     m_layer.def(py::init<>())
         .def(py::init<std::string>(), "name"_a)
         .def("onAttach", &atcg::Layer::onAttach)

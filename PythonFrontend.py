@@ -73,9 +73,7 @@ def main():
     props.height = 1440
     
     layer = PythonLayer()
-    app = atcg.PythonApplication(props)
-
-    app.pushLayer(layer)
+    app = atcg.PythonApplication(layer, props)
 
     atcg.start(app)
 
