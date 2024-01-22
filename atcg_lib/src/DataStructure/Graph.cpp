@@ -2,6 +2,8 @@
 #include <tiny_obj_loader.h>
 #include <DataStructure/TorchUtils.h>
 #include <Scene/Scene.h>
+#include <Scene/Entity.h>
+#include <Scene/Components.h>
 
 namespace atcg
 {
@@ -679,30 +681,33 @@ void load_vertices(const tinyobj::attrib_t& attrib, std::vector<atcg::Vertex>& o
             it = index_map.insert({index, static_cast<uint32_t>(index_map.size())}).first;
 
             atcg::Vertex vertex;
-            if(!attrib.vertices.empty())
+            if(!attrib.vertices.empty() && index.vertex_index != -1)
             {
                 vertex.position = glm::vec3(attrib.vertices[3 * index.vertex_index + 0],
                                             attrib.vertices[3 * index.vertex_index + 1],
                                             attrib.vertices[3 * index.vertex_index + 2]);
             }
 
-            if(!attrib.normals.empty())
+            if(!attrib.normals.empty() && index.normal_index != -1)
             {
                 vertex.normal = glm::vec3(attrib.normals[3 * index.normal_index + 0],
                                           attrib.normals[3 * index.normal_index + 1],
                                           attrib.normals[3 * index.normal_index + 2]);
             }
 
-            if(!attrib.texcoords.empty())
+            if(!attrib.texcoords.empty() && index.texcoord_index != -1)
             {
                 vertex.uv = glm::vec3(attrib.texcoords[2 * index.texcoord_index + 0],
                                       attrib.texcoords[2 * index.texcoord_index + 1],
                                       0.0f);
             }
 
-            if(!attrib.texcoord_ws.empty()) { vertex.uv.z = attrib.texcoord_ws[index.texcoord_index]; }
+            if(!attrib.texcoord_ws.empty() && index.texcoord_index != -1)
+            {
+                vertex.uv.z = attrib.texcoord_ws[index.texcoord_index];
+            }
 
-            if(!attrib.colors.empty())
+            if(!attrib.colors.empty() && index.vertex_index != -1)
             {
                 vertex.color = glm::vec3(attrib.colors[3 * index.vertex_index + 0],
                                          attrib.colors[3 * index.vertex_index + 1],
@@ -798,10 +803,10 @@ void load_pointcloud_data(const tinyobj::attrib_t& attrib,
                   [&](const std::function<uint32_t(const tinyobj::index_t& index)> map_index)
                   {
                       // Iterate over every vertex
-                      for(size_t v = 0; v < shape.mesh.indices.size(); ++v)
+                      for(size_t v = 0; v < shape.points.indices.size(); ++v)
                       {
                           // Check if idx is already used and find appropriate index
-                          size_t vertex_idx = map_index(shape.mesh.indices[v]);
+                          size_t vertex_idx = map_index(shape.points.indices[v]);
                       }
                   });
 }
@@ -894,7 +899,54 @@ atcg::ref_ptr<Graph> IO::read_lines(const std::string& path)
 
 atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
 {
-    return nullptr;
+    atcg::ref_ptr<Scene> scene = atcg::make_ref<Scene>();
+
+    tinyobj::ObjReader reader = detail::read_file(path);
+
+    auto& attrib    = reader.GetAttrib();
+    auto& shapes    = reader.GetShapes();
+    auto& materials = reader.GetMaterials();
+
+    for(const auto& shape: shapes)
+    {
+        if(shape.lines.num_line_vertices.size() != 0)
+        {
+            // Load a line collection
+            std::vector<atcg::Vertex> vertices;
+            std::vector<atcg::Edge> edges;
+            detail::load_line_data(attrib, shape, vertices, edges);
+
+            auto entity = scene->createEntity(shape.name);
+            entity.addComponent<atcg::TransformComponent>();
+            entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createGraph(vertices, edges));
+            entity.addComponent<atcg::EdgeCylinderRenderComponent>();
+        }
+        else if(shape.points.indices.size() != 0)
+        {
+            // Load a point cloud
+            std::vector<atcg::Vertex> vertices;
+            detail::load_pointcloud_data(attrib, shape, vertices);
+
+            auto entity = scene->createEntity(shape.name);
+            entity.addComponent<atcg::TransformComponent>();
+            entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createPointCloud(vertices));
+            entity.addComponent<atcg::PointSphereRenderComponent>();
+        }
+        else
+        {
+            // Load a triangle mesh
+            std::vector<atcg::Vertex> vertices;
+            std::vector<glm::u32vec3> faces;
+            detail::load_mesh_data(attrib, shape, vertices, faces);
+
+            auto entity = scene->createEntity(shape.name);
+            entity.addComponent<atcg::TransformComponent>();
+            entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createTriangleMesh(vertices, faces));
+            entity.addComponent<atcg::MeshRenderComponent>();
+        }
+    }
+
+    return scene;
 }
 
 }    // namespace atcg

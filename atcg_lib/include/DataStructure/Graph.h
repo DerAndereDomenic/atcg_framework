@@ -703,8 +703,8 @@ atcg::ref_ptr<Graph> read_mesh(const std::string& path);
 
 /**
  * @brief Read an obj triangle cloud.
- * This method ignores face information and just creates a point cloud from the given vertices.
- * If the obj file contains multiple objects, they are all combined into one mesh representation.
+ * This method expects shapes that are created using the obj p tag. Face information is ignored.
+ * If the obj file contains multiple objects, they are all combined into one point cloud representation.
  * Material files are ignored.
  *
  * @param path The path to the obj file
@@ -727,9 +727,8 @@ atcg::ref_ptr<Graph> read_lines(const std::string& path);
 
 /**
  * @brief Read a scene representation from an obj file.
- * Create a scene object where each object is either a triangle mesh, a point cloud (if no face information is
- * specified) or a line collection. To use material files, export the obj with the pbr extension. The following
- * parameters are used:
+ * Create a scene object where each object is either a triangle mesh (f tag), a point cloud (p tag) or a line
+ * collection. To use material files, export the obj with the pbr extension. The following parameters are used:
  *
  * Kd - diffuse base color
  * Pr - surface roughness
