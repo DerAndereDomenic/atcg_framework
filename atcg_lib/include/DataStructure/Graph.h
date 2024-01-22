@@ -13,6 +13,7 @@
 
 namespace atcg
 {
+class Scene;
 
 /**
  * @brief An enum to distinguish between different graph types
@@ -688,11 +689,60 @@ private:
 
 namespace IO
 {
+
+/**
+ * @brief Read an obj (triangle) mesh.
+ * If the obj file contains multiple objects, they are all combined into one mesh representation.
+ * Material files are ignored
+ *
+ * @param path The path to the obj file
+ *
+ * @return The mesh representation
+ */
 atcg::ref_ptr<Graph> read_mesh(const std::string& path);
 
+/**
+ * @brief Read an obj triangle cloud.
+ * This method ignores face information and just creates a point cloud from the given vertices.
+ * If the obj file contains multiple objects, they are all combined into one mesh representation.
+ * Material files are ignored.
+ *
+ * @param path The path to the obj file
+ *
+ * @return The point cloud representation
+ */
 atcg::ref_ptr<Graph> read_pointcloud(const std::string& path);
 
+/**
+ * @brief Read an obj file representing a line collection.
+ * This method ignores all surface models (triangle meshes) and only creates geometry from the line tag (l).
+ * Only line segments with two vertices are supported (i.e. l x y).
+ * Material files are ignored
+ *
+ * @param path The path to the obj file
+ *
+ * @return The line representation
+ */
 atcg::ref_ptr<Graph> read_lines(const std::string& path);
+
+/**
+ * @brief Read a scene representation from an obj file.
+ * Create a scene object where each object is either a triangle mesh, a point cloud (if no face information is
+ * specified) or a line collection. To use material files, export the obj with the pbr extension. The following
+ * parameters are used:
+ *
+ * Kd - diffuse base color
+ * Pr - surface roughness
+ * Pm - surface metallic
+ * norm -  normal map
+ * map_Kd - diffuse base color texture
+ * map_RMA - roughness and metallic texture (AO is not used)
+ *
+ * @param path The path to the obj file
+ *
+ * @return The line representation
+ */
+atcg::ref_ptr<Scene> read_scene(const std::string& path);
 }    // namespace IO
 
 }    // namespace atcg

@@ -1,6 +1,7 @@
 #include <DataStructure/Graph.h>
 #include <tiny_obj_loader.h>
 #include <DataStructure/TorchUtils.h>
+#include <Scene/Scene.h>
 
 namespace atcg
 {
@@ -632,7 +633,12 @@ void Graph::unmapAllPointers()
     unmapFacePointer();
 }
 
-atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
+namespace IO
+{
+namespace detail
+{
+
+tinyobj::ObjReader read_file(const std::string& path)
 {
     tinyobj::ObjReaderConfig reader_config;
     reader_config.mtl_search_path = "./";    // Path to material files
@@ -642,10 +648,80 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
     if(!reader.ParseFromFile(path, reader_config))
     {
         if(!reader.Error().empty()) { ATCG_ERROR("TinyObjReader: {0}", reader.Error()); }
-        return nullptr;
+        return reader;
     }
 
     if(!reader.Warning().empty()) { ATCG_WARN("TinyObjReader: {0}", reader.Warning()); }
+
+    return reader;
+}
+
+template<typename Loader>
+void load_vertices(const tinyobj::attrib_t& attrib, std::vector<atcg::Vertex>& out_vertices, Loader loader)
+{
+    struct less
+    {
+        bool operator()(const tinyobj::index_t& lhs, const tinyobj::index_t& rhs) const
+        {
+            if(lhs.vertex_index != rhs.vertex_index) return lhs.vertex_index < rhs.vertex_index;
+            if(lhs.normal_index != rhs.normal_index) return lhs.normal_index < rhs.normal_index;
+            return lhs.texcoord_index < rhs.texcoord_index;
+        }
+    };
+    std::map<tinyobj::index_t, uint32_t, less> index_map;
+
+    auto map_index = [&](const tinyobj::index_t& index)
+    {
+        auto it = index_map.find(index);
+        // Vertex not yet added
+        if(it == index_map.end())
+        {
+            it = index_map.insert({index, static_cast<uint32_t>(index_map.size())}).first;
+
+            atcg::Vertex vertex;
+            if(!attrib.vertices.empty())
+            {
+                vertex.position = glm::vec3(attrib.vertices[3 * index.vertex_index + 0],
+                                            attrib.vertices[3 * index.vertex_index + 1],
+                                            attrib.vertices[3 * index.vertex_index + 2]);
+            }
+
+            if(!attrib.normals.empty())
+            {
+                vertex.normal = glm::vec3(attrib.normals[3 * index.normal_index + 0],
+                                          attrib.normals[3 * index.normal_index + 1],
+                                          attrib.normals[3 * index.normal_index + 2]);
+            }
+
+            if(!attrib.texcoords.empty())
+            {
+                vertex.uv = glm::vec3(attrib.texcoords[2 * index.texcoord_index + 0],
+                                      attrib.texcoords[2 * index.texcoord_index + 1],
+                                      0.0f);
+            }
+
+            if(!attrib.texcoord_ws.empty()) { vertex.uv.z = attrib.texcoord_ws[index.texcoord_index]; }
+
+            if(!attrib.colors.empty())
+            {
+                vertex.color = glm::vec3(attrib.colors[3 * index.vertex_index + 0],
+                                         attrib.colors[3 * index.vertex_index + 1],
+                                         attrib.colors[3 * index.vertex_index + 2]);
+            }
+
+            out_vertices.push_back(vertex);
+        }
+        return it->second;
+    };
+
+    loader(map_index);
+}
+}    // namespace detail
+}    // namespace IO
+
+atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
+{
+    tinyobj::ObjReader reader = detail::read_file(path);
 
     auto& attrib    = reader.GetAttrib();
     auto& shapes    = reader.GetShapes();
@@ -654,122 +730,72 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
     std::vector<atcg::Vertex> vertices;
     std::vector<glm::u32vec3> faces;
 
-    struct less
-    {
-        bool operator()(const tinyobj::index_t& lhs, const tinyobj::index_t& rhs) const
-        {
-            if(lhs.vertex_index != rhs.vertex_index) return lhs.vertex_index < rhs.vertex_index;
-            if(lhs.normal_index != rhs.normal_index) return lhs.normal_index < rhs.normal_index;
-            return lhs.texcoord_index < rhs.texcoord_index;
-        }
-    };
-    std::map<tinyobj::index_t, uint32_t, less> index_map;
-
-    auto map_index = [&](const tinyobj::index_t& index)
-    {
-        auto it = index_map.find(index);
-        // Vertex not yet added
-        if(it == index_map.end())
-        {
-            it = index_map.insert({index, static_cast<uint32_t>(index_map.size())}).first;
-
-            atcg::Vertex vertex;
-            if(!attrib.vertices.empty())
-            {
-                vertex.position = glm::vec3(attrib.vertices[3 * index.vertex_index + 0],
-                                            attrib.vertices[3 * index.vertex_index + 1],
-                                            attrib.vertices[3 * index.vertex_index + 2]);
-            }
-
-            if(!attrib.normals.empty())
-            {
-                vertex.normal = glm::vec3(attrib.normals[3 * index.normal_index + 0],
-                                          attrib.normals[3 * index.normal_index + 1],
-                                          attrib.normals[3 * index.normal_index + 2]);
-            }
-
-            if(!attrib.texcoords.empty())
-            {
-                vertex.uv = glm::vec3(attrib.texcoords[2 * index.texcoord_index + 0],
-                                      attrib.texcoords[2 * index.texcoord_index + 1],
-                                      0.0f);
-            }
-
-            if(!attrib.texcoord_ws.empty()) { vertex.uv.z = attrib.texcoord_ws[index.texcoord_index]; }
-
-            if(!attrib.colors.empty())
-            {
-                vertex.color = glm::vec3(attrib.colors[3 * index.vertex_index + 0],
-                                         attrib.colors[3 * index.vertex_index + 1],
-                                         attrib.colors[3 * index.vertex_index + 2]);
-            }
-
-            vertices.push_back(vertex);
-        }
-        return it->second;
-    };
-
     for(const auto& shape: shapes)
     {
         // Iterate over every face
-        size_t index_offset = 0;
-        for(size_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f)
-        {
-            size_t fv = size_t(shape.mesh.num_face_vertices[f]);
+        detail::load_vertices(attrib,
+                              vertices,
+                              [&](const std::function<uint32_t(const tinyobj::index_t& index)> map_index)
+                              {
+                                  size_t index_offset = 0;
+                                  for(size_t f = 0; f < shape.mesh.num_face_vertices.size(); ++f)
+                                  {
+                                      size_t fv = size_t(shape.mesh.num_face_vertices[f]);
 
-            if(fv != 3) { ATCG_WARN("Detected a face with {0} vertices", fv); }
+                                      if(fv != 3) { ATCG_WARN("Detected a face with {0} vertices", fv); }
 
-            glm::u32vec3 index;
-            for(size_t v = 0; v < fv; ++v)
-            {
-                tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
+                                      glm::u32vec3 index;
+                                      for(size_t v = 0; v < fv; ++v)
+                                      {
+                                          tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
 
-                // Check if idx is already used and find appropriate index
-                size_t vertex_idx = map_index(idx);
-                index[v]          = vertex_idx;
-            }
+                                          // Check if idx is already used and find appropriate index
+                                          size_t vertex_idx = map_index(idx);
+                                          index[v]          = vertex_idx;
+                                      }
 
-            faces.push_back(index);
+                                      faces.push_back(index);
 
-            // Calculate tangent vector
-            glm::vec3 pos1 = vertices[index[0]].position;
-            glm::vec3 pos2 = vertices[index[1]].position;
-            glm::vec3 pos3 = vertices[index[2]].position;
+                                      // Calculate tangent vector
+                                      glm::vec3 pos1 = vertices[index[0]].position;
+                                      glm::vec3 pos2 = vertices[index[1]].position;
+                                      glm::vec3 pos3 = vertices[index[2]].position;
 
-            glm::vec2 uv1 = vertices[index[0]].uv;
-            glm::vec2 uv2 = vertices[index[1]].uv;
-            glm::vec2 uv3 = vertices[index[2]].uv;
+                                      glm::vec2 uv1 = vertices[index[0]].uv;
+                                      glm::vec2 uv2 = vertices[index[1]].uv;
+                                      glm::vec2 uv3 = vertices[index[2]].uv;
 
-            glm::vec3 edge1 = pos2 - pos1;
-            glm::vec3 edge2 = pos3 - pos1;
+                                      glm::vec3 edge1 = pos2 - pos1;
+                                      glm::vec3 edge2 = pos3 - pos1;
 
-            glm::vec2 deltaUV1 = uv2 - uv1;
-            glm::vec2 deltaUV2 = uv3 - uv1;
+                                      glm::vec2 deltaUV1 = uv2 - uv1;
+                                      glm::vec2 deltaUV2 = uv3 - uv1;
 
-            float det = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+                                      float det = (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
 
-            if(std::abs(det) >= 1e-5f)
-            {
-                float invdet = 1.0f / det;
-                glm::vec3 tangent;
-                tangent.x = det * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
-                tangent.y = det * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
-                tangent.z = det * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
-                tangent   = glm::normalize(tangent);
+                                      if(std::abs(det) >= 1e-5f)
+                                      {
+                                          float invdet = 1.0f / det;
+                                          glm::vec3 tangent;
+                                          tangent.x = det * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+                                          tangent.y = det * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+                                          tangent.z = det * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+                                          tangent   = glm::normalize(tangent);
 
-                vertices[index[0]].tangent += tangent;
-                vertices[index[1]].tangent += tangent;
-                vertices[index[2]].tangent += tangent;
-            }
+                                          vertices[index[0]].tangent += tangent;
+                                          vertices[index[1]].tangent += tangent;
+                                          vertices[index[2]].tangent += tangent;
+                                      }
 
-            index_offset += fv;
-        }
+                                      index_offset += fv;
+                                  }
 
-        for(auto& vtx: vertices)
-        {
-            float len = glm::length2(vtx.tangent);
-            if(len >= 1e-5f) { vtx.tangent = vtx.tangent / glm::sqrt(len); }
-        }
+                                  for(auto& vtx: vertices)
+                                  {
+                                      float len = glm::length2(vtx.tangent);
+                                      if(len >= 1e-5f) { vtx.tangent = vtx.tangent / glm::sqrt(len); }
+                                  }
+                              });
     }
 
     return atcg::Graph::createTriangleMesh(vertices, faces);
@@ -777,18 +803,7 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
 
 atcg::ref_ptr<Graph> IO::read_pointcloud(const std::string& path)
 {
-    tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./";    // Path to material files
-
-    tinyobj::ObjReader reader;
-
-    if(!reader.ParseFromFile(path, reader_config))
-    {
-        if(!reader.Error().empty()) { ATCG_ERROR("TinyObjReader: {0}", reader.Error()); }
-        return nullptr;
-    }
-
-    if(!reader.Warning().empty()) { ATCG_WARN("TinyObjReader: {0}", reader.Warning()); }
+    tinyobj::ObjReader reader = detail::read_file(path);
 
     auto& attrib    = reader.GetAttrib();
     auto& shapes    = reader.GetShapes();
@@ -796,69 +811,19 @@ atcg::ref_ptr<Graph> IO::read_pointcloud(const std::string& path)
 
     std::vector<atcg::Vertex> vertices;
 
-    struct less
-    {
-        bool operator()(const tinyobj::index_t& lhs, const tinyobj::index_t& rhs) const
-        {
-            if(lhs.vertex_index != rhs.vertex_index) return lhs.vertex_index < rhs.vertex_index;
-            if(lhs.normal_index != rhs.normal_index) return lhs.normal_index < rhs.normal_index;
-            return lhs.texcoord_index < rhs.texcoord_index;
-        }
-    };
-    std::map<tinyobj::index_t, uint32_t, less> index_map;
-
-    auto map_index = [&](const tinyobj::index_t& index)
-    {
-        auto it = index_map.find(index);
-        // Vertex not yet added
-        if(it == index_map.end())
-        {
-            it = index_map.insert({index, static_cast<uint32_t>(index_map.size())}).first;
-
-            atcg::Vertex vertex;
-            if(!attrib.vertices.empty())
-            {
-                vertex.position = glm::vec3(attrib.vertices[3 * index.vertex_index + 0],
-                                            attrib.vertices[3 * index.vertex_index + 1],
-                                            attrib.vertices[3 * index.vertex_index + 2]);
-            }
-
-            if(!attrib.normals.empty())
-            {
-                vertex.normal = glm::vec3(attrib.normals[3 * index.normal_index + 0],
-                                          attrib.normals[3 * index.normal_index + 1],
-                                          attrib.normals[3 * index.normal_index + 2]);
-            }
-
-            if(!attrib.texcoords.empty())
-            {
-                vertex.uv = glm::vec3(attrib.texcoords[2 * index.texcoord_index + 0],
-                                      attrib.texcoords[2 * index.texcoord_index + 1],
-                                      0.0f);
-            }
-
-            if(!attrib.texcoord_ws.empty()) { vertex.uv.z = attrib.texcoord_ws[index.texcoord_index]; }
-
-            if(!attrib.colors.empty())
-            {
-                vertex.color = glm::vec3(attrib.colors[3 * index.vertex_index + 0],
-                                         attrib.colors[3 * index.vertex_index + 1],
-                                         attrib.colors[3 * index.vertex_index + 2]);
-            }
-
-            vertices.push_back(vertex);
-        }
-        return it->second;
-    };
-
     for(const auto& shape: shapes)
     {
-        // Iterate over every vertex
-        for(size_t v = 0; v < shape.mesh.indices.size(); ++v)
-        {
-            // Check if idx is already used and find appropriate index
-            size_t vertex_idx = map_index(shape.mesh.indices[v]);
-        }
+        detail::load_vertices(attrib,
+                              vertices,
+                              [&](const std::function<uint32_t(const tinyobj::index_t& index)> map_index)
+                              {
+                                  // Iterate over every vertex
+                                  for(size_t v = 0; v < shape.mesh.indices.size(); ++v)
+                                  {
+                                      // Check if idx is already used and find appropriate index
+                                      size_t vertex_idx = map_index(shape.mesh.indices[v]);
+                                  }
+                              });
     }
 
     return atcg::Graph::createPointCloud(vertices);
@@ -866,18 +831,7 @@ atcg::ref_ptr<Graph> IO::read_pointcloud(const std::string& path)
 
 atcg::ref_ptr<Graph> IO::read_lines(const std::string& path)
 {
-    tinyobj::ObjReaderConfig reader_config;
-    reader_config.mtl_search_path = "./";    // Path to material files
-
-    tinyobj::ObjReader reader;
-
-    if(!reader.ParseFromFile(path, reader_config))
-    {
-        if(!reader.Error().empty()) { ATCG_ERROR("TinyObjReader: {0}", reader.Error()); }
-        return nullptr;
-    }
-
-    if(!reader.Warning().empty()) { ATCG_WARN("TinyObjReader: {0}", reader.Warning()); }
+    tinyobj::ObjReader reader = detail::read_file(path);
 
     auto& attrib    = reader.GetAttrib();
     auto& shapes    = reader.GetShapes();
@@ -886,89 +840,44 @@ atcg::ref_ptr<Graph> IO::read_lines(const std::string& path)
     std::vector<atcg::Vertex> vertices;
     std::vector<atcg::Edge> edges;
 
-    struct less
-    {
-        bool operator()(const tinyobj::index_t& lhs, const tinyobj::index_t& rhs) const
-        {
-            if(lhs.vertex_index != rhs.vertex_index) return lhs.vertex_index < rhs.vertex_index;
-            if(lhs.normal_index != rhs.normal_index) return lhs.normal_index < rhs.normal_index;
-            return lhs.texcoord_index < rhs.texcoord_index;
-        }
-    };
-    std::map<tinyobj::index_t, uint32_t, less> index_map;
-
-    auto map_index = [&](const tinyobj::index_t& index)
-    {
-        auto it = index_map.find(index);
-        // Vertex not yet added
-        if(it == index_map.end())
-        {
-            it = index_map.insert({index, static_cast<uint32_t>(index_map.size())}).first;
-
-            atcg::Vertex vertex;
-            if(!attrib.vertices.empty())
-            {
-                vertex.position = glm::vec3(attrib.vertices[3 * index.vertex_index + 0],
-                                            attrib.vertices[3 * index.vertex_index + 1],
-                                            attrib.vertices[3 * index.vertex_index + 2]);
-            }
-
-            if(!attrib.normals.empty())
-            {
-                vertex.normal = glm::vec3(attrib.normals[3 * index.normal_index + 0],
-                                          attrib.normals[3 * index.normal_index + 1],
-                                          attrib.normals[3 * index.normal_index + 2]);
-            }
-
-            if(!attrib.texcoords.empty())
-            {
-                vertex.uv = glm::vec3(attrib.texcoords[2 * index.texcoord_index + 0],
-                                      attrib.texcoords[2 * index.texcoord_index + 1],
-                                      0.0f);
-            }
-
-            if(!attrib.texcoord_ws.empty()) { vertex.uv.z = attrib.texcoord_ws[index.texcoord_index]; }
-
-            if(!attrib.colors.empty())
-            {
-                vertex.color = glm::vec3(attrib.colors[3 * index.vertex_index + 0],
-                                         attrib.colors[3 * index.vertex_index + 1],
-                                         attrib.colors[3 * index.vertex_index + 2]);
-            }
-
-            vertices.push_back(vertex);
-        }
-        return it->second;
-    };
-
     for(const auto& shape: shapes)
     {
-        // Iterate over every vertex
-        size_t index_offset = 0;
-        for(size_t l = 0; l < shape.lines.num_line_vertices.size(); ++l)
-        {
-            // Check if idx is already used and find appropriate index
-            size_t lv = size_t(shape.lines.num_line_vertices[l]);
-            if(lv != 2) { ATCG_WARN("Detected a line with {0} vertices", lv); }
+        detail::load_vertices(attrib,
+                              vertices,
+                              [&](const std::function<uint32_t(const tinyobj::index_t& index)>& map_index)
+                              {
+                                  // Iterate over every vertex
+                                  size_t index_offset = 0;
+                                  for(size_t l = 0; l < shape.lines.num_line_vertices.size(); ++l)
+                                  {
+                                      // Check if idx is already used and find appropriate index
+                                      size_t lv = size_t(shape.lines.num_line_vertices[l]);
+                                      if(lv != 2) { ATCG_WARN("Detected a line with {0} vertices", lv); }
 
-            glm::vec2 index;
-            for(size_t v = 0; v < lv; ++v)
-            {
-                tinyobj::index_t idx = shape.lines.indices[index_offset + v];
+                                      glm::vec2 index;
+                                      for(size_t v = 0; v < lv; ++v)
+                                      {
+                                          tinyobj::index_t idx = shape.lines.indices[index_offset + v];
 
-                // Check if idx is already used and find appropriate index
-                size_t vertex_idx = map_index(idx);
-                index[v]          = vertex_idx;
-            }
+                                          // Check if idx is already used and find appropriate index
+                                          size_t vertex_idx = map_index(idx);
+                                          index[v]          = vertex_idx;
+                                      }
 
-            atcg::Edge edge {index, glm::vec3(1), 1.0f};
-            edges.push_back(edge);
+                                      atcg::Edge edge {index, glm::vec3(1), 1.0f};
+                                      edges.push_back(edge);
 
-            index_offset += lv;
-        }
+                                      index_offset += lv;
+                                  }
+                              });
     }
 
     return atcg::Graph::createGraph(vertices, edges);
+}
+
+atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
+{
+    return nullptr;
 }
 
 }    // namespace atcg
