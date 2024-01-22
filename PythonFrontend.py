@@ -68,13 +68,16 @@ class PythonLayer(atcg.Layer):
             
 
 def main():
-    layer = PythonLayer()
-
     props = atcg.WindowProps()
     props.width = 2560 
     props.height = 1440
+    
+    layer = PythonLayer()
+    app = atcg.PythonApplication(props)
 
-    atcg.show(layer, props)
+    app.pushLayer(layer)
+
+    atcg.start(app)
 
 main()
 atcg.print_statistics()

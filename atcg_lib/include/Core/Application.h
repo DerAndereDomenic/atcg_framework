@@ -12,7 +12,7 @@ namespace atcg
 class Application;
 int atcg_main(Application* app);
 }    // namespace atcg
-int python_main(atcg::Layer* layer, const atcg::WindowProps& props);
+int python_main(atcg::Application* app);
 
 namespace atcg
 {
@@ -120,7 +120,7 @@ private:
     LayerStack _layer_stack;
 
     friend int atcg::atcg_main(Application* app);
-    friend int ::python_main(atcg::Layer* layer, const atcg::WindowProps& props);    // Entry point for python bindings
+    friend int ::python_main(atcg::Application* app);    // Entry point for python bindings
     static Application* s_instance;
 };
 

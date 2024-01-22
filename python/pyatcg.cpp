@@ -47,13 +47,11 @@ public:
 //* This function isn't called but is needed for the linker
 atcg::Application* atcg::createApplication()
 {
-    return new PythonApplication;
+    return nullptr;
 }
 
-int python_main(atcg::Layer* layer, const atcg::WindowProps& props)
+int python_main(atcg::Application* app)
 {
-    atcg::Application* app = new PythonApplication(props);
-    app->pushLayer(layer);
     return atcg::atcg_main(app);
 }
 
@@ -73,8 +71,10 @@ PYBIND11_MODULE(pyatcg, m)
     )pbdoc";
 
     // ---------------- CORE ---------------------
-    auto m_layer  = py::class_<atcg::Layer, PythonLayer, std::unique_ptr<atcg::Layer, py::nodelete>>(m, "Layer");
-    auto m_event  = py::class_<atcg::Event>(m, "Event");
+    py::class_<atcg::Application>(m, "Application");
+    auto m_application = py::class_<PythonApplication, atcg::Application>(m, "PythonApplication");
+    auto m_layer       = py::class_<atcg::Layer, PythonLayer, std::unique_ptr<atcg::Layer, py::nodelete>>(m, "Layer");
+    auto m_event       = py::class_<atcg::Event>(m, "Event");
     auto m_camera = py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");
     auto m_controller =
         py::class_<atcg::FirstPersonController, atcg::ref_ptr<atcg::FirstPersonController>>(m, "FirstPersonController");
@@ -100,8 +100,9 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("pos_y", &atcg::WindowProps::pos_y)
         .def_readwrite("vsync", &atcg::WindowProps::vsync);
 
-    m.def("show", &python_main, "layer"_a, py::arg("props"));
+    m.def("start", &python_main, py::arg("application"));
     m.def("print_statistics", &atcg::print_statistics);
+    m_application.def(py::init<>()).def(py::init<atcg::WindowProps>()).def("pushLayer", &atcg::Application::pushLayer);
     m_layer.def(py::init<>())
         .def(py::init<std::string>(), "name"_a)
         .def("onAttach", &atcg::Layer::onAttach)
@@ -143,8 +144,6 @@ PYBIND11_MODULE(pyatcg, m)
         .def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
         .def("getWidth", &atcg::ViewportResizeEvent::getWidth)
         .def("getHeight", &atcg::ViewportResizeEvent::getHeight);
-
-    py::class_<atcg::Application, atcg::ref_ptr<atcg::Application>>(m, "Application");
 
     m.def("width",
           []()
