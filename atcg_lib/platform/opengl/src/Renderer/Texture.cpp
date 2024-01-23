@@ -1,6 +1,7 @@
 #include <Renderer/Texture.h>
 
 #include <glad/glad.h>
+#include <DataStructure/TorchUtils.h>
 
 #ifdef ATCG_CUDA_BACKEND
     #include <cuda_gl_interop.h>
@@ -158,6 +159,58 @@ GLenum toGLtype(TextureFormat format)
         case TextureFormat::DEPTH:
         {
             return GL_FLOAT;
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
+            return -1;
+        }
+    }
+}
+
+uint32_t num_channels(TextureFormat format)
+{
+    switch(format)
+    {
+        case TextureFormat::RG:
+        {
+            return 2;
+        }
+        case TextureFormat::RGB:
+        {
+            return 3;
+        }
+        case TextureFormat::RGBA:
+        {
+            return 4;
+        }
+        case TextureFormat::RGFLOAT:
+        {
+            return 1;
+        }
+        case TextureFormat::RGBFLOAT:
+        {
+            return 3;
+        }
+        case TextureFormat::RGBAFLOAT:
+        {
+            return 4;
+        }
+        case TextureFormat::RINT:
+        {
+            return 1;
+        }
+        case TextureFormat::RINT8:
+        {
+            return 1;
+        }
+        case TextureFormat::RFLOAT:
+        {
+            return 1;
+        }
+        case TextureFormat::DEPTH:
+        {
+            return 1;
         }
         default:
         {
@@ -450,8 +503,38 @@ Texture2D::~Texture2D()
     glDeleteTextures(1, &_ID);
 }
 
-void Texture2D::setData(const void* data)
+void Texture2D::setData(const torch::Tensor& data)
 {
+    TORCH_CHECK_EQ(data.numel() * data.element_size(), _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.size(0), _spec.height);
+    TORCH_CHECK_EQ(data.size(1), _spec.width);
+    int num_channels = detail::num_channels(_spec.format);
+    TORCH_CHECK_EQ(data.size(2), num_channels);
+
+    torch::Tensor pixel_data = data;
+    bool cuda_copy_possible  = num_channels == 1 || num_channels == 4;
+    if(data.is_cuda())
+    {
+        if(cuda_copy_possible)
+        {
+#ifdef ATCG_CUDA_BACKEND
+            atcg::textureArray array = getTextureArray();
+            CUDA_SAFE_CALL(cudaMemcpy2DToArray(array,
+                                               0,
+                                               0,
+                                               pixel_data.data_ptr(),
+                                               pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
+                                               pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
+                                               _spec.height,
+                                               cudaMemcpyDeviceToDevice));
+            unmapPointers();
+#endif
+            return;
+        }
+        ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy");
+        pixel_data = data.to(atcg::CPU);
+    }
+
     unmapPointers();
     glBindTexture(GL_TEXTURE_2D, _ID);
 
@@ -463,18 +546,54 @@ void Texture2D::setData(const void* data)
                     _spec.height,
                     detail::toGLformat(_spec.format),
                     detail::toGLtype(_spec.format),
-                    (void*)data);
+                    (void*)pixel_data.data_ptr());
 }
 
-std::vector<uint8_t> Texture2D::getData() const
+torch::Tensor Texture2D::getData(const torch::Device& device) const
 {
-    unmapPointers();
-    std::size_t size = detail::toSize(_spec.format) * _spec.width * _spec.height;
+    int num_channels = detail::num_channels(_spec.format);
+    bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
+               _spec.format == TextureFormat::RGBFLOAT;
 
-    std::vector<uint8_t> pixels(size);
+    torch::Tensor result;
+#ifdef ATCG_CUDA_BACKEND
+    bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
+    if(cuda_copy_possible && device.is_cuda())
+    {
+        result =
+            torch::empty({_spec.height, _spec.width, num_channels},
+                         hdr ? atcg::TensorOptions::floatDeviceOptions() : atcg::TensorOptions::uint8DeviceOptions());
+
+        atcg::textureArray array = getTextureArray();
+
+        CUDA_SAFE_CALL(cudaMemcpy2DFromArray(result.data_ptr(),
+                                             result.size(1) * result.size(2) * result.element_size(),
+                                             array,
+                                             0,
+                                             0,
+                                             result.size(1) * result.size(2) * result.element_size(),
+                                             _spec.height,
+                                             cudaMemcpyDeviceToDevice));
+
+        unmapPointers();
+
+        return result;
+    }
+    else if(device.is_cuda()) { ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy"); }
+#endif
+
+    unmapPointers();
+
+    result = torch::empty({_spec.height, _spec.width, num_channels},
+                          hdr ? atcg::TensorOptions::floatHostOptions() : atcg::TensorOptions::uint8HostOptions());
+
     use();
-    glGetTexImage(GL_TEXTURE_2D, 0, detail::toGLformat(_spec.format), detail::toGLtype(_spec.format), pixels.data());
-    return pixels;
+    glGetTexImage(GL_TEXTURE_2D,
+                  0,
+                  detail::toGLformat(_spec.format),
+                  detail::toGLtype(_spec.format),
+                  result.data_ptr());
+    return result;
 }
 
 void Texture2D::use(const uint32_t& slot) const
@@ -541,8 +660,48 @@ Texture3D::~Texture3D()
     glDeleteTextures(1, &_ID);
 }
 
-void Texture3D::setData(const void* data)
+void Texture3D::setData(const torch::Tensor& data)
 {
+    TORCH_CHECK_EQ(data.numel() * data.element_size(),
+                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.size(0), _spec.depth);
+    TORCH_CHECK_EQ(data.size(1), _spec.height);
+    TORCH_CHECK_EQ(data.size(2), _spec.width);
+    int num_channels = detail::num_channels(_spec.format);
+    TORCH_CHECK_EQ(data.size(3), num_channels);
+
+    torch::Tensor pixel_data = data;
+    bool cuda_copy_possible  = num_channels == 1 || num_channels == 4;
+    if(data.is_cuda())
+    {
+        if(cuda_copy_possible)
+        {
+#ifdef ATCG_CUDA_BACKEND
+            atcg::textureArray array   = getTextureArray();
+            cudaChannelFormatDesc desc = {};
+            cudaExtent ext             = {};
+            unsigned int array_flags   = 0;
+
+            CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
+
+            cudaMemcpy3DParms p = {0};
+            p.dstArray          = array;
+            p.kind              = cudaMemcpyDeviceToDevice;
+            p.srcPtr.ptr        = pixel_data.contiguous().data_ptr();
+            p.srcPtr.pitch      = ext.width * num_channels;
+            p.srcPtr.xsize      = ext.width;
+            p.srcPtr.ysize      = ext.height;
+            p.extent            = ext;
+
+            CUDA_SAFE_CALL(cudaMemcpy3D(&p));
+            unmapPointers();
+#endif
+            return;
+        }
+        ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy");
+        pixel_data = data.to(atcg::CPU);
+    }
+
     unmapPointers();
     glBindTexture(GL_TEXTURE_3D, _ID);
 
@@ -556,18 +715,62 @@ void Texture3D::setData(const void* data)
                     _spec.depth,
                     detail::toGLformat(_spec.format),
                     detail::toGLtype(_spec.format),
-                    (void*)data);
+                    (void*)pixel_data.data_ptr());
 }
 
-std::vector<uint8_t> Texture3D::getData() const
+torch::Tensor Texture3D::getData(const torch::Device& device) const
 {
-    unmapPointers();
-    std::size_t size = detail::toSize(_spec.format) * _spec.width * _spec.height * _spec.depth;
+    int num_channels = detail::num_channels(_spec.format);
+    bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
+               _spec.format == TextureFormat::RGBFLOAT;
 
-    std::vector<uint8_t> pixels(size);
+    torch::Tensor result;
+#ifdef ATCG_CUDA_BACKEND
+    bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
+    if(cuda_copy_possible && device.is_cuda())
+    {
+        result =
+            torch::empty({_spec.depth, _spec.height, _spec.width, num_channels},
+                         hdr ? atcg::TensorOptions::floatDeviceOptions() : atcg::TensorOptions::uint8DeviceOptions());
+
+        atcg::textureArray array = getTextureArray();
+
+        cudaChannelFormatDesc desc = {};
+        cudaExtent ext             = {};
+        unsigned int array_flags   = 0;
+
+        CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
+
+        cudaMemcpy3DParms p = {0};
+        p.srcArray          = array;
+        p.kind              = cudaMemcpyDeviceToDevice;
+        p.dstPtr.ptr        = result.contiguous().data_ptr();
+        p.dstPtr.pitch      = ext.width * num_channels;
+        p.dstPtr.xsize      = ext.width;
+        p.dstPtr.ysize      = ext.height;
+        p.extent            = ext;
+
+        CUDA_SAFE_CALL(cudaMemcpy3D(&p));
+
+        unmapPointers();
+
+        return result;
+    }
+    else if(device.is_cuda()) { ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy"); }
+#endif
+
+    unmapPointers();
+
+    result = torch::empty({_spec.depth, _spec.height, _spec.width, num_channels},
+                          hdr ? atcg::TensorOptions::floatHostOptions() : atcg::TensorOptions::uint8HostOptions());
+
     use();
-    glGetTexImage(GL_TEXTURE_3D, 0, detail::toGLformat(_spec.format), detail::toGLtype(_spec.format), pixels.data());
-    return pixels;
+    glGetTexImage(GL_TEXTURE_3D,
+                  0,
+                  detail::toGLformat(_spec.format),
+                  detail::toGLtype(_spec.format),
+                  result.data_ptr());
+    return result;
 }
 
 void Texture3D::use(const uint32_t& slot) const

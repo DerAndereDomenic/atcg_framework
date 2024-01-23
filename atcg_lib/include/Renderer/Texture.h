@@ -2,6 +2,7 @@
 
 #include <Core/Memory.h>
 #include <DataStructure/Image.h>
+#include <DataStructure/TorchUtils.h>
 
 #include <cstdint>
 namespace atcg
@@ -95,18 +96,28 @@ public:
 
     /**
      * @brief Set the data of the texture.
+     * The tensor can be a host or device tensor if CUDA is enabled.
+     * For CPU tensors a host-device memcpy is performed.
+     * For Device Tensors a device-device copy is performed.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
      *
      * @param data The data
      */
-    virtual void setData(const void* data) = 0;
+    virtual void setData(const torch::Tensor& data) = 0;
 
     /**
      * @brief Get the data in the texture.
-     * This copies between CPU and GPU memory.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
+     *
+     * @param device The device
      *
      * @return The data
      */
-    virtual std::vector<uint8_t> getData() const = 0;
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU)) const = 0;
 
     /**
      * @brief Get the width of the texture
@@ -256,18 +267,28 @@ public:
 
     /**
      * @brief Set the data of the texture.
+     * The tensor can be a host or device tensor if CUDA is enabled.
+     * For CPU tensors a host-device memcpy is performed.
+     * For Device Tensors a device-device copy is performed.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
      *
      * @param data The data
      */
-    virtual void setData(const void* data) override;
+    virtual void setData(const torch::Tensor& data) override;
 
     /**
      * @brief Get the data in the texture.
-     * This copies between CPU and GPU memory.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
+     *
+     * @param device The device
      *
      * @return The data
      */
-    virtual std::vector<uint8_t> getData() const override;
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU)) const override;
 
     /**
      * @brief Use this texture
@@ -314,18 +335,28 @@ public:
 
     /**
      * @brief Set the data of the texture.
+     * The tensor can be a host or device tensor if CUDA is enabled.
+     * For CPU tensors a host-device memcpy is performed.
+     * For Device Tensors a device-device copy is performed.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
      *
      * @param data The data
      */
-    virtual void setData(const void* data) override;
+    virtual void setData(const torch::Tensor& data) override;
 
     /**
      * @brief Get the data in the texture.
-     * This copies between CPU and GPU memory.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
+     *
+     * @param device The device
      *
      * @return The data
      */
-    virtual std::vector<uint8_t> getData() const override;
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU)) const override;
 
     /**
      * @brief Use this texture
@@ -364,20 +395,28 @@ public:
 
     /**
      * @brief Set the data of the texture.
-     * @note This is not implemented for cube maps
+     * The tensor can be a host or device tensor if CUDA is enabled.
+     * For CPU tensors a host-device memcpy is performed.
+     * For Device Tensors a device-device copy is performed.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
      *
      * @param data The data
      */
-    virtual void setData(const void* data) override {};
+    virtual void setData(const torch::Tensor& data) override {}
 
     /**
      * @brief Get the data in the texture.
-     * This copies between CPU and GPU memory.
-     * @note This is not implemented for cube maps
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
+     *
+     * @param device The device
      *
      * @return The data
      */
-    virtual std::vector<uint8_t> getData() const override { return {}; }
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU)) const override { return {}; }
 
     /**
      * @brief Use this texture
