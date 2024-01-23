@@ -33,11 +33,27 @@ class PythonLayer(atcg.Layer):
 
         self.panel = atcg.SceneHierarchyPanel(self.scene)
 
-        entity = self.scene.createEntity("Sphere")
-        self.graph = atcg.read_mesh("res/sphere_low.obj")
+        entity = self.scene.createEntity("Cylinder")
+        self.graph = atcg.read_mesh("res/cylinder.obj")
         entity.addGeometryComponent(self.graph)
         entity.addTransformComponent(atcg.vec3(0), atcg.vec3(1), atcg.vec3(0))
-        entity.addMeshRenderComponent(atcg.ShaderManager.getShader("base"))
+        renderer = entity.addMeshRenderComponent(atcg.ShaderManager.getShader("base"))
+
+        diffuse_img = atcg.imread("res/pbr/diffuse.png", 2.2)
+        normal_img = atcg.imread("res/pbr/normals.png", 1.0)
+        roughness_img = atcg.imread("res/pbr/roughness.png", 1.0)
+        metallic_img = atcg.imread("res/pbr/metallic.png", 1.0)
+
+        diffuse_texture = atcg.Texture2D.create(diffuse_img)
+        normal_texture = atcg.Texture2D.create(normal_img)
+        roughness_texture = atcg.Texture2D.create(roughness_img)
+        metallic_texture = atcg.Texture2D.create(metallic_img)
+
+        renderer.material.setDiffuseTexture(diffuse_texture)
+        renderer.material.setNormalTexture(normal_texture)
+        renderer.material.setRoughnessTexture(roughness_texture)
+        renderer.material.setMetallicTexture(metallic_texture)
+        entity.replaceMeshRenderComponent(renderer)
 
         self.current_operation = atcg.ImGui.GuizmoOperation.TRANSLATE
 
