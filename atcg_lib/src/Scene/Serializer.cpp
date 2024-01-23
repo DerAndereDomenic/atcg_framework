@@ -193,16 +193,10 @@ void serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path
                texture->getSpecification().format == TextureFormat::RFLOAT;
     std::string file_ending = hdr ? ".hdr" : ".png";
 
-    auto img_data = texture->getData();
+    auto img_data = texture->getData(atcg::CPU);
     atcg::ref_ptr<Image> img;
-    if(hdr)
-    {
-        img = atcg::make_ref<Image>(reinterpret_cast<const float*>(img_data.data()),
-                                    texture->width(),
-                                    texture->height(),
-                                    channels);
-    }
-    else { img = atcg::make_ref<Image>(img_data.data(), texture->width(), texture->height(), channels); }
+    if(hdr) { img = atcg::make_ref<Image>((float*)img_data.data_ptr(), texture->width(), texture->height(), channels); }
+    else { img = atcg::make_ref<Image>((uint8_t*)img_data.data_ptr(), texture->width(), texture->height(), channels); }
 
     path = path + file_ending;
     IO::imwrite(img, path, gamma);
@@ -235,8 +229,10 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     }
     else
     {
-        auto data         = diffuse_texture->getData();
-        glm::u8vec3 color = *((glm::u8vec4*)(data.data()));
+        auto data         = diffuse_texture->getData(atcg::CPU);
+        glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
+                             data.index({0, 0, 1}).item<uint8_t>(),
+                             data.index({0, 0, 2}).item<uint8_t>()};
 
         glm::vec3 c(color);
         c = c / 255.0f;
@@ -263,8 +259,8 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     }
     else
     {
-        auto data   = metallic_texture->getData();
-        float color = *((float*)(data.data()));
+        auto data   = metallic_texture->getData(atcg::CPU);
+        float color = data.item<float>();
 
         out << YAML::Key << RENDER_MATERIAL_METALLIC << YAML::Value << color;
     }
@@ -279,8 +275,8 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     }
     else
     {
-        auto data   = roughness_texture->getData();
-        float color = *((float*)(data.data()));
+        auto data   = roughness_texture->getData(atcg::CPU);
+        float color = data.item<float>();
 
         out << YAML::Key << RENDER_MATERIAL_ROUGHNESS << YAML::Value << color;
     }

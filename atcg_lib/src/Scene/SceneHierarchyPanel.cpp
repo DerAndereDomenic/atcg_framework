@@ -3,6 +3,7 @@
 #include <imgui.h>
 #include <Scene/Components.h>
 #include <portable-file-dialogs.h>
+#include <DataStructure/TorchUtils.h>
 
 namespace atcg
 {
@@ -55,12 +56,12 @@ void displayMaterial(const std::string& key, Material& material)
 
         if(!useTextures)
         {
-            auto diffuse = material.getDiffuseTexture()->getData();
+            auto diffuse = material.getDiffuseTexture()->getData(atcg::CPU);
 
-            float color[4] = {(float)diffuse[0] / 255.0f,
-                              (float)diffuse[1] / 255.0f,
-                              (float)diffuse[2] / 255.0f,
-                              (float)diffuse[3] / 255.0f};
+            float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 1}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 2}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 3}).item<float>() / 255.0f};
 
             if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
             {
@@ -160,8 +161,8 @@ void displayMaterial(const std::string& key, Material& material)
 
         if(!useTextures)
         {
-            auto data       = material.getRoughnessTexture()->getData();
-            float roughness = *((float*)data.data());
+            auto data       = material.getRoughnessTexture()->getData(atcg::CPU);
+            float roughness = data.item<float>();
 
             if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
             {
@@ -215,8 +216,8 @@ void displayMaterial(const std::string& key, Material& material)
 
         if(!useTextures)
         {
-            auto data      = material.getMetallicTexture()->getData();
-            float metallic = *((float*)data.data());
+            auto data      = material.getMetallicTexture()->getData(atcg::CPU);
+            float metallic = data.item<float>();
 
             if(ImGui::DragFloat(("Metallic##" + key).c_str(), &metallic, 0.005f, 0.0f, 1.0f))
             {
