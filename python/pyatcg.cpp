@@ -675,14 +675,8 @@ PYBIND11_MODULE(pyatcg, m)
             [](const atcg::ref_ptr<atcg::Image>& img) { return atcg::Texture2D::create(img); },
             "img"_a)
         .def("getID", &atcg::Texture2D::getID)
-        .def(
-            "setData",
-            [](const atcg::ref_ptr<atcg::Texture2D>& texture, py::array_t<uint8_t> b)
-            {
-                py::buffer_info info = b.request();
-                texture->setData(info.ptr);
-            },
-            "data"_a);
+        .def("setData", &atcg::Texture2D::setData, "data"_a)
+        .def("getData", &atcg::Texture2D::getData);
 
     // ------------------- Scene ---------------------------------
     py::class_<entt::entity>(m, "EntityHandle").def(py::init<uint32_t>(), "handle"_a);
