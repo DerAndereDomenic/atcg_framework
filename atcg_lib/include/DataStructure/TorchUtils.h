@@ -2,6 +2,7 @@
 
 #include <DataStructure/GraphDefinitions.h>
 #include <torch/types.h>
+#include <Renderer/Buffer.h>
 
 namespace atcg
 {
