@@ -687,6 +687,24 @@ PYBIND11_MODULE(pyatcg, m)
     // ------------------- Scene ---------------------------------
     py::class_<entt::entity>(m, "EntityHandle").def(py::init<uint32_t>(), "handle"_a);
 
+    py::class_<atcg::Material>(m, "Material")
+        .def(py::init<>())
+        .def("getDiffuseTexture", &atcg::Material::getDiffuseTexture)
+        .def("getNormalTexture", &atcg::Material::getNormalTexture)
+        .def("getRoughnessTexture", &atcg::Material::getRoughnessTexture)
+        .def("getMetallicTexture", &atcg::Material::getMetallicTexture)
+        .def("setDiffuseTexture", &atcg::Material::setDiffuseTexture)
+        .def("setNormalTexture", &atcg::Material::setNormalTexture)
+        .def("setRoughnessTexture", &atcg::Material::setRoughnessTexture)
+        .def("setMetallicTexture", &atcg::Material::setMetallicTexture)
+        .def("setDiffuseColor",
+             [](atcg::Material& material, const glm::vec3& color) { material.setDiffuseColor(color); })
+        .def("setDiffuseColor",
+             [](atcg::Material& material, const glm::vec4& color) { material.setDiffuseColor(color); })
+        .def("setRoughness", &atcg::Material::setRoughness)
+        .def("setMetallic", &atcg::Material::setMetallic)
+        .def("removeNormalMap", &atcg::Material::removeNormalMap);
+
     py::class_<atcg::TransformComponent>(m, "TransformComponent")
         .def(py::init<glm::vec3, glm::vec3, glm::vec3>(), "position"_a, "scale"_a, "rotation"_a)
         .def(py::init<glm::mat4>(), "model"_a)
@@ -708,7 +726,8 @@ PYBIND11_MODULE(pyatcg, m)
         .def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&>(), "shader"_a)
         .def_readwrite("visible", &atcg::MeshRenderComponent::visible)
-        .def_readwrite("shader", &atcg::MeshRenderComponent::shader);
+        .def_readwrite("shader", &atcg::MeshRenderComponent::shader)
+        .def_readwrite("material", &atcg::MeshRenderComponent::material);
 
     py::class_<atcg::PointRenderComponent>(m, "PointRenderComponent")
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
@@ -719,7 +738,8 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent")
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, float>(), "shader"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointSphereRenderComponent::visible)
-        .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader);
+        .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader)
+        .def_readwrite("material", &atcg::PointSphereRenderComponent::material);
 
     py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent")
         .def(py::init<glm::vec3>(), "color"_a)
@@ -728,7 +748,8 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent")
         .def(py::init<float>(), "radius"_a)
-        .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible);
+        .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
+        .def_readwrite("material", &atcg::EdgeCylinderRenderComponent::material);
 
     py::class_<atcg::NameComponent>(m, "NameComponent")
         .def(py::init<>())
@@ -749,9 +770,9 @@ PYBIND11_MODULE(pyatcg, m)
             "scale"_a,
             "rotation"_a)
         .def(
-            "addTransformComponent",
-            [](atcg::Entity& entity, const atcg::TransformComponent& transform)
-            { return entity.addComponent<atcg::TransformComponent>(transform); },
+            "replaceTransformComponent",
+            [](atcg::Entity& entity, atcg::TransformComponent& transform)
+            { return entity.replaceComponent<atcg::TransformComponent>(transform); },
             "transform"_a)
         .def(
             "addGeometryComponent",
@@ -759,9 +780,9 @@ PYBIND11_MODULE(pyatcg, m)
             { return entity.addComponent<atcg::GeometryComponent>(graph); },
             "graph"_a)
         .def(
-            "addGeometryComponent",
-            [](atcg::Entity& entity, const atcg::GeometryComponent& geometry)
-            { return entity.addComponent<atcg::GeometryComponent>(geometry); },
+            "replaceGeometryComponent",
+            [](atcg::Entity& entity, atcg::GeometryComponent& geometry)
+            { return entity.replaceComponent<atcg::GeometryComponent>(geometry); },
             "geometry"_a)
         .def(
             "addMeshRenderComponent",
@@ -769,9 +790,9 @@ PYBIND11_MODULE(pyatcg, m)
             { return entity.addComponent<atcg::MeshRenderComponent>(shader); },
             "shader"_a)
         .def(
-            "addMeshRenderComponent",
-            [](atcg::Entity& entity, const atcg::MeshRenderComponent& component)
-            { return entity.addComponent<atcg::MeshRenderComponent>(component); },
+            "replaceMeshRenderComponent",
+            [](atcg::Entity& entity, atcg::MeshRenderComponent& component)
+            { return entity.replaceComponent<atcg::MeshRenderComponent>(component); },
             "component"_a)
         .def(
             "addPointRenderComponent",
@@ -783,9 +804,9 @@ PYBIND11_MODULE(pyatcg, m)
             "color"_a,
             "point_size"_a)
         .def(
-            "addPointRenderComponent",
-            [](atcg::Entity& entity, const atcg::PointRenderComponent& component)
-            { return entity.addComponent<atcg::PointRenderComponent>(component); },
+            "replacePointRenderComponent",
+            [](atcg::Entity& entity, atcg::PointRenderComponent& component)
+            { return entity.replaceComponent<atcg::PointRenderComponent>(component); },
             "component_a")
         .def(
             "addPointSphereRenderComponent",
@@ -794,9 +815,9 @@ PYBIND11_MODULE(pyatcg, m)
             "shader"_a,
             "point_size"_a)
         .def(
-            "addPointSphereRenderComponent",
-            [](atcg::Entity& entity, const atcg::PointSphereRenderComponent& component)
-            { return entity.addComponent<atcg::PointSphereRenderComponent>(component); },
+            "replacePointSphereRenderComponent",
+            [](atcg::Entity& entity, atcg::PointSphereRenderComponent& component)
+            { return entity.replaceComponent<atcg::PointSphereRenderComponent>(component); },
             "component"_a)
         .def(
             "addEdgeRenderComponent",
@@ -804,9 +825,9 @@ PYBIND11_MODULE(pyatcg, m)
             { return entity.addComponent<atcg::EdgeRenderComponent>(color); },
             "color"_a)
         .def(
-            "addEdgeRenderComponent",
-            [](atcg::Entity& entity, const atcg::EdgeRenderComponent& component)
-            { return entity.addComponent<atcg::EdgeRenderComponent>(component); },
+            "replaceEdgeRenderComponent",
+            [](atcg::Entity& entity, atcg::EdgeRenderComponent& component)
+            { return entity.replaceComponent<atcg::EdgeRenderComponent>(component); },
             "component"_a)
         .def(
             "addEdgeCylinderRenderComponent",
@@ -814,16 +835,16 @@ PYBIND11_MODULE(pyatcg, m)
             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(radius); },
             "radius"_a)
         .def(
-            "addEdgeCylinderRenderComponent",
-            [](atcg::Entity& entity, const atcg::EdgeCylinderRenderComponent& component)
-            { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(component); },
+            "replaceEdgeCylinderRenderComponent",
+            [](atcg::Entity& entity, atcg::EdgeCylinderRenderComponent& component)
+            { return entity.replaceComponent<atcg::EdgeCylinderRenderComponent>(component); },
             "component"_a)
         .def("addNameComponent",
              [](atcg::Entity& entity, const std::string& name)
              { return entity.addComponent<atcg::NameComponent>(name); })
-        .def("addNameComponent",
-             [](atcg::Entity& entity, const atcg::NameComponent& component)
-             { return entity.addComponent<atcg::NameComponent>(component); })
+        .def("replaceNameComponent",
+             [](atcg::Entity& entity, atcg::NameComponent& component)
+             { return entity.replaceComponent<atcg::NameComponent>(component); })
         .def("hasTransformComponent", &atcg::Entity::hasComponent<atcg::TransformComponent>)
         .def("hasGeometryComponent", &atcg::Entity::hasComponent<atcg::GeometryComponent>)
         .def("hasMeshRenderComponent", &atcg::Entity::hasComponent<atcg::MeshRenderComponent>)
