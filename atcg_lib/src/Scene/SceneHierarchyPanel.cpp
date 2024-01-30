@@ -24,7 +24,10 @@ void drawComponent(const std::string& name, Entity entity, UIFunction uiFunction
 
         ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
         ImGui::SameLine(contentRegionAvailable.x);
-        if(ImGui::Button("+")) { ImGui::OpenPopup("ComponentSettings"); }
+        if(ImGui::Button("+"))
+        {
+            ImGui::OpenPopup("ComponentSettings");
+        }
 
         bool removeComponent = false;
         if(ImGui::BeginPopup("ComponentSettings"))
@@ -100,7 +103,10 @@ void displayMaterial(const std::string& key, Material& material)
             ImGui::Text("Diffuse Texture");
             ImGui::SameLine();
 
-            if(ImGui::Button(("X##diffuse" + key).c_str())) { material.setDiffuseColor(glm::vec4(1)); }
+            if(ImGui::Button(("X##diffuse" + key).c_str()))
+            {
+                material.setDiffuseColor(glm::vec4(1));
+            }
             else
                 ImGui::Image((void*)(uint64_t)material.getDiffuseTexture()->getID(),
                              ImVec2(128, 128),
@@ -146,7 +152,10 @@ void displayMaterial(const std::string& key, Material& material)
             ImGui::Text("Normal Texture");
             ImGui::SameLine();
 
-            if(ImGui::Button(("X##normal" + key).c_str())) { material.removeNormalMap(); }
+            if(ImGui::Button(("X##normal" + key).c_str()))
+            {
+                material.removeNormalMap();
+            }
             else
                 ImGui::Image((void*)(uint64_t)material.getNormalTexture()->getID(),
                              ImVec2(128, 128),
@@ -200,7 +209,10 @@ void displayMaterial(const std::string& key, Material& material)
             ImGui::Text("Roughness Texture");
             ImGui::SameLine();
 
-            if(ImGui::Button(("X##roughness" + key).c_str())) { material.setRoughness(1.0f); }
+            if(ImGui::Button(("X##roughness" + key).c_str()))
+            {
+                material.setRoughness(1.0f);
+            }
             else
                 ImGui::Image((void*)(uint64_t)material.getRoughnessTexture()->getID(),
                              ImVec2(128, 128),
@@ -255,7 +267,10 @@ void displayMaterial(const std::string& key, Material& material)
             ImGui::Text("Metallic Texture");
             ImGui::SameLine();
 
-            if(ImGui::Button(("X##metallic" + key).c_str())) { material.setMetallic(0.0f); }
+            if(ImGui::Button(("X##metallic" + key).c_str()))
+            {
+                material.setMetallic(0.0f);
+            }
             else
                 ImGui::Image((void*)(uint64_t)material.getMetallicTexture()->getID(),
                              ImVec2(128, 128),
@@ -309,7 +324,10 @@ void SceneHierarchyPanel::drawEntityNode(Entity entity)
         ImGuiTreeNodeFlags_Bullet;
     flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
     bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity.getComponent<IDComponent>().ID, flags, tag.c_str());
-    if(ImGui::IsItemClicked()) { _selected_entity = entity; }
+    if(ImGui::IsItemClicked())
+    {
+        _selected_entity = entity;
+    }
 
     // bool entityDeleted = false;
     // if(ImGui::BeginPopupContextItem())
@@ -319,7 +337,10 @@ void SceneHierarchyPanel::drawEntityNode(Entity entity)
     //     ImGui::EndPopup();
     // }
 
-    if(opened) { ImGui::TreePop(); }
+    if(opened)
+    {
+        ImGui::TreePop();
+    }
 
     // if(entityDeleted)
     // {
@@ -340,12 +361,18 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
     // ? strncpy_s not available in gcc. Is this unsafe?
     memcpy(buffer, tag.c_str(), sizeof(buffer));
     label << "##" << id;
-    if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer))) { tag = std::string(buffer); }
+    if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer)))
+    {
+        tag = std::string(buffer);
+    }
 
     ImGui::SameLine();
     ImGui::PushItemWidth(-1);
 
-    if(ImGui::Button("Add Component")) { ImGui::OpenPopup("AddComponent"); }
+    if(ImGui::Button("Add Component"))
+    {
+        ImGui::OpenPopup("AddComponent");
+    }
 
     if(ImGui::BeginPopup("AddComponent"))
     {
@@ -666,7 +693,10 @@ void SceneHierarchyPanel::drawSceneProperties()
                          ImVec2(128, 64),
                          ImVec2 {0, 1},
                          ImVec2 {1, 0});
-            if(ImGui::Button("Remove skybox##skybox")) { Renderer::removeSkybox(); }
+            if(ImGui::Button("Remove skybox##skybox"))
+            {
+                Renderer::removeSkybox();
+            }
         }
         else
         {
@@ -729,7 +759,10 @@ void SceneHierarchyPanel::renderPanel()
         drawEntityNode(entity);
     }
 
-    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) { _selected_entity = {}; }
+    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+    {
+        _selected_entity = {};
+    }
 
     if(ImGui::BeginPopupContextWindow(0, 1))
     {
@@ -749,7 +782,10 @@ void SceneHierarchyPanel::renderPanel()
     {
         if(ImGui::BeginTabItem("Components"))
         {
-            if(_selected_entity) { drawComponents(_selected_entity); }
+            if(_selected_entity)
+            {
+                drawComponents(_selected_entity);
+            }
             ImGui::EndTabItem();
         }
 

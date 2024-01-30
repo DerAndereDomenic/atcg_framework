@@ -29,12 +29,18 @@ bool Framebuffer::complete() const
     use();
 
     std::vector<GLenum> buffers;
-    for(uint32_t i = 0; i < _color_attachements.size(); ++i) { buffers.push_back(GL_COLOR_ATTACHMENT0 + i); }
+    for(uint32_t i = 0; i < _color_attachements.size(); ++i)
+    {
+        buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+    }
     glDrawBuffers(buffers.size(), buffers.data());
 
     uint32_t error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     bool complete  = error == GL_FRAMEBUFFER_COMPLETE;
-    if(!complete) { ATCG_ERROR("ERROR: Framebuffer not complete!"); }
+    if(!complete)
+    {
+        ATCG_ERROR("ERROR: Framebuffer not complete!");
+    }
     useDefault();
     return complete;
 }

@@ -120,9 +120,18 @@ public:
 
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
-        if(event->getKeyCode() == GLFW_KEY_T) { current_operation = ImGuizmo::OPERATION::TRANSLATE; }
-        if(event->getKeyCode() == GLFW_KEY_R) { current_operation = ImGuizmo::OPERATION::ROTATE; }
-        if(event->getKeyCode() == GLFW_KEY_S) { current_operation = ImGuizmo::OPERATION::SCALE; }
+        if(event->getKeyCode() == GLFW_KEY_T)
+        {
+            current_operation = ImGuizmo::OPERATION::TRANSLATE;
+        }
+        if(event->getKeyCode() == GLFW_KEY_R)
+        {
+            current_operation = ImGuizmo::OPERATION::ROTATE;
+        }
+        if(event->getKeyCode() == GLFW_KEY_S)
+        {
+            current_operation = ImGuizmo::OPERATION::SCALE;
+        }
         // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;

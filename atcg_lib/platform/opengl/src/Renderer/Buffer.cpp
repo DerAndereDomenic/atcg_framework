@@ -88,7 +88,10 @@ void VertexBuffer::Impl::mapResourceDevice()
 void VertexBuffer::Impl::unmapResourceDevice()
 {
 #ifdef ATCG_CUDA_BACKEND
-    if(mapped_device) { CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource)); }
+    if(mapped_device)
+    {
+        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource));
+    }
     mapped_device = false;
 #else
     if(mapped_host)
@@ -155,7 +158,10 @@ VertexBuffer::VertexBuffer(const void* data, size_t size)
 VertexBuffer::~VertexBuffer()
 {
     unmapPointers();
-    if(impl->resource_ready) { impl->deinitResource(); }
+    if(impl->resource_ready)
+    {
+        impl->deinitResource();
+    }
     glDeleteBuffers(1, &_ID);
 }
 
@@ -184,11 +190,17 @@ void VertexBuffer::resize(std::size_t size)
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     if(size > impl->capacity)
     {
-        if(impl->resource_ready) { impl->deinitResource(); }
+        if(impl->resource_ready)
+        {
+            impl->deinitResource();
+        }
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
         impl->capacity = size;
     }
-    if(!impl->resource_ready) { impl->initResource(_ID); }
+    if(!impl->resource_ready)
+    {
+        impl->initResource(_ID);
+    }
     impl->size = size;
 }
 

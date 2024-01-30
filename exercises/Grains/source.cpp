@@ -211,7 +211,10 @@ public:
                 }
             }
 
-            if(!inserted) { active_list.erase(std::next(active_list.begin(), active_index)); }
+            if(!inserted)
+            {
+                active_list.erase(std::next(active_list.begin(), active_index));
+            }
         }
         uint32_t unique_spheres = m_positions.size();
         m_positions.insert(m_positions.end(), boundary_spheres.begin(), boundary_spheres.end());
@@ -229,9 +232,18 @@ public:
 
         for(auto it = m_positions.begin(); it != m_positions.end();)
         {
-            if((*it).x < m_grain_size - m_voxel_length / 2.0f) { it = m_positions.erase(it); }
-            else if((*it).y < m_grain_size - m_voxel_length / 2.0f) { it = m_positions.erase(it); }
-            else if((*it).z < m_grain_size - m_voxel_length / 2.0f) { it = m_positions.erase(it); }
+            if((*it).x < m_grain_size - m_voxel_length / 2.0f)
+            {
+                it = m_positions.erase(it);
+            }
+            else if((*it).y < m_grain_size - m_voxel_length / 2.0f)
+            {
+                it = m_positions.erase(it);
+            }
+            else if((*it).z < m_grain_size - m_voxel_length / 2.0f)
+            {
+                it = m_positions.erase(it);
+            }
             else
                 ++it;
         }
@@ -600,7 +612,10 @@ public:
             std::vector<atcg::Instance> instances = updateInstances();
 
             std::vector<glm::mat4> models;
-            for(int i = 0; i < instances.size(); ++i) { models.push_back(glm::transpose(instances[i].model)); }
+            for(int i = 0; i < instances.size(); ++i)
+            {
+                models.push_back(glm::transpose(instances[i].model));
+            }
             std::ofstream summary_file("Transforms_needle.bin", std::ios::out | std::ios::binary);
             summary_file.write((char*)models.data(), sizeof(glm::mat4) * models.size());
             summary_file.close();
@@ -647,9 +662,18 @@ public:
 
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
-        if(event->getKeyCode() == GLFW_KEY_T) { current_operation = ImGuizmo::OPERATION::TRANSLATE; }
-        if(event->getKeyCode() == GLFW_KEY_R) { current_operation = ImGuizmo::OPERATION::ROTATE; }
-        if(event->getKeyCode() == GLFW_KEY_S) { current_operation = ImGuizmo::OPERATION::SCALE; }
+        if(event->getKeyCode() == GLFW_KEY_T)
+        {
+            current_operation = ImGuizmo::OPERATION::TRANSLATE;
+        }
+        if(event->getKeyCode() == GLFW_KEY_R)
+        {
+            current_operation = ImGuizmo::OPERATION::ROTATE;
+        }
+        if(event->getKeyCode() == GLFW_KEY_S)
+        {
+            current_operation = ImGuizmo::OPERATION::SCALE;
+        }
         // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition());
         // }
 

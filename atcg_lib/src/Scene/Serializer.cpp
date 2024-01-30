@@ -23,7 +23,10 @@ struct convert<glm::vec2>
 
     static bool decode(const Node& node, glm::vec2& rhs)
     {
-        if(!node.IsSequence() || node.size() != 2) { return false; }
+        if(!node.IsSequence() || node.size() != 2)
+        {
+            return false;
+        }
 
         rhs.x = node[0].as<float>();
         rhs.y = node[1].as<float>();
@@ -46,7 +49,10 @@ struct convert<glm::vec3>
 
     static bool decode(const Node& node, glm::vec3& rhs)
     {
-        if(!node.IsSequence() || node.size() != 3) { return false; }
+        if(!node.IsSequence() || node.size() != 3)
+        {
+            return false;
+        }
 
         rhs.x = node[0].as<float>();
         rhs.y = node[1].as<float>();
@@ -71,7 +77,10 @@ struct convert<glm::vec4>
 
     static bool decode(const Node& node, glm::vec4& rhs)
     {
-        if(!node.IsSequence() || node.size() != 4) { return false; }
+        if(!node.IsSequence() || node.size() != 4)
+        {
+            return false;
+        }
 
         rhs.x = node[0].as<float>();
         rhs.y = node[1].as<float>();
@@ -178,7 +187,10 @@ std::vector<T> deserializeBuffer(const std::string& file_name)
     std::vector<T> buffer(buffer_char.size() / sizeof(T));
 
     T* data = reinterpret_cast<T*>(buffer_char.data());
-    for(uint32_t i = 0; i < buffer_char.size() / sizeof(T); ++i) { buffer[i] = data[i]; }
+    for(uint32_t i = 0; i < buffer_char.size() / sizeof(T); ++i)
+    {
+        buffer[i] = data[i];
+    }
 
     return buffer;
 }
@@ -195,8 +207,14 @@ void serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path
 
     auto img_data = texture->getData(atcg::CPU);
     atcg::ref_ptr<Image> img;
-    if(hdr) { img = atcg::make_ref<Image>((float*)img_data.data_ptr(), texture->width(), texture->height(), channels); }
-    else { img = atcg::make_ref<Image>((uint8_t*)img_data.data_ptr(), texture->width(), texture->height(), channels); }
+    if(hdr)
+    {
+        img = atcg::make_ref<Image>((float*)img_data.data_ptr(), texture->width(), texture->height(), channels);
+    }
+    else
+    {
+        img = atcg::make_ref<Image>((uint8_t*)img_data.data_ptr(), texture->width(), texture->height(), channels);
+    }
 
     path = path + file_ending;
     IO::imwrite(img, path, gamma);
@@ -718,7 +736,10 @@ void Serializer::deserialize(const std::string& file_path)
                         {
                             renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
                         }
-                        else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+                        else
+                        {
+                            renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
+                        }
 
                         auto material_node = renderer["Material"];
 
@@ -750,7 +771,10 @@ void Serializer::deserialize(const std::string& file_path)
                         {
                             renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
                         }
-                        else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+                        else
+                        {
+                            renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
+                        }
                     }
                     break;
                     case atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE:
@@ -773,7 +797,10 @@ void Serializer::deserialize(const std::string& file_path)
                         {
                             renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
                         }
-                        else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+                        else
+                        {
+                            renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
+                        }
 
                         auto material_node = renderer["Material"];
 

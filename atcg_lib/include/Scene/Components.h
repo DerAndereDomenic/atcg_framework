@@ -112,7 +112,10 @@ struct CameraComponent
     CameraComponent() = default;
     CameraComponent(const atcg::ref_ptr<Camera>& camera) : camera(camera)
     {
-        if(dynamic_cast<PerspectiveCamera*>(camera.get())) { perspective = true; }
+        if(dynamic_cast<PerspectiveCamera*>(camera.get()))
+        {
+            perspective = true;
+        }
     }
 
     atcg::ref_ptr<Camera> camera;

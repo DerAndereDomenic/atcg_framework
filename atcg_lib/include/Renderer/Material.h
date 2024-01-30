@@ -37,4 +37,4 @@ private:
     atcg::ref_ptr<atcg::Texture2D> _roughness_texture;
     atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
 };
-}
+}    // namespace atcg

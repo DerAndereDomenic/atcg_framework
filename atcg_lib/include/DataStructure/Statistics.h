@@ -83,7 +83,10 @@ template<typename T>
 T Statistic<T>::mean() const
 {
     T m = T(0);
-    for(const T& sample: _samples) { m += sample; }
+    for(const T& sample: _samples)
+    {
+        m += sample;
+    }
 
     return m / static_cast<T>(_samples.size());
 }
@@ -95,7 +98,10 @@ T Statistic<T>::var() const
 
     T v = T(0);
     T m = mean();
-    for(const T& sample: _samples) { v += (sample - m) * (sample - m); }
+    for(const T& sample: _samples)
+    {
+        v += (sample - m) * (sample - m);
+    }
 
     return v / static_cast<T>(_samples.size() - 1);
 }

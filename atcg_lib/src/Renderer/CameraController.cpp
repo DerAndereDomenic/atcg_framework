@@ -274,7 +274,10 @@ bool FirstPersonController::onWindowResize(WindowResizeEvent* event)
 
 bool FirstPersonController::onMouseMove(MouseMovedEvent* event)
 {
-    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT)) { _clicked_right = true; }
+    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+    {
+        _clicked_right = true;
+    }
 
     return false;
 }

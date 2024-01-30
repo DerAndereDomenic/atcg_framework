@@ -89,7 +89,10 @@ void Image::applyGamma(const float gamma)
     if(stbi_is_hdr(_filename.c_str()))
     {
         float* data = (float*)_img_data;
-        for(uint32_t i = 0; i < _width * _height * _channels; ++i) { data[i] = glm::pow(data[i], gamma); }
+        for(uint32_t i = 0; i < _width * _height * _channels; ++i)
+        {
+            data[i] = glm::pow(data[i], gamma);
+        }
     }
     else
     {
@@ -111,14 +114,20 @@ void Image::loadLDR(const std::string& filename)
 {
     _img_data = stbi_load(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0);
 
-    if(_img_data == nullptr) { ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename); }
+    if(_img_data == nullptr)
+    {
+        ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename);
+    }
 }
 
 void Image::loadHDR(const std::string& filename)
 {
     _img_data = (uint8_t*)stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0);
 
-    if(_img_data == nullptr) { ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename); }
+    if(_img_data == nullptr)
+    {
+        ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename);
+    }
 }
 
 

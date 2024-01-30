@@ -44,7 +44,10 @@ std::vector<Entity> Scene::getEntitiesByName(const std::string& name)
     for(auto e: view)
     {
         Entity entity(e, this);
-        if(name == entity.getComponent<NameComponent>().name) { entities.push_back(entity); }
+        if(name == entity.getComponent<NameComponent>().name)
+        {
+            entities.push_back(entity);
+        }
     }
 
     return entities;

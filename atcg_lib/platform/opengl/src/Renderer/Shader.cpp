@@ -190,7 +190,10 @@ uint32_t Shader::compileShader(unsigned int shaderType, const std::string& shade
         {
             ATCG_ERROR("ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n{0}", std::string(infoLog));
         }
-        else { ATCG_ERROR("ERROR::SHADER::COMPILATION_FAILED\nUnknown shader type"); }
+        else
+        {
+            ATCG_ERROR("ERROR::SHADER::COMPILATION_FAILED\nUnknown shader type");
+        }
 
         free(infoLog);
     }
@@ -203,7 +206,10 @@ void Shader::linkShader(const uint32_t* shaders, const uint32_t& num_shaders)
     int32_t success;
 
     _ID = glCreateProgram();
-    for(uint32_t i = 0; i < num_shaders; ++i) { glAttachShader(_ID, shaders[i]); }
+    for(uint32_t i = 0; i < num_shaders; ++i)
+    {
+        glAttachShader(_ID, shaders[i]);
+    }
     glLinkProgram(_ID);
 
     glGetProgramiv(_ID, GL_LINK_STATUS, &success);

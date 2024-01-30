@@ -41,7 +41,10 @@ void ShaderManager::addShaderFromNameImpl(const std::string& name)
     {
         shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
     }
-    else { shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+    else
+    {
+        shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
+    }
 
     addShaderImpl(name, shader);
 }

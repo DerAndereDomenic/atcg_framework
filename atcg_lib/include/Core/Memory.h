@@ -204,11 +204,17 @@ public:
 
         destroy();
 
-        if(n <= 0) { return false; }
+        if(n <= 0)
+        {
+            return false;
+        }
 
         allocator alloc;
         _buffer = alloc.allocate(n);
-        if(!_buffer) { return false; }
+        if(!_buffer)
+        {
+            return false;
+        }
         _size     = n;
         _capacity = n;
         return true;

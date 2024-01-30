@@ -108,9 +108,15 @@ public:
 
         ImGui::Begin("Scene Panel");
 
-        if(ImGui::Button("Light")) { selected_entity = light_entity; }
+        if(ImGui::Button("Light"))
+        {
+            selected_entity = light_entity;
+        }
 
-        if(ImGui::Button("Volume")) { selected_entity = cube_entity; }
+        if(ImGui::Button("Volume"))
+        {
+            selected_entity = cube_entity;
+        }
 
         ImGui::End();
 
@@ -150,9 +156,18 @@ public:
 
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
-        if(event->getKeyCode() == GLFW_KEY_T) { current_operation = ImGuizmo::OPERATION::TRANSLATE; }
-        if(event->getKeyCode() == GLFW_KEY_R) { current_operation = ImGuizmo::OPERATION::ROTATE; }
-        if(event->getKeyCode() == GLFW_KEY_S) { current_operation = ImGuizmo::OPERATION::SCALE; }
+        if(event->getKeyCode() == GLFW_KEY_T)
+        {
+            current_operation = ImGuizmo::OPERATION::TRANSLATE;
+        }
+        if(event->getKeyCode() == GLFW_KEY_R)
+        {
+            current_operation = ImGuizmo::OPERATION::ROTATE;
+        }
+        if(event->getKeyCode() == GLFW_KEY_S)
+        {
+            current_operation = ImGuizmo::OPERATION::SCALE;
+        }
         // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;

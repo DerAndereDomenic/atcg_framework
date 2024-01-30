@@ -40,7 +40,10 @@ void Context::init(void* window)
 {
     glfwMakeContextCurrent((GLFWwindow*)window);
 
-    if(!gladLoadGL()) { ATCG_ERROR("Error loading glad!"); }
+    if(!gladLoadGL())
+    {
+        ATCG_ERROR("Error loading glad!");
+    }
 
     _window = window;
 

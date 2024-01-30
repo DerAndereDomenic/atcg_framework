@@ -158,7 +158,10 @@ void VertexArray::pushInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
 void VertexArray::markInstance(uint32_t divisor)
 {
     uint32_t curr_divisor = _vertex_buffer_index.back().divisor;
-    if(curr_divisor == divisor) { return; }
+    if(curr_divisor == divisor)
+    {
+        return;
+    }
 
     this->use();
     _vertex_buffer_index.back().divisor = divisor;

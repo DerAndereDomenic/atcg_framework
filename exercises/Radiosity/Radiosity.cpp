@@ -13,7 +13,10 @@ atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const
     std::vector<uint32_t> faces;
     for(auto ft: mesh->faces())
     {
-        for(auto vt: ft.vertices()) { faces.push_back(vt.idx()); }
+        for(auto vt: ft.vertices())
+        {
+            faces.push_back(vt.idx());
+        }
     }
 
     nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(vertices),
@@ -39,7 +42,10 @@ atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const
     for(auto ft: mesh->faces())
     {
         glm::vec3 color = glm::vec3(0);
-        for(auto vt: ft.vertices()) { color += mesh->color(vt) / 255.0f; }
+        for(auto vt: ft.vertices())
+        {
+            color += mesh->color(vt) / 255.0f;
+        }
         color /= 3.0f;
         albedos.index_put_({ft.idx(), Slice()}, torch::tensor({color.x, color.y, color.z}));
     }
@@ -124,7 +130,8 @@ atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const
                                     radiostiy.index({1}).item<float>(),
                                     radiostiy.index({2}).item<float>());
         color                   = glm::pow(1.0f - glm::exp(-color), glm::vec3(1.0f / 2.4f));
-        for(auto vt = ft->vertices().begin(); vt != ft->vertices().end(); ++vt) result->set_color(*vt, 255.0f * color);
+        for(auto vt = ft->vertices().begin(); vt != ft->vertices().end(); ++vt)
+            result->set_color(*vt, 255.0f * color);
     }
 
     return result;

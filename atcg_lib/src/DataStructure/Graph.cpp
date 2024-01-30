@@ -85,7 +85,10 @@ void Graph::Impl::updateVertexBuffer(const torch::Tensor& pvertices)
         vertices->setData(pvertices.data_ptr(), sizeof(atcg::Vertex) * n);
 #endif
     }
-    else { vertices->setData(pvertices.data_ptr(), sizeof(atcg::Vertex) * n); }
+    else
+    {
+        vertices->setData(pvertices.data_ptr(), sizeof(atcg::Vertex) * n);
+    }
     n_vertices = n;
 }
 
@@ -108,7 +111,10 @@ void Graph::Impl::updateEdgeBuffer(const torch::Tensor& pedges)
         edges->setData(pedges.data_ptr(), sizeof(atcg::Edge) * n);
 #endif
     }
-    else { edges->setData(pedges.data_ptr(), sizeof(atcg::Edge) * n); }
+    else
+    {
+        edges->setData(pedges.data_ptr(), sizeof(atcg::Edge) * n);
+    }
     n_edges = n;
 }
 
@@ -133,7 +139,10 @@ void Graph::Impl::updateFaceBuffer(const torch::Tensor& pindices)
         indices->setData((const uint32_t*)pindices.data_ptr(), 3 * n);
 #endif
     }
-    else { indices->setData((const uint32_t*)pindices.data_ptr(), 3 * n); }
+    else
+    {
+        indices->setData((const uint32_t*)pindices.data_ptr(), 3 * n);
+    }
 
     n_faces = n;
 }
@@ -325,7 +334,10 @@ atcg::ref_ptr<Graph> Graph::createTriangleMesh(const atcg::ref_ptr<TriMesh>& mes
     }
 
     // TODO: Find better structure so we don't have to iterate over everything again
-    for(auto& vtx: vertex_data) { vtx.tangent = glm::normalize(vtx.tangent); }
+    for(auto& vtx: vertex_data)
+    {
+        vtx.tangent = glm::normalize(vtx.tangent);
+    }
 
     return createTriangleMesh(vertex_data, indices_data);
 }
@@ -513,32 +525,62 @@ GraphType Graph::type() const
 
 torch::Tensor Graph::getPositions(const torch::Device& device) const
 {
-    if(device.is_cpu()) { return atcg::getPositionsAsHostTensor(impl->vertices); }
-    else { return atcg::getPositionsAsDeviceTensor(impl->vertices); }
+    if(device.is_cpu())
+    {
+        return atcg::getPositionsAsHostTensor(impl->vertices);
+    }
+    else
+    {
+        return atcg::getPositionsAsDeviceTensor(impl->vertices);
+    }
 }
 
 torch::Tensor Graph::getColors(const torch::Device& device) const
 {
-    if(device.is_cpu()) { return atcg::getColorsAsHostTensor(impl->vertices); }
-    else { return atcg::getColorsAsDeviceTensor(impl->vertices); }
+    if(device.is_cpu())
+    {
+        return atcg::getColorsAsHostTensor(impl->vertices);
+    }
+    else
+    {
+        return atcg::getColorsAsDeviceTensor(impl->vertices);
+    }
 }
 
 torch::Tensor Graph::getNormals(const torch::Device& device) const
 {
-    if(device.is_cpu()) { return atcg::getNormalsAsHostTensor(impl->vertices); }
-    else { return atcg::getNormalsAsDeviceTensor(impl->vertices); }
+    if(device.is_cpu())
+    {
+        return atcg::getNormalsAsHostTensor(impl->vertices);
+    }
+    else
+    {
+        return atcg::getNormalsAsDeviceTensor(impl->vertices);
+    }
 }
 
 torch::Tensor Graph::getTangents(const torch::Device& device) const
 {
-    if(device.is_cpu()) { return atcg::getTangentsAsHostTensor(impl->vertices); }
-    else { return atcg::getTangentsAsDeviceTensor(impl->vertices); }
+    if(device.is_cpu())
+    {
+        return atcg::getTangentsAsHostTensor(impl->vertices);
+    }
+    else
+    {
+        return atcg::getTangentsAsDeviceTensor(impl->vertices);
+    }
 }
 
 torch::Tensor Graph::getUVs(const torch::Device& device) const
 {
-    if(device.is_cpu()) { return atcg::getUVsAsHostTensor(impl->vertices); }
-    else { return atcg::getUVsAsDeviceTensor(impl->vertices); }
+    if(device.is_cpu())
+    {
+        return atcg::getUVsAsHostTensor(impl->vertices);
+    }
+    else
+    {
+        return atcg::getUVsAsDeviceTensor(impl->vertices);
+    }
 }
 
 torch::Tensor Graph::getEdges(const torch::Device& device) const
@@ -649,11 +691,17 @@ tinyobj::ObjReader read_file(const std::string& path)
 
     if(!reader.ParseFromFile(path, reader_config))
     {
-        if(!reader.Error().empty()) { ATCG_ERROR("TinyObjReader: {0}", reader.Error()); }
+        if(!reader.Error().empty())
+        {
+            ATCG_ERROR("TinyObjReader: {0}", reader.Error());
+        }
         return reader;
     }
 
-    if(!reader.Warning().empty()) { ATCG_WARN("TinyObjReader: {0}", reader.Warning()); }
+    if(!reader.Warning().empty())
+    {
+        ATCG_WARN("TinyObjReader: {0}", reader.Warning());
+    }
 
     return reader;
 }
@@ -737,7 +785,10 @@ void load_mesh_data(const tinyobj::attrib_t& attrib,
                       {
                           size_t fv = size_t(shape.mesh.num_face_vertices[f]);
 
-                          if(fv != 3) { ATCG_WARN("Detected a face with {0} vertices", fv); }
+                          if(fv != 3)
+                          {
+                              ATCG_WARN("Detected a face with {0} vertices", fv);
+                          }
 
                           glm::u32vec3 index;
                           for(size_t v = 0; v < fv; ++v)
@@ -788,7 +839,10 @@ void load_mesh_data(const tinyobj::attrib_t& attrib,
                       for(auto& vtx: out_vertices)
                       {
                           float len = glm::length2(vtx.tangent);
-                          if(len >= 1e-5f) { vtx.tangent = vtx.tangent / glm::sqrt(len); }
+                          if(len >= 1e-5f)
+                          {
+                              vtx.tangent = vtx.tangent / glm::sqrt(len);
+                          }
                       }
                   });
 }
@@ -827,7 +881,10 @@ void load_line_data(const tinyobj::attrib_t& attrib,
                       {
                           // Check if idx is already used and find appropriate index
                           size_t lv = size_t(shape.lines.num_line_vertices[l]);
-                          if(lv != 2) { ATCG_WARN("Detected a line with {0} vertices", lv); }
+                          if(lv != 2)
+                          {
+                              ATCG_WARN("Detected a line with {0} vertices", lv);
+                          }
 
                           glm::vec2 index;
                           for(size_t v = 0; v < lv; ++v)
@@ -860,7 +917,10 @@ atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
     std::vector<atcg::Vertex> vertices;
     std::vector<glm::u32vec3> faces;
 
-    for(const auto& shape: shapes) { detail::load_mesh_data(attrib, shape, vertices, faces); }
+    for(const auto& shape: shapes)
+    {
+        detail::load_mesh_data(attrib, shape, vertices, faces);
+    }
 
     return atcg::Graph::createTriangleMesh(vertices, faces);
 }
@@ -874,7 +934,10 @@ atcg::ref_ptr<Graph> IO::read_pointcloud(const std::string& path)
 
     std::vector<atcg::Vertex> vertices;
 
-    for(const auto& shape: shapes) { detail::load_pointcloud_data(attrib, shape, vertices); }
+    for(const auto& shape: shapes)
+    {
+        detail::load_pointcloud_data(attrib, shape, vertices);
+    }
 
     return atcg::Graph::createPointCloud(vertices);
 }
@@ -889,7 +952,10 @@ atcg::ref_ptr<Graph> IO::read_lines(const std::string& path)
     std::vector<atcg::Vertex> vertices;
     std::vector<atcg::Edge> edges;
 
-    for(const auto& shape: shapes) { detail::load_line_data(attrib, shape, vertices, edges); }
+    for(const auto& shape: shapes)
+    {
+        detail::load_line_data(attrib, shape, vertices, edges);
+    }
 
     return atcg::Graph::createGraph(vertices, edges);
 }
@@ -918,7 +984,10 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             auto texture = atcg::Texture2D::create(img);
             material.setDiffuseTexture(texture);
         }
-        else { material.setDiffuseColor(glm::make_vec3(mat_obj.diffuse)); }
+        else
+        {
+            material.setDiffuseColor(glm::make_vec3(mat_obj.diffuse));
+        }
 
         if(mat_obj.metallic_texname != "")
         {
@@ -926,7 +995,10 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             auto texture = atcg::Texture2D::create(img);
             material.setMetallicTexture(texture);
         }
-        else { material.setMetallic(mat_obj.metallic); }
+        else
+        {
+            material.setMetallic(mat_obj.metallic);
+        }
 
         if(mat_obj.roughness_texname != "")
         {
@@ -934,7 +1006,10 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             auto texture = atcg::Texture2D::create(img);
             material.setRoughnessTexture(texture);
         }
-        else { material.setRoughness(mat_obj.roughness); }
+        else
+        {
+            material.setRoughness(mat_obj.roughness);
+        }
 
         if(mat_obj.bump_texname != "")
         {
@@ -980,7 +1055,10 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             entity.addComponent<atcg::TransformComponent>();
             entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createTriangleMesh(vertices, faces));
             auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
-            if(shape.mesh.material_ids[0] != -1) { renderer.material = materials[shape.mesh.material_ids[0]]; }
+            if(shape.mesh.material_ids[0] != -1)
+            {
+                renderer.material = materials[shape.mesh.material_ids[0]];
+            }
         }
     }
 

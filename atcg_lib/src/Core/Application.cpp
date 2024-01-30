@@ -65,14 +65,20 @@ void Application::onEvent(Event* e)
 
 glm::ivec2 Application::getViewportSize() const
 {
-    if(_imgui_layer->dockspaceEnabled()) { return _imgui_layer->getViewportSize(); }
+    if(_imgui_layer->dockspaceEnabled())
+    {
+        return _imgui_layer->getViewportSize();
+    }
 
     return glm::ivec2(_window->getWidth(), _window->getHeight());
 }
 
 glm::ivec2 Application::getViewportPosition() const
 {
-    if(_imgui_layer->dockspaceEnabled()) { return _imgui_layer->getViewportPosition(); }
+    if(_imgui_layer->dockspaceEnabled())
+    {
+        return _imgui_layer->getViewportPosition();
+    }
 
     return glm::ivec2(0);
 }
@@ -89,12 +95,18 @@ void Application::run()
         last_time = current_time;
 
         Renderer::useScreenBuffer();
-        for(Layer* layer: _layer_stack) { layer->onUpdate(delta_time); }
+        for(Layer* layer: _layer_stack)
+        {
+            layer->onUpdate(delta_time);
+        }
         Renderer::finishFrame();
 
         // First finish the main content of all layers before doing any imgui stuff
         _imgui_layer->begin();
-        for(Layer* layer: _layer_stack) { layer->onImGuiRender(); }
+        for(Layer* layer: _layer_stack)
+        {
+            layer->onImGuiRender();
+        }
         _imgui_layer->end();
 
         _window->onUpdate();

@@ -202,7 +202,10 @@ void Renderer::Impl::initGrid()
 
     std::vector<atcg::Edge> edges;
 
-    for(int i = 0; i < 4 * grid_size; i += 2) { edges.push_back({glm::vec2(i, i + 1), glm::vec3(1), 0.1f}); }
+    for(int i = 0; i < 4 * grid_size; i += 2)
+    {
+        edges.push_back({glm::vec2(i, i + 1), glm::vec3(1), 0.1f});
+    }
 
     grid = atcg::Graph::createGraph(host_points, edges);
 }
@@ -737,7 +740,10 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
             return;
         }
     }
-    else { return; }
+    else
+    {
+        return;
+    }
 
     uint32_t entity_id           = (uint32_t)entity._entity_handle;
     TransformComponent transform = entity.getComponent<TransformComponent>();
@@ -940,7 +946,10 @@ void Renderer::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vb
     atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVerticesArray();
     if(vao_sphere->peekVertexBuffer() != vbo)
     {
-        if(s_renderer->impl->sphere_has_instance) { vao_sphere->popVertexBuffer(); }
+        if(s_renderer->impl->sphere_has_instance)
+        {
+            vao_sphere->popVertexBuffer();
+        }
         vao_sphere->pushInstanceBuffer(vbo);
         s_renderer->impl->sphere_has_instance = true;
     }
@@ -974,7 +983,10 @@ void Renderer::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
         shader->setVec3("camera_dir", camera->getDirection());
         shader->setMVP(model, camera->getView(), camera->getProjection());
     }
-    else { shader->setMVP(model); }
+    else
+    {
+        shader->setMVP(model);
+    }
     shader->use();
 
     const atcg::ref_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
@@ -997,7 +1009,10 @@ void Renderer::drawCircle(const glm::vec3& position,
     shader->setFloat("radius", radius);
     shader->setFloat("thickness", thickness);
     shader->setVec3("position", position);
-    if(camera) { shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection()); }
+    if(camera)
+    {
+        shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+    }
 
     const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
 
@@ -1018,7 +1033,10 @@ void Renderer::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
     atcg::ref_ptr<VertexArray> vao_cylinder = cylinder_mesh->getVerticesArray();
     if(vao_cylinder->peekVertexBuffer() != indices)
     {
-        if(cylinder_has_instance) { vao_cylinder->popVertexBuffer(); }
+        if(cylinder_has_instance)
+        {
+            vao_cylinder->popVertexBuffer();
+        }
         vao_cylinder->pushInstanceBuffer(indices);
         cylinder_has_instance = true;
     }

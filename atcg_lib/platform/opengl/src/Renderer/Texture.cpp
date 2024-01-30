@@ -387,7 +387,10 @@ void Texture::Impl::mapResourceDevice()
 void Texture::Impl::unmapResourceDevice()
 {
 #ifdef ATCG_CUDA_BACKEND
-    if(mapped_device) { CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource)); }
+    if(mapped_device)
+    {
+        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource));
+    }
     mapped_device = false;
 #endif
 }
@@ -454,7 +457,10 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
                     GL_TEXTURE_MAG_FILTER,
                     filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
 
-    if(spec.sampler.mip_map) { glGenerateMipmap(GL_TEXTURE_2D); }
+    if(spec.sampler.mip_map)
+    {
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
 
     if(spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_2D);
 
@@ -579,7 +585,10 @@ torch::Tensor Texture2D::getData(const torch::Device& device) const
 
         return result;
     }
-    else if(device.is_cuda()) { ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy"); }
+    else if(device.is_cuda())
+    {
+        ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy");
+    }
 #endif
 
     unmapPointers();
@@ -647,7 +656,10 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
                     GL_TEXTURE_MAG_FILTER,
                     filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
 
-    if(spec.sampler.mip_map) { glGenerateMipmap(GL_TEXTURE_3D); }
+    if(spec.sampler.mip_map)
+    {
+        glGenerateMipmap(GL_TEXTURE_3D);
+    }
 
     if(spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_3D);
 
@@ -756,7 +768,10 @@ torch::Tensor Texture3D::getData(const torch::Device& device) const
 
         return result;
     }
-    else if(device.is_cuda()) { ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy"); }
+    else if(device.is_cuda())
+    {
+        ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy");
+    }
 #endif
 
     unmapPointers();
@@ -821,7 +836,10 @@ atcg::ref_ptr<TextureCube> TextureCube::create(const TextureSpecification& spec)
                     GL_TEXTURE_MAG_FILTER,
                     filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
 
-    if(spec.sampler.mip_map) { glGenerateMipmap(GL_TEXTURE_CUBE_MAP); }
+    if(spec.sampler.mip_map)
+    {
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    }
 
     return result;
 }
