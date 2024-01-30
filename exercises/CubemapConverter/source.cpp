@@ -27,12 +27,12 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
 
-        auto face_0                         = atcg::IO::imread("../Cubemap/image_2.png");
-        auto face_1                         = atcg::IO::imread("../Cubemap/image_0.png");
-        auto face_2                         = atcg::IO::imread("../Cubemap/image_5.png");
-        auto face_3                         = atcg::IO::imread("../Cubemap/image_4.png");
-        auto face_4                         = atcg::IO::imread("../Cubemap/image_1.png");
-        auto face_5                         = atcg::IO::imread("../Cubemap/image_3.png");
+        auto face_0                         = atcg::IO::imread("../Cubemap/image_2.hdr");
+        auto face_1                         = atcg::IO::imread("../Cubemap/image_0.hdr");
+        auto face_2                         = atcg::IO::imread("../Cubemap/image_5.hdr");
+        auto face_3                         = atcg::IO::imread("../Cubemap/image_4.hdr");
+        auto face_4                         = atcg::IO::imread("../Cubemap/image_1.hdr");
+        auto face_5                         = atcg::IO::imread("../Cubemap/image_3.hdr");
         atcg::ref_ptr<atcg::Image> images[] = {face_0, face_1, face_2, face_3, face_4, face_5};
 
         bool is_hdr  = face_0->isHDR();
