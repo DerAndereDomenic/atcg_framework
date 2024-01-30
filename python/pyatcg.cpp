@@ -372,7 +372,10 @@ PYBIND11_MODULE(pyatcg, m)
                      const float* data = static_cast<const float*>(b.data());
                      for(int i = 0; i < 3; ++i)
                      {
-                         for(int j = 0; j < 3; ++j) { M[i][j] = data[b.index_at(j, i)]; }
+                         for(int j = 0; j < 3; ++j)
+                         {
+                             M[i][j] = data[b.index_at(j, i)];
+                         }
                      }
 
                      return M;
@@ -385,7 +388,10 @@ PYBIND11_MODULE(pyatcg, m)
 
                 for(int i = 0; i < 3; ++i)
                 {
-                    for(int j = 0; j < 3; ++j) { data[i][j] = M[j][i]; }
+                    for(int j = 0; j < 3; ++j)
+                    {
+                        data[i][j] = M[j][i];
+                    }
                 }
 
                 return py::buffer_info(data,
@@ -407,7 +413,10 @@ PYBIND11_MODULE(pyatcg, m)
                      const float* data = static_cast<const float*>(b.data());
                      for(int i = 0; i < 4; ++i)
                      {
-                         for(int j = 0; j < 4; ++j) { M[i][j] = data[b.index_at(j, i)]; }
+                         for(int j = 0; j < 4; ++j)
+                         {
+                             M[i][j] = data[b.index_at(j, i)];
+                         }
                      }
 
                      return M;
@@ -420,7 +429,10 @@ PYBIND11_MODULE(pyatcg, m)
 
                 for(int i = 0; i < 4; ++i)
                 {
-                    for(int j = 0; j < 4; ++j) { data[i][j] = M[j][i]; }
+                    for(int j = 0; j < 4; ++j)
+                    {
+                        data[i][j] = M[j][i];
+                    }
                 }
 
                 return py::buffer_info(data,
@@ -575,8 +587,14 @@ PYBIND11_MODULE(pyatcg, m)
         .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
 
     py::enum_<atcg::TextureFormat>(m, "TextureFormat")
+        .value("RG", atcg::TextureFormat::RG)
+        .value("RGB", atcg::TextureFormat::RGB)
         .value("RGBA", atcg::TextureFormat::RGBA)
+        .value("RGFLOAT", atcg::TextureFormat::RGFLOAT)
+        .value("RGBFLOAT", atcg::TextureFormat::RGBFLOAT)
+        .value("RGBAFLOAT", atcg::TextureFormat::RGBAFLOAT)
         .value("RINT", atcg::TextureFormat::RINT)
+        .value("RINT8", atcg::TextureFormat::RINT8)
         .value("RFLOAT", atcg::TextureFormat::RFLOAT)
         .value("DEPTH", atcg::TextureFormat::DEPTH);
 
@@ -864,7 +882,10 @@ PYBIND11_MODULE(pyatcg, m)
              {
                  std::vector<atcg::Entity> entities;
                  auto view = scene->getAllEntitiesWith<atcg::IDComponent>();
-                 for(auto e: view) { entities.push_back(atcg::Entity(e, scene.get())); }
+                 for(auto e: view)
+                 {
+                     entities.push_back(atcg::Entity(e, scene.get()));
+                 }
                  return entities;
              });
 
