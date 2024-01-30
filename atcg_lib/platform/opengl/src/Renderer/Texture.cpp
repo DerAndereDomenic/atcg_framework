@@ -855,6 +855,34 @@ void TextureCube::use(const uint32_t& slot) const
     glBindTexture(GL_TEXTURE_CUBE_MAP, _ID);
 }
 
+void TextureCube::setData(const torch::Tensor& data)
+{
+    TORCH_CHECK_EQ(data.numel() * data.element_size() / 6, _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.size(0), 6);
+    TORCH_CHECK_EQ(data.size(1), _spec.height);
+    TORCH_CHECK_EQ(data.size(2), _spec.width);
+    int num_channels = detail::num_channels(_spec.format);
+    TORCH_CHECK_EQ(data.size(3), num_channels);
+
+    torch::Tensor pixel_data = data.to(atcg::CPU);
+
+    unmapPointers();
+    glBindTexture(GL_TEXTURE_CUBE_MAP, _ID);
+
+    for(int i = 0; i < 6; ++i)
+    {
+        glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                        0,
+                        0,
+                        0,
+                        _spec.width,
+                        _spec.height,
+                        detail::toGLformat(_spec.format),
+                        detail::toGLtype(_spec.format),
+                        (void*)pixel_data.index({i, 0, 0, 0}).data_ptr());
+    }
+}
+
 void TextureCube::generateMipmaps()
 {
     use();

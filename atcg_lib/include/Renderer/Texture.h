@@ -394,17 +394,14 @@ public:
     virtual ~TextureCube();
 
     /**
-     * @brief Set the data of the texture.
-     * The tensor can be a host or device tensor if CUDA is enabled.
-     * For CPU tensors a host-device memcpy is performed.
-     * For Device Tensors a device-device copy is performed.
-     *
-     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
-     * a host-device memcpy is required.
+     * @brief Set the data of the cube map texture.
+     * The tensor is supposed to be a (6, spec.height, spec.width, channels) tensor for each cubemap side.
+     * This function will always transfer the data to opengl via a host to device upload. If the tensor is on the GPU,
+     * it will be copied to host first.
      *
      * @param data The data
      */
-    virtual void setData(const torch::Tensor& data) override {}
+    virtual void setData(const torch::Tensor& data) override;
 
     /**
      * @brief Get the data in the texture.
