@@ -18,7 +18,7 @@ jobs:
       - run: sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev xorg-dev
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
       - run: cmake -B ./build -S .
-      - run: cmake --build build
+      - run: cmake --build build --parallel
   
   windows-build:
     name: Windows Compile Check
@@ -29,7 +29,7 @@ jobs:
           submodules: recursive
       - run: pip install torch torchvision torchaudio
       - run: cmake -B ./build -S .
-      - run: cmake --build build
+      - run: cmake --build build --parallel
       
   #macos-build:
   #  name: MacOS Compile Check
