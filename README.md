@@ -1,12 +1,12 @@
 # ATCG FRAMEWORK
 
-This repository contains a C++ rendering framework.
+This repository contains a C++ 3D rendering for research applications and scientific computation/visualization. It combines the OpenGL rendering pipeline with high performance CUDA integration using torch.
 
 ## Building
 
-First, you need to install a C++ compiler. Tested compilers that should work are MSVC for Windows and gcc for Linux. MacOS is only tested via github actions. Additionally, you need to install [CMake](https://cmake.org) to build the project.
+This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are [CMake](https://cmake.org), [Python3.9](https://www.python.org), and [pytorch2.2.0](https://pytorch.org). Newer versions should also work.
 
-To build the project clone the repository recursively (to include submodules)
+After installing the dependencies, clone the repository recursively (to include submodules)
 
 ```
 git clone --recursive git@github.com:DerAndereDomenic/atcg_framework.git
@@ -30,7 +30,7 @@ From the main folder of this project (aka the folder where this file is located)
 cmake --build build --config <Debug|Release>
 ```
 
-to compile the project. On Windows, you can specify if you want to build in Debug or Release mode. If everything worked the executables are located in `bin\<config>\<name>.exe` (or slightly differently depending on your system). Currently, you have to execute the program from the project's main folder. Otherwise, it may not find the shader files.
+to compile the project.
 
 ### Building with CUDA Support
 
@@ -40,7 +40,7 @@ You can also build the framework with CUDA support by setting the ATCG_CUDA_BACK
 cmake . -B build -DATCG_CUDA_BACKEND=ON
 ```
 
-This way you can include high performant GPU code into your application. Note that this is only possible if you have the CUDA compiler installed.
+This way you can include high performant GPU code into your application. Note that this is only possible if you have the CUDA compiler installed. Furthermore, torch should also be installed with the same CUDA version.
 
 ### Building the documentation (experimental)
 
@@ -48,11 +48,12 @@ There is a (not very complete) documentation that can be build using [doxygen](h
 
 ## Project Structure
 
-The code base is based on the [Hazel Game Engine](https://github.com/TheCherno/Hazel). The framework also includes several dependencies that are used to implement the algorithms. You should make yourself familiar with **OpenMesh** explicitely. The project consists of the following components.
+The code base is based on the [Hazel Game Engine](https://github.com/TheCherno/Hazel). The framework also includes several dependencies that are used to implement different computer graphics algorithms.
+The project consists of the following components:
 
--**atcg_lib**: This library handles the rendering and event handling of the application. It defines an entry point for each application that uses this library. Each exercise uses this entry point to build its application.
+-**atcg_lib**: This library handles the rendering and event handling of the application. It defines an entry point for each application that uses this library. Each executable uses this entry point to build its application.
 
--**exercises**: Contains the projects for each exercise. See _How to use_ for more details on its structure.
+-**exercises**: Contains the targets for each executable. See _How to use_ for more details on its structure.
 
 -**shader**: Contains the opengl shaders used for rendering. You can add custom shaders by providing a vertex (`<name>.vs`), fragment (`<name>.fs`), and (optionally) a geometry (`<name>.gs`) shader. To use them in a project you have to add it via
 
@@ -68,9 +69,9 @@ atcg::ShaderManager::getShader("<name>");
 
 You can edit shaders while the program is running!
 
--**res**: Contains resources (meshes) used for the exercises
+-**res**: Contains resources (meshes and textures)
 
--**external**: Contains the exernal libraries used in this framework. There is no need to install any external libraries (except for OpenGL in some cases) as all dependencies come with this repository.
+-**external**: Contains the exernal libraries used in this framework. There is no need to install any external libraries (except for OpenGL/Driver and torch) as all dependencies come with this repository.
 
 ## Usage
 
@@ -98,10 +99,7 @@ public:
 
         // Load images and create textures
         diffuse_image = atcg::IO::imread("path/to/image");
-        atcg::TextureSpecification spec;
-        spec.width = diffuse_image->width();
-        spec.height = diffuse_image->height();
-        diffuse_texture = atcg::Texture2D::create(diffuse_image, spec);
+        diffuse_texture = atcg::Texture2D::create(diffuse_image);
 
         // Create a scene using the custom shared pointer atcg::ref_ptr
         scene = atcg::make_ref<atcg::Scene>();
@@ -148,9 +146,8 @@ public:
         {
             ImGui::Begin("Settings", &show_render_settings);
 
-            ImGui::Checkbox("Render Vertices", &render_points);
-            ImGui::Checkbox("Render Edges", &render_edges);
-            ImGui::Checkbox("Render Mesh", &render_faces);
+            // Set some settings
+            
             ImGui::End();
         }
 
@@ -226,33 +223,31 @@ IMPORTANT: Note that CUDAs memory API is more a C than C++ API. Therefore object
 
 ```c++
 // Creates a device buffer with 10 ints
-atcg::ref_ptr<int, atcg::device_allocator> p(10);
+atcg::DeviceBuffer<int, atcg::device_allocator> p(10);
 
 // ...
 
 // Creates an object and initializes it from a host object
 T host_object(...);
 // atcg::dref_ptr as shortcut for atcg::ref_ptr<..., atcg::device_allocator>
-atcg::dref_ptr<T> device_ptr(1); // Allocate space for one object
+atcg::dref_ptr<T> device_ptr;
 device_ptr.upload(&host_object);
 ```
 
 ## Dependencies (included)
 
 - [OpenMesh](https://gitlab.vci.rwth-aachen.de:9000/OpenMesh/OpenMesh) - For mesh manipulation.
-- [Eigen](https://gitlab.com/libeigen/eigen/) - For math operations
 - [Glad](https://glad.dav1d.de) - For loading OpenGL.
 - [ImGui](https://github.com/ocornut/imgui) - For interactive GUI.
+- [ImGuizmo](https://github.com/CedricGuillemet/ImGuizmo) - For guizmos.
+- [ImPlot](https://github.com/epezent/implot) - For plots.
 - [GLFW](https://github.com/glfw/glfw) - For window creation and handling
 - [GLM](https://github.com/g-truc/glm) - For OpenGL math.
 - [entt](https://github.com/skypjack/entt) - For the entity component system.
-- [ImGuizmo](https://github.com/CedricGuillemet/ImGuizmo) - For guizmos.
-- [ImPlot](https://github.com/epezent/implot) - For plots.
 - [nanoflann](https://github.com/jlblancoc/nanoflann) - For kD-Trees.
 - [nanort](https://github.com/lighttransport/nanort) - For ray - mesh intersection tests.
 - [protable-file-dialogs](https://github.com/samhocevar/portable-file-dialogs) - For file dialogs.
 - [spdlog](https://github.com/gabime/spdlog) - For logging.
-- [pybind11](https://github.com/pybind/pybind11) - For python bindings.
 - [stbimage](https://github.com/nothings/stb) - For image I/O.
-- [tinyobjload](https://github.com/tinyobjloader/tinyobjloader) - For loading obj meshes.
+- [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader) - For loading obj meshes.
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp) - For serializing YAML files.
