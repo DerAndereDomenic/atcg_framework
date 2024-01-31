@@ -2,9 +2,9 @@ name: CMake
 
 on:
   push:
-    branches: [ "main", "exercises", "research" ]
+    branches: [ "main", "exercises", "dev" ]
   pull_request:
-    branches: [ "main", "exercises", "research" ]
+    branches: [ "main", "exercises", "dev" ]
 
 jobs:
   ubuntu-build:
