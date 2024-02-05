@@ -426,6 +426,17 @@ void Texture::useForCompute(const uint32_t& slot) const
     glBindImageTexture(slot, _ID, 0, GL_TRUE, 0, GL_WRITE_ONLY, detail::to2GLinternalFormat(_spec.format));
 }
 
+uint32_t Texture::channels() const
+{
+    return detail::num_channels(_spec.format);
+}
+
+bool Texture::isHDR() const
+{
+    return _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
+           _spec.format == TextureFormat::RGBFLOAT;
+}
+
 atcg::ref_ptr<Texture2D> Texture2D::create(const TextureSpecification& spec)
 {
     return create(nullptr, spec);

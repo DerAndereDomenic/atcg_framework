@@ -141,6 +141,20 @@ public:
     inline uint32_t depth() const { return _spec.depth; }
 
     /**
+     * @brief Get the number of channels
+     *
+     * @return The number of channels
+     */
+    uint32_t channels() const;
+
+    /**
+     * @brief Get if the texture is HDR
+     *
+     * @return True if the texture uses an internal float format
+     */
+    bool isHDR() const;
+
+    /**
      * @brief Get the id of the texture
      *
      * @return The id
