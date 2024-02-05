@@ -480,7 +480,7 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
 
 atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img, const TextureSpecification& spec)
 {
-    return create(img->data(), spec);
+    return create(img->data().data_ptr(), spec);
 }
 
 atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img)
@@ -511,7 +511,7 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img)
         }
         break;
     }
-    return create(img->data(), spec);
+    return create(img->data().data_ptr(), spec);
 }
 
 Texture2D::~Texture2D()
