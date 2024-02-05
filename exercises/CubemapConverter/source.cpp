@@ -47,10 +47,7 @@ public:
         for(int i = 0; i < 6; ++i)
         {
             cubemap_tensor.index_put_({i, torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice()},
-                                      atcg::createTensorFromPointer((void*)images[i]->data(),
-                                                                    {height, width, channels},
-                                                                    is_hdr ? atcg::TensorOptions::floatHostOptions()
-                                                                           : atcg::TensorOptions::uint8HostOptions()));
+                                      images[i]->data());
         }
 
         atcg::TextureSpecification spec;
@@ -116,7 +113,7 @@ public:
         auto texture_data = skybox_texture->getData(atcg::CPU);
 
         atcg::ref_ptr<atcg::Image> output_img =
-            atcg::make_ref<atcg::Image>((const float*)texture_data.data_ptr(), spec.width, spec.height, 4);
+            atcg::make_ref<atcg::Image>((float*)texture_data.data_ptr(), spec.width, spec.height, 4);
 
         output_img->store("skybox.hdr");
 

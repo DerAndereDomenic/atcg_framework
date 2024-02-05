@@ -1,5 +1,7 @@
 #pragma once
 
+#include <torch/types.h>
+
 namespace atcg
 {
 
@@ -21,29 +23,33 @@ public:
      * @brief Create an one byte per channel image from external data.
      * The data is copied.
      *
-     * @note This interface only supports 1 or 4 channel images. If channels is 2 or three, the memory will be padded.
-     *
      * @param img_data The data
      * @param width The image width
      * @param height The image height
      * @param channels The number of channels between 1 and 4
      *
      */
-    Image(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
+    Image(uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
 
     /**
      * @brief Create a floating point image from external data.
      * The data is copied.
      *
-     * @note This interface only supports 1 or 4 channel images. If channels is 2 or three, the memory will be padded.
-     *
      * @param img_data The data
      * @param width The image width
      * @param height The image height
      * @param channels The number of channels between 1 and 4
      *
      */
-    Image(const float* data, uint32_t width, uint32_t height, uint32_t channels);
+    Image(float* data, uint32_t width, uint32_t height, uint32_t channels);
+
+    /**
+     * @brief Create an image from tensor.
+     *
+     * @param tensor The image data of shape (h,w,c)
+     * The type of the tensor should either be uint8 (for LDR) or float (for HDR)
+     */
+    Image(const torch::Tensor& tensor);
 
     /**
      * @brief Destructor
@@ -81,7 +87,14 @@ public:
      *
      * @param data The image data
      */
-    void setData(const uint8_t* data);
+    void setData(uint8_t* data);
+
+    /**
+     * @brief Set image data
+     *
+     * @param data The image data
+     */
+    void setData(const torch::Tensor& data);
 
     /**
      * @brief Get the width of the image
@@ -112,13 +125,6 @@ public:
     inline const std::string& name() const { return _filename; }
 
     /**
-     *  @brief Get the raw data pointer of the image.
-     *
-     * @return The data
-     */
-    inline const uint8_t* data() const { return _img_data; }
-
-    /**
      * @brief If this image is a HDR texture
      *
      * @return True if it's an hdr image
@@ -128,21 +134,15 @@ public:
     /**
      * @brief Get the image data interpreted in a specific format.
      *
-     * @tparam T The type
-     *
      * @return The data
      */
-    template<typename T>
-    inline const T* data() const
-    {
-        return reinterpret_cast<T*>(_img_data);
-    }
+    inline torch::Tensor data() const { return _img_data; }
 
 private:
     void loadLDR(const std::string& filename);
     void loadHDR(const std::string& filename);
 
-    uint8_t* _img_data;
+    torch::Tensor _img_data;
     uint32_t _width    = 0;
     uint32_t _height   = 0;
     uint32_t _channels = 0;
