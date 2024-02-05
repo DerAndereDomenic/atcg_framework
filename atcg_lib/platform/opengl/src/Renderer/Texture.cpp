@@ -480,38 +480,48 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
 
 atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img, const TextureSpecification& spec)
 {
-    return create(img->data().data_ptr(), spec);
+    return create(img->data(), spec);
 }
 
 atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img)
 {
+    return create(img->data());
+}
+
+atcg::ref_ptr<Texture2D> Texture2D::create(const torch::Tensor& img)
+{
     TextureSpecification spec;
-    spec.width  = img->width();
-    spec.height = img->height();
-    switch(img->channels())
+    spec.width  = img.size(1);
+    spec.height = img.size(0);
+    switch(img.size(2))
     {
         case 1:
         {
-            spec.format = (img->isHDR() ? TextureFormat::RFLOAT : TextureFormat::RINT8);
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RFLOAT : TextureFormat::RINT8);
         }
         break;
         case 2:
         {
-            spec.format = (img->isHDR() ? TextureFormat::RGFLOAT : TextureFormat::RG);
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGFLOAT : TextureFormat::RG);
         }
         break;
         case 3:
         {
-            spec.format = (img->isHDR() ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
         }
         break;
         case 4:
         {
-            spec.format = (img->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
         }
         break;
     }
-    return create(img->data().data_ptr(), spec);
+    return create(img.data_ptr(), spec);
+}
+
+atcg::ref_ptr<Texture2D> Texture2D::create(const torch::Tensor& img, const TextureSpecification& spec)
+{
+    return create(img.data_ptr(), spec);
 }
 
 Texture2D::~Texture2D()
@@ -675,6 +685,43 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
     if(spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_3D);
 
     return result;
+}
+
+atcg::ref_ptr<Texture3D> Texture3D::create(const torch::Tensor& img)
+{
+    TextureSpecification spec;
+    spec.width  = img.size(2);
+    spec.height = img.size(1);
+    spec.depth  = img.size(0);
+    switch(img.size(3))
+    {
+        case 1:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RFLOAT : TextureFormat::RINT8);
+        }
+        break;
+        case 2:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGFLOAT : TextureFormat::RG);
+        }
+        break;
+        case 3:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
+        }
+        break;
+        case 4:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        }
+        break;
+    }
+    return create(img.data_ptr(), spec);
+}
+
+atcg::ref_ptr<Texture3D> Texture3D::create(const torch::Tensor& img, const TextureSpecification& spec)
+{
+    return create(img.data_ptr(), spec);
 }
 
 Texture3D::~Texture3D()

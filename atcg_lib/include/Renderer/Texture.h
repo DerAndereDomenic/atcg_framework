@@ -275,6 +275,25 @@ public:
     static atcg::ref_ptr<Texture2D> create(const atcg::ref_ptr<Image> img, const TextureSpecification& spec);
 
     /**
+     * @brief Create a 2D texture.
+     *
+     * @param data The image (host data)
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<Texture2D> create(const torch::Tensor& img);
+
+    /**
+     * @brief Create a 2D texture.
+     *
+     * @param data The image (host data)
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<Texture2D> create(const torch::Tensor& img, const TextureSpecification& spec);
+
+    /**
      *  @brief Destructor
      */
     virtual ~Texture2D();
@@ -341,6 +360,25 @@ public:
      * @return The resulting texture
      */
     static atcg::ref_ptr<Texture3D> create(const void* data, const TextureSpecification& spec);
+
+    /**
+     * @brief Create a 3D texture.
+     *
+     * @param data The image (host data)
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<Texture3D> create(const torch::Tensor& img);
+
+    /**
+     * @brief Create a 3D texture.
+     *
+     * @param data The image (host data)
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<Texture3D> create(const torch::Tensor& img, const TextureSpecification& spec);
 
     /**
      *  @brief Destructor
