@@ -104,6 +104,13 @@ inline torch::TensorOptions HostOptions<int8_t>()
 }
 
 template<>
+inline torch::TensorOptions HostOptions<uint8_t>()
+{
+    return uint8HostOptions();
+}
+
+
+template<>
 inline torch::TensorOptions HostOptions<int16_t>()
 {
     return int16HostOptions();
@@ -137,6 +144,12 @@ template<>
 inline torch::TensorOptions DeviceOptions<int8_t>()
 {
     return int8DeviceOptions();
+}
+
+template<>
+inline torch::TensorOptions DeviceOptions<uint8_t>()
+{
+    return uint8DeviceOptions();
 }
 
 template<>
