@@ -8,6 +8,9 @@ namespace atcg
 
 namespace detail
 {
+static bool s_glfw_initialized   = false;
+static bool s_opengl_initialized = false;
+
 void GLAPIENTRY MessageCallback(GLenum source,
                                 GLenum type,
                                 GLuint id,
@@ -34,23 +37,55 @@ void GLAPIENTRY MessageCallback(GLenum source,
             break;
     }
 }
+
+
+static void GLFWErrorCallback(int error, const char* description)
+{
+    ATCG_ERROR("GLFW Error: {0}: {1}", error, description);
+}
+
 }    // namespace detail
 
-void Context::init(void* window)
+void Context::initWindowingAPI()
 {
-    glfwMakeContextCurrent((GLFWwindow*)window);
-
-    if(!gladLoadGL())
+    if(!detail::s_glfw_initialized)
     {
-        ATCG_ERROR("Error loading glad!");
-    }
+        int success = glfwInit();
+        if(success != GLFW_TRUE) return;
 
-    _window = window;
+        detail::s_glfw_initialized = true;
+        glfwSetErrorCallback(detail::GLFWErrorCallback);
+    }
+}
+
+void Context::deinitWindowingAPI()
+{
+    if(detail::s_glfw_initialized)
+    {
+        glfwTerminate();
+        detail::s_glfw_initialized = false;
+    }
+}
+
+void Context::initGraphicsAPI(void* window)
+{
+    if(!detail::s_opengl_initialized)
+    {
+        glfwMakeContextCurrent((GLFWwindow*)window);
+
+        if(!gladLoadGL())
+        {
+            ATCG_ERROR("Error loading glad!");
+        }
+
+        _window = window;
 
 #ifndef NDEBUG
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(detail::MessageCallback, 0);
+        glEnable(GL_DEBUG_OUTPUT);
+        glDebugMessageCallback(detail::MessageCallback, 0);
 #endif
+        detail::s_opengl_initialized = true;
+    }
 }
 
 void Context::swapBuffers()

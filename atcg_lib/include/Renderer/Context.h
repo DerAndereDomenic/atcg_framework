@@ -14,10 +14,20 @@ public:
     Context() = default;
 
     /**
+     * @brief Initialize the windowing API for the current module
+     */
+    void initWindowingAPI();
+
+    /**
+     * @brief Deinit the windowing API
+     */
+    void deinitWindowingAPI();
+
+    /**
      *   @brief Initiliaze the context
      *   @param window The window for the context
      */
-    void init(void* window);
+    void initGraphicsAPI(void* window);
 
     /**
      *   @brief Swap buffers in the swap chain

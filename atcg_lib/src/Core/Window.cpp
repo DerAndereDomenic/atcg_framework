@@ -6,23 +6,10 @@
 
 namespace atcg
 {
-static bool s_glfw_initialized = false;
-
-static void GLFWErrorCallback(int error, const char* description)
-{
-    ATCG_ERROR("GLFW Error: {0}: {1}", error, description);
-}
-
 Window::Window(const WindowProps& props)
 {
-    if(!s_glfw_initialized)
-    {
-        int success = glfwInit();
-        if(success != GLFW_TRUE) return;
-
-        s_glfw_initialized = true;
-        glfwSetErrorCallback(GLFWErrorCallback);
-    }
+    _context = atcg::make_ref<Context>();
+    _context->initWindowingAPI();
 
     _data.width  = props.width;
     _data.height = props.height;
@@ -45,8 +32,7 @@ Window::Window(const WindowProps& props)
 
     glfwSetWindowPos((GLFWwindow*)_window, pos_x, pos_y);
 
-    _context = atcg::make_ref<Context>();
-    _context->init(_window);
+    _context->initGraphicsAPI(_window);
 
     glfwSetWindowUserPointer((GLFWwindow*)_window, &_data);
 
@@ -167,6 +153,7 @@ Window::Window(const WindowProps& props)
 Window::~Window()
 {
     glfwDestroyWindow((GLFWwindow*)_window);
+    _context->deinitWindowingAPI();
 }
 
 void Window::onUpdate()
