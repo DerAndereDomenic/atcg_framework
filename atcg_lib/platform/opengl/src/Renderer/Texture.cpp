@@ -532,6 +532,13 @@ Texture2D::~Texture2D()
 
 void Texture2D::setData(const torch::Tensor& data)
 {
+    TORCH_CHECK_GE(data.ndimension(), 2);
+    TORCH_CHECK_LE(data.ndimension(), 3);
+    if(data.ndimension() < 3)
+    {
+        data.unsqueeze(-1);
+    }
+
     TORCH_CHECK_EQ(data.numel() * data.element_size(), _spec.width * _spec.height * detail::toSize(_spec.format));
     TORCH_CHECK_EQ(data.size(0), _spec.height);
     TORCH_CHECK_EQ(data.size(1), _spec.width);
@@ -732,6 +739,13 @@ Texture3D::~Texture3D()
 
 void Texture3D::setData(const torch::Tensor& data)
 {
+    TORCH_CHECK_GE(data.ndimension(), 3);
+    TORCH_CHECK_LE(data.ndimension(), 4);
+    if(data.ndimension() < 4)
+    {
+        data.unsqueeze(-1);
+    }
+
     TORCH_CHECK_EQ(data.numel() * data.element_size(),
                    _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
     TORCH_CHECK_EQ(data.size(0), _spec.depth);
