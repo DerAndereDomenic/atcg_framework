@@ -664,7 +664,7 @@ PYBIND11_MODULE(pyatcg, m)
             {
                 bool isHDR  = img.isHDR();
                 size_t size = isHDR ? sizeof(float) : sizeof(uint8_t);
-                void* data  = (void*)img.data();
+                void* data  = img.data().data_ptr();
                 return py::buffer_info(data,
                                        size,
                                        isHDR ? py::format_descriptor<float>::format()
