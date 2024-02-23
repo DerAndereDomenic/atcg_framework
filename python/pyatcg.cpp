@@ -451,6 +451,28 @@ PYBIND11_MODULE(pyatcg, m)
         .def("ellapsedSeconds", &atcg::Timer::elapsedSeconds)
         .def("reset", &atcg::Timer::reset);
 
+    py::class_<atcg::VertexSpecification>(m, "VertexSpecification")
+        .def_readonly_static("POSITION_BEGIN", &atcg::VertexSpecification::POSITION_BEGIN)
+        .def_readonly_static("POSITION_END", &atcg::VertexSpecification::POSITION_END)
+        .def_readonly_static("COLOR_BEGIN", &atcg::VertexSpecification::COLOR_BEGIN)
+        .def_readonly_static("COLOR_END", &atcg::VertexSpecification::COLOR_END)
+        .def_readonly_static("NORMAL_BEGIN", &atcg::VertexSpecification::NORMAL_BEGIN)
+        .def_readonly_static("NORMAL_END", &atcg::VertexSpecification::NORMAL_END)
+        .def_readonly_static("TANGNET_BEGIN", &atcg::VertexSpecification::TANGNET_BEGIN)
+        .def_readonly_static("TANGNET_END", &atcg::VertexSpecification::TANGNET_END)
+        .def_readonly_static("UV_BEGIN", &atcg::VertexSpecification::UV_BEGIN)
+        .def_readonly_static("UV_END", &atcg::VertexSpecification::UV_END)
+        .def_readonly_static("VERTEX_SIZE", &atcg::VertexSpecification::VERTEX_SIZE);
+
+    py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification")
+        .def_readonly_static("INDICES_BEGIN", &atcg::EdgeSpecification::INDICES_BEGIN)
+        .def_readonly_static("INDICES_END", &atcg::EdgeSpecification::INDICES_END)
+        .def_readonly_static("COLOR_BEGIN", &atcg::EdgeSpecification::COLOR_BEGIN)
+        .def_readonly_static("COLOR_END", &atcg::EdgeSpecification::COLOR_END)
+        .def_readonly_static("RADIUS_BEGIN", &atcg::EdgeSpecification::RADIUS_BEGIN)
+        .def_readonly_static("RADIUS_END", &atcg::EdgeSpecification::RADIUS_END)
+        .def_readonly_static("EDGE_SIZE", &atcg::EdgeSpecification::EDGE_SIZE);
+
     py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph")
         .def(py::init<>())
         .def_static("createPointCloud", py::overload_cast<>(&atcg::Graph::createPointCloud))
