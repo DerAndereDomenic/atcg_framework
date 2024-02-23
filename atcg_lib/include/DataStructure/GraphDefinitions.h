@@ -1,9 +1,43 @@
 #pragma once
 
 #include <Core/glm.h>
+#include <torch/types.h>
 
 namespace atcg
 {
+
+/**
+ * @brief A struct that specifies how vertices are represented as a raw float buffer.
+ * This is useful for filling and defining vertex data as tensors.
+ *
+ * {name}_BEGIN variables state the index of the first float where the {name} attribute starts.
+ * {name}_END denotes the first index that now longer is part of the {name} attribute.
+ *
+ * Example:
+ * vertices.index_put_({Slice(), Slice(POSITION_BEGIN, POSITION_END)}, position_data);
+ *
+ * VERTEX_SIZE is the total number of floats to describe one vertex
+ */
+struct VertexSpecification
+{
+    static constexpr int POSITION_BEGIN = 0;
+    static constexpr int POSITION_END   = 3;
+
+    static constexpr int COLOR_BEGIN = 3;
+    static constexpr int COLOR_END   = 6;
+
+    static constexpr int NORMAL_BEGIN = 6;
+    static constexpr int NORMAL_END   = 9;
+
+    static constexpr int TANGNET_BEGIN = 9;
+    static constexpr int TANGNET_END   = 12;
+
+    static constexpr int UV_BEGIN = 12;
+    static constexpr int UV_END   = 15;
+
+    static constexpr int VERTEX_SIZE = 15;
+};
+
 /**
  * @brief A struct to model a vertex
  */
@@ -29,6 +63,32 @@ struct Vertex
     glm::vec3 normal   = glm::vec3(0);
     glm::vec3 tangent  = glm::vec3(0);
     glm::vec3 uv       = glm::vec3(0);
+};
+
+/**
+ * @brief A struct that specifies how edges are represented as a raw float buffer.
+ * This is useful for filling and defining edge data as tensors.
+ *
+ * {name}_BEGIN variables state the index of the first float where the {name} attribute starts.
+ * {name}_END denotes the first index that now longer is part of the {name} attribute.
+ *
+ * Example:
+ * edges.index_put_({Slice(), Slice(INDICES_BEGIN, INDICES_END)}, connection_data);
+ *
+ * EDGE_SIZE is the total number of floats to describe one vertex
+ */
+struct EdgeSpecification
+{
+    static constexpr int INDICES_BEGIN = 0;
+    static constexpr int INDICES_END   = 2;
+
+    static constexpr int COLOR_BEGIN = 2;
+    static constexpr int COLOR_END   = 5;
+
+    static constexpr int RADIUS_BEGIN = 5;
+    static constexpr int RADIUS_END   = 6;
+
+    static constexpr int EDGE_SIZE = 6;
 };
 
 /**
