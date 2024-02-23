@@ -137,6 +137,13 @@ public:
      */
     inline uint32_t getHeight() const { return _data.height; }
 
+    /**
+     * @brief Get the context
+     *
+     * @return The context
+     */
+    inline atcg::ref_ptr<Context> getContext() const { return _context; }
+
 private:
     struct WindowData
     {
