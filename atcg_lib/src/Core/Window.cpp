@@ -206,6 +206,13 @@ glm::vec2 Window::getPosition() const
     return glm::vec2(x, y);
 }
 
+float Window::getContentScale() const
+{
+    float xscale;
+    glfwGetWindowContentScale((GLFWwindow*)_window, &xscale, NULL);
+    return xscale;
+}
+
 void Window::hide()
 {
     glfwHideWindow((GLFWwindow*)_window);

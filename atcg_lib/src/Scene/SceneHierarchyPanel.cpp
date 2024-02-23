@@ -4,6 +4,7 @@
 #include <Scene/Components.h>
 #include <portable-file-dialogs.h>
 #include <DataStructure/TorchUtils.h>
+#include <Core/Application.h>
 
 namespace atcg
 {
@@ -49,6 +50,7 @@ void drawComponent(const std::string& name, Entity entity, UIFunction uiFunction
 
 void displayMaterial(const std::string& key, Material& material)
 {
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     ImGui::Separator();
 
     ImGui::Text("Material");
@@ -109,7 +111,7 @@ void displayMaterial(const std::string& key, Material& material)
             }
             else
                 ImGui::Image((void*)(uint64_t)material.getDiffuseTexture()->getID(),
-                             ImVec2(128, 128),
+                             ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
         }
@@ -158,7 +160,7 @@ void displayMaterial(const std::string& key, Material& material)
             }
             else
                 ImGui::Image((void*)(uint64_t)material.getNormalTexture()->getID(),
-                             ImVec2(128, 128),
+                             ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
         }
@@ -215,7 +217,7 @@ void displayMaterial(const std::string& key, Material& material)
             }
             else
                 ImGui::Image((void*)(uint64_t)material.getRoughnessTexture()->getID(),
-                             ImVec2(128, 128),
+                             ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
         }
@@ -273,7 +275,7 @@ void displayMaterial(const std::string& key, Material& material)
             }
             else
                 ImGui::Image((void*)(uint64_t)material.getMetallicTexture()->getID(),
-                             ImVec2(128, 128),
+                             ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
         }
@@ -353,6 +355,8 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
 {
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
     std::stringstream label;
+
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
 
     NameComponent& component = entity.getComponent<NameComponent>();
     std::string& tag         = component.name;
@@ -451,7 +455,10 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
 
             ImVec2 window_size = ImGui::GetWindowSize();
             ImGui::SetCursorPos(ImVec2((window_size.x - width) * 0.5f, ImGui::GetCursorPosY()));
-            ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
+            ImGui::Image(reinterpret_cast<void*>(textureID),
+                         ImVec2(content_scale * width, content_scale * height),
+                         ImVec2 {0, 1},
+                         ImVec2 {1, 0});
 
             if(ImGui::Button("Screenshot"))
             {
@@ -677,6 +684,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
 
 void SceneHierarchyPanel::drawSceneProperties()
 {
+    float content_scale                    = atcg::Application::get()->getWindow()->getContentScale();
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
                                              ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
                                              ImGuiTreeNodeFlags_FramePadding;
@@ -690,7 +698,7 @@ void SceneHierarchyPanel::drawSceneProperties()
         if(Renderer::hasSkybox())
         {
             ImGui::Image((void*)(uint64_t)Renderer::getSkyboxTexture()->getID(),
-                         ImVec2(128, 64),
+                         ImVec2(content_scale * 128, content_scale * 64),
                          ImVec2 {0, 1},
                          ImVec2 {1, 0});
             if(ImGui::Button("Remove skybox##skybox"))

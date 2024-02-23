@@ -117,6 +117,13 @@ public:
     glm::vec2 getPosition() const;
 
     /**
+     * @brief Get the content scale of the window (4k support)
+     *
+     * @return The content scaling factor
+     */
+    float getContentScale() const;
+
+    /**
      * @brief Get the Width object
      *
      * @return uint32_t width
