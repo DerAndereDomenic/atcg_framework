@@ -18,6 +18,7 @@ public:
      *
      * @param name The name of the statistic
      */
+    ATCG_HOST_DEVICE
     Statistic(const std::string& name) : _name(name) {}
 
     /**
@@ -30,6 +31,7 @@ public:
      *
      * @param sample The new sample
      */
+    ATCG_HOST_DEVICE
     void addSample(const T& sample);
 
     /**
@@ -37,6 +39,7 @@ public:
      *
      * @return Estimate of the mean
      */
+    ATCG_HOST_DEVICE
     T mean() const;
 
     /**
@@ -44,6 +47,7 @@ public:
      *
      * @return The variance
      */
+    ATCG_HOST_DEVICE
     T var() const;
 
     /**
@@ -51,11 +55,15 @@ public:
      *
      * @return The name
      */
+    ATCG_HOST_DEVICE
     std::string name() const;
 
 private:
-    std::vector<T> _samples;
     std::string _name;
+    T _mean         = 0;
+    T _var          = 0;
+    uint32_t _count = 0;
+    T _M2           = 0;
 };
 
 /**
@@ -76,40 +84,106 @@ std::ostream& operator<<(std::ostream& os, const Statistic<T>& statistic)
 template<typename T>
 void Statistic<T>::addSample(const T& sample)
 {
-    _samples.push_back(sample);
+    T delta = sample - _mean;
+    _mean += delta / (T)_count;
+    T delta2 = sample - _mean;
+    _M2 += delta * delta2;
 }
 
 template<typename T>
 T Statistic<T>::mean() const
 {
-    T m = T(0);
-    for(const T& sample: _samples)
-    {
-        m += sample;
-    }
-
-    return m / static_cast<T>(_samples.size());
+    return _mean;
 }
 
 template<typename T>
 T Statistic<T>::var() const
 {
-    if(_samples.size() < 1) return T(0);
-
-    T v = T(0);
-    T m = mean();
-    for(const T& sample: _samples)
-    {
-        v += (sample - m) * (sample - m);
-    }
-
-    return v / static_cast<T>(_samples.size() - 1);
+    return _M2 / (T)_count;
 }
 
 template<typename T>
 std::string Statistic<T>::name() const
 {
     return _name;
+}
+
+template<typename T, class allocator>
+class Collection : public MemoryBuffer<T, allocator>
+{
+public:
+    Collection(const std::string& name) : MemoryBuffer<T, allocator>(), _name(name) {}
+
+    Collection(const std::string& name, std::size_t n) : MemoryBuffer<T, allocator>(n), _name(name) {}
+
+    ~Collection();
+
+    ATCG_HOST_DEVICE
+    void add(const T& value);
+
+    ATCG_HOST_DEVICE
+    T mean() const;
+
+    ATCG_HOST_DEVICE
+    T var() const;
+
+    ATCG_HOST_DEVICE
+    void resetStatistics();
+
+    ATCG_HOST_DEVICE
+    std::string name() const;
+
+private:
+    uint32_t _index = 0;
+    T _mean         = 0;
+    T _var          = 0;
+    T _M2           = 0;
+    std::string _name;
+};
+
+template<typename T, class allocator>
+void Collection<T, allocator>::add(const T& value)
+{
+    if(_index >= capacity())
+    {
+        ATCG_WARN("Collection is full");
+        return;
+    }
+
+    get()[_index] = value;
+    ++_index;
+
+    T delta = value - _mean;
+    _mean += delta / (T)_index;
+    T delta2 = value - _mean;
+    _M2 += delta * delta2;
+}
+
+template<typename T, class allocator>
+T Collection<T, allocator>::mean() const
+{
+    return _mean;
+}
+
+template<typename T, class allocator>
+T Collection<T, allocator>::var() const
+{
+    return _M2 / (T)_index;
+}
+
+template<typename T, class allocator>
+std::string Collection<T, allocator>::name() const
+{
+    return _name;
+}
+
+template<typename T, class allocator>
+void Collection<T, allocator>::resetStatistics()
+{
+    _mean  = 0;
+    _var   = 0;
+    _M2    = 0;
+    _index = 0;
 }
 
 }    // namespace atcg
