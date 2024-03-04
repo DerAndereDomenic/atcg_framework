@@ -138,6 +138,7 @@ VertexBuffer::VertexBuffer(size_t size)
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     glBufferData(GL_ARRAY_BUFFER, std::max(size_t(1), size), nullptr, GL_DYNAMIC_DRAW);
+    ATCG_TRACE("Allocated VertexBuffer of size {0}", size);
 
     impl           = atcg::make_scope<Impl>(_ID);
     impl->size     = size;
@@ -149,6 +150,7 @@ VertexBuffer::VertexBuffer(const void* data, size_t size)
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
     glBufferData(GL_ARRAY_BUFFER, std::max(size_t(1), size), data, GL_DYNAMIC_DRAW);
+    ATCG_TRACE("Allocated VertexBuffer of size {0}", size);
 
     impl           = atcg::make_scope<Impl>(_ID);
     impl->size     = size;
@@ -187,14 +189,15 @@ void VertexBuffer::setData(const void* data, size_t size)
 
 void VertexBuffer::resize(std::size_t size)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, _ID);
     if(size > impl->capacity)
     {
+        glBindBuffer(GL_ARRAY_BUFFER, _ID);
         if(impl->resource_ready)
         {
             impl->deinitResource();
         }
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+        ATCG_TRACE("Allocated VertexBuffer of size {0}", size);
         impl->capacity = size;
     }
     if(!impl->resource_ready)
