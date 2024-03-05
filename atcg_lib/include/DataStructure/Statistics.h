@@ -108,28 +108,66 @@ std::string Statistic<T>::name() const
     return _name;
 }
 
+/**
+ * @brief A class to model a collection that also holds a statistic about this collection
+ *
+ * @tparam T The type of the elements of the collection
+ * @tparam allocator Host or Device allocator
+ */
 template<typename T, class allocator>
 class Collection : public MemoryBuffer<T, allocator>
 {
 public:
-    Collection(const std::string& name) : MemoryBuffer<T, allocator>(), _name(name) {}
-
+    /**
+     * @brief Create a collection.
+     *
+     * @param name The name of the collection
+     * @param n The capacity of the collection
+     */
     Collection(const std::string& name, std::size_t n) : MemoryBuffer<T, allocator>(n), _name(name) {}
 
-    ~Collection(){}
+    /**
+     * @brief The destructor
+     */
+    ~Collection() {}
 
+    /**
+     * @brief Add a sample.
+     * If the capacity of the collection is reached, a warning is thrown and no elements are updated
+     *
+     * @param value The new sample
+     */
     ATCG_HOST_DEVICE
-    virtual void add(const T& value);
+    virtual void addSample(const T& value);
 
+    /**
+     * @brief Get the mean of the collection.
+     *
+     * @return The mean
+     */
     ATCG_HOST_DEVICE
     T mean() const;
 
+    /**
+     * @brief Get the variance of the collection.
+     *
+     * @return The variance
+     */
     ATCG_HOST_DEVICE
     T var() const;
 
+    /**
+     * @brief Reset the statistic.
+     * Also invalidates all the samples and clears the collection
+     */
     ATCG_HOST_DEVICE
     void resetStatistics();
 
+    /**
+     * @brief Get the name of the collection
+     *
+     * @return The name
+     */
     ATCG_HOST_DEVICE
     std::string name() const;
 
@@ -158,7 +196,7 @@ std::ostream& operator<<(std::ostream& os, const Collection<T, atcg::host_alloca
 }
 
 template<typename T, class allocator>
-void Collection<T, allocator>::add(const T& value)
+void Collection<T, allocator>::addSample(const T& value)
 {
     if(_index >= capacity())
     {
@@ -198,27 +236,42 @@ template<typename T, class allocator>
 void Collection<T, allocator>::resetStatistics()
 {
     _mean  = 0;
-    _var   = 0;
     _M2    = 0;
     _index = 0;
     _count = 0;
 }
 
+/**
+ * @brief A class to model a cyclic collection that also holds a statistic about this collection
+ *
+ * @tparam T The type of the elements of the collection
+ * @tparam allocator Host or Device allocator
+ */
 template<typename T, class allocator>
 class CyclicCollection : public Collection<T, allocator>
 {
 public:
-    CyclicCollection(const std::string& name) : Collection<T, allocator>(name) {}
-
+    /**
+     * @brief Create a cyclic collection.
+     *
+     * @param name The name of the collection
+     * @param n The capacity of the collection
+     */
     CyclicCollection(const std::string& name, std::size_t n) : Collection<T, allocator>(name, n) {}
 
+    /**
+     * @brief The destructor
+     */
     ~CyclicCollection() {}
 
+    /**
+     * @brief Add a sample.
+     * If the capacity of the collection is reached, the oldest element will be overwritten.
+     *
+     * @param value The new sample
+     */
     ATCG_HOST_DEVICE
-    virtual void add(const T& value) override;
-
-    ATCG_HOST_DEVICE
-    void resetStatistics();
+    virtual void addSample(const T& value) override;
 };
 
 /**
@@ -237,7 +290,7 @@ std::ostream& operator<<(std::ostream& os, const CyclicCollection<T, atcg::host_
 }
 
 template<typename T, class allocator>
-void CyclicCollection<T, allocator>::add(const T& value)
+void CyclicCollection<T, allocator>::addSample(const T& value)
 {
     if(_count >= capacity())
     {
