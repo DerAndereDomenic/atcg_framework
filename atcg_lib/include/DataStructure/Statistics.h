@@ -116,10 +116,10 @@ public:
 
     Collection(const std::string& name, std::size_t n) : MemoryBuffer<T, allocator>(n), _name(name) {}
 
-    ~Collection();
+    ~Collection(){}
 
     ATCG_HOST_DEVICE
-    void add(const T& value);
+    virtual void add(const T& value);
 
     ATCG_HOST_DEVICE
     T mean() const;
@@ -133,13 +133,29 @@ public:
     ATCG_HOST_DEVICE
     std::string name() const;
 
-private:
+protected:
     uint32_t _index = 0;
+    uint32_t _count = 0;
     T _mean         = 0;
     T _var          = 0;
     T _M2           = 0;
     std::string _name;
 };
+
+/**
+ * @brief Prints the mean and standard deviation of the underlying data
+ *
+ * @param os The ostream
+ * @return The ostream
+ */
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const Collection<T, atcg::host_allocator>& statistic)
+{
+    os << "Statistic for " << statistic.name() << ":\t";
+    os << statistic.mean() << "\t";
+    os << "( " << std::sqrt(statistic.var()) << " )\n";
+    return os;
+}
 
 template<typename T, class allocator>
 void Collection<T, allocator>::add(const T& value)
@@ -152,9 +168,10 @@ void Collection<T, allocator>::add(const T& value)
 
     get()[_index] = value;
     ++_index;
+    ++_count;
 
     T delta = value - _mean;
-    _mean += delta / (T)_index;
+    _mean += delta / (T)_count;
     T delta2 = value - _mean;
     _M2 += delta * delta2;
 }
@@ -168,7 +185,7 @@ T Collection<T, allocator>::mean() const
 template<typename T, class allocator>
 T Collection<T, allocator>::var() const
 {
-    return _M2 / (T)_index;
+    return _M2 / (T)_count;
 }
 
 template<typename T, class allocator>
@@ -184,6 +201,67 @@ void Collection<T, allocator>::resetStatistics()
     _var   = 0;
     _M2    = 0;
     _index = 0;
+    _count = 0;
 }
+
+template<typename T, class allocator>
+class CyclicCollection : public Collection<T, allocator>
+{
+public:
+    CyclicCollection(const std::string& name) : Collection<T, allocator>(name) {}
+
+    CyclicCollection(const std::string& name, std::size_t n) : Collection<T, allocator>(name, n) {}
+
+    ~CyclicCollection() {}
+
+    ATCG_HOST_DEVICE
+    virtual void add(const T& value) override;
+
+    ATCG_HOST_DEVICE
+    void resetStatistics();
+};
+
+/**
+ * @brief Prints the mean and standard deviation of the underlying data
+ *
+ * @param os The ostream
+ * @return The ostream
+ */
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const CyclicCollection<T, atcg::host_allocator>& statistic)
+{
+    os << "Statistic for " << statistic.name() << ":\t";
+    os << statistic.mean() << "\t";
+    os << "( " << std::sqrt(statistic.var()) << " )\n";
+    return os;
+}
+
+template<typename T, class allocator>
+void CyclicCollection<T, allocator>::add(const T& value)
+{
+    if(_count >= capacity())
+    {
+        T value_old   = get()[_index];
+        get()[_index] = value;
+
+        // Remove old sample
+        T delta = value_old - _mean;
+        _mean -= delta / (T)(_count - 1);
+        T delta2 = value_old - _mean;
+        _M2 -= delta * delta2;
+    }
+    else
+    {
+        get()[_index] = value;
+        ++_count;
+    }
+
+    T delta = value - _mean;
+    _mean += delta / (T)_count;
+    T delta2 = value - _mean;
+    _M2 += delta * delta2;
+    _index = (_index + 1) % capacity();
+}
+
 
 }    // namespace atcg
