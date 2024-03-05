@@ -35,6 +35,15 @@ public:
     void addSample(const T& sample);
 
     /**
+     * @brief Remove a sample from the statistic.
+     * The sample has to be added to the statistic prior to this call.
+     *
+     * @param sample The sample to remove
+     */
+    ATCG_HOST_DEVICE
+    void removeSample(const T& sample);
+
+    /**
      * @brief Get the mean of the data points
      *
      * @return Estimate of the mean
@@ -61,9 +70,8 @@ public:
 private:
     std::string _name;
     T _mean         = 0;
-    T _var          = 0;
-    uint32_t _count = 0;
     T _M2           = 0;
+    uint32_t _count = 0;
 };
 
 /**
@@ -88,6 +96,15 @@ void Statistic<T>::addSample(const T& sample)
     _mean += delta / (T)_count;
     T delta2 = sample - _mean;
     _M2 += delta * delta2;
+}
+
+template<typename T>
+void Statistic<T>::removeSample(const T& sample)
+{
+    T delta = sample - _mean;
+    _mean -= delta / (T)(_count - 1);
+    T delta2 = sample - _mean;
+    _M2 -= delta * delta2;
 }
 
 template<typename T>
