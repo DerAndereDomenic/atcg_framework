@@ -221,6 +221,22 @@ public:
     ATCG_HOST_DEVICE
     std::string name() const;
 
+    /**
+     * @brief Get the number of samples
+     *
+     * @return The number of samples
+     */
+    ATCG_HOST_DEVICE
+    uint32_t count() const;
+
+    /**
+     * @brief Get the current index into the collection
+     *
+     * @return The current index
+     */
+    ATCG_HOST_DEVICE
+    uint32_t index() const;
+
 protected:
     uint32_t _index = 0;
     std::string _name;
@@ -279,6 +295,18 @@ void Collection<T, allocator>::resetStatistics()
 {
     _statistic.reset();
     _index = 0;
+}
+
+template<typename T, class allocator>
+uint32_t Collection<T, allocator>::count() const
+{
+    return _statistic.count();
+}
+
+template<typename T, class allocator>
+uint32_t Collection<T, allocator>::index() const
+{
+    return _index;
 }
 
 /**
