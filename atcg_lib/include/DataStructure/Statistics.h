@@ -86,8 +86,8 @@ public:
 
 private:
     std::string _name = "";
-    T _mean           = 0;
-    T _M2             = 0;
+    T _mean           = T(0);
+    T _M2             = T(0);
     uint32_t _count   = 0;
 };
 
@@ -154,8 +154,8 @@ template<typename T>
 void Statistic<T>::reset()
 {
     _count = 0;
-    _mean  = 0;
-    _M2    = 0;
+    _mean  = T(0);
+    _M2    = T(0);
 }
 
 /**
