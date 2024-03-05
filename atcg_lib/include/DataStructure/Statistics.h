@@ -67,6 +67,14 @@ public:
     ATCG_HOST_DEVICE
     std::string name() const;
 
+    /**
+     * @brief Get the number of elements in the collection
+     *
+     * @return The number of samples.
+     */
+    ATCG_HOST_DEVICE
+    uint32_t count() const;
+
 private:
     std::string _name;
     T _mean         = 0;
@@ -123,6 +131,12 @@ template<typename T>
 std::string Statistic<T>::name() const
 {
     return _name;
+}
+
+template<typename T>
+uint32_t Statistic<T>::count() const
+{
+    return _count;
 }
 
 /**
