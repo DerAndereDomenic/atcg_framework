@@ -13,6 +13,9 @@ template<typename T>
 class Statistic
 {
 public:
+    ATCG_HOST_DEVICE
+    Statistic() = default;
+
     /**
      * @brief Create a new statistic.
      *
@@ -75,11 +78,17 @@ public:
     ATCG_HOST_DEVICE
     uint32_t count() const;
 
+    /**
+     * @brief Reset a statistic.
+     */
+    ATCG_HOST_DEVICE
+    void reset();
+
 private:
-    std::string _name;
-    T _mean         = 0;
-    T _M2           = 0;
-    uint32_t _count = 0;
+    std::string _name = "";
+    T _mean           = 0;
+    T _M2             = 0;
+    uint32_t _count   = 0;
 };
 
 /**
@@ -100,6 +109,7 @@ std::ostream& operator<<(std::ostream& os, const Statistic<T>& statistic)
 template<typename T>
 void Statistic<T>::addSample(const T& sample)
 {
+    ++_count;
     T delta = sample - _mean;
     _mean += delta / (T)_count;
     T delta2 = sample - _mean;
@@ -109,8 +119,9 @@ void Statistic<T>::addSample(const T& sample)
 template<typename T>
 void Statistic<T>::removeSample(const T& sample)
 {
+    --_count;
     T delta = sample - _mean;
-    _mean -= delta / (T)(_count - 1);
+    _mean -= delta / (T)(_count);
     T delta2 = sample - _mean;
     _M2 -= delta * delta2;
 }
@@ -137,6 +148,14 @@ template<typename T>
 uint32_t Statistic<T>::count() const
 {
     return _count;
+}
+
+template<typename T>
+void Statistic<T>::reset()
+{
+    _count = 0;
+    _mean  = 0;
+    _M2    = 0;
 }
 
 /**
@@ -204,11 +223,8 @@ public:
 
 protected:
     uint32_t _index = 0;
-    uint32_t _count = 0;
-    T _mean         = 0;
-    T _var          = 0;
-    T _M2           = 0;
     std::string _name;
+    Statistic<T> _statistic;
 };
 
 /**
@@ -237,24 +253,19 @@ void Collection<T, allocator>::addSample(const T& value)
 
     get()[_index] = value;
     ++_index;
-    ++_count;
-
-    T delta = value - _mean;
-    _mean += delta / (T)_count;
-    T delta2 = value - _mean;
-    _M2 += delta * delta2;
+    _statistic.addSample(value);
 }
 
 template<typename T, class allocator>
 T Collection<T, allocator>::mean() const
 {
-    return _mean;
+    return _statistic.mean();
 }
 
 template<typename T, class allocator>
 T Collection<T, allocator>::var() const
 {
-    return _M2 / (T)_count;
+    return _statistic.var();
 }
 
 template<typename T, class allocator>
@@ -266,10 +277,8 @@ std::string Collection<T, allocator>::name() const
 template<typename T, class allocator>
 void Collection<T, allocator>::resetStatistics()
 {
-    _mean  = 0;
-    _M2    = 0;
+    _statistic.reset();
     _index = 0;
-    _count = 0;
 }
 
 /**
@@ -323,27 +332,20 @@ std::ostream& operator<<(std::ostream& os, const CyclicCollection<T, atcg::host_
 template<typename T, class allocator>
 void CyclicCollection<T, allocator>::addSample(const T& value)
 {
-    if(_count >= capacity())
+    if(_statistic.count() >= capacity())
     {
         T value_old   = get()[_index];
         get()[_index] = value;
 
         // Remove old sample
-        T delta = value_old - _mean;
-        _mean -= delta / (T)(_count - 1);
-        T delta2 = value_old - _mean;
-        _M2 -= delta * delta2;
+        _statistic.removeSample(value_old);
     }
     else
     {
         get()[_index] = value;
-        ++_count;
     }
 
-    T delta = value - _mean;
-    _mean += delta / (T)_count;
-    T delta2 = value - _mean;
-    _M2 += delta * delta2;
+    _statistic.addSample(value);
     _index = (_index + 1) % capacity();
 }
 
