@@ -481,7 +481,7 @@ Texture::getTextureObject(const uint32_t mip_level, const glm::vec4& border_colo
         texDesc.addressMode[1]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
         texDesc.addressMode[2]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
         texDesc.filterMode      = detail::toCUDATextureMode(_spec.sampler.filter_mode);
-        texDesc.readMode        = cudaReadModeElementType;
+        texDesc.readMode        = cudaReadModeNormalizedFloat;
         texDesc.borderColor[0]  = border_color.x;
         texDesc.borderColor[1]  = border_color.y;
         texDesc.borderColor[2]  = border_color.z;
