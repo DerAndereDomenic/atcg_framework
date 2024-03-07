@@ -284,6 +284,10 @@ GLint toGLWrapMode(TextureWrapMode wrap_mode)
         {
             return GL_REPEAT;
         }
+        case TextureWrapMode::BORDER:
+        {
+            return GL_CLAMP_TO_BORDER;
+        }
         default:
         {
             ATCG_ERROR("Unknown TextureWrapMode {0}", (int)wrap_mode);
@@ -315,6 +319,57 @@ GLint toGLFilterMode(TextureFilterMode filter_mode)
         }
     }
 }
+
+#ifdef ATCG_CUDA_BACKEND
+cudaTextureFilterMode toCUDATextureMode(TextureFilterMode filter_mode)
+{
+    switch(filter_mode)
+    {
+        case TextureFilterMode::MIPMAP_LINEAR:
+        {
+            return cudaFilterModeLinear;
+        }
+        case TextureFilterMode::LINEAR:
+        {
+            return cudaFilterModeLinear;
+        }
+        case TextureFilterMode::NEAREST:
+        {
+            return cudaFilterModePoint;
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureFilterMode {0}", (int)filter_mode);
+            return cudaFilterModePoint;
+        }
+    }
+}
+
+cudaTextureAddressMode toCUDAAddressMode(TextureWrapMode wrap_mode)
+{
+    switch(wrap_mode)
+    {
+        case TextureWrapMode::CLAMP_TO_EDGE:
+        {
+            return cudaAddressModeClamp;
+        }
+        case TextureWrapMode::REPEAT:
+        {
+            return cudaAddressModeWrap;
+        }
+        case TextureWrapMode::BORDER:
+        {
+            return cudaAddressModeBorder;
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureWrapMode {0}", (int)wrap_mode);
+            return cudaAddressModeClamp;
+        }
+    }
+}
+#endif
+
 }    // namespace detail
 
 class Texture::Impl
@@ -335,10 +390,14 @@ public:
 #endif
 
     atcg::textureArray dev_ptr;
+    atcg::textureObject texture_object;
+    atcg::surfaceObject surface_object;
 
     GLuint ID           = 0;
     bool resource_ready = false;
     bool mapped_device  = false;
+    bool texture_mapped = false;
+    bool surface_mapped = false;
 };
 
 Texture::Impl::Impl() {}
@@ -405,6 +464,56 @@ atcg::textureArray Texture::getTextureArray(const uint32_t mip_level) const
     return impl->dev_ptr;
 }
 
+atcg::textureObject
+Texture::getTextureObject(const uint32_t mip_level, const glm::vec4& border_color, const bool normalized_coords) const
+{
+#ifdef ATCG_CUDA_BACKEND
+    if(impl->texture_mapped)
+    {
+        atcg::textureArray array = getTextureArray(mip_level);
+
+        cudaResourceDesc resDesc = {};
+        resDesc.resType          = cudaResourceTypeArray;
+        resDesc.res.array.array  = array;
+
+        cudaTextureDesc texDesc = {};
+        texDesc.addressMode[0]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
+        texDesc.addressMode[1]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
+        texDesc.addressMode[2]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
+        texDesc.filterMode      = detail::toCUDATextureMode(_spec.sampler.filter_mode);
+        texDesc.readMode        = cudaReadModeElementType;
+        texDesc.borderColor[0]  = border_color.x;
+        texDesc.borderColor[1]  = border_color.y;
+        texDesc.borderColor[2]  = border_color.z;
+        texDesc.borderColor[3]  = border_color.w;
+
+        texDesc.normalizedCoords = normalized_coords;
+
+        CUDA_SAFE_CALL(cudaCreateTextureObject(&impl->texture_object, &resDesc, &texDesc, NULL));
+    }
+#endif
+    impl->texture_mapped = true;
+    return impl->texture_object;
+}
+
+atcg::surfaceObject Texture::getSurfaceObject(const uint32_t mip_level) const
+{
+#ifdef ATCG_CUDA_BACKEND
+    if(!impl->surface_mapped)
+    {
+        atcg::textureArray array = getTextureArray(mip_level);
+
+        cudaResourceDesc resDesc = {};
+        resDesc.resType          = cudaResourceTypeArray;
+        resDesc.res.array.array  = array;
+
+        CUDA_SAFE_CALL(cudaCreateSurfaceObject(&impl->texture_object, &resDesc));
+    }
+#endif
+    impl->surface_mapped = true;
+    return impl->surface_object;
+}
+
 bool Texture::isDeviceMapped() const
 {
     return impl->mapped_device;
@@ -412,6 +521,18 @@ bool Texture::isDeviceMapped() const
 
 void Texture::unmapDevicePointers() const
 {
+#if ATCG_CUDA_BACKEND
+    if(impl->surface_mapped)
+    {
+        CUDA_SAFE_CALL(cudaDestroySurfaceObject(impl->surface_object));
+        impl->surface_mapped = false;
+    }
+    if(impl->texture_mapped)
+    {
+        CUDA_SAFE_CALL(cudaDestroyTextureObject(impl->texture_object));
+        impl->texture_mapped = false;
+    }
+#endif
     impl->unmapResourceDevice();
 }
 

@@ -43,7 +43,9 @@ enum class TextureWrapMode
     // Extend the texture by the border pixel values
     CLAMP_TO_EDGE,
     // Repeat the texture
-    REPEAT
+    REPEAT,
+    // Border
+    BORDER
 };
 
 /**
@@ -205,6 +207,45 @@ public:
      */
     atcg::textureArray getTextureArray(const uint32_t mip_level = 0) const;
 
+    /**
+     * @brief Get the underlying data as a cudaTextureObject_t.
+     * This only returns a valid cudaTextureObject_t if the CUDA backend is enabled. Otherwise this will return the
+     * buffer mapped to host space.
+     *
+     * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
+     * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
+     * gets mapped and unmapped automatically. Every call to use(), bindStorage() or setData() invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a VertexArray for example only points to this
+     * buffer), the client has to manually unmap the pointers using unmapPointers() before any further rendering calls
+     * can be done.
+     *
+     * @param mip_level The mip level
+     * @param border_color The border color
+     * @param normalized_coords If the coordinates should be normalized between 0 and 1
+     *
+     * @return The pointer
+     */
+    atcg::textureObject getTextureObject(const uint32_t mip_level      = 0,
+                                         const glm::vec4& border_color = glm::vec4(0),
+                                         const bool normalized_coords  = true) const;
+
+    /**
+     * @brief Get the underlying data as a cudaSurfaceObject_t.
+     * This only returns a valid cudaSurfaceObject_t if the CUDA backend is enabled. Otherwise this will return the
+     * buffer mapped to host space.
+     *
+     * @note This function should be called every frame and the pointer should not be cached by the application. OpenGL
+     * is allowed to move buffers in memory. Therefore, the pointer might no longer be valid. The underlying resource
+     * gets mapped and unmapped automatically. Every call to use(), bindStorage() or setData() invalidates the pointer.
+     * If the buffer does not get explicitly binded again (because a VertexArray for example only points to this
+     * buffer), the client has to manually unmap the pointers using unmapPointers() before any further rendering calls
+     * can be done.
+     *
+     * @param mip_level The mip level
+     *
+     * @return The pointer
+     */
+    atcg::surfaceObject getSurfaceObject(const uint32_t mip_level = 0) const;
 
     /**
      * @brief Check if the device pointer is mapped (valid).
