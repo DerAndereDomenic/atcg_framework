@@ -350,20 +350,20 @@ std::ostream& operator<<(std::ostream& os, const CyclicCollection<T>& statistic)
 template<typename T>
 void CyclicCollection<T>::addSample(const T& value)
 {
-    if(_statistic.count() >= this->capacity())
+    if(this->_statistic.count() >= this->capacity())
     {
         T value_old               = this->get()[this->_index];
         this->get()[this->_index] = value;
 
         // Remove old sample
-        _statistic.removeSample(value_old);
+        this->_statistic.removeSample(value_old);
     }
     else
     {
         this->get()[this->_index] = value;
     }
 
-    _statistic.addSample(value);
+    this->_statistic.addSample(value);
     this->_index = (this->_index + 1) % this->capacity();
 }
 
