@@ -253,13 +253,13 @@ std::ostream& operator<<(std::ostream& os, const Collection<T>& statistic)
 template<typename T>
 void Collection<T>::addSample(const T& value)
 {
-    if(_index >= capacity())
+    if(_index >= this->capacity())
     {
         ATCG_WARN("Collection is full");
         return;
     }
 
-    get()[_index] = value;
+    this->get()[_index] = value;
     ++_index;
     _statistic.addSample(value);
 }
@@ -350,21 +350,21 @@ std::ostream& operator<<(std::ostream& os, const CyclicCollection<T>& statistic)
 template<typename T>
 void CyclicCollection<T>::addSample(const T& value)
 {
-    if(_statistic.count() >= capacity())
+    if(_statistic.count() >= this->capacity())
     {
-        T value_old   = get()[_index];
-        get()[_index] = value;
+        T value_old         = this->get()[_index];
+        this->get()[_index] = value;
 
         // Remove old sample
         _statistic.removeSample(value_old);
     }
     else
     {
-        get()[_index] = value;
+        this->get()[_index] = value;
     }
 
     _statistic.addSample(value);
-    _index = (_index + 1) % capacity();
+    _index = (_index + 1) % this->capacity();
 }
 
 
