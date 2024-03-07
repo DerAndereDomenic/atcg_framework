@@ -352,19 +352,19 @@ void CyclicCollection<T>::addSample(const T& value)
 {
     if(_statistic.count() >= this->capacity())
     {
-        T value_old         = this->get()[_index];
-        this->get()[_index] = value;
+        T value_old               = this->get()[this->_index];
+        this->get()[this->_index] = value;
 
         // Remove old sample
         _statistic.removeSample(value_old);
     }
     else
     {
-        this->get()[_index] = value;
+        this->get()[this->_index] = value;
     }
 
     _statistic.addSample(value);
-    _index = (_index + 1) % this->capacity();
+    this->_index = (this->_index + 1) % this->capacity();
 }
 
 
