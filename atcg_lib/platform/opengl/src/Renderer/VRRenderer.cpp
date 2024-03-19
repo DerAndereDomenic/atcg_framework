@@ -1,7 +1,7 @@
 #include <Renderer/VRRenderer.h>
 
 #include <Core/Log.h>
-
+#include <glad/glad.h>
 #include <openvr.h>
 
 namespace atcg
@@ -108,18 +108,21 @@ void VRRenderer::onUpdate(const float delta_time)
         vr::VRCompositor()->Submit(vr::Eye_Left, &left_eye_texture);
         vr::VRCompositor()->Submit(vr::Eye_Right, &right_eye_texture);
 
-        vr::VRCompositor()->PostPresentHandoff();
+        glFlush();
+
+        // vr::VRCompositor()->PostPresentHandoff();
     }
 
     // Update position
-    vr::TrackedDevicePose_t trackedDevicePoses[vr::k_unMaxTrackedDeviceCount];
-    vr::VRCompositor()->WaitGetPoses(trackedDevicePoses, vr::k_unMaxActionOriginCount, nullptr, 0);
+    vr::TrackedDevicePose_t renderPoses[vr::k_unMaxTrackedDeviceCount];
+    vr::TrackedDevicePose_t gamePoses[vr::k_unMaxTrackedDeviceCount];
 
-    vr::TrackedDevicePose_t trackedDevicePose;
-    s_renderer->impl->vr_pointer->GetDeviceToAbsoluteTrackingPose(vr::TrackingUniverseStanding,
-                                                                  0,
-                                                                  &trackedDevicePose,
-                                                                  1);
+    vr::VRCompositor()->WaitGetPoses(renderPoses,
+                                     vr::k_unMaxTrackedDeviceCount,
+                                     gamePoses,
+                                     vr::k_unMaxTrackedDeviceCount);
+
+    auto trackedDevicePose = renderPoses[vr::k_unTrackedDeviceIndex_Hmd];
     {
         s_renderer->impl->position = glm::vec3(trackedDevicePose.mDeviceToAbsoluteTracking.m[0][3],
                                                trackedDevicePose.mDeviceToAbsoluteTracking.m[1][3],
