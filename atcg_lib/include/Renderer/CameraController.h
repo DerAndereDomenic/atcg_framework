@@ -170,4 +170,72 @@ private:
     bool _clicked_right = false;
 };
 
+class VRController : public CameraController
+{
+public:
+    /**
+     * @brief Construct a new First Person Camera object
+     *
+     * @param aspect_ratio The aspect ratio of the camera
+     */
+    VRController(const float& aspect_ratio, const float& speed = 1.0f);
+
+    /**
+     * @brief Construct a new First Person Camera object
+     *
+     * @param camera The camera
+     */
+    VRController(const atcg::ref_ptr<Camera>& camera);
+
+    /**
+     * @brief Gets called every frame
+     *
+     * @param delta_time Time since last frame
+     */
+    virtual void onUpdate(float delta_time);
+
+    /**
+     * @brief Handles events
+     *
+     * @param e The event
+     */
+    virtual void onEvent(Event* e);
+
+    /**
+     * @brief Get the camera of the left eye
+     *
+     * @return The camera
+     */
+    inline atcg::ref_ptr<atcg::PerspectiveCamera> getCameraLeft() const { return _cam_left; }
+
+
+    /**
+     * @brief Get the camera of the right eye
+     *
+     * @return The camera
+     */
+    inline atcg::ref_ptr<atcg::PerspectiveCamera> getCameraRight() const { return _cam_right; }
+
+private:
+    bool onWindowResize(WindowResizeEvent* event);
+    bool onKeyPressed(KeyPressedEvent* event);
+    bool onKeyReleased(KeyReleasedEvent* event);
+
+    float _speed;
+    glm::vec3 _current_position = glm::vec3(0);
+    float _velocity_forward     = 0.0f;
+    float _velocity_right       = 0.0f;
+    float _velocity_threshold   = 0.3f;
+    float _max_velocity         = 3.0f;
+    float _acceleration         = 5.0f;
+
+    bool _pressed_W = false;
+    bool _pressed_A = false;
+    bool _pressed_S = false;
+    bool _pressed_D = false;
+
+    atcg::ref_ptr<atcg::PerspectiveCamera> _cam_left;
+    atcg::ref_ptr<atcg::PerspectiveCamera> _cam_right;
+};
+
 }    // namespace atcg
