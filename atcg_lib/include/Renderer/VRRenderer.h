@@ -110,6 +110,11 @@ public:
     static bool isVRAvailable();
 
     /**
+     * @brief Renders both views onto a screen quad
+     */
+    static void renderToScreen();
+
+    /**
      * @brief Destroys the Renderer instance. SHOULD NOT BE CALLED BY THE USER
      *
      */

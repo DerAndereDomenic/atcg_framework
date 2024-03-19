@@ -2,6 +2,8 @@
 
 #include <Core/Log.h>
 #include <glad/glad.h>
+#include <DataStructure/Graph.h>
+#include <Renderer/Renderer.h>
 #include <openvr.h>
 
 namespace atcg
@@ -30,6 +32,8 @@ public:
     glm::mat4 view_right = glm::mat4(1);
 
     glm::vec3 position = glm::vec3(0);
+
+    atcg::ref_ptr<Graph> quad;
 };
 
 VRRenderer::VRRenderer() {}
@@ -69,6 +73,15 @@ void VRRenderer::Impl::init()
     render_target_right->attachColor();
     render_target_right->attachDepth();
     render_target_right->complete();
+
+    std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
+                                          atcg::Vertex(glm::vec3(1, -1, 0)),
+                                          atcg::Vertex(glm::vec3(1, 1, 0)),
+                                          atcg::Vertex(glm::vec3(-1, 1, 0))};
+
+    std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+
+    quad = atcg::Graph::createTriangleMesh(vertices, edges);
 
     ATCG_INFO("Initialized VR runtime with resolution: {0}x{1}", width, height);
 }
@@ -240,6 +253,16 @@ std::tuple<atcg::ref_ptr<Framebuffer>, atcg::ref_ptr<Framebuffer>> VRRenderer::g
 {
     return std::make_tuple(VRRenderer::getRenderTarget(VRRenderer::Eye::LEFT),
                            VRRenderer::getRenderTarget(VRRenderer::Eye::RIGHT));
+}
+
+void VRRenderer::renderToScreen()
+{
+    auto vr_shader = atcg::ShaderManager::getShader("vrScreen");
+    vr_shader->setInt("texture_left", 10);
+    vr_shader->setInt("texture_right", 11);
+    s_renderer->impl->render_target_left->getColorAttachement()->use(10);
+    s_renderer->impl->render_target_right->getColorAttachement()->use(11);
+    atcg::Renderer::draw(s_renderer->impl->quad, {}, glm::mat4(1), glm::vec3(1), vr_shader);
 }
 
 glm::vec3 VRRenderer::getPosition()
