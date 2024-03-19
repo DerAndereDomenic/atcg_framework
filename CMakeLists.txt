@@ -105,6 +105,9 @@ if(NOT MSVC)
     target_compile_definitions(spdlog_header_only INTERFACE FMT_USE_CONSTEXPR)
 endif()
 
+# openvr
+add_subdirectory(external/openvr)
+
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
     set(CMAKE_CUDA_ARCHITECTURES "native")
@@ -150,6 +153,7 @@ target_link_libraries(atcg_lib PUBLIC glfw
                                       nanoflann
                                       glm
                                       spdlog_header_only
+                                      openvr_api64
 )
 
 if(ATCG_CUDA_BACKEND)

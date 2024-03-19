@@ -22,3 +22,6 @@
 [submodule "external/charonload"]
 	path = external/charonload
 	url = https://github.com/vc-bonn/charonload.git
+[submodule "external/openvr"]
+	path = external/openvr
+	url = https://github.com/ValveSoftware/openvr.git
