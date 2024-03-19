@@ -103,6 +103,13 @@ public:
     static uint32_t height();
 
     /**
+     * @brief Check if VR is available
+     *
+     * @return True if the HMD was found and the runtime could be initialized
+     */
+    static bool isVRAvailable();
+
+    /**
      * @brief Destroys the Renderer instance. SHOULD NOT BE CALLED BY THE USER
      *
      */

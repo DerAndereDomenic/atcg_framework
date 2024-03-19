@@ -244,6 +244,11 @@ glm::vec3 VRRenderer::getPosition()
     return s_renderer->impl->position;
 }
 
+bool VRRenderer::isVRAvailable()
+{
+    return s_renderer->impl->vr_available;
+}
+
 uint32_t VRRenderer::width()
 {
     return s_renderer->impl->width;
