@@ -34,20 +34,20 @@ public:
     static void onUpdate(const float delta_time);
 
     /**
-     * @brief Get the view matrix of a specific eye
+     * @brief Get the inverse view matrix of a specific eye
      *
      * @param eye The eye
      *
      * @return The view matrix
      */
-    static glm::mat4 getView(const Eye& eye);
+    static glm::mat4 getInverseView(const Eye& eye);
 
     /**
-     * @brief Get both view matrices at the same time
+     * @brief Get both inverse view matrices at the same time
      *
      * @return A tuple with the view matrices (Left, Right)
      */
-    static std::tuple<glm::mat4, glm::mat4> getViews();
+    static std::tuple<glm::mat4, glm::mat4> getInverseViews();
 
     /**
      * @brief Get the projection matrix of a specific eye

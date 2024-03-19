@@ -28,8 +28,8 @@ public:
     glm::mat4 projection_left  = glm::mat4(1);
     glm::mat4 projection_right = glm::mat4(1);
 
-    glm::mat4 view_left  = glm::mat4(1);
-    glm::mat4 view_right = glm::mat4(1);
+    glm::mat4 inv_view_left  = glm::mat4(1);
+    glm::mat4 inv_view_right = glm::mat4(1);
 
     glm::vec3 position = glm::vec3(0);
 
@@ -158,7 +158,7 @@ void VRRenderer::onUpdate(const float delta_time)
                 }
             }
         }
-        s_renderer->impl->view_left = glm::inverse(eye2head) * glm::inverse(result);
+        s_renderer->impl->inv_view_left = result * eye2head;
     }
 
     {
@@ -176,7 +176,7 @@ void VRRenderer::onUpdate(const float delta_time)
                 }
             }
         }
-        s_renderer->impl->view_right = glm::inverse(eye2head) * glm::inverse(result);
+        s_renderer->impl->inv_view_right = result * eye2head;
     }
 
     // Update projection matrices
@@ -211,18 +211,19 @@ void VRRenderer::onUpdate(const float delta_time)
     }
 }
 
-glm::mat4 VRRenderer::getView(const Eye& eye)
+glm::mat4 VRRenderer::getInverseView(const Eye& eye)
 {
     if(eye == Eye::LEFT)
     {
-        return s_renderer->impl->view_left;
+        return s_renderer->impl->inv_view_left;
     }
-    return s_renderer->impl->view_right;
+    return s_renderer->impl->inv_view_right;
 }
 
-std::tuple<glm::mat4, glm::mat4> VRRenderer::getViews()
+std::tuple<glm::mat4, glm::mat4> VRRenderer::getInverseViews()
 {
-    return std::make_tuple(VRRenderer::getView(VRRenderer::Eye::LEFT), VRRenderer::getView(VRRenderer::Eye::RIGHT));
+    return std::make_tuple(VRRenderer::getInverseView(VRRenderer::Eye::LEFT),
+                           VRRenderer::getInverseView(VRRenderer::Eye::RIGHT));
 }
 
 glm::mat4 VRRenderer::getProjection(const Eye& eye)
