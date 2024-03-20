@@ -34,6 +34,12 @@ public:
     static void onUpdate(const float delta_time);
 
     /**
+     * @brief Do the tracking. This is a blocking call and should be called at the beginning of the rendering thread.
+     * This is done by the application, not the client.
+     */
+    static void doTracking();
+
+    /**
      * @brief Get the inverse view matrix of a specific eye
      *
      * @param eye The eye

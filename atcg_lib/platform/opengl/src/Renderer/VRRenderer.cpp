@@ -104,7 +104,7 @@ void VRRenderer::init(const EventCallbackFn& callback)
 
     s_renderer->impl->init();
 
-    onUpdate(0);
+    doTracking();
 }
 
 void VRRenderer::onUpdate(const float delta_time)
@@ -125,17 +125,17 @@ void VRRenderer::onUpdate(const float delta_time)
 
         // vr::VRCompositor()->PostPresentHandoff();
     }
+}
+
+void VRRenderer::doTracking()
+{
+    vr::TrackedDevicePose_t renderPoses[vr::k_unMaxTrackedDeviceCount];
+
+    vr::VRCompositor()->WaitGetPoses(renderPoses, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
 
     // Update position
-    vr::TrackedDevicePose_t renderPoses[vr::k_unMaxTrackedDeviceCount];
-    vr::TrackedDevicePose_t gamePoses[vr::k_unMaxTrackedDeviceCount];
+    vr::TrackedDevicePose_t trackedDevicePose = renderPoses[vr::k_unTrackedDeviceIndex_Hmd];
 
-    vr::VRCompositor()->WaitGetPoses(renderPoses,
-                                     vr::k_unMaxTrackedDeviceCount,
-                                     gamePoses,
-                                     vr::k_unMaxTrackedDeviceCount);
-
-    auto trackedDevicePose = renderPoses[vr::k_unTrackedDeviceIndex_Hmd];
     {
         s_renderer->impl->position = glm::vec3(trackedDevicePose.mDeviceToAbsoluteTracking.m[0][3],
                                                trackedDevicePose.mDeviceToAbsoluteTracking.m[1][3],

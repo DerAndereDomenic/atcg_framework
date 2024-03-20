@@ -96,6 +96,8 @@ void Application::run()
     {
         last_time = current_time;
 
+        VRRenderer::doTracking();
+
         Renderer::useScreenBuffer();
         for(Layer* layer: _layer_stack)
         {
