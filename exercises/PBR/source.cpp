@@ -55,7 +55,14 @@ public:
         if(atcg::VRRenderer::isVRAvailable())
         {
             atcg::ref_ptr<atcg::VRController> controller = camera_controller;
-            auto [t_left, t_right]                       = atcg::VRRenderer::getRenderTargets();
+
+            if(controller->inMovement())
+            {
+                atcg::VRRenderer::setMovementLine(controller->getControllerPosition(),
+                                                  controller->getControllerIntersection());
+            }
+
+            auto [t_left, t_right] = atcg::VRRenderer::getRenderTargets();
 
             t_left->use();
             atcg::Renderer::setViewport(0, 0, atcg::VRRenderer::width(), atcg::VRRenderer::height());
@@ -68,6 +75,11 @@ public:
 
             atcg::Renderer::drawCADGrid(controller->getCameraLeft());
 
+            if(controller->inMovement())
+            {
+                atcg::VRRenderer::drawMovementLine(controller->getCameraLeft());
+            }
+
             t_right->use();
 
             atcg::Renderer::clear();
@@ -77,6 +89,11 @@ public:
             atcg::Renderer::drawCameras(scene, controller->getCameraRight());
 
             atcg::Renderer::drawCADGrid(controller->getCameraRight());
+
+            if(controller->inMovement())
+            {
+                atcg::VRRenderer::drawMovementLine(controller->getCameraRight());
+            }
 
             atcg::Renderer::useScreenBuffer();
             atcg::Renderer::setViewport(0,
