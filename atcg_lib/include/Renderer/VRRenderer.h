@@ -40,6 +40,12 @@ public:
     static void doTracking();
 
     /**
+     * @brief This function pulls events from the headset and forwards them through the framework.
+     *
+     */
+    static void emitEvents();
+
+    /**
      * @brief Get the inverse view matrix of a specific eye
      *
      * @param eye The eye

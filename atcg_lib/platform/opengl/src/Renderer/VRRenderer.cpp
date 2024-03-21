@@ -4,6 +4,7 @@
 #include <glad/glad.h>
 #include <DataStructure/Graph.h>
 #include <Renderer/Renderer.h>
+#include <Events/VREvent.h>
 #include <openvr.h>
 
 namespace atcg
@@ -20,6 +21,7 @@ public:
     void init();
     void deinit();
     bool vr_available = false;
+    EventCallbackFn on_event;
 
     vr::IVRSystem* vr_pointer = NULL;
 
@@ -103,6 +105,7 @@ void VRRenderer::init(const EventCallbackFn& callback)
     s_renderer->impl = atcg::make_scope<Impl>();
 
     s_renderer->impl->init();
+    s_renderer->impl->on_event = callback;
 
     doTracking();
 }
@@ -208,6 +211,34 @@ void VRRenderer::doTracking()
         }
 
         s_renderer->impl->projection_right = result;
+    }
+}
+
+void VRRenderer::emitEvents()
+{
+    vr::VREvent_t vrevent;
+    if(s_renderer->impl->vr_pointer->PollNextEvent(&vrevent, sizeof(vrevent)))
+    {
+        if(vrevent.eventType == vr::EVREventType::VREvent_ButtonPress)
+        {
+            VRButtonPressedEvent event(vrevent.data.controller.button, vrevent.trackedDeviceIndex);
+            s_renderer->impl->on_event(&event);
+        }
+        else if(vrevent.eventType == vr::EVREventType::VREvent_ButtonUnpress)
+        {
+            VRButtonReleasedEvent event(vrevent.data.controller.button, vrevent.trackedDeviceIndex);
+            s_renderer->impl->on_event(&event);
+        }
+        else if(vrevent.eventType == vr::EVREventType::VREvent_ButtonTouch)
+        {
+            VRButtonTouchedEvent event(vrevent.data.controller.button, vrevent.trackedDeviceIndex);
+            s_renderer->impl->on_event(&event);
+        }
+        else if(vrevent.eventType == vr::EVREventType::VREvent_ButtonUntouch)
+        {
+            VRButtonUntouchedEvent event(vrevent.data.controller.button, vrevent.trackedDeviceIndex);
+            s_renderer->impl->on_event(&event);
+        }
     }
 }
 
