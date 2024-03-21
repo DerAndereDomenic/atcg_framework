@@ -336,4 +336,23 @@ VRRenderer::Role VRRenderer::getDeviceRole(const uint32_t device_index)
     return VRRenderer::Role::INVALID;
 }
 
+glm::mat4 VRRenderer::getDevicePose(const uint32_t device_index)
+{
+    auto trackedDevicePose = s_renderer->impl->renderPoses[device_index];
+
+    glm::mat4 result = glm::mat4(1);
+    if(trackedDevicePose.bPoseIsValid)
+    {
+        for(int i = 0; i < 3; ++i)
+        {
+            for(int j = 0; j < 4; ++j)
+            {
+                result[j][i] = trackedDevicePose.mDeviceToAbsoluteTracking.m[i][j];
+            }
+        }
+    }
+
+    return result;
+}
+
 }    // namespace atcg

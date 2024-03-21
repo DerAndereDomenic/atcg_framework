@@ -144,6 +144,15 @@ public:
     static Role getDeviceRole(const uint32_t device_index);
 
     /**
+     * @brief Get the device pose transform from device to world space.
+     *
+     * @param device_index The device index
+     *
+     * @return The transformation matrix
+     */
+    static glm::mat4 getDevicePose(const uint32_t device_index);
+
+    /**
      * @brief Destroys the Renderer instance. SHOULD NOT BE CALLED BY THE USER
      *
      */
