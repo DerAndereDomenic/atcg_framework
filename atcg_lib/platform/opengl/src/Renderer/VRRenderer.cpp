@@ -7,6 +7,9 @@
 #include <Events/VREvent.h>
 #include <openvr.h>
 
+#include <Scene/Entity.h>
+#include <Scene/Components.h>
+
 namespace atcg
 {
 VRRenderer* VRRenderer::s_renderer = new VRRenderer;
@@ -40,6 +43,10 @@ public:
 
     // Tracked poses
     vr::TrackedDevicePose_t renderPoses[vr::k_unMaxTrackedDeviceCount];
+
+    bool controller_initialized = false;
+    atcg::Entity left_controller_entity;
+    atcg::Entity right_controller_entity;
 };
 
 VRRenderer::VRRenderer() {}
@@ -124,6 +131,49 @@ void VRRenderer::init(const EventCallbackFn& callback)
     doTracking();
 }
 
+void VRRenderer::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
+{
+    // Left
+    {
+        auto mesh = atcg::IO::read_mesh("res/VRController/Quest/questpro_controllers_left.obj");
+
+        auto base_color = atcg::IO::imread("res/VRController/Quest/controller_l_lo_BaseColor.png", 2.2f);
+        auto normal     = atcg::IO::imread("res/VRController/Quest/controller_l_lo_Normal.png");
+        auto roughness  = atcg::IO::imread("res/VRController/Quest/controller_l_lo_roughness.png");
+        auto metallic   = atcg::IO::imread("res/VRController/Quest/controller_l_lo_metallic.png");
+
+        s_renderer->impl->left_controller_entity = scene->createEntity("Left Controller");
+        s_renderer->impl->left_controller_entity.addComponent<atcg::TransformComponent>();
+        auto& renderer = s_renderer->impl->left_controller_entity.addComponent<atcg::MeshRenderComponent>();
+        renderer.material.setDiffuseTexture(atcg::Texture2D::create(base_color));
+        renderer.material.setNormalTexture(atcg::Texture2D::create(normal));
+        renderer.material.setRoughnessTexture(atcg::Texture2D::create(roughness));
+        renderer.material.setMetallicTexture(atcg::Texture2D::create(metallic));
+        s_renderer->impl->left_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
+    }
+
+    // Right
+    {
+        auto mesh = atcg::IO::read_mesh("res/VRController/Quest/questpro_controllers_right.obj");
+
+        auto base_color = atcg::IO::imread("res/VRController/Quest/controller_r_lo_BaseColor.png", 2.2f);
+        auto normal     = atcg::IO::imread("res/VRController/Quest/controller_r_lo_Normal.png");
+        auto roughness  = atcg::IO::imread("res/VRController/Quest/controller_r_lo_roughness.png");
+        auto metallic   = atcg::IO::imread("res/VRController/Quest/controller_r_lo_metallic.png");
+
+        s_renderer->impl->right_controller_entity = scene->createEntity("Right Controller");
+        s_renderer->impl->right_controller_entity.addComponent<atcg::TransformComponent>();
+        auto& renderer = s_renderer->impl->right_controller_entity.addComponent<atcg::MeshRenderComponent>();
+        renderer.material.setDiffuseTexture(atcg::Texture2D::create(base_color));
+        renderer.material.setNormalTexture(atcg::Texture2D::create(normal));
+        renderer.material.setRoughnessTexture(atcg::Texture2D::create(roughness));
+        renderer.material.setMetallicTexture(atcg::Texture2D::create(metallic));
+        s_renderer->impl->right_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
+    }
+
+    s_renderer->impl->controller_initialized = true;
+}
+
 void VRRenderer::onUpdate(const float delta_time)
 {
     // Upload to HMD
@@ -141,6 +191,32 @@ void VRRenderer::onUpdate(const float delta_time)
         glFlush();
 
         // vr::VRCompositor()->PostPresentHandoff();
+    }
+
+    // Update controller transforms
+    if(s_renderer->impl->controller_initialized)
+    {
+        {
+            uint32_t device_idx = s_renderer->impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
+                vr::ETrackedControllerRole::TrackedControllerRole_RightHand);
+
+            if(device_idx >= vr::k_unMaxTrackedDeviceCount) return;
+
+            glm::mat4 model = VRRenderer::getDevicePose(device_idx);
+
+            s_renderer->impl->right_controller_entity.getComponent<atcg::TransformComponent>().setModel(model);
+        }
+
+        {
+            uint32_t device_idx = s_renderer->impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
+                vr::ETrackedControllerRole::TrackedControllerRole_LeftHand);
+
+            if(device_idx >= vr::k_unMaxTrackedDeviceCount) return;
+
+            glm::mat4 model = VRRenderer::getDevicePose(device_idx);
+
+            s_renderer->impl->left_controller_entity.getComponent<atcg::TransformComponent>().setModel(model);
+        }
     }
 }
 

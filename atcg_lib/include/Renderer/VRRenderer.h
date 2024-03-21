@@ -4,6 +4,7 @@
 #include <Core/glm.h>
 #include <Renderer/Framebuffer.h>
 #include <Renderer/PerspectiveCamera.h>
+#include <Scene/Scene.h>
 
 #include <functional>
 
@@ -34,6 +35,16 @@ public:
      * @param callback The callback function
      */
     static void init(const EventCallbackFn& callback);
+
+    /**
+     * @brief Initialize controller renderings.
+     * This has to be called by the client. Adds controller entities to the scene
+     *
+     * These entities get updated automatically based on the current pose of the tracker every frame.
+     *
+     * @param scene The scene
+     */
+    static void initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene);
 
     /**
      * @brief Gets called every frame and handles VR updates
