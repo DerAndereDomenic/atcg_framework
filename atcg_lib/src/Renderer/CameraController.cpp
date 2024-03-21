@@ -421,8 +421,8 @@ void VRController::onUpdate(float delta_time)
 
     // update camera position
     auto [v_left, v_right] = VRRenderer::getInverseViews();
-
-    glm::vec3 p_left = v_left[3];
+    _cam_left->setView(glm::inverse(v_left));
+    _cam_right->setView(glm::inverse(v_right));
 
     glm::vec3 forward_left = -v_left[2];
 
@@ -431,19 +431,15 @@ void VRController::onUpdate(float delta_time)
     glm::vec3 rightDirection = glm::normalize(glm::cross(forward_left, upDirection));
 
     glm::vec3 total_velocity = _speed * (forward_left * _velocity_forward + rightDirection * _velocity_right);
-    _current_position += total_velocity * delta_time;
+    glm::vec3 current_offset = VRRenderer::getOffset();
+    current_offset += total_velocity * delta_time;
 
-    v_left[3] += glm::vec4(_current_position, 0);
-    v_right[3] += glm::vec4(_current_position, 0);
-
-    _cam_left->setView(glm::inverse(v_left));
-    _cam_right->setView(glm::inverse(v_right));
 
     // The trigger is currently down
     if(_trigger_pressed)
     {
         glm::mat4 pose        = VRRenderer::getDevicePose(_device_index);
-        _controller_position  = _current_position + glm::vec3(pose[3]);
+        _controller_position  = glm::vec3(pose[3]);
         _controller_direction = -pose[2];
 
         float t = -_controller_position.y / _controller_direction.y;
@@ -467,9 +463,11 @@ void VRController::onUpdate(float delta_time)
 
         if(std::abs(_controller_direction.y) > 1e-5f && t > 0.0f)
         {
-            _current_position = _controller_position + t * _controller_direction;
+            current_offset = _controller_position + t * _controller_direction;
         }
     }
+
+    VRRenderer::setOffset(current_offset);
 
     if(!Input::isKeyPressed(GLFW_KEY_W)) _pressed_W = false;
     if(!Input::isKeyPressed(GLFW_KEY_A)) _pressed_A = false;

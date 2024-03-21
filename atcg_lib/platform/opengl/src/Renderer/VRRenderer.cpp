@@ -47,6 +47,8 @@ public:
     bool controller_initialized = false;
     atcg::Entity left_controller_entity;
     atcg::Entity right_controller_entity;
+
+    glm::vec3 offset = glm::vec3(0);
 };
 
 VRRenderer::VRRenderer() {}
@@ -249,7 +251,11 @@ void VRRenderer::doTracking()
                 }
             }
         }
-        s_renderer->impl->inv_view_left = result * eye2head;
+
+        result = result * eye2head;
+        result[3] += glm::vec4(s_renderer->impl->offset, 0);
+
+        s_renderer->impl->inv_view_left = result;
     }
 
     {
@@ -267,7 +273,11 @@ void VRRenderer::doTracking()
                 }
             }
         }
-        s_renderer->impl->inv_view_right = result * eye2head;
+
+        result = result * eye2head;
+        result[3] += glm::vec4(s_renderer->impl->offset, 0);
+
+        s_renderer->impl->inv_view_right = result;
     }
 
     // Update projection matrices
@@ -439,6 +449,8 @@ glm::mat4 VRRenderer::getDevicePose(const uint32_t device_index)
         }
     }
 
+    result[3] += glm::vec4(s_renderer->impl->offset, 0);
+
     return result;
 }
 
@@ -464,5 +476,14 @@ void VRRenderer::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& 
                          atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
 }
 
+void VRRenderer::setOffset(const glm::vec3& offset)
+{
+    s_renderer->impl->offset = offset;
+}
+
+glm::vec3 VRRenderer::getOffset()
+{
+    return s_renderer->impl->offset;
+}
 
 }    // namespace atcg

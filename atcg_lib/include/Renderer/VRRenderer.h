@@ -114,9 +114,9 @@ public:
     static std::tuple<atcg::ref_ptr<Framebuffer>, atcg::ref_ptr<Framebuffer>> getRenderTargets();
 
     /**
-     * @brief Get the position of the Headset
+     * @brief Get the position of the Headset in tracking space
      *
-     * @return The 3D position in world space
+     * @return The 3D position in tracking space
      */
     static glm::vec3 getPosition();
 
@@ -178,6 +178,20 @@ public:
      * @param camera The camera
      */
     static void drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& camera);
+
+    /**
+     * @brief Set a offset between the tracking frame and the virtual world
+     *
+     * @param offset The new offset
+     */
+    static void setOffset(const glm::vec3& offset);
+
+    /**
+     * @brief Get the offset between the tracking frame and the virtual world
+     *
+     * @return The offset
+     */
+    static glm::vec3 getOffset();
 
     /**
      * @brief Destroys the Renderer instance. SHOULD NOT BE CALLED BY THE USER

@@ -253,12 +253,11 @@ private:
     bool onVRButtonReleased(VRButtonReleasedEvent* event);
 
     float _speed;
-    glm::vec3 _current_position = glm::vec3(0);
-    float _velocity_forward     = 0.0f;
-    float _velocity_right       = 0.0f;
-    float _velocity_threshold   = 0.3f;
-    float _max_velocity         = 3.0f;
-    float _acceleration         = 5.0f;
+    float _velocity_forward   = 0.0f;
+    float _velocity_right     = 0.0f;
+    float _velocity_threshold = 0.3f;
+    float _max_velocity       = 3.0f;
+    float _acceleration       = 5.0f;
 
     bool _pressed_W       = false;
     bool _pressed_A       = false;
