@@ -5,6 +5,7 @@
 #include <Events/MouseEvent.h>
 #include <Events/KeyEvent.h>
 #include <Events/WindowEvent.h>
+#include <Events/VREvent.h>
 
 #include <Core/Memory.h>
 
@@ -220,6 +221,8 @@ private:
     bool onWindowResize(WindowResizeEvent* event);
     bool onKeyPressed(KeyPressedEvent* event);
     bool onKeyReleased(KeyReleasedEvent* event);
+    bool onVRButtonPressed(VRButtonPressedEvent* event);
+    bool onVRButtonReleased(VRButtonReleasedEvent* event);
 
     float _speed;
     glm::vec3 _current_position = glm::vec3(0);
@@ -229,10 +232,15 @@ private:
     float _max_velocity         = 3.0f;
     float _acceleration         = 5.0f;
 
-    bool _pressed_W = false;
-    bool _pressed_A = false;
-    bool _pressed_S = false;
-    bool _pressed_D = false;
+    bool _pressed_W       = false;
+    bool _pressed_A       = false;
+    bool _pressed_S       = false;
+    bool _pressed_D       = false;
+    bool _trigger_pressed = false;
+    bool _trigger_release = false;
+    uint32_t _device_index;
+    glm::vec3 _controller_position;
+    glm::vec3 _controller_direction;
 
     atcg::ref_ptr<atcg::PerspectiveCamera> _cam_left;
     atcg::ref_ptr<atcg::PerspectiveCamera> _cam_right;

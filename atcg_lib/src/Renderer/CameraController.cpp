@@ -1,6 +1,7 @@
 #include <Renderer/CameraController.h>
 
 #include <Renderer/VRRenderer.h>
+#include <openvr.h>
 
 #include <GLFW/glfw3.h>
 
@@ -438,6 +439,26 @@ void VRController::onUpdate(float delta_time)
     _cam_left->setView(glm::inverse(v_left));
     _cam_right->setView(glm::inverse(v_right));
 
+    // The trigger is currently down
+    if(_trigger_pressed)
+    {
+        glm::mat4 pose        = VRRenderer::getDevicePose(_device_index);
+        _controller_position  = _current_position + glm::vec3(pose[3]);
+        _controller_direction = -pose[2];
+    }
+
+    // Update camera position
+    if(_trigger_release)
+    {
+        _trigger_release = false;
+        float t          = -_controller_position.y / _controller_direction.y;
+
+        if(std::abs(_controller_direction.y) > 1e-5f && t > 0.0f)
+        {
+            _current_position = _controller_position + t * _controller_direction;
+        }
+    }
+
     if(!Input::isKeyPressed(GLFW_KEY_W)) _pressed_W = false;
     if(!Input::isKeyPressed(GLFW_KEY_A)) _pressed_A = false;
     if(!Input::isKeyPressed(GLFW_KEY_S)) _pressed_S = false;
@@ -450,6 +471,8 @@ void VRController::onEvent(Event* e)
     dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(VRController::onWindowResize));
     dispatcher.dispatch<KeyPressedEvent>(ATCG_BIND_EVENT_FN(VRController::onKeyPressed));
     dispatcher.dispatch<KeyReleasedEvent>(ATCG_BIND_EVENT_FN(VRController::onKeyReleased));
+    dispatcher.dispatch<VRButtonPressedEvent>(ATCG_BIND_EVENT_FN(VRController::onVRButtonPressed));
+    dispatcher.dispatch<VRButtonReleasedEvent>(ATCG_BIND_EVENT_FN(VRController::onVRButtonReleased));
 }
 
 bool VRController::onWindowResize(WindowResizeEvent* event)
@@ -487,4 +510,25 @@ bool VRController::onKeyReleased(KeyReleasedEvent* event)
     return true;
 }
 
+bool VRController::onVRButtonPressed(VRButtonPressedEvent* event)
+{
+    auto role = VRRenderer::getDeviceRole(event->getDeviceIndex());
+    if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRRenderer::Role::RIGHT_HAND)
+    {
+        _trigger_pressed = true;
+        _device_index    = event->getDeviceIndex();
+    }
+    return true;
+}
+
+bool VRController::onVRButtonReleased(VRButtonReleasedEvent* event)
+{
+    auto role = VRRenderer::getDeviceRole(event->getDeviceIndex());
+    if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRRenderer::Role::RIGHT_HAND)
+    {
+        _trigger_release = true;
+        _trigger_pressed = false;
+    }
+    return true;
+}
 }    // namespace atcg
