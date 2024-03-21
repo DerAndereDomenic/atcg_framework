@@ -108,7 +108,7 @@ if(NOT MSVC)
 endif()
 
 # openvr
-set(BUILD_SHARED "On")
+set(BUILD_SHARED ON CACHE BOOL "Builds the library as shared library" FORCE)
 add_subdirectory(external/openvr)
 set_target_properties(openvr_api64 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
                                               RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
