@@ -1,6 +1,6 @@
 #include <Renderer/CameraController.h>
 
-#include <Renderer/VRRenderer.h>
+#include <Renderer/VRSystem.h>
 #include <openvr.h>
 
 #include <GLFW/glfw3.h>
@@ -342,7 +342,7 @@ VRController::VRController(const float& aspect_ratio, const float& speed)
     _cam_right = atcg::make_ref<PerspectiveCamera>(aspect_ratio);
     _camera    = _cam_left;
 
-    auto [p_left, p_right] = VRRenderer::getProjections();
+    auto [p_left, p_right] = VRSystem::getProjections();
     _cam_left->setProjection(p_left);
     _cam_right->setProjection(p_right);
 }
@@ -420,7 +420,7 @@ void VRController::onUpdate(float delta_time)
     _velocity_right   = glm::clamp(_velocity_right, -max_velocity, max_velocity);
 
     // update camera position
-    auto [v_left, v_right] = VRRenderer::getInverseViews();
+    auto [v_left, v_right] = VRSystem::getInverseViews();
     _cam_left->setView(glm::inverse(v_left));
     _cam_right->setView(glm::inverse(v_right));
 
@@ -431,14 +431,14 @@ void VRController::onUpdate(float delta_time)
     glm::vec3 rightDirection = glm::normalize(glm::cross(forward_left, upDirection));
 
     glm::vec3 total_velocity = _speed * (forward_left * _velocity_forward + rightDirection * _velocity_right);
-    glm::vec3 current_offset = VRRenderer::getOffset();
+    glm::vec3 current_offset = VRSystem::getOffset();
     current_offset += total_velocity * delta_time;
 
 
     // The trigger is currently down
     if(_trigger_pressed)
     {
-        glm::mat4 pose        = VRRenderer::getDevicePose(_device_index);
+        glm::mat4 pose        = VRSystem::getDevicePose(_device_index);
         _controller_position  = glm::vec3(pose[3]);
         _controller_direction = -pose[2];
 
@@ -467,7 +467,7 @@ void VRController::onUpdate(float delta_time)
         }
     }
 
-    VRRenderer::setOffset(current_offset);
+    VRSystem::setOffset(current_offset);
 
     if(!Input::isKeyPressed(GLFW_KEY_W)) _pressed_W = false;
     if(!Input::isKeyPressed(GLFW_KEY_A)) _pressed_A = false;
@@ -522,8 +522,8 @@ bool VRController::onKeyReleased(KeyReleasedEvent* event)
 
 bool VRController::onVRButtonPressed(VRButtonPressedEvent* event)
 {
-    auto role = VRRenderer::getDeviceRole(event->getDeviceIndex());
-    if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRRenderer::Role::RIGHT_HAND)
+    auto role = VRSystem::getDeviceRole(event->getDeviceIndex());
+    if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRSystem::Role::RIGHT_HAND)
     {
         _trigger_pressed = true;
         _device_index    = event->getDeviceIndex();
@@ -533,8 +533,8 @@ bool VRController::onVRButtonPressed(VRButtonPressedEvent* event)
 
 bool VRController::onVRButtonReleased(VRButtonReleasedEvent* event)
 {
-    auto role = VRRenderer::getDeviceRole(event->getDeviceIndex());
-    if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRRenderer::Role::RIGHT_HAND)
+    auto role = VRSystem::getDeviceRole(event->getDeviceIndex());
+    if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRSystem::Role::RIGHT_HAND)
     {
         _trigger_release = true;
         _trigger_pressed = false;

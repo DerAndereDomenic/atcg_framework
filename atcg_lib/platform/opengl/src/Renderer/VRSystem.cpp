@@ -1,4 +1,4 @@
-#include <Renderer/VRRenderer.h>
+#include <Renderer/VRSystem.h>
 
 #include <Core/Log.h>
 #include <glad/glad.h>
@@ -12,9 +12,9 @@
 
 namespace atcg
 {
-VRRenderer* VRRenderer::s_renderer = new VRRenderer;
+VRSystem* VRSystem::s_renderer = new VRSystem;
 
-class VRRenderer::Impl
+class VRSystem::Impl
 {
 public:
     Impl();
@@ -51,16 +51,16 @@ public:
     glm::vec3 offset = glm::vec3(0);
 };
 
-VRRenderer::VRRenderer() {}
+VRSystem::VRSystem() {}
 
-VRRenderer::~VRRenderer()
+VRSystem::~VRSystem()
 {
     impl->deinit();
 }
 
-VRRenderer::Impl::Impl() {}
+VRSystem::Impl::Impl() {}
 
-void VRRenderer::Impl::init()
+void VRSystem::Impl::init()
 {
     bool hmd_present       = vr::VR_IsHmdPresent();
     bool runtime_installed = vr::VR_IsRuntimeInstalled();
@@ -111,7 +111,7 @@ void VRRenderer::Impl::init()
     ATCG_INFO("Initialized VR runtime with resolution: {0}x{1}", width, height);
 }
 
-void VRRenderer::Impl::deinit()
+void VRSystem::Impl::deinit()
 {
     if(vr_pointer != NULL)
     {
@@ -123,7 +123,7 @@ void VRRenderer::Impl::deinit()
     vr_available = false;
 }
 
-void VRRenderer::init(const EventCallbackFn& callback)
+void VRSystem::init(const EventCallbackFn& callback)
 {
     s_renderer->impl = atcg::make_scope<Impl>();
 
@@ -133,7 +133,7 @@ void VRRenderer::init(const EventCallbackFn& callback)
     doTracking();
 }
 
-void VRRenderer::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
+void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
 {
     // Left
     {
@@ -176,7 +176,7 @@ void VRRenderer::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
     s_renderer->impl->controller_initialized = true;
 }
 
-void VRRenderer::onUpdate(const float delta_time)
+void VRSystem::onUpdate(const float delta_time)
 {
     // Upload to HMD
     {
@@ -204,7 +204,7 @@ void VRRenderer::onUpdate(const float delta_time)
 
             if(device_idx >= vr::k_unMaxTrackedDeviceCount) return;
 
-            glm::mat4 model = VRRenderer::getDevicePose(device_idx);
+            glm::mat4 model = VRSystem::getDevicePose(device_idx);
 
             s_renderer->impl->right_controller_entity.getComponent<atcg::TransformComponent>().setModel(model);
         }
@@ -215,14 +215,14 @@ void VRRenderer::onUpdate(const float delta_time)
 
             if(device_idx >= vr::k_unMaxTrackedDeviceCount) return;
 
-            glm::mat4 model = VRRenderer::getDevicePose(device_idx);
+            glm::mat4 model = VRSystem::getDevicePose(device_idx);
 
             s_renderer->impl->left_controller_entity.getComponent<atcg::TransformComponent>().setModel(model);
         }
     }
 }
 
-void VRRenderer::doTracking()
+void VRSystem::doTracking()
 {
     vr::VRCompositor()->WaitGetPoses(s_renderer->impl->renderPoses, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
 
@@ -312,7 +312,7 @@ void VRRenderer::doTracking()
     }
 }
 
-void VRRenderer::emitEvents()
+void VRSystem::emitEvents()
 {
     vr::VREvent_t vrevent;
     if(s_renderer->impl->vr_pointer->PollNextEvent(&vrevent, sizeof(vrevent)))
@@ -340,7 +340,7 @@ void VRRenderer::emitEvents()
     }
 }
 
-glm::mat4 VRRenderer::getInverseView(const Eye& eye)
+glm::mat4 VRSystem::getInverseView(const Eye& eye)
 {
     if(eye == Eye::LEFT)
     {
@@ -349,13 +349,13 @@ glm::mat4 VRRenderer::getInverseView(const Eye& eye)
     return s_renderer->impl->inv_view_right;
 }
 
-std::tuple<glm::mat4, glm::mat4> VRRenderer::getInverseViews()
+std::tuple<glm::mat4, glm::mat4> VRSystem::getInverseViews()
 {
-    return std::make_tuple(VRRenderer::getInverseView(VRRenderer::Eye::LEFT),
-                           VRRenderer::getInverseView(VRRenderer::Eye::RIGHT));
+    return std::make_tuple(VRSystem::getInverseView(VRSystem::Eye::LEFT),
+                           VRSystem::getInverseView(VRSystem::Eye::RIGHT));
 }
 
-glm::mat4 VRRenderer::getProjection(const Eye& eye)
+glm::mat4 VRSystem::getProjection(const Eye& eye)
 {
     if(eye == Eye::LEFT)
     {
@@ -364,13 +364,12 @@ glm::mat4 VRRenderer::getProjection(const Eye& eye)
     return s_renderer->impl->projection_right;
 }
 
-std::tuple<glm::mat4, glm::mat4> VRRenderer::getProjections()
+std::tuple<glm::mat4, glm::mat4> VRSystem::getProjections()
 {
-    return std::make_tuple(VRRenderer::getProjection(VRRenderer::Eye::LEFT),
-                           VRRenderer::getProjection(VRRenderer::Eye::RIGHT));
+    return std::make_tuple(VRSystem::getProjection(VRSystem::Eye::LEFT), VRSystem::getProjection(VRSystem::Eye::RIGHT));
 }
 
-atcg::ref_ptr<Framebuffer> VRRenderer::getRenderTarget(const Eye& eye)
+atcg::ref_ptr<Framebuffer> VRSystem::getRenderTarget(const Eye& eye)
 {
     if(eye == Eye::LEFT)
     {
@@ -379,13 +378,13 @@ atcg::ref_ptr<Framebuffer> VRRenderer::getRenderTarget(const Eye& eye)
     return s_renderer->impl->render_target_right;
 }
 
-std::tuple<atcg::ref_ptr<Framebuffer>, atcg::ref_ptr<Framebuffer>> VRRenderer::getRenderTargets()
+std::tuple<atcg::ref_ptr<Framebuffer>, atcg::ref_ptr<Framebuffer>> VRSystem::getRenderTargets()
 {
-    return std::make_tuple(VRRenderer::getRenderTarget(VRRenderer::Eye::LEFT),
-                           VRRenderer::getRenderTarget(VRRenderer::Eye::RIGHT));
+    return std::make_tuple(VRSystem::getRenderTarget(VRSystem::Eye::LEFT),
+                           VRSystem::getRenderTarget(VRSystem::Eye::RIGHT));
 }
 
-void VRRenderer::renderToScreen()
+void VRSystem::renderToScreen()
 {
     auto vr_shader = atcg::ShaderManager::getShader("vrScreen");
     vr_shader->setInt("texture_left", 10);
@@ -395,45 +394,45 @@ void VRRenderer::renderToScreen()
     atcg::Renderer::draw(s_renderer->impl->quad, {}, glm::mat4(1), glm::vec3(1), vr_shader);
 }
 
-glm::vec3 VRRenderer::getPosition()
+glm::vec3 VRSystem::getPosition()
 {
     return s_renderer->impl->position;
 }
 
-bool VRRenderer::isVRAvailable()
+bool VRSystem::isVRAvailable()
 {
     return s_renderer->impl->vr_available;
 }
 
-uint32_t VRRenderer::width()
+uint32_t VRSystem::width()
 {
     return s_renderer->impl->width;
 }
 
-uint32_t VRRenderer::height()
+uint32_t VRSystem::height()
 {
     return s_renderer->impl->height;
 }
 
-VRRenderer::Role VRRenderer::getDeviceRole(const uint32_t device_index)
+VRSystem::Role VRSystem::getDeviceRole(const uint32_t device_index)
 {
-    if(device_index == vr::k_unTrackedDeviceIndex_Hmd) return VRRenderer::Role::HMD;
+    if(device_index == vr::k_unTrackedDeviceIndex_Hmd) return VRSystem::Role::HMD;
 
     auto device_role = s_renderer->impl->vr_pointer->GetControllerRoleForTrackedDeviceIndex(device_index);
 
     if(device_role == vr::ETrackedControllerRole::TrackedControllerRole_LeftHand)
     {
-        return VRRenderer::Role::LEFT_HAND;
+        return VRSystem::Role::LEFT_HAND;
     }
     else if(device_role == vr::ETrackedControllerRole::TrackedControllerRole_RightHand)
     {
-        return VRRenderer::Role::RIGHT_HAND;
+        return VRSystem::Role::RIGHT_HAND;
     }
 
-    return VRRenderer::Role::INVALID;
+    return VRSystem::Role::INVALID;
 }
 
-glm::mat4 VRRenderer::getDevicePose(const uint32_t device_index)
+glm::mat4 VRSystem::getDevicePose(const uint32_t device_index)
 {
     auto trackedDevicePose = s_renderer->impl->renderPoses[device_index];
 
@@ -454,7 +453,7 @@ glm::mat4 VRRenderer::getDevicePose(const uint32_t device_index)
     return result;
 }
 
-void VRRenderer::setMovementLine(const glm::vec3& start, const glm::vec3& end)
+void VRSystem::setMovementLine(const glm::vec3& start, const glm::vec3& end)
 {
     auto positions = s_renderer->impl->movement_line->getDevicePositions();
 
@@ -466,7 +465,7 @@ void VRRenderer::setMovementLine(const glm::vec3& start, const glm::vec3& end)
     s_renderer->impl->movement_line->unmapAllPointers();
 }
 
-void VRRenderer::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+void VRSystem::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
 {
     atcg::Renderer::draw(s_renderer->impl->movement_line,
                          camera,
@@ -476,12 +475,12 @@ void VRRenderer::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& 
                          atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
 }
 
-void VRRenderer::setOffset(const glm::vec3& offset)
+void VRSystem::setOffset(const glm::vec3& offset)
 {
     s_renderer->impl->offset = offset;
 }
 
-glm::vec3 VRRenderer::getOffset()
+glm::vec3 VRSystem::getOffset()
 {
     return s_renderer->impl->offset;
 }

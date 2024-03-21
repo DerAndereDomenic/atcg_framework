@@ -1,7 +1,7 @@
 #include <Core/Application.h>
 
 #include <Renderer/Renderer.h>
-#include <Renderer/VRRenderer.h>
+#include <Renderer/VRSystem.h>
 #include <Renderer/ShaderManager.h>
 
 
@@ -29,7 +29,7 @@ void Application::init(const WindowProps& props)
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
     Renderer::init(_window->getWidth(), _window->getHeight());
-    VRRenderer::init(ATCG_BIND_EVENT_FN(Application::onEvent));
+    VRSystem::init(ATCG_BIND_EVENT_FN(Application::onEvent));
 
     Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 
@@ -96,7 +96,7 @@ void Application::run()
     {
         last_time = current_time;
 
-        VRRenderer::doTracking();
+        VRSystem::doTracking();
 
         Renderer::useScreenBuffer();
         for(Layer* layer: _layer_stack)
@@ -113,8 +113,8 @@ void Application::run()
         }
         _imgui_layer->end();
 
-        VRRenderer::onUpdate(delta_time);
-        VRRenderer::emitEvents();
+        VRSystem::onUpdate(delta_time);
+        VRSystem::emitEvents();
         _window->onUpdate();
         glm::ivec2 viewport_size = _imgui_layer->getViewportSize();
         if(_imgui_layer->dockspaceEnabled() && (viewport_size.x != Renderer::getFramebuffer()->width() ||

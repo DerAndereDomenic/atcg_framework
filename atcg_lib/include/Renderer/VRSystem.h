@@ -10,7 +10,7 @@
 
 namespace atcg
 {
-class VRRenderer
+class VRSystem
 {
 public:
     enum class Eye
@@ -199,14 +199,14 @@ public:
      */
     inline static void destroy() { delete s_renderer; }
 
-    ~VRRenderer();
+    ~VRSystem();
 
 private:
-    VRRenderer();
+    VRSystem();
 
     class Impl;
     atcg::scope_ptr<Impl> impl;
 
-    static VRRenderer* s_renderer;
+    static VRSystem* s_renderer;
 };
 }    // namespace atcg

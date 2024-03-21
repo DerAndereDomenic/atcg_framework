@@ -32,7 +32,7 @@
 #include <Renderer/Texture.h>
 #include <Renderer/Framebuffer.h>
 #include <Renderer/Material.h>
-#include <Renderer/VRRenderer.h>
+#include <Renderer/VRSystem.h>
 
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
