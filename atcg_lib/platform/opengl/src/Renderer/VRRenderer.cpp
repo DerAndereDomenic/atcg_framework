@@ -36,6 +36,9 @@ public:
     glm::vec3 position = glm::vec3(0);
 
     atcg::ref_ptr<Graph> quad;
+
+    // Tracked poses
+    vr::TrackedDevicePose_t renderPoses[vr::k_unMaxTrackedDeviceCount];
 };
 
 VRRenderer::VRRenderer() {}
@@ -132,12 +135,10 @@ void VRRenderer::onUpdate(const float delta_time)
 
 void VRRenderer::doTracking()
 {
-    vr::TrackedDevicePose_t renderPoses[vr::k_unMaxTrackedDeviceCount];
-
-    vr::VRCompositor()->WaitGetPoses(renderPoses, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
+    vr::VRCompositor()->WaitGetPoses(s_renderer->impl->renderPoses, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
 
     // Update position
-    vr::TrackedDevicePose_t trackedDevicePose = renderPoses[vr::k_unTrackedDeviceIndex_Hmd];
+    vr::TrackedDevicePose_t trackedDevicePose = s_renderer->impl->renderPoses[vr::k_unTrackedDeviceIndex_Hmd];
 
     {
         s_renderer->impl->position = glm::vec3(trackedDevicePose.mDeviceToAbsoluteTracking.m[0][3],
