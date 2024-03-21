@@ -316,4 +316,23 @@ uint32_t VRRenderer::height()
 {
     return s_renderer->impl->height;
 }
+
+VRRenderer::Role VRRenderer::getDeviceRole(const uint32_t device_index)
+{
+    if(device_index == vr::k_unTrackedDeviceIndex_Hmd) return VRRenderer::Role::HMD;
+
+    auto device_role = s_renderer->impl->vr_pointer->GetControllerRoleForTrackedDeviceIndex(device_index);
+
+    if(device_role == vr::ETrackedControllerRole::TrackedControllerRole_LeftHand)
+    {
+        return VRRenderer::Role::LEFT_HAND;
+    }
+    else if(device_role == vr::ETrackedControllerRole::TrackedControllerRole_RightHand)
+    {
+        return VRRenderer::Role::RIGHT_HAND;
+    }
+
+    return VRRenderer::Role::INVALID;
+}
+
 }    // namespace atcg

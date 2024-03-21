@@ -17,6 +17,14 @@ public:
         RIGHT = 1
     };
 
+    enum class Role
+    {
+        HMD        = 0,
+        LEFT_HAND  = 1,
+        RIGHT_HAND = 2,
+        INVALID    = -1
+    };
+
     using EventCallbackFn = std::function<void(Event*)>;
 
     /**
@@ -125,6 +133,15 @@ public:
      * @brief Renders both views onto a screen quad
      */
     static void renderToScreen();
+
+    /**
+     * @brief Get the role of a specific device
+     *
+     * @param device_index The device index
+     *
+     * @return The role of this index
+     */
+    static Role getDeviceRole(const uint32_t device_index);
 
     /**
      * @brief Destroys the Renderer instance. SHOULD NOT BE CALLED BY THE USER
