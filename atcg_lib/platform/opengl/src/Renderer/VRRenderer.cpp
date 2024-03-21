@@ -36,6 +36,7 @@ public:
     glm::vec3 position = glm::vec3(0);
 
     atcg::ref_ptr<Graph> quad;
+    atcg::ref_ptr<Graph> movement_line;
 
     // Tracked poses
     vr::TrackedDevicePose_t renderPoses[vr::k_unMaxTrackedDeviceCount];
@@ -79,14 +80,24 @@ void VRRenderer::Impl::init()
     render_target_right->attachDepth();
     render_target_right->complete();
 
-    std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
-                                          atcg::Vertex(glm::vec3(1, -1, 0)),
-                                          atcg::Vertex(glm::vec3(1, 1, 0)),
-                                          atcg::Vertex(glm::vec3(-1, 1, 0))};
+    {
+        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
+                                              atcg::Vertex(glm::vec3(1, -1, 0)),
+                                              atcg::Vertex(glm::vec3(1, 1, 0)),
+                                              atcg::Vertex(glm::vec3(-1, 1, 0))};
 
-    std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+        std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
 
-    quad = atcg::Graph::createTriangleMesh(vertices, edges);
+        quad = atcg::Graph::createTriangleMesh(vertices, edges);
+    }
+
+    {
+        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(0)), atcg::Vertex(glm::vec3(0))};
+
+        std::vector<atcg::Edge> edges = {atcg::Edge {glm::vec2(0, 1), glm::vec3(1), 1.0f}};
+
+        movement_line = atcg::Graph::createGraph(vertices, edges);
+    }
 
     ATCG_INFO("Initialized VR runtime with resolution: {0}x{1}", width, height);
 }
@@ -354,5 +365,28 @@ glm::mat4 VRRenderer::getDevicePose(const uint32_t device_index)
 
     return result;
 }
+
+void VRRenderer::setMovementLine(const glm::vec3& start, const glm::vec3& end)
+{
+    auto positions = s_renderer->impl->movement_line->getDevicePositions();
+
+    torch::Tensor line_tensor =
+        torch::tensor({{start.x, start.y, start.z}, {end.x, end.y, end.z}}, atcg::TensorOptions::floatDeviceOptions());
+
+    positions.index_put_({torch::indexing::Slice(), torch::indexing::Slice()}, line_tensor);
+
+    s_renderer->impl->movement_line->unmapAllPointers();
+}
+
+void VRRenderer::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+{
+    atcg::Renderer::draw(s_renderer->impl->movement_line,
+                         camera,
+                         glm::mat4(1),
+                         glm::vec3(1),
+                         nullptr,
+                         atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+}
+
 
 }    // namespace atcg

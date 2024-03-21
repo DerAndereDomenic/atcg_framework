@@ -3,6 +3,7 @@
 #include <Core/Memory.h>
 #include <Core/glm.h>
 #include <Renderer/Framebuffer.h>
+#include <Renderer/PerspectiveCamera.h>
 
 #include <functional>
 
@@ -151,6 +152,21 @@ public:
      * @return The transformation matrix
      */
     static glm::mat4 getDevicePose(const uint32_t device_index);
+
+    /**
+     * @brief Set the current movement line
+     *
+     * @param start The start point
+     * @param end The end point
+     */
+    static void setMovementLine(const glm::vec3& start, const glm::vec3& end);
+
+    /**
+     * @brief Draw the current movement line
+     *
+     * @param camera The camera
+     */
+    static void drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& camera);
 
     /**
      * @brief Destroys the Renderer instance. SHOULD NOT BE CALLED BY THE USER

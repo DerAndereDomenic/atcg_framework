@@ -445,13 +445,25 @@ void VRController::onUpdate(float delta_time)
         glm::mat4 pose        = VRRenderer::getDevicePose(_device_index);
         _controller_position  = _current_position + glm::vec3(pose[3]);
         _controller_direction = -pose[2];
+
+        float t = -_controller_position.y / _controller_direction.y;
+
+        if(std::abs(_controller_direction.y) > 1e-5f && t > 0.0f)
+        {
+            _controller_intersection = _controller_position + t * _controller_direction;
+        }
+        else
+        {
+            _controller_intersection = _controller_position + 1000.0f * _controller_direction;
+        }
     }
 
     // Update camera position
     if(_trigger_release)
     {
         _trigger_release = false;
-        float t          = -_controller_position.y / _controller_direction.y;
+
+        float t = -_controller_position.y / _controller_direction.y;
 
         if(std::abs(_controller_direction.y) > 1e-5f && t > 0.0f)
         {

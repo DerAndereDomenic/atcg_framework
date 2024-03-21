@@ -209,13 +209,41 @@ public:
      */
     inline atcg::ref_ptr<atcg::PerspectiveCamera> getCameraLeft() const { return _cam_left; }
 
-
     /**
      * @brief Get the camera of the right eye
      *
      * @return The camera
      */
     inline atcg::ref_ptr<atcg::PerspectiveCamera> getCameraRight() const { return _cam_right; }
+
+    /**
+     * @brief Get the position of the controller if the trigger is pressed for movement
+     *
+     * @return The Controller position
+     */
+    inline glm::vec3 getControllerPosition() const { return _controller_position; }
+
+    /**
+     * @brief Get the direction of the controller if the trigger is pressed for movement
+     *
+     * @return The Controller direction
+     */
+    inline glm::vec3 getControllerDirection() const { return _controller_direction; }
+
+    /**
+     * @brief Get the position of the intersection of the controller with the floor plane if the trigger is pressed for
+     * movement
+     *
+     * @return The intersection
+     */
+    inline glm::vec3 getControllerIntersection() const { return _controller_intersection; }
+
+    /**
+     * @brief Check if we are currently trying to move
+     *
+     * @return True if the trigger is pressed and we try to move
+     */
+    inline bool inMovement() const { return _trigger_pressed; }
 
 private:
     bool onWindowResize(WindowResizeEvent* event);
@@ -241,6 +269,7 @@ private:
     uint32_t _device_index;
     glm::vec3 _controller_position;
     glm::vec3 _controller_direction;
+    glm::vec3 _controller_intersection;
 
     atcg::ref_ptr<atcg::PerspectiveCamera> _cam_left;
     atcg::ref_ptr<atcg::PerspectiveCamera> _cam_right;
