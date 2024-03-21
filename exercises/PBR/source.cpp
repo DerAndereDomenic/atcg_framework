@@ -36,6 +36,7 @@ public:
         {
             float vr_aspect   = (float)atcg::VRRenderer::width() / (float)atcg::VRRenderer::height();
             camera_controller = atcg::make_ref<atcg::VRController>(vr_aspect);
+            atcg::VRRenderer::initControllerMeshes(scene);
         }
         else
         {
