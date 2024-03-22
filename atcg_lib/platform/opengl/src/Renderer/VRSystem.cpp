@@ -28,7 +28,7 @@ public:
 
     vr::IVRSystem* vr_pointer = NULL;
 
-    uint32_t width, height;
+    uint32_t width = 0, height = 0;
     atcg::ref_ptr<Framebuffer> render_target_left, render_target_right;
     glm::mat4 projection_left  = glm::mat4(1);
     glm::mat4 projection_right = glm::mat4(1);
@@ -69,46 +69,47 @@ void VRSystem::Impl::init()
     {
         vr::EVRInitError error = vr::VRInitError_None;
         vr_pointer             = vr::VR_Init(&error, vr::VRApplication_Scene);
-        if(error != vr::VRInitError_None)
+
+        if(error != vr::VRInitError_None || vr_pointer == NULL)
         {
             vr_pointer = NULL;
             ATCG_WARN("Unable to init VR runtime: {0}", std::string(vr::VR_GetVRInitErrorAsEnglishDescription(error)));
         }
         vr_available = true;
+        vr_pointer->GetRecommendedRenderTargetSize(&width, &height);
+
+
+        render_target_left = atcg::make_ref<Framebuffer>(width, height);
+        render_target_left->attachColor();
+        render_target_left->attachDepth();
+        render_target_left->complete();
+
+        render_target_right = atcg::make_ref<Framebuffer>(width, height);
+        render_target_right->attachColor();
+        render_target_right->attachDepth();
+        render_target_right->complete();
+
+        {
+            std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
+                                                  atcg::Vertex(glm::vec3(1, -1, 0)),
+                                                  atcg::Vertex(glm::vec3(1, 1, 0)),
+                                                  atcg::Vertex(glm::vec3(-1, 1, 0))};
+
+            std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+
+            quad = atcg::Graph::createTriangleMesh(vertices, edges);
+        }
+
+        {
+            std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(0)), atcg::Vertex(glm::vec3(0))};
+
+            std::vector<atcg::Edge> edges = {atcg::Edge {glm::vec2(0, 1), glm::vec3(1), 1.0f}};
+
+            movement_line = atcg::Graph::createGraph(vertices, edges);
+        }
+
+        ATCG_INFO("Initialized VR runtime with resolution: {0}x{1}", width, height);
     }
-
-    vr_pointer->GetRecommendedRenderTargetSize(&width, &height);
-
-    render_target_left = atcg::make_ref<Framebuffer>(width, height);
-    render_target_left->attachColor();
-    render_target_left->attachDepth();
-    render_target_left->complete();
-
-    render_target_right = atcg::make_ref<Framebuffer>(width, height);
-    render_target_right->attachColor();
-    render_target_right->attachDepth();
-    render_target_right->complete();
-
-    {
-        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
-                                              atcg::Vertex(glm::vec3(1, -1, 0)),
-                                              atcg::Vertex(glm::vec3(1, 1, 0)),
-                                              atcg::Vertex(glm::vec3(-1, 1, 0))};
-
-        std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
-
-        quad = atcg::Graph::createTriangleMesh(vertices, edges);
-    }
-
-    {
-        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(0)), atcg::Vertex(glm::vec3(0))};
-
-        std::vector<atcg::Edge> edges = {atcg::Edge {glm::vec2(0, 1), glm::vec3(1), 1.0f}};
-
-        movement_line = atcg::Graph::createGraph(vertices, edges);
-    }
-
-    ATCG_INFO("Initialized VR runtime with resolution: {0}x{1}", width, height);
 }
 
 void VRSystem::Impl::deinit()
@@ -135,6 +136,8 @@ void VRSystem::init(const EventCallbackFn& callback)
 
 void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
 {
+    if(!s_renderer->impl->vr_available) return;
+
     // Left
     {
         auto mesh = atcg::IO::read_mesh("res/VRController/Quest/questpro_controllers_left.obj");
@@ -178,6 +181,8 @@ void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
 
 void VRSystem::onUpdate(const float delta_time)
 {
+    if(!s_renderer->impl->vr_available) return;
+
     // Upload to HMD
     {
         vr::Texture_t left_eye_texture  = {(void*)s_renderer->impl->render_target_left->getColorAttachement()->getID(),
@@ -224,6 +229,8 @@ void VRSystem::onUpdate(const float delta_time)
 
 void VRSystem::doTracking()
 {
+    if(!s_renderer->impl->vr_available) return;
+
     vr::VRCompositor()->WaitGetPoses(s_renderer->impl->renderPoses, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
 
     // Update position
@@ -314,6 +321,8 @@ void VRSystem::doTracking()
 
 void VRSystem::emitEvents()
 {
+    if(!s_renderer->impl->vr_available) return;
+
     vr::VREvent_t vrevent;
     if(s_renderer->impl->vr_pointer->PollNextEvent(&vrevent, sizeof(vrevent)))
     {
@@ -386,6 +395,8 @@ std::tuple<atcg::ref_ptr<Framebuffer>, atcg::ref_ptr<Framebuffer>> VRSystem::get
 
 void VRSystem::renderToScreen()
 {
+    if(!s_renderer->impl->vr_available) return;
+
     auto vr_shader = atcg::ShaderManager::getShader("vrScreen");
     vr_shader->setInt("texture_left", 10);
     vr_shader->setInt("texture_right", 11);
@@ -416,6 +427,8 @@ uint32_t VRSystem::height()
 
 VRSystem::Role VRSystem::getDeviceRole(const uint32_t device_index)
 {
+    if(!s_renderer->impl->vr_available) return VRSystem::Role::INVALID;
+
     if(device_index == vr::k_unTrackedDeviceIndex_Hmd) return VRSystem::Role::HMD;
 
     auto device_role = s_renderer->impl->vr_pointer->GetControllerRoleForTrackedDeviceIndex(device_index);
@@ -434,6 +447,8 @@ VRSystem::Role VRSystem::getDeviceRole(const uint32_t device_index)
 
 glm::mat4 VRSystem::getDevicePose(const uint32_t device_index)
 {
+    if(!s_renderer->impl->vr_available) return glm::mat4(1);
+
     auto trackedDevicePose = s_renderer->impl->renderPoses[device_index];
 
     glm::mat4 result = glm::mat4(1);
@@ -455,6 +470,8 @@ glm::mat4 VRSystem::getDevicePose(const uint32_t device_index)
 
 void VRSystem::setMovementLine(const glm::vec3& start, const glm::vec3& end)
 {
+    if(!s_renderer->impl->vr_available) return;
+
     auto positions = s_renderer->impl->movement_line->getDevicePositions();
 
     torch::Tensor line_tensor =
@@ -467,6 +484,8 @@ void VRSystem::setMovementLine(const glm::vec3& start, const glm::vec3& end)
 
 void VRSystem::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
 {
+    if(!s_renderer->impl->vr_available) return;
+
     atcg::Renderer::draw(s_renderer->impl->movement_line,
                          camera,
                          glm::mat4(1),
