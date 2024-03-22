@@ -567,35 +567,37 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
 {
     atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
     result->_spec                   = spec;
+    result->_spec.width             = std::max(1u, result->_spec.width);
+    result->_spec.height            = std::max(1u, result->_spec.height);
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_2D, result->_ID);
 
     glTexImage2D(GL_TEXTURE_2D,
                  0,
-                 detail::to2GLinternalFormat(spec.format),
-                 spec.width,
-                 spec.height,
+                 detail::to2GLinternalFormat(result->_spec.format),
+                 result->_spec.width,
+                 result->_spec.height,
                  0,
-                 detail::toGLformat(spec.format),
-                 detail::toGLtype(spec.format),
+                 detail::toGLformat(result->_spec.format),
+                 detail::toGLtype(result->_spec.format),
                  (void*)data);
-    ATCG_TRACE("Allocated Texture of size {} x {}", spec.width, spec.height);
+    ATCG_TRACE("Allocated Texture of size {} x {}", result->_spec.width, result->_spec.height);
 
-    auto filtermode = detail::toGLFilterMode(spec.sampler.filter_mode);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    auto filtermode = detail::toGLFilterMode(result->_spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filtermode);
     glTexParameteri(GL_TEXTURE_2D,
                     GL_TEXTURE_MAG_FILTER,
                     filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
 
-    if(spec.sampler.mip_map)
+    if(result->_spec.sampler.mip_map)
     {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 
-    if(spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_2D);
+    if(result->_spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_2D);
 
     return result;
 }
@@ -613,8 +615,8 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img)
 atcg::ref_ptr<Texture2D> Texture2D::create(const torch::Tensor& img)
 {
     TextureSpecification spec;
-    spec.width  = img.size(1);
-    spec.height = img.size(0);
+    spec.width  = std::max(1ll, img.size(1));
+    spec.height = std::max(1ll, img.size(0));
     switch(img.size(2))
     {
         case 1:
@@ -782,6 +784,9 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
 {
     atcg::ref_ptr<Texture3D> result = atcg::make_ref<Texture3D>();
     result->_spec                   = spec;
+    result->_spec.width             = std::max(1u, result->_spec.width);
+    result->_spec.height            = std::max(1u, result->_spec.height);
+    result->_spec.depth             = std::max(1u, result->_spec.depth);
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_3D, result->_ID);
@@ -789,30 +794,33 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
     glTexImage3D(GL_TEXTURE_3D,
                  0,
                  detail::to2GLinternalFormat(spec.format),
-                 spec.width,
-                 spec.height,
-                 spec.depth,
+                 result->_spec.width,
+                 result->_spec.height,
+                 result->_spec.depth,
                  0,
-                 detail::toGLformat(spec.format),
-                 detail::toGLtype(spec.format),
+                 detail::toGLformat(result->_spec.format),
+                 detail::toGLtype(result->_spec.format),
                  (void*)data);
-    ATCG_TRACE("Allocated Texture of size {} x {} x {}", spec.width, spec.height, spec.depth);
+    ATCG_TRACE("Allocated Texture of size {} x {} x {}",
+               result->_spec.width,
+               result->_spec.height,
+               result->_spec.depth);
 
-    auto filtermode = detail::toGLFilterMode(spec.sampler.filter_mode);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    auto filtermode = detail::toGLFilterMode(result->_spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, filtermode);
     glTexParameteri(GL_TEXTURE_3D,
                     GL_TEXTURE_MAG_FILTER,
                     filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
 
-    if(spec.sampler.mip_map)
+    if(result->_spec.sampler.mip_map)
     {
         glGenerateMipmap(GL_TEXTURE_3D);
     }
 
-    if(spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_3D);
+    if(result->_spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_3D);
 
     return result;
 }
@@ -820,9 +828,9 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
 atcg::ref_ptr<Texture3D> Texture3D::create(const torch::Tensor& img)
 {
     TextureSpecification spec;
-    spec.width  = img.size(2);
-    spec.height = img.size(1);
-    spec.depth  = img.size(0);
+    spec.width  = std::max(1ll, img.size(2));
+    spec.height = std::max(1ll, img.size(1));
+    spec.depth  = std::max(1ll, img.size(0));
     switch(img.size(3))
     {
         case 1:
