@@ -463,7 +463,9 @@ void VRController::onUpdate(float delta_time)
 
         if(std::abs(_controller_direction.y) > 1e-5f && t > 0.0f)
         {
-            current_offset = _controller_position + t * _controller_direction;
+            auto rl_pos    = atcg::VRSystem::getPosition();
+            rl_pos.y       = 0;
+            current_offset = _controller_position + t * _controller_direction - rl_pos;
         }
     }
 
