@@ -1126,11 +1126,11 @@ int Renderer::getEntityIndex(const glm::vec2& mouse)
 
 void Renderer::screenshot(const atcg::ref_ptr<Scene>& scene,
                           const atcg::ref_ptr<Camera>& camera,
+                          const uint32_t width,
                           const std::string& path)
 {
     atcg::ref_ptr<PerspectiveCamera> cam         = camera;
-    float width                                  = 1920.0f;
-    float height                                 = width / cam->getAspectRatio();
+    float height                                 = (float)width / cam->getAspectRatio();
     atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
     screenshot_buffer->attachColor();
     screenshot_buffer->attachDepth();

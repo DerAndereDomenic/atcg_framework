@@ -225,10 +225,13 @@ public:
      *
      * @param scene The scene
      * @param camera The camera
+     * @param width The output width. Height is calculated from the camera's aspect ratio
      * @param path The output path
      */
-    static void
-    screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const std::string& path);
+    static void screenshot(const atcg::ref_ptr<Scene>& scene,
+                           const atcg::ref_ptr<Camera>& camera,
+                           const uint32_t width,
+                           const std::string& path);
 
     /**
      * @brief Get a buffer representing the color attachement of the screen frame buffer.

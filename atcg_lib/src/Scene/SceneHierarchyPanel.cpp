@@ -467,7 +467,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                 std::ostringstream oss;
                 oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
 
-                atcg::Renderer::screenshot(_scene, camera_component.camera, oss.str());
+                atcg::Renderer::screenshot(_scene, camera_component.camera, 1920, oss.str());
             }
             atcg::Framebuffer::useDefault();
 
