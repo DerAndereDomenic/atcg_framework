@@ -221,7 +221,7 @@ public:
     static int getEntityIndex(const glm::vec2& mouse);
 
     /**
-     * @brief Take a screenshot
+     * @brief Take a screenshot and save it to disk
      *
      * @param scene The scene
      * @param camera The camera
@@ -232,6 +232,18 @@ public:
                            const atcg::ref_ptr<Camera>& camera,
                            const uint32_t width,
                            const std::string& path);
+
+    /**
+     * @brief Take a screenshot and return it as tensor
+     *
+     * @param scene The scene
+     * @param camera The camera
+     * @param width The output width. Height is calculated from the camera's aspect ratio
+     *
+     * @return The pixel data as tensor
+     */
+    static torch::Tensor
+    screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width);
 
     /**
      * @brief Get a buffer representing the color attachement of the screen frame buffer.

@@ -1150,6 +1150,30 @@ void Renderer::screenshot(const atcg::ref_ptr<Scene>& scene,
     img.store(path);
 }
 
+torch::Tensor
+Renderer::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
+{
+    atcg::ref_ptr<PerspectiveCamera> cam         = camera;
+    float height                                 = (float)width / cam->getAspectRatio();
+    atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
+    screenshot_buffer->attachColor();
+    screenshot_buffer->attachDepth();
+    screenshot_buffer->complete();
+
+    screenshot_buffer->use();
+    atcg::Renderer::clear();
+    atcg::Renderer::setViewport(0, 0, width, height);
+    atcg::Renderer::draw(scene, cam);
+    atcg::Renderer::getFramebuffer()->use();
+    atcg::Renderer::setViewport(0, 0, getFramebuffer()->width(), getFramebuffer()->height());
+
+    std::vector<uint8_t> buffer = getFrame(screenshot_buffer);
+
+    Image img = Image(buffer.data(), width, height, 4);
+
+    return img.data().clone();
+}
+
 std::vector<uint8_t> Renderer::getFrame()
 {
     return getFrame(s_renderer->impl->screen_fbo);
