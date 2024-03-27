@@ -587,9 +587,11 @@ PYBIND11_MODULE(pyatcg, m)
             "screenshot",
             [](const atcg::ref_ptr<atcg::Scene>& scene,
                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-               const std::string& path) { atcg::Renderer::screenshot(scene, cam, path); },
+               const uint32_t width,
+               const std::string& path) { atcg::Renderer::screenshot(scene, cam, width, path); },
             "scene"_a,
             "camera"_a,
+            "width"_a,
             "path"_a);
 
     py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
@@ -1230,6 +1232,37 @@ PYBIND11_MODULE(pyatcg, m)
     //              std::vector<float> buffer = atcg::Renderer::getZBuffer();
     //              return py::array(buffer.size(), buffer.data());
     //          });
+
+    auto mutils = m.def_submodule("Utils");
+
+    mutils.def("AEMap", &atcg::Utils::AEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    mutils.def("relAEMap",
+               &atcg::Utils::relAEMap,
+               "groundtruth"_a,
+               "prediction"_a,
+               "channel_reduction"_a = "mean",
+               "delta"_a             = 1e-4f);
+    mutils.def("SEMap", &atcg::Utils::SEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    mutils.def("relSEMap",
+               &atcg::Utils::relSEMap,
+               "groundtruth"_a,
+               "prediction"_a,
+               "channel_reduction"_a = "mean",
+               "delta"_a             = 1e-4f);
+    mutils.def("MAE", &atcg::Utils::MAE, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    mutils.def("relMAE",
+               &atcg::Utils::relMAE,
+               "groundtruth"_a,
+               "prediction"_a,
+               "channel_reduction"_a = "mean",
+               "delta"_a             = 1e-4f);
+    mutils.def("MSE", &atcg::Utils::MSE, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    mutils.def("relMSE",
+               &atcg::Utils::relMSE,
+               "groundtruth"_a,
+               "prediction"_a,
+               "channel_reduction"_a = "mean",
+               "delta"_a             = 1e-4f);
 
     // IMGUI BINDINGS
 
