@@ -387,6 +387,11 @@ void Renderer::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t&
     glViewport(x, y, width, height);
 }
 
+void Renderer::setDefaultViewport()
+{
+    setViewport(0, 0, getFramebuffer()->width(), getFramebuffer()->height());
+}
+
 void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
 {
     bool culling                 = s_renderer->impl->culling_enabled;

@@ -99,6 +99,12 @@ public:
     static void setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height);
 
     /**
+     * @brief Set the viewport according to the current main screen render buffer
+     *
+     */
+    static void setDefaultViewport();
+
+    /**
      * @brief Set a skybox
      *
      * @param skybox An equirectangular representation of the skybox
