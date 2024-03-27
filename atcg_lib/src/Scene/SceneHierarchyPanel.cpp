@@ -446,10 +446,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             atcg::Renderer::setViewport(0, 0, width, height);
             atcg::Renderer::draw(_scene, camera_component.camera);
             atcg::Renderer::getFramebuffer()->use();
-            atcg::Renderer::setViewport(0,
-                                        0,
-                                        atcg::Renderer::getFramebuffer()->width(),
-                                        atcg::Renderer::getFramebuffer()->height());
+            atcg::Renderer::setDefaultViewport();
 
             uint64_t textureID = _camera_preview->getColorAttachement(0)->getID();
 

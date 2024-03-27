@@ -1156,7 +1156,7 @@ Renderer::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Came
     atcg::Renderer::setViewport(0, 0, width, height);
     atcg::Renderer::draw(scene, cam);
     atcg::Renderer::getFramebuffer()->use();
-    atcg::Renderer::setViewport(0, 0, getFramebuffer()->width(), getFramebuffer()->height());
+    atcg::Renderer::setDefaultViewport();
 
     std::vector<uint8_t> buffer = getFrame(screenshot_buffer);
 

@@ -97,10 +97,7 @@ public:
             }
 
             atcg::Renderer::useScreenBuffer();
-            atcg::Renderer::setViewport(0,
-                                        0,
-                                        atcg::Renderer::getFramebuffer()->width(),
-                                        atcg::Renderer::getFramebuffer()->height());
+            atcg::Renderer::setDefaultViewport();
 
             atcg::VRSystem::renderToScreen();
         }
