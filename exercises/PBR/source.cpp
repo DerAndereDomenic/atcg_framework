@@ -253,6 +253,6 @@ public:
 atcg::Application* atcg::createApplication()
 {
     atcg::WindowProps props;
-    props.vsync = false;
+    props.vsync = true;
     return new PBR(props);
 }
