@@ -1,5 +1,7 @@
 #pragma once
 
+#include <torch/types.h>
+
 namespace atcg
 {
 
@@ -23,29 +25,33 @@ public:
      * @brief Create an one byte per channel image from external data.
      * The data is copied.
      *
-     * @note This interface only supports 1 or 4 channel images. If channels is 2 or three, the memory will be padded.
-     *
      * @param img_data The data
      * @param width The image width
      * @param height The image height
      * @param channels The number of channels between 1 and 4
      *
      */
-    Image(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
+    Image(uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
 
     /**
      * @brief Create a floating point image from external data.
      * The data is copied.
      *
-     * @note This interface only supports 1 or 4 channel images. If channels is 2 or three, the memory will be padded.
-     *
      * @param img_data The data
      * @param width The image width
      * @param height The image height
      * @param channels The number of channels between 1 and 4
      *
      */
-    Image(const float* data, uint32_t width, uint32_t height, uint32_t channels);
+    Image(float* data, uint32_t width, uint32_t height, uint32_t channels);
+
+    /**
+     * @brief Create an image from tensor.
+     *
+     * @param tensor The image data of shape (h,w,c)
+     * The type of the tensor should either be uint8 (for LDR) or float (for HDR)
+     */
+    Image(const torch::Tensor& tensor);
 
     /**
      * @brief Create image from a texture
@@ -90,7 +96,14 @@ public:
      *
      * @param data The image data
      */
-    void setData(const uint8_t* data);
+    void setData(uint8_t* data);
+
+    /**
+     * @brief Set image data
+     *
+     * @param data The image data
+     */
+    void setData(const torch::Tensor& data);
 
     /**
      * @brief Get the width of the image
@@ -121,13 +134,6 @@ public:
     inline const std::string& name() const { return _filename; }
 
     /**
-     *  @brief Get the raw data pointer of the image.
-     *
-     * @return The data
-     */
-    inline const uint8_t* data() const { return _img_data; }
-
-    /**
      * @brief If this image is a HDR texture
      *
      * @return True if it's an hdr image
@@ -137,15 +143,9 @@ public:
     /**
      * @brief Get the image data interpreted in a specific format.
      *
-     * @tparam T The type
-     *
      * @return The data
      */
-    template<typename T>
-    inline const T* data() const
-    {
-        return reinterpret_cast<T*>(_img_data);
-    }
+    inline torch::Tensor data() const { return _img_data; }
 
     /**
      * @brief Read the pixel at a given index
@@ -167,7 +167,7 @@ private:
     void createLDR(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
     void createHDR(const float* data, uint32_t width, uint32_t height, uint32_t channels);
 
-    uint8_t* _img_data;
+    torch::Tensor _img_data;
     uint32_t _width    = 0;
     uint32_t _height   = 0;
     uint32_t _channels = 0;
@@ -197,4 +197,138 @@ atcg::ref_ptr<Image> imread(const std::string& filename, const float gamma = 1.0
  */
 void imwrite(const atcg::ref_ptr<Image>& image, const std::string& filename, const float gamma = 1.0f);
 }    // namespace IO
+
+namespace Utils
+{
+/**
+ * @brief Compute the absolute error maps between pairwise images.
+ * The AE is defined as |x_i - y_i|. All images are expected to be in a floating point representation.
+ *
+ * @param ground_truth A batch with ground truth images of shape (B, H, W, C)
+ * @param prediction A batch with predicted images of shape (B, H, W, C)
+ * @param channel_reduction How the last dimension (channels C) is reduced. Either "none", "mean", "sum", or "norm"
+ * which computes the L2 norm over the channel dimension. "none" computes a 3 channel error map.
+ *
+ * @return A (B, H, W, {C|1}) tensor with error maps. C=1 if a reduction other than "none" was used.
+ */
+torch::Tensor AEMap(const torch::Tensor& ground_truth,
+                    const torch::Tensor& prediction,
+                    const std::string& channel_reduction = "mean");
+
+/**
+ * @brief Compute the relative absolute error maps between pairwise images.
+ * The relAE is defined as |x_i - y_i| / (|y_i| + delta). All images are expected to be in a floating point
+ * representation.
+ *
+ * @param ground_truth A batch with ground truth images of shape (B, H, W, C)
+ * @param prediction A batch with predicted images of shape (B, H, W, C)
+ * @param channel_reduction How the last dimension (channels C) is reduced. Either "none", "mean", "sum", or "norm"
+ * which computes the L2 norm over the channel dimension. "none" computes a 3 channel error map.
+ * @param delta Delta value for numerical stability
+ *
+ * @return A (B, H, W, {C|1}) tensor with error maps. C=1 if a reduction other than "none" was used.
+ */
+torch::Tensor relAEMap(const torch::Tensor& ground_truth,
+                       const torch::Tensor& prediction,
+                       const std::string& channel_reduction = "mean",
+                       const float delta                    = 1e-4f);
+
+/**
+ * @brief Compute the squared error maps between pairwise images.
+ * The SE is defined as |x_i - y_i|^2. All images are expected to be in a floating point representation.
+ *
+ * @param ground_truth A batch with ground truth images of shape (B, H, W, C)
+ * @param prediction A batch with predicted images of shape (B, H, W, C)
+ * @param channel_reduction How the last dimension (channels C) is reduced. Either "none", "mean", "sum", or "norm"
+ * which computes the L2 norm over the channel dimension. "none" computes a 3 channel error map.
+ *
+ * @return A (B, H, W, {C|1}) tensor with error maps. C=1 if a reduction other than "none" was used.
+ */
+torch::Tensor SEMap(const torch::Tensor& ground_truth,
+                    const torch::Tensor& prediction,
+                    const std::string& channel_reduction = "mean");
+
+/**
+ * @brief Compute the relative squared error maps between pairwise images.
+ * The relAE is defined as |x_i - y_i|^2 / (|y_i|^2 + delta). All images are expected to be in a floating point
+ * representation.
+ *
+ * @param ground_truth A batch with ground truth images of shape (B, H, W, C)
+ * @param prediction A batch with predicted images of shape (B, H, W, C)
+ * @param channel_reduction How the last dimension (channels C) is reduced. Either "none", "mean", "sum", or "norm"
+ * which computes the L2 norm over the channel dimension. "none" computes a 3 channel error map.
+ * @param delta Delta value for numerical stability
+ *
+ * @return A (B, H, W, {C|1}) tensor with error maps. C=1 if a reduction other than "none" was used.
+ */
+torch::Tensor relSEMap(const torch::Tensor& ground_truth,
+                       const torch::Tensor& prediction,
+                       const std::string& channel_reduction = "mean",
+                       const float delta                    = 1e-4f);
+
+/**
+ * @brief Compute the pixelwise mean absolute error between pairwise images.
+ * The MAE is defined as sum_i |x_i - y_i|. All images are expected to be in a floating point representation.
+ *
+ * @param ground_truth A batch with ground truth images of shape (B, H, W, C)
+ * @param prediction A batch with predicted images of shape (B, H, W, C)
+ * @param channel_reduction How the last dimension (channels C) is reduced. Either "none", "mean", "sum", or "norm"
+ * which computes the L2 norm over the channel dimension. "none" computes a 3 channel error map.
+ *
+ * @return A (B, {C|1}) tensor with error values. C=1 if a reduction other than "none" was used.
+ */
+torch::Tensor
+MAE(const torch::Tensor& ground_truth, const torch::Tensor& prediction, const std::string& channel_reduction = "mean");
+
+/**
+ * @brief Compute the pixelwise relative mean absolute error between pairwise images.
+ * The relMAE is defined as sum_i |x_i - y_i| / (|x_i| + delta). All images are expected to be in a floating point
+ * representation.
+ *
+ * @param ground_truth A batch with ground truth images of shape (B, H, W, C)
+ * @param prediction A batch with predicted images of shape (B, H, W, C)
+ * @param channel_reduction How the last dimension (channels C) is reduced. Either "none", "mean", "sum", or "norm"
+ * which computes the L2 norm over the channel dimension. "none" computes a 3 channel error map.
+ * @param delta Delta value for numerical stability
+ *
+ * @return A (B, {C|1}) tensor with error values. C=1 if a reduction other than "none" was used.
+ */
+torch::Tensor relMAE(const torch::Tensor& ground_truth,
+                     const torch::Tensor& prediction,
+                     const std::string& channel_reduction = "mean",
+                     const float delta                    = 1e-4f);
+/**
+ * @brief Compute the pixelwise mean squared error between pairwise images.
+ * The MSE is defined as sum_i |x_i - y_i|^2. All images are expected to be in a floating point representation.
+ *
+ * @param ground_truth A batch with ground truth images of shape (B, H, W, C)
+ * @param prediction A batch with predicted images of shape (B, H, W, C)
+ * @param channel_reduction How the last dimension (channels C) is reduced. Either "none", "mean", "sum", or "norm"
+ * which computes the L2 norm over the channel dimension. "none" computes a 3 channel error map.
+ *
+ * @return A (B, {C|1}) tensor with error values. C=1 if a reduction other than "none" was used.
+ */
+torch::Tensor
+MSE(const torch::Tensor& ground_truth, const torch::Tensor& prediction, const std::string& channel_reduction = "mean");
+
+/**
+ * @brief Compute the pixelwise relative mean squared error between pairwise images.
+ * The relMSE is defined as sum_i |x_i - y_i|^2 / (|x_i|^2 + delta). All images are expected to be in a floating point
+ * representation.
+ *
+ * @param ground_truth A batch with ground truth images of shape (B, H, W, C)
+ * @param prediction A batch with predicted images of shape (B, H, W, C)
+ * @param channel_reduction How the last dimension (channels C) is reduced. Either "none", "mean", "sum", or "norm"
+ * which computes the L2 norm over the channel dimension. "none" computes a 3 channel error map.
+ * @param delta Delta value for numerical stability
+ *
+ * @return A (B, {C|1}) tensor with error values. C=1 if a reduction other than "none" was used.
+ */
+torch::Tensor relMSE(const torch::Tensor& ground_truth,
+                     const torch::Tensor& prediction,
+                     const std::string& channel_reduction = "mean",
+                     const float delta                    = 1e-4f);
+
+}    // namespace Utils
+
 }    // namespace atcg

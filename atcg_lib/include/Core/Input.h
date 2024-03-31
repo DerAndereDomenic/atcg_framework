@@ -21,10 +21,10 @@ public:
 
     /**
      * @brief Check if key is released
-     * 
+     *
      * @param key The keycode
      * @return true If the key was released
-    */
+     */
     static bool isKeyReleased(const int32_t& key);
 
     /**

@@ -204,11 +204,17 @@ public:
 
         destroy();
 
-        if(n <= 0) { return false; }
+        if(n <= 0)
+        {
+            return false;
+        }
 
         allocator alloc;
         _buffer = alloc.allocate(n);
-        if(!_buffer) { return false; }
+        if(!_buffer)
+        {
+            return false;
+        }
         _size     = n;
         _capacity = n;
         return true;
@@ -393,7 +399,7 @@ public:
      * @brief Convert between different types that are holded by this buffer.
      * After this operation, the use count of the underlying shared_ptr will be 2.
      * Both, the original and the newly constructed object will handle the same memory
-     * just interpreted differently. This means that DeviceBuffer<float> a = DeviceBuffer<int>(5)
+     * just interpreted differently. This means that MemoryBuffer<float> a = MemoryBuffer<int>(5)
      * will not cast 5 to 5.0f but will just interpet the bits of 5 as float.
      * @tparam The type of the other object
      */
@@ -483,14 +489,14 @@ private:
  * @brief A device buffer with managed memory
  */
 template<typename T, typename allocator = host_allocator>
-class DeviceBuffer
+class MemoryBuffer
 {
 public:
     /**
      * @brief Constructor
      *
      */
-    DeviceBuffer()
+    MemoryBuffer()
     {
         _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
                                                                  ContainerDeleter<T, allocator>());
@@ -502,7 +508,7 @@ public:
      * @param n Size of the buffer (number of elements)
      *
      */
-    DeviceBuffer(std::size_t n)
+    MemoryBuffer(std::size_t n)
     {
         _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
                                                                  ContainerDeleter<T, allocator>());
@@ -512,7 +518,7 @@ public:
     /**
      * @brief Assign nullptr
      */
-    constexpr DeviceBuffer(std::nullptr_t) noexcept
+    constexpr MemoryBuffer(std::nullptr_t) noexcept
     {
         _container = std::shared_ptr<MemoryContainer<allocator>>(new MemoryContainer<allocator>(),
                                                                  ContainerDeleter<T, allocator>());
@@ -525,7 +531,7 @@ public:
      *
      * @param ptr The pointer
      */
-    DeviceBuffer(T* ptr)
+    MemoryBuffer(T* ptr)
     {
         MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, sizeof(T));
 
@@ -539,7 +545,7 @@ public:
      * @param ptr The pointer
      * @param size The number of elements
      */
-    DeviceBuffer(T* ptr, std::size_t size)
+    MemoryBuffer(T* ptr, std::size_t size)
     {
         MemoryContainer<allocator>* obj = new MemoryContainer<allocator>(ptr, size * sizeof(T));
 
@@ -549,7 +555,7 @@ public:
     /**
      * @brief Destructor
      */
-    ~DeviceBuffer() {}
+    ~MemoryBuffer() {}
 
     /**
      * @brief Get the data
@@ -585,14 +591,14 @@ public:
      * @brief Convert between different types that are holded by this buffer.
      * After this operation, the use count of the underlying shared_ptr will be 2.
      * Both, the original and the newly constructed object will handle the same memory
-     * just interpreted differently. This means that DeviceBuffer<float> a = DeviceBuffer<int>(5)
+     * just interpreted differently. This means that MemoryBuffer<float> a = MemoryBuffer<int>(5)
      * will not cast 5 to 5.0f but will just interpet the bits of 5 as float.
      * @tparam The type of the other object
      */
     template<typename U>
-    operator DeviceBuffer<U, allocator>() const
+    operator MemoryBuffer<U, allocator>() const
     {
-        DeviceBuffer<U> ptr;
+        MemoryBuffer<U> ptr;
         ptr._container = _container;
         return ptr;
     }
@@ -674,7 +680,7 @@ public:
      *
      * @param src The source pointer
      */
-    void copy(const DeviceBuffer<T, allocator>& src) { _container->copy(src.get(), src.size() * sizeof(T)); }
+    void copy(const MemoryBuffer<T, allocator>& src) { _container->copy(src.get(), src.size() * sizeof(T)); }
 
     /**
      * @brief Reset this shared_ptr, i.e. decrement the ref counter of the underlying shared_ptr
@@ -718,7 +724,7 @@ public:
 
 private:
     template<typename U, typename _allocator>
-    friend class DeviceBuffer;
+    friend class MemoryBuffer;
 
     std::shared_ptr<MemoryContainer<allocator>> _container;
 };
@@ -736,13 +742,13 @@ bool operator!=(const DevicePointer<T, allocator>& p1, const DevicePointer<T, al
 }
 
 template<typename T, typename allocator>
-bool operator==(const DeviceBuffer<T, allocator>& p1, const DeviceBuffer<T, allocator>& p2) noexcept
+bool operator==(const MemoryBuffer<T, allocator>& p1, const MemoryBuffer<T, allocator>& p2) noexcept
 {
     return p1.get() == p2.get();
 }
 
 template<typename T, typename allocator>
-bool operator!=(const DeviceBuffer<T, allocator>& p1, const DeviceBuffer<T, allocator>& p2) noexcept
+bool operator!=(const MemoryBuffer<T, allocator>& p1, const MemoryBuffer<T, allocator>& p2) noexcept
 {
     return p1.get() != p2.get();
 }
@@ -754,6 +760,10 @@ template<typename T, typename allocator = host_allocator>
 using ref_ptr = DevicePointer<T, allocator>;
 template<typename T>
 using dref_ptr = DevicePointer<T, device_allocator>;
+template<typename T>
+using HostBuffer = MemoryBuffer<T, host_allocator>;
+template<typename T>
+using DeviceBuffer = MemoryBuffer<T, device_allocator>;
 
 template<typename T, typename... Args>
 constexpr scope_ptr<T> make_scope(Args&&... args)

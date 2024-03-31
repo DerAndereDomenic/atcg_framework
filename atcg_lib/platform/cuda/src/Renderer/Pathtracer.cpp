@@ -18,7 +18,8 @@
 #include <optix_stubs.h>
 
 #define OPTIX_CHECK(call)                                                                                              \
-    do {                                                                                                               \
+    do                                                                                                                 \
+    {                                                                                                                  \
         OptixResult res = call;                                                                                        \
         if(res != OPTIX_SUCCESS)                                                                                       \
         {                                                                                                              \
@@ -51,39 +52,36 @@ public:
     OptixProgramGroup miss_prog_group     = nullptr;
     OptixProgramGroup hitgroup_prog_group = nullptr;
 
-    atcg::DeviceBuffer<MissSbtRecord, atcg::device_allocator> miss_record =
-        atcg::DeviceBuffer<MissSbtRecord, atcg::device_allocator>(1);
-    atcg::DeviceBuffer<RayGenSbtRecord, atcg::device_allocator> raygen_record =
-        atcg::DeviceBuffer<RayGenSbtRecord, atcg::device_allocator>(1);
-    atcg::DeviceBuffer<HitGroupSbtRecord, atcg::device_allocator> hitgroup_records =
-        atcg::DeviceBuffer<HitGroupSbtRecord, atcg::device_allocator>(1);
+    atcg::DeviceBuffer<MissSbtRecord> miss_record          = atcg::DeviceBuffer<MissSbtRecord>(1);
+    atcg::DeviceBuffer<RayGenSbtRecord> raygen_record      = atcg::DeviceBuffer<RayGenSbtRecord>(1);
+    atcg::DeviceBuffer<HitGroupSbtRecord> hitgroup_records = atcg::DeviceBuffer<HitGroupSbtRecord>(1);
 
     OptixShaderBindingTable sbt = {};
     atcg::dref_ptr<Params> launch_params;
 
     // Baked scene
-    std::vector<atcg::DeviceBuffer<glm::vec3, atcg::device_allocator>> vertices;
-    std::vector<atcg::DeviceBuffer<glm::vec3, atcg::device_allocator>> normals;
-    std::vector<atcg::DeviceBuffer<glm::vec3, atcg::device_allocator>> uvs;
-    std::vector<atcg::DeviceBuffer<glm::u32vec3, atcg::device_allocator>> faces;
-    std::vector<atcg::DeviceBuffer<uint8_t, atcg::device_allocator>> gas_buffers;
-    atcg::DeviceBuffer<uint8_t, atcg::device_allocator> ias_buffer;
+    std::vector<atcg::DeviceBuffer<glm::vec3>> vertices;
+    std::vector<atcg::DeviceBuffer<glm::vec3>> normals;
+    std::vector<atcg::DeviceBuffer<glm::vec3>> uvs;
+    std::vector<atcg::DeviceBuffer<glm::u32vec3>> faces;
+    std::vector<atcg::DeviceBuffer<uint8_t>> gas_buffers;
+    atcg::DeviceBuffer<uint8_t> ias_buffer;
     std::vector<OptixTraversableHandle> gas_handles;
     OptixTraversableHandle ias_handle;
     atcg::ref_ptr<PerspectiveCamera> camera;
     bool hasSkybox = false;
-    atcg::DeviceBuffer<glm::vec4, atcg::device_allocator> skybox_data;
+    atcg::DeviceBuffer<glm::vec3> skybox_data;
     uint32_t skybox_width;
     uint32_t skybox_height;
 
-    atcg::DeviceBuffer<glm::vec3, atcg::device_allocator> accumulation_buffer;
+    atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
 
     // Basic swap chain
     uint32_t width  = 512;
     uint32_t height = 512;
     glm::u8vec4* output_buffer;
     uint8_t swap_index = 1;
-    atcg::DeviceBuffer<glm::u8vec4, atcg::device_allocator> swap_chain_buffer;
+    atcg::DeviceBuffer<glm::u8vec4> swap_chain_buffer;
     bool dirty = false;
     std::mutex swap_chain_mutex;
 
@@ -158,12 +156,12 @@ void Pathtracer::init()
 {
     s_pathtracer->impl = std::make_unique<Impl>();
 
-    s_pathtracer->impl->swap_chain_buffer = atcg::DeviceBuffer<glm::u8vec4, atcg::device_allocator>(
+    s_pathtracer->impl->swap_chain_buffer = atcg::DeviceBuffer<glm::u8vec4>(
         2 * s_pathtracer->impl->width * s_pathtracer->impl->height);    // 2 swap chain buffers
     s_pathtracer->impl->output_buffer = s_pathtracer->impl->swap_chain_buffer.get();
 
     s_pathtracer->impl->accumulation_buffer =
-        atcg::DeviceBuffer<glm::vec3, atcg::device_allocator>(s_pathtracer->impl->width * s_pathtracer->impl->height);
+        atcg::DeviceBuffer<glm::vec3>(s_pathtracer->impl->width * s_pathtracer->impl->height);
 
     TextureSpecification spec;
     spec.width                         = s_pathtracer->impl->width;
@@ -182,7 +180,10 @@ std::vector<char> readFile(const char* filename)
 {
     std::ifstream input(filename, std::ios::binary);
 
-    if(!input.is_open()) { throw std::runtime_error("readFile: Could not open file! " + std::string(filename)); }
+    if(!input.is_open())
+    {
+        throw std::runtime_error("readFile: Could not open file! " + std::string(filename));
+    }
 
     input.seekg(0, std::ios::end);
     size_t size = static_cast<size_t>(input.tellg());
@@ -205,11 +206,11 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         s_pathtracer->impl->skybox_width  = skybox_texture->width();
         s_pathtracer->impl->skybox_height = skybox_texture->height();
 
-        auto data = skybox_texture->getData();
+        auto data = skybox_texture->getData(atcg::CPU);
 
-        s_pathtracer->impl->skybox_data = atcg::DeviceBuffer<glm::vec4, atcg::device_allocator>(
-            s_pathtracer->impl->skybox_width * s_pathtracer->impl->skybox_height);
-        s_pathtracer->impl->skybox_data.upload((glm::vec4*)data.data());
+        s_pathtracer->impl->skybox_data =
+            atcg::DeviceBuffer<glm::vec3>(s_pathtracer->impl->skybox_width * s_pathtracer->impl->skybox_height);
+        s_pathtracer->impl->skybox_data.upload((glm::vec3*)data.data_ptr());
     }
 
     // Extract scene information
@@ -235,20 +236,23 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
             uvs[i]      = gl_vertices[i].uv;
         }
 
-        atcg::DeviceBuffer<glm::vec3, atcg::device_allocator> d_vertices(graph->n_vertices());
+        atcg::DeviceBuffer<glm::vec3> d_vertices(graph->n_vertices());
         d_vertices.upload(vertices.data());
 
-        atcg::DeviceBuffer<glm::vec3, atcg::device_allocator> d_normals(graph->n_vertices());
+        atcg::DeviceBuffer<glm::vec3> d_normals(graph->n_vertices());
         d_normals.upload(normals.data());
 
-        atcg::DeviceBuffer<glm::vec3, atcg::device_allocator> d_uvs(graph->n_vertices());
+        atcg::DeviceBuffer<glm::vec3> d_uvs(graph->n_vertices());
         d_uvs.upload(uvs.data());
 
         std::vector<glm::u32vec3> faces(graph->n_faces());
         glm::u32vec3* gl_faces = graph->getFaceIndexBuffer()->getHostPointer<glm::u32vec3>();
-        for(int i = 0; i < graph->n_faces(); ++i) { faces[i] = gl_faces[i]; }
+        for(int i = 0; i < graph->n_faces(); ++i)
+        {
+            faces[i] = gl_faces[i];
+        }
 
-        atcg::DeviceBuffer<glm::u32vec3, atcg::device_allocator> d_faces(graph->n_faces());
+        atcg::DeviceBuffer<glm::u32vec3> d_faces(graph->n_faces());
         d_faces.upload(faces.data());
 
         graph->getVerticesBuffer()->unmapHostPointers();
@@ -291,8 +295,8 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
                                                  1,
                                                  &gas_buffer_sizes));
 
-        atcg::DeviceBuffer<uint8_t, atcg::device_allocator> d_temp_buffer_gas(gas_buffer_sizes.tempSizeInBytes);
-        auto gas_buffer = atcg::DeviceBuffer<uint8_t, atcg::device_allocator>(gas_buffer_sizes.outputSizeInBytes);
+        atcg::DeviceBuffer<uint8_t> d_temp_buffer_gas(gas_buffer_sizes.tempSizeInBytes);
+        auto gas_buffer = atcg::DeviceBuffer<uint8_t>(gas_buffer_sizes.outputSizeInBytes);
         s_pathtracer->impl->gas_buffers.push_back(gas_buffer);
 
         OPTIX_CHECK(optixAccelBuild(s_pathtracer->impl->context,
@@ -329,7 +333,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
             glm::transpose(glm::mat4x3(transforms[i].getModel()));
     }
 
-    atcg::DeviceBuffer<OptixInstance, atcg::device_allocator> d_instances(num_instances);
+    atcg::DeviceBuffer<OptixInstance> d_instances(num_instances);
     d_instances.upload(optix_instances.data());
 
     OptixBuildInput instance_input            = {};
@@ -348,9 +352,8 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
                                              1,    // num build inputs
                                              &ias_buffer_sizes));
 
-    atcg::DeviceBuffer<uint8_t, atcg::device_allocator> d_temp_buffer(ias_buffer_sizes.tempSizeInBytes);
-    s_pathtracer->impl->ias_buffer =
-        atcg::DeviceBuffer<uint8_t, atcg::device_allocator>(ias_buffer_sizes.outputSizeInBytes);
+    atcg::DeviceBuffer<uint8_t> d_temp_buffer(ias_buffer_sizes.tempSizeInBytes);
+    s_pathtracer->impl->ias_buffer = atcg::DeviceBuffer<uint8_t>(ias_buffer_sizes.outputSizeInBytes);
 
     OPTIX_CHECK(optixAccelBuild(s_pathtracer->impl->context,
                                 nullptr,    // CUDA stream
@@ -392,8 +395,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     // This is the name of the param struct variable in our device code
     pipeline_compile_options.pipelineLaunchParamsVariableName = "params";
 
-    auto ptx = readFile("C:/Users/zingsheim/Documents/Repositories/atcg_framework/build/ptxmodules.dir/Debug/"
-                        "raygen.ptx");
+    auto ptx = readFile("C:/Users/Domenic/Documents/Repositories/atcg_framework/build/ptxmodules.dir/Debug/raygen.ptx");
     char log[2048];
     size_t sizeof_log = sizeof(log);
 
@@ -475,7 +477,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     s_pathtracer->impl->raygen_record.upload(&raygen_sbt);
 
     std::vector<HitGroupSbtRecord> hit_sbt(num_instances);
-    s_pathtracer->impl->hitgroup_records = atcg::DeviceBuffer<HitGroupSbtRecord, atcg::device_allocator>(num_instances);
+    s_pathtracer->impl->hitgroup_records = atcg::DeviceBuffer<HitGroupSbtRecord>(num_instances);
     for(int i = 0; i < num_instances; ++i)
     {
         hit_sbt[i].data.positions = s_pathtracer->impl->vertices[i].get();
@@ -529,7 +531,9 @@ atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
                                       (void*)data_ptr,
                                       sizeof(glm::u8vec4) * s_pathtracer->impl->width * s_pathtracer->impl->height,
                                       cudaMemcpyDeviceToHost));
-            s_pathtracer->impl->output_texture->setData((void*)temp_buffer.data());
+            s_pathtracer->impl->output_texture->setData(
+                atcg::createHostTensorFromPointer((uint8_t*)temp_buffer.data(),
+                                                  {s_pathtracer->impl->height, s_pathtracer->impl->width, 4}));
             s_pathtracer->impl->dirty = false;
         }
     }

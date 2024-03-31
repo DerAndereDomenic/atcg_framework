@@ -114,10 +114,14 @@ struct CameraComponent
     CameraComponent() = default;
     CameraComponent(const atcg::ref_ptr<Camera>& camera) : camera(camera)
     {
-        if(dynamic_cast<PerspectiveCamera*>(camera.get())) { perspective = true; }
+        if(dynamic_cast<PerspectiveCamera*>(camera.get()))
+        {
+            perspective = true;
+        }
     }
 
     atcg::ref_ptr<Camera> camera;
+    glm::vec3 color  = glm::vec3(1);
     bool perspective = false;
 };
 
@@ -192,13 +196,13 @@ struct EdgeRenderComponent : public RenderComponent
 
 struct EdgeCylinderRenderComponent : public RenderComponent
 {
-    EdgeCylinderRenderComponent(float radius = 1.0f)
+    EdgeCylinderRenderComponent(float radius = 0.001f)
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER),
           radius(radius)
     {
     }
 
-    float radius = 1.0f;
+    float radius = 0.001f;
     Material material;
 };
 

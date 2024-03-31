@@ -18,6 +18,7 @@
 #include <Events/MouseEvent.h>
 #include <Events/WindowEvent.h>
 #include <Events/KeyEvent.h>
+#include <Events/VREvent.h>
 
 //-------- Renderer ------
 #include <Renderer/Renderer.h>
@@ -32,6 +33,7 @@
 #include <Renderer/Texture.h>
 #include <Renderer/Framebuffer.h>
 #include <Renderer/Material.h>
+#include <Renderer/VRSystem.h>
 
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
@@ -39,7 +41,6 @@
 //-------- DataStructure --
 #include <DataStructure/Graph.h>
 #include <DataStructure/Grid.h>
-#include <DataStructure/Laplacian.h>
 #include <DataStructure/Timer.h>
 #include <DataStructure/Statistics.h>
 #include <DataStructure/BufferView.h>
@@ -63,3 +64,6 @@
 #include <Scene/Entity.h>
 #include <Scene/Serializer.h>
 #include <Scene/SceneHierarchyPanel.h>
+
+//-------- Torch ------------
+#include <DataStructure/TorchUtils.h>

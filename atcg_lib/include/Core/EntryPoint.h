@@ -34,9 +34,9 @@ int atcg_main(Application* app)
 
     {
         atcg::ShaderManager::destroy();
+        atcg::VRSystem::destroy();
         atcg::Pathtracer::destroy();
         atcg::Renderer::destroy();
-        delete app;
     }
 
     return 0;
@@ -47,6 +47,7 @@ int main(int argc, char** argv)
 {
     atcg::Application* app = atcg::createApplication();
     int ret                = atcg::atcg_main(app);
+    delete app;
     atcg::print_statistics();
     return ret;
 }

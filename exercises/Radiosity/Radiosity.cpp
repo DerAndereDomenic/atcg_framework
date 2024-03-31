@@ -5,14 +5,18 @@
 #include <nanort.h>
 
 using namespace atcg;
+using namespace torch::indexing;
 
-atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const Eigen::MatrixX3f& emission)
+atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const torch::Tensor& emission)
 {
     const glm::vec3* vertices = mesh->points();
     std::vector<uint32_t> faces;
     for(auto ft: mesh->faces())
     {
-        for(auto vt: ft.vertices()) { faces.push_back(vt.idx()); }
+        for(auto vt: ft.vertices())
+        {
+            faces.push_back(vt.idx());
+        }
     }
 
     nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(vertices),
@@ -32,15 +36,18 @@ atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const
     printf("    # of branch nodes: %d\n", stats.num_branch_nodes);
     printf("  Max tree depth     : %d\n", stats.max_tree_depth);
 
-    Eigen::MatrixX3f albedos(mesh->n_faces(), 3);
-    Eigen::MatrixXf form_factors = Eigen::MatrixXf::Zero(mesh->n_faces(), mesh->n_faces());
+    torch::Tensor albedos      = torch::zeros({(int)mesh->n_faces(), 3});
+    torch::Tensor form_factors = torch::zeros({(int)mesh->n_faces(), (int)mesh->n_faces()});
 
     for(auto ft: mesh->faces())
     {
         glm::vec3 color = glm::vec3(0);
-        for(auto vt: ft.vertices()) { color += mesh->color(vt) / 255.0f; }
+        for(auto vt: ft.vertices())
+        {
+            color += mesh->color(vt) / 255.0f;
+        }
         color /= 3.0f;
-        albedos.row(ft.idx()) = Eigen::Vector3f {color.x, color.y, color.z};
+        albedos.index_put_({ft.idx(), Slice()}, torch::tensor({color.x, color.y, color.z}));
     }
 
 // Compute Form factor matrix
@@ -84,27 +91,27 @@ atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const
                 G = cos_theta_1 * cos_theta_2 / (distance * distance * glm::pi<float>());
             }
 
-            form_factors(i, j) = G * mesh->calc_face_area(f2);
-            form_factors(j, i) = G * mesh->calc_face_area(f1);
+            form_factors.index_put_({(int)i, (int)j}, G * mesh->calc_face_area(f2));
+            form_factors.index_put_({(int)j, (int)i}, G * mesh->calc_face_area(f1));
         }
     }
 
     ATCG_TRACE("Solving");
 
-    Eigen::MatrixX3f solution = Eigen::MatrixX3f::Zero(mesh->n_faces(), 3);
-    Eigen::MatrixX3f FE       = Eigen::MatrixX3f::Zero(mesh->n_faces(), 3);
-    Eigen::MatrixX3f update   = Eigen::MatrixX3f::Zero(mesh->n_faces(), 3);
+    torch::Tensor solution = torch::zeros({(int)mesh->n_faces(), 3});
+    torch::Tensor FE       = torch::zeros({(int)mesh->n_faces(), 3});
+    torch::Tensor update   = torch::zeros({(int)mesh->n_faces(), 3});
 
     for(int iter = 0; iter < 50; ++iter)
     {
         ATCG_TRACE("{0}", iter);
 
-        FE = form_factors * solution;
+        FE = torch::matmul(form_factors, solution);
 
-        FE                      = albedos.array() * FE.array();
-        Eigen::MatrixX3f update = (emission - solution + FE);
+        FE                   = albedos * FE;
+        torch::Tensor update = (emission - solution + FE);
 
-        if(update.norm() < 1e-4f) break;
+        if(torch::norm(update).item<float>() < 1e-4f) break;
 
         solution += update;
     }
@@ -118,10 +125,13 @@ atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const
 
     for(auto ft = result->faces_begin(); ft != result->faces_end(); ++ft)
     {
-        Eigen::Vector3f radiostiy = solution.row(ft->idx());
-        glm::vec3 color           = glm::vec3(radiostiy.x(), radiostiy.y(), radiostiy.z());
-        color                     = glm::pow(1.0f - glm::exp(-color), glm::vec3(1.0f / 2.4f));
-        for(auto vt = ft->vertices().begin(); vt != ft->vertices().end(); ++vt) result->set_color(*vt, 255.0f * color);
+        torch::Tensor radiostiy = solution.index({ft->idx(), Slice()});
+        glm::vec3 color         = glm::vec3(radiostiy.index({0}).item<float>(),
+                                    radiostiy.index({1}).item<float>(),
+                                    radiostiy.index({2}).item<float>());
+        color                   = glm::pow(1.0f - glm::exp(-color), glm::vec3(1.0f / 2.4f));
+        for(auto vt = ft->vertices().begin(); vt != ft->vertices().end(); ++vt)
+            result->set_color(*vt, 255.0f * color);
     }
 
     return result;

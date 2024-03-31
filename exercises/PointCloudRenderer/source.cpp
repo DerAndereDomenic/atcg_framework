@@ -63,7 +63,10 @@ public:
                      depth_values.data());
         float min = 1.0f;
 
-        for(float depth: depth_values) { min = std::min(depth, min); }
+        for(float depth: depth_values)
+        {
+            min = std::min(depth, min);
+        }
 
         if(min != 0.0f && min != 1.0f)
         {
@@ -82,7 +85,10 @@ public:
             world_pos = glm::inverse(camera_controller->getCamera()->getViewProjection()) * world_pos;
             world_pos /= world_pos.w;
 
-            if(atcg::Input::isKeyPressed(GLFW_KEY_P)) { sphere_pos.push_back(world_pos); }
+            if(atcg::Input::isKeyPressed(GLFW_KEY_P))
+            {
+                sphere_pos.push_back(world_pos);
+            }
         }
 
         // glDepthMask(false);

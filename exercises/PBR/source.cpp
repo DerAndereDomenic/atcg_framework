@@ -24,10 +24,6 @@ public:
         atcg::Application::get()->enableDockSpace(true);
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
-        const auto& window = atcg::Application::get()->getWindow();
-        float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
-
         auto skybox = atcg::IO::imread("res/pbr/skybox.hdr");
         ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
         atcg::Renderer::setSkybox(skybox);
@@ -56,6 +52,19 @@ public:
         }
 
         panel = atcg::SceneHierarchyPanel(scene);
+
+        if(atcg::VRSystem::isVRAvailable())
+        {
+            float vr_aspect   = (float)atcg::VRSystem::width() / (float)atcg::VRSystem::height();
+            camera_controller = atcg::make_ref<atcg::VRController>(vr_aspect);
+            atcg::VRSystem::initControllerMeshes(scene);
+        }
+        else
+        {
+            const auto& window = atcg::Application::get()->getWindow();
+            float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
+            camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
+        }
     }
 
     // This gets called each frame
@@ -65,11 +74,64 @@ public:
 
         atcg::Renderer::clear();
 
-        atcg::Renderer::draw(scene, camera_controller->getCamera());
+        if(atcg::VRSystem::isVRAvailable())
+        {
+            atcg::ref_ptr<atcg::VRController> controller = camera_controller;
 
-        atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
+            if(controller->inMovement())
+            {
+                atcg::VRSystem::setMovementLine(controller->getControllerPosition(),
+                                                controller->getControllerIntersection());
+            }
 
-        atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+            auto [t_left, t_right] = atcg::VRSystem::getRenderTargets();
+
+            t_left->use();
+            atcg::Renderer::setViewport(0, 0, atcg::VRSystem::width(), atcg::VRSystem::height());
+
+            atcg::Renderer::clear();
+
+            atcg::Renderer::draw(scene, controller->getCameraLeft());
+
+            atcg::Renderer::drawCameras(scene, controller->getCameraLeft());
+
+            atcg::Renderer::drawCADGrid(controller->getCameraLeft());
+
+            if(controller->inMovement())
+            {
+                atcg::VRSystem::drawMovementLine(controller->getCameraLeft());
+            }
+
+            t_right->use();
+
+            atcg::Renderer::clear();
+
+            atcg::Renderer::draw(scene, controller->getCameraRight());
+
+            atcg::Renderer::drawCameras(scene, controller->getCameraRight());
+
+            atcg::Renderer::drawCADGrid(controller->getCameraRight());
+
+            if(controller->inMovement())
+            {
+                atcg::VRSystem::drawMovementLine(controller->getCameraRight());
+            }
+
+            atcg::Renderer::useScreenBuffer();
+            atcg::Renderer::setDefaultViewport();
+
+            atcg::VRSystem::renderToScreen();
+        }
+        else
+        {
+            atcg::Renderer::clear();
+
+            atcg::Renderer::draw(scene, camera_controller->getCamera());
+
+            atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
+
+            atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+        }
     }
 
     virtual void onImGuiRender() override
@@ -149,9 +211,18 @@ public:
 
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
-        if(event->getKeyCode() == GLFW_KEY_T) { current_operation = ImGuizmo::OPERATION::TRANSLATE; }
-        if(event->getKeyCode() == GLFW_KEY_R) { current_operation = ImGuizmo::OPERATION::ROTATE; }
-        if(event->getKeyCode() == GLFW_KEY_S) { current_operation = ImGuizmo::OPERATION::SCALE; }
+        if(event->getKeyCode() == GLFW_KEY_T)
+        {
+            current_operation = ImGuizmo::OPERATION::TRANSLATE;
+        }
+        if(event->getKeyCode() == GLFW_KEY_R)
+        {
+            current_operation = ImGuizmo::OPERATION::ROTATE;
+        }
+        if(event->getKeyCode() == GLFW_KEY_S)
+        {
+            current_operation = ImGuizmo::OPERATION::SCALE;
+        }
         // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         if(event->getKeyCode() == GLFW_KEY_P)
@@ -159,8 +230,14 @@ public:
             atcg::Pathtracer::bakeScene(scene, camera_controller->getCamera());
             atcg::Pathtracer::start();
         }
-        if(event->getKeyCode() == GLFW_KEY_L) { atcg::Pathtracer::stop(); }
-        if(event->getKeyCode() == GLFW_KEY_B) { atcg::Pathtracer::bakeScene(scene, camera_controller->getCamera()); }
+        if(event->getKeyCode() == GLFW_KEY_L)
+        {
+            atcg::Pathtracer::stop();
+        }
+        if(event->getKeyCode() == GLFW_KEY_B)
+        {
+            atcg::Pathtracer::bakeScene(scene, camera_controller->getCamera());
+        }
 
         return true;
     }
@@ -193,7 +270,7 @@ private:
     atcg::ref_ptr<atcg::Scene> scene;
     atcg::Entity hovered_entity;
 
-    atcg::ref_ptr<atcg::FirstPersonController> camera_controller;
+    atcg::ref_ptr<atcg::CameraController> camera_controller;
 
     atcg::ref_ptr<atcg::Graph> plane;
 
@@ -211,12 +288,14 @@ private:
 class PBR : public atcg::Application
 {
 public:
-    PBR() : atcg::Application() { pushLayer(new PBRLayer("Layer")); }
+    PBR(const atcg::WindowProps& props) : atcg::Application(props) { pushLayer(new PBRLayer("Layer")); }
 
     ~PBR() {}
 };
 
 atcg::Application* atcg::createApplication()
 {
-    return new PBR;
+    atcg::WindowProps props;
+    props.vsync = true;
+    return new PBR(props);
 }

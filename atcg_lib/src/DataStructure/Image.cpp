@@ -2,59 +2,45 @@
 
 #include <stb_image.h>
 #include <stb_image_write.h>
-
-#include <Renderer/Texture.h>
+#include <DataStructure/TorchUtils.h>
 
 namespace atcg
 {
 
-Image::Image(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels)
+Image::Image(uint8_t* data, uint32_t width, uint32_t height, uint32_t channels)
 {
-    _width  = width;
-    _height = height;
+    _width    = width;
+    _height   = height;
+    _channels = channels;
 
-    createLDR(data, width, height, channels);
+    _img_data = atcg::createHostTensorFromPointer<uint8_t>(data, {(int)height, (int)width, (int)channels}).clone();
 }
 
-Image::Image(const float* data, uint32_t width, uint32_t height, uint32_t channels)
+Image::Image(float* data, uint32_t width, uint32_t height, uint32_t channels)
 {
-    _width  = width;
-    _height = height;
-    _hdr    = true;
+    _width    = width;
+    _height   = height;
+    _hdr      = true;
+    _channels = channels;
 
-    createHDR(data, width, height, channels);
+    _img_data = atcg::createHostTensorFromPointer<float>(data, {(int)height, (int)width, (int)channels}).clone();
 }
 
-Image::Image(const atcg::ref_ptr<Texture2D>& texture)
+Image::Image(const torch::Tensor& tensor)
+    : _img_data(tensor),
+      _width(tensor.size(1)),
+      _height(tensor.size(0)),
+      _channels(tensor.size(2)),
+      _hdr(tensor.dtype() == torch::kFloat32)
 {
-    _width  = texture->width();
-    _height = texture->height();
-
-    uint32_t channels = texture->getSpecification().format == TextureFormat::RGBA ||
-                                texture->getSpecification().format == TextureFormat::RGBAFLOAT
-                            ? 4
-                            : 1;
-    bool hdr          = texture->getSpecification().format == TextureFormat::RGBAFLOAT ||
-               texture->getSpecification().format == TextureFormat::RFLOAT;
-
-    _hdr = hdr;
-
-    auto img_data = texture->getData();
-    if(hdr) { createHDR((float*)img_data.data(), texture->width(), texture->height(), channels); }
-    else { createLDR(img_data.data(), texture->width(), texture->height(), channels); }
 }
 
 Image::~Image()
 {
-    if(_img_data)
-    {
-        free(_img_data);
-        uint8_t* _img_data;
-        uint32_t _width    = 0;
-        uint32_t _height   = 0;
-        uint32_t _channels = 0;
-        _hdr               = false;
-    }
+    uint32_t _width    = 0;
+    uint32_t _height   = 0;
+    uint32_t _channels = 0;
+    _hdr               = false;
 }
 
 void Image::load(const std::string& filename)
@@ -78,130 +64,88 @@ void Image::store(const std::string& filename)
                        (int)_width,
                        (int)_height,
                        (int)_channels,
-                       (const void*)_img_data,
+                       (const void*)_img_data.data_ptr(),
                        _channels * _width * sizeof(uint8_t));
     }
     else if(file_ending == "bmp")
     {
-        stbi_write_bmp(filename.c_str(), (int)_width, (int)_height, (int)_channels, (const void*)_img_data);
+        stbi_write_bmp(filename.c_str(), (int)_width, (int)_height, (int)_channels, (const void*)_img_data.data_ptr());
     }
     else if(file_ending == "tga")
     {
-        stbi_write_tga(filename.c_str(), (int)_width, (int)_height, (int)_channels, (const void*)_img_data);
+        stbi_write_tga(filename.c_str(), (int)_width, (int)_height, (int)_channels, (const void*)_img_data.data_ptr());
     }
     else if(file_ending == "jpg")
     {
-        stbi_write_jpg(filename.c_str(), (int)_width, (int)_height, (int)_channels, (const void*)_img_data, 100);
+        stbi_write_jpg(filename.c_str(),
+                       (int)_width,
+                       (int)_height,
+                       (int)_channels,
+                       (const void*)_img_data.data_ptr(),
+                       100);
     }
     else if(file_ending == "hdr")
     {
-        stbi_write_hdr(filename.c_str(), (int)_width, (int)_height, (int)_channels, (const float*)_img_data);
+        stbi_write_hdr(filename.c_str(), (int)_width, (int)_height, (int)_channels, (const float*)_img_data.data_ptr());
     }
 }
 
 void Image::applyGamma(const float gamma)
 {
-    if(stbi_is_hdr(_filename.c_str()))
+    if(_hdr)
     {
-        float* data = (float*)_img_data;
-        for(uint32_t i = 0; i < _width * _height * _channels; ++i) { data[i] = glm::pow(data[i], gamma); }
+        _img_data = _img_data.pow(gamma);
     }
     else
     {
-        uint8_t* data = _img_data;
-        for(uint32_t i = 0; i < _width * _height * _channels; ++i)
-        {
-            data[i] = (uint8_t)(255.0f * glm::pow((float)data[i] / 255.0f, gamma));
-        }
+        _img_data = ((_img_data.to(torch::kFloat32) / 255.0f).pow(gamma) * 255.0f).to(torch::kUInt8);
     }
 }
 
-void Image::setData(const uint8_t* data)
+void Image::setData(uint8_t* data)
 {
-    size_t size = stbi_is_hdr(_filename.c_str()) ? sizeof(float) : sizeof(uint8_t);
-    memcpy((void*)_img_data, (const void*)data, _width * _height * _channels * size);
-}
-
-void Image::createLDR(const uint8_t* data, uint32_t width, uint32_t height, uint32_t channels)
-{
-    if(channels == 1 || channels == 4)
+    if(_hdr)
     {
-        _img_data = (uint8_t*)malloc(width * height * channels *
-                                     sizeof(uint8_t));    // We use malloc here for compatibility with stbi
-        memcpy(_img_data, data, width * height * channels * sizeof(uint8_t));
-        _channels = channels;
+        _img_data =
+            atcg::createHostTensorFromPointer<float>((float*)data, {(int)_height, (int)_width, (int)_channels}).clone();
     }
     else
     {
-        // Padding
-        _img_data = (uint8_t*)malloc(width * height * 4 * sizeof(uint8_t));
-
-        for(uint32_t i = 0; i < width * height; ++i)    // Iterate through each rg or rgb pixel
-        {
-            uint8_t padded[4] = {data[channels * i],
-                                 data[channels * i + 1],
-                                 channels == 3 ? data[channels * i + 2] : 0,
-                                 255};
-            memcpy(_img_data + channels * i, padded, sizeof(padded));
-        }
-
-        _channels = 4;
+        _img_data =
+            atcg::createHostTensorFromPointer<uint8_t>(data, {(int)_height, (int)_width, (int)_channels}).clone();
     }
 }
 
-void Image::createHDR(const float* data, uint32_t width, uint32_t height, uint32_t channels)
+void Image::setData(const torch::Tensor& data)
 {
-    if(channels == 1 || channels == 4)
-    {
-        _img_data = (uint8_t*)malloc(width * height * channels *
-                                     sizeof(float));    // We use malloc here for compatibility with stbi
-        memcpy(_img_data, data, width * height * channels * sizeof(float));
-        _channels = channels;
-    }
-    else
-    {
-        _img_data = (uint8_t*)malloc(width * height * 4 * sizeof(float));
-
-        float* data_float = (float*)data;
-
-        for(uint32_t i = 0; i < width * height; ++i)    // Iterate through each rg or rgb pixel
-        {
-            float padded[4] = {data_float[channels * i],
-                               data_float[channels * i + 1],
-                               channels == 3 ? data_float[channels * i + 2] : 0.0f,
-                               1.0f};
-            memcpy(data_float + channels * i, padded, sizeof(padded));
-        }
-        // Padding
-        _channels = 4;
-    }
+    _img_data = data;
 }
 
 void Image::loadLDR(const std::string& filename)
 {
-    stbi_info(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels);
+    uint8_t* data = stbi_load(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0);
 
-    if(_channels == 1) { _img_data = stbi_load(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0); }
-    else
+    if(data == nullptr)
     {
-        _img_data = stbi_load(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 4);
-        _channels = 4;
+        ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename);
     }
+
+    setData(data);
+    stbi_image_free(data);
 }
 
 void Image::loadHDR(const std::string& filename)
 {
-    stbi_info(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels);
+    _hdr        = true;
+    float* data = stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0);
 
-    if(_channels == 1)
+    if(data == nullptr)
     {
-        _img_data = (uint8_t*)stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 0);
+        ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename);
     }
-    else
-    {
-        _img_data = (uint8_t*)stbi_loadf(filename.c_str(), (int*)&_width, (int*)&_height, (int*)&_channels, 4);
-        _channels = 4;
-    }
+
+    setData((uint8_t*)data);
+    stbi_image_free(data);
 }
 
 

@@ -44,6 +44,21 @@ public:
     }
 
     /**
+     * @brief Set a component to the entity
+     *
+     * @tparam T The component type
+     * @tparam The component to replace
+     *
+     * @return Reference to the created component
+     */
+    template<typename T>
+    T& replaceComponent(T& component)
+    {
+        T& comp = _scene->_registry.replace<T>(_entity_handle, component);
+        return comp;
+    }
+
+    /**
      * @brief Get a component
      *
      * @tparam T The component type

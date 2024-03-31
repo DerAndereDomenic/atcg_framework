@@ -23,6 +23,8 @@ struct Material
 
     void setDiffuseColor(const glm::vec4& color);
 
+    void setDiffuseColor(const glm::vec3& color);
+
     void setRoughness(const float roughness);
 
     void setMetallic(const float metallic);
@@ -35,4 +37,4 @@ private:
     atcg::ref_ptr<atcg::Texture2D> _roughness_texture;
     atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
 };
-}
+}    // namespace atcg

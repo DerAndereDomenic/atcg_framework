@@ -22,7 +22,10 @@ void drawGuizmo(Entity entity, ImGuizmo::OPERATION operation, const atcg::ref_pt
     {
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::BeginFrame();
-        if(useViewports) { ImGuizmo::SetDrawlist(); }
+        if(useViewports)
+        {
+            ImGuizmo::SetDrawlist();
+        }
 
         ImGuizmo::SetRect(window_pos.x + viewport_pos.x,
                           window_pos.y + viewport_pos.y,

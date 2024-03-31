@@ -3,6 +3,8 @@
 #include <imgui.h>
 #include <Scene/Components.h>
 #include <portable-file-dialogs.h>
+#include <DataStructure/TorchUtils.h>
+#include <Core/Application.h>
 
 namespace atcg
 {
@@ -23,7 +25,10 @@ void drawComponent(const std::string& name, Entity entity, UIFunction uiFunction
 
         ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
         ImGui::SameLine(contentRegionAvailable.x);
-        if(ImGui::Button("+")) { ImGui::OpenPopup("ComponentSettings"); }
+        if(ImGui::Button("+"))
+        {
+            ImGui::OpenPopup("ComponentSettings");
+        }
 
         bool removeComponent = false;
         if(ImGui::BeginPopup("ComponentSettings"))
@@ -45,6 +50,7 @@ void drawComponent(const std::string& name, Entity entity, UIFunction uiFunction
 
 void displayMaterial(const std::string& key, Material& material)
 {
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     ImGui::Separator();
 
     ImGui::Text("Material");
@@ -55,12 +61,12 @@ void displayMaterial(const std::string& key, Material& material)
 
         if(!useTextures)
         {
-            auto diffuse = material.getDiffuseTexture()->getData();
+            auto diffuse = material.getDiffuseTexture()->getData(atcg::CPU);
 
-            float color[4] = {(float)diffuse[0] / 255.0f,
-                              (float)diffuse[1] / 255.0f,
-                              (float)diffuse[2] / 255.0f,
-                              (float)diffuse[3] / 255.0f};
+            float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 1}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 2}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 3}).item<float>() / 255.0f};
 
             if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
             {
@@ -99,10 +105,13 @@ void displayMaterial(const std::string& key, Material& material)
             ImGui::Text("Diffuse Texture");
             ImGui::SameLine();
 
-            if(ImGui::Button(("X##diffuse" + key).c_str())) { material.setDiffuseColor(glm::vec4(1)); }
+            if(ImGui::Button(("X##diffuse" + key).c_str()))
+            {
+                material.setDiffuseColor(glm::vec4(1));
+            }
             else
                 ImGui::Image((void*)(uint64_t)material.getDiffuseTexture()->getID(),
-                             ImVec2(128, 128),
+                             ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
         }
@@ -145,10 +154,13 @@ void displayMaterial(const std::string& key, Material& material)
             ImGui::Text("Normal Texture");
             ImGui::SameLine();
 
-            if(ImGui::Button(("X##normal" + key).c_str())) { material.removeNormalMap(); }
+            if(ImGui::Button(("X##normal" + key).c_str()))
+            {
+                material.removeNormalMap();
+            }
             else
                 ImGui::Image((void*)(uint64_t)material.getNormalTexture()->getID(),
-                             ImVec2(128, 128),
+                             ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
         }
@@ -160,8 +172,8 @@ void displayMaterial(const std::string& key, Material& material)
 
         if(!useTextures)
         {
-            auto data       = material.getRoughnessTexture()->getData();
-            float roughness = *((float*)data.data());
+            auto data       = material.getRoughnessTexture()->getData(atcg::CPU);
+            float roughness = data.item<float>();
 
             if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
             {
@@ -199,10 +211,13 @@ void displayMaterial(const std::string& key, Material& material)
             ImGui::Text("Roughness Texture");
             ImGui::SameLine();
 
-            if(ImGui::Button(("X##roughness" + key).c_str())) { material.setRoughness(1.0f); }
+            if(ImGui::Button(("X##roughness" + key).c_str()))
+            {
+                material.setRoughness(1.0f);
+            }
             else
                 ImGui::Image((void*)(uint64_t)material.getRoughnessTexture()->getID(),
-                             ImVec2(128, 128),
+                             ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
         }
@@ -215,8 +230,8 @@ void displayMaterial(const std::string& key, Material& material)
 
         if(!useTextures)
         {
-            auto data      = material.getMetallicTexture()->getData();
-            float metallic = *((float*)data.data());
+            auto data      = material.getMetallicTexture()->getData(atcg::CPU);
+            float metallic = data.item<float>();
 
             if(ImGui::DragFloat(("Metallic##" + key).c_str(), &metallic, 0.005f, 0.0f, 1.0f))
             {
@@ -254,10 +269,13 @@ void displayMaterial(const std::string& key, Material& material)
             ImGui::Text("Metallic Texture");
             ImGui::SameLine();
 
-            if(ImGui::Button(("X##metallic" + key).c_str())) { material.setMetallic(0.0f); }
+            if(ImGui::Button(("X##metallic" + key).c_str()))
+            {
+                material.setMetallic(0.0f);
+            }
             else
                 ImGui::Image((void*)(uint64_t)material.getMetallicTexture()->getID(),
-                             ImVec2(128, 128),
+                             ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
         }
@@ -308,7 +326,10 @@ void SceneHierarchyPanel::drawEntityNode(Entity entity)
         ImGuiTreeNodeFlags_Bullet;
     flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
     bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity.getComponent<IDComponent>().ID, flags, tag.c_str());
-    if(ImGui::IsItemClicked()) { _selected_entity = entity; }
+    if(ImGui::IsItemClicked())
+    {
+        _selected_entity = entity;
+    }
 
     // bool entityDeleted = false;
     // if(ImGui::BeginPopupContextItem())
@@ -318,7 +339,10 @@ void SceneHierarchyPanel::drawEntityNode(Entity entity)
     //     ImGui::EndPopup();
     // }
 
-    if(opened) { ImGui::TreePop(); }
+    if(opened)
+    {
+        ImGui::TreePop();
+    }
 
     // if(entityDeleted)
     // {
@@ -332,6 +356,8 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
     std::stringstream label;
 
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+
     NameComponent& component = entity.getComponent<NameComponent>();
     std::string& tag         = component.name;
     char buffer[256];
@@ -339,12 +365,18 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
     // ? strncpy_s not available in gcc. Is this unsafe?
     memcpy(buffer, tag.c_str(), sizeof(buffer));
     label << "##" << id;
-    if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer))) { tag = std::string(buffer); }
+    if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer)))
+    {
+        tag = std::string(buffer);
+    }
 
     ImGui::SameLine();
     ImGui::PushItemWidth(-1);
 
-    if(ImGui::Button("Add Component")) { ImGui::OpenPopup("AddComponent"); }
+    if(ImGui::Button("Add Component"))
+    {
+        ImGui::OpenPopup("AddComponent");
+    }
 
     if(ImGui::BeginPopup("AddComponent"))
     {
@@ -414,16 +446,16 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
             atcg::Renderer::setViewport(0, 0, width, height);
             atcg::Renderer::draw(_scene, camera_component.camera);
             atcg::Renderer::getFramebuffer()->use();
-            atcg::Renderer::setViewport(0,
-                                        0,
-                                        atcg::Renderer::getFramebuffer()->width(),
-                                        atcg::Renderer::getFramebuffer()->height());
+            atcg::Renderer::setDefaultViewport();
 
             uint64_t textureID = _camera_preview->getColorAttachement(0)->getID();
 
             ImVec2 window_size = ImGui::GetWindowSize();
             ImGui::SetCursorPos(ImVec2((window_size.x - width) * 0.5f, ImGui::GetCursorPosY()));
-            ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
+            ImGui::Image(reinterpret_cast<void*>(textureID),
+                         ImVec2(content_scale * width, content_scale * height),
+                         ImVec2 {0, 1},
+                         ImVec2 {1, 0});
 
             if(ImGui::Button("Screenshot"))
             {
@@ -432,7 +464,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                 std::ostringstream oss;
                 oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
 
-                atcg::Renderer::screenshot(_scene, camera_component.camera, oss.str());
+                atcg::Renderer::screenshot(_scene, camera_component.camera, 1920, oss.str());
             }
             atcg::Framebuffer::useDefault();
 
@@ -453,6 +485,10 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                     }
                 }
             }
+
+            label.str(std::string());
+            label << "Color##" << id;
+            ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(camera_component.color));
         });
 
     detail::drawComponent<TransformComponent>("Transform",
@@ -567,34 +603,34 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                         component.color = color;
                                                     }
 
-                                                    float point_size = component.point_size;
+                                                    int point_size = (int)component.point_size;
                                                     label.str(std::string());
                                                     label << "Point Size##point" << id;
-                                                    if(ImGui::DragFloat(label.str().c_str(), &point_size))
+                                                    if(ImGui::DragInt(label.str().c_str(), &point_size, 1, 1, INT_MAX))
                                                     {
-                                                        component.point_size = point_size;
+                                                        component.point_size = (float)point_size;
                                                     }
                                                 });
-    detail::drawComponent<PointSphereRenderComponent>("Point Sphere Renderer",
-                                                      entity,
-                                                      [&](PointSphereRenderComponent& component)
-                                                      {
-                                                          ImGui::Checkbox("Visible##visiblepointsphere",
-                                                                          &component.visible);
+    detail::drawComponent<PointSphereRenderComponent>(
+        "Point Sphere Renderer",
+        entity,
+        [&](PointSphereRenderComponent& component)
+        {
+            ImGui::Checkbox("Visible##visiblepointsphere", &component.visible);
 
-                                                          float point_size = component.point_size;
-                                                          label.str(std::string());
-                                                          label << "Point Size##pointsphere" << id;
-                                                          if(ImGui::DragFloat(label.str().c_str(), &point_size))
-                                                          {
-                                                              component.point_size = point_size;
-                                                          }
+            float point_size = component.point_size;
+            label.str(std::string());
+            label << "Point Size##pointsphere" << id;
+            if(ImGui::DragFloat(label.str().c_str(), &point_size, 0.001f, 0.001f, FLT_MAX / INT_MAX))
+            {
+                component.point_size = point_size;
+            }
 
-                                                          // Material
-                                                          Material& material = component.material;
+            // Material
+            Material& material = component.material;
 
-                                                          detail::displayMaterial("pointsphere", material);
-                                                      });
+            detail::displayMaterial("pointsphere", material);
+        });
 
     detail::drawComponent<EdgeRenderComponent>("Edge Renderer",
                                                entity,
@@ -610,25 +646,25 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
                                                    }
                                                });
 
-    detail::drawComponent<EdgeCylinderRenderComponent>("Edge Cylinder Renderer",
-                                                       entity,
-                                                       [&](EdgeCylinderRenderComponent& component)
-                                                       {
-                                                           ImGui::Checkbox("Visible##visibleedgecylinder",
-                                                                           &component.visible);
-                                                           label.str(std::string());
-                                                           label << "Radius##edgecylinder" << id;
-                                                           float radius = component.radius;
-                                                           if(ImGui::DragFloat(label.str().c_str(), &radius))
-                                                           {
-                                                               component.radius = radius;
-                                                           }
+    detail::drawComponent<EdgeCylinderRenderComponent>(
+        "Edge Cylinder Renderer",
+        entity,
+        [&](EdgeCylinderRenderComponent& component)
+        {
+            ImGui::Checkbox("Visible##visibleedgecylinder", &component.visible);
+            label.str(std::string());
+            label << "Radius##edgecylinder" << id;
+            float radius = component.radius;
+            if(ImGui::DragFloat(label.str().c_str(), &radius, 0.001f, 0.001f, FLT_MAX / INT_MAX))
+            {
+                component.radius = radius;
+            }
 
-                                                           // Material
-                                                           Material& material = component.material;
+            // Material
+            Material& material = component.material;
 
-                                                           detail::displayMaterial("edgecylinder", material);
-                                                       });
+            detail::displayMaterial("edgecylinder", material);
+        });
 
     detail::drawComponent<InstanceRenderComponent>("Instance Renderer",
                                                    entity,
@@ -645,6 +681,7 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
 
 void SceneHierarchyPanel::drawSceneProperties()
 {
+    float content_scale                    = atcg::Application::get()->getWindow()->getContentScale();
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
                                              ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
                                              ImGuiTreeNodeFlags_FramePadding;
@@ -658,10 +695,13 @@ void SceneHierarchyPanel::drawSceneProperties()
         if(Renderer::hasSkybox())
         {
             ImGui::Image((void*)(uint64_t)Renderer::getSkyboxTexture()->getID(),
-                         ImVec2(128, 64),
+                         ImVec2(content_scale * 128, content_scale * 64),
                          ImVec2 {0, 1},
                          ImVec2 {1, 0});
-            if(ImGui::Button("Remove skybox##skybox")) { Renderer::removeSkybox(); }
+            if(ImGui::Button("Remove skybox##skybox"))
+            {
+                Renderer::removeSkybox();
+            }
         }
         else
         {
@@ -724,7 +764,10 @@ void SceneHierarchyPanel::renderPanel()
         drawEntityNode(entity);
     }
 
-    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered()) { _selected_entity = {}; }
+    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
+    {
+        _selected_entity = {};
+    }
 
     if(ImGui::BeginPopupContextWindow(0, 1))
     {
@@ -744,7 +787,10 @@ void SceneHierarchyPanel::renderPanel()
     {
         if(ImGui::BeginTabItem("Components"))
         {
-            if(_selected_entity) { drawComponents(_selected_entity); }
+            if(_selected_entity)
+            {
+                drawComponents(_selected_entity);
+            }
             ImGui::EndTabItem();
         }
 

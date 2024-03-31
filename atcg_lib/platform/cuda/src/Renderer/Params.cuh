@@ -21,7 +21,7 @@ struct Params
 
     // Skybox
     bool hasSkybox;
-    glm::vec4* skybox_data;
+    glm::vec3* skybox_data;
     uint32_t skybox_width;
     uint32_t skybox_height;
 };

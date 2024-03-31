@@ -8,12 +8,15 @@ charonload.module_config["pyatcg"] = charonload.Config(
     project_directory=pathlib.Path(__file__).parent,
     build_directory=pathlib.Path(__file__).parent / "build_python",
     cmake_options={"ATCG_CUDA_BACKEND": "On", "ATCG_PYTHON_BINDINGS" : "On"},
-    generate_stubs_in_directory=VSCODE_STUBS_DIRECTORY,
-    build_type="Debug",
-    verbose=True
+    stubs_directory=VSCODE_STUBS_DIRECTORY,
+    build_type="RelWithDebInfo",
+    verbose=True,
+    stubs_invalid_ok=True
 )
 
 import pyatcg as atcg
+import torch
+import numpy as np
 
 class PythonLayer(atcg.Layer):
 
@@ -31,11 +34,27 @@ class PythonLayer(atcg.Layer):
 
         self.panel = atcg.SceneHierarchyPanel(self.scene)
 
-        entity = self.scene.createEntity("Sphere")
-        graph = atcg.read_mesh("res/sphere_low.obj")
-        entity.addGeometryComponent(graph)
+        entity = self.scene.createEntity("Cylinder")
+        self.graph = atcg.read_mesh("res/cylinder.obj")
+        entity.addGeometryComponent(self.graph)
         entity.addTransformComponent(atcg.vec3(0), atcg.vec3(1), atcg.vec3(0))
-        entity.addMeshRenderComponent(atcg.ShaderManager.getShader("base"))
+        renderer = entity.addMeshRenderComponent(atcg.ShaderManager.getShader("base"))
+
+        diffuse_img = atcg.imread("res/pbr/diffuse.png", 2.2)
+        normal_img = atcg.imread("res/pbr/normals.png", 1.0)
+        roughness_img = atcg.imread("res/pbr/roughness.png", 1.0)
+        metallic_img = atcg.imread("res/pbr/metallic.png", 1.0)
+
+        diffuse_texture = atcg.Texture2D.create(diffuse_img)
+        normal_texture = atcg.Texture2D.create(normal_img)
+        roughness_texture = atcg.Texture2D.create(roughness_img)
+        metallic_texture = atcg.Texture2D.create(metallic_img)
+
+        renderer.material.setDiffuseTexture(diffuse_texture)
+        renderer.material.setNormalTexture(normal_texture)
+        renderer.material.setRoughnessTexture(roughness_texture)
+        renderer.material.setMetallicTexture(metallic_texture)
+        entity.replaceMeshRenderComponent(renderer)
 
         self.current_operation = atcg.ImGui.GuizmoOperation.TRANSLATE
 
@@ -66,13 +85,14 @@ class PythonLayer(atcg.Layer):
             
 
 def main():
-    layer = PythonLayer()
-
     props = atcg.WindowProps()
     props.width = 2560 
     props.height = 1440
+    
+    layer = PythonLayer()
+    app = atcg.PythonApplication(layer, props)
 
-    atcg.show(layer, props)
+    atcg.start(app)
 
 main()
 atcg.print_statistics()

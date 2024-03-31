@@ -113,7 +113,10 @@ extern "C" __global__ void __raygen__rg()
                 next_dir    = result.out_dir;
                 throughput *= result.bsdf_weight;
             }
-            else { break; }
+            else
+            {
+                break;
+            }
         }
         else
         {

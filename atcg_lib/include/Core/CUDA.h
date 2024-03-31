@@ -56,6 +56,9 @@ inline dim3 configure(glm::u32vec3 thread_count, glm::u32vec3 block_size)
     return {block_count.x, block_count.y, block_count.z};
 }
 
+typedef cudaArray_t textureArray;
+typedef cudaTextureObject_t textureObject;
+typedef cudaSurfaceObject_t surfaceObject;
 }    // namespace atcg
 
     #ifdef NDEBUG
@@ -72,6 +75,7 @@ inline dim3 configure(glm::u32vec3 thread_count, glm::u32vec3 block_size)
     #define ATCG_DEVICE                  __device__
     #define ATCG_HOST_DEVICE             __host__ __device__
     #define ATCG_GLOBAL                  __global__
+
 #else
 namespace atcg
 {
@@ -79,11 +83,15 @@ constexpr bool cuda_available()
 {
     return false;
 }
+typedef void* textureArray;
+typedef void* textureObject;
+typedef void* surfaceObject;
 }    // namespace atcg
 
     #define ATCG_HOST
     #define ATCG_DEVICE
     #define ATCG_HOST_DEVICE
     #define ATCG_GLOBAL
+
 
 #endif

@@ -125,10 +125,9 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     }
 
     // Load a sphere
-    auto options = OpenMesh::IO::Options(OpenMesh::IO::Options(OpenMesh::IO::Options::VertexTexCoord));
-    sphere_mesh  = atcg::IO::read_mesh("res/sphere_low.obj", options);
+    sphere_mesh = atcg::IO::read_mesh("res/sphere_low.obj");
 
-    cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj", options);
+    cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj");
 
     // Generate CAD grid
     initGrid();
@@ -168,11 +167,11 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     spec_prefiltered_cubemap.sampler.mip_map     = true;
     prefiltered_cubemap                          = atcg::TextureCube::create(spec_prefiltered_cubemap);
 
-    auto img = IO::imread("res/lut.hdr");
+    auto img = IO::imread("res/LUT.hdr");
     TextureSpecification spec_lut;
     spec_lut.width             = img->width();
     spec_lut.height            = img->height();
-    spec_lut.format            = TextureFormat::RGBAFLOAT;
+    spec_lut.format            = TextureFormat::RGBFLOAT;
     spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     lut                        = atcg::Texture2D::create(img, spec_lut);
 
@@ -203,7 +202,10 @@ void Renderer::Impl::initGrid()
 
     std::vector<atcg::Edge> edges;
 
-    for(int i = 0; i < 4 * grid_size; i += 2) { edges.push_back({glm::vec2(i, i + 1), glm::vec3(1), 0.1f}); }
+    for(int i = 0; i < 4 * grid_size; i += 2)
+    {
+        edges.push_back({glm::vec2(i, i + 1), glm::vec3(1), 0.1f});
+    }
 
     grid = atcg::Graph::createGraph(host_points, edges);
 }
@@ -333,6 +335,7 @@ void Renderer::init(uint32_t width, uint32_t height)
     ShaderManager::addShaderFromName("skybox");
     ShaderManager::addShaderFromName("cubeMapConvolution");
     ShaderManager::addShaderFromName("prefilter_cubemap");
+    ShaderManager::addShaderFromName("vrScreen");
     ShaderManager::addComputerShaderFromName("white_noise_2D");
     ShaderManager::addComputerShaderFromName("white_noise_3D");
     ShaderManager::addComputerShaderFromName("worly_noise_2D");
@@ -384,6 +387,11 @@ void Renderer::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t&
     glViewport(x, y, width, height);
 }
 
+void Renderer::setDefaultViewport()
+{
+    setViewport(0, 0, getFramebuffer()->width(), getFramebuffer()->height());
+}
+
 void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
 {
     bool culling                 = s_renderer->impl->culling_enabled;
@@ -403,11 +411,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     capture_cam->setProjection(captureProjection);
     // convert HDR equirectangular environment map to cubemap equivalent
 
-    TextureSpecification spec;
-    spec.width                       = skybox->width();
-    spec.height                      = skybox->height();
-    spec.format                      = skybox->isHDR() ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA;
-    s_renderer->impl->skybox_texture = atcg::Texture2D::create(skybox, spec);
+    s_renderer->impl->skybox_texture = atcg::Texture2D::create(skybox);
 
     uint32_t current_fbo = atcg::Framebuffer::currentFramebuffer();
     int old_viewport[4];
@@ -644,6 +648,7 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
                     const atcg::ref_ptr<Shader>& shader,
                     DrawMode draw_mode)
 {
+    mesh->unmapAllPointers();
     switch(draw_mode)
     {
         case ATCG_DRAW_MODE_TRIANGLE:
@@ -741,7 +746,10 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
             return;
         }
     }
-    else { return; }
+    else
+    {
+        return;
+    }
 
     uint32_t entity_id           = (uint32_t)entity._entity_handle;
     TransformComponent transform = entity.getComponent<TransformComponent>();
@@ -755,7 +763,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
     // renderer.shader->setInt("entityID", entity_id);
     s_renderer->impl->white_pixel->use(0);
-
+    geometry.graph->unmapAllPointers();
     if(entity.hasComponent<MeshRenderComponent>())
     {
         MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
@@ -919,7 +927,8 @@ void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         setLineSize(2.0f);
         uint32_t entity_id = (uint32_t)entity._entity_handle;
         atcg::ShaderManager::getShader("edge")->setInt("entityID", entity_id);
-        atcg::ref_ptr<PerspectiveCamera> cam = entity.getComponent<CameraComponent>().camera;
+        atcg::CameraComponent& comp          = entity.getComponent<CameraComponent>();
+        atcg::ref_ptr<PerspectiveCamera> cam = comp.camera;
         float aspect_ratio                   = cam->getAspectRatio();
         glm::mat4 scale =
             glm::scale(glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)));
@@ -927,7 +936,7 @@ void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         Renderer::draw(s_renderer->impl->camera_frustrum,
                        camera,
                        model,
-                       glm::vec3(1),
+                       comp.color,
                        atcg::ShaderManager::getShader("edge"),
                        atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
     }
@@ -943,7 +952,10 @@ void Renderer::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vb
     atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVerticesArray();
     if(vao_sphere->peekVertexBuffer() != vbo)
     {
-        if(s_renderer->impl->sphere_has_instance) { vao_sphere->popVertexBuffer(); }
+        if(s_renderer->impl->sphere_has_instance)
+        {
+            vao_sphere->popVertexBuffer();
+        }
         vao_sphere->pushInstanceBuffer(vbo);
         s_renderer->impl->sphere_has_instance = true;
     }
@@ -977,7 +989,10 @@ void Renderer::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
         shader->setVec3("camera_dir", camera->getDirection());
         shader->setMVP(model, camera->getView(), camera->getProjection());
     }
-    else { shader->setMVP(model); }
+    else
+    {
+        shader->setMVP(model);
+    }
     shader->use();
 
     const atcg::ref_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
@@ -1000,7 +1015,10 @@ void Renderer::drawCircle(const glm::vec3& position,
     shader->setFloat("radius", radius);
     shader->setFloat("thickness", thickness);
     shader->setVec3("position", position);
-    if(camera) { shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection()); }
+    if(camera)
+    {
+        shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
+    }
 
     const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
 
@@ -1021,7 +1039,10 @@ void Renderer::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
     atcg::ref_ptr<VertexArray> vao_cylinder = cylinder_mesh->getVerticesArray();
     if(vao_cylinder->peekVertexBuffer() != indices)
     {
-        if(cylinder_has_instance) { vao_cylinder->popVertexBuffer(); }
+        if(cylinder_has_instance)
+        {
+            vao_cylinder->popVertexBuffer();
+        }
         vao_cylinder->pushInstanceBuffer(indices);
         cylinder_has_instance = true;
     }
@@ -1110,11 +1131,21 @@ int Renderer::getEntityIndex(const glm::vec2& mouse)
 
 void Renderer::screenshot(const atcg::ref_ptr<Scene>& scene,
                           const atcg::ref_ptr<Camera>& camera,
+                          const uint32_t width,
                           const std::string& path)
 {
+    auto data = screenshot(scene, camera, width);
+
+    Image img(data);
+
+    img.store(path);
+}
+
+torch::Tensor
+Renderer::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
+{
     atcg::ref_ptr<PerspectiveCamera> cam         = camera;
-    float width                                  = 1920.0f;
-    float height                                 = width / cam->getAspectRatio();
+    float height                                 = (float)width / cam->getAspectRatio();
     atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
     screenshot_buffer->attachColor();
     screenshot_buffer->attachDepth();
@@ -1125,13 +1156,13 @@ void Renderer::screenshot(const atcg::ref_ptr<Scene>& scene,
     atcg::Renderer::setViewport(0, 0, width, height);
     atcg::Renderer::draw(scene, cam);
     atcg::Renderer::getFramebuffer()->use();
-    atcg::Renderer::setViewport(0, 0, getFramebuffer()->width(), getFramebuffer()->height());
+    atcg::Renderer::setDefaultViewport();
 
     std::vector<uint8_t> buffer = getFrame(screenshot_buffer);
 
-    Image img = Image(buffer.data(), width, height, 4);
+    auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
-    img.store(path);
+    return data;
 }
 
 std::vector<uint8_t> Renderer::getFrame()

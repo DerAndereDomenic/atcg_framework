@@ -5,6 +5,7 @@
 #include <Events/MouseEvent.h>
 #include <Events/KeyEvent.h>
 #include <Events/WindowEvent.h>
+#include <Events/VREvent.h>
 
 #include <Core/Memory.h>
 
@@ -168,6 +169,109 @@ private:
     bool _pressed_Q     = false;
     bool _pressed_E     = false;
     bool _clicked_right = false;
+};
+
+class VRController : public CameraController
+{
+public:
+    /**
+     * @brief Construct a new First Person Camera object
+     *
+     * @param aspect_ratio The aspect ratio of the camera
+     */
+    VRController(const float& aspect_ratio, const float& speed = 1.0f);
+
+    /**
+     * @brief Construct a new First Person Camera object
+     *
+     * @param camera The camera
+     */
+    VRController(const atcg::ref_ptr<Camera>& camera);
+
+    /**
+     * @brief Gets called every frame
+     *
+     * @param delta_time Time since last frame
+     */
+    virtual void onUpdate(float delta_time);
+
+    /**
+     * @brief Handles events
+     *
+     * @param e The event
+     */
+    virtual void onEvent(Event* e);
+
+    /**
+     * @brief Get the camera of the left eye
+     *
+     * @return The camera
+     */
+    inline atcg::ref_ptr<atcg::PerspectiveCamera> getCameraLeft() const { return _cam_left; }
+
+    /**
+     * @brief Get the camera of the right eye
+     *
+     * @return The camera
+     */
+    inline atcg::ref_ptr<atcg::PerspectiveCamera> getCameraRight() const { return _cam_right; }
+
+    /**
+     * @brief Get the position of the controller if the trigger is pressed for movement
+     *
+     * @return The Controller position
+     */
+    inline glm::vec3 getControllerPosition() const { return _controller_position; }
+
+    /**
+     * @brief Get the direction of the controller if the trigger is pressed for movement
+     *
+     * @return The Controller direction
+     */
+    inline glm::vec3 getControllerDirection() const { return _controller_direction; }
+
+    /**
+     * @brief Get the position of the intersection of the controller with the floor plane if the trigger is pressed for
+     * movement
+     *
+     * @return The intersection
+     */
+    inline glm::vec3 getControllerIntersection() const { return _controller_intersection; }
+
+    /**
+     * @brief Check if we are currently trying to move
+     *
+     * @return True if the trigger is pressed and we try to move
+     */
+    inline bool inMovement() const { return _trigger_pressed; }
+
+private:
+    bool onWindowResize(WindowResizeEvent* event);
+    bool onKeyPressed(KeyPressedEvent* event);
+    bool onKeyReleased(KeyReleasedEvent* event);
+    bool onVRButtonPressed(VRButtonPressedEvent* event);
+    bool onVRButtonReleased(VRButtonReleasedEvent* event);
+
+    float _speed;
+    float _velocity_forward   = 0.0f;
+    float _velocity_right     = 0.0f;
+    float _velocity_threshold = 0.3f;
+    float _max_velocity       = 3.0f;
+    float _acceleration       = 5.0f;
+
+    bool _pressed_W       = false;
+    bool _pressed_A       = false;
+    bool _pressed_S       = false;
+    bool _pressed_D       = false;
+    bool _trigger_pressed = false;
+    bool _trigger_release = false;
+    uint32_t _device_index;
+    glm::vec3 _controller_position;
+    glm::vec3 _controller_direction;
+    glm::vec3 _controller_intersection;
+
+    atcg::ref_ptr<atcg::PerspectiveCamera> _cam_left;
+    atcg::ref_ptr<atcg::PerspectiveCamera> _cam_right;
 };
 
 }    // namespace atcg

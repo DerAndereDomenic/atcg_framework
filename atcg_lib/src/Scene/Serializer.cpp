@@ -23,7 +23,10 @@ struct convert<glm::vec2>
 
     static bool decode(const Node& node, glm::vec2& rhs)
     {
-        if(!node.IsSequence() || node.size() != 2) { return false; }
+        if(!node.IsSequence() || node.size() != 2)
+        {
+            return false;
+        }
 
         rhs.x = node[0].as<float>();
         rhs.y = node[1].as<float>();
@@ -46,7 +49,10 @@ struct convert<glm::vec3>
 
     static bool decode(const Node& node, glm::vec3& rhs)
     {
-        if(!node.IsSequence() || node.size() != 3) { return false; }
+        if(!node.IsSequence() || node.size() != 3)
+        {
+            return false;
+        }
 
         rhs.x = node[0].as<float>();
         rhs.y = node[1].as<float>();
@@ -71,7 +77,10 @@ struct convert<glm::vec4>
 
     static bool decode(const Node& node, glm::vec4& rhs)
     {
-        if(!node.IsSequence() || node.size() != 4) { return false; }
+        if(!node.IsSequence() || node.size() != 4)
+        {
+            return false;
+        }
 
         rhs.x = node[0].as<float>();
         rhs.y = node[1].as<float>();
@@ -178,7 +187,10 @@ std::vector<T> deserializeBuffer(const std::string& file_name)
     std::vector<T> buffer(buffer_char.size() / sizeof(T));
 
     T* data = reinterpret_cast<T*>(buffer_char.data());
-    for(uint32_t i = 0; i < buffer_char.size() / sizeof(T); ++i) { buffer[i] = data[i]; }
+    for(uint32_t i = 0; i < buffer_char.size() / sizeof(T); ++i)
+    {
+        buffer[i] = data[i];
+    }
 
     return buffer;
 }
@@ -193,16 +205,16 @@ void serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path
                texture->getSpecification().format == TextureFormat::RFLOAT;
     std::string file_ending = hdr ? ".hdr" : ".png";
 
-    auto img_data = texture->getData();
+    auto img_data = texture->getData(atcg::CPU);
     atcg::ref_ptr<Image> img;
     if(hdr)
     {
-        img = atcg::make_ref<Image>(reinterpret_cast<const float*>(img_data.data()),
-                                    texture->width(),
-                                    texture->height(),
-                                    channels);
+        img = atcg::make_ref<Image>((float*)img_data.data_ptr(), texture->width(), texture->height(), channels);
     }
-    else { img = atcg::make_ref<Image>(img_data.data(), texture->width(), texture->height(), channels); }
+    else
+    {
+        img = atcg::make_ref<Image>((uint8_t*)img_data.data_ptr(), texture->width(), texture->height(), channels);
+    }
 
     path = path + file_ending;
     IO::imwrite(img, path, gamma);
@@ -235,8 +247,10 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     }
     else
     {
-        auto data         = diffuse_texture->getData();
-        glm::u8vec3 color = *((glm::u8vec4*)(data.data()));
+        auto data         = diffuse_texture->getData(atcg::CPU);
+        glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
+                             data.index({0, 0, 1}).item<uint8_t>(),
+                             data.index({0, 0, 2}).item<uint8_t>()};
 
         glm::vec3 c(color);
         c = c / 255.0f;
@@ -263,8 +277,8 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     }
     else
     {
-        auto data   = metallic_texture->getData();
-        float color = *((float*)(data.data()));
+        auto data   = metallic_texture->getData(atcg::CPU);
+        float color = data.item<float>();
 
         out << YAML::Key << RENDER_MATERIAL_METALLIC << YAML::Value << color;
     }
@@ -279,8 +293,8 @@ void serializeMaterial(YAML::Emitter& out, Entity entity, const Material& materi
     }
     else
     {
-        auto data   = roughness_texture->getData();
-        float color = *((float*)(data.data()));
+        auto data   = roughness_texture->getData(atcg::CPU);
+        float color = data.item<float>();
 
         out << YAML::Key << RENDER_MATERIAL_ROUGHNESS << YAML::Value << color;
     }
@@ -722,7 +736,10 @@ void Serializer::deserialize(const std::string& file_path)
                         {
                             renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
                         }
-                        else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+                        else
+                        {
+                            renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
+                        }
 
                         auto material_node = renderer["Material"];
 
@@ -754,7 +771,10 @@ void Serializer::deserialize(const std::string& file_path)
                         {
                             renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
                         }
-                        else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+                        else
+                        {
+                            renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
+                        }
                     }
                     break;
                     case atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE:
@@ -777,7 +797,10 @@ void Serializer::deserialize(const std::string& file_path)
                         {
                             renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
                         }
-                        else { renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path); }
+                        else
+                        {
+                            renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
+                        }
 
                         auto material_node = renderer["Material"];
 

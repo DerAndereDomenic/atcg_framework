@@ -48,8 +48,14 @@ void Tracing::prepareAccelerationStructure(Entity entity)
     memcpy(acc_component.faces.data(), faces, sizeof(glm::u32vec3) * mesh->n_faces());
 
     // Restore original mapping relation
-    if(!vertices_mapped) { mesh->getVerticesBuffer()->unmapHostPointers(); }
-    if(!faces_mapped) { mesh->getFaceIndexBuffer()->unmapHostPointers(); }
+    if(!vertices_mapped)
+    {
+        mesh->getVerticesBuffer()->unmapHostPointers();
+    }
+    if(!faces_mapped)
+    {
+        mesh->getFaceIndexBuffer()->unmapHostPointers();
+    }
 
     nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.data()),
                                               reinterpret_cast<const uint32_t*>(acc_component.faces.data()),
@@ -116,7 +122,10 @@ SurfaceInteraction Tracing::traceRay(const nanort::BVHAccel<float>& accel,
     nanort::TriangleIntersection<> isect;
     bool hit = accel.Traverse(ray, triangle_intersector, &isect);
 
-    if(!hit) { return si; }
+    if(!hit)
+    {
+        return si;
+    }
 
     si.valid         = true;
     si.position      = origin + isect.t * dir;
