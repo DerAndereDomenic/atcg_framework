@@ -524,16 +524,9 @@ atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
                                                                                       s_pathtracer->impl->width *
                                                                                       s_pathtracer->impl->height;
 
-            // TODO: GPU binding
-            std::vector<glm::u8vec4> temp_buffer(s_pathtracer->impl->width * s_pathtracer->impl->height);
-
-            CUDA_SAFE_CALL(cudaMemcpy((void*)temp_buffer.data(),
-                                      (void*)data_ptr,
-                                      sizeof(glm::u8vec4) * s_pathtracer->impl->width * s_pathtracer->impl->height,
-                                      cudaMemcpyDeviceToHost));
             s_pathtracer->impl->output_texture->setData(
-                atcg::createHostTensorFromPointer((uint8_t*)temp_buffer.data(),
-                                                  {s_pathtracer->impl->height, s_pathtracer->impl->width, 4}));
+                atcg::createDeviceTensorFromPointer((uint8_t*)data_ptr,
+                                                    {s_pathtracer->impl->height, s_pathtracer->impl->width, 4}));
             s_pathtracer->impl->dirty = false;
         }
     }
