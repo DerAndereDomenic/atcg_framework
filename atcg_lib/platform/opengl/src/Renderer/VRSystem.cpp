@@ -74,6 +74,7 @@ void VRSystem::Impl::init()
         {
             vr_pointer = NULL;
             ATCG_WARN("Unable to init VR runtime: {0}", std::string(vr::VR_GetVRInitErrorAsEnglishDescription(error)));
+            return;
         }
         vr_available = true;
         vr_pointer->GetRecommendedRenderTargetSize(&width, &height);
