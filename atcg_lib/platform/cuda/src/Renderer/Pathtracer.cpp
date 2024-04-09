@@ -60,10 +60,10 @@ public:
     atcg::dref_ptr<Params> launch_params;
 
     // Baked scene
-    std::vector<atcg::DeviceBuffer<glm::vec3>> vertices;
-    std::vector<atcg::DeviceBuffer<glm::vec3>> normals;
-    std::vector<atcg::DeviceBuffer<glm::vec3>> uvs;
-    std::vector<atcg::DeviceBuffer<glm::u32vec3>> faces;
+    std::vector<torch::Tensor> vertices;
+    std::vector<torch::Tensor> normals;
+    std::vector<torch::Tensor> uvs;
+    std::vector<torch::Tensor> faces;
     std::vector<atcg::DeviceBuffer<uint8_t>> gas_buffers;
     atcg::DeviceBuffer<uint8_t> ias_buffer;
     std::vector<OptixTraversableHandle> gas_handles;
@@ -225,43 +225,18 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         transforms.push_back(transform);
 
         atcg::ref_ptr<Graph> graph = entity.getComponent<GeometryComponent>().graph;
-        std::vector<glm::vec3> vertices(graph->n_vertices());
-        std::vector<glm::vec3> normals(graph->n_vertices());
-        std::vector<glm::vec3> uvs(graph->n_vertices());
-        Vertex* gl_vertices = graph->getVerticesBuffer()->getHostPointer<Vertex>();
-        for(int i = 0; i < graph->n_vertices(); ++i)
-        {
-            vertices[i] = gl_vertices[i].position;
-            normals[i]  = gl_vertices[i].normal;
-            uvs[i]      = gl_vertices[i].uv;
-        }
 
-        atcg::DeviceBuffer<glm::vec3> d_vertices(graph->n_vertices());
-        d_vertices.upload(vertices.data());
-
-        atcg::DeviceBuffer<glm::vec3> d_normals(graph->n_vertices());
-        d_normals.upload(normals.data());
-
-        atcg::DeviceBuffer<glm::vec3> d_uvs(graph->n_vertices());
-        d_uvs.upload(uvs.data());
-
-        std::vector<glm::u32vec3> faces(graph->n_faces());
-        glm::u32vec3* gl_faces = graph->getFaceIndexBuffer()->getHostPointer<glm::u32vec3>();
-        for(int i = 0; i < graph->n_faces(); ++i)
-        {
-            faces[i] = gl_faces[i];
-        }
-
-        atcg::DeviceBuffer<glm::u32vec3> d_faces(graph->n_faces());
-        d_faces.upload(faces.data());
-
-        graph->getVerticesBuffer()->unmapHostPointers();
-        graph->getFaceIndexBuffer()->unmapHostPointers();
+        auto d_vertices = graph->getDevicePositions().clone();
+        auto d_normals  = graph->getDeviceNormals().clone();
+        auto d_uvs      = graph->getDeviceUVs().clone();
+        auto d_faces    = graph->getDeviceFaces().clone();
 
         s_pathtracer->impl->vertices.push_back(d_vertices);
         s_pathtracer->impl->normals.push_back(d_normals);
         s_pathtracer->impl->uvs.push_back(d_uvs);
         s_pathtracer->impl->faces.push_back(d_faces);
+
+        graph->unmapAllPointers();
     }
 
     s_pathtracer->impl->gas_handles.resize(s_pathtracer->impl->vertices.size());
@@ -278,15 +253,15 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         OptixBuildInput triangle_input             = {};
         triangle_input.type                        = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
         triangle_input.triangleArray.vertexFormat  = OPTIX_VERTEX_FORMAT_FLOAT3;
-        triangle_input.triangleArray.numVertices   = s_pathtracer->impl->vertices[i].size();
-        CUdeviceptr ptr                            = (CUdeviceptr)s_pathtracer->impl->vertices[i].get();
+        triangle_input.triangleArray.numVertices   = s_pathtracer->impl->vertices[i].numel();
+        CUdeviceptr ptr                            = (CUdeviceptr)s_pathtracer->impl->vertices[i].data_ptr();
         triangle_input.triangleArray.vertexBuffers = &ptr;
         triangle_input.triangleArray.flags         = triangle_input_flags;
         triangle_input.triangleArray.numSbtRecords = 1;
 
         triangle_input.triangleArray.indexFormat      = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-        triangle_input.triangleArray.numIndexTriplets = s_pathtracer->impl->faces[i].size();
-        triangle_input.triangleArray.indexBuffer      = (CUdeviceptr)s_pathtracer->impl->faces[i].get();
+        triangle_input.triangleArray.numIndexTriplets = s_pathtracer->impl->faces[i].size(0);
+        triangle_input.triangleArray.indexBuffer      = (CUdeviceptr)s_pathtracer->impl->faces[i].data_ptr();
 
         OptixAccelBufferSizes gas_buffer_sizes;
         OPTIX_CHECK(optixAccelComputeMemoryUsage(s_pathtracer->impl->context,
@@ -480,10 +455,10 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     s_pathtracer->impl->hitgroup_records = atcg::DeviceBuffer<HitGroupSbtRecord>(num_instances);
     for(int i = 0; i < num_instances; ++i)
     {
-        hit_sbt[i].data.positions = s_pathtracer->impl->vertices[i].get();
-        hit_sbt[i].data.normals   = s_pathtracer->impl->normals[i].get();
-        hit_sbt[i].data.uvs       = s_pathtracer->impl->uvs[i].get();
-        hit_sbt[i].data.faces     = s_pathtracer->impl->faces[i].get();
+        hit_sbt[i].data.positions = (glm::vec3*)s_pathtracer->impl->vertices[i].data_ptr();
+        hit_sbt[i].data.normals   = (glm::vec3*)s_pathtracer->impl->normals[i].data_ptr();
+        hit_sbt[i].data.uvs       = (glm::vec3*)s_pathtracer->impl->uvs[i].data_ptr();
+        hit_sbt[i].data.faces     = (glm::u32vec3*)s_pathtracer->impl->faces[i].data_ptr();
         OPTIX_CHECK(optixSbtRecordPackHeader(s_pathtracer->impl->hitgroup_prog_group, &hit_sbt[i]));
         s_pathtracer->impl->hitgroup_records.upload(hit_sbt.data());
     }
