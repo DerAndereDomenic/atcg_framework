@@ -161,6 +161,7 @@ void Pathtracer::init()
     OPTIX_CHECK(optixDeviceContextCreate(cuCtx, &options, &s_pathtracer->impl->context));
 
     s_pathtracer->impl->raytracing_pipeline = atcg::make_ref<RayTracingPipeline>(s_pathtracer->impl->context);
+    s_pathtracer->impl->sbt                 = atcg::make_ref<ShaderBindingTable>(s_pathtracer->impl->context);
 }
 
 void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera)
@@ -321,6 +322,8 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         s_pathtracer->impl->raytracing_pipeline->addMissShader({ptx_filename, "__miss__ms"});
     OptixProgramGroup hitgroup_prog_group =
         s_pathtracer->impl->raytracing_pipeline->addTrianglesHitGroupShader({ptx_filename, "__closesthit__ch"}, {});
+
+    s_pathtracer->impl->raytracing_pipeline->createPipeline();
 
     // SBT
     s_pathtracer->impl->raygen_index = s_pathtracer->impl->sbt->addRaygenEntry(raygen_prog_group);

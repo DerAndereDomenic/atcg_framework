@@ -162,7 +162,7 @@ extern "C" __global__ void __raygen__rg()
 extern "C" __global__ void __closesthit__ch()
 {
     atcg::SurfaceInteraction* si = getPayloadDataPointer<atcg::SurfaceInteraction>();
-    const HitGroupData* sbt_data = reinterpret_cast<const HitGroupData*>(optixGetSbtDataPointer());
+    const HitGroupData* sbt_data = *reinterpret_cast<const HitGroupData**>(optixGetSbtDataPointer());
 
     float3 optix_world_origin = optixGetWorldRayOrigin();
     float3 optix_world_dir    = optixGetWorldRayDirection();
