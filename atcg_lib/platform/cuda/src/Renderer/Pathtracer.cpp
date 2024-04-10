@@ -309,16 +309,21 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
                                 ));
 
 
-    const std::string ptx_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/build/ptxmodules.dir/"
-                                     "Debug/raygen.ptx";
+    const std::string ptx_raygen_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/build/"
+                                            "ptxmodules.dir/"
+                                            "Debug/raygen.ptx";
+    const std::string ptx_bsdf_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/build/ptxmodules.dir/"
+                                          "Debug/bsdf.ptx";
     OptixProgramGroup raygen_prog_group =
-        s_pathtracer->impl->raytracing_pipeline->addRaygenShader({ptx_filename, "__raygen__rg"});
+        s_pathtracer->impl->raytracing_pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
     OptixProgramGroup miss_prog_group =
-        s_pathtracer->impl->raytracing_pipeline->addMissShader({ptx_filename, "__miss__ms"});
+        s_pathtracer->impl->raytracing_pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
     OptixProgramGroup hitgroup_prog_group =
-        s_pathtracer->impl->raytracing_pipeline->addTrianglesHitGroupShader({ptx_filename, "__closesthit__ch"}, {});
-    OptixProgramGroup bsdf_prog_group =
-        s_pathtracer->impl->raytracing_pipeline->addCallableShader({ptx_filename, "__direct_callable__sample_bsdf"});
+        s_pathtracer->impl->raytracing_pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__ch"},
+                                                                            {});
+    OptixProgramGroup bsdf_prog_group = s_pathtracer->impl->raytracing_pipeline->addCallableShader({ptx_bsdf_filename,
+                                                                                                    "__direct_callable_"
+                                                                                                    "_sample_bsdf"});
 
     s_pathtracer->impl->raytracing_pipeline->createPipeline();
 
