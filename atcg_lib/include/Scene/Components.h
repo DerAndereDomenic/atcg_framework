@@ -106,7 +106,9 @@ struct AccelerationStructureComponent
     torch::Tensor normals;
     torch::Tensor uvs;
     torch::Tensor faces;
-    nanort::BVHAccel<float> accel;
+
+    nanort::BVHAccel<float> bvh_accel;    // Used for CPU tracing
+    unsigned long long optix_accel;       // = OptixTraversableHandle
 };
 
 struct CameraComponent
