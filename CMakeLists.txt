@@ -199,11 +199,14 @@ if(ATCG_CUDA_BACKEND)
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
 
-    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
+    string(APPEND CMAKE_CUDA_FLAGS " --use_fast_math")
 
     add_library(ptxmodules OBJECT ${ptx_files})
-    set_property(TARGET ptxmodules PROPERTY CUDA_PTX_COMPILATION ON)
+    set_target_properties(ptxmodules PROPERTIES
+        CUDA_PTX_COMPILATION ON
+        CUDA_SEPARABLE_COMPILATION ON)
     target_compile_definitions(ptxmodules PUBLIC ATCG_CUDA_BACKEND _USE_MATH_DEFINES)
+    target_compile_options(ptxmodules PRIVATE -ptx)
     target_link_libraries(ptxmodules PRIVATE atcg_lib)
 endif()
 
