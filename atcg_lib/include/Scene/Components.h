@@ -109,6 +109,7 @@ struct AccelerationStructureComponent
 
     nanort::BVHAccel<float> bvh_accel;    // Used for CPU tracing
     unsigned long long optix_accel;       // = OptixTraversableHandle
+    atcg::DeviceBuffer<uint8_t> gas_buffer;
 };
 
 struct CameraComponent

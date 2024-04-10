@@ -42,14 +42,8 @@ public:
     atcg::dref_ptr<Params> launch_params;
 
     // Baked scene
-    std::vector<torch::Tensor> vertices;
-    std::vector<torch::Tensor> normals;
-    std::vector<torch::Tensor> uvs;
-    std::vector<torch::Tensor> faces;
     std::vector<atcg::DeviceBuffer<HitGroupData>> hit_data;
-    std::vector<atcg::DeviceBuffer<uint8_t>> gas_buffers;
     atcg::DeviceBuffer<uint8_t> ias_buffer;
-    std::vector<OptixTraversableHandle> gas_handles;
     OptixTraversableHandle ias_handle;
     atcg::ref_ptr<PerspectiveCamera> camera;
     bool hasSkybox = false;
@@ -185,6 +179,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     // Extract scene information
     auto view = scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
     std::vector<TransformComponent> transforms;
+    size_t num_instances = 0;
     for(auto e: view)
     {
         Entity entity(e, scene.get());
@@ -195,25 +190,17 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
         atcg::ref_ptr<Graph> graph = entity.getComponent<GeometryComponent>().graph;
 
-        auto d_vertices = graph->getDevicePositions().clone();
-        auto d_normals  = graph->getDeviceNormals().clone();
-        auto d_uvs      = graph->getDeviceUVs().clone();
-        auto d_faces    = graph->getDeviceFaces().clone();
+        if(!entity.hasComponent<AccelerationStructureComponent>())
+        {
+            entity.addComponent<AccelerationStructureComponent>();
+        }
+        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
 
-        s_pathtracer->impl->vertices.push_back(d_vertices);
-        s_pathtracer->impl->normals.push_back(d_normals);
-        s_pathtracer->impl->uvs.push_back(d_uvs);
-        s_pathtracer->impl->faces.push_back(d_faces);
+        acc.vertices = graph->getDevicePositions().clone();
+        acc.normals  = graph->getDeviceNormals().clone();
+        acc.uvs      = graph->getDeviceUVs().clone();
+        acc.faces    = graph->getDeviceFaces().clone();
 
-        graph->unmapAllPointers();
-    }
-
-    s_pathtracer->impl->gas_handles.resize(s_pathtracer->impl->vertices.size());
-
-    // Build Accel structure
-
-    for(int i = 0; i < s_pathtracer->impl->vertices.size(); ++i)
-    {
         OptixAccelBuildOptions accel_options = {};
         accel_options.buildFlags             = OPTIX_BUILD_FLAG_NONE;
         accel_options.operation              = OPTIX_BUILD_OPERATION_BUILD;
@@ -222,15 +209,15 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         OptixBuildInput triangle_input             = {};
         triangle_input.type                        = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
         triangle_input.triangleArray.vertexFormat  = OPTIX_VERTEX_FORMAT_FLOAT3;
-        triangle_input.triangleArray.numVertices   = s_pathtracer->impl->vertices[i].numel();
-        CUdeviceptr ptr                            = (CUdeviceptr)s_pathtracer->impl->vertices[i].data_ptr();
+        triangle_input.triangleArray.numVertices   = acc.vertices.size(0);
+        CUdeviceptr ptr                            = (CUdeviceptr)acc.vertices.data_ptr();
         triangle_input.triangleArray.vertexBuffers = &ptr;
         triangle_input.triangleArray.flags         = triangle_input_flags;
         triangle_input.triangleArray.numSbtRecords = 1;
 
         triangle_input.triangleArray.indexFormat      = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-        triangle_input.triangleArray.numIndexTriplets = s_pathtracer->impl->faces[i].size(0);
-        triangle_input.triangleArray.indexBuffer      = (CUdeviceptr)s_pathtracer->impl->faces[i].data_ptr();
+        triangle_input.triangleArray.numIndexTriplets = acc.faces.size(0);
+        triangle_input.triangleArray.indexBuffer      = (CUdeviceptr)acc.faces.data_ptr();
 
         OptixAccelBufferSizes gas_buffer_sizes;
         OPTIX_CHECK(optixAccelComputeMemoryUsage(s_pathtracer->impl->context,
@@ -240,8 +227,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
                                                  &gas_buffer_sizes));
 
         atcg::DeviceBuffer<uint8_t> d_temp_buffer_gas(gas_buffer_sizes.tempSizeInBytes);
-        auto gas_buffer = atcg::DeviceBuffer<uint8_t>(gas_buffer_sizes.outputSizeInBytes);
-        s_pathtracer->impl->gas_buffers.push_back(gas_buffer);
+        acc.gas_buffer = atcg::DeviceBuffer<uint8_t>(gas_buffer_sizes.outputSizeInBytes);
 
         OPTIX_CHECK(optixAccelBuild(s_pathtracer->impl->context,
                                     0,    // CUDA stream
@@ -250,20 +236,26 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
                                     1,    // num build inputs
                                     (CUdeviceptr)d_temp_buffer_gas.get(),
                                     gas_buffer_sizes.tempSizeInBytes,
-                                    (CUdeviceptr)gas_buffer.get(),
+                                    (CUdeviceptr)acc.gas_buffer.get(),
                                     gas_buffer_sizes.outputSizeInBytes,
-                                    &s_pathtracer->impl->gas_handles[i],    // Output handle to the struct
-                                    nullptr,                                // emitted property list
-                                    0));                                    // num emitted properties
+                                    &acc.optix_accel,    // Output handle to the struct
+                                    nullptr,             // emitted property list
+                                    0));                 // num emitted properties
+
+        graph->unmapAllPointers();
+
+        ++num_instances;
     }
 
     // IAS
-
-    const size_t num_instances = s_pathtracer->impl->vertices.size();
-
     std::vector<OptixInstance> optix_instances(num_instances);
-    for(size_t i = 0; i < num_instances; ++i)
+    int i = 0;
+    for(auto e: view)
     {
+        Entity entity(e, scene.get());
+
+        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+
         auto& optix_instance = optix_instances[i];
         memset(&optix_instance, 0, sizeof(OptixInstance));
 
@@ -271,10 +263,12 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         optix_instance.instanceId        = i;
         optix_instance.sbtOffset         = i;
         optix_instance.visibilityMask    = 1;
-        optix_instance.traversableHandle = s_pathtracer->impl->gas_handles[i];
+        optix_instance.traversableHandle = acc.optix_accel;
 
         reinterpret_cast<glm::mat3x4&>(optix_instance.transform) =
             glm::transpose(glm::mat4x3(transforms[i].getModel()));
+
+        ++i;
     }
 
     atcg::DeviceBuffer<OptixInstance> d_instances(num_instances);
@@ -329,13 +323,17 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     s_pathtracer->impl->raygen_index = s_pathtracer->impl->sbt->addRaygenEntry(raygen_prog_group);
     s_pathtracer->impl->sbt->addMissEntry(miss_prog_group);
 
-    for(int i = 0; i < s_pathtracer->impl->vertices.size(); ++i)
+    for(auto e: view)
     {
+        Entity entity(e, scene.get());
+
+        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+
         HitGroupData hit_data;
-        hit_data.positions = (glm::vec3*)s_pathtracer->impl->vertices[i].data_ptr();
-        hit_data.normals   = (glm::vec3*)s_pathtracer->impl->normals[i].data_ptr();
-        hit_data.uvs       = (glm::vec3*)s_pathtracer->impl->uvs[i].data_ptr();
-        hit_data.faces     = (glm::u32vec3*)s_pathtracer->impl->faces[i].data_ptr();
+        hit_data.positions = (glm::vec3*)acc.vertices.data_ptr();
+        hit_data.normals   = (glm::vec3*)acc.normals.data_ptr();
+        hit_data.uvs       = (glm::vec3*)acc.uvs.data_ptr();
+        hit_data.faces     = (glm::u32vec3*)acc.faces.data_ptr();
 
         DeviceBuffer<HitGroupData> d_hit_data(1);
         d_hit_data.upload(&hit_data);
