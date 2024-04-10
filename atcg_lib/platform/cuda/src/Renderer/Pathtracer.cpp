@@ -17,18 +17,8 @@
 #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
 
-#define OPTIX_CHECK(call)                                                                                              \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        OptixResult res = call;                                                                                        \
-        if(res != OPTIX_SUCCESS)                                                                                       \
-        {                                                                                                              \
-            std::stringstream ss;                                                                                      \
-            ss << "Optix error '" << optixGetErrorName(res) << "' at " << __FILE__ << ":" << __LINE__ << ": "          \
-               << #call;                                                                                               \
-            ATCG_ERROR(ss.str());                                                                                      \
-        }                                                                                                              \
-    } while(0)
+#include "Common.h"
+#include "RaytracingPipeline.h"
 
 namespace atcg
 {
@@ -45,12 +35,7 @@ public:
 
     // OptiX
     OptixDeviceContext context = nullptr;
-    OptixModule module         = nullptr;
-    OptixPipeline pipeline     = nullptr;
-
-    OptixProgramGroup raygen_prog_group   = nullptr;
-    OptixProgramGroup miss_prog_group     = nullptr;
-    OptixProgramGroup hitgroup_prog_group = nullptr;
+    atcg::ref_ptr<RayTracingPipeline> raytracing_pipeline;
 
     atcg::DeviceBuffer<MissSbtRecord> miss_record          = atcg::DeviceBuffer<MissSbtRecord>(1);
     atcg::DeviceBuffer<RayGenSbtRecord> raygen_record      = atcg::DeviceBuffer<RayGenSbtRecord>(1);
@@ -121,7 +106,7 @@ void Pathtracer::Impl::worker()
 
         launch_params.upload(&params);
 
-        OPTIX_CHECK(optixLaunch(pipeline,
+        OPTIX_CHECK(optixLaunch(raytracing_pipeline->getPipeline(),
                                 0,    // Default CUDA stream
                                 (CUdeviceptr)launch_params.get(),
                                 sizeof(Params),
@@ -174,25 +159,8 @@ void Pathtracer::init()
     CUcontext cuCtx                   = 0;
 
     OPTIX_CHECK(optixDeviceContextCreate(cuCtx, &options, &s_pathtracer->impl->context));
-}
 
-std::vector<char> readFile(const char* filename)
-{
-    std::ifstream input(filename, std::ios::binary);
-
-    if(!input.is_open())
-    {
-        throw std::runtime_error("readFile: Could not open file! " + std::string(filename));
-    }
-
-    input.seekg(0, std::ios::end);
-    size_t size = static_cast<size_t>(input.tellg());
-    input.seekg(0, std::ios::beg);
-
-    std::vector<char> buffer(size);
-    input.read(buffer.data(), buffer.size());
-
-    return buffer;
+    s_pathtracer->impl->raytracing_pipeline = atcg::make_ref<RayTracingPipeline>(s_pathtracer->impl->context);
 }
 
 void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera)
@@ -345,110 +313,22 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
                                 ));
 
 
-    // Modules, Program Groups, Pipelines
-    // Default options for our module.
-    OptixModuleCompileOptions module_compile_options = {};
-    module_compile_options.debugLevel                = OPTIX_COMPILE_DEBUG_LEVEL_FULL;
-    module_compile_options.optLevel                  = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
-
-    // Pipeline options must be consistent for all modules used in a
-    // single pipeline
-    OptixPipelineCompileOptions pipeline_compile_options      = {};
-    pipeline_compile_options.usesMotionBlur                   = false;
-    pipeline_compile_options.numAttributeValues               = 2;
-    pipeline_compile_options.numPayloadValues                 = 2;
-    pipeline_compile_options.pipelineLaunchParamsVariableName = "params";
-
-    // This option is important to ensure we compile code which is optimal
-    // for our scene hierarchy. We use a single GAS – no instancing or
-    // multi-level hierarchies
-    pipeline_compile_options.traversableGraphFlags = OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_ANY;
-
-    // Our device code uses 3 payload registers (r,g,b output value)
-    pipeline_compile_options.numPayloadValues = 3;
-
-    // This is the name of the param struct variable in our device code
-    pipeline_compile_options.pipelineLaunchParamsVariableName = "params";
-
-    auto ptx = readFile("C:/Users/Domenic/Documents/Repositories/atcg_framework/build/ptxmodules.dir/Debug/raygen.ptx");
-    char log[2048];
-    size_t sizeof_log = sizeof(log);
-
-    OPTIX_CHECK(optixModuleCreate(s_pathtracer->impl->context,
-                                  &module_compile_options,
-                                  &pipeline_compile_options,
-                                  ptx.data(),
-                                  ptx.size(),
-                                  log,
-                                  &sizeof_log,
-                                  &s_pathtracer->impl->module));
-    ATCG_TRACE(log);
-
-    OptixProgramGroupOptions program_group_options  = {};
-    OptixProgramGroupDesc raygen_prog_group_desc    = {};
-    raygen_prog_group_desc.kind                     = OPTIX_PROGRAM_GROUP_KIND_RAYGEN;
-    raygen_prog_group_desc.raygen.module            = s_pathtracer->impl->module;
-    raygen_prog_group_desc.raygen.entryFunctionName = "__raygen__rg";
-    OPTIX_CHECK(optixProgramGroupCreate(s_pathtracer->impl->context,
-                                        &raygen_prog_group_desc,
-                                        1,    // num program groups
-                                        &program_group_options,
-                                        log,
-                                        &sizeof_log,
-                                        &s_pathtracer->impl->raygen_prog_group));
-    ATCG_TRACE(log);
-
-    OptixProgramGroupDesc miss_prog_group_desc  = {};
-    miss_prog_group_desc.kind                   = OPTIX_PROGRAM_GROUP_KIND_MISS;
-    miss_prog_group_desc.miss.module            = s_pathtracer->impl->module;
-    miss_prog_group_desc.miss.entryFunctionName = "__miss__ms";
-    OPTIX_CHECK(optixProgramGroupCreate(s_pathtracer->impl->context,
-                                        &miss_prog_group_desc,
-                                        1,    // num program groups
-                                        &program_group_options,
-                                        log,
-                                        &sizeof_log,
-                                        &s_pathtracer->impl->miss_prog_group));
-    ATCG_TRACE(log);
-
-    OptixProgramGroupDesc hitgroup_prog_group_desc        = {};
-    hitgroup_prog_group_desc.kind                         = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
-    hitgroup_prog_group_desc.hitgroup.moduleCH            = s_pathtracer->impl->module;
-    hitgroup_prog_group_desc.hitgroup.entryFunctionNameCH = "__closesthit__ch";
-    // We could also specify an any-hit and/or intersection program here
-    OPTIX_CHECK(optixProgramGroupCreate(s_pathtracer->impl->context,
-                                        &hitgroup_prog_group_desc,
-                                        1,    // num program groups
-                                        &program_group_options,
-                                        log,
-                                        &sizeof_log,
-                                        &s_pathtracer->impl->hitgroup_prog_group));
-    ATCG_TRACE(log);
-
-    OptixProgramGroup program_groups[] = {s_pathtracer->impl->raygen_prog_group,
-                                          s_pathtracer->impl->miss_prog_group,
-                                          s_pathtracer->impl->hitgroup_prog_group};
-
-    OptixPipelineLinkOptions pipeline_link_options = {};
-    pipeline_link_options.maxTraceDepth            = 1;
-
-    OPTIX_CHECK(optixPipelineCreate(s_pathtracer->impl->context,
-                                    &pipeline_compile_options,
-                                    &pipeline_link_options,
-                                    program_groups,
-                                    sizeof(program_groups) / sizeof(program_groups[0]),
-                                    log,
-                                    &sizeof_log,
-                                    &s_pathtracer->impl->pipeline));
-    ATCG_TRACE(log);
+    const std::string ptx_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/build/ptxmodules.dir/"
+                                     "Debug/raygen.ptx";
+    OptixProgramGroup raygen_prog_group =
+        s_pathtracer->impl->raytracing_pipeline->addRaygenShader({ptx_filename, "__raygen__rg"});
+    OptixProgramGroup miss_prog_group =
+        s_pathtracer->impl->raytracing_pipeline->addMissShader({ptx_filename, "__miss__ms"});
+    OptixProgramGroup hitgroup_prog_group =
+        s_pathtracer->impl->raytracing_pipeline->addTrianglesHitGroupShader({ptx_filename, "__closesthit__ch"}, {});
 
     // SBT
     MissSbtRecord ms_sbt;
-    OPTIX_CHECK(optixSbtRecordPackHeader(s_pathtracer->impl->miss_prog_group, &ms_sbt));
+    OPTIX_CHECK(optixSbtRecordPackHeader(miss_prog_group, &ms_sbt));
     s_pathtracer->impl->miss_record.upload(&ms_sbt);
 
     RayGenSbtRecord raygen_sbt;
-    OPTIX_CHECK(optixSbtRecordPackHeader(s_pathtracer->impl->raygen_prog_group, &raygen_sbt));
+    OPTIX_CHECK(optixSbtRecordPackHeader(raygen_prog_group, &raygen_sbt));
     s_pathtracer->impl->raygen_record.upload(&raygen_sbt);
 
     std::vector<HitGroupSbtRecord> hit_sbt(num_instances);
@@ -459,7 +339,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         hit_sbt[i].data.normals   = (glm::vec3*)s_pathtracer->impl->normals[i].data_ptr();
         hit_sbt[i].data.uvs       = (glm::vec3*)s_pathtracer->impl->uvs[i].data_ptr();
         hit_sbt[i].data.faces     = (glm::u32vec3*)s_pathtracer->impl->faces[i].data_ptr();
-        OPTIX_CHECK(optixSbtRecordPackHeader(s_pathtracer->impl->hitgroup_prog_group, &hit_sbt[i]));
+        OPTIX_CHECK(optixSbtRecordPackHeader(hitgroup_prog_group, &hit_sbt[i]));
         s_pathtracer->impl->hitgroup_records.upload(hit_sbt.data());
     }
 
