@@ -155,7 +155,20 @@ RayTracingPipeline::Impl::Impl(OptixDeviceContext context)
 #endif
 }
 
-RayTracingPipeline::Impl::~Impl() {}
+RayTracingPipeline::Impl::~Impl()
+{
+    optixPipelineDestroy(pipeline);
+
+    for(const auto& [key, prog_group]: program_groups)
+    {
+        optixProgramGroupDestroy(prog_group);
+    }
+
+    for(const auto& [filename, module]: module_cache)
+    {
+        optixModuleDestroy(module);
+    }
+}
 
 std::vector<char> RayTracingPipeline::Impl::readFile(const char* filename)
 {
