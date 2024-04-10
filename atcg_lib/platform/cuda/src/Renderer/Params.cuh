@@ -2,6 +2,7 @@
 
 #include <optix.h>
 #include <Core/glm.h>
+#include <Renderer/BSDFModels.h>
 
 struct Params
 {
@@ -32,4 +33,6 @@ struct HitGroupData
     glm::vec3* normals;
     glm::vec3* uvs;
     glm::u32vec3* faces;
+
+    const atcg::BSDFVPtrTable* bsdf;
 };
