@@ -50,6 +50,7 @@ public:
     atcg::DeviceBuffer<glm::vec3> skybox_data;
     uint32_t skybox_width;
     uint32_t skybox_height;
+    atcg::dref_ptr<BSDFVPtrTable> bsdf;
 
     atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
 
@@ -316,12 +317,19 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         s_pathtracer->impl->raytracing_pipeline->addMissShader({ptx_filename, "__miss__ms"});
     OptixProgramGroup hitgroup_prog_group =
         s_pathtracer->impl->raytracing_pipeline->addTrianglesHitGroupShader({ptx_filename, "__closesthit__ch"}, {});
+    OptixProgramGroup bsdf_prog_group =
+        s_pathtracer->impl->raytracing_pipeline->addCallableShader({ptx_filename, "__direct_callable__sample_bsdf"});
 
     s_pathtracer->impl->raytracing_pipeline->createPipeline();
 
     // SBT
     s_pathtracer->impl->raygen_index = s_pathtracer->impl->sbt->addRaygenEntry(raygen_prog_group);
     s_pathtracer->impl->sbt->addMissEntry(miss_prog_group);
+    uint32_t bsdf_index = s_pathtracer->impl->sbt->addCallableEntry(bsdf_prog_group);
+
+    BSDFVPtrTable bsdf_table;
+    bsdf_table.sampleCallIndex = bsdf_index;
+    s_pathtracer->impl->bsdf.upload(&bsdf_table);
 
     for(auto e: view)
     {
@@ -334,6 +342,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         hit_data.normals   = (glm::vec3*)acc.normals.data_ptr();
         hit_data.uvs       = (glm::vec3*)acc.uvs.data_ptr();
         hit_data.faces     = (glm::u32vec3*)acc.faces.data_ptr();
+        hit_data.bsdf      = s_pathtracer->impl->bsdf.get();
 
         DeviceBuffer<HitGroupData> d_hit_data(1);
         d_hit_data.upload(&hit_data);

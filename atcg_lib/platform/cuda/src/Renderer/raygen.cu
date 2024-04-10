@@ -5,8 +5,7 @@
 #include "Params.cuh"
 
 #include <Math/Random.h>
-#include <Math/Tracing.h>
-#include <Renderer/BSDFModels.h>
+#include <Math/SurfaceInteraciton.h>
 
 extern "C"
 {
@@ -98,14 +97,7 @@ extern "C" __global__ void __raygen__rg()
         if(si.valid)
         {
             // PBR Sampling
-            glm::vec3 diffuse_color = glm::vec3(1);
-            float metallic          = 0.7f;
-            float roughness         = 0.2f;
-
-            glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
-
-            atcg::BSDFSamplingResult result =
-                atcg::sampleGGX(si, diffuse_color, metallic_color, metallic, roughness, rng);
+            auto result = si.bsdf->sampleBSDF(si, rng);
 
             if(result.sample_probability > 0.0f)
             {
@@ -201,6 +193,8 @@ extern "C" __global__ void __closesthit__ch()
     const glm::vec3 UV1 = sbt_data->uvs[triangle.y];
     const glm::vec3 UV2 = sbt_data->uvs[triangle.z];
     si->uv              = (1.0f - si->barys.x - si->barys.y) * UV0 + si->barys.x * UV1 + si->barys.y * UV2;
+
+    si->bsdf = sbt_data->bsdf;
 }
 
 extern "C" __global__ void __miss__ms()
@@ -208,4 +202,18 @@ extern "C" __global__ void __miss__ms()
     atcg::SurfaceInteraction* si = getPayloadDataPointer<atcg::SurfaceInteraction>();
 
     si->valid = false;
+}
+
+extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_bsdf(const atcg::SurfaceInteraction& si,
+                                                                              atcg::PCG32& rng)
+{
+    glm::vec3 diffuse_color = glm::vec3(1);
+    float metallic          = 0.7f;
+    float roughness         = 0.2f;
+
+    glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
+
+    atcg::BSDFSamplingResult result = atcg::sampleGGX(si, diffuse_color, metallic_color, metallic, roughness, rng);
+
+    return result;
 }
