@@ -19,6 +19,7 @@
 
 #include "Common.h"
 #include "RaytracingPipeline.h"
+#include "ShaderBindingTable.h"
 
 namespace atcg
 {
@@ -36,12 +37,8 @@ public:
     // OptiX
     OptixDeviceContext context = nullptr;
     atcg::ref_ptr<RayTracingPipeline> raytracing_pipeline;
+    atcg::ref_ptr<ShaderBindingTable> sbt;
 
-    atcg::DeviceBuffer<MissSbtRecord> miss_record          = atcg::DeviceBuffer<MissSbtRecord>(1);
-    atcg::DeviceBuffer<RayGenSbtRecord> raygen_record      = atcg::DeviceBuffer<RayGenSbtRecord>(1);
-    atcg::DeviceBuffer<HitGroupSbtRecord> hitgroup_records = atcg::DeviceBuffer<HitGroupSbtRecord>(1);
-
-    OptixShaderBindingTable sbt = {};
     atcg::dref_ptr<Params> launch_params;
 
     // Baked scene
@@ -49,6 +46,7 @@ public:
     std::vector<torch::Tensor> normals;
     std::vector<torch::Tensor> uvs;
     std::vector<torch::Tensor> faces;
+    std::vector<atcg::DeviceBuffer<HitGroupData>> hit_data;
     std::vector<atcg::DeviceBuffer<uint8_t>> gas_buffers;
     atcg::DeviceBuffer<uint8_t> ias_buffer;
     std::vector<OptixTraversableHandle> gas_handles;
@@ -75,6 +73,8 @@ public:
     std::thread worker_thread;
 
     std::atomic_bool running = false;
+
+    uint32_t raygen_index = 0;
 };
 
 void Pathtracer::Impl::worker()
@@ -110,7 +110,7 @@ void Pathtracer::Impl::worker()
                                 0,    // Default CUDA stream
                                 (CUdeviceptr)launch_params.get(),
                                 sizeof(Params),
-                                &sbt,
+                                sbt->getSBT(raygen_index),
                                 width,
                                 height,
                                 1));    // depth
@@ -323,33 +323,25 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         s_pathtracer->impl->raytracing_pipeline->addTrianglesHitGroupShader({ptx_filename, "__closesthit__ch"}, {});
 
     // SBT
-    MissSbtRecord ms_sbt;
-    OPTIX_CHECK(optixSbtRecordPackHeader(miss_prog_group, &ms_sbt));
-    s_pathtracer->impl->miss_record.upload(&ms_sbt);
+    s_pathtracer->impl->raygen_index = s_pathtracer->impl->sbt->addRaygenEntry(raygen_prog_group);
+    s_pathtracer->impl->sbt->addMissEntry(miss_prog_group);
 
-    RayGenSbtRecord raygen_sbt;
-    OPTIX_CHECK(optixSbtRecordPackHeader(raygen_prog_group, &raygen_sbt));
-    s_pathtracer->impl->raygen_record.upload(&raygen_sbt);
-
-    std::vector<HitGroupSbtRecord> hit_sbt(num_instances);
-    s_pathtracer->impl->hitgroup_records = atcg::DeviceBuffer<HitGroupSbtRecord>(num_instances);
-    for(int i = 0; i < num_instances; ++i)
+    for(int i = 0; i < s_pathtracer->impl->vertices.size(); ++i)
     {
-        hit_sbt[i].data.positions = (glm::vec3*)s_pathtracer->impl->vertices[i].data_ptr();
-        hit_sbt[i].data.normals   = (glm::vec3*)s_pathtracer->impl->normals[i].data_ptr();
-        hit_sbt[i].data.uvs       = (glm::vec3*)s_pathtracer->impl->uvs[i].data_ptr();
-        hit_sbt[i].data.faces     = (glm::u32vec3*)s_pathtracer->impl->faces[i].data_ptr();
-        OPTIX_CHECK(optixSbtRecordPackHeader(hitgroup_prog_group, &hit_sbt[i]));
-        s_pathtracer->impl->hitgroup_records.upload(hit_sbt.data());
+        HitGroupData hit_data;
+        hit_data.positions = (glm::vec3*)s_pathtracer->impl->vertices[i].data_ptr();
+        hit_data.normals   = (glm::vec3*)s_pathtracer->impl->normals[i].data_ptr();
+        hit_data.uvs       = (glm::vec3*)s_pathtracer->impl->uvs[i].data_ptr();
+        hit_data.faces     = (glm::u32vec3*)s_pathtracer->impl->faces[i].data_ptr();
+
+        DeviceBuffer<HitGroupData> d_hit_data(1);
+        d_hit_data.upload(&hit_data);
+        s_pathtracer->impl->hit_data.push_back(d_hit_data);
+
+        s_pathtracer->impl->sbt->addHitEntry(hitgroup_prog_group, d_hit_data.get());
     }
 
-    s_pathtracer->impl->sbt.raygenRecord                = (CUdeviceptr)s_pathtracer->impl->raygen_record.get();
-    s_pathtracer->impl->sbt.missRecordBase              = (CUdeviceptr)s_pathtracer->impl->miss_record.get();
-    s_pathtracer->impl->sbt.missRecordStrideInBytes     = sizeof(MissSbtRecord);
-    s_pathtracer->impl->sbt.missRecordCount             = 1;
-    s_pathtracer->impl->sbt.hitgroupRecordBase          = (CUdeviceptr)s_pathtracer->impl->hitgroup_records.get();
-    s_pathtracer->impl->sbt.hitgroupRecordStrideInBytes = sizeof(HitGroupSbtRecord);
-    s_pathtracer->impl->sbt.hitgroupRecordCount         = num_instances;
+    s_pathtracer->impl->sbt->createSBT();
 }
 
 void Pathtracer::start()
