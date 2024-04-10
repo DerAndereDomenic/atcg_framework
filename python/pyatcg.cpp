@@ -920,10 +920,10 @@ PYBIND11_MODULE(pyatcg, m)
         .def("selectEntity", &atcg::SceneHierarchyPanel::selectEntity, "entity"_a)
         .def("getSelectedEntity", &atcg::SceneHierarchyPanel::getSelectedEntity);
 
-    py::class_<atcg::Tracing::HitInfo>(m, "HitInfo")
-        .def_readonly("hit", &atcg::Tracing::HitInfo::hit)
-        .def_readonly("position", &atcg::Tracing::HitInfo::p)
-        .def_readonly("triangle_index", &atcg::Tracing::HitInfo::primitive_idx);
+    py::class_<atcg::SurfaceInteraction>(m, "SurfaceInteraction")
+        .def_readonly("hit", &atcg::SurfaceInteraction::valid)
+        .def_readonly("position", &atcg::SurfaceInteraction::position)
+        .def_readonly("triangle_index", &atcg::SurfaceInteraction::primitive_idx);
 
     m.def("prepareAccelerationStructure", &atcg::Tracing::prepareAccelerationStructure);
     m.def("traceRay", atcg::Tracing::traceRay);
@@ -951,8 +951,8 @@ PYBIND11_MODULE(pyatcg, m)
 
                   auto info = atcg::Tracing::traceRay(entity, o, d, t_min, t_max);
 
-                  result_hit_ptr[i] = info.hit;
-                  result_p_ptr[i]   = info.p;
+                  result_hit_ptr[i] = info.valid;
+                  result_p_ptr[i]   = info.position;
                   result_idx_ptr[i] = info.primitive_idx;
               }
 

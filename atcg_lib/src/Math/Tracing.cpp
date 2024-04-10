@@ -31,21 +31,10 @@ void Tracing::prepareAccelerationStructure(Entity entity)
     bool vertices_mapped = mesh->getVerticesBuffer()->isHostMapped();
     bool faces_mapped    = mesh->getFaceIndexBuffer()->isHostMapped();
 
-    Vertex* vertices    = mesh->getVerticesBuffer()->getHostPointer<Vertex>();
-    glm::u32vec3* faces = mesh->getFaceIndexBuffer()->getHostPointer<glm::u32vec3>();
-
-    acc_component.vertices.resize(mesh->n_vertices());
-    acc_component.normals.resize(mesh->n_vertices());
-    acc_component.uv.resize(mesh->n_vertices());
-    acc_component.faces.resize(mesh->n_faces());
-
-    for(uint32_t i = 0; i < mesh->n_vertices(); ++i)
-    {
-        acc_component.vertices[i] = vertices[i].position;
-        acc_component.normals[i]  = vertices[i].normal;
-        acc_component.uv[i]       = vertices[i].uv;
-    }
-    memcpy(acc_component.faces.data(), faces, sizeof(glm::u32vec3) * mesh->n_faces());
+    acc_component.vertices = mesh->getHostPositions().clone();
+    acc_component.normals  = mesh->getHostNormals().clone();
+    acc_component.uvs      = mesh->getHostUVs().clone();
+    acc_component.faces    = mesh->getHostFaces().clone();
 
     // Restore original mapping relation
     if(!vertices_mapped)
@@ -57,11 +46,11 @@ void Tracing::prepareAccelerationStructure(Entity entity)
         mesh->getFaceIndexBuffer()->unmapHostPointers();
     }
 
-    nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.data()),
-                                              reinterpret_cast<const uint32_t*>(acc_component.faces.data()),
+    nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.data_ptr()),
+                                              reinterpret_cast<const uint32_t*>(acc_component.faces.data_ptr()),
                                               sizeof(float) * 3);
-    nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const float*>(acc_component.vertices.data()),
-                                                 reinterpret_cast<const uint32_t*>(acc_component.faces.data()),
+    nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const float*>(acc_component.vertices.data_ptr()),
+                                                 reinterpret_cast<const uint32_t*>(acc_component.faces.data_ptr()),
                                                  sizeof(float) * 3);
     bool ret = acc_component.accel.Build(mesh->n_faces(), triangle_mesh, triangle_pred);
     assert(ret);
@@ -88,7 +77,7 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
     return traceRay(acc_component.accel,
                     acc_component.vertices,
                     acc_component.normals,
-                    acc_component.uv,
+                    acc_component.uvs,
                     acc_component.faces,
                     ray_origin,
                     ray_dir,
@@ -97,10 +86,10 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
 }
 
 SurfaceInteraction Tracing::traceRay(const nanort::BVHAccel<float>& accel,
-                                     const std::vector<glm::vec3>& positions,
-                                     const std::vector<glm::vec3>& normals,
-                                     const std::vector<glm::vec3>& uvs,
-                                     const std::vector<glm::u32vec3>& faces,
+                                     const torch::Tensor& positions,
+                                     const torch::Tensor& normals,
+                                     const torch::Tensor& uvs,
+                                     const torch::Tensor& faces,
                                      const glm::vec3& origin,
                                      const glm::vec3& dir,
                                      float tmin,
@@ -116,8 +105,8 @@ SurfaceInteraction Tracing::traceRay(const nanort::BVHAccel<float>& accel,
     ray.min_t = tmin;
     ray.max_t = tmax;
 
-    nanort::TriangleIntersector<> triangle_intersector(reinterpret_cast<const float*>(positions.data()),
-                                                       reinterpret_cast<const uint32_t*>(faces.data()),
+    nanort::TriangleIntersector<> triangle_intersector(reinterpret_cast<const float*>(positions.data_ptr()),
+                                                       reinterpret_cast<const uint32_t*>(faces.data_ptr()),
                                                        sizeof(float) * 3);
     nanort::TriangleIntersection<> isect;
     bool hit = accel.Traverse(ray, triangle_intersector, &isect);
@@ -132,11 +121,37 @@ SurfaceInteraction Tracing::traceRay(const nanort::BVHAccel<float>& accel,
     si.barys         = glm::vec2(isect.u, isect.v);
     si.primitive_idx = isect.prim_id;
 
-    glm::u32vec3 face = faces[isect.prim_id];
+    glm::u32vec3 face = glm::u32vec3(faces.index({(int)isect.prim_id, 0}).item<uint32_t>(),
+                                     faces.index({(int)isect.prim_id, 1}).item<uint32_t>(),
+                                     faces.index({(int)isect.prim_id, 2}).item<uint32_t>());
 
-    si.normal = (1.0f - isect.u - isect.v) * normals[face.x] + isect.u * normals[face.y] + isect.v * normals[face.z];
+    glm::vec3 n1 = glm::vec3(normals.index({(int)face.x, 0}).item<float>(),
+                             normals.index({(int)face.x, 1}).item<float>(),
+                             normals.index({(int)face.x, 2}).item<float>());
 
-    si.uv                = (1.0f - isect.u - isect.v) * uvs[face.x] + isect.u * uvs[face.y] + isect.v * uvs[face.z];
+    glm::vec3 n2 = glm::vec3(normals.index({(int)face.y, 0}).item<float>(),
+                             normals.index({(int)face.y, 1}).item<float>(),
+                             normals.index({(int)face.y, 2}).item<float>());
+
+    glm::vec3 n3 = glm::vec3(normals.index({(int)face.z, 0}).item<float>(),
+                             normals.index({(int)face.z, 1}).item<float>(),
+                             normals.index({(int)face.z, 2}).item<float>());
+
+    si.normal = (1.0f - isect.u - isect.v) * n1 + isect.u * n2 + isect.v * n3;
+
+    glm::vec3 uv1 = glm::vec3(uvs.index({(int)face.x, 0}).item<float>(),
+                              uvs.index({(int)face.x, 1}).item<float>(),
+                              uvs.index({(int)face.x, 2}).item<float>());
+
+    glm::vec3 uv2 = glm::vec3(uvs.index({(int)face.y, 0}).item<float>(),
+                              uvs.index({(int)face.y, 1}).item<float>(),
+                              uvs.index({(int)face.y, 2}).item<float>());
+
+    glm::vec3 uv3 = glm::vec3(uvs.index({(int)face.z, 0}).item<float>(),
+                              uvs.index({(int)face.z, 1}).item<float>(),
+                              uvs.index({(int)face.z, 2}).item<float>());
+
+    si.uv                = (1.0f - isect.u - isect.v) * uv1 + isect.u * uv2 + isect.v * uv3;
     si.incoming_distance = isect.t;
 
     return si;

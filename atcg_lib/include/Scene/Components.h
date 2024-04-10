@@ -102,10 +102,10 @@ struct AccelerationStructureComponent
     AccelerationStructureComponent() = default;
 
     // Don't retrieve this from opengl each time used
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec3> normals;
-    std::vector<glm::vec3> uv;
-    std::vector<glm::u32vec3> faces;
+    torch::Tensor vertices;
+    torch::Tensor normals;
+    torch::Tensor uvs;
+    torch::Tensor faces;
     nanort::BVHAccel<float> accel;
 };
 

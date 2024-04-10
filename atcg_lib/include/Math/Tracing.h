@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nanort.h>
+#include <torch/types.h>
 
 namespace atcg
 {
@@ -62,10 +63,10 @@ traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, f
  * @return The intersection information
  */
 SurfaceInteraction traceRay(const nanort::BVHAccel<float>& accel,
-                            const std::vector<glm::vec3>& positions,
-                            const std::vector<glm::vec3>& normals,
-                            const std::vector<glm::vec3>& uvs,
-                            const std::vector<glm::u32vec3>& faces,
+                            const torch::Tensor& positions,
+                            const torch::Tensor& normals,
+                            const torch::Tensor& uvs,
+                            const torch::Tensor& faces,
                             const glm::vec3& origin,
                             const glm::vec3& dir,
                             float tmin,
