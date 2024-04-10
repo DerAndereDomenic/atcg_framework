@@ -2,6 +2,8 @@
 
 #include "Common.h"
 
+#include <optix_stubs.h>
+
 namespace atcg
 {
 template<typename T>
@@ -195,7 +197,7 @@ void ShaderBindingTable::createSBT()
     }
 }
 
-const OptixShaderBindingTable *ShaderBindingTable::getSBT(uint32_t raygen_index = 0) const
+const OptixShaderBindingTable *ShaderBindingTable::getSBT(uint32_t raygen_index) const
 {
     return raygen_index < impl->sbt.size() ? &impl->sbt[raygen_index] : nullptr;
 }

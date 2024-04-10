@@ -4,6 +4,8 @@
 
 #include <unordered_map>
 
+#include <optix_stubs.h>
+
 struct OptixProgramGroupEntryKey
 {
     OptixModule module = nullptr;
@@ -131,8 +133,6 @@ public:
 
     OptixPipeline pipeline;
 };
-
-RayTracingPipeline::Impl::Impl() {}
 
 RayTracingPipeline::Impl::Impl(OptixDeviceContext context)
 {
