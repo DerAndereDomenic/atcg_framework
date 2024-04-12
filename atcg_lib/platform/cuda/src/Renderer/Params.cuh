@@ -2,7 +2,7 @@
 
 #include <optix.h>
 #include <Core/glm.h>
-#include <Renderer/BSDFModels.h>
+#include <Renderer/BSDFModels.cuh>
 
 struct Params
 {

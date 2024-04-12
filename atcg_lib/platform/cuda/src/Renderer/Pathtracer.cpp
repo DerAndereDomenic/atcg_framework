@@ -4,7 +4,7 @@
 #include <Math/Tracing.h>
 #include <DataStructure/Timer.h>
 #include <Math/Random.h>
-#include <Renderer/BSDFModels.h>
+#include <Renderer/BSDFModels.cuh>
 
 #include <Scene/Entity.h>
 #include "Params.cuh"

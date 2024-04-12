@@ -5,7 +5,7 @@
 #include <Math/Random.h>
 #include <Math/SurfaceInteraciton.h>
 
-#include <Renderer/BSDFModels.h>
+#include <Renderer/BSDFModels.cuh>
 
 extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_bsdf(const atcg::SurfaceInteraction& si,
                                                                               atcg::PCG32& rng)
