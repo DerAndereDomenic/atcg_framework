@@ -2,7 +2,7 @@
 
 #include <Core/CUDA.h>
 
-#include "Params.cuh"
+#include <Renderer/Params.cuh>
 
 #include <Math/Random.h>
 #include <Math/SurfaceInteraciton.h>

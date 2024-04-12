@@ -7,7 +7,7 @@
 #include <Renderer/BSDFModels.cuh>
 
 #include <Scene/Entity.h>
-#include "Params.cuh"
+#include <Renderer/Params.cuh>
 
 #include <thread>
 #include <mutex>
@@ -17,9 +17,9 @@
 #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
 
-#include "Common.h"
-#include "RaytracingPipeline.h"
-#include "ShaderBindingTable.h"
+#include <Renderer/Common.h>
+#include <Renderer/RaytracingPipeline.h>
+#include <Renderer/ShaderBindingTable.h>
 
 namespace atcg
 {
