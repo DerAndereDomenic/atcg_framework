@@ -34,9 +34,9 @@ public:
                         const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    torch::Tensor _diffuse_texture;
-    torch::Tensor _metallic_texture;
-    torch::Tensor _roughness_texture;
+    cudaArray_t _diffuse_texture;
+    cudaArray_t _metallic_texture;
+    cudaArray_t _roughness_texture;
 
     atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
 };

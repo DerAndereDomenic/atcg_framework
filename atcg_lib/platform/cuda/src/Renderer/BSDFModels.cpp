@@ -5,77 +5,131 @@ namespace atcg
 {
 PBRBSDF::PBRBSDF(const Material& material)
 {
-    _diffuse_texture   = material.getDiffuseTexture()->getData(atcg::GPU).clone();
-    _metallic_texture  = material.getMetallicTexture()->getData(atcg::GPU).clone();
-    _roughness_texture = material.getRoughnessTexture()->getData(atcg::GPU).clone();
+    auto diffuse_texture   = material.getDiffuseTexture()->getData(atcg::GPU);
+    auto metallic_texture  = material.getMetallicTexture()->getData(atcg::GPU);
+    auto roughness_texture = material.getRoughnessTexture()->getData(atcg::GPU);
 
     PBRBSDFData data;
 
     // Diffuse texture
     {
+        cudaChannelFormatDesc format = {};
+        format.f                     = cudaChannelFormatKindUnsigned;
+        format.x                     = 8;
+        format.y                     = 8;
+        format.z                     = 8;
+        format.w                     = 8;
+
+        cudaExtent extent = {};
+        extent.width      = diffuse_texture.size(1);
+        extent.height     = diffuse_texture.size(0);
+        extent.depth      = 0;
+
+        CUDA_SAFE_CALL(cudaMalloc3DArray(&_diffuse_texture, &format, extent));
+
+        CUDA_SAFE_CALL(
+            cudaMemcpy2DToArray(_diffuse_texture,
+                                0,
+                                0,
+                                diffuse_texture.contiguous().data_ptr(),
+                                diffuse_texture.size(1) * diffuse_texture.size(2) * diffuse_texture.element_size(),
+                                diffuse_texture.size(1) * diffuse_texture.size(2) * diffuse_texture.element_size(),
+                                diffuse_texture.size(0),
+                                cudaMemcpyDeviceToDevice));
+
         cudaTextureDesc desc  = {};
-        desc.normalizedCoords = 0;
+        desc.normalizedCoords = 1;
         desc.addressMode[0]   = cudaAddressModeClamp;
         desc.addressMode[1]   = cudaAddressModeClamp;
         desc.addressMode[2]   = cudaAddressModeClamp;
-        desc.readMode         = cudaReadModeElementType;
-        desc.filterMode       = cudaFilterModePoint;
+        desc.readMode         = cudaReadModeNormalizedFloat;
+        desc.filterMode       = cudaFilterModeLinear;
 
-        cudaResourceDesc resDesc       = {};
-        resDesc.resType                = cudaResourceTypeLinear;
-        resDesc.res.linear.devPtr      = _diffuse_texture.data_ptr();
-        resDesc.res.linear.sizeInBytes = _diffuse_texture.numel() * _diffuse_texture.element_size();
-        resDesc.res.linear.desc.f      = cudaChannelFormatKindUnsigned;
-        resDesc.res.linear.desc.x      = 8;
-        resDesc.res.linear.desc.y      = 8;
-        resDesc.res.linear.desc.z      = 8;
-        resDesc.res.linear.desc.w      = 8;
+        cudaResourceDesc resDesc = {};
+        resDesc.resType          = cudaResourceTypeArray;
+        resDesc.res.array.array  = _diffuse_texture;
 
         CUDA_SAFE_CALL(cudaCreateTextureObject(&data.diffuse_texture, &resDesc, &desc, nullptr));
     }
 
     // Roughness texture
     {
+        cudaChannelFormatDesc format = {};
+        format.f                     = cudaChannelFormatKindFloat;
+        format.x                     = 32;
+        format.y                     = 0;
+        format.z                     = 0;
+        format.w                     = 0;
+
+        cudaExtent extent = {};
+        extent.width      = roughness_texture.size(1);
+        extent.height     = roughness_texture.size(0);
+        extent.depth      = 0;
+
+        CUDA_SAFE_CALL(cudaMalloc3DArray(&_roughness_texture, &format, extent));
+
+        CUDA_SAFE_CALL(cudaMemcpy2DToArray(
+            _roughness_texture,
+            0,
+            0,
+            roughness_texture.contiguous().data_ptr(),
+            roughness_texture.size(1) * roughness_texture.size(2) * roughness_texture.element_size(),
+            roughness_texture.size(1) * roughness_texture.size(2) * roughness_texture.element_size(),
+            roughness_texture.size(0),
+            cudaMemcpyDeviceToDevice));
+
         cudaTextureDesc desc  = {};
-        desc.normalizedCoords = 0;
+        desc.normalizedCoords = 1;
         desc.addressMode[0]   = cudaAddressModeClamp;
         desc.addressMode[1]   = cudaAddressModeClamp;
         desc.addressMode[2]   = cudaAddressModeClamp;
         desc.readMode         = cudaReadModeElementType;
         desc.filterMode       = cudaFilterModeLinear;
 
-        cudaResourceDesc resDesc       = {};
-        resDesc.resType                = cudaResourceTypeLinear;
-        resDesc.res.linear.devPtr      = _roughness_texture.data_ptr();
-        resDesc.res.linear.sizeInBytes = _roughness_texture.numel() * _roughness_texture.element_size();
-        resDesc.res.linear.desc.f      = cudaChannelFormatKindFloat;
-        resDesc.res.linear.desc.x      = 32;
-        resDesc.res.linear.desc.y      = 0;
-        resDesc.res.linear.desc.z      = 0;
-        resDesc.res.linear.desc.w      = 0;
+        cudaResourceDesc resDesc = {};
+        resDesc.resType          = cudaResourceTypeArray;
+        resDesc.res.array.array  = _roughness_texture;
 
         CUDA_SAFE_CALL(cudaCreateTextureObject(&data.roughness_texture, &resDesc, &desc, nullptr));
     }
 
     // Metallic texture
     {
+        cudaChannelFormatDesc format = {};
+        format.f                     = cudaChannelFormatKindFloat;
+        format.x                     = 32;
+        format.y                     = 0;
+        format.z                     = 0;
+        format.w                     = 0;
+
+        cudaExtent extent = {};
+        extent.width      = metallic_texture.size(1);
+        extent.height     = metallic_texture.size(0);
+        extent.depth      = 0;
+
+        CUDA_SAFE_CALL(cudaMalloc3DArray(&_metallic_texture, &format, extent));
+
+        CUDA_SAFE_CALL(
+            cudaMemcpy2DToArray(_metallic_texture,
+                                0,
+                                0,
+                                metallic_texture.contiguous().data_ptr(),
+                                metallic_texture.size(1) * metallic_texture.size(2) * metallic_texture.element_size(),
+                                metallic_texture.size(1) * metallic_texture.size(2) * metallic_texture.element_size(),
+                                metallic_texture.size(0),
+                                cudaMemcpyDeviceToDevice));
+
         cudaTextureDesc desc  = {};
-        desc.normalizedCoords = 0;
+        desc.normalizedCoords = 1;
         desc.addressMode[0]   = cudaAddressModeClamp;
         desc.addressMode[1]   = cudaAddressModeClamp;
         desc.addressMode[2]   = cudaAddressModeClamp;
         desc.readMode         = cudaReadModeElementType;
         desc.filterMode       = cudaFilterModeLinear;
 
-        cudaResourceDesc resDesc       = {};
-        resDesc.resType                = cudaResourceTypeLinear;
-        resDesc.res.linear.devPtr      = _metallic_texture.data_ptr();
-        resDesc.res.linear.sizeInBytes = _metallic_texture.numel() * _metallic_texture.element_size();
-        resDesc.res.linear.desc.f      = cudaChannelFormatKindFloat;
-        resDesc.res.linear.desc.x      = 32;
-        resDesc.res.linear.desc.y      = 0;
-        resDesc.res.linear.desc.z      = 0;
-        resDesc.res.linear.desc.w      = 0;
+        cudaResourceDesc resDesc = {};
+        resDesc.resType          = cudaResourceTypeArray;
+        resDesc.res.array.array  = _metallic_texture;
 
         CUDA_SAFE_CALL(cudaCreateTextureObject(&data.metallic_texture, &resDesc, &desc, nullptr));
     }

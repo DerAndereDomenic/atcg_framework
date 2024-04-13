@@ -12,11 +12,10 @@ extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_bsdf(co
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
-    uchar4 color_u = tex1Dfetch<uchar4>(sbt_data->diffuse_texture, 0);
-    glm::vec3 diffuse_color =
-        glm::vec3((float)color_u.x / 255.0f, (float)color_u.y / 255.0f, (float)color_u.z / 255.0f);
-    float metallic  = tex1Dfetch<float>(sbt_data->metallic_texture, 0);
-    float roughness = tex1Dfetch<float>(sbt_data->roughness_texture, 0);
+    float4 color_u          = tex2D<float4>(sbt_data->diffuse_texture, si.uv.x, si.uv.y);
+    glm::vec3 diffuse_color = glm::vec3(color_u.x, color_u.y, color_u.z);
+    float metallic          = tex2D<float>(sbt_data->metallic_texture, si.uv.x, si.uv.y);
+    float roughness         = tex2D<float>(sbt_data->roughness_texture, si.uv.x, si.uv.y);
 
     glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
 
