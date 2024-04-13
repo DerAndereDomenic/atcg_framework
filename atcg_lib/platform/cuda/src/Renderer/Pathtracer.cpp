@@ -20,6 +20,7 @@
 #include <Renderer/Common.h>
 #include <Renderer/RaytracingPipeline.h>
 #include <Renderer/ShaderBindingTable.h>
+#include <Renderer/BSDFModels.h>
 
 namespace atcg
 {
@@ -50,7 +51,7 @@ public:
     atcg::DeviceBuffer<glm::vec3> skybox_data;
     uint32_t skybox_width;
     uint32_t skybox_height;
-    atcg::dref_ptr<BSDFVPtrTable> bsdf;
+    std::vector<atcg::ref_ptr<PBRBSDF>> bsdfs;
 
     atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
 
@@ -189,6 +190,12 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
         transforms.push_back(transform);
 
+        atcg::ref_ptr<PBRBSDF> bsdf =
+            atcg::make_ref<PBRBSDF>(entity.getComponent<atcg::MeshRenderComponent>().material);
+        bsdf->initializeBSDF(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+
+        s_pathtracer->impl->bsdfs.push_back(bsdf);
+
         atcg::ref_ptr<Graph> graph = entity.getComponent<GeometryComponent>().graph;
 
         if(!entity.hasComponent<AccelerationStructureComponent>())
@@ -321,21 +328,14 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     OptixProgramGroup hitgroup_prog_group =
         s_pathtracer->impl->raytracing_pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__ch"},
                                                                             {});
-    OptixProgramGroup bsdf_prog_group = s_pathtracer->impl->raytracing_pipeline->addCallableShader({ptx_bsdf_filename,
-                                                                                                    "__direct_callable_"
-                                                                                                    "_sample_bsdf"});
 
     s_pathtracer->impl->raytracing_pipeline->createPipeline();
 
     // SBT
     s_pathtracer->impl->raygen_index = s_pathtracer->impl->sbt->addRaygenEntry(raygen_prog_group);
     s_pathtracer->impl->sbt->addMissEntry(miss_prog_group);
-    uint32_t bsdf_index = s_pathtracer->impl->sbt->addCallableEntry(bsdf_prog_group);
 
-    BSDFVPtrTable bsdf_table;
-    bsdf_table.sampleCallIndex = bsdf_index;
-    s_pathtracer->impl->bsdf.upload(&bsdf_table);
-
+    i = 0;
     for(auto e: view)
     {
         Entity entity(e, scene.get());
@@ -347,13 +347,14 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         hit_data.normals   = (glm::vec3*)acc.normals.data_ptr();
         hit_data.uvs       = (glm::vec3*)acc.uvs.data_ptr();
         hit_data.faces     = (glm::u32vec3*)acc.faces.data_ptr();
-        hit_data.bsdf      = s_pathtracer->impl->bsdf.get();
+        hit_data.bsdf      = s_pathtracer->impl->bsdfs[i]->getBSDFVPtrTable();
 
         DeviceBuffer<HitGroupData> d_hit_data(1);
         d_hit_data.upload(&hit_data);
         s_pathtracer->impl->hit_data.push_back(d_hit_data);
 
         s_pathtracer->impl->sbt->addHitEntry(hitgroup_prog_group, d_hit_data.get());
+        ++i;
     }
 
     s_pathtracer->impl->sbt->createSBT();
