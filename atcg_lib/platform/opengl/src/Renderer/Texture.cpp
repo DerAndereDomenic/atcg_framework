@@ -754,7 +754,7 @@ torch::Tensor Texture2D::getData(const torch::Device& device) const
                   detail::toGLformat(_spec.format),
                   detail::toGLtype(_spec.format),
                   result.data_ptr());
-    return result;
+    return result.to(device);
 }
 
 void Texture2D::use(const uint32_t& slot) const
@@ -988,7 +988,7 @@ torch::Tensor Texture3D::getData(const torch::Device& device) const
                   detail::toGLformat(_spec.format),
                   detail::toGLtype(_spec.format),
                   result.data_ptr());
-    return result;
+    return result.to(device);
 }
 
 void Texture3D::use(const uint32_t& slot) const
