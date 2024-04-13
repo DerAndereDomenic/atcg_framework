@@ -14,15 +14,18 @@ void convertToTextureObject(const torch::Tensor& texture_data,
     torch::Tensor data = texture_data;
     if(texture_data.size(2) == 2)
     {
-        data = torch::cat({texture_data, torch::zeros_like(texture_data)});
+        data = torch::cat({texture_data, torch::zeros_like(texture_data)}, -1);
     }
 
     if(texture_data.size(2) == 3)
     {
-        data = torch::cat(
-            {texture_data,
-             torch::zeros_like(texture_data.index({torch::indexing::Slice(), torch::indexing::Slice(), 0}))});
+        data =
+            torch::cat({texture_data,
+                        torch::zeros_like(
+                            texture_data.index({torch::indexing::Slice(), torch::indexing::Slice(), 0}).unsqueeze(-1))},
+                       -1);
     }
+
 
     uint32_t num_channels = data.size(2);
     bool isFloat          = data.dtype() == torch::kFloat32;
