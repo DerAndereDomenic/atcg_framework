@@ -10,6 +10,13 @@
 namespace atcg
 {
 
+    struct PBRBSDFData
+    {
+        cudaTextureObject_t diffuse_texture;
+        cudaTextureObject_t metallic_texture;
+        cudaTextureObject_t roughness_texture;
+    };
+
 inline ATCG_HOST_DEVICE glm::mat3 compute_local_frame(const glm::vec3& localZ)
 {
     float x  = localZ.x;

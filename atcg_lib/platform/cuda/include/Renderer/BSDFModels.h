@@ -1,0 +1,44 @@
+#pragma once
+
+#include <Renderer/BSDFModels.cuh>
+#include <Renderer/ShaderBindingTable.h>
+#include <Renderer/RaytracingPipeline.h>
+#include <Renderer/Material.h>
+
+namespace atcg
+{
+class BSDF
+{
+public:
+    BSDF() = default;
+
+    virtual ~BSDF() = default;
+
+    inline const BSDFVPtrTable* getBSDFVPtrTable() const { return _vptr_table.get(); }
+
+    virtual void initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
+
+protected:
+    atcg::dref_ptr<BSDFVPtrTable> _vptr_table;
+};
+
+class PBRBSDF : public BSDF
+{
+public:
+    PBRBSDF(const Material& material);
+
+    ~PBRBSDF();
+
+    void initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                        const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
+private:
+    torch::Tensor _diffuse_texture;
+    torch::Tensor _metallic_texture;
+    torch::Tensor _roughness_texture;
+
+    atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
+};
+
+}    // namespace atcg
