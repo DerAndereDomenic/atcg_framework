@@ -84,7 +84,20 @@ PBRBSDF::PBRBSDF(const Material& material)
     _bsdf_data_buffer.upload(&data);
 }
 
-PBRBSDF::~PBRBSDF() {}
+PBRBSDF::~PBRBSDF()
+{
+    PBRBSDFData data;
+
+    _bsdf_data_buffer.download(&data);
+
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.diffuse_texture));
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.metallic_texture));
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.roughness_texture));
+
+    CUDA_SAFE_CALL(cudaFreeArray(_diffuse_texture));
+    CUDA_SAFE_CALL(cudaFreeArray(_metallic_texture));
+    CUDA_SAFE_CALL(cudaFreeArray(_roughness_texture));
+}
 
 void PBRBSDF::initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                              const atcg::ref_ptr<ShaderBindingTable>& sbt)
