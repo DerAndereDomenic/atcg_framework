@@ -56,8 +56,8 @@ public:
     atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
 
     // Basic swap chain
-    uint32_t width  = 512;
-    uint32_t height = 512;
+    uint32_t width  = 1024;
+    uint32_t height = 1024;
     glm::u8vec4* output_buffer;
     uint8_t swap_index = 1;
     atcg::DeviceBuffer<glm::u8vec4> swap_chain_buffer;
