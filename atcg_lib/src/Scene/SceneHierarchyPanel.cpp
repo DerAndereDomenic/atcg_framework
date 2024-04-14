@@ -55,6 +55,10 @@ void displayMaterial(const std::string& key, Material& material)
 
     ImGui::Text("Material");
 
+    ImGui::Checkbox("Glass", &material.glass);
+
+    ImGui::DragFloat("IoR", &material.ior, 0.005f, 0.3f, 3.0f);
+
     {
         auto spec        = material.getDiffuseTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;

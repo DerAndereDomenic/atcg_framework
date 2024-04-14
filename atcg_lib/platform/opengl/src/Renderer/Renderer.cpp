@@ -304,6 +304,10 @@ void Renderer::Impl::setMaterial(const Material& material, const atcg::ref_ptr<S
     shader->setInt("lut", Renderer::Impl::TextureBindings::LUT_TEXTURE);
 
     shader->setInt("use_ibl", has_skybox);
+
+    shader->setInt("is_glass", material.glass);
+
+    shader->setFloat("ior", material.ior);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)

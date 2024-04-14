@@ -31,6 +31,10 @@ struct Material
 
     void removeNormalMap();
 
+    bool glass = false;
+
+    float ior = 1.5f;
+
 private:
     atcg::ref_ptr<atcg::Texture2D> _diffuse_texture;
     atcg::ref_ptr<atcg::Texture2D> _normal_texture;

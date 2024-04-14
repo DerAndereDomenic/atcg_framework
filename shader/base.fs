@@ -16,6 +16,8 @@ uniform vec3 camera_dir;
 uniform vec3 flat_color;
 uniform int entityID;
 uniform int use_ibl;
+uniform int is_glass;
+uniform float ior;
 
 // Material textures
 uniform sampler2D texture_diffuse;
@@ -87,7 +89,9 @@ void main()
 
     // PBR material shader
     vec3 normal = frag_tbn * texture_normal;
-    vec3 F0 = vec3(0.04);
+    float eta = 1.0 / ior;
+    vec3 F0 = vec3((eta - 1.0) / (eta + 1.0));
+    F0 = F0 * F0;
 	F0 = mix(F0, color_diffuse, metallic);
 
     vec3 H = normalize(light_dir + view_dir);
@@ -124,7 +128,17 @@ void main()
     specular = prefilteredColor * (F * lutbrdf.x + lutbrdf.y);
     vec3 ambient = (kD * diffuse + specular);
 
-    vec3 color = (1.0 - float(use_ibl)) * brdf * light_radiance * NdotL + (float(use_ibl)) * ambient;
+    F0 = vec3((eta - 1.0) / (eta + 1.0));
+    F0 = F0 * F0;
+    R = reflect(-view_dir, normal);
+    float reflection_prob = fresnel_schlick(F0, max(0, dot(normal, R))).r;
+    vec3 glass_color = reflection_prob * textureLod(prefilter_map, R, 0).rgb;
+
+    R = refract(-view_dir, normal, eta);
+    glass_color += (1.0 - reflection_prob) * textureLod(prefilter_map, R, 0).rgb;
+    
+    vec3 color = (1.0 - float(use_ibl)) * brdf * light_radiance * NdotL + 
+                 (float(use_ibl)) * ((1.0 - float(is_glass))*ambient + float(is_glass) * glass_color);
     
     float frag_dist = length(camera_pos - frag_pos);
     outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), diffuse_lookup.w *( 1.0 - pow(1.01, frag_dist - 1000)));
