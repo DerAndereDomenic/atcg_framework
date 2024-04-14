@@ -41,4 +41,18 @@ private:
     atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
 };
 
+class RefractiveBSDF : public BSDF
+{
+public:
+    RefractiveBSDF(const Material& material);
+
+    ~RefractiveBSDF();
+    void initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                        const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
+private:
+    cudaArray_t _diffuse_texture;
+    atcg::dref_ptr<RefractiveBSDFData> _bsdf_data_buffer;
+};
+
 }    // namespace atcg

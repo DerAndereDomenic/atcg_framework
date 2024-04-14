@@ -115,4 +115,41 @@ void PBRBSDF::initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
 
     _vptr_table.upload(&table);
 }
+
+RefractiveBSDF::RefractiveBSDF(const Material& material)
+{
+    auto diffuse_texture = material.getDiffuseTexture()->getData(atcg::GPU);
+
+    RefractiveBSDFData data;
+
+    detail::convertToTextureObject(diffuse_texture, _diffuse_texture, data.diffuse_texture);
+    data.ior = material.ior;
+
+    _bsdf_data_buffer.upload(&data);
+}
+
+RefractiveBSDF::~RefractiveBSDF()
+{
+    RefractiveBSDFData data;
+
+    _bsdf_data_buffer.download(&data);
+
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.diffuse_texture));
+
+    CUDA_SAFE_CALL(cudaFreeArray(_diffuse_texture));
+}
+
+void RefractiveBSDF::initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    const std::string ptx_bsdf_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/build/ptxmodules.dir/"
+                                          "Debug/bsdf.ptx";
+    auto prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_refractivebsdf"});
+    uint32_t idx    = sbt->addCallableEntry(prog_group, _bsdf_data_buffer.get());
+
+    BSDFVPtrTable table;
+    table.sampleCallIndex = idx;
+
+    _vptr_table.upload(&table);
+}
 }    // namespace atcg
