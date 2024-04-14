@@ -132,6 +132,7 @@ public:
     std::unordered_map<OptixProgramGroupDescKey, OptixProgramGroup> program_groups;
 
     OptixPipeline pipeline;
+    bool pipeline_created = false;
 };
 
 RayTracingPipeline::Impl::Impl(OptixDeviceContext context)
@@ -157,7 +158,7 @@ RayTracingPipeline::Impl::Impl(OptixDeviceContext context)
 
 RayTracingPipeline::Impl::~Impl()
 {
-    optixPipelineDestroy(pipeline);
+    if(pipeline_created) optixPipelineDestroy(pipeline);
 
     for(const auto& [key, prog_group]: program_groups)
     {
@@ -360,6 +361,8 @@ void RayTracingPipeline::createPipeline()
                                     &sizeof_log,
                                     &impl->pipeline));
     ATCG_TRACE(log);
+
+    impl->pipeline_created = true;
 }
 
 OptixPipeline RayTracingPipeline::getPipeline() const
