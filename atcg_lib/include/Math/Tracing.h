@@ -2,7 +2,7 @@
 
 #include <nanort.h>
 #include <torch/types.h>
-#include <Math/SurfaceInteraciton.h>
+#include <Math/SurfaceInteraction.h>
 
 
 namespace atcg

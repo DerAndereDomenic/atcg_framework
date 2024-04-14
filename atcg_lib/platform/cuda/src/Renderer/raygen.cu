@@ -5,7 +5,7 @@
 #include <Renderer/Params.cuh>
 
 #include <Math/Random.h>
-#include <Math/SurfaceInteraciton.h>
+#include <Math/SurfaceInteraction.h>
 
 extern "C"
 {

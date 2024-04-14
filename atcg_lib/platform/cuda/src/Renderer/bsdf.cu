@@ -3,7 +3,7 @@
 #include <Core/CUDA.h>
 
 #include <Math/Random.h>
-#include <Math/SurfaceInteraciton.h>
+#include <Math/SurfaceInteraction.h>
 
 #include <Renderer/BSDFModels.cuh>
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Math/Random.h>
-#include <Math/SurfaceInteraciton.h>
+#include <Math/SurfaceInteraction.h>
 
 #ifdef ATCG_CUDA_BACKEND
     #include <optix.h>
