@@ -51,7 +51,7 @@ public:
     atcg::DeviceBuffer<glm::vec3> skybox_data;
     uint32_t skybox_width;
     uint32_t skybox_height;
-    std::vector<atcg::ref_ptr<PBRBSDF>> bsdfs;
+    std::vector<atcg::ref_ptr<BSDF>> bsdfs;
 
     atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
 
@@ -190,9 +190,19 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
         transforms.push_back(transform);
 
-        atcg::ref_ptr<PBRBSDF> bsdf =
-            atcg::make_ref<PBRBSDF>(entity.getComponent<atcg::MeshRenderComponent>().material);
-        bsdf->initializeBSDF(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+        Material material = entity.getComponent<atcg::MeshRenderComponent>().material;
+
+        atcg::ref_ptr<BSDF> bsdf;
+        if(material.glass)
+        {
+            bsdf = atcg::make_ref<RefractiveBSDF>(material);
+            bsdf->initializeBSDF(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+        }
+        else
+        {
+            bsdf = atcg::make_ref<PBRBSDF>(material);
+            bsdf->initializeBSDF(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+        }
 
         s_pathtracer->impl->bsdfs.push_back(bsdf);
 
