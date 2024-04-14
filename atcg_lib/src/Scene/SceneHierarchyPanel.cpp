@@ -121,6 +121,7 @@ void displayMaterial(const std::string& key, Material& material)
         }
     }
 
+    if(!material.glass)
     {
         auto spec        = material.getNormalTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -170,6 +171,7 @@ void displayMaterial(const std::string& key, Material& material)
         }
     }
 
+    if(!material.glass)
     {
         auto spec        = material.getRoughnessTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -227,7 +229,7 @@ void displayMaterial(const std::string& key, Material& material)
         }
     }
 
-
+    if(!material.glass)
     {
         auto spec        = material.getMetallicTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
