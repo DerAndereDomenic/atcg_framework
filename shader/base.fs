@@ -138,7 +138,7 @@ void main()
     glass_color += (1.0 - reflection_prob) * textureLod(prefilter_map, R, 0).rgb;
     
     vec3 color = (1.0 - float(use_ibl)) * brdf * light_radiance * NdotL + 
-                 (float(use_ibl)) * ((1.0 - float(is_glass))*ambient + float(is_glass) * glass_color);
+                 (float(use_ibl)) * ((1.0 - float(is_glass))*ambient + float(is_glass) * glass_color * color_diffuse);
     
     float frag_dist = length(camera_pos - frag_pos);
     outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), diffuse_lookup.w *( 1.0 - pow(1.01, frag_dist - 1000)));
