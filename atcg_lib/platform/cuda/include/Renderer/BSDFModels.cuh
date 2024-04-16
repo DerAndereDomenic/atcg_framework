@@ -23,6 +23,18 @@ struct RefractiveBSDFData
     float ior;
 };
 
+struct BSDFSamplingResult
+{
+    glm::vec3 out_dir;
+    glm::vec3 bsdf_weight;
+    float sample_probability = 0.0f;
+};
+
+struct BSDFEvalResult
+{
+    glm::vec3 bsdf_value = glm::vec3(0);
+};
+
 inline ATCG_HOST_DEVICE glm::mat3 compute_local_frame(const glm::vec3& localZ)
 {
     float x  = localZ.x;
@@ -44,13 +56,6 @@ inline ATCG_HOST_DEVICE glm::mat3 compute_local_frame(const glm::vec3& localZ)
     frame[2] = localZ;
     return frame;
 }
-
-struct BSDFSamplingResult
-{
-    glm::vec3 out_dir;
-    glm::vec3 bsdf_weight;
-    float sample_probability = 0.0f;
-};
 
 inline ATCG_HOST_DEVICE float D_GGX(const float NdotH, const float roughness)
 {
@@ -131,6 +136,11 @@ inline ATCG_HOST_DEVICE float geometrySmith(float NdotL, float NdotV, float roug
     float ggx1 = geometrySchlickGGX(NdotL, roughness);
 
     return ggx1 * ggx2;
+}
+
+inline ATCG_HOST_DEVICE float rgb2scalar(const glm::vec3& rgb)
+{
+    return (rgb.x + rgb.y + rgb.z) / 3.0f;
 }
 
 inline ATCG_HOST_DEVICE BSDFSamplingResult sampleGGX(const SurfaceInteraction& si,
@@ -229,12 +239,20 @@ inline ATCG_HOST_DEVICE BSDFSamplingResult sampleGGX(const SurfaceInteraction& s
 struct BSDFVPtrTable
 {
     uint32_t sampleCallIndex;
+    uint32_t evalCallIndex;
 
 #ifdef __CUDACC__
 
     __device__ BSDFSamplingResult sampleBSDF(const SurfaceInteraction& si, PCG32& rng) const
     {
         return optixDirectCall<BSDFSamplingResult, const SurfaceInteraction&, PCG32&>(sampleCallIndex, si, rng);
+    }
+
+    __device__ BSDFEvalResult evalBSDF(const SurfaceInteraction& si, const glm::vec3& outgoing_dir) const
+    {
+        return optixDirectCall<BSDFEvalResult, const SurfaceInteraction&, const glm::vec3&>(evalCallIndex,
+                                                                                            si,
+                                                                                            outgoing_dir);
     }
 
 #endif
