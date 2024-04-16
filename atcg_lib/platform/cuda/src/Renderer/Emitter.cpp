@@ -26,7 +26,16 @@ MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const Material& mate
     _mesh_emitter_data.upload(&data);
 }
 
-MeshEmitter::~MeshEmitter() {}
+MeshEmitter::~MeshEmitter()
+{
+    MeshEmitterData data;
+
+    _mesh_emitter_data.download(&data);
+
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.emissive_texture));
+
+    CUDA_SAFE_CALL(cudaFreeArray(_emissive_texture));
+}
 
 void MeshEmitter::initializeEmitter(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt)
