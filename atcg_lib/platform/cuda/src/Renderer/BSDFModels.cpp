@@ -105,8 +105,7 @@ PBRBSDF::~PBRBSDF()
 void PBRBSDF::initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                              const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/build/ptxmodules.dir/"
-                                          "Debug/bsdf.ptx";
+    const std::string ptx_bsdf_filename = "./build/ptxmodules.dir/Debug/bsdf.ptx";
     auto prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_bsdf"});
     uint32_t idx    = sbt->addCallableEntry(prog_group, _bsdf_data_buffer.get());
 
@@ -142,8 +141,7 @@ RefractiveBSDF::~RefractiveBSDF()
 void RefractiveBSDF::initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_bsdf_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/build/ptxmodules.dir/"
-                                          "Debug/bsdf.ptx";
+    const std::string ptx_bsdf_filename = "./build/ptxmodules.dir/Debug/bsdf.ptx";
     auto prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_refractivebsdf"});
     uint32_t idx    = sbt->addCallableEntry(prog_group, _bsdf_data_buffer.get());
 

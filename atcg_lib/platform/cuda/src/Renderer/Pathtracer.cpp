@@ -326,11 +326,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
                                 ));
 
 
-    const std::string ptx_raygen_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/build/"
-                                            "ptxmodules.dir/"
-                                            "Debug/raygen.ptx";
-    const std::string ptx_bsdf_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/build/ptxmodules.dir/"
-                                          "Debug/bsdf.ptx";
+    const std::string ptx_raygen_filename = "./build/ptxmodules.dir/Debug/raygen.ptx";
     OptixProgramGroup raygen_prog_group =
         s_pathtracer->impl->raytracing_pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
     OptixProgramGroup miss_prog_group =
