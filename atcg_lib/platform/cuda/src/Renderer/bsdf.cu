@@ -7,8 +7,8 @@
 
 #include <Renderer/BSDFModels.cuh>
 
-extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_bsdf(const atcg::SurfaceInteraction& si,
-                                                                              atcg::PCG32& rng)
+extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                                                                 atcg::PCG32& rng)
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 

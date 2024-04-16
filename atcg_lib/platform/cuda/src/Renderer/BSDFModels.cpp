@@ -106,7 +106,7 @@ void PBRBSDF::initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                              const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_bsdf_filename = "./build/ptxmodules.dir/Debug/bsdf.ptx";
-    auto prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_bsdf"});
+    auto prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_pbrbsdf"});
     uint32_t idx    = sbt->addCallableEntry(prog_group, _bsdf_data_buffer.get());
 
     BSDFVPtrTable table;
