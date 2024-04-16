@@ -47,7 +47,7 @@ public:
     std::vector<atcg::DeviceBuffer<HitGroupData>> hit_data;
     atcg::DeviceBuffer<uint8_t> ias_buffer;
     OptixTraversableHandle ias_handle;
-    atcg::ref_ptr<PerspectiveCamera> camera;
+    glm::mat4 camera_view;
     bool hasSkybox = false;
     atcg::DeviceBuffer<glm::vec3> skybox_data;
     uint32_t skybox_width;
@@ -84,7 +84,6 @@ void Pathtracer::Impl::worker()
 
         Params params;
 
-        glm::mat4 camera_view = glm::inverse(camera->getView());
         memcpy(params.cam_eye, glm::value_ptr(camera_view[3]), sizeof(glm::vec3));
         memcpy(params.U, glm::value_ptr(glm::normalize(camera_view[0])), sizeof(glm::vec3));
         memcpy(params.V, glm::value_ptr(glm::normalize(camera_view[1])), sizeof(glm::vec3));
@@ -164,7 +163,7 @@ void Pathtracer::init()
 
 void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera)
 {
-    s_pathtracer->impl->camera = camera;
+    s_pathtracer->impl->camera_view = glm::inverse(camera->getView());
 
     if(Renderer::hasSkybox())
     {
