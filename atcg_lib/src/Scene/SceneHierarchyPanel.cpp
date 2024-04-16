@@ -59,6 +59,8 @@ void displayMaterial(const std::string& key, Material& material)
 
     ImGui::DragFloat("IoR", &material.ior, 0.005f, 0.3f, 3.0f);
 
+    ImGui::Separator();
+
     {
         auto spec        = material.getDiffuseTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -121,7 +123,8 @@ void displayMaterial(const std::string& key, Material& material)
         }
     }
 
-    if(!material.glass)
+    if(material.glass) return;
+
     {
         auto spec        = material.getNormalTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -171,7 +174,6 @@ void displayMaterial(const std::string& key, Material& material)
         }
     }
 
-    if(!material.glass)
     {
         auto spec        = material.getRoughnessTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -229,7 +231,6 @@ void displayMaterial(const std::string& key, Material& material)
         }
     }
 
-    if(!material.glass)
     {
         auto spec        = material.getMetallicTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -281,6 +282,75 @@ void displayMaterial(const std::string& key, Material& material)
             }
             else
                 ImGui::Image((void*)(uint64_t)material.getMetallicTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+
+    ImGui::Separator();
+
+    ImGui::Checkbox("Emissive", &material.emissive);
+
+    if(material.emissive)
+    {
+        auto spec        = material.getEmissiveTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        ImGui::DragFloat("Scaling", &material.emission_scale, 0.005f, 0.0f, FLT_MAX);
+
+        if(!useTextures)
+        {
+            auto diffuse = material.getEmissiveTexture()->getData(atcg::CPU);
+
+            float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 1}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 2}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 3}).item<float>() / 255.0f};
+
+            if(ImGui::ColorEdit4(("Emissive##" + key).c_str(), color))
+            {
+                glm::vec4 new_color = glm::make_vec4(color);
+                material.setEmissiveColor(new_color);
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##emissive" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                        pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                        pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0], 2.2f);
+                    auto texture = atcg::Texture2D::create(img);
+                    material.setEmissiveTexture(texture);
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("Emissive Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##emissive" + key).c_str()))
+            {
+                material.setEmissiveColor(glm::vec4(1));
+            }
+            else
+                ImGui::Image((void*)(uint64_t)material.getEmissiveTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
