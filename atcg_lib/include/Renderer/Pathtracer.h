@@ -25,6 +25,8 @@ public:
 
     static void stop();
 
+    static void reset(const atcg::ref_ptr<PerspectiveCamera>& camera);
+
     static atcg::ref_ptr<Texture2D> getOutputTexture();
 
     ~Pathtracer();

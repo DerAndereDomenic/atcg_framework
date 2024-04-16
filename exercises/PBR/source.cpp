@@ -234,6 +234,10 @@ public:
         {
             atcg::Pathtracer::stop();
         }
+        if(event->getKeyCode() == GLFW_KEY_M)
+        {
+            atcg::Pathtracer::reset(camera_controller->getCamera());
+        }
         if(event->getKeyCode() == GLFW_KEY_B)
         {
             atcg::Pathtracer::bakeScene(scene, camera_controller->getCamera());

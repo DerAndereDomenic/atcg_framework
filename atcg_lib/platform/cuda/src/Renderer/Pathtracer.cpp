@@ -73,11 +73,12 @@ public:
     std::atomic_bool running = false;
 
     uint32_t raygen_index = 0;
+
+    uint32_t frame_counter = 0;
 };
 
 void Pathtracer::Impl::worker()
 {
-    uint32_t frame_counter = 0;
     while(true)
     {
         Timer frame_time;
@@ -392,6 +393,20 @@ void Pathtracer::stop()
     s_pathtracer->impl->running = false;
 
     if(s_pathtracer->impl->worker_thread.joinable()) s_pathtracer->impl->worker_thread.join();
+}
+
+void Pathtracer::reset(const atcg::ref_ptr<PerspectiveCamera>& camera)
+{
+    stop();
+
+    s_pathtracer->impl->camera_view = glm::inverse(camera->getView());
+
+    s_pathtracer->impl->accumulation_buffer =
+        atcg::DeviceBuffer<glm::vec3>(s_pathtracer->impl->width * s_pathtracer->impl->height);
+
+    s_pathtracer->impl->frame_counter = 0;
+
+    start();
 }
 
 atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
