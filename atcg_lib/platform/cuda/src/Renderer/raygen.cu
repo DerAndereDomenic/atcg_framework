@@ -89,25 +89,37 @@ extern "C" __global__ void __raygen__rg()
     glm::vec3 next_origin;
     glm::vec3 next_dir;
 
+    bool next_ray_valid = true;
+    ;
+
     for(int n = 0; n < 10; ++n)
     {
+        if(!next_ray_valid) break;
+        next_ray_valid = false;
+
         atcg::SurfaceInteraction si;
         traceWithDataPointer<atcg::SurfaceInteraction>(params.handle, ray_origin, ray_dir, 0.001f, 1e16f, &si);
 
         if(si.valid)
         {
-            // PBR Sampling
-            auto result = si.bsdf->sampleBSDF(si, rng);
-
-            if(result.sample_probability > 0.0f)
+            // Check for light source
+            if(si.emitter)
             {
-                next_origin = si.position;
-                next_dir    = result.out_dir;
-                throughput *= result.bsdf_weight;
+                radiance += throughput * si.emitter->evalLight(si);
             }
-            else
+
+            // PBR Sampling
+            if(si.bsdf)
             {
-                break;
+                auto result = si.bsdf->sampleBSDF(si, rng);
+
+                if(result.sample_probability > 0.0f)
+                {
+                    next_origin = si.position;
+                    next_dir    = result.out_dir;
+                    throughput *= result.bsdf_weight;
+                    next_ray_valid = true;
+                }
             }
         }
         else
@@ -124,8 +136,6 @@ extern "C" __global__ void __raygen__rg()
 
                 radiance = throughput * glm::vec3(params.skybox_data[pixel.x + params.skybox_width * pixel.y]);
             }
-
-            break;
         }
 
         ray_origin = next_origin;
