@@ -194,7 +194,8 @@ extern "C" __global__ void __closesthit__ch()
     const glm::vec3 UV2 = sbt_data->uvs[triangle.z];
     si->uv              = (1.0f - si->barys.x - si->barys.y) * UV0 + si->barys.x * UV1 + si->barys.y * UV2;
 
-    si->bsdf = sbt_data->bsdf;
+    si->bsdf    = sbt_data->bsdf;
+    si->emitter = sbt_data->emitter;
 }
 
 extern "C" __global__ void __miss__ms()

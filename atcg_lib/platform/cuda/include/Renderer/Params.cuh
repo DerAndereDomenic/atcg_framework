@@ -3,6 +3,7 @@
 #include <optix.h>
 #include <Core/glm.h>
 #include <Renderer/BSDFModels.cuh>
+#include <Renderer/Emitter.cuh>
 
 struct Params
 {
@@ -35,4 +36,5 @@ struct HitGroupData
     glm::u32vec3* faces;
 
     const atcg::BSDFVPtrTable* bsdf;
+    const atcg::EmitterVPtrTable* emitter;
 };

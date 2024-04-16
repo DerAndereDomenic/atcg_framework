@@ -21,6 +21,7 @@
 #include <Renderer/RaytracingPipeline.h>
 #include <Renderer/ShaderBindingTable.h>
 #include <Renderer/BSDFModels.h>
+#include <Renderer/Emitter.h>
 
 namespace atcg
 {
@@ -52,6 +53,7 @@ public:
     uint32_t skybox_width;
     uint32_t skybox_height;
     std::vector<atcg::ref_ptr<BSDF>> bsdfs;
+    std::vector<atcg::ref_ptr<Emitter>> emitters;
 
     atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
 
@@ -214,6 +216,15 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         }
         AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
 
+        atcg::ref_ptr<Emitter> emitter = nullptr;
+        if(material.emissive)
+        {
+            emitter = atcg::make_ref<MeshEmitter>(graph, material);
+            emitter->initializeEmitter(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+        }
+
+        s_pathtracer->impl->emitters.push_back(emitter);
+
         acc.vertices = graph->getDevicePositions().clone();
         acc.normals  = graph->getDeviceNormals().clone();
         acc.uvs      = graph->getDeviceUVs().clone();
@@ -354,6 +365,8 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         hit_data.uvs       = (glm::vec3*)acc.uvs.data_ptr();
         hit_data.faces     = (glm::u32vec3*)acc.faces.data_ptr();
         hit_data.bsdf      = s_pathtracer->impl->bsdfs[i]->getBSDFVPtrTable();
+        hit_data.emitter =
+            s_pathtracer->impl->emitters[i] ? s_pathtracer->impl->emitters[i]->getEmitterVPtrTable() : nullptr;
 
         DeviceBuffer<HitGroupData> d_hit_data(1);
         d_hit_data.upload(&hit_data);

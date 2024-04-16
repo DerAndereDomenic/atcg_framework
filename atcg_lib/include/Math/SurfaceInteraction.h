@@ -4,6 +4,7 @@ namespace atcg
 {
 
 struct BSDFVPtrTable;
+struct EmitterVPtrTable;
 
 struct SurfaceInteraction
 {
@@ -17,5 +18,6 @@ struct SurfaceInteraction
     uint32_t primitive_idx;
 
     const BSDFVPtrTable* bsdf;
+    const EmitterVPtrTable* emitter;
 };
 }    // namespace atcg
