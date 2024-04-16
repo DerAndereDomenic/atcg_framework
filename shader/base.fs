@@ -17,13 +17,16 @@ uniform vec3 flat_color;
 uniform int entityID;
 uniform int use_ibl;
 uniform int is_glass;
+uniform int is_emissive;
 uniform float ior;
+uniform float emissive_scaling;
 
 // Material textures
 uniform sampler2D texture_diffuse;
 uniform sampler2D texture_normal;
 uniform sampler2D texture_roughness;
 uniform sampler2D texture_metallic;
+uniform sampler2D texture_emissive;
 uniform samplerCube irradiance_map;
 uniform samplerCube prefilter_map;
 uniform sampler2D lut;
@@ -140,6 +143,10 @@ void main()
     vec3 color = (1.0 - float(use_ibl)) * brdf * light_radiance * NdotL + 
                  (float(use_ibl)) * ((1.0 - float(is_glass))*ambient + float(is_glass) * glass_color * color_diffuse);
     
+    // "Emission"
+
+    color += (1.0 - float(is_glass)) * float(is_emissive) * texture(texture_emissive, frag_uv).rgb * emissive_scaling;
+
     float frag_dist = length(camera_pos - frag_pos);
     outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), diffuse_lookup.w *( 1.0 - pow(1.01, frag_dist - 1000)));
     outEntityID = entityID;

@@ -93,10 +93,11 @@ public:
         NORMAL_TEXTURE    = 1,
         ROUGHNESS_TEXTURE = 2,
         METALLIC_TEXTURE  = 3,
-        IRRADIANCE_MAP    = 4,
-        PREFILTER_MAP     = 5,
-        LUT_TEXTURE       = 6,
-        SKYBOX_TEXTURE    = 7,
+        EMISSIVE_TEXTURE  = 4,
+        IRRADIANCE_MAP    = 5,
+        PREFILTER_MAP     = 6,
+        LUT_TEXTURE       = 7,
+        SKYBOX_TEXTURE    = 8,
         COUNT
     };
 };
@@ -294,6 +295,9 @@ void Renderer::Impl::setMaterial(const Material& material, const atcg::ref_ptr<S
     material.getMetallicTexture()->use(Renderer::Impl::TextureBindings::METALLIC_TEXTURE);
     shader->setInt("texture_metallic", Renderer::Impl::TextureBindings::METALLIC_TEXTURE);
 
+    material.getEmissiveTexture()->use(Renderer::Impl::TextureBindings::EMISSIVE_TEXTURE);
+    shader->setInt("texture_emissive", Renderer::Impl::TextureBindings::EMISSIVE_TEXTURE);
+
     irradiance_cubemap->use(Renderer::Impl::TextureBindings::IRRADIANCE_MAP);
     shader->setInt("irradiance_map", Renderer::Impl::TextureBindings::IRRADIANCE_MAP);
 
@@ -308,6 +312,10 @@ void Renderer::Impl::setMaterial(const Material& material, const atcg::ref_ptr<S
     shader->setInt("is_glass", material.glass);
 
     shader->setFloat("ior", material.ior);
+
+    shader->setFloat("emissive_scaling", material.emission_scale);
+
+    shader->setInt("is_emissive", material.emissive);
 }
 
 void Renderer::init(uint32_t width, uint32_t height)
