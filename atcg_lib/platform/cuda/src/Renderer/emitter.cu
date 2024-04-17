@@ -140,7 +140,10 @@ MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const Material& mate
         AT_CUDA_CHECK(cudaStreamSynchronize(stream));
     }
 
-    data.mesh_cdf = (float*)_mesh_cdf.data_ptr();
+    data.mesh_cdf       = (float*)_mesh_cdf.data_ptr();
+    data.local_to_world = glm::mat4(1);
+    data.world_to_local = glm::mat4(1);
+    data.num_faces      = _faces.size(0);
 
     _mesh_emitter_data.upload(&data);
 }
