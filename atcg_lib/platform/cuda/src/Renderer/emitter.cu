@@ -84,9 +84,9 @@ MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const glm::mat4& tra
     _faces     = graph->getFaces(atcg::GPU).clone();
 
     data.positions = (glm::vec3*)_positions.data_ptr();
-    data.normals   = (glm::vec3*)_positions.data_ptr();
-    data.uvs       = (glm::vec3*)_positions.data_ptr();
-    data.faces     = (glm::u32vec3*)_positions.data_ptr();
+    data.normals   = (glm::vec3*)_normals.data_ptr();
+    data.uvs       = (glm::vec3*)_uvs.data_ptr();
+    data.faces     = (glm::u32vec3*)_faces.data_ptr();
 
     _mesh_cdf = torch::zeros({_faces.size(0)}, atcg::TensorOptions::floatDeviceOptions());
 

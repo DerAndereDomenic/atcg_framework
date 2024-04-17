@@ -15,6 +15,10 @@ struct Params
 
     OptixTraversableHandle handle;
 
+    // Emitters
+    const atcg::EmitterVPtrTable** emitters;
+    uint32_t num_emitters;
+
     // Cam data
     float cam_eye[3];
     float U[3];

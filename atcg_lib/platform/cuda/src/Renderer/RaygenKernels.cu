@@ -111,6 +111,31 @@ extern "C" __global__ void __raygen__rg()
             // PBR Sampling
             if(si.bsdf)
             {
+                // Next-event estimation
+                for(uint32_t i = 0; i < params.num_emitters; ++i)
+                {
+                    const atcg::EmitterVPtrTable* emitter = params.emitters[i];
+
+                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+
+                    if(emitter_sampling.sampling_pdf == 0) continue;
+
+                    atcg::SurfaceInteraction emitter_si;
+                    traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
+                                                                   si.position,
+                                                                   emitter_sampling.direction_to_light,
+                                                                   1e-3f,
+                                                                   emitter_sampling.distance_to_light - 1e-3f,
+                                                                   &emitter_si);
+
+                    if(emitter_si.incoming_distance < emitter_sampling.distance_to_light)
+                    {
+                        atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+                        radiance += throughput * emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value *
+                                    glm::max(0.0f, glm::dot(si.normal, emitter_sampling.direction_to_light));
+                    }
+                }
+
                 auto result = si.bsdf->sampleBSDF(si, rng);
 
                 if(result.sample_probability > 0.0f)

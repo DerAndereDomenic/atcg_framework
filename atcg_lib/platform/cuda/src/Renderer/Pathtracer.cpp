@@ -52,6 +52,7 @@ public:
     std::vector<atcg::ref_ptr<BSDF>> bsdfs;
     std::vector<atcg::ref_ptr<Emitter>> emitters;
     atcg::ref_ptr<Emitter> environment_emitter = nullptr;
+    atcg::DeviceBuffer<const atcg::EmitterVPtrTable*> emitter_tables;
 
     atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
 
@@ -94,6 +95,8 @@ void Pathtracer::Impl::worker()
         params.image_width         = height;
         params.handle              = ias_handle;
         params.frame_counter       = frame_counter;
+        params.num_emitters        = emitter_tables.size();
+        params.emitters            = emitter_tables.get();
 
         params.environment_emitter = environment_emitter ? environment_emitter->getEmitterVPtrTable() : nullptr;
 
@@ -214,6 +217,21 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         }
 
         s_pathtracer->impl->emitters.push_back(emitter);
+
+        std::vector<const atcg::EmitterVPtrTable*> emitter_tables;
+
+        for(auto emitter: s_pathtracer->impl->emitters)
+        {
+            if(emitter) emitter_tables.push_back(emitter->getEmitterVPtrTable());
+        }
+
+        if(s_pathtracer->impl->environment_emitter)
+        {
+            emitter_tables.push_back(s_pathtracer->impl->environment_emitter->getEmitterVPtrTable());
+        }
+
+        s_pathtracer->impl->emitter_tables.create(emitter_tables.size());
+        s_pathtracer->impl->emitter_tables.upload(emitter_tables.data());
 
         acc.vertices = graph->getDevicePositions().clone();
         acc.normals  = graph->getDeviceNormals().clone();
