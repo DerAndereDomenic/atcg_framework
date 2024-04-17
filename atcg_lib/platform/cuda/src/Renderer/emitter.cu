@@ -47,7 +47,7 @@ extern "C" __device__ glm::vec3 __direct_callable__eval_environmentemitter(const
 
     glm::vec2 uv(phi, theta);
 
-    float4 color = tex2D<float4>(sbt_data->environment_texture, uv.x, uv.y);
+    float4 color = tex2D<float4>(sbt_data->environment_texture, uv.x, 1.0f - uv.y);
 
     return glm::vec3(color.x, color.y, color.z);
 }

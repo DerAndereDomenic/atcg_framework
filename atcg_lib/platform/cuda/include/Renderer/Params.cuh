@@ -22,10 +22,7 @@ struct Params
     float W[3];
 
     // Skybox
-    bool hasSkybox;
-    glm::vec3* skybox_data;
-    uint32_t skybox_width;
-    uint32_t skybox_height;
+    const atcg::EmitterVPtrTable* environment_emitter;
 };
 
 struct HitGroupData

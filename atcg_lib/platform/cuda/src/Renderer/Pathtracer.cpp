@@ -48,12 +48,10 @@ public:
     atcg::DeviceBuffer<uint8_t> ias_buffer;
     OptixTraversableHandle ias_handle;
     glm::mat4 camera_view;
-    bool hasSkybox = false;
-    atcg::DeviceBuffer<glm::vec3> skybox_data;
-    uint32_t skybox_width;
-    uint32_t skybox_height;
+
     std::vector<atcg::ref_ptr<BSDF>> bsdfs;
     std::vector<atcg::ref_ptr<Emitter>> emitters;
+    atcg::ref_ptr<Emitter> environment_emitter = nullptr;
 
     atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
 
@@ -97,10 +95,7 @@ void Pathtracer::Impl::worker()
         params.handle              = ias_handle;
         params.frame_counter       = frame_counter;
 
-        params.hasSkybox     = hasSkybox;
-        params.skybox_width  = skybox_width;
-        params.skybox_height = skybox_height;
-        params.skybox_data   = skybox_data.get();
+        params.environment_emitter = environment_emitter ? environment_emitter->getEmitterVPtrTable() : nullptr;
 
         launch_params.upload(&params);
 
@@ -168,16 +163,11 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
     if(Renderer::hasSkybox())
     {
-        s_pathtracer->impl->hasSkybox     = true;
-        auto skybox_texture               = Renderer::getSkyboxTexture();
-        s_pathtracer->impl->skybox_width  = skybox_texture->width();
-        s_pathtracer->impl->skybox_height = skybox_texture->height();
+        auto skybox_texture = Renderer::getSkyboxTexture();
 
-        auto data = skybox_texture->getData(atcg::CPU);
-
-        s_pathtracer->impl->skybox_data =
-            atcg::DeviceBuffer<glm::vec3>(s_pathtracer->impl->skybox_width * s_pathtracer->impl->skybox_height);
-        s_pathtracer->impl->skybox_data.upload((glm::vec3*)data.data_ptr());
+        s_pathtracer->impl->environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(skybox_texture);
+        s_pathtracer->impl->environment_emitter->initializeEmitter(s_pathtracer->impl->raytracing_pipeline,
+                                                                   s_pathtracer->impl->sbt);
     }
 
     // Extract scene information

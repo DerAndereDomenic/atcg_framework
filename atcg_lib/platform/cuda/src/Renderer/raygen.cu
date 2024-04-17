@@ -124,17 +124,9 @@ extern "C" __global__ void __raygen__rg()
         }
         else
         {
-            if(params.hasSkybox)
+            if(params.environment_emitter)
             {
-                float theta = std::acos(ray_dir.y) / glm::pi<float>();
-                float phi   = (std::atan2(ray_dir.z, ray_dir.x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
-
-                glm::vec2 uv(phi, theta);
-
-                glm::ivec2 pixel(uv.x * params.skybox_width, params.skybox_height - uv.y * params.skybox_height);
-                pixel = glm::clamp(pixel, glm::ivec2(0), glm::ivec2(params.skybox_width - 1, params.skybox_height - 1));
-
-                radiance = throughput * glm::vec3(params.skybox_data[pixel.x + params.skybox_width * pixel.y]);
+                radiance += throughput * params.environment_emitter->evalLight(si);
             }
         }
 
@@ -211,6 +203,11 @@ extern "C" __global__ void __closesthit__ch()
 extern "C" __global__ void __miss__ms()
 {
     atcg::SurfaceInteraction* si = getPayloadDataPointer<atcg::SurfaceInteraction>();
+    float tmax                   = optixGetRayTmax();
+    float3 optix_world_dir       = optixGetWorldRayDirection();
+    glm::vec3 ray_dir            = glm::make_vec3((float*)&optix_world_dir);
 
-    si->valid = false;
+    si->valid              = false;
+    si->incoming_distance  = tmax;
+    si->incoming_direction = ray_dir;
 }
