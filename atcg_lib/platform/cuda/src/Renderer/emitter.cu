@@ -1,75 +1,96 @@
-#pragma cuda_source_property_format = PTX
+#include <Renderer/Emitter.h>
+#include <Renderer/Common.h>
 
-#include <Core/CUDA.h>
-
-#include <Math/Random.h>
-#include <Math/SurfaceInteraction.h>
-
-#include <Renderer/Emitter.cuh>
-#include <Renderer/BSDFModels.cuh>
-
-extern "C" __device__ atcg::EmitterSamplingResult
-__direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
+namespace atcg
 {
-    atcg::EmitterSamplingResult result;
+MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const Material& material)
+{
+    auto emissive_texture = material.getEmissiveTexture()->getData(atcg::GPU);
 
+    MeshEmitterData data;
 
-    return result;
+    ::detail::convertToTextureObject(emissive_texture, _emissive_texture, data.emissive_texture);
+
+    data.emitter_scaling = material.emission_scale;
+
+    _positions = graph->getPositions(atcg::GPU).clone();
+    _normals   = graph->getNormals(atcg::GPU).clone();
+    _uvs       = graph->getUVs(atcg::GPU).clone();
+    _faces     = graph->getFaces(atcg::GPU).clone();
+
+    data.positions = (glm::vec3*)_positions.data_ptr();
+    data.normals   = (glm::vec3*)_positions.data_ptr();
+    data.uvs       = (glm::vec3*)_positions.data_ptr();
+    data.faces     = (glm::u32vec3*)_positions.data_ptr();
+
+    _mesh_emitter_data.upload(&data);
 }
 
-extern "C" __device__ glm::vec3 __direct_callable__eval_meshemitter(const atcg::SurfaceInteraction& si)
+MeshEmitter::~MeshEmitter()
 {
-    const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
+    MeshEmitterData data;
 
-    float4 color_u           = tex2D<float4>(sbt_data->emissive_texture, si.uv.x, si.uv.y);
-    glm::vec3 emissive_color = glm::vec3(color_u.x, color_u.y, color_u.z);
+    _mesh_emitter_data.download(&data);
 
-    return emissive_color * sbt_data->emitter_scaling;
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.emissive_texture));
+
+    CUDA_SAFE_CALL(cudaFreeArray(_emissive_texture));
 }
 
-extern "C" __device__ atcg::EmitterSamplingResult
-__direct_callable__sample_environmentemitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
+void MeshEmitter::initializeEmitter(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const atcg::EnvironmentEmitterData* sbt_data =
-        *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
+    const std::string ptx_emitter_filename = "./build/ptxmodules.dir/Debug/EmitterKernels.ptx";
+    auto sample_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_meshemitter"});
+    auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_meshemitter"});
+    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
 
-    atcg::EmitterSamplingResult result;
+    EmitterVPtrTable table;
+    table.sampleCallIndex = sample_idx;
+    table.evalCallIndex   = eval_idx;
 
-    glm::vec3 random_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
-    float pdf            = atcg::warp_square_to_hemisphere_cosine_pdf(random_dir);
-    glm::mat3 frame      = atcg::compute_local_frame(si.normal);
-
-    random_dir = frame * random_dir;
-
-    glm::vec3 ray_dir = si.incoming_direction;
-
-    float theta = std::acos(ray_dir.y) / glm::pi<float>();
-    float phi   = (std::atan2(ray_dir.z, ray_dir.x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
-
-    glm::vec2 uv(phi, theta);
-
-    float4 color = tex2D<float4>(sbt_data->environment_texture, uv.x, 1.0f - uv.y);
-
-    result.distance_to_light           = std::numeric_limits<float>::infinity();
-    result.sampling_pdf                = pdf;
-    result.radiance_weight_at_receiver = glm::vec3(color.x, color.y, color.z) / pdf;
-
-    return result;
+    _vptr_table.upload(&table);
 }
 
-extern "C" __device__ glm::vec3 __direct_callable__eval_environmentemitter(const atcg::SurfaceInteraction& si)
+EnvironmentEmitter::EnvironmentEmitter(const atcg::ref_ptr<Texture2D>& texture)
 {
-    const atcg::EnvironmentEmitterData* sbt_data =
-        *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
+    auto environment_texture = texture->getData(atcg::GPU);
 
-    glm::vec3 ray_dir = si.incoming_direction;
+    EnvironmentEmitterData data;
 
-    float theta = std::acos(ray_dir.y) / glm::pi<float>();
-    float phi   = (std::atan2(ray_dir.z, ray_dir.x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
+    ::detail::convertToTextureObject(environment_texture, _environment_texture, data.environment_texture);
 
-    glm::vec2 uv(phi, theta);
-
-    float4 color = tex2D<float4>(sbt_data->environment_texture, uv.x, 1.0f - uv.y);
-
-    return glm::vec3(color.x, color.y, color.z);
+    _environment_emitter_data.upload(&data);
 }
+
+EnvironmentEmitter::~EnvironmentEmitter()
+{
+    EnvironmentEmitterData data;
+
+    _environment_emitter_data.download(&data);
+
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.environment_texture));
+
+    CUDA_SAFE_CALL(cudaFreeArray(_environment_texture));
+}
+
+void EnvironmentEmitter::initializeEmitter(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                           const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    const std::string ptx_emitter_filename = "./build/ptxmodules.dir/Debug/EmitterKernels.ptx";
+    auto sample_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_environmentemitter"});
+    auto eval_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_environmentemitter"});
+    uint32_t sample_idx = sbt->addCallableEntry(sample_prog_group, _environment_emitter_data.get());
+    uint32_t eval_idx   = sbt->addCallableEntry(eval_prog_group, _environment_emitter_data.get());
+
+    EmitterVPtrTable table;
+    table.sampleCallIndex = sample_idx;
+    table.evalCallIndex   = eval_idx;
+
+    _vptr_table.upload(&table);
+}
+}    // namespace atcg
