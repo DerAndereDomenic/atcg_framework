@@ -19,25 +19,25 @@ namespace glm
 {
 
 template<typename Scalar, int Dimension>
-glm::vec<Dimension, Scalar> cross(const glm::vec<Dimension, Scalar>& x, const glm::vec<Dimension, Scalar>&& y)
+ATCG_HOST_DEVICE glm::vec<Dimension, Scalar> cross(const glm::vec<Dimension, Scalar>& x, const glm::vec<Dimension, Scalar>&& y)
 {
     return glm::cross(x, y);
 }
 
 template<typename Scalar, int Dimension>
-Scalar norm(const glm::vec<Dimension, Scalar>& x)
+ATCG_HOST_DEVICE Scalar norm(const glm::vec<Dimension, Scalar>& x)
 {
     return glm::length(x);
 }
 
 template<typename Scalar, int Dimension>
-Scalar sqrnorm(const glm::vec<Dimension, Scalar>& x)
+ATCG_HOST_DEVICE Scalar sqrnorm(const glm::vec<Dimension, Scalar>& x)
 {
     return glm::dot(x, x);
 }
 
 template<typename Scalar, int Dimension>
-glm::vec<Dimension, Scalar> vectorize(glm::vec<Dimension, Scalar>& x, Scalar const& val)
+ATCG_HOST_DEVICE glm::vec<Dimension, Scalar> vectorize(glm::vec<Dimension, Scalar>& x, Scalar const& val)
 {
     x = glm::vec<Dimension, Scalar>(val);
     return x;
