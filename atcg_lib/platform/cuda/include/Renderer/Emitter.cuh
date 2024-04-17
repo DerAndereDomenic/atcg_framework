@@ -29,6 +29,11 @@ struct MeshEmitterData
     cudaTextureObject_t emissive_texture;
 };
 
+struct EnvironmentEmitterData
+{
+    cudaTextureObject_t environment_texture;
+};
+
 struct EmitterVPtrTable
 {
     uint32_t evalCallIndex;

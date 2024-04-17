@@ -53,4 +53,44 @@ void MeshEmitter::initializeEmitter(const atcg::ref_ptr<RayTracingPipeline>& pip
 
     _vptr_table.upload(&table);
 }
+
+EnvironmentEmitter::EnvironmentEmitter(const atcg::ref_ptr<Texture2D>& texture)
+{
+    auto environment_texture = texture->getData(atcg::GPU);
+
+    EnvironmentEmitterData data;
+
+    ::detail::convertToTextureObject(environment_texture, _environment_texture, data.environment_texture);
+
+    _environment_emitter_data.upload(&data);
+}
+
+EnvironmentEmitter::~EnvironmentEmitter()
+{
+    EnvironmentEmitterData data;
+
+    _environment_emitter_data.download(&data);
+
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.environment_texture));
+
+    CUDA_SAFE_CALL(cudaFreeArray(_environment_texture));
+}
+
+void EnvironmentEmitter::initializeEmitter(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                           const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    const std::string ptx_emitter_filename = "./build/ptxmodules.dir/Debug/emitter.ptx";
+    auto sample_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_environmentemitter"});
+    auto eval_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_environmentemitter"});
+    uint32_t sample_idx = sbt->addCallableEntry(sample_prog_group, _environment_emitter_data.get());
+    uint32_t eval_idx   = sbt->addCallableEntry(eval_prog_group, _environment_emitter_data.get());
+
+    EmitterVPtrTable table;
+    table.sampleCallIndex = sample_idx;
+    table.evalCallIndex   = eval_idx;
+
+    _vptr_table.upload(&table);
+}
 }    // namespace atcg

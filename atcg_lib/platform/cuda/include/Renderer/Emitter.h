@@ -44,4 +44,20 @@ private:
 
     atcg::dref_ptr<MeshEmitterData> _mesh_emitter_data;
 };
+
+class EnvironmentEmitter : public Emitter
+{
+public:
+    EnvironmentEmitter(const atcg::ref_ptr<atcg::Texture2D>& environment_texture);
+
+    ~EnvironmentEmitter();
+
+    virtual void initializeEmitter(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                   const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
+private:
+    cudaArray_t _environment_texture;
+
+    atcg::dref_ptr<EnvironmentEmitterData> _environment_emitter_data;
+};
 }    // namespace atcg
