@@ -27,6 +27,9 @@ struct MeshEmitterData
 
     float emitter_scaling;
     cudaTextureObject_t emissive_texture;
+
+    float* mesh_cdf;
+    float total_area;
 };
 
 struct EnvironmentEmitterData

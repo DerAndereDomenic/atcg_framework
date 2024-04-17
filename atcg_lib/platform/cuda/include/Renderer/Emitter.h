@@ -42,6 +42,8 @@ private:
     torch::Tensor _uvs;
     torch::Tensor _faces;
 
+    torch::Tensor _mesh_cdf;
+
     atcg::dref_ptr<MeshEmitterData> _mesh_emitter_data;
 };
 
