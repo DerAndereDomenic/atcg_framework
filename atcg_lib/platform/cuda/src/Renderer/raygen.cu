@@ -203,11 +203,10 @@ extern "C" __global__ void __closesthit__ch()
 extern "C" __global__ void __miss__ms()
 {
     atcg::SurfaceInteraction* si = getPayloadDataPointer<atcg::SurfaceInteraction>();
-    float tmax                   = optixGetRayTmax();
     float3 optix_world_dir       = optixGetWorldRayDirection();
     glm::vec3 ray_dir            = glm::make_vec3((float*)&optix_world_dir);
 
     si->valid              = false;
-    si->incoming_distance  = tmax;
+    si->incoming_distance  = std::numeric_limits<float>::infinity();
     si->incoming_direction = ray_dir;
 }
