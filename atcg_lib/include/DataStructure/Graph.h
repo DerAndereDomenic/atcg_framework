@@ -731,12 +731,16 @@ atcg::ref_ptr<Graph> read_lines(const std::string& path);
  * collection. To use material files, export the obj with the pbr extension. The following parameters are used:
  *
  * Kd - diffuse base color
+ * Ke - emissive color
+ * Ni - index of refraction
  * Pr - surface roughness
  * Pm - surface metallic
  * map_Kd - diffuse base color texture
  * map_Pr - roughness texture
  * map_Pm - metallic texture
  * map_Bump - normal texture
+ * map_Ke - emissive texture
+ * illum -  If illum == 4, we treat it as glass, otherwise ignored
  *
  * @note We do not use per-face materials but only per object materials
  *

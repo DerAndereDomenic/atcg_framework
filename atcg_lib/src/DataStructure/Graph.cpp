@@ -1017,6 +1017,29 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             auto texture = atcg::Texture2D::create(img);
             material.setNormalTexture(texture);
         }
+
+        if(mat_obj.emissive_texname != "")
+        {
+            auto img     = IO::imread(mat_obj.emissive_texname);
+            auto texture = atcg::Texture2D::create(img);
+            material.setEmissiveTexture(texture);
+            material.emissive = true;
+        }
+        else
+        {
+            glm::vec3 emissive_color = glm::make_vec3(mat_obj.emission);
+            float emission_scale     = glm::max(emissive_color.x, glm::max(emissive_color.y, emissive_color.z));
+            if(emission_scale > 0)
+            {
+                material.emissive       = true;
+                material.emission_scale = emission_scale;
+                material.setEmissiveColor(emissive_color / emission_scale);
+            }
+        }
+
+        material.ior = mat_obj.ior;
+
+        material.glass = mat_obj.illum == 4;
     }
 
     for(const auto& shape: shapes)
