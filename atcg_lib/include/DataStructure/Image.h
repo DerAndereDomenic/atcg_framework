@@ -158,7 +158,7 @@ public:
     template<typename T>
     inline T& dataAt(uint32_t idx) const
     {
-        return reinterpret_cast<T*>(_img_data)[idx];
+        return reinterpret_cast<T*>(_img_data.data_ptr())[idx];
     }
 
 private:
