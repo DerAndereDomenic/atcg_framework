@@ -68,7 +68,7 @@ __global__ void normalizeMeshTriangleCDFKernel(torch::PackedTensorAccessor32<flo
 }
 }    // namespace detail
 
-MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const Material& material)
+MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const glm::mat4& transform, const Material& material)
 {
     auto emissive_texture = material.getEmissiveTexture()->getData(atcg::GPU);
 
@@ -104,7 +104,7 @@ MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const Material& mate
         detail::computeMeshTrianglePDFKernel<<<grid, threads, 0, stream>>>(
             _positions.packed_accessor32<float, 2, torch::RestrictPtrTraits>(),
             _faces.packed_accessor32<int, 2, torch::RestrictPtrTraits>(),
-            glm::mat4(1),
+            transform,
             _mesh_cdf.packed_accessor32<float, 1, torch::RestrictPtrTraits>());
 
         AT_CUDA_CHECK(cudaGetLastError());
@@ -141,8 +141,8 @@ MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const Material& mate
     }
 
     data.mesh_cdf       = (float*)_mesh_cdf.data_ptr();
-    data.local_to_world = glm::mat4(1);
-    data.world_to_local = glm::mat4(1);
+    data.local_to_world = transform;
+    data.world_to_local = glm::inverse(transform);
     data.num_faces      = _faces.size(0);
 
     _mesh_emitter_data.upload(&data);

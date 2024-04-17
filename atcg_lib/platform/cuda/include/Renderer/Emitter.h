@@ -27,7 +27,7 @@ protected:
 class MeshEmitter : public Emitter
 {
 public:
-    MeshEmitter(const atcg::ref_ptr<Graph>& graph, const Material& material);
+    MeshEmitter(const atcg::ref_ptr<Graph>& graph, const glm::mat4& transform, const Material& material);
 
     ~MeshEmitter();
 

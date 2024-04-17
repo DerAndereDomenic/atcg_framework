@@ -209,7 +209,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         atcg::ref_ptr<Emitter> emitter = nullptr;
         if(material.emissive)
         {
-            emitter = atcg::make_ref<MeshEmitter>(graph, material);
+            emitter = atcg::make_ref<MeshEmitter>(graph, transform, material);
             emitter->initializeEmitter(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
         }
 
