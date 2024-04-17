@@ -26,30 +26,9 @@ public:
 
         auto skybox = atcg::IO::imread("res/pbr/skybox.hdr");
         ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
-        atcg::Renderer::setSkybox(skybox);
+        // atcg::Renderer::setSkybox(skybox);
 
-        scene = atcg::make_ref<atcg::Scene>();
-
-        {
-            plane = atcg::IO::read_mesh("res/plane.obj");
-
-            auto entity     = scene->createEntity("Plane");
-            auto& transform = entity.addComponent<atcg::TransformComponent>();
-            transform.setPosition(glm::vec3(-2.5f, 0.0f, 2.5f));
-            transform.setScale(glm::vec3(5.0f));
-            entity.addComponent<atcg::GeometryComponent>(plane);
-            auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
-        }
-
-        {
-            auto sphere = atcg::IO::read_mesh("res/sphere_low.obj");
-
-            auto entity     = scene->createEntity("Sphere");
-            auto& transform = entity.addComponent<atcg::TransformComponent>();
-            transform.setPosition(glm::vec3(0.0f, 1.1f, 0.0f));
-            entity.addComponent<atcg::GeometryComponent>(sphere);
-            auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
-        }
+        scene = atcg::IO::read_scene("res/cornell_box.obj");
 
         panel = atcg::SceneHierarchyPanel(scene);
 
@@ -65,6 +44,9 @@ public:
             float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
             camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
         }
+
+        camera_controller->getCamera()->setPosition(glm::vec3(0.0f, 1.0f, 1.8f));
+        camera_controller->getCamera()->setLookAt(glm::vec3(0.0f, 1.0f, 0.8f));
     }
 
     // This gets called each frame
