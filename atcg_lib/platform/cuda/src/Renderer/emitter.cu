@@ -6,6 +6,7 @@
 #include <Math/SurfaceInteraction.h>
 
 #include <Renderer/Emitter.cuh>
+#include <Renderer/BSDFModels.cuh>
 
 extern "C" __device__ atcg::EmitterSamplingResult
 __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
@@ -29,8 +30,29 @@ extern "C" __device__ glm::vec3 __direct_callable__eval_meshemitter(const atcg::
 extern "C" __device__ atcg::EmitterSamplingResult
 __direct_callable__sample_environmentemitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
 {
+    const atcg::EnvironmentEmitterData* sbt_data =
+        *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
+
     atcg::EmitterSamplingResult result;
 
+    glm::vec3 random_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
+    float pdf            = atcg::warp_square_to_hemisphere_cosine_pdf(random_dir);
+    glm::mat3 frame      = atcg::compute_local_frame(si.normal);
+
+    random_dir = frame * random_dir;
+
+    glm::vec3 ray_dir = si.incoming_direction;
+
+    float theta = std::acos(ray_dir.y) / glm::pi<float>();
+    float phi   = (std::atan2(ray_dir.z, ray_dir.x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
+
+    glm::vec2 uv(phi, theta);
+
+    float4 color = tex2D<float4>(sbt_data->environment_texture, uv.x, 1.0f - uv.y);
+
+    result.distance_to_light           = std::numeric_limits<float>::infinity();
+    result.sampling_pdf                = pdf;
+    result.radiance_weight_at_receiver = glm::vec3(color.x, color.y, color.z) / pdf;
 
     return result;
 }
