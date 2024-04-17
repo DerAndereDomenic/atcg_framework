@@ -567,8 +567,8 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
 {
     atcg::ref_ptr<Texture2D> result = atcg::make_ref<Texture2D>();
     result->_spec                   = spec;
-    result->_spec.width             = std::max(1u, result->_spec.width);
-    result->_spec.height            = std::max(1u, result->_spec.height);
+    result->_spec.width             = std::max<uint32_t>(1, result->_spec.width);
+    result->_spec.height            = std::max<uint32_t>(1, result->_spec.height);
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_2D, result->_ID);
@@ -615,8 +615,8 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const atcg::ref_ptr<Image> img)
 atcg::ref_ptr<Texture2D> Texture2D::create(const torch::Tensor& img)
 {
     TextureSpecification spec;
-    spec.width  = std::max(1ll, img.size(1));
-    spec.height = std::max(1ll, img.size(0));
+    spec.width  = std::max<uint32_t>(1, img.size(1));
+    spec.height = std::max<uint32_t>(1, img.size(0));
     switch(img.size(2))
     {
         case 1:
@@ -784,9 +784,9 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
 {
     atcg::ref_ptr<Texture3D> result = atcg::make_ref<Texture3D>();
     result->_spec                   = spec;
-    result->_spec.width             = std::max(1u, result->_spec.width);
-    result->_spec.height            = std::max(1u, result->_spec.height);
-    result->_spec.depth             = std::max(1u, result->_spec.depth);
+    result->_spec.width             = std::max<uint32_t>(1, result->_spec.width);
+    result->_spec.height            = std::max<uint32_t>(1, result->_spec.height);
+    result->_spec.depth             = std::max<uint32_t>(1, result->_spec.depth);
 
     glGenTextures(1, &(result->_ID));
     glBindTexture(GL_TEXTURE_3D, result->_ID);
@@ -828,9 +828,9 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
 atcg::ref_ptr<Texture3D> Texture3D::create(const torch::Tensor& img)
 {
     TextureSpecification spec;
-    spec.width  = std::max(1ll, img.size(2));
-    spec.height = std::max(1ll, img.size(1));
-    spec.depth  = std::max(1ll, img.size(0));
+    spec.width  = std::max<uint32_t>(1, img.size(2));
+    spec.height = std::max<uint32_t>(1, img.size(1));
+    spec.depth  = std::max<uint32_t>(1, img.size(0));
     switch(img.size(3))
     {
         case 1:
