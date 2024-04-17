@@ -110,9 +110,14 @@ endif()
 # openvr
 set(BUILD_SHARED ON CACHE BOOL "Builds the library as shared library" FORCE)
 add_subdirectory(external/openvr)
-set_target_properties(openvr_api64 PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-                                              RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-                                              ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+if(TARGET openvr_api)
+    set(ATCG_OPENVR_TARGET openvr_api)
+elseif(TARGET openvr_api64)
+    set(ATCG_OPENVR_TARGET openvr_api64)
+endif()
+set_target_properties(${ATCG_OPENVR_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+                                                       RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+                                                       ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
@@ -159,7 +164,7 @@ target_link_libraries(atcg_lib PUBLIC glfw
                                       nanoflann
                                       glm
                                       spdlog_header_only
-                                      openvr_api64
+                                      ${ATCG_OPENVR_TARGET}
 )
 
 if(ATCG_CUDA_BACKEND)
