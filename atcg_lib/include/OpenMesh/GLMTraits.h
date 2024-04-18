@@ -19,7 +19,8 @@ namespace glm
 {
 
 template<typename Scalar, int Dimension>
-ATCG_HOST_DEVICE glm::vec<Dimension, Scalar> cross(const glm::vec<Dimension, Scalar>& x, const glm::vec<Dimension, Scalar>&& y)
+ATCG_HOST_DEVICE glm::vec<Dimension, Scalar> cross(const glm::vec<Dimension, Scalar>& x,
+                                                   const glm::vec<Dimension, Scalar>& y)
 {
     return glm::cross(x, y);
 }
