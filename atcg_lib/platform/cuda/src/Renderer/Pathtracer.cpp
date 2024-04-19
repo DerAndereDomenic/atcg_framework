@@ -49,8 +49,6 @@ public:
     OptixTraversableHandle ias_handle;
     glm::mat4 camera_view;
 
-    std::vector<atcg::ref_ptr<OptixBSDF>> bsdfs;
-    std::vector<atcg::ref_ptr<OptixEmitter>> emitters;
     atcg::ref_ptr<OptixEmitter> environment_emitter = nullptr;
     atcg::DeviceBuffer<const atcg::EmitterVPtrTable*> emitter_tables;
 
@@ -177,6 +175,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     auto view = scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
     std::vector<TransformComponent> transforms;
     size_t num_instances = 0;
+    std::vector<const atcg::EmitterVPtrTable*> emitter_tables;
     for(auto e: view)
     {
         Entity entity(e, scene.get());
@@ -199,7 +198,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
             bsdf->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
         }
 
-        s_pathtracer->impl->bsdfs.push_back(bsdf);
+        entity.addComponent<BSDFComponent>(bsdf);
 
         atcg::ref_ptr<Graph> graph = entity.getComponent<GeometryComponent>().graph;
 
@@ -216,22 +215,9 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
             emitter->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
         }
 
-        s_pathtracer->impl->emitters.push_back(emitter);
+        entity.addComponent<EmitterComponent>(emitter);
 
-        std::vector<const atcg::EmitterVPtrTable*> emitter_tables;
-
-        for(auto emitter: s_pathtracer->impl->emitters)
-        {
-            if(emitter) emitter_tables.push_back(emitter->getVPtrTable());
-        }
-
-        if(s_pathtracer->impl->environment_emitter)
-        {
-            emitter_tables.push_back(s_pathtracer->impl->environment_emitter->getVPtrTable());
-        }
-
-        s_pathtracer->impl->emitter_tables.create(emitter_tables.size());
-        s_pathtracer->impl->emitter_tables.upload(emitter_tables.data());
+        if(emitter) emitter_tables.push_back(emitter->getVPtrTable());
 
         acc.vertices = graph->getDevicePositions().clone();
         acc.normals  = graph->getDeviceNormals().clone();
@@ -283,6 +269,14 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
         ++num_instances;
     }
+
+    if(s_pathtracer->impl->environment_emitter)
+    {
+        emitter_tables.push_back(s_pathtracer->impl->environment_emitter->getVPtrTable());
+    }
+
+    s_pathtracer->impl->emitter_tables.create(emitter_tables.size());
+    s_pathtracer->impl->emitter_tables.upload(emitter_tables.data());
 
     // IAS
     std::vector<OptixInstance> optix_instances(num_instances);
@@ -366,14 +360,16 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         Entity entity(e, scene.get());
 
         AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+        atcg::ref_ptr<OptixBSDF> bsdf       = entity.getComponent<BSDFComponent>().bsdf;
+        atcg::ref_ptr<OptixEmitter> emitter = entity.getComponent<EmitterComponent>().emitter;
 
         HitGroupData hit_data;
         hit_data.positions = (glm::vec3*)acc.vertices.data_ptr();
         hit_data.normals   = (glm::vec3*)acc.normals.data_ptr();
         hit_data.uvs       = (glm::vec3*)acc.uvs.data_ptr();
         hit_data.faces     = (glm::u32vec3*)acc.faces.data_ptr();
-        hit_data.bsdf      = s_pathtracer->impl->bsdfs[i]->getVPtrTable();
-        hit_data.emitter = s_pathtracer->impl->emitters[i] ? s_pathtracer->impl->emitters[i]->getVPtrTable() : nullptr;
+        hit_data.bsdf      = bsdf->getVPtrTable();
+        hit_data.emitter   = emitter ? emitter->getVPtrTable() : nullptr;
 
         DeviceBuffer<HitGroupData> d_hit_data(1);
         d_hit_data.upload(&hit_data);
