@@ -8,6 +8,8 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/Material.h>
 #include <DataStructure/Graph.h>
+#include <Renderer/BSDF.h>
+#include <Renderer/Emitter.h>
 #include <nanort.h>
 
 #include <vector>
@@ -234,6 +236,22 @@ struct CustomRenderComponent : public RenderComponent
     }
 
     RenderCallbackFn callback;
+};
+
+struct BSDFComponent
+{
+    BSDFComponent() = default;
+    BSDFComponent(const atcg::ref_ptr<BSDF>& bsdf) : bsdf(bsdf) {}
+
+    atcg::ref_ptr<BSDF> bsdf;
+};
+
+struct EmitterComponent
+{
+    EmitterComponent() = default;
+    EmitterComponent(const atcg::ref_ptr<Emitter>& emitter) : emitter(emitter) {}
+
+    atcg::ref_ptr<BSDF> emitter;
 };
 
 }    // namespace atcg
