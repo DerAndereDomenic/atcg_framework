@@ -55,6 +55,13 @@ public:
     void attachDepth();
 
     /**
+     * @brief Attach a custom depth component
+     *
+     * @param depth_map The depth map component
+     */
+    void attachDepth(const atcg::ref_ptr<Texture2D>& depth_map);
+
+    /**
      * @brief Get a color attachement
      *
      * @param slot The number of which attachement to use

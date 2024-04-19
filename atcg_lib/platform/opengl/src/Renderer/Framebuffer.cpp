@@ -76,12 +76,18 @@ void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
 
 void Framebuffer::attachDepth()
 {
-    use();
     TextureSpecification spec;
     spec.width         = _width;
     spec.height        = _height;
     spec.format        = TextureFormat::DEPTH;
     _depth_attachement = Texture2D::create(spec);
+    attachDepth(_depth_attachement);
+}
+
+void Framebuffer::attachDepth(const atcg::ref_ptr<Texture2D>& depth_map)
+{
+    use();
+    _depth_attachement = depth_map;
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depth_attachement->getID(), 0);
     useDefault();
 }
