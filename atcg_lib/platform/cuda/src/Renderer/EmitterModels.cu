@@ -1,4 +1,4 @@
-#include <Renderer/Emitter.h>
+#include <Renderer/EmitterModels.h>
 #include <Renderer/Common.h>
 #include <ATen/cuda/ApplyGridUtils.cuh>
 #include <c10/cuda/CUDAGuard.h>
@@ -159,8 +159,8 @@ MeshEmitter::~MeshEmitter()
     CUDA_SAFE_CALL(cudaFreeArray(_emissive_texture));
 }
 
-void MeshEmitter::initializeEmitter(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                     const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_emitter_filename = "./build/ptxmodules.dir/Debug/EmitterKernels.ptx";
     auto sample_prog_group =
@@ -198,8 +198,8 @@ EnvironmentEmitter::~EnvironmentEmitter()
     CUDA_SAFE_CALL(cudaFreeArray(_environment_texture));
 }
 
-void EnvironmentEmitter::initializeEmitter(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                           const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                            const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_emitter_filename = "./build/ptxmodules.dir/Debug/EmitterKernels.ptx";
     auto sample_prog_group =

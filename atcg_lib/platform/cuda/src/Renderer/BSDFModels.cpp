@@ -36,8 +36,8 @@ PBRBSDF::~PBRBSDF()
     CUDA_SAFE_CALL(cudaFreeArray(_roughness_texture));
 }
 
-void PBRBSDF::initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                             const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                 const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_bsdf_filename = "./build/ptxmodules.dir/Debug/BSDFKernels.ptx";
     auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_pbrbsdf"});
@@ -75,8 +75,8 @@ RefractiveBSDF::~RefractiveBSDF()
     CUDA_SAFE_CALL(cudaFreeArray(_diffuse_texture));
 }
 
-void RefractiveBSDF::initializeBSDF(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void RefractiveBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                        const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_bsdf_filename = "./build/ptxmodules.dir/Debug/BSDFKernels.ptx";
     auto sample_prog_group =

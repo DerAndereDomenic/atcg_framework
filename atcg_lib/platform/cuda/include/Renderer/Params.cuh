@@ -3,7 +3,7 @@
 #include <optix.h>
 #include <Core/glm.h>
 #include <Renderer/BSDFModels.cuh>
-#include <Renderer/Emitter.cuh>
+#include <Renderer/EmitterModels.cuh>
 
 struct Params
 {

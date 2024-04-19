@@ -5,7 +5,7 @@
 #include <Math/Random.h>
 #include <Math/SurfaceInteraction.h>
 
-#include <Renderer/Emitter.cuh>
+#include <Renderer/EmitterModels.cuh>
 #include <Renderer/BSDFModels.cuh>
 
 template<typename T>

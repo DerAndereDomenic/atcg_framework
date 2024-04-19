@@ -4,7 +4,6 @@
 #include <Math/Tracing.h>
 #include <DataStructure/Timer.h>
 #include <Math/Random.h>
-#include <Renderer/BSDFModels.cuh>
 
 #include <Scene/Entity.h>
 #include <Renderer/Params.cuh>
@@ -20,8 +19,9 @@
 #include <Renderer/Common.h>
 #include <Renderer/RaytracingPipeline.h>
 #include <Renderer/ShaderBindingTable.h>
+
 #include <Renderer/BSDFModels.h>
-#include <Renderer/Emitter.h>
+#include <Renderer/EmitterModels.h>
 
 namespace atcg
 {
@@ -49,9 +49,9 @@ public:
     OptixTraversableHandle ias_handle;
     glm::mat4 camera_view;
 
-    std::vector<atcg::ref_ptr<BSDF>> bsdfs;
-    std::vector<atcg::ref_ptr<Emitter>> emitters;
-    atcg::ref_ptr<Emitter> environment_emitter = nullptr;
+    std::vector<atcg::ref_ptr<OptixBSDF>> bsdfs;
+    std::vector<atcg::ref_ptr<OptixEmitter>> emitters;
+    atcg::ref_ptr<OptixEmitter> environment_emitter = nullptr;
     atcg::DeviceBuffer<const atcg::EmitterVPtrTable*> emitter_tables;
 
     atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
@@ -98,7 +98,7 @@ void Pathtracer::Impl::worker()
         params.num_emitters        = emitter_tables.size();
         params.emitters            = emitter_tables.get();
 
-        params.environment_emitter = environment_emitter ? environment_emitter->getEmitterVPtrTable() : nullptr;
+        params.environment_emitter = environment_emitter ? environment_emitter->getVPtrTable() : nullptr;
 
         launch_params.upload(&params);
 
@@ -169,8 +169,8 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         auto skybox_texture = Renderer::getSkyboxTexture();
 
         s_pathtracer->impl->environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(skybox_texture);
-        s_pathtracer->impl->environment_emitter->initializeEmitter(s_pathtracer->impl->raytracing_pipeline,
-                                                                   s_pathtracer->impl->sbt);
+        s_pathtracer->impl->environment_emitter->initializePipeline(s_pathtracer->impl->raytracing_pipeline,
+                                                                    s_pathtracer->impl->sbt);
     }
 
     // Extract scene information
@@ -187,16 +187,16 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
         Material material = entity.getComponent<atcg::MeshRenderComponent>().material;
 
-        atcg::ref_ptr<BSDF> bsdf;
+        atcg::ref_ptr<OptixBSDF> bsdf;
         if(material.glass)
         {
             bsdf = atcg::make_ref<RefractiveBSDF>(material);
-            bsdf->initializeBSDF(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+            bsdf->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
         }
         else
         {
             bsdf = atcg::make_ref<PBRBSDF>(material);
-            bsdf->initializeBSDF(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+            bsdf->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
         }
 
         s_pathtracer->impl->bsdfs.push_back(bsdf);
@@ -209,11 +209,11 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         }
         AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
 
-        atcg::ref_ptr<Emitter> emitter = nullptr;
+        atcg::ref_ptr<OptixEmitter> emitter = nullptr;
         if(material.emissive)
         {
             emitter = atcg::make_ref<MeshEmitter>(graph, transform, material);
-            emitter->initializeEmitter(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+            emitter->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
         }
 
         s_pathtracer->impl->emitters.push_back(emitter);
@@ -222,12 +222,12 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
         for(auto emitter: s_pathtracer->impl->emitters)
         {
-            if(emitter) emitter_tables.push_back(emitter->getEmitterVPtrTable());
+            if(emitter) emitter_tables.push_back(emitter->getVPtrTable());
         }
 
         if(s_pathtracer->impl->environment_emitter)
         {
-            emitter_tables.push_back(s_pathtracer->impl->environment_emitter->getEmitterVPtrTable());
+            emitter_tables.push_back(s_pathtracer->impl->environment_emitter->getVPtrTable());
         }
 
         s_pathtracer->impl->emitter_tables.create(emitter_tables.size());
@@ -372,9 +372,8 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         hit_data.normals   = (glm::vec3*)acc.normals.data_ptr();
         hit_data.uvs       = (glm::vec3*)acc.uvs.data_ptr();
         hit_data.faces     = (glm::u32vec3*)acc.faces.data_ptr();
-        hit_data.bsdf      = s_pathtracer->impl->bsdfs[i]->getBSDFVPtrTable();
-        hit_data.emitter =
-            s_pathtracer->impl->emitters[i] ? s_pathtracer->impl->emitters[i]->getEmitterVPtrTable() : nullptr;
+        hit_data.bsdf      = s_pathtracer->impl->bsdfs[i]->getVPtrTable();
+        hit_data.emitter = s_pathtracer->impl->emitters[i] ? s_pathtracer->impl->emitters[i]->getVPtrTable() : nullptr;
 
         DeviceBuffer<HitGroupData> d_hit_data(1);
         d_hit_data.upload(&hit_data);
