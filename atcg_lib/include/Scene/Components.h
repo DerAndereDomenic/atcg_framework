@@ -246,7 +246,7 @@ struct EmitterComponent
     EmitterComponent() = default;
     EmitterComponent(const atcg::ref_ptr<Emitter>& emitter) : emitter(emitter) {}
 
-    atcg::ref_ptr<BSDF> emitter;
+    atcg::ref_ptr<Emitter> emitter;
 };
 
 }    // namespace atcg
