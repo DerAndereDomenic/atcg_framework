@@ -17,8 +17,8 @@ namespace detail
 {
 
 inline void convertToTextureObject(const torch::Tensor& texture_data,
-                            cudaArray_t& output_array,
-                            cudaTextureObject_t& output_texture)
+                                   cudaArray_t& output_array,
+                                   cudaTextureObject_t& output_texture)
 {
     torch::Tensor data = texture_data;
     if(texture_data.size(2) == 2)
@@ -78,4 +78,4 @@ inline void convertToTextureObject(const torch::Tensor& texture_data,
 
     CUDA_SAFE_CALL(cudaCreateTextureObject(&output_texture, &resDesc, &desc, nullptr));
 }
-}
+}    // namespace detail

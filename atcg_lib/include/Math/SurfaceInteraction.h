@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/glm.h>
+
 namespace atcg
 {
 

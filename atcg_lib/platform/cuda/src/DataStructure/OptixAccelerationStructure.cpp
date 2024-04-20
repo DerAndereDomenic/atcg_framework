@@ -49,4 +49,11 @@ OptixAccelerationStructure::OptixAccelerationStructure(OptixDeviceContext contex
 }
 
 OptixAccelerationStructure::~OptixAccelerationStructure() {}
+
+void OptixAccelerationStructure::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                                    const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    const std::string ptx_raygen_filename = "./build/ptxmodules.dir/Debug/MeshKernels.ptx";
+    _hit_group = pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__mesh"}, {});
+}
 }    // namespace atcg

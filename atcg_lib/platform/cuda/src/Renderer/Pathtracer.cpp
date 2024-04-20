@@ -24,6 +24,7 @@
 #include <Renderer/EmitterModels.h>
 
 #include <DataStructure/OptixAccelerationStructure.h>
+#include <Renderer/HitGroupData.h>
 
 namespace atcg
 {
@@ -46,7 +47,6 @@ public:
     atcg::dref_ptr<Params> launch_params;
 
     // Baked scene
-    std::vector<atcg::DeviceBuffer<HitGroupData>> hit_data;
     atcg::DeviceBuffer<uint8_t> ias_buffer;
     OptixTraversableHandle ias_handle;
     glm::mat4 camera_view;
@@ -216,6 +216,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
         atcg::ref_ptr<OptixAccelerationStructure> accel =
             atcg::make_ref<OptixAccelerationStructure>(s_pathtracer->impl->context, graph);
+        accel->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
 
         acc.accel = accel;
 
@@ -311,9 +312,6 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         s_pathtracer->impl->raytracing_pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
     OptixProgramGroup miss_prog_group =
         s_pathtracer->impl->raytracing_pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
-    OptixProgramGroup hitgroup_prog_group =
-        s_pathtracer->impl->raytracing_pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__ch"},
-                                                                            {});
 
     s_pathtracer->impl->raytracing_pipeline->createPipeline();
 
@@ -321,7 +319,6 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     s_pathtracer->impl->raygen_index = s_pathtracer->impl->sbt->addRaygenEntry(raygen_prog_group);
     s_pathtracer->impl->sbt->addMissEntry(miss_prog_group);
 
-    i = 0;
     for(auto e: view)
     {
         Entity entity(e, scene.get());
@@ -340,12 +337,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         hit_data.bsdf      = bsdf->getVPtrTable();
         hit_data.emitter   = emitter ? emitter->getVPtrTable() : nullptr;
 
-        DeviceBuffer<HitGroupData> d_hit_data(1);
-        d_hit_data.upload(&hit_data);
-        s_pathtracer->impl->hit_data.push_back(d_hit_data);
-
-        s_pathtracer->impl->sbt->addHitEntry(hitgroup_prog_group, d_hit_data.get());
-        ++i;
+        s_pathtracer->impl->sbt->addHitEntry(accel->getHitGroup(), hit_data);
     }
 
     s_pathtracer->impl->sbt->createSBT();
