@@ -72,6 +72,8 @@ public:
     uint32_t raygen_index = 0;
 
     uint32_t frame_counter = 0;
+
+    cudaStream_t stream;
 };
 
 void Pathtracer::Impl::worker()
@@ -101,7 +103,7 @@ void Pathtracer::Impl::worker()
         launch_params.upload(&params);
 
         OPTIX_CHECK(optixLaunch(raytracing_pipeline->getPipeline(),
-                                0,    // Default CUDA stream
+                                stream,    // Default CUDA stream
                                 (CUdeviceptr)launch_params.get(),
                                 sizeof(Params),
                                 sbt->getSBT(raygen_index),
@@ -109,7 +111,7 @@ void Pathtracer::Impl::worker()
                                 height,
                                 1));    // depth
 
-        SYNCHRONIZE_DEFAULT_STREAM();
+        CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
 
         ATCG_TRACE(frame_time.elapsedMillis());
 
@@ -156,6 +158,8 @@ void Pathtracer::init()
 
     s_pathtracer->impl->raytracing_pipeline = atcg::make_ref<RayTracingPipeline>(s_pathtracer->impl->context);
     s_pathtracer->impl->sbt                 = atcg::make_ref<ShaderBindingTable>(s_pathtracer->impl->context);
+
+    CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&s_pathtracer->impl->stream, cudaStreamNonBlocking));
 }
 
 void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera)
