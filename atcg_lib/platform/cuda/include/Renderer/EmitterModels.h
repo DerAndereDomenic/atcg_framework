@@ -10,7 +10,10 @@ namespace atcg
 class MeshEmitter : public OptixEmitter
 {
 public:
-    MeshEmitter(const atcg::ref_ptr<Graph>& graph, const glm::mat4& transform, const Material& material);
+    MeshEmitter(const torch::Tensor& positions,
+                const torch::Tensor& faces,
+                const glm::mat4& transform,
+                const Material& material);
 
     ~MeshEmitter();
 
@@ -19,11 +22,6 @@ public:
 
 private:
     cudaArray_t _emissive_texture;
-
-    torch::Tensor _positions;
-    torch::Tensor _normals;
-    torch::Tensor _uvs;
-    torch::Tensor _faces;
 
     torch::Tensor _mesh_cdf;
 

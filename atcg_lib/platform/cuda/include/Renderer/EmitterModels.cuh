@@ -18,12 +18,9 @@ struct EmitterSamplingResult
     float sampling_pdf;
 };
 
-// TODO: Make this dependent on a shape instance and don't copy the data twice
 struct MeshEmitterData
 {
     glm::vec3* positions;
-    glm::vec3* normals;
-    glm::vec3* uvs;
     glm::u32vec3* faces;
     uint32_t num_faces;
 

@@ -211,22 +211,21 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
             entity.addComponent<AccelerationStructureComponent>();
         }
         AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+        acc.vertices                        = graph->getDevicePositions().clone();
+        acc.normals                         = graph->getDeviceNormals().clone();
+        acc.uvs                             = graph->getDeviceUVs().clone();
+        acc.faces                           = graph->getDeviceFaces().clone();
 
         atcg::ref_ptr<OptixEmitter> emitter = nullptr;
         if(material.emissive)
         {
-            emitter = atcg::make_ref<MeshEmitter>(graph, transform, material);
+            emitter = atcg::make_ref<MeshEmitter>(acc.vertices, acc.faces, transform, material);
             emitter->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
         }
 
         entity.addComponent<EmitterComponent>(emitter);
 
         if(emitter) emitter_tables.push_back(emitter->getVPtrTable());
-
-        acc.vertices = graph->getDevicePositions().clone();
-        acc.normals  = graph->getDeviceNormals().clone();
-        acc.uvs      = graph->getDeviceUVs().clone();
-        acc.faces    = graph->getDeviceFaces().clone();
 
         OptixAccelBuildOptions accel_options = {};
         accel_options.buildFlags             = OPTIX_BUILD_FLAG_NONE;

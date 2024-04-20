@@ -68,7 +68,10 @@ __global__ void normalizeMeshTriangleCDFKernel(torch::PackedTensorAccessor32<flo
 }
 }    // namespace detail
 
-MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const glm::mat4& transform, const Material& material)
+MeshEmitter::MeshEmitter(const torch::Tensor& positions,
+                         const torch::Tensor& faces,
+                         const glm::mat4& transform,
+                         const Material& material)
 {
     auto emissive_texture = material.getEmissiveTexture()->getData(atcg::GPU);
 
@@ -78,17 +81,11 @@ MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const glm::mat4& tra
 
     data.emitter_scaling = material.emission_scale;
 
-    _positions = graph->getPositions(atcg::GPU).clone();
-    _normals   = graph->getNormals(atcg::GPU).clone();
-    _uvs       = graph->getUVs(atcg::GPU).clone();
-    _faces     = graph->getFaces(atcg::GPU).clone();
+    data.positions = (glm::vec3*)positions.data_ptr();
+    data.faces     = (glm::u32vec3*)faces.data_ptr();
+    data.num_faces = faces.size(0);
 
-    data.positions = (glm::vec3*)_positions.data_ptr();
-    data.normals   = (glm::vec3*)_normals.data_ptr();
-    data.uvs       = (glm::vec3*)_uvs.data_ptr();
-    data.faces     = (glm::u32vec3*)_faces.data_ptr();
-
-    _mesh_cdf = torch::zeros({_faces.size(0)}, atcg::TensorOptions::floatDeviceOptions());
+    _mesh_cdf = torch::zeros({faces.size(0)}, atcg::TensorOptions::floatDeviceOptions());
 
     auto device = _mesh_cdf.device();
 
@@ -98,12 +95,12 @@ MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const glm::mat4& tra
 
         const int threads_per_block = 128;
         dim3 grid;
-        at::cuda::getApplyGrid(_faces.size(0), grid, device.index(), threads_per_block);
+        at::cuda::getApplyGrid(faces.size(0), grid, device.index(), threads_per_block);
         dim3 threads = at::cuda::getApplyBlock(threads_per_block);
 
         detail::computeMeshTrianglePDFKernel<<<grid, threads, 0, stream>>>(
-            _positions.packed_accessor32<float, 2, torch::RestrictPtrTraits>(),
-            _faces.packed_accessor32<int, 2, torch::RestrictPtrTraits>(),
+            positions.packed_accessor32<float, 2, torch::RestrictPtrTraits>(),
+            faces.packed_accessor32<int, 2, torch::RestrictPtrTraits>(),
             transform,
             _mesh_cdf.packed_accessor32<float, 1, torch::RestrictPtrTraits>());
 
@@ -143,7 +140,6 @@ MeshEmitter::MeshEmitter(const atcg::ref_ptr<Graph>& graph, const glm::mat4& tra
     data.mesh_cdf       = (float*)_mesh_cdf.data_ptr();
     data.local_to_world = transform;
     data.world_to_local = glm::inverse(transform);
-    data.num_faces      = _faces.size(0);
 
     _mesh_emitter_data.upload(&data);
 }
