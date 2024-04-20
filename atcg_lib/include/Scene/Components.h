@@ -10,6 +10,7 @@
 #include <DataStructure/Graph.h>
 #include <Renderer/BSDF.h>
 #include <Renderer/Emitter.h>
+#include <DataStructure/AccelerationStructure.h>
 #include <nanort.h>
 
 #include <vector>
@@ -103,15 +104,9 @@ struct AccelerationStructureComponent
 {
     AccelerationStructureComponent() = default;
 
-    // Don't retrieve this from opengl each time used
-    torch::Tensor vertices;
-    torch::Tensor normals;
-    torch::Tensor uvs;
-    torch::Tensor faces;
+    AccelerationStructureComponent(const atcg::ref_ptr<AccelerationStructureComponent>& accel) : accel(accel) {}
 
-    nanort::BVHAccel<float> bvh_accel;    // Used for CPU tracing
-    unsigned long long optix_accel;       // = OptixTraversableHandle
-    atcg::DeviceBuffer<uint8_t> gas_buffer;
+    atcg::ref_ptr<AccelerationStructureComponent> accel;
 };
 
 struct CameraComponent

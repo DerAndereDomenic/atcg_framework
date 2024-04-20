@@ -20,47 +20,9 @@ void Tracing::prepareAccelerationStructure(Entity entity)
 
     auto& acc_component = entity.getComponent<AccelerationStructureComponent>();
 
-    auto& geometry_component  = entity.getComponent<GeometryComponent>();
-    atcg::ref_ptr<Graph> mesh = geometry_component.graph;
-    if(mesh->type() != GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH)
-    {
-        ATCG_WARN("Can only create BVH for triangles. Aborting...");
-        return;
-    }
+    auto& geometry = entity.getComponent<GeometryComponent>();
 
-    bool vertices_mapped = mesh->getVerticesBuffer()->isHostMapped();
-    bool faces_mapped    = mesh->getFaceIndexBuffer()->isHostMapped();
-
-    acc_component.vertices = mesh->getHostPositions().clone();
-    acc_component.normals  = mesh->getHostNormals().clone();
-    acc_component.uvs      = mesh->getHostUVs().clone();
-    acc_component.faces    = mesh->getHostFaces().clone();
-
-    // Restore original mapping relation
-    if(!vertices_mapped)
-    {
-        mesh->getVerticesBuffer()->unmapHostPointers();
-    }
-    if(!faces_mapped)
-    {
-        mesh->getFaceIndexBuffer()->unmapHostPointers();
-    }
-
-    nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.data_ptr()),
-                                              reinterpret_cast<const uint32_t*>(acc_component.faces.data_ptr()),
-                                              sizeof(float) * 3);
-    nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const float*>(acc_component.vertices.data_ptr()),
-                                                 reinterpret_cast<const uint32_t*>(acc_component.faces.data_ptr()),
-                                                 sizeof(float) * 3);
-    bool ret = acc_component.bvh_accel.Build(mesh->n_faces(), triangle_mesh, triangle_pred);
-    assert(ret);
-
-    nanort::BVHBuildStatistics stats = acc_component.bvh_accel.GetStatistics();
-
-    ATCG_INFO("BVH statistics:");
-    ATCG_INFO("\t# of leaf   nodes: {0}", stats.num_leaf_nodes);
-    ATCG_INFO("\t# of branch nodes: {0}", stats.num_branch_nodes);
-    ATCG_INFO("\tMax tree depth   : {0}", stats.max_tree_depth);
+    acc_component.accel = atcg::make_ref<BVHAccelerationStructure>(geometry.graph);
 }
 
 SurfaceInteraction
@@ -74,24 +36,26 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
 
     auto& acc_component = entity.getComponent<AccelerationStructureComponent>();
 
-    if(!acc_component.bvh_accel.IsValid())
+    atcg::ref_ptr<BVHAccelerationStructure> bvh_accel = entity.getComponent<AccelerationStructureComponent>().accel;
+
+    if(!bvh_accel->getBVH().IsValid())
     {
         ATCG_WARN("Acceleration Structure not valid. Aborting...");
         return SurfaceInteraction();
     }
 
-    return traceRay(acc_component.bvh_accel,
-                    acc_component.vertices,
-                    acc_component.normals,
-                    acc_component.uvs,
-                    acc_component.faces,
+    return traceRay(bvh_accel,
+                    bvh_accel->getPositions(),
+                    bvh_accel->getNormals(),
+                    bvh_accel->getUVs(),
+                    bvh_accel->getFaces(),
                     ray_origin,
                     ray_dir,
                     t_min,
                     t_max);
 }
 
-SurfaceInteraction Tracing::traceRay(const nanort::BVHAccel<float>& accel,
+SurfaceInteraction Tracing::traceRay(const atcg::ref_ptr<BVHAccelerationStructure>& accel,
                                      const torch::Tensor& positions,
                                      const torch::Tensor& normals,
                                      const torch::Tensor& uvs,
@@ -101,7 +65,7 @@ SurfaceInteraction Tracing::traceRay(const nanort::BVHAccel<float>& accel,
                                      float tmin,
                                      float tmax)
 {
-    if(!accel.IsValid())
+    if(!accel->getBVH().IsValid())
     {
         ATCG_WARN("Acceleration Structure not valid. Aborting...");
         return SurfaceInteraction();
@@ -121,7 +85,7 @@ SurfaceInteraction Tracing::traceRay(const nanort::BVHAccel<float>& accel,
                                                        reinterpret_cast<const uint32_t*>(faces.data_ptr()),
                                                        sizeof(float) * 3);
     nanort::TriangleIntersection<> isect;
-    bool hit = accel.Traverse(ray, triangle_intersector, &isect);
+    bool hit = accel->getBVH().Traverse(ray, triangle_intersector, &isect);
 
     if(!hit)
     {

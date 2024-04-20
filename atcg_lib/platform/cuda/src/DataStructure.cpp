@@ -1,0 +1,52 @@
+#include <DataStructure/OptixAccelerationStructure.h>
+#include <Renderer/Common.h>
+
+namespace atcg
+{
+OptixAccelerationStructure::OptixAccelerationStructure(OptixDeviceContext context, const atcg::ref_ptr<Graph>& graph)
+{
+    _positions = graph->getDevicePositions().clone();
+    _normals   = graph->getDeviceNormals().clone();
+    _uvs       = graph->getDeviceUVs().clone();
+    _faces     = graph->getDeviceFaces().clone();
+
+    OptixAccelBuildOptions accel_options = {};
+    accel_options.buildFlags             = OPTIX_BUILD_FLAG_NONE;
+    accel_options.operation              = OPTIX_BUILD_OPERATION_BUILD;
+
+    const uint32_t triangle_input_flags[1]     = {OPTIX_GEOMETRY_FLAG_NONE};
+    OptixBuildInput triangle_input             = {};
+    triangle_input.type                        = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
+    triangle_input.triangleArray.vertexFormat  = OPTIX_VERTEX_FORMAT_FLOAT3;
+    triangle_input.triangleArray.numVertices   = _positions.size(0);
+    CUdeviceptr ptr                            = (CUdeviceptr)_positions.data_ptr();
+    triangle_input.triangleArray.vertexBuffers = &ptr;
+    triangle_input.triangleArray.flags         = triangle_input_flags;
+    triangle_input.triangleArray.numSbtRecords = 1;
+
+    triangle_input.triangleArray.indexFormat      = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
+    triangle_input.triangleArray.numIndexTriplets = _faces.size(0);
+    triangle_input.triangleArray.indexBuffer      = (CUdeviceptr)_faces.data_ptr();
+
+    OptixAccelBufferSizes gas_buffer_sizes;
+    OPTIX_CHECK(optixAccelComputeMemoryUsage(context, &accel_options, &triangle_input, 1, &gas_buffer_sizes));
+
+    atcg::DeviceBuffer<uint8_t> d_temp_buffer_gas(gas_buffer_sizes.tempSizeInBytes);
+    _gas_buffer = atcg::DeviceBuffer<uint8_t>(gas_buffer_sizes.outputSizeInBytes);
+
+    OPTIX_CHECK(optixAccelBuild(context,
+                                0,    // CUDA stream
+                                &accel_options,
+                                &triangle_input,
+                                1,    // num build inputs
+                                (CUdeviceptr)d_temp_buffer_gas.get(),
+                                gas_buffer_sizes.tempSizeInBytes,
+                                (CUdeviceptr)_gas_buffer.get(),
+                                gas_buffer_sizes.outputSizeInBytes,
+                                &_handle,    // Output handle to the struct
+                                nullptr,     // emitted property list
+                                0));         // num emitted properties
+}
+
+OptixAccelerationStructure::~OptixAccelerationStructure() {}
+}    // namespace atcg

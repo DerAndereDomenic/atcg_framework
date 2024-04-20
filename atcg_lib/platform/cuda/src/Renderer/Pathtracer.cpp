@@ -23,6 +23,8 @@
 #include <Renderer/BSDFModels.h>
 #include <Renderer/EmitterModels.h>
 
+#include <DataStructure/OptixAccelerationStructure.h>
+
 namespace atcg
 {
 
@@ -211,15 +213,16 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
             entity.addComponent<AccelerationStructureComponent>();
         }
         AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
-        acc.vertices                        = graph->getDevicePositions().clone();
-        acc.normals                         = graph->getDeviceNormals().clone();
-        acc.uvs                             = graph->getDeviceUVs().clone();
-        acc.faces                           = graph->getDeviceFaces().clone();
+
+        atcg::ref_ptr<OptixAccelerationStructure> accel =
+            atcg::make_ref<OptixAccelerationStructure>(s_pathtracer->impl->context, graph);
+
+        acc.accel = accel;
 
         atcg::ref_ptr<OptixEmitter> emitter = nullptr;
         if(material.emissive)
         {
-            emitter = atcg::make_ref<MeshEmitter>(acc.vertices, acc.faces, transform, material);
+            emitter = atcg::make_ref<MeshEmitter>(accel->getPositions(), accel->getFaces(), transform, material);
             emitter->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
         }
 
@@ -227,46 +230,6 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
         if(emitter) emitter_tables.push_back(emitter->getVPtrTable());
 
-        OptixAccelBuildOptions accel_options = {};
-        accel_options.buildFlags             = OPTIX_BUILD_FLAG_NONE;
-        accel_options.operation              = OPTIX_BUILD_OPERATION_BUILD;
-
-        const uint32_t triangle_input_flags[1]     = {OPTIX_GEOMETRY_FLAG_NONE};
-        OptixBuildInput triangle_input             = {};
-        triangle_input.type                        = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
-        triangle_input.triangleArray.vertexFormat  = OPTIX_VERTEX_FORMAT_FLOAT3;
-        triangle_input.triangleArray.numVertices   = acc.vertices.size(0);
-        CUdeviceptr ptr                            = (CUdeviceptr)acc.vertices.data_ptr();
-        triangle_input.triangleArray.vertexBuffers = &ptr;
-        triangle_input.triangleArray.flags         = triangle_input_flags;
-        triangle_input.triangleArray.numSbtRecords = 1;
-
-        triangle_input.triangleArray.indexFormat      = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-        triangle_input.triangleArray.numIndexTriplets = acc.faces.size(0);
-        triangle_input.triangleArray.indexBuffer      = (CUdeviceptr)acc.faces.data_ptr();
-
-        OptixAccelBufferSizes gas_buffer_sizes;
-        OPTIX_CHECK(optixAccelComputeMemoryUsage(s_pathtracer->impl->context,
-                                                 &accel_options,
-                                                 &triangle_input,
-                                                 1,
-                                                 &gas_buffer_sizes));
-
-        atcg::DeviceBuffer<uint8_t> d_temp_buffer_gas(gas_buffer_sizes.tempSizeInBytes);
-        acc.gas_buffer = atcg::DeviceBuffer<uint8_t>(gas_buffer_sizes.outputSizeInBytes);
-
-        OPTIX_CHECK(optixAccelBuild(s_pathtracer->impl->context,
-                                    0,    // CUDA stream
-                                    &accel_options,
-                                    &triangle_input,
-                                    1,    // num build inputs
-                                    (CUdeviceptr)d_temp_buffer_gas.get(),
-                                    gas_buffer_sizes.tempSizeInBytes,
-                                    (CUdeviceptr)acc.gas_buffer.get(),
-                                    gas_buffer_sizes.outputSizeInBytes,
-                                    &acc.optix_accel,    // Output handle to the struct
-                                    nullptr,             // emitted property list
-                                    0));                 // num emitted properties
 
         graph->unmapAllPointers();
 
@@ -288,7 +251,8 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     {
         Entity entity(e, scene.get());
 
-        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+        AccelerationStructureComponent& acc             = entity.getComponent<AccelerationStructureComponent>();
+        atcg::ref_ptr<OptixAccelerationStructure> accel = acc.accel;
 
         auto& optix_instance = optix_instances[i];
         memset(&optix_instance, 0, sizeof(OptixInstance));
@@ -297,7 +261,7 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         optix_instance.instanceId        = i;
         optix_instance.sbtOffset         = i;
         optix_instance.visibilityMask    = 1;
-        optix_instance.traversableHandle = acc.optix_accel;
+        optix_instance.traversableHandle = accel->getTraversableHandle();
 
         reinterpret_cast<glm::mat3x4&>(optix_instance.transform) =
             glm::transpose(glm::mat4x3(transforms[i].getModel()));
@@ -362,15 +326,17 @@ void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     {
         Entity entity(e, scene.get());
 
-        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+        AccelerationStructureComponent& acc             = entity.getComponent<AccelerationStructureComponent>();
+        atcg::ref_ptr<OptixAccelerationStructure> accel = acc.accel;
+
         atcg::ref_ptr<OptixBSDF> bsdf       = entity.getComponent<BSDFComponent>().bsdf;
         atcg::ref_ptr<OptixEmitter> emitter = entity.getComponent<EmitterComponent>().emitter;
 
         HitGroupData hit_data;
-        hit_data.positions = (glm::vec3*)acc.vertices.data_ptr();
-        hit_data.normals   = (glm::vec3*)acc.normals.data_ptr();
-        hit_data.uvs       = (glm::vec3*)acc.uvs.data_ptr();
-        hit_data.faces     = (glm::u32vec3*)acc.faces.data_ptr();
+        hit_data.positions = (glm::vec3*)accel->getPositions().data_ptr();
+        hit_data.normals   = (glm::vec3*)accel->getNormals().data_ptr();
+        hit_data.uvs       = (glm::vec3*)accel->getUVs().data_ptr();
+        hit_data.faces     = (glm::u32vec3*)accel->getFaces().data_ptr();
         hit_data.bsdf      = bsdf->getVPtrTable();
         hit_data.emitter   = emitter ? emitter->getVPtrTable() : nullptr;
 

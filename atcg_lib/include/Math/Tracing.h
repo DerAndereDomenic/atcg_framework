@@ -3,6 +3,7 @@
 #include <nanort.h>
 #include <torch/types.h>
 #include <Math/SurfaceInteraction.h>
+#include <DataStructure/AccelerationStructure.h>
 
 
 namespace atcg
@@ -53,7 +54,7 @@ traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, f
  *
  * @return The intersection information
  */
-SurfaceInteraction traceRay(const nanort::BVHAccel<float>& accel,
+SurfaceInteraction traceRay(const atcg::ref_ptr<BVHAccelerationStructure>& accel,
                             const torch::Tensor& positions,
                             const torch::Tensor& normals,
                             const torch::Tensor& uvs,
