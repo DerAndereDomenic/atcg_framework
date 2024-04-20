@@ -80,7 +80,7 @@ __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::
     float4 color_u           = tex2D<float4>(sbt_data->emissive_texture, si.uv.x, si.uv.y);
     glm::vec3 emissive_color = glm::vec3(color_u.x, color_u.y, color_u.z);
 
-    result.radiance_weight_at_receiver = emissive_color * one_over_light_direction_pdf;
+    result.radiance_weight_at_receiver = sbt_data->emitter_scaling * emissive_color * one_over_light_direction_pdf;
 
     // Probability of sampling this direction via light source sampling
     result.sampling_pdf = 1 / one_over_light_direction_pdf;
