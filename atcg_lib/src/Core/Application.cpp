@@ -152,12 +152,14 @@ bool Application::onWindowClose(WindowCloseEvent* e)
 bool Application::onWindowResize(WindowResizeEvent* e)
 {
     Renderer::resize(e->getWidth(), e->getHeight());
+    Pathtracer::resize(e->getWidth(), e->getHeight());
     return false;
 }
 
 bool Application::onViewportResize(ViewportResizeEvent* e)
 {
     Renderer::resize(e->getWidth(), e->getHeight());
+    Pathtracer::resize(e->getWidth(), e->getHeight());
     return false;
 }
 }    // namespace atcg

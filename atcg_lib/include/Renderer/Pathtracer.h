@@ -29,6 +29,8 @@ public:
 
     static atcg::ref_ptr<Texture2D> getOutputTexture();
 
+    static void resize(const uint32_t width, const uint32_t height);
+
     ~Pathtracer();
 
 private:

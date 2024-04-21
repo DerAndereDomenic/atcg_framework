@@ -28,7 +28,7 @@ extern "C" __global__ void __raygen__rg()
     glm::vec3 cam_eye = glm::make_vec3(params.cam_eye);
     glm::vec3 U       = glm::make_vec3(params.U) * (float)params.image_width / (float)params.image_height;
     glm::vec3 V       = glm::make_vec3(params.V);
-    glm::vec3 W       = glm::make_vec3(params.W);
+    glm::vec3 W       = glm::make_vec3(params.W) / glm::tan(glm::radians(30.0f));
 
     glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
     glm::vec3 ray_origin = cam_eye;
@@ -40,7 +40,7 @@ extern "C" __global__ void __raygen__rg()
 
     bool next_ray_valid = true;
 
-    for(int n = 0; n < 50; ++n)
+    for(int n = 0; n < 10; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;

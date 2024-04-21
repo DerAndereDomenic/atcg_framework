@@ -160,9 +160,12 @@ public:
 
         atcg::ref_ptr<atcg::Texture2D> pt_texture = atcg::Pathtracer::getOutputTexture();
 
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
         ImGui::Begin("Pathtracer");
+        ImGui::PopStyleVar();
 
-        ImGui::Image((void*)(uint64_t)pt_texture->getID(), ImVec2(1280, 720));
+        const atcg::Application* app = atcg::Application::get();
+        ImGui::Image((void*)(uint64_t)pt_texture->getID(), ImVec2(app->getViewportSize().x, app->getViewportSize().y));
 
         ImGui::End();
 

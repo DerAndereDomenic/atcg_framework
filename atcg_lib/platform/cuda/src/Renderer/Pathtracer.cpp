@@ -354,9 +354,12 @@ void Pathtracer::start()
 
 void Pathtracer::stop()
 {
-    s_pathtracer->impl->running = false;
+    if(s_pathtracer->impl->running)
+    {
+        s_pathtracer->impl->running = false;
 
-    if(s_pathtracer->impl->worker_thread.joinable()) s_pathtracer->impl->worker_thread.join();
+        if(s_pathtracer->impl->worker_thread.joinable()) s_pathtracer->impl->worker_thread.join();
+    }
 }
 
 void Pathtracer::reset(const atcg::ref_ptr<PerspectiveCamera>& camera)
@@ -371,6 +374,32 @@ void Pathtracer::reset(const atcg::ref_ptr<PerspectiveCamera>& camera)
     s_pathtracer->impl->frame_counter = 0;
 
     start();
+}
+
+void Pathtracer::resize(const uint32_t width, const uint32_t height)
+{
+    bool running = s_pathtracer->impl->running;
+    stop();
+
+    s_pathtracer->impl->width  = width;
+    s_pathtracer->impl->height = height;
+
+    // Resize
+    s_pathtracer->impl->swap_chain_buffer = atcg::DeviceBuffer<glm::u8vec4>(
+        2 * s_pathtracer->impl->width * s_pathtracer->impl->height);    // 2 swap chain buffers
+    s_pathtracer->impl->output_buffer = s_pathtracer->impl->swap_chain_buffer.get();
+
+    s_pathtracer->impl->accumulation_buffer =
+        atcg::DeviceBuffer<glm::vec3>(s_pathtracer->impl->width * s_pathtracer->impl->height);
+
+    TextureSpecification spec;
+    spec.width                         = s_pathtracer->impl->width;
+    spec.height                        = s_pathtracer->impl->height;
+    s_pathtracer->impl->output_texture = atcg::Texture2D::create(spec);
+
+    s_pathtracer->impl->frame_counter = 0;
+
+    if(running) start();
 }
 
 atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
