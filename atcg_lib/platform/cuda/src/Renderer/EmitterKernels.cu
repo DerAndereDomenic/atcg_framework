@@ -69,8 +69,8 @@ __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::
 
     // light source sampling
     result.direction_to_light       = glm::normalize(light_position - si.position);
-    float distance_to_light_squared = glm::length2(light_position - si.position);
-    result.distance_to_light        = glm::length(light_position - si.position);
+    float distance_to_light_squared = glm::length2(light_position - si.position) + 1e-5f;
+    result.distance_to_light        = glm::length(light_position - si.position) + 1e-5f;
     result.normal_at_light          = light_normal;
 
     float one_over_light_position_pdf  = sbt_data->total_area;

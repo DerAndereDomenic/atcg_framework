@@ -61,7 +61,7 @@ inline ATCG_HOST_DEVICE float D_GGX(const float NdotH, const float roughness)
 {
     float a2 = roughness * roughness;
     float d  = (NdotH * a2 - NdotH) * NdotH + 1.0f;
-    return a2 / (glm::pi<float>() * d * d);
+    return a2 / (glm::pi<float>() * d * d + 1e-5f);
 }
 
 inline ATCG_HOST_DEVICE glm::vec3 warp_square_to_hemisphere_ggx(const glm::vec2& uv, float roughness)
@@ -125,7 +125,7 @@ inline ATCG_HOST_DEVICE float geometrySchlickGGX(float NdotV, float roughness)
     float k = (r * r) / 8.0f;
 
     float nom   = NdotV;
-    float denom = NdotV * (1.0f - k) + k;
+    float denom = NdotV * (1.0f - k) + k + 1e-5f;
 
     return nom / denom;
 }

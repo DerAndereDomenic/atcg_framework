@@ -52,7 +52,7 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
     glm::vec3 F = atcg::fresnel_schlick(metallic_color, max(dot(H, view_dir), 0.0));
 
     glm::vec3 numerator = NDF * G * F;
-    float denominator   = 4.0 * NdotV * NdotL + 0.0001;
+    float denominator   = 4.0 * NdotV * NdotL + 1e-5f;
     glm::vec3 specular  = numerator / denominator;
 
     glm::vec3 kS = F;
