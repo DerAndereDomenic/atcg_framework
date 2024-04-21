@@ -43,10 +43,11 @@ public:
             const auto& window = atcg::Application::get()->getWindow();
             float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
             camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
+            camera_controller->getCamera()->setFOV(70.0f);
         }
 
-        camera_controller->getCamera()->setPosition(glm::vec3(0.0f, 1.0f, 1.8f));
-        camera_controller->getCamera()->setLookAt(glm::vec3(0.0f, 1.0f, 0.8f));
+        camera_controller->getCamera()->setPosition(glm::vec3(0.0f, 1.0f, 2.4f));
+        camera_controller->getCamera()->setLookAt(glm::vec3(0.0f, 1.0f, 1.4f));
     }
 
     // This gets called each frame
