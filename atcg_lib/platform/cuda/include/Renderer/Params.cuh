@@ -24,6 +24,7 @@ struct Params
     float U[3];
     float V[3];
     float W[3];
+    float fov_y;
 
     // Skybox
     const atcg::EmitterVPtrTable* environment_emitter;
