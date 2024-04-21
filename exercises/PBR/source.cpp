@@ -162,7 +162,7 @@ public:
 
         ImGui::Begin("Pathtracer");
 
-        ImGui::Image((void*)(uint64_t)pt_texture->getID(), ImVec2(1024, 1024));
+        ImGui::Image((void*)(uint64_t)pt_texture->getID(), ImVec2(1280, 720));
 
         ImGui::End();
 

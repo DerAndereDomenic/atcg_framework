@@ -49,7 +49,7 @@ public:
     // Baked scene
     atcg::DeviceBuffer<uint8_t> ias_buffer;
     OptixTraversableHandle ias_handle;
-    glm::mat4 camera_view;
+    glm::mat4 inv_camera_view;
 
     atcg::ref_ptr<OptixEmitter> environment_emitter = nullptr;
     atcg::DeviceBuffer<const atcg::EmitterVPtrTable*> emitter_tables;
@@ -57,8 +57,8 @@ public:
     atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
 
     // Basic swap chain
-    uint32_t width  = 1024;
-    uint32_t height = 1024;
+    uint32_t width  = 1280;
+    uint32_t height = 720;
     glm::u8vec4* output_buffer;
     uint8_t swap_index = 1;
     atcg::DeviceBuffer<glm::u8vec4> swap_chain_buffer;
@@ -86,15 +86,15 @@ void Pathtracer::Impl::worker()
 
         Params params;
 
-        memcpy(params.cam_eye, glm::value_ptr(camera_view[3]), sizeof(glm::vec3));
-        memcpy(params.U, glm::value_ptr(glm::normalize(camera_view[0])), sizeof(glm::vec3));
-        memcpy(params.V, glm::value_ptr(glm::normalize(camera_view[1])), sizeof(glm::vec3));
-        memcpy(params.W, glm::value_ptr(-glm::normalize(camera_view[2])), sizeof(glm::vec3));
+        memcpy(params.cam_eye, glm::value_ptr(inv_camera_view[3]), sizeof(glm::vec3));
+        memcpy(params.U, glm::value_ptr(glm::normalize(inv_camera_view[0])), sizeof(glm::vec3));
+        memcpy(params.V, glm::value_ptr(glm::normalize(inv_camera_view[1])), sizeof(glm::vec3));
+        memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
 
         params.accumulation_buffer = accumulation_buffer.get();
         params.output_image        = output_buffer;
-        params.image_height        = width;
-        params.image_width         = height;
+        params.image_height        = height;
+        params.image_width         = width;
         params.handle              = ias_handle;
         params.frame_counter       = frame_counter;
         params.num_emitters        = emitter_tables.size();
@@ -166,7 +166,7 @@ void Pathtracer::init()
 
 void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera)
 {
-    s_pathtracer->impl->camera_view = glm::inverse(camera->getView());
+    s_pathtracer->impl->inv_camera_view = glm::inverse(camera->getView());
 
     if(Renderer::hasSkybox())
     {
@@ -363,7 +363,7 @@ void Pathtracer::reset(const atcg::ref_ptr<PerspectiveCamera>& camera)
 {
     stop();
 
-    s_pathtracer->impl->camera_view = glm::inverse(camera->getView());
+    s_pathtracer->impl->inv_camera_view = glm::inverse(camera->getView());
 
     s_pathtracer->impl->accumulation_buffer =
         atcg::DeviceBuffer<glm::vec3>(s_pathtracer->impl->width * s_pathtracer->impl->height);

@@ -26,7 +26,7 @@ extern "C" __global__ void __raygen__rg()
     float v = (((float)(params.image_height - launch_idx.y) + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
 
     glm::vec3 cam_eye = glm::make_vec3(params.cam_eye);
-    glm::vec3 U       = glm::make_vec3(params.U);
+    glm::vec3 U       = glm::make_vec3(params.U) * (float)params.image_width / (float)params.image_height;
     glm::vec3 V       = glm::make_vec3(params.V);
     glm::vec3 W       = glm::make_vec3(params.W);
 
