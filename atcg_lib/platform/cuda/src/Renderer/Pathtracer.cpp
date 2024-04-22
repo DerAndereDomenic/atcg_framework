@@ -55,14 +55,14 @@ public:
     atcg::ref_ptr<OptixEmitter> environment_emitter = nullptr;
     atcg::DeviceBuffer<const atcg::EmitterVPtrTable*> emitter_tables;
 
-    atcg::DeviceBuffer<glm::vec3> accumulation_buffer;
+    torch::Tensor accumulation_buffer;
 
     // Basic swap chain
     uint32_t width  = 1280;
     uint32_t height = 720;
     glm::u8vec4* output_buffer;
     uint8_t swap_index = 1;
-    atcg::DeviceBuffer<glm::u8vec4> swap_chain_buffer;
+    torch::Tensor swap_chain_buffer;
     bool dirty = false;
     std::mutex swap_chain_mutex;
 
@@ -93,7 +93,7 @@ void Pathtracer::Impl::worker()
         memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
         params.fov_y = fov_y;
 
-        params.accumulation_buffer = accumulation_buffer.get();
+        params.accumulation_buffer = (glm::vec3*)accumulation_buffer.data_ptr();
         params.output_image        = output_buffer;
         params.image_height        = height;
         params.image_width         = width;
@@ -124,7 +124,7 @@ void Pathtracer::Impl::worker()
         // Perform swap
         {
             std::lock_guard guard(swap_chain_mutex);
-            output_buffer = swap_chain_buffer.get() + swap_index * width * height;
+            output_buffer = (glm::u8vec4*)swap_chain_buffer.index({swap_index}).data_ptr();
             swap_index    = (swap_index + 1) % 2;
             dirty         = true;
         }
@@ -141,12 +141,13 @@ void Pathtracer::init()
 {
     s_pathtracer->impl = std::make_unique<Impl>();
 
-    s_pathtracer->impl->swap_chain_buffer = atcg::DeviceBuffer<glm::u8vec4>(
-        2 * s_pathtracer->impl->width * s_pathtracer->impl->height);    // 2 swap chain buffers
-    s_pathtracer->impl->output_buffer = s_pathtracer->impl->swap_chain_buffer.get();
+    s_pathtracer->impl->swap_chain_buffer = torch::zeros({2, s_pathtracer->impl->height, s_pathtracer->impl->width, 4},
+                                                         atcg::TensorOptions::uint8DeviceOptions());
 
-    s_pathtracer->impl->accumulation_buffer =
-        atcg::DeviceBuffer<glm::vec3>(s_pathtracer->impl->width * s_pathtracer->impl->height);
+    s_pathtracer->impl->output_buffer = (glm::u8vec4*)s_pathtracer->impl->swap_chain_buffer.index({0}).data_ptr();
+
+    s_pathtracer->impl->accumulation_buffer = torch::zeros({s_pathtracer->impl->height, s_pathtracer->impl->width, 3},
+                                                           atcg::TensorOptions::floatDeviceOptions());
 
     TextureSpecification spec;
     spec.width                         = s_pathtracer->impl->width;
@@ -372,8 +373,8 @@ void Pathtracer::reset(const atcg::ref_ptr<PerspectiveCamera>& camera)
     s_pathtracer->impl->inv_camera_view = glm::inverse(camera->getView());
     s_pathtracer->impl->fov_y           = camera->getFOV();
 
-    s_pathtracer->impl->accumulation_buffer =
-        atcg::DeviceBuffer<glm::vec3>(s_pathtracer->impl->width * s_pathtracer->impl->height);
+    s_pathtracer->impl->accumulation_buffer = torch::zeros({s_pathtracer->impl->height, s_pathtracer->impl->width, 3},
+                                                           atcg::TensorOptions::floatDeviceOptions());
 
     s_pathtracer->impl->frame_counter = 0;
 
@@ -389,12 +390,13 @@ void Pathtracer::resize(const uint32_t width, const uint32_t height)
     s_pathtracer->impl->height = height;
 
     // Resize
-    s_pathtracer->impl->swap_chain_buffer = atcg::DeviceBuffer<glm::u8vec4>(
-        2 * s_pathtracer->impl->width * s_pathtracer->impl->height);    // 2 swap chain buffers
-    s_pathtracer->impl->output_buffer = s_pathtracer->impl->swap_chain_buffer.get();
+    s_pathtracer->impl->swap_chain_buffer = torch::zeros({2, s_pathtracer->impl->height, s_pathtracer->impl->width, 4},
+                                                         atcg::TensorOptions::uint8DeviceOptions());
 
-    s_pathtracer->impl->accumulation_buffer =
-        atcg::DeviceBuffer<glm::vec3>(s_pathtracer->impl->width * s_pathtracer->impl->height);
+    s_pathtracer->impl->output_buffer = (glm::u8vec4*)s_pathtracer->impl->swap_chain_buffer.index({0}).data_ptr();
+
+    s_pathtracer->impl->accumulation_buffer = torch::zeros({s_pathtracer->impl->height, s_pathtracer->impl->width, 3},
+                                                           atcg::TensorOptions::floatDeviceOptions());
 
     TextureSpecification spec;
     spec.width                         = s_pathtracer->impl->width;
@@ -413,13 +415,8 @@ atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
 
         if(s_pathtracer->impl->dirty)
         {
-            glm::u8vec4* data_ptr = s_pathtracer->impl->swap_chain_buffer.get() + s_pathtracer->impl->swap_index *
-                                                                                      s_pathtracer->impl->width *
-                                                                                      s_pathtracer->impl->height;
-
             s_pathtracer->impl->output_texture->setData(
-                atcg::createDeviceTensorFromPointer((uint8_t*)data_ptr,
-                                                    {s_pathtracer->impl->height, s_pathtracer->impl->width, 4}));
+                s_pathtracer->impl->swap_chain_buffer.index({s_pathtracer->impl->swap_index}));
             s_pathtracer->impl->dirty = false;
         }
     }
