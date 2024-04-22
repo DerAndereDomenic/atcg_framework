@@ -107,6 +107,11 @@ void ImGuiLayer::onEvent(Event* event)
     }
 }
 
+void ImGuiLayer::setPathtracingFocus()
+{
+    ImGui::SetWindowFocus("Pathtracer");
+}
+
 void ImGuiLayer::onImGuiRender() {}
 
 void ImGuiLayer::begin()

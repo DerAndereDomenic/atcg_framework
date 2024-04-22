@@ -202,6 +202,8 @@ public:
 
         if(event->getKeyCode() == GLFW_KEY_P)
         {
+            auto imgui_layer = atcg::Application::get()->getImGuiLayer();
+            imgui_layer->setPathtracingFocus();
             atcg::Pathtracer::bakeScene(scene, camera_controller->getCamera());
             atcg::Pathtracer::start();
         }

@@ -55,6 +55,11 @@ public:
     void end();
 
     /**
+     * @brief Set the focus to the pathtracing window
+     */
+    void setPathtracingFocus();
+
+    /**
      * @brief Block events by imgui
      *
      * @param block If events should be blocked
@@ -80,14 +85,14 @@ public:
      *
      * @return The viewport size
      */
-    glm::ivec2 getViewportSize() const { return _viewport_size; }
+    inline glm::ivec2 getViewportSize() const { return _viewport_size; }
 
     /**
      * @brief Get the current viewport position (without title bar)
      *
      * @return The viewport position
      */
-    glm::ivec2 getViewportPosition() const { return _viewport_position; }
+    inline glm::ivec2 getViewportPosition() const { return _viewport_position; }
 
 private:
     bool _block_events            = true;
