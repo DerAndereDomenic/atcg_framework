@@ -11,8 +11,12 @@
 #include <Renderer/Emitter.h>
 #include <Renderer/EmitterModels.cuh>
 
+#include <torch/types.h>
+#include <Renderer/PerspectiveCamera.h>
+
 namespace atcg
 {
+class Scene;
 class OptixComponent
 {
 public:
@@ -36,6 +40,33 @@ public:
 
 protected:
     atcg::dref_ptr<EmitterVPtrTable> _vptr_table;
+};
+
+class OptixRaytracingShader : public OptixComponent
+{
+public:
+    OptixRaytracingShader(OptixDeviceContext context,
+                          const atcg::ref_ptr<Scene>& scene,
+                          const atcg::ref_ptr<PerspectiveCamera>& camera)
+        : _context(context),
+          _scene(scene)
+    {
+    }
+
+    virtual ~OptixRaytracingShader() {}
+
+
+    virtual void reset() = 0;
+
+    virtual void setCamera(const atcg::ref_ptr<PerspectiveCamera>& camera) = 0;
+
+    virtual void generateRays(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                              const atcg::ref_ptr<ShaderBindingTable>& sbt,
+                              torch::Tensor& output) = 0;
+
+protected:
+    OptixDeviceContext _context;
+    atcg::ref_ptr<Scene> _scene;
 };
 
 }    // namespace atcg

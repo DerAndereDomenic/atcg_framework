@@ -1,12 +1,11 @@
 #include <Renderer/Pathtracer.h>
 
-#include <Scene/Components.h>
-#include <Math/Tracing.h>
 #include <DataStructure/Timer.h>
-#include <Math/Random.h>
 
 #include <Scene/Entity.h>
-#include <Renderer/Params.cuh>
+#include <Scene/Components.h>
+
+#include <Renderer/Common.h>
 
 #include <thread>
 #include <mutex>
@@ -16,15 +15,11 @@
 #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
 
-#include <Renderer/Common.h>
 #include <Renderer/RaytracingPipeline.h>
 #include <Renderer/ShaderBindingTable.h>
 
-#include <Renderer/BSDFModels.h>
-#include <Renderer/EmitterModels.h>
 
-#include <DataStructure/OptixAccelerationStructure.h>
-#include <Renderer/HitGroupData.h>
+#include <Renderer/PathtracingShader.h>
 
 namespace atcg
 {
@@ -44,22 +39,6 @@ public:
     atcg::ref_ptr<RayTracingPipeline> raytracing_pipeline;
     atcg::ref_ptr<ShaderBindingTable> sbt;
 
-    atcg::dref_ptr<Params> launch_params;
-
-    // Baked scene
-    atcg::DeviceBuffer<uint8_t> ias_buffer;
-    OptixTraversableHandle ias_handle;
-    glm::mat4 inv_camera_view;
-    float fov_y = 60.0f;
-
-    atcg::ref_ptr<OptixEmitter> environment_emitter = nullptr;
-    atcg::DeviceBuffer<const atcg::EmitterVPtrTable*> emitter_tables;
-
-    torch::Tensor accumulation_buffer;
-
-    // Basic swap chain
-    uint32_t width  = 1280;
-    uint32_t height = 720;
     glm::u8vec4* output_buffer;
     uint8_t swap_index = 1;
     torch::Tensor swap_chain_buffer;
@@ -72,11 +51,7 @@ public:
 
     std::atomic_bool running = false;
 
-    uint32_t raygen_index = 0;
-
-    uint32_t frame_counter = 0;
-
-    cudaStream_t stream;
+    atcg::ref_ptr<OptixRaytracingShader> shader = nullptr;
 };
 
 void Pathtracer::Impl::worker()
@@ -85,41 +60,13 @@ void Pathtracer::Impl::worker()
     {
         Timer frame_time;
 
-        Params params;
-
-        memcpy(params.cam_eye, glm::value_ptr(inv_camera_view[3]), sizeof(glm::vec3));
-        memcpy(params.U, glm::value_ptr(glm::normalize(inv_camera_view[0])), sizeof(glm::vec3));
-        memcpy(params.V, glm::value_ptr(glm::normalize(inv_camera_view[1])), sizeof(glm::vec3));
-        memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
-        params.fov_y = fov_y;
-
-        params.accumulation_buffer = (glm::vec3*)accumulation_buffer.data_ptr();
-        params.output_image        = output_buffer;
-        params.image_height        = height;
-        params.image_width         = width;
-        params.handle              = ias_handle;
-        params.frame_counter       = frame_counter;
-        params.num_emitters        = emitter_tables.size();
-        params.emitters            = emitter_tables.get();
-
-        params.environment_emitter = environment_emitter ? environment_emitter->getVPtrTable() : nullptr;
-
-        launch_params.upload(&params);
-
-        OPTIX_CHECK(optixLaunch(raytracing_pipeline->getPipeline(),
-                                stream,    // Default CUDA stream
-                                (CUdeviceptr)launch_params.get(),
-                                sizeof(Params),
-                                sbt->getSBT(raygen_index),
-                                width,
-                                height,
-                                1));    // depth
-
-        CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+        shader->generateRays(
+            raytracing_pipeline,
+            sbt,
+            atcg::createDeviceTensorFromPointer<uint8_t>((uint8_t*)output_buffer,
+                                                         {output_texture->height(), output_texture->width(), 4}));
 
         ATCG_TRACE(frame_time.elapsedMillis());
-
-        ++frame_counter;
 
         // Perform swap
         {
@@ -141,17 +88,13 @@ void Pathtracer::init()
 {
     s_pathtracer->impl = std::make_unique<Impl>();
 
-    s_pathtracer->impl->swap_chain_buffer = torch::zeros({2, s_pathtracer->impl->height, s_pathtracer->impl->width, 4},
-                                                         atcg::TensorOptions::uint8DeviceOptions());
-
-    s_pathtracer->impl->output_buffer = (glm::u8vec4*)s_pathtracer->impl->swap_chain_buffer.index({0}).data_ptr();
-
-    s_pathtracer->impl->accumulation_buffer = torch::zeros({s_pathtracer->impl->height, s_pathtracer->impl->width, 3},
-                                                           atcg::TensorOptions::floatDeviceOptions());
+    // Just create some dummy data
+    s_pathtracer->impl->swap_chain_buffer = torch::zeros({2, 1, 1, 4}, atcg::TensorOptions::uint8DeviceOptions());
+    s_pathtracer->impl->output_buffer     = (glm::u8vec4*)s_pathtracer->impl->swap_chain_buffer.index({0}).data_ptr();
 
     TextureSpecification spec;
-    spec.width                         = s_pathtracer->impl->width;
-    spec.height                        = s_pathtracer->impl->height;
+    spec.width                         = 1;
+    spec.height                        = 1;
     s_pathtracer->impl->output_texture = atcg::Texture2D::create(spec);
 
     OPTIX_CHECK(optixInit());
@@ -163,187 +106,14 @@ void Pathtracer::init()
 
     s_pathtracer->impl->raytracing_pipeline = atcg::make_ref<RayTracingPipeline>(s_pathtracer->impl->context);
     s_pathtracer->impl->sbt                 = atcg::make_ref<ShaderBindingTable>(s_pathtracer->impl->context);
-
-    CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&s_pathtracer->impl->stream, cudaStreamNonBlocking));
 }
 
 void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera)
 {
-    s_pathtracer->impl->inv_camera_view = glm::inverse(camera->getView());
-    s_pathtracer->impl->fov_y           = camera->getFOV();
-
-    if(Renderer::hasSkybox())
-    {
-        auto skybox_texture = Renderer::getSkyboxTexture();
-
-        s_pathtracer->impl->environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(skybox_texture);
-        s_pathtracer->impl->environment_emitter->initializePipeline(s_pathtracer->impl->raytracing_pipeline,
-                                                                    s_pathtracer->impl->sbt);
-    }
-
-    // Extract scene information
-    auto view = scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
-    std::vector<TransformComponent> transforms;
-    size_t num_instances = 0;
-    std::vector<const atcg::EmitterVPtrTable*> emitter_tables;
-    for(auto e: view)
-    {
-        Entity entity(e, scene.get());
-
-        TransformComponent transform = entity.getComponent<TransformComponent>();
-
-        transforms.push_back(transform);
-
-        Material material = entity.getComponent<atcg::MeshRenderComponent>().material;
-
-        atcg::ref_ptr<OptixBSDF> bsdf;
-        if(material.glass)
-        {
-            bsdf = atcg::make_ref<RefractiveBSDF>(material);
-            bsdf->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
-        }
-        else
-        {
-            bsdf = atcg::make_ref<PBRBSDF>(material);
-            bsdf->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
-        }
-
-        entity.addComponent<BSDFComponent>(bsdf);
-
-        atcg::ref_ptr<Graph> graph = entity.getComponent<GeometryComponent>().graph;
-
-        if(!entity.hasComponent<AccelerationStructureComponent>())
-        {
-            entity.addComponent<AccelerationStructureComponent>();
-        }
-        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
-
-        atcg::ref_ptr<OptixAccelerationStructure> accel =
-            atcg::make_ref<OptixAccelerationStructure>(s_pathtracer->impl->context, graph);
-        accel->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
-
-        acc.accel = accel;
-
-        atcg::ref_ptr<OptixEmitter> emitter = nullptr;
-        if(material.emissive)
-        {
-            emitter = atcg::make_ref<MeshEmitter>(accel->getPositions(), accel->getFaces(), transform, material);
-            emitter->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
-        }
-
-        entity.addComponent<EmitterComponent>(emitter);
-
-        if(emitter) emitter_tables.push_back(emitter->getVPtrTable());
-
-
-        graph->unmapAllPointers();
-
-        ++num_instances;
-    }
-
-    if(s_pathtracer->impl->environment_emitter)
-    {
-        emitter_tables.push_back(s_pathtracer->impl->environment_emitter->getVPtrTable());
-    }
-
-    s_pathtracer->impl->emitter_tables.create(emitter_tables.size());
-    s_pathtracer->impl->emitter_tables.upload(emitter_tables.data());
-
-    // IAS
-    std::vector<OptixInstance> optix_instances(num_instances);
-    int i = 0;
-    for(auto e: view)
-    {
-        Entity entity(e, scene.get());
-
-        AccelerationStructureComponent& acc             = entity.getComponent<AccelerationStructureComponent>();
-        atcg::ref_ptr<OptixAccelerationStructure> accel = acc.accel;
-
-        auto& optix_instance = optix_instances[i];
-        memset(&optix_instance, 0, sizeof(OptixInstance));
-
-        optix_instance.flags             = OPTIX_INSTANCE_FLAG_NONE;
-        optix_instance.instanceId        = i;
-        optix_instance.sbtOffset         = i;
-        optix_instance.visibilityMask    = 1;
-        optix_instance.traversableHandle = accel->getTraversableHandle();
-
-        reinterpret_cast<glm::mat3x4&>(optix_instance.transform) =
-            glm::transpose(glm::mat4x3(transforms[i].getModel()));
-
-        ++i;
-    }
-
-    atcg::DeviceBuffer<OptixInstance> d_instances(num_instances);
-    d_instances.upload(optix_instances.data());
-
-    OptixBuildInput instance_input            = {};
-    instance_input.type                       = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
-    instance_input.instanceArray.instances    = (CUdeviceptr)d_instances.get();
-    instance_input.instanceArray.numInstances = static_cast<uint32_t>(num_instances);
-
-    OptixAccelBuildOptions accel_options = {};
-    accel_options.buildFlags             = OPTIX_BUILD_FLAG_NONE;
-    accel_options.operation              = OPTIX_BUILD_OPERATION_BUILD;
-
-    OptixAccelBufferSizes ias_buffer_sizes;
-    OPTIX_CHECK(optixAccelComputeMemoryUsage(s_pathtracer->impl->context,
-                                             &accel_options,
-                                             &instance_input,
-                                             1,    // num build inputs
-                                             &ias_buffer_sizes));
-
-    atcg::DeviceBuffer<uint8_t> d_temp_buffer(ias_buffer_sizes.tempSizeInBytes);
-    s_pathtracer->impl->ias_buffer = atcg::DeviceBuffer<uint8_t>(ias_buffer_sizes.outputSizeInBytes);
-
-    OPTIX_CHECK(optixAccelBuild(s_pathtracer->impl->context,
-                                nullptr,    // CUDA stream
-                                &accel_options,
-                                &instance_input,
-                                1,    // num build inputs
-                                (CUdeviceptr)d_temp_buffer.get(),
-                                ias_buffer_sizes.tempSizeInBytes,
-                                (CUdeviceptr)s_pathtracer->impl->ias_buffer.get(),
-                                ias_buffer_sizes.outputSizeInBytes,
-                                &s_pathtracer->impl->ias_handle,
-                                nullptr,    // emitted property list
-                                0           // num emitted properties
-                                ));
-
-
-    const std::string ptx_raygen_filename = "./build/ptxmodules.dir/Debug/RaygenKernels.ptx";
-    OptixProgramGroup raygen_prog_group =
-        s_pathtracer->impl->raytracing_pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
-    OptixProgramGroup miss_prog_group =
-        s_pathtracer->impl->raytracing_pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
+    s_pathtracer->impl->shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context, scene, camera);
+    s_pathtracer->impl->shader->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
 
     s_pathtracer->impl->raytracing_pipeline->createPipeline();
-
-    // SBT
-    s_pathtracer->impl->raygen_index = s_pathtracer->impl->sbt->addRaygenEntry(raygen_prog_group);
-    s_pathtracer->impl->sbt->addMissEntry(miss_prog_group);
-
-    for(auto e: view)
-    {
-        Entity entity(e, scene.get());
-
-        AccelerationStructureComponent& acc             = entity.getComponent<AccelerationStructureComponent>();
-        atcg::ref_ptr<OptixAccelerationStructure> accel = acc.accel;
-
-        atcg::ref_ptr<OptixBSDF> bsdf       = entity.getComponent<BSDFComponent>().bsdf;
-        atcg::ref_ptr<OptixEmitter> emitter = entity.getComponent<EmitterComponent>().emitter;
-
-        HitGroupData hit_data;
-        hit_data.positions = (glm::vec3*)accel->getPositions().data_ptr();
-        hit_data.normals   = (glm::vec3*)accel->getNormals().data_ptr();
-        hit_data.uvs       = (glm::vec3*)accel->getUVs().data_ptr();
-        hit_data.faces     = (glm::u32vec3*)accel->getFaces().data_ptr();
-        hit_data.bsdf      = bsdf->getVPtrTable();
-        hit_data.emitter   = emitter ? emitter->getVPtrTable() : nullptr;
-
-        s_pathtracer->impl->sbt->addHitEntry(accel->getHitGroup(), hit_data);
-    }
-
     s_pathtracer->impl->sbt->createSBT();
 }
 
@@ -370,13 +140,11 @@ void Pathtracer::reset(const atcg::ref_ptr<PerspectiveCamera>& camera)
 {
     stop();
 
-    s_pathtracer->impl->inv_camera_view = glm::inverse(camera->getView());
-    s_pathtracer->impl->fov_y           = camera->getFOV();
-
-    s_pathtracer->impl->accumulation_buffer = torch::zeros({s_pathtracer->impl->height, s_pathtracer->impl->width, 3},
-                                                           atcg::TensorOptions::floatDeviceOptions());
-
-    s_pathtracer->impl->frame_counter = 0;
+    if(s_pathtracer->impl->shader)
+    {
+        s_pathtracer->impl->shader->reset();
+        s_pathtracer->impl->shader->setCamera(camera);
+    }
 
     start();
 }
@@ -386,24 +154,18 @@ void Pathtracer::resize(const uint32_t width, const uint32_t height)
     bool running = s_pathtracer->impl->running;
     stop();
 
-    s_pathtracer->impl->width  = width;
-    s_pathtracer->impl->height = height;
-
     // Resize
-    s_pathtracer->impl->swap_chain_buffer = torch::zeros({2, s_pathtracer->impl->height, s_pathtracer->impl->width, 4},
-                                                         atcg::TensorOptions::uint8DeviceOptions());
+    s_pathtracer->impl->swap_chain_buffer =
+        torch::zeros({2, height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
 
     s_pathtracer->impl->output_buffer = (glm::u8vec4*)s_pathtracer->impl->swap_chain_buffer.index({0}).data_ptr();
 
-    s_pathtracer->impl->accumulation_buffer = torch::zeros({s_pathtracer->impl->height, s_pathtracer->impl->width, 3},
-                                                           atcg::TensorOptions::floatDeviceOptions());
-
     TextureSpecification spec;
-    spec.width                         = s_pathtracer->impl->width;
-    spec.height                        = s_pathtracer->impl->height;
+    spec.width                         = width;
+    spec.height                        = height;
     s_pathtracer->impl->output_texture = atcg::Texture2D::create(spec);
 
-    s_pathtracer->impl->frame_counter = 0;
+    if(s_pathtracer->impl->shader) s_pathtracer->impl->shader->reset();
 
     if(running) start();
 }
