@@ -10,6 +10,7 @@
 #include <Core/Application.h>
 
 #include <Renderer/Renderer.h>
+#include <Renderer/Pathtracer.h>
 
 namespace atcg
 {
@@ -133,6 +134,17 @@ void ImGuiLayer::begin()
 
         ImGuiID dockspace_id = ImGui::GetID("atcg_MainDockSpace");
         ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f));
+
+        atcg::ref_ptr<atcg::Texture2D> pt_texture = Pathtracer::getOutputTexture();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
+        ImGui::Begin("Pathtracer");
+        ImGui::PopStyleVar();
+
+        const atcg::Application* app = atcg::Application::get();
+        ImGui::Image((void*)(uint64_t)pt_texture->getID(), ImVec2(app->getViewportSize().x, app->getViewportSize().y));
+
+        ImGui::End();
 
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
