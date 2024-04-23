@@ -582,7 +582,7 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
                  detail::toGLformat(result->_spec.format),
                  detail::toGLtype(result->_spec.format),
                  (void*)data);
-    ATCG_TRACE("Allocated Texture of size {} x {}", result->_spec.width, result->_spec.height);
+    ATCG_LOG_ALLOCATION("Allocated Texture of size {} x {}", result->_spec.width, result->_spec.height);
 
     auto filtermode = detail::toGLFilterMode(result->_spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
@@ -801,10 +801,10 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
                  detail::toGLformat(result->_spec.format),
                  detail::toGLtype(result->_spec.format),
                  (void*)data);
-    ATCG_TRACE("Allocated Texture of size {} x {} x {}",
-               result->_spec.width,
-               result->_spec.height,
-               result->_spec.depth);
+    ATCG_LOG_ALLOCATION("Allocated Texture of size {} x {} x {}",
+                        result->_spec.width,
+                        result->_spec.height,
+                        result->_spec.depth);
 
     auto filtermode = detail::toGLFilterMode(result->_spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));

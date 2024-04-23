@@ -40,3 +40,5 @@ private:
     #define ATCG_INFO(...)  atcg::Log::getLogger()->info(__VA_ARGS__)
     #define ATCG_TRACE(...) atcg::Log::getLogger()->trace(__VA_ARGS__)
 #endif
+
+#define ATCG_LOG_ALLOCATION(...) ATCG_TRACE(__VA_ARGS__)
