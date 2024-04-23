@@ -323,6 +323,7 @@ void Renderer::init(uint32_t width, uint32_t height)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     ShaderManager::addShaderFromName("base");
     ShaderManager::addShaderFromName("flat");
