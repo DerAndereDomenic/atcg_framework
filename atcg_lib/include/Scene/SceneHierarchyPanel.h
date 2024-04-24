@@ -3,6 +3,7 @@
 #include <Core/Memory.h>
 #include <Scene/Entity.h>
 #include <Renderer/PerspectiveCamera.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -47,21 +48,12 @@ public:
      */
     inline Entity getSelectedEntity() const { return _selected_entity; }
 
-    /**
-     * @brief Get the framebuffer that is responsible for generating camera previews
-     *
-     * @return The framebuffer
-     */
-    inline atcg::ref_ptr<Framebuffer> getPreviewFramebuffer() const { return _camera_preview; }
-
 private:
     void drawEntityNode(Entity entity);
     void drawComponents(Entity entity);
     void drawSceneProperties();
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
-    atcg::ref_ptr<atcg::Framebuffer> _camera_preview;
-    atcg::ref_ptr<atcg::Framebuffer> _object_preview;
-    atcg::ref_ptr<atcg::PerspectiveCamera> _object_preview_cam;
+    atcg::ref_ptr<ComponentGUIHandler> _gui_handler;
 };
 }    // namespace atcg
