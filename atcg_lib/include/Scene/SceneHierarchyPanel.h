@@ -32,6 +32,7 @@ public:
      * @brief Should be called in onImGuiRender.
      * Renders the panel
      */
+    template<typename... CustomComponents>
     void renderPanel();
 
     /**
@@ -53,9 +54,13 @@ private:
 
     template<typename... Components>
     void drawComponents(Entity entity);
+
     void drawSceneProperties();
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
     atcg::ref_ptr<ComponentGUIHandler> _gui_handler;
 };
 }    // namespace atcg
+
+
+#include "../../src/Scene/SceneHierarchyPanelDetails.h"
