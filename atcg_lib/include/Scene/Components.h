@@ -62,6 +62,8 @@ struct TransformComponent
 
     inline operator glm::mat4() const { return _model_matrix; }
 
+    static constexpr inline const char* toString() { return "Transform"; }
+
 private:
     void calculateModelMatrix();
     void decomposeModelMatrix();
@@ -95,6 +97,8 @@ struct GeometryComponent
     GeometryComponent(const atcg::ref_ptr<Graph>& graph) : graph(graph) {}
 
     atcg::ref_ptr<Graph> graph;
+
+    static constexpr inline const char* toString() { return "Geometry"; }
 };
 
 struct AccelerationStructureComponent
@@ -117,6 +121,8 @@ struct CameraComponent
             perspective = true;
         }
     }
+
+    static constexpr inline const char* toString() { return "Camera"; }
 
     atcg::ref_ptr<Camera> camera;
     glm::vec3 color  = glm::vec3(1);
@@ -145,6 +151,8 @@ struct MeshRenderComponent : public RenderComponent
     {
     }
 
+    static constexpr inline const char* toString() { return "Mesh Renderer"; }
+
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     Material material;
 };
@@ -161,6 +169,8 @@ struct PointRenderComponent : public RenderComponent
     {
     }
 
+    static constexpr inline const char* toString() { return "Point Renderer"; }
+
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     glm::vec3 color              = glm::vec3(1);
     float point_size             = 1.0f;
@@ -176,6 +186,8 @@ struct PointSphereRenderComponent : public RenderComponent
     {
     }
 
+    static constexpr inline const char* toString() { return "Point Sphere Renderer"; }
+
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     float point_size             = 0.1f;
     Material material;
@@ -189,6 +201,8 @@ struct EdgeRenderComponent : public RenderComponent
     {
     }
 
+    static constexpr inline const char* toString() { return "Edge Renderer"; }
+
     glm::vec3 color = glm::vec3(1);
 };
 
@@ -199,6 +213,8 @@ struct EdgeCylinderRenderComponent : public RenderComponent
           radius(radius)
     {
     }
+
+    static constexpr inline const char* toString() { return "Edge Cylinder Renderer"; }
 
     float radius = 0.001f;
     Material material;
@@ -213,6 +229,8 @@ struct InstanceRenderComponent : public RenderComponent
         instance_vbo = atcg::make_ref<VertexBuffer>((void*)instances.data(), instances.size() * sizeof(atcg::Instance));
         instance_vbo->setLayout({{atcg::ShaderDataType::Mat4, "aModel"}, {atcg::ShaderDataType::Float3, "aColor"}});
     }
+
+    static constexpr inline const char* toString() { return "Instance Renderer"; }
 
     atcg::ref_ptr<VertexBuffer> instance_vbo;
     Material material;
