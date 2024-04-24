@@ -12,7 +12,7 @@ namespace atcg
 namespace detail
 {
 template<typename T>
-void drawComponent(const std::string& name, Entity entity, const atcg::ref_ptr<ComponentGUIHandler>& gui_handler)
+void drawComponent(Entity entity, const atcg::ref_ptr<ComponentGUIHandler>& gui_handler)
 {
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
                                              ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
@@ -21,7 +21,7 @@ void drawComponent(const std::string& name, Entity entity, const atcg::ref_ptr<C
     if(entity.hasComponent<T>())
     {
         auto& component = entity.getComponent<T>();
-        bool open       = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, name.c_str());
+        bool open       = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, T::toString());
 
         ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
         ImGui::SameLine(contentRegionAvailable.x);
@@ -49,11 +49,11 @@ void drawComponent(const std::string& name, Entity entity, const atcg::ref_ptr<C
 }
 
 template<typename T>
-void displayAddComponentEntry(const std::string& name, Entity entity)
+void displayAddComponentEntry(Entity entity)
 {
     if(!entity.hasComponent<T>())
     {
-        if(ImGui::MenuItem(name.c_str()))
+        if(ImGui::MenuItem(T::toString()))
         {
             entity.addComponent<T>();
             ImGui::CloseCurrentPopup();
@@ -62,11 +62,11 @@ void displayAddComponentEntry(const std::string& name, Entity entity)
 }
 
 template<>
-void displayAddComponentEntry<CameraComponent>(const std::string& name, Entity entity)
+void displayAddComponentEntry<CameraComponent>(Entity entity)
 {
     if(!entity.hasComponent<CameraComponent>())
     {
-        if(ImGui::MenuItem(name.c_str()))
+        if(ImGui::MenuItem(CameraComponent::toString()))
         {
             auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>(1.0f));
             if(entity.hasComponent<TransformComponent>())
@@ -146,28 +146,28 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
 
     if(ImGui::BeginPopup("AddComponent"))
     {
-        detail::displayAddComponentEntry<TransformComponent>("Transform", entity);
-        detail::displayAddComponentEntry<GeometryComponent>("Geometry", entity);
-        detail::displayAddComponentEntry<MeshRenderComponent>("Mesh Renderer", entity);
-        detail::displayAddComponentEntry<PointRenderComponent>("Point Renderer", entity);
-        detail::displayAddComponentEntry<PointSphereRenderComponent>("Point Sphere Renderer", entity);
-        detail::displayAddComponentEntry<EdgeRenderComponent>("Edge Renderer", entity);
-        detail::displayAddComponentEntry<EdgeCylinderRenderComponent>("Edge Cylinder Renderer", entity);
-        detail::displayAddComponentEntry<CameraComponent>("Camera Component", entity);
+        detail::displayAddComponentEntry<TransformComponent>(entity);
+        detail::displayAddComponentEntry<GeometryComponent>(entity);
+        detail::displayAddComponentEntry<MeshRenderComponent>(entity);
+        detail::displayAddComponentEntry<PointRenderComponent>(entity);
+        detail::displayAddComponentEntry<PointSphereRenderComponent>(entity);
+        detail::displayAddComponentEntry<EdgeRenderComponent>(entity);
+        detail::displayAddComponentEntry<EdgeCylinderRenderComponent>(entity);
+        detail::displayAddComponentEntry<CameraComponent>(entity);
         ImGui::EndPopup();
     }
 
     ImGui::PopItemWidth();
 
-    detail::drawComponent<CameraComponent>("Camera View", entity, _gui_handler);
-    detail::drawComponent<TransformComponent>("Transform", entity, _gui_handler);
-    detail::drawComponent<GeometryComponent>("Geometry", entity, _gui_handler);
-    detail::drawComponent<MeshRenderComponent>("Mesh Renderer", entity, _gui_handler);
-    detail::drawComponent<PointRenderComponent>("Point Renderer", entity, _gui_handler);
-    detail::drawComponent<PointSphereRenderComponent>("Point Sphere Renderer", entity, _gui_handler);
-    detail::drawComponent<EdgeRenderComponent>("Edge Renderer", entity, _gui_handler);
-    detail::drawComponent<EdgeCylinderRenderComponent>("Edge Cylinder Renderer", entity, _gui_handler);
-    detail::drawComponent<InstanceRenderComponent>("Instance Renderer", entity, _gui_handler);
+    detail::drawComponent<CameraComponent>(entity, _gui_handler);
+    detail::drawComponent<TransformComponent>(entity, _gui_handler);
+    detail::drawComponent<GeometryComponent>(entity, _gui_handler);
+    detail::drawComponent<MeshRenderComponent>(entity, _gui_handler);
+    detail::drawComponent<PointRenderComponent>(entity, _gui_handler);
+    detail::drawComponent<PointSphereRenderComponent>(entity, _gui_handler);
+    detail::drawComponent<EdgeRenderComponent>(entity, _gui_handler);
+    detail::drawComponent<EdgeCylinderRenderComponent>(entity, _gui_handler);
+    detail::drawComponent<InstanceRenderComponent>(entity, _gui_handler);
 }
 
 void SceneHierarchyPanel::drawSceneProperties()
