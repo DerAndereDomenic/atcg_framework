@@ -12,6 +12,8 @@ class Framebuffer;
 
 /**
  * @brief A Scene hierarchy panel
+ *
+ * @tparam GUIHandler The class that handles gui drawing. Default = atcg::ComponentGUIHandler
  */
 template<typename GUIHandler = ComponentGUIHandler>
 class SceneHierarchyPanel
