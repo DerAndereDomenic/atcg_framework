@@ -50,6 +50,8 @@ public:
 
 private:
     void drawEntityNode(Entity entity);
+
+    template<typename... Components>
     void drawComponents(Entity entity);
     void drawSceneProperties();
     Entity _selected_entity;

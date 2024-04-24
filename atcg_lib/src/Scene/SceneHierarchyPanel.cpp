@@ -117,6 +117,7 @@ void SceneHierarchyPanel::drawEntityNode(Entity entity)
     // }
 }
 
+template<typename... Components>
 void SceneHierarchyPanel::drawComponents(Entity entity)
 {
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
@@ -146,28 +147,14 @@ void SceneHierarchyPanel::drawComponents(Entity entity)
 
     if(ImGui::BeginPopup("AddComponent"))
     {
-        detail::displayAddComponentEntry<TransformComponent>(entity);
-        detail::displayAddComponentEntry<GeometryComponent>(entity);
-        detail::displayAddComponentEntry<MeshRenderComponent>(entity);
-        detail::displayAddComponentEntry<PointRenderComponent>(entity);
-        detail::displayAddComponentEntry<PointSphereRenderComponent>(entity);
-        detail::displayAddComponentEntry<EdgeRenderComponent>(entity);
-        detail::displayAddComponentEntry<EdgeCylinderRenderComponent>(entity);
-        detail::displayAddComponentEntry<CameraComponent>(entity);
+        (detail::displayAddComponentEntry<Components>(entity), ...);
+
         ImGui::EndPopup();
     }
 
     ImGui::PopItemWidth();
 
-    detail::drawComponent<CameraComponent>(entity, _gui_handler);
-    detail::drawComponent<TransformComponent>(entity, _gui_handler);
-    detail::drawComponent<GeometryComponent>(entity, _gui_handler);
-    detail::drawComponent<MeshRenderComponent>(entity, _gui_handler);
-    detail::drawComponent<PointRenderComponent>(entity, _gui_handler);
-    detail::drawComponent<PointSphereRenderComponent>(entity, _gui_handler);
-    detail::drawComponent<EdgeRenderComponent>(entity, _gui_handler);
-    detail::drawComponent<EdgeCylinderRenderComponent>(entity, _gui_handler);
-    detail::drawComponent<InstanceRenderComponent>(entity, _gui_handler);
+    (detail::drawComponent<Components>(entity, _gui_handler), ...);
 }
 
 void SceneHierarchyPanel::drawSceneProperties()
@@ -271,7 +258,14 @@ void SceneHierarchyPanel::renderPanel()
         {
             if(_selected_entity)
             {
-                drawComponents(_selected_entity);
+                drawComponents<CameraComponent,
+                               TransformComponent,
+                               GeometryComponent,
+                               MeshRenderComponent,
+                               PointRenderComponent,
+                               PointSphereRenderComponent,
+                               EdgeRenderComponent,
+                               EdgeCylinderRenderComponent>(_selected_entity);
             }
             ImGui::EndTabItem();
         }
