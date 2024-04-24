@@ -272,7 +272,7 @@ private:
     atcg::ref_ptr<atcg::Graph> plane;
     atcg::ref_ptr<atcg::Shader> checkerboard_shader;
 
-    atcg::SceneHierarchyPanel panel;
+    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
 
     float time       = 0.0f;
     bool in_viewport = false;

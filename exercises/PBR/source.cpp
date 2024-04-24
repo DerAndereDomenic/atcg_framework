@@ -30,7 +30,7 @@ public:
 
         scene = atcg::IO::read_scene("res/test_scene.obj");
 
-        panel = atcg::SceneHierarchyPanel(scene);
+        panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
 
         if(atcg::VRSystem::isVRAvailable())
         {
@@ -231,7 +231,7 @@ private:
 
     atcg::ref_ptr<atcg::Graph> plane;
 
-    atcg::SceneHierarchyPanel panel;
+    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
 
     float time       = 0.0f;
     bool in_viewport = false;
