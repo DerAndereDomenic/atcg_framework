@@ -13,6 +13,7 @@ class Framebuffer;
 /**
  * @brief A Scene hierarchy panel
  */
+template<typename GUIHandler = ComponentGUIHandler>
 class SceneHierarchyPanel
 {
 public:
@@ -49,6 +50,13 @@ public:
      */
     inline Entity getSelectedEntity() const { return _selected_entity; }
 
+    /**
+     * @brief Set a custom gui handler
+     *
+     * @param gui_handler The gui handler instance
+     */
+    inline void setGuiHandler(const atcg::ref_ptr<GUIHandler>& gui_handler) { _gui_handler = gui_handler; }
+
 private:
     void drawEntityNode(Entity entity);
 
@@ -58,7 +66,7 @@ private:
     void drawSceneProperties();
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
-    atcg::ref_ptr<ComponentGUIHandler> _gui_handler;
+    atcg::ref_ptr<GUIHandler> _gui_handler;
 };
 }    // namespace atcg
 
