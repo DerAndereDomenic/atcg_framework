@@ -464,11 +464,13 @@ atcg::textureArray Texture::getTextureArray(const uint32_t mip_level) const
     return impl->dev_ptr;
 }
 
-atcg::textureObject
-Texture::getTextureObject(const uint32_t mip_level, const glm::vec4& border_color, const bool normalized_coords) const
+atcg::textureObject Texture::getTextureObject(const uint32_t mip_level,
+                                              const glm::vec4& border_color,
+                                              const bool normalized_coords,
+                                              const bool normalized_float) const
 {
 #ifdef ATCG_CUDA_BACKEND
-    if(impl->texture_mapped)
+    if(!impl->texture_mapped)
     {
         atcg::textureArray array = getTextureArray(mip_level);
 
@@ -476,12 +478,17 @@ Texture::getTextureObject(const uint32_t mip_level, const glm::vec4& border_colo
         resDesc.resType          = cudaResourceTypeArray;
         resDesc.res.array.array  = array;
 
+        bool isFloat = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGFLOAT ||
+                       _spec.format == TextureFormat::RGBFLOAT || _spec.format == TextureFormat::RGBAFLOAT;
+
         cudaTextureDesc texDesc = {};
         texDesc.addressMode[0]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
         texDesc.addressMode[1]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
         texDesc.addressMode[2]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
         texDesc.filterMode      = detail::toCUDATextureMode(_spec.sampler.filter_mode);
-        texDesc.readMode        = cudaReadModeNormalizedFloat;
+        texDesc.readMode        = isFloat            ? cudaReadModeElementType
+                                  : normalized_float ? cudaReadModeNormalizedFloat
+                                                     : cudaReadModeElementType;
         texDesc.borderColor[0]  = border_color.x;
         texDesc.borderColor[1]  = border_color.y;
         texDesc.borderColor[2]  = border_color.z;
