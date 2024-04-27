@@ -37,7 +37,7 @@ inline void drawComponent(Entity entity, const atcg::ref_ptr<GUIHandler>& gui_ha
 
         if(open)
         {
-            gui_handler->draw_component<T>(entity, component);
+            gui_handler->template draw_component<T>(entity, component);
             ImGui::TreePop();
         }
 
@@ -286,4 +286,4 @@ inline void SceneHierarchyPanel<GUIHandler>::renderPanel()
 
     ImGui::End();
 }
-}
+}    // namespace atcg
