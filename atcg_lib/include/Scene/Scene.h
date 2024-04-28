@@ -8,7 +8,6 @@
 namespace atcg
 {
 class Entity;
-class Serializer;
 
 /**
  * @brief A class to model a scene.
@@ -69,7 +68,6 @@ public:
 
 private:
     friend class Entity;
-    friend class Serializer;
     entt::registry _registry;
 
     class Impl;
