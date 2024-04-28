@@ -119,6 +119,10 @@ set_target_properties(${ATCG_OPENVR_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY 
                                                        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
                                                        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
+# json
+add_library(json INTERFACE)
+target_include_directories(json INTERFACE "external/json")
+
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
     set(CMAKE_CUDA_ARCHITECTURES "native")
@@ -164,6 +168,7 @@ target_link_libraries(atcg_lib PUBLIC glfw
                                       nanoflann
                                       glm
                                       spdlog_header_only
+                                      json
                                       ${ATCG_OPENVR_TARGET}
 )
 
