@@ -66,6 +66,11 @@ public:
         return _registry.view<Components...>();
     }
 
+    /**
+     * @brief Remove all entities
+     */
+    void removeAllEntites() { _registry.clear(); }
+
 private:
     friend class Entity;
     entt::registry _registry;
