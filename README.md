@@ -147,7 +147,7 @@ public:
             ImGui::Begin("Settings", &show_render_settings);
 
             // Set some settings
-            
+
             ImGui::End();
         }
 
@@ -250,4 +250,6 @@ device_ptr.upload(&host_object);
 - [spdlog](https://github.com/gabime/spdlog) - For logging.
 - [stbimage](https://github.com/nothings/stb) - For image I/O.
 - [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader) - For loading obj meshes.
-- [yaml-cpp](https://github.com/jbeder/yaml-cpp) - For serializing YAML files.
+- [json](https://github.com/nlohmann/json) - For serializing JSON files.
+- [charonload](https://github.com/nlohmann/json) - For torch integration.
+- [openvr](https://github.com/ValveSoftware/openvr) - For VR support.
