@@ -121,17 +121,17 @@ public:
         {
             if(ImGui::MenuItem("Save"))
             {
-                atcg::Serializer serializer(scene);
+                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
 
-                serializer.serialize("../Scene/Scene.yaml");
+                serializer.serialize("../Scene/Scene.json");
             }
 
             if(ImGui::MenuItem("Load"))
             {
-                scene = atcg::make_ref<atcg::Scene>();
-                atcg::Serializer serializer(scene);
+                scene->removeAllEntites();
+                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
 
-                serializer.deserialize("../Scene/Scene.yaml");
+                serializer.deserialize("../Scene/Scene.json");
 
                 hovered_entity = atcg::Entity();
                 panel.selectEntity(hovered_entity);
