@@ -457,6 +457,15 @@ void serializeComponent(const std::string& file_name,
         serializer->template serialize_component<Component>(file_name, entity, component, j);
     }
 }
+
+template<typename ComponentSerializerT, typename Component>
+void deserializeComponent(const std::string& file_name,
+                          const atcg::ref_ptr<ComponentSerializerT>& serializer,
+                          Entity entity,
+                          nlohmann::json& j)
+{
+    serializer->template deserialize_component<Component>(file_name, entity, j);
+}
 }    // namespace detail
 
 template<typename ComponentSerializerT>
@@ -472,6 +481,19 @@ nlohmann::json Serializer<ComponentSerializerT>::serializeEntity(const std::stri
      ...);
 
     return entity_object;
+}
+
+template<typename ComponentSerializerT>
+template<typename... Components>
+void Serializer<ComponentSerializerT>::deserializeEntity(const std::string& file_name,
+                                                         Entity entity,
+                                                         nlohmann::json& entity_object)
+{
+    (detail::deserializeComponent<ComponentSerializerT, Components>(file_name,
+                                                                    _component_serializer,
+                                                                    entity,
+                                                                    entity_object),
+     ...);
 }
 
 template<typename ComponentSerializerT>
@@ -521,5 +543,33 @@ template<typename ComponentSerializerT>
 template<typename... CustomComponents>
 inline void Serializer<ComponentSerializerT>::deserialize(const std::string& file_path)
 {
+    std::ifstream i(file_path);
+    nlohmann::json j;
+    i >> j;
+
+    if(!j.contains("Entities"))
+    {
+        return;
+    }
+
+    auto entities = j["Entities"];
+
+    for(auto entity_object: entities)
+    {
+        if(!entity_object.contains("Name")) continue;
+        Entity entity = _scene->createEntity(entity_object["Name"]);
+
+        deserializeEntity<IDComponent,
+                          NameComponent,
+                          TransformComponent,
+                          CameraComponent,
+                          GeometryComponent,
+                          MeshRenderComponent,
+                          PointRenderComponent,
+                          PointSphereRenderComponent,
+                          EdgeRenderComponent,
+                          EdgeCylinderRenderComponent,
+                          CustomComponents...>(file_path, entity, entity_object);
+    }
 }
 }    // namespace atcg

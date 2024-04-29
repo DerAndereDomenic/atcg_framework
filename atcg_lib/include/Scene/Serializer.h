@@ -42,6 +42,8 @@ public:
 private:
     template<typename... Components>
     nlohmann::json serializeEntity(const std::string& file_path, Entity entity);
+    template<typename... Components>
+    void deserializeEntity(const std::string& file_path, Entity entity, nlohmann::json& entity_object);
 
     atcg::ref_ptr<Scene> _scene;
     atcg::ref_ptr<ComponentSerializerT> _component_serializer;
