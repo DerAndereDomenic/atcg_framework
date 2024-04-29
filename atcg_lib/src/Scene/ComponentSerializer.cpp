@@ -6,6 +6,42 @@
 
 namespace atcg
 {
+
+#define ID_KEY                     "ID"
+#define NAME_KEY                   "Name"
+#define TRANSFORM_KEY              "Transform"
+#define POSITION_KEY               "Position"
+#define SCALE_KEY                  "Scale"
+#define EULER_ANGLES_KEY           "EulerAngles"
+#define SHADER_KEY                 "Shader"
+#define MATERIAL_KEY               "Material"
+#define DIFFUSE_KEY                "Diffuse"
+#define DIFFUSE_TEXTURE_KEY        "DiffuseTexture"
+#define NORMAL_TEXTURE_KEY         "NormalTexture"
+#define ROUGHNESS_KEY              "Roughness"
+#define ROUGHNESS_TEXTURE_KEY      "RoughnessTexture"
+#define METALLIC_KEY               "Metallic"
+#define METALLIC_TEXTURE_KEY       "MetallicTexture"
+#define VERTEX_KEY                 "Vertex"
+#define FRAGMENT_KEY               "Fragment"
+#define GEOMETRY_KEY               "Geometry"
+#define TYPE_KEY                   "Type"
+#define VERTICES_KEY               "Vertices"
+#define FACES_KEY                  "Faces"
+#define EDGES_KEY                  "Edges"
+#define GEOMETRY_KEY               "Geometry"
+#define MESH_RENDERER_KEY          "MeshRenderer"
+#define POINT_RENDERER_KEY         "PointRenderer"
+#define POINT_SPHERE_RENDERER_KEY  "PointSphereRenderer"
+#define EDGE_RENDERER_KEY          "EdgeRenderer"
+#define EDGE_CYLINDER_RENDERER_KEY "EdgeCylinderRenderer"
+#define COLOR_KEY                  "Color"
+#define POINT_SIZE_KEY             "PointSize"
+#define RADIUS_KEY                 "Radius"
+#define PERSPECTIVE_CAMERA_KEY     "PerspectiveCamera"
+#define ASPECT_RATIO_KEY           "AspectRatio"
+#define FOVY_KEY                   "FoVy"
+
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
     std::ofstream summary_file(file_name, std::ios::out | std::ios::binary);
@@ -56,13 +92,15 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
 
     auto entity_id = entity.getComponent<IDComponent>().ID;
 
+    auto& material_node = j[MATERIAL_KEY];
+
     if(use_diffuse_texture)
     {
         std::string img_path = file_path + "_" + std::to_string(entity_id) + "_diffuse";
 
         serializeTexture(diffuse_texture, img_path, 1.0f / 2.2f);
 
-        j["Material"]["DiffuseTexture"] = img_path;
+        material_node[DIFFUSE_TEXTURE_KEY] = img_path;
     }
     else
     {
@@ -74,7 +112,7 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
         glm::vec3 c(color);
         c = c / 255.0f;
 
-        j["Material"]["Diffuse"] = nlohmann::json::array({c.x, c.y, c.z});
+        material_node[DIFFUSE_KEY] = nlohmann::json::array({c.x, c.y, c.z});
     }
 
     if(use_normal_texture)
@@ -83,7 +121,7 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
 
         serializeTexture(normal_texture, img_path);
 
-        j["Material"]["NormalTexture"] = img_path;
+        material_node[NORMAL_TEXTURE_KEY] = img_path;
     }
 
     if(use_metallic_texture)
@@ -92,14 +130,14 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
 
         serializeTexture(metallic_texture, img_path);
 
-        j["Material"]["MetallicTexture"] = img_path;
+        material_node[METALLIC_TEXTURE_KEY] = img_path;
     }
     else
     {
         auto data   = metallic_texture->getData(atcg::CPU);
         float color = data.item<float>();
 
-        j["Material"]["Metallic"] = color;
+        material_node[METALLIC_KEY] = color;
     }
 
     if(use_roughness_texture)
@@ -108,14 +146,14 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
 
         serializeTexture(roughness_texture, img_path);
 
-        j["Material"]["RoughnessTexture"] = img_path;
+        material_node[ROUGHNESS_TEXTURE_KEY] = img_path;
     }
     else
     {
         auto data   = roughness_texture->getData(atcg::CPU);
         float color = data.item<float>();
 
-        j["Material"]["Roughness"] = color;
+        material_node[ROUGHNESS_KEY] = color;
     }
 }
 
@@ -124,14 +162,14 @@ Material ComponentSerializer::deserialize_material(const nlohmann::json& materia
     Material material;
 
     // Diffuse
-    if(material_node.contains("Diffuse"))
+    if(material_node.contains(DIFFUSE_KEY))
     {
-        std::vector<float> diffuse_color = material_node["Diffuse"];
+        std::vector<float> diffuse_color = material_node[DIFFUSE_KEY];
         material.setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
     }
-    else if(material_node.contains("DiffuseTexture"))
+    else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
     {
-        std::string diffuse_path = material_node["DiffuseTexture"];
+        std::string diffuse_path = material_node[DIFFUSE_TEXTURE_KEY];
         ATCG_TRACE(diffuse_path);
         auto img             = IO::imread(diffuse_path, 2.2f);
         auto diffuse_texture = atcg::Texture2D::create(img);
@@ -139,37 +177,37 @@ Material ComponentSerializer::deserialize_material(const nlohmann::json& materia
     }
 
     // Normals
-    if(material_node.contains("NormalTexture"))
+    if(material_node.contains(NORMAL_TEXTURE_KEY))
     {
-        std::string normal_path = material_node["NormalTexture"];
+        std::string normal_path = material_node[NORMAL_TEXTURE_KEY];
         auto img                = IO::imread(normal_path);
         auto normal_texture     = atcg::Texture2D::create(img);
         material.setNormalTexture(normal_texture);
     }
 
     // Roughness
-    if(material_node.contains("Roughness"))
+    if(material_node.contains(ROUGHNESS_KEY))
     {
-        float roughness = material_node["Roughness"];
+        float roughness = material_node[ROUGHNESS_KEY];
         material.setRoughness(roughness);
     }
-    else if(material_node.contains("RoughnessTexture"))
+    else if(material_node.contains(ROUGHNESS_TEXTURE_KEY))
     {
-        std::string roughness_path = material_node["RoughnessTexture"];
+        std::string roughness_path = material_node[ROUGHNESS_TEXTURE_KEY];
         auto img                   = IO::imread(roughness_path);
         auto roughness_texture     = atcg::Texture2D::create(img);
         material.setRoughnessTexture(roughness_texture);
     }
 
     // Metallic
-    if(material_node.contains("Metallic"))
+    if(material_node.contains(METALLIC_KEY))
     {
-        float metallic = material_node["Metallic"];
+        float metallic = material_node[METALLIC_KEY];
         material.setMetallic(metallic);
     }
-    else if(material_node.contains("MetallicTexture"))
+    else if(material_node.contains(METALLIC_TEXTURE_KEY))
     {
-        std::string metallic_path = material_node["MetallicTexture"];
+        std::string metallic_path = material_node[METALLIC_TEXTURE_KEY];
         auto img                  = IO::imread(metallic_path);
         auto metallic_texture     = atcg::Texture2D::create(img);
         material.setMetallicTexture(metallic_texture);
@@ -192,7 +230,7 @@ void ComponentSerializer::serialize_component<IDComponent>(const std::string& fi
                                                            IDComponent& component,
                                                            nlohmann::json& j)
 {
-    j["ID"] = (uint64_t)entity.getComponent<IDComponent>().ID;
+    j[ID_KEY] = (uint64_t)entity.getComponent<IDComponent>().ID;
 }
 
 template<>
@@ -201,7 +239,7 @@ void ComponentSerializer::serialize_component<NameComponent>(const std::string& 
                                                              NameComponent& component,
                                                              nlohmann::json& j)
 {
-    j["Name"] = entity.getComponent<NameComponent>().name;
+    j[NAME_KEY] = entity.getComponent<NameComponent>().name;
 }
 
 template<>
@@ -210,12 +248,12 @@ void ComponentSerializer::serialize_component<TransformComponent>(const std::str
                                                                   TransformComponent& component,
                                                                   nlohmann::json& j)
 {
-    glm::vec3 position            = component.getPosition();
-    glm::vec3 scale               = component.getScale();
-    glm::vec3 rotation            = component.getRotation();
-    j["Transform"]["Position"]    = nlohmann::json::array({position.x, position.y, position.z});
-    j["Transform"]["Scale"]       = nlohmann::json::array({scale.x, scale.y, scale.z});
-    j["Transform"]["EulerAngles"] = nlohmann::json::array({rotation.x, rotation.y, rotation.z});
+    glm::vec3 position                 = component.getPosition();
+    glm::vec3 scale                    = component.getScale();
+    glm::vec3 rotation                 = component.getRotation();
+    j[TRANSFORM_KEY][POSITION_KEY]     = nlohmann::json::array({position.x, position.y, position.z});
+    j[TRANSFORM_KEY][SCALE_KEY]        = nlohmann::json::array({scale.x, scale.y, scale.z});
+    j[TRANSFORM_KEY][EULER_ANGLES_KEY] = nlohmann::json::array({rotation.x, rotation.y, rotation.z});
 }
 
 template<>
@@ -226,8 +264,8 @@ void ComponentSerializer::serialize_component<CameraComponent>(const std::string
 {
     atcg::ref_ptr<PerspectiveCamera> cam = component.camera;
 
-    j["PerspectiveCamera"]["AspectRatio"] = cam->getAspectRatio();
-    j["PerspectiveCamera"]["FoVy"]        = cam->getFOV();
+    j[PERSPECTIVE_CAMERA_KEY][ASPECT_RATIO_KEY] = cam->getAspectRatio();
+    j[PERSPECTIVE_CAMERA_KEY][FOVY_KEY]         = cam->getFOV();
 }
 
 template<>
@@ -238,7 +276,7 @@ void ComponentSerializer::serialize_component<GeometryComponent>(const std::stri
 {
     atcg::ref_ptr<Graph> graph = component.graph;
 
-    j["Geometry"]["Type"] = (int)graph->type();
+    j[GEOMETRY_KEY][TYPE_KEY] = (int)graph->type();
 
     IDComponent& id = entity.getComponent<IDComponent>();
 
@@ -247,7 +285,7 @@ void ComponentSerializer::serialize_component<GeometryComponent>(const std::stri
         const char* buffer      = graph->getVerticesBuffer()->getHostPointer<char>();
         std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".vertices";
         serializeBuffer(buffer_name, buffer, graph->getVerticesBuffer()->size());
-        j["Geometry"]["Vertices"] = buffer_name;
+        j[GEOMETRY_KEY][VERTICES_KEY] = buffer_name;
         graph->getVerticesBuffer()->unmapHostPointers();
     }
 
@@ -256,7 +294,7 @@ void ComponentSerializer::serialize_component<GeometryComponent>(const std::stri
         const char* buffer      = graph->getFaceIndexBuffer()->getHostPointer<char>();
         std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".faces";
         serializeBuffer(buffer_name, buffer, graph->getFaceIndexBuffer()->size());
-        j["Geometry"]["Faces"] = buffer_name;
+        j[GEOMETRY_KEY][FACES_KEY] = buffer_name;
         graph->getFaceIndexBuffer()->unmapHostPointers();
     }
 
@@ -265,7 +303,7 @@ void ComponentSerializer::serialize_component<GeometryComponent>(const std::stri
         const char* buffer      = graph->getEdgesBuffer()->getHostPointer<char>();
         std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".edges";
         serializeBuffer(buffer_name, buffer, graph->getEdgesBuffer()->size());
-        j["Geometry"]["Edges"] = buffer_name;
+        j[GEOMETRY_KEY][EDGES_KEY] = buffer_name;
         graph->getEdgesBuffer()->unmapHostPointers();
     }
 }
@@ -276,11 +314,11 @@ void ComponentSerializer::serialize_component<MeshRenderComponent>(const std::st
                                                                    MeshRenderComponent& component,
                                                                    nlohmann::json& j)
 {
-    j["MeshRenderer"]["Shader"]["Vertex"]   = component.shader->getVertexPath();
-    j["MeshRenderer"]["Shader"]["Fragment"] = component.shader->getFragmentPath();
-    j["MeshRenderer"]["Shader"]["Geometry"] = component.shader->getGeometryPath();
+    j[MESH_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = component.shader->getVertexPath();
+    j[MESH_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = component.shader->getFragmentPath();
+    j[MESH_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
 
-    serializeMaterial(j["MeshRenderer"], entity, component.material, file_path);
+    serializeMaterial(j[MESH_RENDERER_KEY], entity, component.material, file_path);
 }
 
 template<>
@@ -289,11 +327,11 @@ void ComponentSerializer::serialize_component<PointRenderComponent>(const std::s
                                                                     PointRenderComponent& component,
                                                                     nlohmann::json& j)
 {
-    j["PointRenderer"]["Color"]     = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
-    j["PointRenderer"]["PointSize"] = component.point_size;
-    j["PointRenderer"]["Shader"]["Vertex"]   = component.shader->getVertexPath();
-    j["PointRenderer"]["Shader"]["Fragment"] = component.shader->getFragmentPath();
-    j["PointRenderer"]["Shader"]["Geometry"] = component.shader->getGeometryPath();
+    j[POINT_RENDERER_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
+    j[POINT_RENDERER_KEY][POINT_SIZE_KEY]           = component.point_size;
+    j[POINT_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = component.shader->getVertexPath();
+    j[POINT_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = component.shader->getFragmentPath();
+    j[POINT_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
 }
 
 template<>
@@ -302,12 +340,12 @@ void ComponentSerializer::serialize_component<PointSphereRenderComponent>(const 
                                                                           PointSphereRenderComponent& component,
                                                                           nlohmann::json& j)
 {
-    j["PointSphereRenderer"]["PointSize"]          = component.point_size;
-    j["PointSphereRenderer"]["Shader"]["Vertex"]   = component.shader->getVertexPath();
-    j["PointSphereRenderer"]["Shader"]["Fragment"] = component.shader->getFragmentPath();
-    j["PointSphereRenderer"]["Shader"]["Geometry"] = component.shader->getGeometryPath();
+    j[POINT_SPHERE_RENDERER_KEY][POINT_SIZE_KEY]           = component.point_size;
+    j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = component.shader->getVertexPath();
+    j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = component.shader->getFragmentPath();
+    j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
 
-    serializeMaterial(j["PointSphereRenderer"], entity, component.material, file_path);
+    serializeMaterial(j[POINT_SPHERE_RENDERER_KEY], entity, component.material, file_path);
 }
 
 template<>
@@ -316,7 +354,7 @@ void ComponentSerializer::serialize_component<EdgeRenderComponent>(const std::st
                                                                    EdgeRenderComponent& component,
                                                                    nlohmann::json& j)
 {
-    j["EdgeRenderer"]["Color"] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
+    j[EDGE_RENDERER_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
 }
 
 template<>
@@ -325,9 +363,9 @@ void ComponentSerializer::serialize_component<EdgeCylinderRenderComponent>(const
                                                                            EdgeCylinderRenderComponent& component,
                                                                            nlohmann::json& j)
 {
-    j["EdgeCylinderRenderer"]["Radius"] = component.radius;
+    j[EDGE_CYLINDER_RENDERER_KEY][RADIUS_KEY] = component.radius;
 
-    serializeMaterial(j["EdgeCylinderRenderer"], entity, component.material, file_path);
+    serializeMaterial(j[EDGE_CYLINDER_RENDERER_KEY], entity, component.material, file_path);
 }
 
 template<typename T>
@@ -340,13 +378,13 @@ void ComponentSerializer::deserialize_component<IDComponent>(const std::string& 
                                                              Entity entity,
                                                              nlohmann::json& j)
 {
-    if(!j.contains("ID"))
+    if(!j.contains(ID_KEY))
     {
         return;
     }
 
     auto& component = entity.getComponent<IDComponent>();
-    component.ID    = (uint64_t)j["ID"];
+    component.ID    = (uint64_t)j[ID_KEY];
 }
 
 template<>
@@ -354,13 +392,13 @@ void ComponentSerializer::deserialize_component<NameComponent>(const std::string
                                                                Entity entity,
                                                                nlohmann::json& j)
 {
-    if(!j.contains("Name"))
+    if(!j.contains(NAME_KEY))
     {
         return;
     }
 
     auto& component = entity.getComponent<NameComponent>();
-    component.name  = j["Name"];
+    component.name  = j[NAME_KEY];
 }
 
 template<>
@@ -368,14 +406,14 @@ void ComponentSerializer::deserialize_component<TransformComponent>(const std::s
                                                                     Entity entity,
                                                                     nlohmann::json& j)
 {
-    if(!j.contains("Transform"))
+    if(!j.contains(TRANSFORM_KEY))
     {
         return;
     }
 
-    std::vector<float> position = j["Transform"]["Position"];
-    std::vector<float> scale    = j["Transform"]["Scale"];
-    std::vector<float> rotation = j["Transform"]["EulerAngles"];
+    std::vector<float> position = j[TRANSFORM_KEY][POSITION_KEY];
+    std::vector<float> scale    = j[TRANSFORM_KEY][SCALE_KEY];
+    std::vector<float> rotation = j[TRANSFORM_KEY][EULER_ANGLES_KEY];
 
     entity.addComponent<atcg::TransformComponent>(glm::make_vec3(position.data()),
                                                   glm::make_vec3(scale.data()),
@@ -387,13 +425,13 @@ void ComponentSerializer::deserialize_component<CameraComponent>(const std::stri
                                                                  Entity entity,
                                                                  nlohmann::json& j)
 {
-    if(!j.contains("PerspectiveCamera"))
+    if(!j.contains(PERSPECTIVE_CAMERA_KEY))
     {
         return;
     }
 
-    float aspect_ratio = j["PerspectiveCamera"]["AspectRatio"];
-    float fov          = j["PerspectiveCamera"]["FoVy"];
+    float aspect_ratio = j[PERSPECTIVE_CAMERA_KEY][ASPECT_RATIO_KEY];
+    float fov          = j[PERSPECTIVE_CAMERA_KEY][FOVY_KEY];
     auto& camera       = entity.addComponent<CameraComponent>(
         atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, glm::vec3(0), glm::vec3(0, 0, 1)));
     atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
@@ -412,20 +450,20 @@ void ComponentSerializer::deserialize_component<GeometryComponent>(const std::st
                                                                    Entity entity,
                                                                    nlohmann::json& j)
 {
-    if(!j.contains("Geometry"))
+    if(!j.contains(GEOMETRY_KEY))
     {
         return;
     }
 
     auto& geometry       = entity.addComponent<GeometryComponent>();
-    atcg::GraphType type = (atcg::GraphType)(int)j["Geometry"]["Type"];
+    atcg::GraphType type = (atcg::GraphType)(int)j[GEOMETRY_KEY][TYPE_KEY];
 
     switch(type)
     {
         case atcg::GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH:
         {
-            std::string vertex_path           = j["Geometry"]["Vertices"];
-            std::string faces_path            = j["Geometry"]["Faces"];
+            std::string vertex_path           = j[GEOMETRY_KEY][VERTICES_KEY];
+            std::string faces_path            = j[GEOMETRY_KEY][FACES_KEY];
             std::vector<uint8_t> vertices_raw = deserializeBuffer(vertex_path);
             std::vector<uint8_t> faces_raw    = deserializeBuffer(faces_path);
 
@@ -441,7 +479,7 @@ void ComponentSerializer::deserialize_component<GeometryComponent>(const std::st
         break;
         case atcg::GraphType::ATCG_GRAPH_TYPE_POINTCLOUD:
         {
-            std::string vertex_path           = j["Geometry"]["Vertices"];
+            std::string vertex_path           = j[GEOMETRY_KEY][VERTICES_KEY];
             std::vector<uint8_t> vertices_raw = deserializeBuffer(vertex_path);
 
             auto vertices = atcg::createHostTensorFromPointer(
@@ -453,8 +491,8 @@ void ComponentSerializer::deserialize_component<GeometryComponent>(const std::st
         break;
         case atcg::GraphType::ATCG_GRAPH_TYPE_GRAPH:
         {
-            std::string vertex_path           = j["Geometry"]["Vertices"];
-            std::string edges_path            = j["Geometry"]["Edges"];
+            std::string vertex_path           = j[GEOMETRY_KEY][VERTICES_KEY];
+            std::string edges_path            = j[GEOMETRY_KEY][EDGES_KEY];
             std::vector<uint8_t> vertices_raw = deserializeBuffer(vertex_path);
             std::vector<uint8_t> edges_raw    = deserializeBuffer(edges_path);
 
@@ -482,16 +520,16 @@ void ComponentSerializer::deserialize_component<MeshRenderComponent>(const std::
                                                                      Entity entity,
                                                                      nlohmann::json& j)
 {
-    if(!j.contains("MeshRenderer"))
+    if(!j.contains(MESH_RENDERER_KEY))
     {
         return;
     }
 
-    auto& renderer            = j["MeshRenderer"];
+    auto& renderer            = j[MESH_RENDERER_KEY];
     auto& renderComponent     = entity.addComponent<MeshRenderComponent>();
-    std::string vertex_path   = renderer["Shader"]["Vertex"];
-    std::string fragment_path = renderer["Shader"]["Fragment"];
-    std::string geometry_path = renderer["Shader"]["Geometry"];
+    std::string vertex_path   = renderer[SHADER_KEY][VERTEX_KEY];
+    std::string fragment_path = renderer[SHADER_KEY][FRAGMENT_KEY];
+    std::string geometry_path = renderer[SHADER_KEY][GEOMETRY_KEY];
 
     std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
     shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
@@ -509,9 +547,9 @@ void ComponentSerializer::deserialize_component<MeshRenderComponent>(const std::
         renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
     }
 
-    if(renderer.contains("Material"))
+    if(renderer.contains(MATERIAL_KEY))
     {
-        auto material_node       = renderer["Material"];
+        auto material_node       = renderer[MATERIAL_KEY];
         Material material        = deserialize_material(material_node);
         renderComponent.material = material;
     }
@@ -522,19 +560,19 @@ void ComponentSerializer::deserialize_component<PointRenderComponent>(const std:
                                                                       Entity entity,
                                                                       nlohmann::json& j)
 {
-    if(!j.contains("PointRenderer"))
+    if(!j.contains(POINT_RENDERER_KEY))
     {
         return;
     }
 
-    auto& renderer             = j["PointRenderer"];
+    auto& renderer             = j[POINT_RENDERER_KEY];
     auto& renderComponent      = entity.addComponent<PointRenderComponent>();
-    std::vector<float> color   = renderer["Color"];
+    std::vector<float> color   = renderer[COLOR_KEY];
     renderComponent.color      = glm::make_vec3(color.data());
-    renderComponent.point_size = renderer["PointSize"];
-    std::string vertex_path    = renderer["Shader"]["Vertex"];
-    std::string fragment_path  = renderer["Shader"]["Fragment"];
-    std::string geometry_path  = renderer["Shader"]["Geometry"];
+    renderComponent.point_size = renderer[POINT_SIZE_KEY];
+    std::string vertex_path    = renderer[SHADER_KEY][VERTEX_KEY];
+    std::string fragment_path  = renderer[SHADER_KEY][FRAGMENT_KEY];
+    std::string geometry_path  = renderer[SHADER_KEY][GEOMETRY_KEY];
 
     std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
     shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
@@ -558,17 +596,17 @@ void ComponentSerializer::deserialize_component<PointSphereRenderComponent>(cons
                                                                             Entity entity,
                                                                             nlohmann::json& j)
 {
-    if(!j.contains("PointSphereRenderer"))
+    if(!j.contains(POINT_SPHERE_RENDERER_KEY))
     {
         return;
     }
 
-    auto& renderer             = j["PointSphereRenderer"];
+    auto& renderer             = j[POINT_SPHERE_RENDERER_KEY];
     auto& renderComponent      = entity.addComponent<PointSphereRenderComponent>();
-    renderComponent.point_size = renderer["PointSize"];
-    std::string vertex_path    = renderer["Shader"]["Vertex"];
-    std::string fragment_path  = renderer["Shader"]["Fragment"];
-    std::string geometry_path  = renderer["Shader"]["Geometry"];
+    renderComponent.point_size = renderer[POINT_SIZE_KEY];
+    std::string vertex_path    = renderer[SHADER_KEY][VERTEX_KEY];
+    std::string fragment_path  = renderer[SHADER_KEY][FRAGMENT_KEY];
+    std::string geometry_path  = renderer[SHADER_KEY][GEOMETRY_KEY];
 
     std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
     shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
@@ -587,9 +625,9 @@ void ComponentSerializer::deserialize_component<PointSphereRenderComponent>(cons
     }
 
 
-    if(renderer.contains("Material"))
+    if(renderer.contains(MATERIAL_KEY))
     {
-        auto material_node       = renderer["Material"];
+        auto material_node       = renderer[MATERIAL_KEY];
         Material material        = deserialize_material(material_node);
         renderComponent.material = material;
     }
@@ -600,14 +638,14 @@ void ComponentSerializer::deserialize_component<EdgeRenderComponent>(const std::
                                                                      Entity entity,
                                                                      nlohmann::json& j)
 {
-    if(!j.contains("EdgeRenderer"))
+    if(!j.contains(EDGE_RENDERER_KEY))
     {
         return;
     }
 
-    auto& renderer           = j["EdgeRenderer"];
+    auto& renderer           = j[EDGE_RENDERER_KEY];
     auto& renderComponent    = entity.addComponent<EdgeRenderComponent>();
-    std::vector<float> color = renderer["Color"];
+    std::vector<float> color = renderer[COLOR_KEY];
     renderComponent.color    = glm::make_vec3(color.data());
 }
 
@@ -616,19 +654,19 @@ void ComponentSerializer::deserialize_component<EdgeCylinderRenderComponent>(con
                                                                              Entity entity,
                                                                              nlohmann::json& j)
 {
-    if(!j.contains("EdgeCylinderRenderer"))
+    if(!j.contains(EDGE_CYLINDER_RENDERER_KEY))
     {
         return;
     }
 
-    auto& renderer         = j["EdgeCylinderRenderer"];
+    auto& renderer         = j[EDGE_CYLINDER_RENDERER_KEY];
     auto& renderComponent  = entity.addComponent<EdgeCylinderRenderComponent>();
-    renderComponent.radius = renderer["Radius"];
+    renderComponent.radius = renderer[RADIUS_KEY];
 
 
-    if(renderer.contains("Material"))
+    if(renderer.contains(MATERIAL_KEY))
     {
-        auto& material_node      = renderer["Material"];
+        auto& material_node      = renderer[MATERIAL_KEY];
         Material material        = deserialize_material(material_node);
         renderComponent.material = material;
     }
