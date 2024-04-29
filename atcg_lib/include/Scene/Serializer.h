@@ -10,6 +10,8 @@ namespace atcg
 
 /**
  * @brief A class that handles scene serialization
+ *
+ * @tparam ComponentSerializerT The class that handles serialization of individual components
  */
 template<typename ComponentSerializerT>
 class Serializer
