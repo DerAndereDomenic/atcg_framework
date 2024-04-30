@@ -179,7 +179,7 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
         }
         else
         {
-            auto data         = diffuse_texture->getData(atcg::CPU);
+            auto data         = emissive_texture->getData(atcg::CPU);
             glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
                                  data.index({0, 0, 1}).item<uint8_t>(),
                                  data.index({0, 0, 2}).item<uint8_t>()};
@@ -208,9 +208,8 @@ Material ComponentSerializer::deserialize_material(const nlohmann::json& materia
     else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
     {
         std::string diffuse_path = material_node[DIFFUSE_TEXTURE_KEY];
-        ATCG_TRACE(diffuse_path);
-        auto img             = IO::imread(diffuse_path, 2.2f);
-        auto diffuse_texture = atcg::Texture2D::create(img);
+        auto img                 = IO::imread(diffuse_path, 2.2f);
+        auto diffuse_texture     = atcg::Texture2D::create(img);
         material.setDiffuseTexture(diffuse_texture);
     }
 
@@ -250,6 +249,27 @@ Material ComponentSerializer::deserialize_material(const nlohmann::json& materia
         auto metallic_texture     = atcg::Texture2D::create(img);
         material.setMetallicTexture(metallic_texture);
     }
+
+    if(material_node.contains(EMISSIVE_KEY))
+    {
+        material.emissive       = material_node[EMISSIVE_KEY];
+        material.emission_scale = material_node[EMISSIVE_SCALE_KEY];
+        if(material_node.contains(EMISSIVE_COLOR_KEY))
+        {
+            std::vector<float> emissive_color = material_node[EMISSIVE_COLOR_KEY];
+            material.setEmissiveColor(glm::vec4(glm::make_vec3(emissive_color.data()), 1.0f));
+        }
+        else if(material_node.contains(EMISSIVE_TEXTURE_KEY))
+        {
+            std::string emissive_path = material_node[EMISSIVE_TEXTURE_KEY];
+            auto img                  = IO::imread(emissive_path);
+            auto emissive_texture     = atcg::Texture2D::create(img);
+            material.setEmissiveTexture(emissive_texture);
+        }
+    }
+
+    material.glass = material_node[GLASS_KEY];
+    material.ior   = material_node[IOR_KEY];
 
     return material;
 }
