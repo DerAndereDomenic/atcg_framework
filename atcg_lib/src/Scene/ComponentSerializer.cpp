@@ -253,7 +253,7 @@ Material ComponentSerializer::deserialize_material(const nlohmann::json& materia
     if(material_node.contains(EMISSIVE_KEY))
     {
         material.emissive       = material_node[EMISSIVE_KEY];
-        material.emission_scale = material_node[EMISSIVE_SCALE_KEY];
+        material.emission_scale = material_node.value(EMISSIVE_SCALE_KEY, 1.0f);
         if(material_node.contains(EMISSIVE_COLOR_KEY))
         {
             std::vector<float> emissive_color = material_node[EMISSIVE_COLOR_KEY];
@@ -268,8 +268,8 @@ Material ComponentSerializer::deserialize_material(const nlohmann::json& materia
         }
     }
 
-    material.glass = material_node[GLASS_KEY];
-    material.ior   = material_node[IOR_KEY];
+    material.glass = material_node.value(GLASS_KEY, false);
+    material.ior   = material_node.value(IOR_KEY, 1.5f);
 
     return material;
 }
