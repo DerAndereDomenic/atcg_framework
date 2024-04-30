@@ -41,6 +41,12 @@ namespace atcg
 #define PERSPECTIVE_CAMERA_KEY     "PerspectiveCamera"
 #define ASPECT_RATIO_KEY           "AspectRatio"
 #define FOVY_KEY                   "FoVy"
+#define EMISSIVE_SCALE_KEY         "EmissiveScale"
+#define EMISSIVE_KEY               "Emissive"
+#define EMISSIVE_COLOR_KEY         "EmissiveColor"
+#define EMISSIVE_TEXTURE_KEY       "EmissiveTexture"
+#define GLASS_KEY                  "IsGlass"
+#define IOR_KEY                    "IoR"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -84,11 +90,13 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
     auto normal_texture    = material.getNormalTexture();
     auto metallic_texture  = material.getMetallicTexture();
     auto roughness_texture = material.getRoughnessTexture();
+    auto emissive_texture  = material.getEmissiveTexture();
 
     bool use_diffuse_texture   = !(diffuse_texture->width() == 1 && diffuse_texture->height() == 1);
     bool use_normal_texture    = !(normal_texture->width() == 1 && normal_texture->height() == 1);
     bool use_metallic_texture  = !(metallic_texture->width() == 1 && metallic_texture->height() == 1);
     bool use_roughness_texture = !(roughness_texture->width() == 1 && roughness_texture->height() == 1);
+    bool use_emissive_texture  = !(emissive_texture->width() == 1 && emissive_texture->height() == 1);
 
     auto entity_id = entity.getComponent<IDComponent>().ID;
 
@@ -155,6 +163,36 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
 
         material_node[ROUGHNESS_KEY] = color;
     }
+
+    if(material.emissive)
+    {
+        material_node[EMISSIVE_SCALE_KEY] = material.emission_scale;
+        material_node[EMISSIVE_KEY]       = material.emissive;
+
+        if(use_emissive_texture)
+        {
+            std::string img_path = file_path + "_" + std::to_string(entity_id) + "_emissive";
+
+            serializeTexture(emissive_texture, img_path);
+
+            material_node[EMISSIVE_TEXTURE_KEY] = img_path;
+        }
+        else
+        {
+            auto data         = diffuse_texture->getData(atcg::CPU);
+            glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
+                                 data.index({0, 0, 1}).item<uint8_t>(),
+                                 data.index({0, 0, 2}).item<uint8_t>()};
+
+            glm::vec3 c(color);
+            c = c / 255.0f;
+
+            material_node[EMISSIVE_COLOR_KEY] = nlohmann::json::array({c.x, c.y, c.z});
+        }
+    }
+
+    material_node[IOR_KEY]   = material.ior;
+    material_node[GLASS_KEY] = material.glass;
 }
 
 Material ComponentSerializer::deserialize_material(const nlohmann::json& material_node)
