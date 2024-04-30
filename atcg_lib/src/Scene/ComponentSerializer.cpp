@@ -469,9 +469,9 @@ void ComponentSerializer::deserialize_component<TransformComponent>(const std::s
         return;
     }
 
-    std::vector<float> position = j[TRANSFORM_KEY][POSITION_KEY];
-    std::vector<float> scale    = j[TRANSFORM_KEY][SCALE_KEY];
-    std::vector<float> rotation = j[TRANSFORM_KEY][EULER_ANGLES_KEY];
+    std::vector<float> position = j[TRANSFORM_KEY].value(POSITION_KEY, std::vector<float> {0.0f, 0.0f, 0.0f});
+    std::vector<float> scale    = j[TRANSFORM_KEY].value(SCALE_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
+    std::vector<float> rotation = j[TRANSFORM_KEY].value(EULER_ANGLES_KEY, std::vector<float> {0.0f, 0.0f, 0.0f});
 
     entity.addComponent<atcg::TransformComponent>(glm::make_vec3(position.data()),
                                                   glm::make_vec3(scale.data()),
@@ -488,8 +488,8 @@ void ComponentSerializer::deserialize_component<CameraComponent>(const std::stri
         return;
     }
 
-    float aspect_ratio = j[PERSPECTIVE_CAMERA_KEY][ASPECT_RATIO_KEY];
-    float fov          = j[PERSPECTIVE_CAMERA_KEY][FOVY_KEY];
+    float aspect_ratio = j[PERSPECTIVE_CAMERA_KEY].value(ASPECT_RATIO_KEY, 1.0f);
+    float fov          = j[PERSPECTIVE_CAMERA_KEY].value(FOVY_KEY, 60.0f);
     auto& camera       = entity.addComponent<CameraComponent>(
         atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, glm::vec3(0), glm::vec3(0, 0, 1)));
     atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
@@ -585,9 +585,9 @@ void ComponentSerializer::deserialize_component<MeshRenderComponent>(const std::
 
     auto& renderer            = j[MESH_RENDERER_KEY];
     auto& renderComponent     = entity.addComponent<MeshRenderComponent>();
-    std::string vertex_path   = renderer[SHADER_KEY][VERTEX_KEY];
-    std::string fragment_path = renderer[SHADER_KEY][FRAGMENT_KEY];
-    std::string geometry_path = renderer[SHADER_KEY][GEOMETRY_KEY];
+    std::string vertex_path   = renderer[SHADER_KEY].value(VERTEX_KEY, "shader/base.vs");
+    std::string fragment_path = renderer[SHADER_KEY].value(FRAGMENT_KEY, "shader/base.fs");
+    std::string geometry_path = renderer[SHADER_KEY].value(GEOMETRY_KEY, "");
 
     std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
     shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
@@ -625,12 +625,12 @@ void ComponentSerializer::deserialize_component<PointRenderComponent>(const std:
 
     auto& renderer             = j[POINT_RENDERER_KEY];
     auto& renderComponent      = entity.addComponent<PointRenderComponent>();
-    std::vector<float> color   = renderer[COLOR_KEY];
+    std::vector<float> color   = renderer.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
     renderComponent.color      = glm::make_vec3(color.data());
-    renderComponent.point_size = renderer[POINT_SIZE_KEY];
-    std::string vertex_path    = renderer[SHADER_KEY][VERTEX_KEY];
-    std::string fragment_path  = renderer[SHADER_KEY][FRAGMENT_KEY];
-    std::string geometry_path  = renderer[SHADER_KEY][GEOMETRY_KEY];
+    renderComponent.point_size = renderer.value(POINT_SIZE_KEY, 1.0f);
+    std::string vertex_path    = renderer[SHADER_KEY].value(VERTEX_KEY, "shader/base.vs");
+    std::string fragment_path  = renderer[SHADER_KEY].value(FRAGMENT_KEY, "shader/base.fs");
+    std::string geometry_path  = renderer[SHADER_KEY].value(GEOMETRY_KEY, "");
 
     std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
     shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
@@ -661,10 +661,10 @@ void ComponentSerializer::deserialize_component<PointSphereRenderComponent>(cons
 
     auto& renderer             = j[POINT_SPHERE_RENDERER_KEY];
     auto& renderComponent      = entity.addComponent<PointSphereRenderComponent>();
-    renderComponent.point_size = renderer[POINT_SIZE_KEY];
-    std::string vertex_path    = renderer[SHADER_KEY][VERTEX_KEY];
-    std::string fragment_path  = renderer[SHADER_KEY][FRAGMENT_KEY];
-    std::string geometry_path  = renderer[SHADER_KEY][GEOMETRY_KEY];
+    renderComponent.point_size = renderer.value(POINT_SIZE_KEY, 0.1f);
+    std::string vertex_path    = renderer[SHADER_KEY].value(VERTEX_KEY, "shader/base.vs");
+    std::string fragment_path  = renderer[SHADER_KEY].value(FRAGMENT_KEY, "shader/base.fs");
+    std::string geometry_path  = renderer[SHADER_KEY].value(GEOMETRY_KEY, "");
 
     std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
     shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
@@ -703,7 +703,7 @@ void ComponentSerializer::deserialize_component<EdgeRenderComponent>(const std::
 
     auto& renderer           = j[EDGE_RENDERER_KEY];
     auto& renderComponent    = entity.addComponent<EdgeRenderComponent>();
-    std::vector<float> color = renderer[COLOR_KEY];
+    std::vector<float> color = renderer.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
     renderComponent.color    = glm::make_vec3(color.data());
 }
 
@@ -719,7 +719,7 @@ void ComponentSerializer::deserialize_component<EdgeCylinderRenderComponent>(con
 
     auto& renderer         = j[EDGE_CYLINDER_RENDERER_KEY];
     auto& renderComponent  = entity.addComponent<EdgeCylinderRenderComponent>();
-    renderComponent.radius = renderer[RADIUS_KEY];
+    renderComponent.radius = renderer.value(RADIUS_KEY, 0.001f);
 
 
     if(renderer.contains(MATERIAL_KEY))
