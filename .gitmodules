@@ -16,9 +16,6 @@
 [submodule "external/openmesh"]
 	path = external/openmesh
 	url = https://github.com/DerAndereDomenic/OpenMesh.git
-[submodule "external/yaml-cpp"]
-	path = external/yaml-cpp
-	url = https://github.com/jbeder/yaml-cpp.git
 [submodule "external/charonload"]
 	path = external/charonload
 	url = https://github.com/vc-bonn/charonload.git

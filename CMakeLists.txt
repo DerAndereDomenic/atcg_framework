@@ -29,11 +29,6 @@ target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 add_subdirectory(external/stbimage)
 target_include_directories(stb_image PUBLIC "external/stbimage")
 
-# yaml-cpp
-set(YAML_CPP_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
-add_subdirectory(external/yaml-cpp)
-target_compile_definitions(yaml-cpp PUBLIC YAML_CPP_STATIC_DEFINE)
-
 # imguizmo
 add_library(imguizmo STATIC)
 target_sources(imguizmo PRIVATE "external/imguizmo/GraphEditor.cpp"
@@ -119,6 +114,10 @@ set_target_properties(${ATCG_OPENVR_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY 
                                                        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
                                                        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
+# json
+add_library(json INTERFACE)
+target_include_directories(json INTERFACE "external/json")
+
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
     set(CMAKE_CUDA_ARCHITECTURES "native")
@@ -184,7 +183,6 @@ target_link_libraries(atcg_lib PUBLIC glfw
                                       OpenGL::GL
                                       OpenMeshCore
                                       OpenMeshTools
-                                      yaml-cpp
                                       stb_image
                                       tinyobjloader
                                       entt
@@ -193,6 +191,7 @@ target_link_libraries(atcg_lib PUBLIC glfw
                                       nanoflann
                                       glm
                                       spdlog_header_only
+                                      json
                                       ${ATCG_OPENVR_TARGET}
 )
 

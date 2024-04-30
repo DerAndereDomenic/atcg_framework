@@ -1,14 +1,19 @@
 #pragma once
 
 #include <Core/Memory.h>
+#include <Scene/Entity.h>
+
+#include <json.hpp>
 
 namespace atcg
 {
-class Scene;
 
 /**
  * @brief A class that handles scene serialization
+ *
+ * @tparam ComponentSerializerT The class that handles serialization of individual components
  */
+template<typename ComponentSerializerT>
 class Serializer
 {
 public:
@@ -25,6 +30,7 @@ public:
      *
      * @param file_path The file path
      */
+    template<typename... CustomComponents>
     void serialize(const std::string& file_path);
 
     /**
@@ -32,9 +38,18 @@ public:
      *
      * @param file_path The file path
      */
+    template<typename... CustomComponents>
     void deserialize(const std::string& file_path);
 
 private:
+    template<typename... Components>
+    nlohmann::json serializeEntity(const std::string& file_path, Entity entity);
+    template<typename... Components>
+    void deserializeEntity(const std::string& file_path, Entity entity, nlohmann::json& entity_object);
+
     atcg::ref_ptr<Scene> _scene;
+    atcg::ref_ptr<ComponentSerializerT> _component_serializer;
 };
 }    // namespace atcg
+
+#include "../../src/Scene/SerializerDetail.h"

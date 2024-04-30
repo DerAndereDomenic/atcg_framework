@@ -222,12 +222,14 @@ public:
      * @param mip_level The mip level
      * @param border_color The border color
      * @param normalized_coords If the coordinates should be normalized between 0 and 1
+     * @param normalized_float If the texture should be read as normalized floats
      *
      * @return The pointer
      */
     atcg::textureObject getTextureObject(const uint32_t mip_level      = 0,
                                          const glm::vec4& border_color = glm::vec4(0),
-                                         const bool normalized_coords  = true) const;
+                                         const bool normalized_coords  = true,
+                                         const bool normalized_float   = true) const;
 
     /**
      * @brief Get the underlying data as a cudaSurfaceObject_t.

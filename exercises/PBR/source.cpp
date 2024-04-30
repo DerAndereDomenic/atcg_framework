@@ -30,7 +30,7 @@ public:
 
         scene = atcg::IO::read_scene("res/cornell_box.obj");
 
-        panel = atcg::SceneHierarchyPanel(scene);
+        panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
 
         if(atcg::VRSystem::isVRAvailable())
         {
@@ -125,17 +125,17 @@ public:
         {
             if(ImGui::MenuItem("Save"))
             {
-                atcg::Serializer serializer(scene);
+                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
 
-                serializer.serialize("../Scene/Scene.yaml");
+                serializer.serialize("../Scene/Scene.json");
             }
 
             if(ImGui::MenuItem("Load"))
             {
-                scene = atcg::make_ref<atcg::Scene>();
-                atcg::Serializer serializer(scene);
+                scene->removeAllEntites();
+                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
 
-                serializer.deserialize("../Scene/Scene.yaml");
+                serializer.deserialize("../Scene/Scene.json");
 
                 hovered_entity = atcg::Entity();
                 panel.selectEntity(hovered_entity);
@@ -255,7 +255,7 @@ private:
 
     atcg::ref_ptr<atcg::Graph> plane;
 
-    atcg::SceneHierarchyPanel panel;
+    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
 
     float time       = 0.0f;
     bool in_viewport = false;

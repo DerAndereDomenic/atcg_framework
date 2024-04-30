@@ -464,11 +464,13 @@ atcg::textureArray Texture::getTextureArray(const uint32_t mip_level) const
     return impl->dev_ptr;
 }
 
-atcg::textureObject
-Texture::getTextureObject(const uint32_t mip_level, const glm::vec4& border_color, const bool normalized_coords) const
+atcg::textureObject Texture::getTextureObject(const uint32_t mip_level,
+                                              const glm::vec4& border_color,
+                                              const bool normalized_coords,
+                                              const bool normalized_float) const
 {
 #ifdef ATCG_CUDA_BACKEND
-    if(impl->texture_mapped)
+    if(!impl->texture_mapped)
     {
         atcg::textureArray array = getTextureArray(mip_level);
 
@@ -476,12 +478,17 @@ Texture::getTextureObject(const uint32_t mip_level, const glm::vec4& border_colo
         resDesc.resType          = cudaResourceTypeArray;
         resDesc.res.array.array  = array;
 
+        bool isFloat = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGFLOAT ||
+                       _spec.format == TextureFormat::RGBFLOAT || _spec.format == TextureFormat::RGBAFLOAT;
+
         cudaTextureDesc texDesc = {};
         texDesc.addressMode[0]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
         texDesc.addressMode[1]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
         texDesc.addressMode[2]  = detail::toCUDAAddressMode(_spec.sampler.wrap_mode);
         texDesc.filterMode      = detail::toCUDATextureMode(_spec.sampler.filter_mode);
-        texDesc.readMode        = cudaReadModeNormalizedFloat;
+        texDesc.readMode        = isFloat            ? cudaReadModeElementType
+                                  : normalized_float ? cudaReadModeNormalizedFloat
+                                                     : cudaReadModeElementType;
         texDesc.borderColor[0]  = border_color.x;
         texDesc.borderColor[1]  = border_color.y;
         texDesc.borderColor[2]  = border_color.z;
@@ -582,7 +589,7 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
                  detail::toGLformat(result->_spec.format),
                  detail::toGLtype(result->_spec.format),
                  (void*)data);
-    ATCG_TRACE("Allocated Texture of size {} x {}", result->_spec.width, result->_spec.height);
+    ATCG_LOG_ALLOCATION("Allocated Texture of size {} x {}", result->_spec.width, result->_spec.height);
 
     auto filtermode = detail::toGLFilterMode(result->_spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
@@ -801,10 +808,10 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
                  detail::toGLformat(result->_spec.format),
                  detail::toGLtype(result->_spec.format),
                  (void*)data);
-    ATCG_TRACE("Allocated Texture of size {} x {} x {}",
-               result->_spec.width,
-               result->_spec.height,
-               result->_spec.depth);
+    ATCG_LOG_ALLOCATION("Allocated Texture of size {} x {} x {}",
+                        result->_spec.width,
+                        result->_spec.height,
+                        result->_spec.depth);
 
     auto filtermode = detail::toGLFilterMode(result->_spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));

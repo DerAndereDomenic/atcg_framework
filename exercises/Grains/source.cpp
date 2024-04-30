@@ -691,7 +691,7 @@ private:
     atcg::ref_ptr<atcg::Scene> scene;
     atcg::ref_ptr<atcg::FirstPersonController> camera_controller;
     atcg::Entity hovered_entity;
-    atcg::SceneHierarchyPanel panel;
+    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
 
     std::vector<glm::vec3> m_positions;
     std::vector<glm::vec3> m_rotations;

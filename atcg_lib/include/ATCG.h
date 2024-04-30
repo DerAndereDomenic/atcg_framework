@@ -64,6 +64,8 @@
 #include <Scene/Entity.h>
 #include <Scene/Serializer.h>
 #include <Scene/SceneHierarchyPanel.h>
+#include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentSerializer.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>

@@ -91,7 +91,7 @@ public:
         camera_entity.addComponent<atcg::EditorCameraComponent>(camera_controller->getCamera());*/
 
         scene = atcg::make_ref<atcg::Scene>();
-        atcg::Serializer serializer(scene);
+        atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
         serializer.deserialize("res/Cloth/Scene.yaml");
 
         auto entities     = scene->getEntitiesByName("EditorCamera");
@@ -151,14 +151,14 @@ public:
         {
             if(ImGui::MenuItem("Save"))
             {
-                atcg::Serializer serializer(scene);
+                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
                 serializer.serialize("res/Cloth/Scene.yaml");
             }
 
             if(ImGui::MenuItem("Load"))
             {
                 scene = atcg::make_ref<atcg::Scene>();
-                atcg::Serializer serializer(scene);
+                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
                 serializer.deserialize("res/Cloth/Scene.yaml");
 
                 auto entities     = scene->getEntitiesByName("EditorCamera");
@@ -272,7 +272,7 @@ private:
     atcg::ref_ptr<atcg::Graph> plane;
     atcg::ref_ptr<atcg::Shader> checkerboard_shader;
 
-    atcg::SceneHierarchyPanel panel;
+    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
 
     float time       = 0.0f;
     bool in_viewport = false;
