@@ -11,6 +11,8 @@
 #include <Renderer/Emitter.h>
 #include <Renderer/EmitterModels.cuh>
 
+#include <Renderer/RaytracingShader.h>
+
 #include <torch/types.h>
 #include <Renderer/PerspectiveCamera.h>
 
@@ -42,7 +44,7 @@ protected:
     atcg::dref_ptr<EmitterVPtrTable> _vptr_table;
 };
 
-class OptixRaytracingShader : public OptixComponent
+class OptixRaytracingShader : public OptixComponent, public RaytracingShader
 {
 public:
     OptixRaytracingShader(OptixDeviceContext context,
