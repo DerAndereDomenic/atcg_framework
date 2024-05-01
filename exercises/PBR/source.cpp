@@ -204,20 +204,12 @@ public:
         {
             auto imgui_layer = atcg::Application::get()->getImGuiLayer();
             imgui_layer->setPathtracingFocus();
-            atcg::Pathtracer::bakeScene(scene, camera_controller->getCamera());
-            atcg::Pathtracer::start();
-        }
-        if(event->getKeyCode() == GLFW_KEY_L)
-        {
-            atcg::Pathtracer::stop();
-        }
-        if(event->getKeyCode() == GLFW_KEY_M)
-        {
-            atcg::Pathtracer::reset(camera_controller->getCamera());
-        }
-        if(event->getKeyCode() == GLFW_KEY_B)
-        {
-            atcg::Pathtracer::bakeScene(scene, camera_controller->getCamera());
+            atcg::Pathtracer::draw(scene,
+                                   camera_controller->getCamera(),
+                                   nullptr,
+                                   imgui_layer->getViewportSize().x,
+                                   imgui_layer->getViewportSize().y,
+                                   1024);
         }
 
         return true;
