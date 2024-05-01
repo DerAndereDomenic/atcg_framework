@@ -32,7 +32,10 @@ public:
     Impl() {}
     ~Impl() {}
 
+    void start();
+    void stop();
     void worker();
+    void resize(const uint32_t width, const uint32_t height);
 
     // OptiX
     OptixDeviceContext context = nullptr;
@@ -52,11 +55,12 @@ public:
     std::atomic_bool running = false;
 
     atcg::ref_ptr<OptixRaytracingShader> shader = nullptr;
+    uint32_t num_samples;
 };
 
 void Pathtracer::Impl::worker()
 {
-    while(true)
+    for(int subframe = 0; subframe < num_samples; ++subframe)
     {
         Timer frame_time;
 
@@ -78,6 +82,8 @@ void Pathtracer::Impl::worker()
 
         if(!running) break;
     }
+
+    running = false;
 }
 
 Pathtracer::Pathtracer() {}
@@ -103,57 +109,32 @@ void Pathtracer::init()
     CUcontext cuCtx                   = 0;
 
     OPTIX_CHECK(optixDeviceContextCreate(cuCtx, &options, &s_pathtracer->impl->context));
-
-    s_pathtracer->impl->raytracing_pipeline = atcg::make_ref<RayTracingPipeline>(s_pathtracer->impl->context);
-    s_pathtracer->impl->sbt                 = atcg::make_ref<ShaderBindingTable>(s_pathtracer->impl->context);
 }
 
-void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera)
+void Pathtracer::destroy()
 {
-    s_pathtracer->impl->shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context, scene, camera);
-    s_pathtracer->impl->shader->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
-
-    s_pathtracer->impl->raytracing_pipeline->createPipeline();
-    s_pathtracer->impl->sbt->createSBT();
+    s_pathtracer->impl->stop();
+    delete s_pathtracer;
 }
 
-void Pathtracer::start()
+void Pathtracer::Impl::start()
 {
-    if(!s_pathtracer->impl->running)
+    if(!running)
     {
-        s_pathtracer->impl->running       = true;
-        s_pathtracer->impl->worker_thread = std::thread(&Pathtracer::Impl::worker, s_pathtracer->impl.get());
+        running       = true;
+        worker_thread = std::thread(&Pathtracer::Impl::worker, this);
     }
 }
 
-void Pathtracer::stop()
+void Pathtracer::Impl::stop()
 {
-    if(s_pathtracer->impl->running)
-    {
-        s_pathtracer->impl->running = false;
+    running = false;
 
-        if(s_pathtracer->impl->worker_thread.joinable()) s_pathtracer->impl->worker_thread.join();
-    }
+    if(worker_thread.joinable()) worker_thread.join();
 }
 
-void Pathtracer::reset(const atcg::ref_ptr<PerspectiveCamera>& camera)
+void Pathtracer::Impl::resize(const uint32_t width, const uint32_t height)
 {
-    stop();
-
-    if(s_pathtracer->impl->shader)
-    {
-        s_pathtracer->impl->shader->reset();
-        s_pathtracer->impl->shader->setCamera(camera);
-    }
-
-    start();
-}
-
-void Pathtracer::resize(const uint32_t width, const uint32_t height)
-{
-    bool running = s_pathtracer->impl->running;
-    stop();
-
     // Resize
     s_pathtracer->impl->swap_chain_buffer =
         torch::zeros({2, height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
@@ -164,10 +145,6 @@ void Pathtracer::resize(const uint32_t width, const uint32_t height)
     spec.width                         = width;
     spec.height                        = height;
     s_pathtracer->impl->output_texture = atcg::Texture2D::create(spec);
-
-    if(s_pathtracer->impl->shader) s_pathtracer->impl->shader->reset();
-
-    if(running) start();
 }
 
 atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
@@ -184,6 +161,31 @@ atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
     }
 
     return s_pathtracer->impl->output_texture;
+}
+
+void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
+                      const atcg::ref_ptr<PerspectiveCamera>& camera,
+                      const atcg::ref_ptr<RaytracingShader>& shader,
+                      uint32_t width,
+                      uint32_t height,
+                      const uint32_t num_samples)
+{
+    s_pathtracer->impl->raytracing_pipeline = atcg::make_ref<RayTracingPipeline>(s_pathtracer->impl->context);
+    s_pathtracer->impl->sbt                 = atcg::make_ref<ShaderBindingTable>(s_pathtracer->impl->context);
+
+    s_pathtracer->impl->resize(width, height);
+
+    // TODO: Make this the passed shader
+    s_pathtracer->impl->shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context, scene, camera);
+    s_pathtracer->impl->shader->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+    s_pathtracer->impl->shader->setCamera(camera);
+
+    s_pathtracer->impl->raytracing_pipeline->createPipeline();
+    s_pathtracer->impl->sbt->createSBT();
+
+    s_pathtracer->impl->num_samples = num_samples;
+
+    s_pathtracer->impl->start();
 }
 
 }    // namespace atcg

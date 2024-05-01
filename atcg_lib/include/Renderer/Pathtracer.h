@@ -4,6 +4,7 @@
 #include <Scene/Scene.h>
 #include <Renderer/PerspectiveCamera.h>
 #include <Renderer/Texture.h>
+#include <Renderer/RaytracingShader.h>
 #include <memory>
 
 namespace atcg
@@ -13,23 +14,25 @@ class Pathtracer
 public:
     static void init();
 
-    static void destroy()
-    {
-        stop();
-        delete s_pathtracer;
-    }
+    static void destroy();
 
-    static void bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera);
+    static void draw(const atcg::ref_ptr<Scene>& scene,
+                     const atcg::ref_ptr<PerspectiveCamera>& camera,
+                     const atcg::ref_ptr<RaytracingShader>& shader,
+                     uint32_t width,
+                     uint32_t height,
+                     const uint32_t num_samples);
 
-    static void start();
+    // static void draw(const atcg::ref_ptr<Scene>& scene,
+    //                  const atcg::ref_ptr<PerspectiveCamera>& camera,
+    //                  const atcg::ref_ptr<RaytracingShader>& shader,
+    //                  uint32_t width,
+    //                  uint32_t height,
+    //                  const float time);
 
-    static void stop();
-
-    static void reset(const atcg::ref_ptr<PerspectiveCamera>& camera);
+    static bool isFinished();
 
     static atcg::ref_ptr<Texture2D> getOutputTexture();
-
-    static void resize(const uint32_t width, const uint32_t height);
 
     ~Pathtracer();
 
