@@ -1,6 +1,6 @@
-#include <Renderer/RaytracingPipeline.h>
+#include <Pathtracing/RaytracingPipeline.h>
 
-#include <Renderer/Common.h>
+#include <Pathtracing/Common.h>
 
 #include <unordered_map>
 

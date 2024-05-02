@@ -1,16 +1,16 @@
-#include <Renderer/PathtracingShader.h>
+#include <Pathtracing/PathtracingShader.h>
 #include <Renderer/Renderer.h>
 
 #include <Scene/Scene.h>
 #include <Scene/Components.h>
 #include <Scene/Entity.h>
 
-#include <Renderer/Common.h>
+#include <Pathtracing/Common.h>
 
-#include <Renderer/HitGroupData.h>
-#include <Renderer/EmitterModels.h>
-#include <Renderer/BSDFModels.h>
-#include <DataStructure/OptixAccelerationStructure.h>
+#include <Pathtracing/HitGroupData.h>
+#include <Pathtracing/EmitterModels.h>
+#include <Pathtracing/BSDFModels.h>
+#include <Pathtracing/OptixAccelerationStructure.h>
 
 #include <optix_stubs.h>
 

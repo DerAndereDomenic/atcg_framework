@@ -3,10 +3,10 @@
 #include <Core/CUDA.h>
 
 #include <Math/Random.h>
-#include <Math/SurfaceInteraction.h>
+#include <Pathtracing/SurfaceInteraction.h>
 
-#include <Renderer/EmitterModels.cuh>
-#include <Renderer/BSDFModels.cuh>
+#include <Pathtracing/EmitterModels.cuh>
+#include <Pathtracing/BSDFModels.cuh>
 
 template<typename T>
 inline __device__ uint32_t binary_search(T* sorted_array, T value, uint32_t size)

@@ -3,9 +3,9 @@
 #include <Core/CUDA.h>
 
 #include <Math/Random.h>
-#include <Math/SurfaceInteraction.h>
 
-#include <Renderer/BSDFModels.cuh>
+#include <Pathtracing/SurfaceInteraction.h>
+#include <Pathtracing/BSDFModels.cuh>
 
 extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_pbrbsdf(const atcg::SurfaceInteraction& si,
                                                                                  atcg::PCG32& rng)

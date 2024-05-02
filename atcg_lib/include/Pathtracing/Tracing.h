@@ -2,8 +2,8 @@
 
 #include <nanort.h>
 #include <torch/types.h>
-#include <Math/SurfaceInteraction.h>
-#include <DataStructure/AccelerationStructure.h>
+#include <Pathtracing/SurfaceInteraction.h>
+#include <Pathtracing/AccelerationStructure.h>
 
 
 namespace atcg

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <Renderer/OptixInterface.h>
-#include <Renderer/Params.cuh>
+#include <Pathtracing/OptixInterface.h>
+#include <Pathtracing/Params.cuh>
 
 namespace atcg
 {

@@ -2,8 +2,8 @@
 
 #include <optix.h>
 #include <Core/glm.h>
-#include <Renderer/BSDFModels.cuh>
-#include <Renderer/EmitterModels.cuh>
+#include <Pathtracing/BSDFModels.cuh>
+#include <Pathtracing/EmitterModels.cuh>
 
 struct Params
 {

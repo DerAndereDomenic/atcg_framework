@@ -1,8 +1,8 @@
 #pragma cuda_source_property_format = PTX
 
-#include <Math/SurfaceInteraction.h>
-#include <Renderer/HitGroupData.h>
-#include <Renderer/Payload.h>
+#include <Pathtracing/SurfaceInteraction.h>
+#include <Pathtracing/HitGroupData.h>
+#include <Pathtracing/Payload.h>
 
 #include <optix.h>
 

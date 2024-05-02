@@ -2,16 +2,16 @@
 
 #include <Core/Memory.h>
 
-#include <Renderer/ShaderBindingTable.h>
-#include <Renderer/RaytracingPipeline.h>
+#include <Pathtracing/ShaderBindingTable.h>
+#include <Pathtracing/RaytracingPipeline.h>
 
-#include <Renderer/BSDF.h>
-#include <Renderer/BSDFModels.cuh>
+#include <Pathtracing/BSDF.h>
+#include <Pathtracing/BSDFModels.cuh>
 
-#include <Renderer/Emitter.h>
-#include <Renderer/EmitterModels.cuh>
+#include <Pathtracing/Emitter.h>
+#include <Pathtracing/EmitterModels.cuh>
 
-#include <Renderer/RaytracingShader.h>
+#include <Pathtracing/RaytracingShader.h>
 
 #include <torch/types.h>
 #include <Renderer/PerspectiveCamera.h>

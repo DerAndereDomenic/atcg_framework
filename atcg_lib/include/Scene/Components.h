@@ -8,9 +8,9 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/Material.h>
 #include <DataStructure/Graph.h>
-#include <Renderer/BSDF.h>
-#include <Renderer/Emitter.h>
-#include <DataStructure/AccelerationStructure.h>
+#include <Pathtracing/BSDF.h>
+#include <Pathtracing/Emitter.h>
+#include <Pathtracing/AccelerationStructure.h>
 #include <nanort.h>
 
 #include <vector>

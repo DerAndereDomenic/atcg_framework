@@ -10,7 +10,7 @@
 #include <Core/Application.h>
 
 #include <Renderer/Renderer.h>
-#include <Renderer/Pathtracer.h>
+#include <Pathtracing/Pathtracer.h>
 
 namespace atcg
 {

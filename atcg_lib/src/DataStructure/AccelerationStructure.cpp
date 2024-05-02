@@ -1,4 +1,4 @@
-#include <DataStructure/AccelerationStructure.h>
+#include <Pathtracing/AccelerationStructure.h>
 
 namespace atcg
 {

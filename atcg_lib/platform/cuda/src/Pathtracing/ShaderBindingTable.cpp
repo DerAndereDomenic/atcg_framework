@@ -1,6 +1,6 @@
-#include <Renderer/ShaderBindingTable.h>
+#include <Pathtracing/ShaderBindingTable.h>
 
-#include <Renderer/Common.h>
+#include <Pathtracing/Common.h>
 
 #include <optix_stubs.h>
 

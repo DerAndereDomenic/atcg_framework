@@ -1,7 +1,7 @@
 #pragma once
 
-#include <DataStructure/AccelerationStructure.h>
-#include <Renderer/OptixInterface.h>
+#include <Pathtracing/AccelerationStructure.h>
+#include <Pathtracing/OptixInterface.h>
 #include <optix.h>
 
 namespace atcg

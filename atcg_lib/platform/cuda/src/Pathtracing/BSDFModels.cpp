@@ -1,7 +1,7 @@
-#include <Renderer/BSDFModels.h>
+#include <Pathtracing/BSDFModels.h>
 #include <Core/CUDA.h>
 
-#include <Renderer/Common.h>
+#include <Pathtracing/Common.h>
 
 namespace atcg
 {

@@ -1,5 +1,5 @@
-#include <Renderer/EmitterModels.h>
-#include <Renderer/Common.h>
+#include <Pathtracing/EmitterModels.h>
+#include <Pathtracing/Common.h>
 #include <ATen/cuda/ApplyGridUtils.cuh>
 #include <c10/cuda/CUDAGuard.h>
 

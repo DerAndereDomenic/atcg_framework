@@ -2,8 +2,8 @@
 
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
-#include <Renderer/Pathtracer.h>
 #include <Renderer/ShaderManager.h>
+#include <Pathtracing/Pathtracer.h>
 
 
 namespace atcg

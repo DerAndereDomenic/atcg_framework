@@ -1,5 +1,5 @@
-#include <DataStructure/OptixAccelerationStructure.h>
-#include <Renderer/Common.h>
+#include <Pathtracing/OptixAccelerationStructure.h>
+#include <Pathtracing/Common.h>
 
 namespace atcg
 {

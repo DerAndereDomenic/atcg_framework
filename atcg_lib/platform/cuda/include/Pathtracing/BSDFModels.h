@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Renderer/OptixInterface.h>
+#include <Pathtracing/OptixInterface.h>
 #include <Renderer/Material.h>
 
 namespace atcg

@@ -2,11 +2,11 @@
 
 #include <Core/CUDA.h>
 
-#include <Renderer/Params.cuh>
+#include <Pathtracing/Params.cuh>
 
 #include <Math/Random.h>
-#include <Math/SurfaceInteraction.h>
-#include <Renderer/Payload.h>
+#include <Pathtracing/SurfaceInteraction.h>
+#include <Pathtracing/Payload.h>
 
 extern "C"
 {

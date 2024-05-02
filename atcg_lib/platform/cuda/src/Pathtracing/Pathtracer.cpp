@@ -1,11 +1,11 @@
-#include <Renderer/Pathtracer.h>
+#include <Pathtracing/Pathtracer.h>
 
 #include <DataStructure/Timer.h>
 
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
 
-#include <Renderer/Common.h>
+#include <Pathtracing/Common.h>
 
 #include <thread>
 #include <mutex>
@@ -15,11 +15,11 @@
 #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
 
-#include <Renderer/RaytracingPipeline.h>
-#include <Renderer/ShaderBindingTable.h>
+#include <Pathtracing/RaytracingPipeline.h>
+#include <Pathtracing/ShaderBindingTable.h>
 
 
-#include <Renderer/PathtracingShader.h>
+#include <Pathtracing/PathtracingShader.h>
 
 namespace atcg
 {

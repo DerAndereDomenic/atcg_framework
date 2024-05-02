@@ -22,7 +22,6 @@
 
 //-------- Renderer ------
 #include <Renderer/Renderer.h>
-#include <Renderer/Pathtracer.h>
 #include <Renderer/Shader.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/PerspectiveCamera.h>
@@ -34,6 +33,10 @@
 #include <Renderer/Framebuffer.h>
 #include <Renderer/Material.h>
 #include <Renderer/VRSystem.h>
+
+// ------- Pathtracing -------
+#include <Pathtracing/Pathtracer.h>
+#include <Pathtracing/Tracing.h>
 
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
@@ -49,7 +52,6 @@
 //-------- Math -----------
 #include <Math/Functions.h>
 #include <Math/Utils.h>
-#include <Math/Tracing.h>
 #include <Math/Random.h>
 
 //-------- Utility -----------

@@ -4,7 +4,7 @@
 #include <Scene/Scene.h>
 #include <Renderer/PerspectiveCamera.h>
 #include <Renderer/Texture.h>
-#include <Renderer/RaytracingShader.h>
+#include <Pathtracing/RaytracingShader.h>
 #include <memory>
 
 namespace atcg

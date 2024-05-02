@@ -1,4 +1,4 @@
-#include <Math/Tracing.h>
+#include <Pathtracing/Tracing.h>
 #include <Scene/Components.h>
 #include <Scene/Entity.h>
 
