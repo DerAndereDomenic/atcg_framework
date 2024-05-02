@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Pathtracing/OptixInterface.h>
+#include <Pathtracing/OptixRaytracingShader.h>
 #include <Pathtracing/Params.cuh>
 
 namespace atcg
@@ -8,12 +8,9 @@ namespace atcg
 class PathtracingShader : public OptixRaytracingShader
 {
 public:
-    PathtracingShader(OptixDeviceContext context,
-                      const atcg::ref_ptr<Scene>& scene,
-                      const atcg::ref_ptr<PerspectiveCamera>& camera);
+    PathtracingShader(OptixDeviceContext context);
 
     ~PathtracingShader();
-
 
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;

@@ -16,12 +16,8 @@
 
 namespace atcg
 {
-PathtracingShader::PathtracingShader(OptixDeviceContext context,
-                                     const atcg::ref_ptr<Scene>& scene,
-                                     const atcg::ref_ptr<PerspectiveCamera>& camera)
-    : OptixRaytracingShader(context, scene, camera)
+PathtracingShader::PathtracingShader(OptixDeviceContext context) : OptixRaytracingShader(context)
 {
-    setCamera(camera);
     CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&_stream, cudaStreamNonBlocking));
 }
 

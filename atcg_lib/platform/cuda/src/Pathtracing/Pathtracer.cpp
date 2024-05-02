@@ -176,9 +176,10 @@ void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
     s_pathtracer->impl->resize(width, height);
 
     // TODO: Make this the passed shader
-    s_pathtracer->impl->shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context, scene, camera);
-    s_pathtracer->impl->shader->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+    s_pathtracer->impl->shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context);
+    s_pathtracer->impl->shader->setScene(scene);
     s_pathtracer->impl->shader->setCamera(camera);
+    s_pathtracer->impl->shader->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
 
     s_pathtracer->impl->raytracing_pipeline->createPipeline();
     s_pathtracer->impl->sbt->createSBT();
