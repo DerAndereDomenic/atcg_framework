@@ -206,7 +206,7 @@ public:
             imgui_layer->setPathtracingFocus();
             atcg::Pathtracer::draw(scene,
                                    camera_controller->getCamera(),
-                                   nullptr,
+                                   atcg::RaytracingShaderManager::getShader("Pathtracing"),
                                    imgui_layer->getViewportSize().x,
                                    imgui_layer->getViewportSize().y,
                                    1024);

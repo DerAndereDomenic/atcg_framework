@@ -18,7 +18,7 @@
 #include <Pathtracing/RaytracingPipeline.h>
 #include <Pathtracing/ShaderBindingTable.h>
 
-
+#include <Pathtracing/RaytracingShaderManager.h>
 #include <Pathtracing/PathtracingShader.h>
 
 namespace atcg
@@ -109,6 +109,9 @@ void Pathtracer::init()
     CUcontext cuCtx                   = 0;
 
     OPTIX_CHECK(optixDeviceContextCreate(cuCtx, &options, &s_pathtracer->impl->context));
+
+    auto shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context);
+    atcg::RaytracingShaderManager::addShader("Pathtracing", shader);
 }
 
 void Pathtracer::destroy()
@@ -175,8 +178,7 @@ void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
 
     s_pathtracer->impl->resize(width, height);
 
-    // TODO: Make this the passed shader
-    s_pathtracer->impl->shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context);
+    s_pathtracer->impl->shader = shader;
     s_pathtracer->impl->shader->setScene(scene);
     s_pathtracer->impl->shader->setCamera(camera);
     s_pathtracer->impl->shader->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
