@@ -34,6 +34,7 @@ int atcg_main(Application* app)
 
     {
         atcg::ShaderManager::destroy();
+        atcg::RaytracingShaderManager::destroy();
         atcg::VRSystem::destroy();
         atcg::Pathtracer::destroy();
         atcg::Renderer::destroy();
