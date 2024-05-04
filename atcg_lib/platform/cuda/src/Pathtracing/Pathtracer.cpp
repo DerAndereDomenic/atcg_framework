@@ -33,7 +33,6 @@ public:
     ~Impl() {}
 
     void start();
-    void stop();
     void worker();
     void resize(const uint32_t width, const uint32_t height);
 
@@ -116,7 +115,7 @@ void Pathtracer::init()
 
 void Pathtracer::destroy()
 {
-    s_pathtracer->impl->stop();
+    stop();
     delete s_pathtracer;
 }
 
@@ -129,11 +128,16 @@ void Pathtracer::Impl::start()
     }
 }
 
-void Pathtracer::Impl::stop()
+void Pathtracer::stop()
 {
-    running = false;
+    s_pathtracer->impl->running = false;
 
-    if(worker_thread.joinable()) worker_thread.join();
+    if(s_pathtracer->impl->worker_thread.joinable()) s_pathtracer->impl->worker_thread.join();
+}
+
+bool Pathtracer::isFinished()
+{
+    return s_pathtracer->impl->running;
 }
 
 void Pathtracer::Impl::resize(const uint32_t width, const uint32_t height)

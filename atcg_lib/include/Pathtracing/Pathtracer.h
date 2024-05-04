@@ -32,6 +32,8 @@ public:
 
     static bool isFinished();
 
+    static void stop();
+
     static atcg::ref_ptr<Texture2D> getOutputTexture();
 
     ~Pathtracer();
