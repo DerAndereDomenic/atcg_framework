@@ -17,15 +17,29 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
     if(atcg::Pathtracer::isFinished())
     {
         ImGui::DragInt("Number Samples", &_num_samples, 1.0f, 0, INT_MAX);
+        ImGui::Checkbox("Viewport size", &_use_viewport_size);
+
+        auto imgui_layer = atcg::Application::get()->getImGuiLayer();
+        if(!_use_viewport_size)
+        {
+            ImGui::DragInt("Width", &_width, 1.0f, 1, 4096);
+            ImGui::DragInt("Height", &_height, 1.0f, 1, 4096);
+        }
+        else
+        {
+            auto size = imgui_layer->getViewportSize();
+            _width    = size.x;
+            _height   = size.y;
+        }
+
         if(ImGui::Button("Start"))
         {
-            auto imgui_layer = atcg::Application::get()->getImGuiLayer();
             imgui_layer->setPathtracingFocus();
             atcg::Pathtracer::draw(_scene,
                                    camera,
                                    atcg::RaytracingShaderManager::getShader("Pathtracing"),
-                                   imgui_layer->getViewportSize().x,
-                                   imgui_layer->getViewportSize().y,
+                                   _width,
+                                   _height,
                                    _num_samples);
         }
     }

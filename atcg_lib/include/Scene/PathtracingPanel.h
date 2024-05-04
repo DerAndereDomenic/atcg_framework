@@ -34,6 +34,9 @@ public:
 
 private:
     atcg::ref_ptr<Scene> _scene;
-    int _num_samples = 1024;
+    int _num_samples        = 1024;
+    int _width              = 0;
+    int _height             = 0;
+    bool _use_viewport_size = true;
 };
 }    // namespace atcg
