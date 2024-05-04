@@ -32,6 +32,8 @@ public:
 
         panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
 
+        pt_panel = atcg::PathtracingPanel(scene);
+
         if(atcg::VRSystem::isVRAvailable())
         {
             float vr_aspect   = (float)atcg::VRSystem::width() / (float)atcg::VRSystem::height();
@@ -158,6 +160,7 @@ public:
 
             ImGui::End();
         }
+        pt_panel.renderPanel(camera_controller->getCamera());
 
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
@@ -248,6 +251,7 @@ private:
     atcg::ref_ptr<atcg::Graph> plane;
 
     atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
+    atcg::PathtracingPanel pt_panel;
 
     float time       = 0.0f;
     bool in_viewport = false;

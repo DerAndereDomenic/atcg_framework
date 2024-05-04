@@ -36,6 +36,8 @@ public:
 
     static atcg::ref_ptr<Texture2D> getOutputTexture();
 
+    static uint32_t getFrameIndex();
+
     ~Pathtracer();
 
 private:

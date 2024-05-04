@@ -55,11 +55,12 @@ public:
 
     atcg::ref_ptr<OptixRaytracingShader> shader = nullptr;
     uint32_t num_samples;
+    uint32_t subframe = 0;
 };
 
 void Pathtracer::Impl::worker()
 {
-    for(int subframe = 0; subframe < num_samples; ++subframe)
+    for(subframe = 0; subframe < num_samples; ++subframe)
     {
         Timer frame_time;
 
@@ -137,7 +138,7 @@ void Pathtracer::stop()
 
 bool Pathtracer::isFinished()
 {
-    return s_pathtracer->impl->running;
+    return !s_pathtracer->impl->running;
 }
 
 void Pathtracer::Impl::resize(const uint32_t width, const uint32_t height)
@@ -193,6 +194,11 @@ void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
     s_pathtracer->impl->num_samples = num_samples;
 
     s_pathtracer->impl->start();
+}
+
+uint32_t Pathtracer::getFrameIndex()
+{
+    return s_pathtracer->impl->subframe;
 }
 
 }    // namespace atcg
