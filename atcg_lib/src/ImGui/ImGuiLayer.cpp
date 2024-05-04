@@ -147,7 +147,7 @@ void ImGuiLayer::begin()
         ImGui::PopStyleVar();
 
         const atcg::Application* app = atcg::Application::get();
-        ImGui::Image((void*)(uint64_t)pt_texture->getID(), ImVec2(app->getViewportSize().x, app->getViewportSize().y));
+        ImGui::Image((void*)(uint64_t)pt_texture->getID(), ImVec2(Pathtracer::getWidth(), Pathtracer::getHeight()));
 
         ImGui::End();
 

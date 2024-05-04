@@ -56,6 +56,8 @@ public:
     atcg::ref_ptr<OptixRaytracingShader> shader = nullptr;
     uint32_t num_samples;
     uint32_t subframe = 0;
+
+    uint32_t width = 0, height = 0;
 };
 
 void Pathtracer::Impl::worker()
@@ -153,6 +155,9 @@ void Pathtracer::Impl::resize(const uint32_t width, const uint32_t height)
     spec.width                         = width;
     spec.height                        = height;
     s_pathtracer->impl->output_texture = atcg::Texture2D::create(spec);
+
+    s_pathtracer->impl->width  = width;
+    s_pathtracer->impl->height = height;
 }
 
 atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
@@ -199,6 +204,16 @@ void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
 uint32_t Pathtracer::getFrameIndex()
 {
     return s_pathtracer->impl->subframe;
+}
+
+uint32_t Pathtracer::getWidth()
+{
+    return s_pathtracer->impl->width;
+}
+
+uint32_t Pathtracer::getHeight()
+{
+    return s_pathtracer->impl->height;
 }
 
 }    // namespace atcg

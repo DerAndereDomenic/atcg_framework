@@ -38,6 +38,10 @@ public:
 
     static uint32_t getFrameIndex();
 
+    static uint32_t getWidth();
+
+    static uint32_t getHeight();
+
     ~Pathtracer();
 
 private:
