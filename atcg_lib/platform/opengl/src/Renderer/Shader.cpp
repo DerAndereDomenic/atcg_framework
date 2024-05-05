@@ -274,6 +274,12 @@ void Shader::setValue<glm::vec4>(const uint32_t location, const glm::vec4& value
 }
 
 template<>
+void Shader::setValue<glm::mat3>(const uint32_t location, const glm::mat3& value) const
+{
+    glUniformMatrix3fv(location, 1, GL_FALSE, &value[0][0]);
+}
+
+template<>
 void Shader::setValue<glm::mat4>(const uint32_t location, const glm::mat4& value) const
 {
     glUniformMatrix4fv(location, 1, GL_FALSE, &value[0][0]);
@@ -311,6 +317,13 @@ void Shader::setVec4(const std::string& name, const glm::vec4& value)
 {
     Uniform& uniform = getUniform(name);
     uniform.type     = ShaderDataType::Float4;
+    uniform.data     = value;
+}
+
+void Shader::setMat3(const std::string& name, const glm::mat4& value)
+{
+    Uniform& uniform = getUniform(name);
+    uniform.type     = ShaderDataType::Mat3;
     uniform.data     = value;
 }
 
@@ -360,6 +373,11 @@ void Shader::use() const
             case ShaderDataType::Float4:
             {
                 setValue<glm::vec4>(uniform.location, std::get<glm::vec4>(uniform.data));
+            }
+            break;
+            case ShaderDataType::Mat3:
+            {
+                setValue<glm::mat3>(uniform.location, std::get<glm::mat4>(uniform.data));
             }
             break;
             case ShaderDataType::Mat4:

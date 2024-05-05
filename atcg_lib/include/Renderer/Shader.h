@@ -135,6 +135,19 @@ public:
     void setVec4(const std::string& name, const glm::vec4& value);
 
     /**
+     * @brief Set a mat3 uniform.
+     * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
+     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
+     * frame.
+     *
+     * @param name Name of the uniform
+     * @param value The value
+     *
+     */
+    void setMat3(const std::string& name, const glm::mat4& value);
+
+    /**
      * @brief Set a mat4 uniform
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
      * uniform. The upload to the actual shader program is done when calling shader->use();
@@ -180,7 +193,7 @@ private:
     {
         uint32_t location;
         ShaderDataType type;
-        std::variant<int, float, glm::vec2, glm::vec3, glm::vec4, glm::mat4> data;
+        std::variant<int, float, glm::vec2, glm::vec3, glm::vec4, glm::mat3, glm::mat4> data;
     };
 
     void readShaderCode(const std::string& path, std::string* code);
