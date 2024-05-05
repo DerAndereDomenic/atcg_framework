@@ -110,7 +110,7 @@ struct AccelerationStructureComponent
 
     AccelerationStructureComponent(const atcg::ref_ptr<AccelerationStructureComponent>& accel) : accel(accel) {}
 
-    atcg::ref_ptr<AccelerationStructureComponent> accel;
+    atcg::ref_ptr<AccelerationStructure> accel;
 };
 
 struct CameraComponent

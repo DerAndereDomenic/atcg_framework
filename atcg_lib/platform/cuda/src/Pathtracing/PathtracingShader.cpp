@@ -21,11 +21,16 @@ PathtracingShader::PathtracingShader(OptixDeviceContext context) : OptixRaytraci
     CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&_stream, cudaStreamNonBlocking));
 }
 
-PathtracingShader::~PathtracingShader() {}
+PathtracingShader::~PathtracingShader()
+{
+    reset();
+    CUDA_SAFE_CALL(cudaStreamDestroy(_stream));
+}
 
 void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                            const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
+    reset();
     if(Renderer::hasSkybox())
     {
         auto skybox_texture = Renderer::getSkyboxTexture();
@@ -98,7 +103,7 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         emitter_tables.push_back(_environment_emitter->getVPtrTable());
     }
 
-    _emitter_tables.create(emitter_tables.size());
+    _emitter_tables = atcg::DeviceBuffer<const atcg::EmitterVPtrTable*>(emitter_tables.size());
     _emitter_tables.upload(emitter_tables.data());
 
     // IAS
@@ -195,8 +200,31 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
 
 void PathtracingShader::reset()
 {
-    // TODO: Actually reset the structures
     _frame_counter = 0;
+
+    if(!_scene) return;
+
+    auto view = _scene->getAllEntitiesWith<IDComponent>();
+
+    for(auto e: view)
+    {
+        Entity entity(e, _scene.get());
+
+        if(entity.hasComponent<BSDFComponent>())
+        {
+            entity.removeComponent<BSDFComponent>();
+        }
+
+        if(entity.hasComponent<EmitterComponent>())
+        {
+            entity.removeComponent<EmitterComponent>();
+        }
+
+        if(entity.hasComponent<AccelerationStructureComponent>())
+        {
+            entity.removeComponent<AccelerationStructureComponent>();
+        }
+    }
 }
 
 void PathtracingShader::setCamera(const atcg::ref_ptr<PerspectiveCamera>& camera)
