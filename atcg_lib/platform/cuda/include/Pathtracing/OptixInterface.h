@@ -11,8 +11,6 @@
 #include <Pathtracing/Emitter.h>
 #include <Pathtracing/EmitterModels.cuh>
 
-#include <Pathtracing/RaytracingShader.h>
-
 #include <torch/types.h>
 #include <Renderer/PerspectiveCamera.h>
 
