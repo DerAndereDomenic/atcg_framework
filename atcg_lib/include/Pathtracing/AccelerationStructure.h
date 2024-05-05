@@ -11,6 +11,8 @@ class AccelerationStructure
 public:
     AccelerationStructure() = default;
 
+    virtual ~AccelerationStructure() {}
+
     inline torch::Tensor getPositions() const { return _positions; }
     inline torch::Tensor getNormals() const { return _normals; }
     inline torch::Tensor getUVs() const { return _uvs; }
