@@ -202,7 +202,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
 	endif()
 endfunction()
 
-add_subdirectory(exercises)
+add_subdirectory(src)
 
 # PYTHON BINDINGS
 
