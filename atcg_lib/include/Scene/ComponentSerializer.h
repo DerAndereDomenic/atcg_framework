@@ -14,8 +14,7 @@ namespace atcg
  * custom component. To get the default behavior, override the serialize_component and deserialize_component function
  * that calls the super class. Add this class as template argument to the atcg::Serializer.
  *
- * Example:
- *
+ * @code{.cpp}
  * class MyComponentSerializer : ComponentSerializer
  * {
  * public:
@@ -47,6 +46,7 @@ namespace atcg
  *          // Serialize custom component
  *      }
  * };
+ * @endcode
  */
 class ComponentSerializer
 {

@@ -470,9 +470,9 @@ public:
 
     /**
      * @brief Get the vertex positions as host tensor.
-     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
-     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
-     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     * @note This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
      * @return The Tensor
      */
@@ -480,7 +480,7 @@ public:
 
     /**
      * @brief Get the vertex positions as device tensor.
-     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * @note This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
      * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
      * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
@@ -490,9 +490,9 @@ public:
 
     /**
      * @brief Get the vertex colors as host tensor.
-     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
-     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
-     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     * @note This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
      * @return The Tensor
      */
@@ -500,7 +500,7 @@ public:
 
     /**
      * @brief Get the vertex colors as device tensor.
-     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * @note This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
      * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
      * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
@@ -510,9 +510,9 @@ public:
 
     /**
      * @brief Get the vertex normals as host tensor.
-     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
-     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
-     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     * @note This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
      * @return The Tensor
      */
@@ -520,7 +520,7 @@ public:
 
     /**
      * @brief Get the vertex normals as device tensor.
-     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * @note This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
      * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
      * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
@@ -530,9 +530,9 @@ public:
 
     /**
      * @brief Get the vertex tangents as host tensor.
-     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
-     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
-     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     * @note This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
      * @return The Tensor
      */
@@ -540,7 +540,7 @@ public:
 
     /**
      * @brief Get the vertex tangents as device tensor.
-     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * @note This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
      * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
      * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
@@ -550,9 +550,9 @@ public:
 
     /**
      * @brief Get the vertex uvs as host tensor.
-     * This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller before
-     * the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as the
-     * underlying VertexBuffer is valid. The memory is non-contiguous.
+     * @note This function maps the host pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
+     * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
      * @return The Tensor
      */
@@ -560,7 +560,7 @@ public:
 
     /**
      * @brief Get the vertex uvs as device tensor.
-     * This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
+     * @note This function maps the device pointer of the undelying buffer. It has to be unmapped manually by the caller
      * before the buffer is used for any OpenGL calls. The tensor does not own the memory and is only valid as long as
      * the underlying VertexBuffer is valid. The memory is non-contiguous.
      *
@@ -730,13 +730,13 @@ atcg::ref_ptr<Graph> read_lines(const std::string& path);
  * Create a scene object where each object is either a triangle mesh (f tag), a point cloud (p tag) or a line
  * collection. To use material files, export the obj with the pbr extension. The following parameters are used:
  *
- * Kd - diffuse base color
- * Pr - surface roughness
- * Pm - surface metallic
- * map_Kd - diffuse base color texture
- * map_Pr - roughness texture
- * map_Pm - metallic texture
- * map_Bump - normal texture
+ * - Kd - diffuse base color
+ * - Pr - surface roughness
+ * - Pm - surface metallic
+ * - map_Kd - diffuse base color texture
+ * - map_Pr - roughness texture
+ * - map_Pm - metallic texture
+ * - map_Bump - normal texture
  *
  * @note We do not use per-face materials but only per object materials
  *
