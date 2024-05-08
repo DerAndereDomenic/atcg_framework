@@ -82,7 +82,7 @@ public:
      *
      * @param camera The camera
      */
-    FocusedController(const atcg::ref_ptr<Camera>& camera);
+    FocusedController(const atcg::ref_ptr<PerspectiveCamera>& camera);
 
     /**
      * @brief Gets called every frame
@@ -127,7 +127,7 @@ public:
      *
      * @param camera The camera
      */
-    FirstPersonController(const atcg::ref_ptr<Camera>& camera);
+    FirstPersonController(const atcg::ref_ptr<PerspectiveCamera>& camera);
 
     /**
      * @brief Gets called every frame
@@ -186,7 +186,7 @@ public:
      *
      * @param camera The camera
      */
-    VRController(const atcg::ref_ptr<Camera>& camera);
+    VRController(const atcg::ref_ptr<PerspectiveCamera>& camera);
 
     /**
      * @brief Gets called every frame

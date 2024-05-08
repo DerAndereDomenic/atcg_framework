@@ -120,7 +120,7 @@ atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const
 
     // Copy mesh in a super convuluted way because the documentation doesn't state how to do it right
     atcg::ref_ptr<TriMesh> result = atcg::make_ref<TriMesh>();
-    result->operator=(**mesh);
+    result->operator=(*mesh);
     result->request_face_colors();
 
     for(auto ft = result->faces_begin(); ft != result->faces_end(); ++ft)

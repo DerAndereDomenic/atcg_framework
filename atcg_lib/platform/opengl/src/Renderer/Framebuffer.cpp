@@ -62,7 +62,7 @@ void Framebuffer::attachColor()
     useDefault();
 }
 
-void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
+void Framebuffer::attachTexture(const atcg::ref_ptr<Texture2D>& texture)
 {
     use();
     glFramebufferTexture2D(GL_FRAMEBUFFER,

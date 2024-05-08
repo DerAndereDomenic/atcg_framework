@@ -68,7 +68,7 @@ inline void displayAddComponentEntry<CameraComponent>(Entity entity)
             auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>(1.0f));
             if(entity.hasComponent<TransformComponent>())
             {
-                atcg::ref_ptr<PerspectiveCamera> cam = camera_component.camera;
+                atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(camera_component.camera);
                 cam->setView(glm::inverse(entity.getComponent<TransformComponent>().getModel()));
             }
             ImGui::CloseCurrentPopup();

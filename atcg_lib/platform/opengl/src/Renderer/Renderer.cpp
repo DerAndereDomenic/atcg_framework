@@ -929,7 +929,7 @@ void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         uint32_t entity_id = (uint32_t)entity._entity_handle;
         atcg::ShaderManager::getShader("edge")->setInt("entityID", entity_id);
         atcg::CameraComponent& comp          = entity.getComponent<CameraComponent>();
-        atcg::ref_ptr<PerspectiveCamera> cam = comp.camera;
+        atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(comp.camera);
         float aspect_ratio                   = cam->getAspectRatio();
         glm::mat4 scale =
             glm::scale(glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)));
@@ -1145,7 +1145,7 @@ void Renderer::screenshot(const atcg::ref_ptr<Scene>& scene,
 torch::Tensor
 Renderer::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
 {
-    atcg::ref_ptr<PerspectiveCamera> cam         = camera;
+    atcg::ref_ptr<PerspectiveCamera> cam         = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
     float height                                 = (float)width / cam->getAspectRatio();
     atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
     screenshot_buffer->attachColor();
