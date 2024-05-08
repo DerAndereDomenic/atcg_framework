@@ -756,8 +756,8 @@ bool operator!=(const MemoryBuffer<T, allocator>& p1, const MemoryBuffer<T, allo
 
 template<typename T>
 using scope_ptr = std::unique_ptr<T>;
-template<typename T, typename allocator = host_allocator>
-using ref_ptr = DevicePointer<T, allocator>;
+template<typename T>
+using ref_ptr = std::shared_ptr<T>;
 template<typename T>
 using dref_ptr = DevicePointer<T, device_allocator>;
 template<typename T>
@@ -782,15 +782,16 @@ constexpr scope_ptr<T> make_scope(Args&&... args)
  * @return The buffer
  */
 template<typename T, typename... Args>
-constexpr ref_ptr<T, host_allocator> make_ref(Args&&... args)
+constexpr ref_ptr<T> make_ref(Args&&... args)
 {
-    host_allocator alloc;
-    T* buffer = static_cast<T*>(alloc.allocate(sizeof(T)));
+    // host_allocator alloc;
+    // T* buffer = static_cast<T*>(alloc.allocate(sizeof(T)));
 
-    T* obj = new(buffer) T(std::forward<Args>(args)...);
+    // T* obj = new(buffer) T(std::forward<Args>(args)...);
 
-    ref_ptr<T> ptr(buffer);
-    return ptr;
+    // ref_ptr<T> ptr(buffer);
+    // return ptr;
+    return std::make_shared<T>(std::forward<Args>(args)...);
 }
 
 }    // namespace atcg

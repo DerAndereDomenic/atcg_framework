@@ -74,7 +74,7 @@ public:
     /**
      * @brief Check if the Entity holds all components
      *
-     * @tparam T The component types
+     * @tparam T... The component types
      *
      * @return True if the entity has all of the component
      */
@@ -87,7 +87,7 @@ public:
     /**
      * @brief Check if the Entity holds any components
      *
-     * @tparam T The component types
+     * @tparam T... The component types
      *
      * @return True if the entity has any the component
      */

@@ -34,6 +34,10 @@ public:
     /**
      * @brief Should be called in onImGuiRender.
      * Renders the panel
+     *
+     * @tparam CustomComponents... optional custom components that should be rendered.
+     * 
+     * To support custom component rendering, a custom GUIHandler has to be provided.
      */
     template<typename... CustomComponents>
     void renderPanel();

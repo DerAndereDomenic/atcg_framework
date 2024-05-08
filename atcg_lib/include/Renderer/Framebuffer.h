@@ -47,7 +47,7 @@ public:
      *
      * @param texture The texture to attach
      */
-    void attachTexture(const atcg::ref_ptr<Texture>& texture);
+    void attachTexture(const atcg::ref_ptr<Texture2D>& texture);
 
     /**
      * @brief Add a depth attachement

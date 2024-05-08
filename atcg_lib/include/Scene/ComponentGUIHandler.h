@@ -14,8 +14,7 @@ namespace atcg
  * component. To get the default behavior, override the draw_component function that calls the super class. Add this
  * class as template argument to the atcg::SceneHierarchyPanel.
  *
- * Example:
- *
+ * @code{.cpp}
  * class MyComponentGUIHandler : ComponentGUIHandler
  * {
  * public:
@@ -33,6 +32,7 @@ namespace atcg
  *          // Draw custom component
  *      }
  * };
+ * @endcode
  */
 class ComponentGUIHandler
 {

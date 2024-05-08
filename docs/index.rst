@@ -39,7 +39,10 @@ Core
 .. doxygenclass:: atcg::MemoryContainer
    :members:
    :undoc-members:
-.. doxygenclass:: atcg::DeviceBuffer
+.. doxygenclass:: atcg::DevicePointer
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::MemoryBuffer
    :members:
    :undoc-members:
 .. doxygentypedef:: atcg::scope_ptr
@@ -111,18 +114,40 @@ Events
 .. doxygenclass:: atcg::FileDroppedEvent
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::VRButtonEvent
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::VRButtonPressedEvent
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::VRButtonReleasedEvent
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::VRButtonTouchedEvent
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::VRButtonUntouchedEvent
+   :members:
+   :undoc-members:
 
 DataStructure
 =============
 
-.. .. doxygenclass:: atcg::BufferView
+.. doxygenclass:: atcg::BufferView
    :members:
+   :undoc-members:
 .. doxygenenum:: atcg::GraphType
    :project: ATCGLIB
 .. doxygenstruct:: atcg::Vertex
    :members:
    :undoc-members:
 .. doxygenstruct:: atcg::Edge
+   :members:
+   :undoc-members:
+.. doxygenstruct:: atcg::VertexSpecification
+   :members:
+   :undoc-members:
+.. doxygenstruct:: atcg::EdgeSpecification
    :members:
    :undoc-members:
 .. doxygenstruct:: atcg::Instance
@@ -133,15 +158,98 @@ DataStructure
    :undoc-members:
 .. doxygenfunction:: atcg::IO::read_mesh
    :project: ATCGLIB
+.. doxygenfunction:: atcg::IO::read_pointcloud
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::IO::read_lines
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::IO::read_scene
+   :project: ATCGLIB
 .. doxygenclass:: atcg::Grid
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::Image
    :members:
    :undoc-members:
 .. doxygenclass:: atcg::Statistic
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::Collection
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::CyclicCollection
+   :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Timer
    :members:
    :undoc-members:
+.. doxygenfunction:: atcg::TensorOptions::uint8HostOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::int8HostOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::int16HostOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::int32HostOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::int64HostOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::floatHostOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::doubleHostOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::int8DeviceOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::uint8DeviceOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::int16DeviceOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::int32DeviceOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::int64DeviceOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::floatDeviceOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::doubleDeviceOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::HostOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::DeviceOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::createTensorFromPointer(void* pointer, const at::IntArrayRef& size, const torch::TensorOptions& options)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::createTensorFromPointer(void* pointer, const at::IntArrayRef& size, const at::IntArrayRef& stride, const torch::TensorOptions& options)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::createHostTensorFromPointer(T* pointer, const at::IntArrayRef& size)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::createHostTensorFromPointer(T* pointer, const at::IntArrayRef& size, const at::IntArrayRef& stride)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::createDeviceTensorFromPointer(T* pointer, const at::IntArrayRef& size)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::createDeviceTensorFromPointer(T* pointer, const at::IntArrayRef& size, const at::IntArrayRef& stride)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getVertexBufferAsHostTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getVertexBufferAsDeviceTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getPositionsAsHostTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getPositionsAsDeviceTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getColorsAsHostTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getColorsAsDeviceTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getNormalsAsHostTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getNormalsAsDeviceTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getTangentsAsHostTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getTangentsAsDeviceTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getUVsAsHostTensor
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::getUVsAsDeviceTensor
+   :project: ATCGLIB
 
 ImGui
 =====
@@ -189,6 +297,9 @@ OpenMesh
 
 Renderer
 ========
+.. doxygenclass:: atcg::Context
+   :members:
+   :undoc-members:
 .. doxygenenum:: atcg::ShaderDataType
    :project: ATCGLIB
 .. doxygenfunction:: atcg::ShaderDataTypeSize
@@ -226,9 +337,14 @@ Renderer
 .. doxygenclass:: atcg::FirstPersonController
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::VRController
+   :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Framebuffer
    :members:
    :undoc-members:
+.. doxygenenum:: atcg::TextureFormat
+   :project: ATCGLIB
 .. doxygenenum:: atcg::TextureWrapMode
    :project: ATCGLIB
 .. doxygenenum:: atcg::TextureFilterMode
@@ -248,10 +364,16 @@ Renderer
 .. doxygenclass:: atcg::Texture3D
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::TextureCube
+   :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Shader
    :members:
    :undoc-members:
 .. doxygenclass:: atcg::ShaderManager
+   :members:
+   :undoc-members:
+.. doxygenstruct:: atcg::Material
    :members:
    :undoc-members:
 .. doxygenenum:: atcg::DrawMode
@@ -259,6 +381,9 @@ Renderer
 .. doxygenenum:: atcg::CullMode
    :project: ATCGLIB
 .. doxygenclass:: atcg::Renderer
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::VRSystem
    :members:
    :undoc-members:
 
@@ -309,9 +434,6 @@ Scene
 .. doxygenstruct:: atcg::CustomRenderComponent
    :members:
    :undoc-members:
-.. doxygenstruct:: atcg::TextureComponent
-   :members:
-   :undoc-members:
 .. doxygenclass:: atcg::Entity
    :members:
    :undoc-members:
@@ -321,6 +443,12 @@ Scene
 .. doxygenclass:: atcg::SceneHierarchyPanel
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::ComponentGUIHandler
+   :members:
+   :undoc-members:
 .. doxygenclass:: atcg::Serializer
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::ComponentSerializer
    :members:
    :undoc-members:

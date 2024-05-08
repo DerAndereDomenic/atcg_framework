@@ -61,7 +61,8 @@ public:
 
         if(atcg::VRSystem::isVRAvailable())
         {
-            atcg::ref_ptr<atcg::VRController> controller = camera_controller;
+            atcg::ref_ptr<atcg::VRController> controller =
+                std::dynamic_pointer_cast<atcg::VRController>(camera_controller);
 
             if(controller->inMovement())
             {

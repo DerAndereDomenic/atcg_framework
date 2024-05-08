@@ -19,8 +19,9 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     std::string id      = std::to_string(entity.getComponent<IDComponent>().ID);
 
-    atcg::ref_ptr<atcg::PerspectiveCamera> camera = camera_component.camera;
-    bool has_transform                            = false;
+    atcg::ref_ptr<atcg::PerspectiveCamera> camera =
+        std::dynamic_pointer_cast<atcg::PerspectiveCamera>(camera_component.camera);
+    bool has_transform = false;
     if(entity.hasComponent<atcg::TransformComponent>())
     {
         atcg::TransformComponent& transform_component = entity.getComponent<atcg::TransformComponent>();
@@ -99,7 +100,8 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
         {
             // Should only be one
             Entity camera_entity(e, _scene.get());
-            atcg::ref_ptr<PerspectiveCamera> cam = camera_entity.getComponent<EditorCameraComponent>().camera;
+            atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(
+                camera_entity.getComponent<EditorCameraComponent>().camera);
             camera->setView(cam->getView());
             camera->setAspectRatio(cam->getAspectRatio());
             if(entity.hasComponent<atcg::TransformComponent>())

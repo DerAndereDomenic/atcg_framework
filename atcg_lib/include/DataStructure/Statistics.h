@@ -7,7 +7,7 @@ namespace atcg
 {
 /**
  * @brief A class to model a statistic
- * @tparam The type of data
+ * @tparam T The type of data
  */
 template<typename T>
 class Statistic

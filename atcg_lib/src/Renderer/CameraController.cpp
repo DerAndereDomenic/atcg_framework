@@ -16,7 +16,7 @@ CameraController::CameraController(const atcg::ref_ptr<PerspectiveCamera>& camer
 
 FocusedController::FocusedController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
 
-FocusedController::FocusedController(const atcg::ref_ptr<Camera>& camera) : CameraController(camera)
+FocusedController::FocusedController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera)
 {
     _distance = glm::length(_camera->getPosition() - _camera->getLookAt());
 }
@@ -109,7 +109,9 @@ FirstPersonController::FirstPersonController(const float& aspect_ratio,
 {
 }
 
-FirstPersonController::FirstPersonController(const atcg::ref_ptr<Camera>& camera) : CameraController(camera) {}
+FirstPersonController::FirstPersonController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera)
+{
+}
 
 void FirstPersonController::onUpdate(float delta_time)
 {
@@ -347,7 +349,7 @@ VRController::VRController(const float& aspect_ratio, const float& speed)
     _cam_right->setProjection(p_right);
 }
 
-VRController::VRController(const atcg::ref_ptr<Camera>& camera) : CameraController(camera) {}
+VRController::VRController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera) {}
 
 void VRController::onUpdate(float delta_time)
 {

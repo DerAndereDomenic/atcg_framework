@@ -87,7 +87,7 @@ public:
     void setInt(const std::string& name, const int& value);
 
     /**
-     * @brief Set a float uniform
+     * @brief Set a float uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
      * uniform. The upload to the actual shader program is done when calling shader->use();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
@@ -99,7 +99,7 @@ public:
     void setFloat(const std::string& name, const float& value);
 
     /**
-     * @brief Set a vec2 uniform
+     * @brief Set a vec2 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
      * uniform. The upload to the actual shader program is done when calling shader->use();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
@@ -111,7 +111,7 @@ public:
     void setVec2(const std::string& name, const glm::vec2& value);
 
     /**
-     * @brief Set a vec3 uniform
+     * @brief Set a vec3 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
      * uniform. The upload to the actual shader program is done when calling shader->use();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
@@ -123,7 +123,7 @@ public:
     void setVec3(const std::string& name, const glm::vec3& value);
 
     /**
-     * @brief Set a vec4 uniform
+     * @brief Set a vec4 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
      * uniform. The upload to the actual shader program is done when calling shader->use();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
@@ -148,7 +148,7 @@ public:
     void setMat3(const std::string& name, const glm::mat4& value);
 
     /**
-     * @brief Set a mat4 uniform
+     * @brief Set a mat4 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
      * uniform. The upload to the actual shader program is done when calling shader->use();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
@@ -160,7 +160,7 @@ public:
     void setMat4(const std::string& name, const glm::mat4& value);
 
     /**
-     * @brief Set the model, view, and projection matrix
+     * @brief Set the model, view, and projection matrix.
      *
      * @param M The model matrix
      * @param V The view matrix
@@ -170,7 +170,7 @@ public:
     setMVP(const glm::mat4& M = glm::mat4(1), const glm::mat4& V = glm::mat4(1), const glm::mat4& P = glm::mat4(1));
 
     /**
-     * @brief Dispatch the shader if it is a compute shader
+     * @brief Dispatch the shader if it is a compute shader.
      *
      * @param work_groups The number of work groups in each dimension
      */

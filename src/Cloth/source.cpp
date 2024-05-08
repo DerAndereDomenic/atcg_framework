@@ -94,9 +94,10 @@ public:
         atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
         serializer.deserialize("res/Cloth/Scene.yaml");
 
-        auto entities     = scene->getEntitiesByName("EditorCamera");
-        auto& camera      = entities[0].getComponent<atcg::EditorCameraComponent>();
-        camera_controller = atcg::make_ref<atcg::FocusedController>(camera.camera);
+        auto entities = scene->getEntitiesByName("EditorCamera");
+        auto& camera  = entities[0].getComponent<atcg::EditorCameraComponent>();
+        camera_controller =
+            atcg::make_ref<atcg::FocusedController>(std::dynamic_pointer_cast<atcg::PerspectiveCamera>(camera.camera));
 
         entities   = scene->getEntitiesByName("Plane");
         auto& comp = entities[0].getComponent<atcg::MeshRenderComponent>();
@@ -163,7 +164,8 @@ public:
 
                 auto entities     = scene->getEntitiesByName("EditorCamera");
                 auto& camera      = entities[0].getComponent<atcg::EditorCameraComponent>();
-                camera_controller = atcg::make_ref<atcg::FocusedController>(camera.camera);
+                camera_controller = atcg::make_ref<atcg::FocusedController>(
+                    std::dynamic_pointer_cast<atcg::PerspectiveCamera>(camera.camera));
 
                 entities   = scene->getEntitiesByName("Plane");
                 auto& comp = entities[0].getComponent<atcg::MeshRenderComponent>();
@@ -265,7 +267,7 @@ private:
     atcg::ref_ptr<atcg::Scene> scene;
     atcg::Entity hovered_entity;
 
-    atcg::ref_ptr<atcg::FirstPersonController> camera_controller;
+    atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Graph> grid;
     int32_t grid_size = 51;
 

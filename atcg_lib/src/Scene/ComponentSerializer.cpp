@@ -320,7 +320,7 @@ void ComponentSerializer::serialize_component<CameraComponent>(const std::string
                                                                CameraComponent& component,
                                                                nlohmann::json& j)
 {
-    atcg::ref_ptr<PerspectiveCamera> cam = component.camera;
+    atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(component.camera);
 
     j[PERSPECTIVE_CAMERA_KEY][ASPECT_RATIO_KEY] = cam->getAspectRatio();
     j[PERSPECTIVE_CAMERA_KEY][FOVY_KEY]         = cam->getFOV();
@@ -492,7 +492,7 @@ void ComponentSerializer::deserialize_component<CameraComponent>(const std::stri
     float fov          = j[PERSPECTIVE_CAMERA_KEY].value(FOVY_KEY, 60.0f);
     auto& camera       = entity.addComponent<CameraComponent>(
         atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, glm::vec3(0), glm::vec3(0, 0, 1)));
-    atcg::ref_ptr<PerspectiveCamera> cam = camera.camera;
+    atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(camera.camera);
     // TODO: Keep consistent
     cam->setFOV(fov);
     // Should always have a transform, otherwise construct default camera

@@ -13,7 +13,7 @@ namespace atcg
  *
  * @tparam ComponentSerializerT The class that handles serialization of individual components
  */
-template<typename ComponentSerializerT>
+template<typename ComponentSerializerT = ComponentSerializer>
 class Serializer
 {
 public:
@@ -28,6 +28,10 @@ public:
     /**
      * @brief Serialize the scene.
      *
+     * @tparam CustomComponents... Optional custom components to serialize.
+     * 
+     * To use custom components, a custom serializer has to be supplied.
+     * 
      * @param file_path The file path
      */
     template<typename... CustomComponents>
@@ -36,6 +40,10 @@ public:
     /**
      * @brief Deserialize the scene.
      *
+     * @tparam CustomComponents... Optional custom components to serialize.
+     * 
+     * To use custom components, a custom serializer has to be supplied.
+     * 
      * @param file_path The file path
      */
     template<typename... CustomComponents>
