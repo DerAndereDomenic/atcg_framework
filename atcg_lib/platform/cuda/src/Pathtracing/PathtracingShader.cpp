@@ -66,13 +66,13 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
             bsdf->initializePipeline(pipeline, sbt);
         }
 
-        entity.addComponent<BSDFComponent>(bsdf);
+        entity.addOrReplaceComponent<BSDFComponent>(bsdf);
 
         atcg::ref_ptr<Graph> graph = entity.getComponent<GeometryComponent>().graph;
 
         if(!entity.hasComponent<AccelerationStructureComponent>())
         {
-            entity.addComponent<AccelerationStructureComponent>();
+            entity.addOrReplaceComponent<AccelerationStructureComponent>();
         }
         AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
 
@@ -88,7 +88,7 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
             emitter->initializePipeline(pipeline, sbt);
         }
 
-        entity.addComponent<EmitterComponent>(emitter);
+        entity.addOrReplaceComponent<EmitterComponent>(emitter);
 
         if(emitter) emitter_tables.push_back(emitter->getVPtrTable());
 
@@ -204,30 +204,6 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
 void PathtracingShader::reset()
 {
     _frame_counter = 0;
-
-    if(!_scene) return;
-
-    auto view = _scene->getAllEntitiesWith<IDComponent>();
-
-    for(auto e: view)
-    {
-        Entity entity(e, _scene.get());
-
-        if(entity.hasComponent<BSDFComponent>())
-        {
-            entity.removeComponent<BSDFComponent>();
-        }
-
-        if(entity.hasComponent<EmitterComponent>())
-        {
-            entity.removeComponent<EmitterComponent>();
-        }
-
-        if(entity.hasComponent<AccelerationStructureComponent>())
-        {
-            entity.removeComponent<AccelerationStructureComponent>();
-        }
-    }
 }
 
 void PathtracingShader::setCamera(const atcg::ref_ptr<PerspectiveCamera>& camera)
