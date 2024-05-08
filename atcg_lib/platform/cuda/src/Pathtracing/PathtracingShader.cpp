@@ -113,8 +113,9 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
     {
         Entity entity(e, _scene.get());
 
-        AccelerationStructureComponent& acc             = entity.getComponent<AccelerationStructureComponent>();
-        atcg::ref_ptr<OptixAccelerationStructure> accel = acc.accel;
+        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+        atcg::ref_ptr<OptixAccelerationStructure> accel =
+            std::dynamic_pointer_cast<OptixAccelerationStructure>(acc.accel);
 
         auto& optix_instance = optix_instances[i];
         memset(&optix_instance, 0, sizeof(OptixInstance));
@@ -180,11 +181,13 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
     {
         Entity entity(e, _scene.get());
 
-        AccelerationStructureComponent& acc             = entity.getComponent<AccelerationStructureComponent>();
-        atcg::ref_ptr<OptixAccelerationStructure> accel = acc.accel;
+        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+        atcg::ref_ptr<OptixAccelerationStructure> accel =
+            std::dynamic_pointer_cast<OptixAccelerationStructure>(acc.accel);
 
-        atcg::ref_ptr<OptixBSDF> bsdf       = entity.getComponent<BSDFComponent>().bsdf;
-        atcg::ref_ptr<OptixEmitter> emitter = entity.getComponent<EmitterComponent>().emitter;
+        atcg::ref_ptr<OptixBSDF> bsdf = std::dynamic_pointer_cast<OptixBSDF>(entity.getComponent<BSDFComponent>().bsdf);
+        atcg::ref_ptr<OptixEmitter> emitter =
+            std::dynamic_pointer_cast<OptixEmitter>(entity.getComponent<EmitterComponent>().emitter);
 
         HitGroupData hit_data;
         hit_data.positions = (glm::vec3*)accel->getPositions().data_ptr();

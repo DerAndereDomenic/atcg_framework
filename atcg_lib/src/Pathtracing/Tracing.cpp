@@ -36,7 +36,8 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
 
     auto& acc_component = entity.getComponent<AccelerationStructureComponent>();
 
-    atcg::ref_ptr<BVHAccelerationStructure> bvh_accel = entity.getComponent<AccelerationStructureComponent>().accel;
+    atcg::ref_ptr<BVHAccelerationStructure> bvh_accel = std::dynamic_pointer_cast<BVHAccelerationStructure>(
+        entity.getComponent<AccelerationStructureComponent>().accel);
 
     if(!bvh_accel->getBVH().IsValid())
     {

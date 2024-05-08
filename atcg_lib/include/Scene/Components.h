@@ -108,7 +108,7 @@ struct AccelerationStructureComponent
 {
     AccelerationStructureComponent() = default;
 
-    AccelerationStructureComponent(const atcg::ref_ptr<AccelerationStructureComponent>& accel) : accel(accel) {}
+    AccelerationStructureComponent(const atcg::ref_ptr<AccelerationStructure>& accel) : accel(accel) {}
 
     atcg::ref_ptr<AccelerationStructure> accel;
 };
