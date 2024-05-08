@@ -1,6 +1,8 @@
 #include <Pathtracing/OptixAccelerationStructure.h>
 #include <Pathtracing/Common.h>
 
+#include <optix_stubs.h>
+
 namespace atcg
 {
 OptixAccelerationStructure::OptixAccelerationStructure(OptixDeviceContext context, const atcg::ref_ptr<Graph>& graph)
