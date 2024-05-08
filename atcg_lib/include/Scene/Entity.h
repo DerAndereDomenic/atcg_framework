@@ -59,6 +59,23 @@ public:
     }
 
     /**
+     * @brief Add or replace a component to the entity
+     *
+     * @tparam T The component type
+     * @tparam Args The arguments of the Component Constructor
+     *
+     * @param Args The constructor arguments
+     *
+     * @return Reference to the created component
+     */
+    template<typename T, typename... Args>
+    T& addOrReplaceComponent(Args&&... args)
+    {
+        T& comp = _scene->_registry.emplace_or_replace<T>(_entity_handle, std::forward<Args>(args)...);
+        return comp;
+    }
+
+    /**
      * @brief Get a component
      *
      * @tparam T The component type
