@@ -168,7 +168,7 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
                                 ));
 
 
-    const std::string ptx_raygen_filename = "./build/ptxmodules.dir/Debug/RaygenKernels.ptx";
+    const std::string ptx_raygen_filename = "./bin/RaygenKernels.ptx";
     OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
     OptixProgramGroup miss_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
 

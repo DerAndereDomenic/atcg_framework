@@ -212,6 +212,14 @@ if(ATCG_CUDA_BACKEND)
     target_compile_definitions(ptxmodules PUBLIC ATCG_CUDA_BACKEND _USE_MATH_DEFINES)
     target_compile_options(ptxmodules PRIVATE -ptx)
     target_link_libraries(ptxmodules PRIVATE atcg_lib)
+
+    set(ATCG_PTX_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    add_custom_target(ptxmodules-copy
+        DEPENDS ptxmodules
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        $<TARGET_OBJECTS:ptxmodules> ${ATCG_PTX_OUTPUT_DIRECTORY}
+        COMMAND_EXPAND_LISTS
+    )
 endif()
 
 function(ATCG_add_executable target_name_base target_name_var source)
@@ -226,6 +234,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
     
     target_sources(${target_name} PRIVATE ${source})
     target_link_libraries(${target_name} PRIVATE atcg_lib)
+    add_dependencies(${target_name} ptxmodules-copy)
 
 	if(MSVC)
         get_target_property(TORCH_LIBRARY_LOCATION torch LOCATION)
