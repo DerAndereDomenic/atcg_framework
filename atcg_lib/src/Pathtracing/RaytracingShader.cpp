@@ -4,7 +4,7 @@ namespace atcg
 {
 void RaytracingShader::set(const std::string& name, const Parameter& value)
 {
-    _parameters.insert(std::make_pair(name, value));
+    _parameters[name] = value;
 }
 
 void RaytracingShader::setInt(const std::string& name, const int value)
