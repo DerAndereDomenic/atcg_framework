@@ -31,8 +31,6 @@ private:
     glm::mat4 _inv_camera_view;
     float _fov_y;
 
-    torch::Tensor _accumulation_buffer;
-
     cudaStream_t _stream;
 
     atcg::ref_ptr<OptixEmitter> _environment_emitter = nullptr;

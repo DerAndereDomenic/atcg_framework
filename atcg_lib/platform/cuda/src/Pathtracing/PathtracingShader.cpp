@@ -19,6 +19,8 @@ namespace atcg
 PathtracingShader::PathtracingShader(OptixDeviceContext context) : OptixRaytracingShader(context)
 {
     CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&_stream, cudaStreamNonBlocking));
+
+    setTensor("HDR", torch::zeros({1, 1, 3}, atcg::TensorOptions::floatDeviceOptions()));
 }
 
 PathtracingShader::~PathtracingShader()
@@ -216,11 +218,13 @@ void PathtracingShader::generateRays(const atcg::ref_ptr<RayTracingPipeline>& pi
                                      const atcg::ref_ptr<ShaderBindingTable>& sbt,
                                      torch::Tensor& output)
 {
-    if(_accumulation_buffer.ndimension() != 3 || _accumulation_buffer.size(0) != output.size(0) ||
-       _accumulation_buffer.size(1) != output.size(1))
+    auto accumulation_buffer = getTensor("HDR");
+    if(accumulation_buffer.ndimension() != 3 || accumulation_buffer.size(0) != output.size(0) ||
+       accumulation_buffer.size(1) != output.size(1))
     {
-        _accumulation_buffer =
+        accumulation_buffer =
             torch::zeros({output.size(0), output.size(1), 3}, atcg::TensorOptions::floatDeviceOptions());
+        setTensor("HDR", accumulation_buffer);
     }
 
     Params params;
@@ -231,7 +235,7 @@ void PathtracingShader::generateRays(const atcg::ref_ptr<RayTracingPipeline>& pi
     memcpy(params.W, glm::value_ptr(-glm::normalize(_inv_camera_view[2])), sizeof(glm::vec3));
     params.fov_y = _fov_y;
 
-    params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
+    params.accumulation_buffer = (glm::vec3*)accumulation_buffer.data_ptr();
     params.output_image        = (glm::u8vec4*)output.data_ptr();
     params.image_height        = output.size(0);
     params.image_width         = output.size(1);
