@@ -183,7 +183,7 @@ void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
 
     s_pathtracer->impl->resize(width, height);
 
-    s_pathtracer->impl->shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context);    // shader;
+    s_pathtracer->impl->shader = std::dynamic_pointer_cast<OptixRaytracingShader>(shader);
     s_pathtracer->impl->shader->setScene(scene);
     s_pathtracer->impl->shader->setCamera(camera);
     s_pathtracer->impl->shader->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
