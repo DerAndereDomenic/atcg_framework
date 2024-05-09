@@ -10,7 +10,6 @@
 #include <Pathtracing/HitGroupData.h>
 #include <Pathtracing/EmitterModels.h>
 #include <Pathtracing/BSDFModels.h>
-#include <Pathtracing/OptixAccelerationStructure.h>
 
 #include <optix_stubs.h>
 
@@ -41,20 +40,17 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         _environment_emitter->initializePipeline(pipeline, sbt);
     }
 
+    _accel = atcg::make_ref<IASAccelerationStructure>(_context, _scene);
+
     // Extract scene information
     auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
-    std::vector<TransformComponent> transforms;
-    size_t num_instances = 0;
     std::vector<const atcg::EmitterVPtrTable*> emitter_tables;
     for(auto e: view)
     {
         Entity entity(e, _scene.get());
 
-        TransformComponent transform = entity.getComponent<TransformComponent>();
-
-        transforms.push_back(transform);
-
-        Material material = entity.getComponent<atcg::MeshRenderComponent>().material;
+        Material material   = entity.getComponent<atcg::MeshRenderComponent>().material;
+        glm::mat4 transform = entity.getComponent<atcg::TransformComponent>().getModel();
 
         atcg::ref_ptr<OptixBSDF> bsdf;
         if(material.glass)
@@ -70,18 +66,9 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
 
         entity.addOrReplaceComponent<BSDFComponent>(bsdf);
 
-        atcg::ref_ptr<Graph> graph = entity.getComponent<GeometryComponent>().graph;
-
-        if(!entity.hasComponent<AccelerationStructureComponent>())
-        {
-            entity.addOrReplaceComponent<AccelerationStructureComponent>();
-        }
         AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
 
-        atcg::ref_ptr<OptixAccelerationStructure> accel = atcg::make_ref<OptixAccelerationStructure>(_context, graph);
-        accel->initializePipeline(pipeline, sbt);
-
-        acc.accel = accel;
+        atcg::ref_ptr<GASAccelerationStructure> accel = std::dynamic_pointer_cast<GASAccelerationStructure>(acc.accel);
 
         atcg::ref_ptr<OptixEmitter> emitter = nullptr;
         if(material.emissive)
@@ -93,11 +80,6 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         entity.addOrReplaceComponent<EmitterComponent>(emitter);
 
         if(emitter) emitter_tables.push_back(emitter->getVPtrTable());
-
-
-        graph->unmapAllPointers();
-
-        ++num_instances;
     }
 
     if(_environment_emitter)
@@ -108,99 +90,14 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
     _emitter_tables = atcg::DeviceBuffer<const atcg::EmitterVPtrTable*>(emitter_tables.size());
     _emitter_tables.upload(emitter_tables.data());
 
-    // IAS
-    std::vector<OptixInstance> optix_instances(num_instances);
-    int i = 0;
-    for(auto e: view)
-    {
-        Entity entity(e, _scene.get());
-
-        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
-        atcg::ref_ptr<OptixAccelerationStructure> accel =
-            std::dynamic_pointer_cast<OptixAccelerationStructure>(acc.accel);
-
-        auto& optix_instance = optix_instances[i];
-        memset(&optix_instance, 0, sizeof(OptixInstance));
-
-        optix_instance.flags             = OPTIX_INSTANCE_FLAG_NONE;
-        optix_instance.instanceId        = i;
-        optix_instance.sbtOffset         = i;
-        optix_instance.visibilityMask    = 1;
-        optix_instance.traversableHandle = accel->getTraversableHandle();
-
-        reinterpret_cast<glm::mat3x4&>(optix_instance.transform) =
-            glm::transpose(glm::mat4x3(transforms[i].getModel()));
-
-        ++i;
-    }
-
-    atcg::DeviceBuffer<OptixInstance> d_instances(num_instances);
-    d_instances.upload(optix_instances.data());
-
-    OptixBuildInput instance_input            = {};
-    instance_input.type                       = OPTIX_BUILD_INPUT_TYPE_INSTANCES;
-    instance_input.instanceArray.instances    = (CUdeviceptr)d_instances.get();
-    instance_input.instanceArray.numInstances = static_cast<uint32_t>(num_instances);
-
-    OptixAccelBuildOptions accel_options = {};
-    accel_options.buildFlags             = OPTIX_BUILD_FLAG_NONE;
-    accel_options.operation              = OPTIX_BUILD_OPERATION_BUILD;
-
-    OptixAccelBufferSizes ias_buffer_sizes;
-    OPTIX_CHECK(optixAccelComputeMemoryUsage(_context,
-                                             &accel_options,
-                                             &instance_input,
-                                             1,    // num build inputs
-                                             &ias_buffer_sizes));
-
-    atcg::DeviceBuffer<uint8_t> d_temp_buffer(ias_buffer_sizes.tempSizeInBytes);
-    _ias_buffer = atcg::DeviceBuffer<uint8_t>(ias_buffer_sizes.outputSizeInBytes);
-
-    OPTIX_CHECK(optixAccelBuild(_context,
-                                nullptr,    // CUDA stream
-                                &accel_options,
-                                &instance_input,
-                                1,    // num build inputs
-                                (CUdeviceptr)d_temp_buffer.get(),
-                                ias_buffer_sizes.tempSizeInBytes,
-                                (CUdeviceptr)_ias_buffer.get(),
-                                ias_buffer_sizes.outputSizeInBytes,
-                                &_ias_handle,
-                                nullptr,    // emitted property list
-                                0           // num emitted properties
-                                ));
-
-
     const std::string ptx_raygen_filename = "./bin/RaygenKernels.ptx";
     OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
     OptixProgramGroup miss_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
 
-    // SBT
     _raygen_index = sbt->addRaygenEntry(raygen_prog_group);
     sbt->addMissEntry(miss_prog_group);
 
-    for(auto e: view)
-    {
-        Entity entity(e, _scene.get());
-
-        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
-        atcg::ref_ptr<OptixAccelerationStructure> accel =
-            std::dynamic_pointer_cast<OptixAccelerationStructure>(acc.accel);
-
-        atcg::ref_ptr<OptixBSDF> bsdf = std::dynamic_pointer_cast<OptixBSDF>(entity.getComponent<BSDFComponent>().bsdf);
-        atcg::ref_ptr<OptixEmitter> emitter =
-            std::dynamic_pointer_cast<OptixEmitter>(entity.getComponent<EmitterComponent>().emitter);
-
-        HitGroupData hit_data;
-        hit_data.positions = (glm::vec3*)accel->getPositions().data_ptr();
-        hit_data.normals   = (glm::vec3*)accel->getNormals().data_ptr();
-        hit_data.uvs       = (glm::vec3*)accel->getUVs().data_ptr();
-        hit_data.faces     = (glm::u32vec3*)accel->getFaces().data_ptr();
-        hit_data.bsdf      = bsdf->getVPtrTable();
-        hit_data.emitter   = emitter ? emitter->getVPtrTable() : nullptr;
-
-        sbt->addHitEntry(accel->getHitGroup(), hit_data);
-    }
+    _accel->initializePipeline(pipeline, sbt);
 }
 
 void PathtracingShader::reset()
@@ -239,7 +136,7 @@ void PathtracingShader::generateRays(const atcg::ref_ptr<RayTracingPipeline>& pi
     params.output_image        = (glm::u8vec4*)output.data_ptr();
     params.image_height        = output.size(0);
     params.image_width         = output.size(1);
-    params.handle              = _ias_handle;
+    params.handle              = _accel->getTraversableHandle();
     params.frame_counter       = _frame_counter;
     params.num_emitters        = _emitter_tables.size();
     params.emitters            = _emitter_tables.get();

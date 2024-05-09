@@ -2,6 +2,7 @@
 
 #include <Pathtracing/OptixRaytracingShader.h>
 #include <Pathtracing/Params.cuh>
+#include <Pathtracing/OptixAccelerationStructure.h>
 
 namespace atcg
 {
@@ -25,8 +26,6 @@ public:
 
 private:
     atcg::dref_ptr<Params> _launch_params;
-    atcg::DeviceBuffer<uint8_t> _ias_buffer;
-    OptixTraversableHandle _ias_handle;
 
     glm::mat4 _inv_camera_view;
     float _fov_y;
@@ -38,5 +37,7 @@ private:
 
     uint32_t _frame_counter = 0;
     uint32_t _raygen_index  = 0;
+
+    atcg::ref_ptr<IASAccelerationStructure> _accel;
 };
 }    // namespace atcg
