@@ -34,6 +34,7 @@ struct BSDFSamplingResult
 struct BSDFEvalResult
 {
     glm::vec3 bsdf_value = glm::vec3(0);
+    float sample_probability = 0.0f;
 };
 
 inline ATCG_HOST_DEVICE glm::mat3 compute_local_frame(const glm::vec3& localZ)
