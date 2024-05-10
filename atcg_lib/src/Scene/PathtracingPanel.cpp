@@ -66,7 +66,7 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
             time_seconds -= (int)time_minutes * 60.0f;
         }
 
-        ss << time_seconds << "s";
+        ss << std::ceil(time_seconds * 100.0f) / 100.0f << "s";
 
         ImGui::Text(ss.str().c_str());
     }
