@@ -144,6 +144,50 @@ public:
                 panel.selectEntity(hovered_entity);
             }
 
+            if(ImGui::BeginMenu("Pathtracing"))
+            {
+                if(ImGui::MenuItem("Save LDR"))
+                {
+                    auto f = pfd::save_file("Choose output folder",
+                                            pfd::path::home(),
+                                            {"All files", "*", "PNG Files (.png)", "*.png"},
+                                            pfd::opt::none);
+
+                    auto path = f.result();
+
+                    if(!path.empty())
+                    {
+                        auto ldr_image  = atcg::Pathtracer::getOutputTexture();
+                        auto ldr_tensor = ldr_image->getData(atcg::CPU);
+                        ldr_tensor      = ldr_tensor.flip(0);
+                        auto img        = atcg::make_ref<atcg::Image>(ldr_tensor);
+
+                        atcg::IO::imwrite(img, path);
+                    }
+                }
+
+                if(ImGui::MenuItem("Save HDR"))
+                {
+                    auto f = pfd::save_file("Choose output folder",
+                                            pfd::path::home(),
+                                            {"All files", "*", "HDR Files (.hdr)", "*.hdr"},
+                                            pfd::opt::none);
+
+                    auto path = f.result();
+
+                    if(!path.empty())
+                    {
+                        auto hdr_tensor = atcg::RaytracingShaderManager::getShader("Pathtracing")->getTensor("HDR");
+                        hdr_tensor      = hdr_tensor.flip(0);
+                        auto img        = atcg::make_ref<atcg::Image>(hdr_tensor.to(atcg::CPU));
+
+                        atcg::IO::imwrite(img, path);
+                    }
+                }
+
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMenu();
         }
 
