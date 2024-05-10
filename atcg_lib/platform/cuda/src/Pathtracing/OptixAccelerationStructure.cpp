@@ -164,28 +164,5 @@ IASAccelerationStructure::~IASAccelerationStructure() {}
 void IASAccelerationStructure::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                                   const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
-    for(auto e: view)
-    {
-        Entity entity(e, _scene.get());
-
-        AccelerationStructureComponent& acc           = entity.getComponent<AccelerationStructureComponent>();
-        atcg::ref_ptr<GASAccelerationStructure> accel = std::dynamic_pointer_cast<GASAccelerationStructure>(acc.accel);
-        accel->initializePipeline(pipeline, sbt);
-
-        atcg::ref_ptr<OptixBSDF> bsdf = std::dynamic_pointer_cast<OptixBSDF>(entity.getComponent<BSDFComponent>().bsdf);
-        atcg::ref_ptr<OptixEmitter> emitter =
-            std::dynamic_pointer_cast<OptixEmitter>(entity.getComponent<EmitterComponent>().emitter);
-
-        HitGroupData hit_data;
-        hit_data.positions = (glm::vec3*)accel->getPositions().data_ptr();
-        hit_data.normals   = (glm::vec3*)accel->getNormals().data_ptr();
-        hit_data.uvs       = (glm::vec3*)accel->getUVs().data_ptr();
-        hit_data.faces     = (glm::u32vec3*)accel->getFaces().data_ptr();
-        hit_data.bsdf      = bsdf->getVPtrTable();
-        hit_data.emitter   = emitter ? emitter->getVPtrTable() : nullptr;
-
-        sbt->addHitEntry(accel->getHitGroup(), hit_data);
-    }
 }
 }    // namespace atcg
