@@ -7,7 +7,7 @@
 
 #include <Pathtracing/Common.h>
 
-#include <Pathtracing/HitGroupData.h>
+#include <Pathtracing/Shape/MeshShape.cuh>
 #include <Pathtracing/Emitter/EmitterModels.h>
 #include <Pathtracing/BSDF/BSDFModels.h>
 
@@ -109,7 +109,7 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         atcg::ref_ptr<OptixEmitter> emitter =
             std::dynamic_pointer_cast<OptixEmitter>(entity.getComponent<EmitterComponent>().emitter);
 
-        HitGroupData hit_data;
+        MeshShapeData hit_data;
         hit_data.positions = (glm::vec3*)accel->getPositions().data_ptr();
         hit_data.normals   = (glm::vec3*)accel->getNormals().data_ptr();
         hit_data.uvs       = (glm::vec3*)accel->getUVs().data_ptr();

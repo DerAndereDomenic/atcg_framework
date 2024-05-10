@@ -1,10 +1,10 @@
-#include <Pathtracing/OptixAccelerationStructure.h>
+#include <Pathtracing/Shape/OptixAccelerationStructure.h>
 #include <Pathtracing/Common.h>
 
 #include <Scene/Components.h>
 #include <Scene/Entity.h>
 
-#include <Pathtracing/HitGroupData.h>
+#include <Pathtracing/Shape/MeshShape.cuh>
 
 #include <optix_stubs.h>
 

@@ -3,7 +3,7 @@
 #include <Pathtracing/BSDF/BSDFModels.cuh>
 #include <Pathtracing/Emitter/EmitterModels.cuh>
 
-struct HitGroupData
+struct MeshShapeData
 {
     glm::vec3* positions;
     glm::vec3* normals;

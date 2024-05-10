@@ -1,7 +1,7 @@
 #pragma cuda_source_property_format = PTX
 
 #include <Pathtracing/SurfaceInteraction.h>
-#include <Pathtracing/HitGroupData.h>
+#include <Pathtracing/Shape/MeshShape.cuh>
 #include <Pathtracing/Payload.h>
 
 #include <optix.h>
@@ -9,7 +9,7 @@
 extern "C" __global__ void __closesthit__mesh()
 {
     atcg::SurfaceInteraction* si = getPayloadDataPointer<atcg::SurfaceInteraction>();
-    const HitGroupData sbt_data  = *reinterpret_cast<const HitGroupData*>(optixGetSbtDataPointer());
+    const MeshShapeData sbt_data = *reinterpret_cast<const MeshShapeData*>(optixGetSbtDataPointer());
 
     float3 optix_world_origin = optixGetWorldRayOrigin();
     float3 optix_world_dir    = optixGetWorldRayDirection();
