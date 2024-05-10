@@ -23,12 +23,12 @@ public:
                      uint32_t height,
                      const uint32_t num_samples);
 
-    // static void draw(const atcg::ref_ptr<Scene>& scene,
-    //                  const atcg::ref_ptr<PerspectiveCamera>& camera,
-    //                  const atcg::ref_ptr<RaytracingShader>& shader,
-    //                  uint32_t width,
-    //                  uint32_t height,
-    //                  const float time);
+    static void draw(const atcg::ref_ptr<Scene>& scene,
+                     const atcg::ref_ptr<PerspectiveCamera>& camera,
+                     const atcg::ref_ptr<RaytracingShader>& shader,
+                     uint32_t width,
+                     uint32_t height,
+                     const float time);
 
     static bool isRunning();
 

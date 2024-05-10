@@ -55,20 +55,23 @@ public:
 
     atcg::ref_ptr<OptixRaytracingShader> shader = nullptr;
     uint32_t max_num_samples;
-    uint32_t sample_count = 0;
-    uint32_t subframe     = 0;
+    float max_rendering_time;
+    uint32_t subframe = 0;
 
     uint32_t width = 0, height = 0;
 
     float rendering_time = 0.0f;
+
+    bool samples_mode = true;
 };
 
 void Pathtracer::Impl::worker()
 {
     rendering_time = 0.0f;
-    sample_count   = 0;
+    subframe       = 0;
+
     Timer render_timer;
-    for(subframe = 0; subframe < max_num_samples; ++subframe)
+    while(true)
     {
         Timer frame_time;
 
@@ -78,8 +81,6 @@ void Pathtracer::Impl::worker()
             atcg::createDeviceTensorFromPointer<uint8_t>((uint8_t*)output_buffer,
                                                          {output_texture->height(), output_texture->width(), 4}));
 
-        ATCG_TRACE(frame_time.elapsedMillis());
-
         // Perform swap
         {
             std::lock_guard guard(swap_chain_mutex);
@@ -88,12 +89,16 @@ void Pathtracer::Impl::worker()
             dirty         = true;
         }
 
-        ++sample_count;
+        ++subframe;
+        rendering_time += frame_time.elapsedSeconds();
+
+        if(samples_mode && subframe >= max_num_samples) break;
+        if(!samples_mode && rendering_time >= max_rendering_time) break;
+
         if(!running) break;
     }
 
-    rendering_time = render_timer.elapsedSeconds();
-    running        = false;
+    running = false;
 }
 
 Pathtracer::Pathtracer() {}
@@ -185,6 +190,7 @@ void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
                       uint32_t height,
                       const uint32_t num_samples)
 {
+    s_pathtracer->impl->samples_mode        = true;
     s_pathtracer->impl->swap_index          = 1;
     s_pathtracer->impl->raytracing_pipeline = atcg::make_ref<RayTracingPipeline>(s_pathtracer->impl->context);
     s_pathtracer->impl->sbt                 = atcg::make_ref<ShaderBindingTable>(s_pathtracer->impl->context);
@@ -200,6 +206,32 @@ void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
     s_pathtracer->impl->sbt->createSBT();
 
     s_pathtracer->impl->max_num_samples = num_samples;
+    s_pathtracer->impl->start();
+}
+
+void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
+                      const atcg::ref_ptr<PerspectiveCamera>& camera,
+                      const atcg::ref_ptr<RaytracingShader>& shader,
+                      uint32_t width,
+                      uint32_t height,
+                      const float time)
+{
+    s_pathtracer->impl->samples_mode        = false;
+    s_pathtracer->impl->swap_index          = 1;
+    s_pathtracer->impl->raytracing_pipeline = atcg::make_ref<RayTracingPipeline>(s_pathtracer->impl->context);
+    s_pathtracer->impl->sbt                 = atcg::make_ref<ShaderBindingTable>(s_pathtracer->impl->context);
+
+    s_pathtracer->impl->resize(width, height);
+
+    s_pathtracer->impl->shader = std::dynamic_pointer_cast<OptixRaytracingShader>(shader);
+    s_pathtracer->impl->shader->setScene(scene);
+    s_pathtracer->impl->shader->setCamera(camera);
+    s_pathtracer->impl->shader->initializePipeline(s_pathtracer->impl->raytracing_pipeline, s_pathtracer->impl->sbt);
+
+    s_pathtracer->impl->raytracing_pipeline->createPipeline();
+    s_pathtracer->impl->sbt->createSBT();
+
+    s_pathtracer->impl->max_rendering_time = time;
     s_pathtracer->impl->start();
 }
 
@@ -225,7 +257,7 @@ float Pathtracer::getLastRenderingTime()
 
 uint32_t Pathtracer::getSampleCount()
 {
-    return s_pathtracer->impl->sample_count;
+    return s_pathtracer->impl->subframe;
 }
 
 }    // namespace atcg
