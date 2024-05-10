@@ -18,6 +18,8 @@ PBRBSDF::PBRBSDF(const Material& material)
     ::detail::convertToTextureObject(metallic_texture, _metallic_texture, data.metallic_texture);
     ::detail::convertToTextureObject(roughness_texture, _roughness_texture, data.roughness_texture);
 
+    _flags = BSDFComponentType::GlossyReflection | BSDFComponentType::DiffuseReflection;
+
     _bsdf_data_buffer.upload(&data);
 }
 
@@ -48,6 +50,7 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
     BSDFVPtrTable table;
     table.sampleCallIndex = sample_idx;
     table.evalCallIndex   = eval_idx;
+    table.flags           = _flags;
 
     _vptr_table.upload(&table);
 }
@@ -60,6 +63,8 @@ RefractiveBSDF::RefractiveBSDF(const Material& material)
 
     ::detail::convertToTextureObject(diffuse_texture, _diffuse_texture, data.diffuse_texture);
     data.ior = material.ior;
+
+    _flags = BSDFComponentType::IdealReflection | BSDFComponentType::IdealTransmission;
 
     _bsdf_data_buffer.upload(&data);
 }
@@ -88,6 +93,7 @@ void RefractiveBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>&
     BSDFVPtrTable table;
     table.sampleCallIndex = sample_idx;
     table.evalCallIndex   = eval_idx;
+    table.flags           = _flags;
 
     _vptr_table.upload(&table);
 }

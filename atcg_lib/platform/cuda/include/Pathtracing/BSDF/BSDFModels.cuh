@@ -2,6 +2,7 @@
 
 #include <Math/Random.h>
 #include <Pathtracing/SurfaceInteraction.h>
+#include <Pathtracing/BSDFFLags.h>
 
 #ifdef ATCG_CUDA_BACKEND
     #include <optix.h>
@@ -240,6 +241,8 @@ struct BSDFVPtrTable
 {
     uint32_t sampleCallIndex;
     uint32_t evalCallIndex;
+
+    BSDFComponentType flags;
 
 #ifdef __CUDACC__
 
