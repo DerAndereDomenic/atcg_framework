@@ -58,10 +58,14 @@ public:
     uint32_t subframe = 0;
 
     uint32_t width = 0, height = 0;
+
+    float rendering_time = 0.0f;
 };
 
 void Pathtracer::Impl::worker()
 {
+    rendering_time = 0.0f;
+    Timer render_timer;
     for(subframe = 0; subframe < num_samples; ++subframe)
     {
         Timer frame_time;
@@ -85,7 +89,8 @@ void Pathtracer::Impl::worker()
         if(!running) break;
     }
 
-    running = false;
+    rendering_time = render_timer.elapsedSeconds();
+    running        = false;
 }
 
 Pathtracer::Pathtracer() {}
@@ -208,6 +213,11 @@ uint32_t Pathtracer::getWidth()
 uint32_t Pathtracer::getHeight()
 {
     return s_pathtracer->impl->height;
+}
+
+float Pathtracer::getLastRenderingTime()
+{
+    return s_pathtracer->impl->rendering_time;
 }
 
 }    // namespace atcg

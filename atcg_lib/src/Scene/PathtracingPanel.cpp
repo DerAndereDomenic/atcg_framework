@@ -43,6 +43,32 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
                                    _height,
                                    _num_samples);
         }
+
+        ImGui::Separator();
+
+        float time_seconds = Pathtracer::getLastRenderingTime();
+        float time_minutes = time_seconds / 60.0f;
+        float time_hours   = time_minutes / 60.0f;
+
+        std::stringstream ss;
+        ss << "Rendering took: ";
+
+        if(time_hours >= 1.0f)
+        {
+            ss << (int)time_hours << "h:";
+            time_minutes -= (int)time_hours * 60.0f;
+            time_seconds -= (int)time_seconds * 60.0f * 60.0f;
+        }
+
+        if(time_minutes >= 1.0f)
+        {
+            ss << (int)time_minutes << "m:";
+            time_seconds -= (int)time_minutes * 60.0f;
+        }
+
+        ss << time_seconds << "s";
+
+        ImGui::Text(ss.str().c_str());
     }
     else
     {

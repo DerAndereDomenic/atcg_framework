@@ -42,6 +42,8 @@ public:
 
     static uint32_t getHeight();
 
+    static float getLastRenderingTime();
+
     ~Pathtracer();
 
 private:
