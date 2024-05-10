@@ -10,7 +10,7 @@
 
 namespace atcg
 {
-GASAccelerationStructure::GASAccelerationStructure(OptixDeviceContext context, const atcg::ref_ptr<Graph>& graph)
+MeshAccelerationStructure::MeshAccelerationStructure(OptixDeviceContext context, const atcg::ref_ptr<Graph>& graph)
 {
     _positions = graph->getDevicePositions().clone();
     _normals   = graph->getDeviceNormals().clone();
@@ -39,7 +39,7 @@ GASAccelerationStructure::GASAccelerationStructure(OptixDeviceContext context, c
     OPTIX_CHECK(optixAccelComputeMemoryUsage(context, &accel_options, &triangle_input, 1, &gas_buffer_sizes));
 
     atcg::DeviceBuffer<uint8_t> d_temp_buffer_gas(gas_buffer_sizes.tempSizeInBytes);
-    _gas_buffer = atcg::DeviceBuffer<uint8_t>(gas_buffer_sizes.outputSizeInBytes);
+    _ast_buffer = atcg::DeviceBuffer<uint8_t>(gas_buffer_sizes.outputSizeInBytes);
 
     OPTIX_CHECK(optixAccelBuild(context,
                                 0,    // CUDA stream
@@ -48,17 +48,19 @@ GASAccelerationStructure::GASAccelerationStructure(OptixDeviceContext context, c
                                 1,    // num build inputs
                                 (CUdeviceptr)d_temp_buffer_gas.get(),
                                 gas_buffer_sizes.tempSizeInBytes,
-                                (CUdeviceptr)_gas_buffer.get(),
+                                (CUdeviceptr)_ast_buffer.get(),
                                 gas_buffer_sizes.outputSizeInBytes,
                                 &_handle,    // Output handle to the struct
                                 nullptr,     // emitted property list
                                 0));         // num emitted properties
+
+    graph->unmapAllPointers();
 }
 
-GASAccelerationStructure::~GASAccelerationStructure() {}
+MeshAccelerationStructure::~MeshAccelerationStructure() {}
 
-void GASAccelerationStructure::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                                  const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void MeshAccelerationStructure::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                                   const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_raygen_filename = "./bin/MeshKernels.ptx";
     _hit_group = pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__mesh"}, {});
@@ -69,57 +71,34 @@ IASAccelerationStructure::IASAccelerationStructure(OptixDeviceContext context, c
 {
     // Extract scene information
     auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
-    std::vector<TransformComponent> transforms;
-    size_t num_instances = 0;
-    std::vector<const atcg::EmitterVPtrTable*> emitter_tables;
-    for(auto e: view)
-    {
-        Entity entity(e, _scene.get());
-
-        TransformComponent transform = entity.getComponent<TransformComponent>();
-
-        transforms.push_back(transform);
-
-        atcg::ref_ptr<Graph> graph = entity.getComponent<GeometryComponent>().graph;
-
-        if(!entity.hasComponent<AccelerationStructureComponent>())
-        {
-            entity.addOrReplaceComponent<AccelerationStructureComponent>();
-        }
-        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
-
-        atcg::ref_ptr<GASAccelerationStructure> accel = atcg::make_ref<GASAccelerationStructure>(context, graph);
-
-        acc.accel = accel;
-
-        graph->unmapAllPointers();
-
-        ++num_instances;
-    }
 
     // IAS
-    std::vector<OptixInstance> optix_instances(num_instances);
-    int i = 0;
+    std::vector<OptixInstance> optix_instances;
+    int num_instances = 0;
     for(auto e: view)
     {
         Entity entity(e, _scene.get());
 
-        AccelerationStructureComponent& acc           = entity.getComponent<AccelerationStructureComponent>();
-        atcg::ref_ptr<GASAccelerationStructure> accel = std::dynamic_pointer_cast<GASAccelerationStructure>(acc.accel);
+        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+        atcg::ref_ptr<OptixAccelerationStructure> accel =
+            std::dynamic_pointer_cast<OptixAccelerationStructure>(acc.accel);
 
-        auto& optix_instance = optix_instances[i];
+        OptixInstance optix_instance = {0};
         memset(&optix_instance, 0, sizeof(OptixInstance));
 
         optix_instance.flags             = OPTIX_INSTANCE_FLAG_NONE;
-        optix_instance.instanceId        = i;
-        optix_instance.sbtOffset         = i;
+        optix_instance.instanceId        = num_instances;
+        optix_instance.sbtOffset         = num_instances;
         optix_instance.visibilityMask    = 1;
         optix_instance.traversableHandle = accel->getTraversableHandle();
 
-        reinterpret_cast<glm::mat3x4&>(optix_instance.transform) =
-            glm::transpose(glm::mat4x3(transforms[i].getModel()));
+        glm::mat4 transform = entity.getComponent<atcg::TransformComponent>().getModel();
 
-        ++i;
+        reinterpret_cast<glm::mat3x4&>(optix_instance.transform) = glm::transpose(glm::mat4x3(transform));
+
+        ++num_instances;
+
+        optix_instances.push_back(optix_instance);
     }
 
     atcg::DeviceBuffer<OptixInstance> d_instances(num_instances);
@@ -142,7 +121,7 @@ IASAccelerationStructure::IASAccelerationStructure(OptixDeviceContext context, c
                                              &ias_buffer_sizes));
 
     atcg::DeviceBuffer<uint8_t> d_temp_buffer(ias_buffer_sizes.tempSizeInBytes);
-    _ias_buffer = atcg::DeviceBuffer<uint8_t>(ias_buffer_sizes.outputSizeInBytes);
+    _ast_buffer = atcg::DeviceBuffer<uint8_t>(ias_buffer_sizes.outputSizeInBytes);
 
     OPTIX_CHECK(optixAccelBuild(context,
                                 nullptr,    // CUDA stream
@@ -151,7 +130,7 @@ IASAccelerationStructure::IASAccelerationStructure(OptixDeviceContext context, c
                                 1,    // num build inputs
                                 (CUdeviceptr)d_temp_buffer.get(),
                                 ias_buffer_sizes.tempSizeInBytes,
-                                (CUdeviceptr)_ias_buffer.get(),
+                                (CUdeviceptr)_ast_buffer.get(),
                                 ias_buffer_sizes.outputSizeInBytes,
                                 &_handle,
                                 nullptr,    // emitted property list

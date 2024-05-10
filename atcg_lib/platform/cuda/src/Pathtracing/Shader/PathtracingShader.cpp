@@ -40,8 +40,6 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         _environment_emitter->initializePipeline(pipeline, sbt);
     }
 
-    _accel = atcg::make_ref<IASAccelerationStructure>(_context, _scene);
-
     // Extract scene information
     auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
     std::vector<const atcg::EmitterVPtrTable*> emitter_tables;
@@ -49,8 +47,11 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
     {
         Entity entity(e, _scene.get());
 
-        Material material   = entity.getComponent<atcg::MeshRenderComponent>().material;
-        glm::mat4 transform = entity.getComponent<atcg::TransformComponent>().getModel();
+        Material material = entity.getComponent<atcg::MeshRenderComponent>().material;
+
+        auto graph                                     = entity.getComponent<GeometryComponent>().graph;
+        atcg::ref_ptr<MeshAccelerationStructure> accel = atcg::make_ref<MeshAccelerationStructure>(_context, graph);
+        accel->initializePipeline(pipeline, sbt);
 
         atcg::ref_ptr<OptixBSDF> bsdf;
         if(material.glass)
@@ -66,13 +67,12 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
 
         entity.addOrReplaceComponent<BSDFComponent>(bsdf);
 
-        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
-
-        atcg::ref_ptr<GASAccelerationStructure> accel = std::dynamic_pointer_cast<GASAccelerationStructure>(acc.accel);
+        entity.addOrReplaceComponent<AccelerationStructureComponent>(accel);
 
         atcg::ref_ptr<OptixEmitter> emitter = nullptr;
         if(material.emissive)
         {
+            glm::mat4 transform = entity.getComponent<atcg::TransformComponent>().getModel();
             emitter = atcg::make_ref<MeshEmitter>(accel->getPositions(), accel->getFaces(), transform, material);
             emitter->initializePipeline(pipeline, sbt);
         }
@@ -101,9 +101,9 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
     {
         Entity entity(e, _scene.get());
 
-        AccelerationStructureComponent& acc           = entity.getComponent<AccelerationStructureComponent>();
-        atcg::ref_ptr<GASAccelerationStructure> accel = std::dynamic_pointer_cast<GASAccelerationStructure>(acc.accel);
-        accel->initializePipeline(pipeline, sbt);
+        AccelerationStructureComponent& acc = entity.getComponent<AccelerationStructureComponent>();
+        atcg::ref_ptr<MeshAccelerationStructure> accel =
+            std::dynamic_pointer_cast<MeshAccelerationStructure>(acc.accel);
 
         atcg::ref_ptr<OptixBSDF> bsdf = std::dynamic_pointer_cast<OptixBSDF>(entity.getComponent<BSDFComponent>().bsdf);
         atcg::ref_ptr<OptixEmitter> emitter =
@@ -119,6 +119,8 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
 
         sbt->addHitEntry(accel->getHitGroup(), hit_data);
     }
+
+    _accel = atcg::make_ref<IASAccelerationStructure>(_context, _scene);
 }
 
 void PathtracingShader::reset()
