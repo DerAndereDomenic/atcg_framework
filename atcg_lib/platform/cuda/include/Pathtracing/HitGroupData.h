@@ -1,3 +1,5 @@
+#pragma once
+
 #include <Pathtracing/BSDFModels.cuh>
 #include <Pathtracing/EmitterModels.cuh>
 
