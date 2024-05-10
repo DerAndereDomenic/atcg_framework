@@ -132,9 +132,9 @@ void Pathtracer::stop()
     if(s_pathtracer->impl->worker_thread.joinable()) s_pathtracer->impl->worker_thread.join();
 }
 
-bool Pathtracer::isFinished()
+bool Pathtracer::isRunning()
 {
-    return !s_pathtracer->impl->running;
+    return s_pathtracer->impl->running;
 }
 
 void Pathtracer::Impl::resize(const uint32_t width, const uint32_t height)

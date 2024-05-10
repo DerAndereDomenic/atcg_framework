@@ -30,7 +30,7 @@ public:
     //                  uint32_t height,
     //                  const float time);
 
-    static bool isFinished();
+    static bool isRunning();
 
     static void stop();
 

@@ -15,7 +15,7 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
 {
     ImGui::Begin("PT Panel");
 
-    if(atcg::Pathtracer::isFinished())
+    if(!atcg::Pathtracer::isRunning())
     {
         ImGui::DragInt("Number Samples", &_num_samples, 1.0f, 0, INT_MAX);
         ImGui::Checkbox("Viewport size", &_use_viewport_size);
