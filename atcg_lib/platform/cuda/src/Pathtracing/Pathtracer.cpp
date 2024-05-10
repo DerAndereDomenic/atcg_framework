@@ -54,8 +54,9 @@ public:
     std::atomic_bool running = false;
 
     atcg::ref_ptr<OptixRaytracingShader> shader = nullptr;
-    uint32_t num_samples;
-    uint32_t subframe = 0;
+    uint32_t max_num_samples;
+    uint32_t sample_count = 0;
+    uint32_t subframe     = 0;
 
     uint32_t width = 0, height = 0;
 
@@ -65,8 +66,9 @@ public:
 void Pathtracer::Impl::worker()
 {
     rendering_time = 0.0f;
+    sample_count   = 0;
     Timer render_timer;
-    for(subframe = 0; subframe < num_samples; ++subframe)
+    for(subframe = 0; subframe < max_num_samples; ++subframe)
     {
         Timer frame_time;
 
@@ -86,6 +88,7 @@ void Pathtracer::Impl::worker()
             dirty         = true;
         }
 
+        ++sample_count;
         if(!running) break;
     }
 
@@ -196,7 +199,7 @@ void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
     s_pathtracer->impl->raytracing_pipeline->createPipeline();
     s_pathtracer->impl->sbt->createSBT();
 
-    s_pathtracer->impl->num_samples = num_samples;
+    s_pathtracer->impl->max_num_samples = num_samples;
     s_pathtracer->impl->start();
 }
 
@@ -218,6 +221,11 @@ uint32_t Pathtracer::getHeight()
 float Pathtracer::getLastRenderingTime()
 {
     return s_pathtracer->impl->rendering_time;
+}
+
+uint32_t Pathtracer::getSampleCount()
+{
+    return s_pathtracer->impl->sample_count;
 }
 
 }    // namespace atcg

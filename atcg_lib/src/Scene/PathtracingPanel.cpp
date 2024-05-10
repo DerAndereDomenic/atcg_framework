@@ -69,6 +69,7 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
         ss << std::ceil(time_seconds * 100.0f) / 100.0f << "s";
 
         ImGui::Text(ss.str().c_str());
+        ImGui::Text(("Rendered " + std::to_string(Pathtracer::getSampleCount()) + " samples").c_str());
     }
     else
     {

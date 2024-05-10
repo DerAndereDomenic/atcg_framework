@@ -44,6 +44,8 @@ public:
 
     static float getLastRenderingTime();
 
+    static uint32_t getSampleCount();
+
     ~Pathtracer();
 
 private:
