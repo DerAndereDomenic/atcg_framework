@@ -2,7 +2,7 @@
 
 #include <Core/CUDA.h>
 
-#include <Pathtracing/Params.cuh>
+#include <Pathtracing/Shader/PathtracingShader.cuh>
 
 #include <Math/Random.h>
 #include <Pathtracing/SurfaceInteraction.h>

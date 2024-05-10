@@ -5,7 +5,7 @@
 #include <Math/Random.h>
 
 #include <Pathtracing/SurfaceInteraction.h>
-#include <Pathtracing/BSDFModels.cuh>
+#include <Pathtracing/BSDF/BSDFModels.cuh>
 
 extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_pbrbsdf(const atcg::SurfaceInteraction& si,
                                                                                  atcg::PCG32& rng)

@@ -1,4 +1,4 @@
-#include <Pathtracing/BSDFModels.h>
+#include <Pathtracing/BSDF/BSDFModels.h>
 #include <Core/CUDA.h>
 
 #include <Pathtracing/Common.h>

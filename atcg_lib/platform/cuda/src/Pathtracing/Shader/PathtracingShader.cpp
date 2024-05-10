@@ -1,4 +1,4 @@
-#include <Pathtracing/PathtracingShader.h>
+#include <Pathtracing/Shader/PathtracingShader.h>
 #include <Renderer/Renderer.h>
 
 #include <Scene/Scene.h>
@@ -8,8 +8,8 @@
 #include <Pathtracing/Common.h>
 
 #include <Pathtracing/HitGroupData.h>
-#include <Pathtracing/EmitterModels.h>
-#include <Pathtracing/BSDFModels.h>
+#include <Pathtracing/Emitter/EmitterModels.h>
+#include <Pathtracing/BSDF/BSDFModels.h>
 
 #include <optix_stubs.h>
 

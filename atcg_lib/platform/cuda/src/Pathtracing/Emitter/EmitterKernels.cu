@@ -5,8 +5,8 @@
 #include <Math/Random.h>
 #include <Pathtracing/SurfaceInteraction.h>
 
-#include <Pathtracing/EmitterModels.cuh>
-#include <Pathtracing/BSDFModels.cuh>
+#include <Pathtracing/Emitter/EmitterModels.cuh>
+#include <Pathtracing/BSDF/BSDFModels.cuh>
 
 template<typename T>
 inline __device__ uint32_t binary_search(T* sorted_array, T value, uint32_t size)

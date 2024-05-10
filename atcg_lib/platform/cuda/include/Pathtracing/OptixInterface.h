@@ -6,10 +6,10 @@
 #include <Pathtracing/RaytracingPipeline.h>
 
 #include <Pathtracing/BSDF.h>
-#include <Pathtracing/BSDFModels.cuh>
+#include <Pathtracing/BSDF/BSDFModels.cuh>
 
 #include <Pathtracing/Emitter.h>
-#include <Pathtracing/EmitterModels.cuh>
+#include <Pathtracing/Emitter/EmitterModels.cuh>
 
 #include <torch/types.h>
 #include <Renderer/PerspectiveCamera.h>
@@ -27,6 +27,8 @@ public:
 class OptixBSDF : public OptixComponent, public BSDF
 {
 public:
+    virtual ~OptixBSDF() {}
+
     inline const BSDFVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
 
 protected:
@@ -36,6 +38,8 @@ protected:
 class OptixEmitter : public OptixComponent, public Emitter
 {
 public:
+    virtual ~OptixEmitter() {}
+
     inline const EmitterVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
 
 protected:

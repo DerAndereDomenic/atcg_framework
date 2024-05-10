@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Pathtracing/OptixRaytracingShader.h>
-#include <Pathtracing/Params.cuh>
+#include <Pathtracing/Shader/PathtracingShader.cuh>
 #include <Pathtracing/OptixAccelerationStructure.h>
 
 namespace atcg

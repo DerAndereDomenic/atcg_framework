@@ -19,7 +19,7 @@
 #include <Pathtracing/ShaderBindingTable.h>
 
 #include <Pathtracing/RaytracingShaderManager.h>
-#include <Pathtracing/PathtracingShader.h>
+#include <Pathtracing/Shader/PathtracingShader.h>
 
 namespace atcg
 {

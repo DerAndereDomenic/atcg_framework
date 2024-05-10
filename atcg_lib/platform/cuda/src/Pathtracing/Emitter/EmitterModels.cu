@@ -1,4 +1,4 @@
-#include <Pathtracing/EmitterModels.h>
+#include <Pathtracing/Emitter/EmitterModels.h>
 #include <Pathtracing/Common.h>
 #include <ATen/cuda/ApplyGridUtils.cuh>
 #include <c10/cuda/CUDAGuard.h>
