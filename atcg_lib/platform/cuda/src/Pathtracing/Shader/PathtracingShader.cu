@@ -10,7 +10,7 @@
 
 extern "C"
 {
-    __constant__ Params params;
+    __constant__ PathtracingParams params;
 }
 
 extern "C" __global__ void __raygen__rg()

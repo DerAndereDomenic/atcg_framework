@@ -5,7 +5,7 @@
 #include <Pathtracing/BSDF/BSDFModels.cuh>
 #include <Pathtracing/Emitter/EmitterModels.cuh>
 
-struct Params
+struct PathtracingParams
 {
     glm::vec3* accumulation_buffer;
     glm::u8vec4* output_image;

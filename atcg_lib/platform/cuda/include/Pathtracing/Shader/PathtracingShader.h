@@ -25,7 +25,7 @@ public:
                               torch::Tensor& output) override;
 
 private:
-    atcg::dref_ptr<Params> _launch_params;
+    atcg::dref_ptr<PathtracingParams> _launch_params;
 
     glm::mat4 _inv_camera_view;
     float _fov_y;

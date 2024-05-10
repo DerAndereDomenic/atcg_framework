@@ -147,7 +147,7 @@ void PathtracingShader::generateRays(const atcg::ref_ptr<RayTracingPipeline>& pi
         setTensor("HDR", accumulation_buffer);
     }
 
-    Params params;
+    PathtracingParams params;
 
     memcpy(params.cam_eye, glm::value_ptr(_inv_camera_view[3]), sizeof(glm::vec3));
     memcpy(params.U, glm::value_ptr(glm::normalize(_inv_camera_view[0])), sizeof(glm::vec3));
@@ -171,7 +171,7 @@ void PathtracingShader::generateRays(const atcg::ref_ptr<RayTracingPipeline>& pi
     OPTIX_CHECK(optixLaunch(pipeline->getPipeline(),
                             _stream,
                             (CUdeviceptr)_launch_params.get(),
-                            sizeof(Params),
+                            sizeof(PathtracingParams),
                             sbt->getSBT(_raygen_index),
                             output.size(1),
                             output.size(0),
