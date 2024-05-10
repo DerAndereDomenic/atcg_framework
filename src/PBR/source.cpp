@@ -204,18 +204,6 @@ public:
         }
         // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
-        if(event->getKeyCode() == GLFW_KEY_P)
-        {
-            auto imgui_layer = atcg::Application::get()->getImGuiLayer();
-            imgui_layer->setPathtracingFocus();
-            atcg::Pathtracer::draw(scene,
-                                   camera_controller->getCamera(),
-                                   atcg::RaytracingShaderManager::getShader("Pathtracing"),
-                                   imgui_layer->getViewportSize().x,
-                                   imgui_layer->getViewportSize().y,
-                                   1024);
-        }
-
         return true;
     }
 

@@ -3,6 +3,7 @@
 #include <Core/Application.h>
 #include <Pathtracing/Pathtracer.h>
 #include <Pathtracing/RaytracingShaderManager.h>
+#include <Core/Input.h>
 
 #include <imgui.h>
 
@@ -32,7 +33,7 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
             _height   = size.y;
         }
 
-        if(ImGui::Button("Start"))
+        if(ImGui::Button("Start") || Input::isKeyPressed(80 /*P*/))
         {
             imgui_layer->setPathtracingFocus();
             atcg::Pathtracer::draw(_scene,
