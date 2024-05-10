@@ -17,7 +17,17 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
 
     if(!atcg::Pathtracer::isRunning())
     {
-        ImGui::DragInt("Number Samples", &_num_samples, 1.0f, 0, INT_MAX);
+        ImGui::Checkbox("Equal Sample Count", &_samples_mode);
+
+        if(_samples_mode)
+        {
+            ImGui::DragInt("Number Samples", &_num_samples, 1.0f, 0, INT_MAX);
+        }
+        else
+        {
+            ImGui::DragFloat("Rendering time (s)", &_rendering_time, 0.01f, 0.0f, FLT_MAX);
+        }
+
         ImGui::Checkbox("Viewport size", &_use_viewport_size);
 
         auto imgui_layer = atcg::Application::get()->getImGuiLayer();
@@ -36,12 +46,24 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
         if(ImGui::Button("Start") || Input::isKeyPressed(80 /*P*/))
         {
             imgui_layer->setPathtracingFocus();
-            atcg::Pathtracer::draw(_scene,
-                                   camera,
-                                   atcg::RaytracingShaderManager::getShader("Pathtracing"),
-                                   _width,
-                                   _height,
-                                   _num_samples);
+            if(_samples_mode)
+            {
+                atcg::Pathtracer::draw(_scene,
+                                       camera,
+                                       atcg::RaytracingShaderManager::getShader("Pathtracing"),
+                                       _width,
+                                       _height,
+                                       (uint32_t)_num_samples);
+            }
+            else
+            {
+                atcg::Pathtracer::draw(_scene,
+                                       camera,
+                                       atcg::RaytracingShaderManager::getShader("Pathtracing"),
+                                       _width,
+                                       _height,
+                                       (float)_rendering_time);
+            }
         }
 
         ImGui::Separator();
@@ -73,10 +95,23 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
     }
     else
     {
-        float progress = (float)atcg::Pathtracer::getFrameIndex() / (float)_num_samples;
-        ImGui::ProgressBar(progress);
-        // ImGui::SameLine();
-        ImGui::Text((std::to_string(atcg::Pathtracer::getFrameIndex()) + "/" + std::to_string(_num_samples)).c_str());
+        float progress;
+
+        if(_samples_mode)
+        {
+            progress = (float)atcg::Pathtracer::getFrameIndex() / (float)_num_samples;
+            ImGui::ProgressBar(progress);
+            ImGui::Text(
+                (std::to_string(atcg::Pathtracer::getFrameIndex()) + "/" + std::to_string(_num_samples)).c_str());
+        }
+        else
+        {
+            progress = atcg::Pathtracer::getLastRenderingTime() / _rendering_time;
+            ImGui::ProgressBar(progress);
+            ImGui::Text((std::to_string((int)atcg::Pathtracer::getLastRenderingTime()) + "/" +
+                         std::to_string((int)_rendering_time))
+                            .c_str());
+        }
 
         if(ImGui::Button("Stop"))
         {

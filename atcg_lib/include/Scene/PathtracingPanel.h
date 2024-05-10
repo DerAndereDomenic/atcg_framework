@@ -34,6 +34,8 @@ public:
 
 private:
     atcg::ref_ptr<Scene> _scene;
+    bool _samples_mode      = true;
+    float _rendering_time   = 10.0f;
     int _num_samples        = 1024;
     int _width              = 0;
     int _height             = 0;
