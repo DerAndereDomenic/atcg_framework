@@ -76,7 +76,7 @@ extern "C" __global__ void __raygen__rg()
                                                                    emitter_sampling.distance_to_light - 1e-3f,
                                                                    &emitter_si);
 
-                    if(!si.valid)
+                    if(!emitter_si.valid)
                     {
                         atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
                         radiance += throughput * emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value *
