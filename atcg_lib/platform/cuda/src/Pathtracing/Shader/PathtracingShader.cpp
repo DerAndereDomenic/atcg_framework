@@ -13,6 +13,8 @@
 
 #include <optix_stubs.h>
 
+#include <Pathtracing/Payload.h>
+
 namespace atcg
 {
 PathtracingShader::PathtracingShader(OptixDeviceContext context) : OptixRaytracingShader(context)
@@ -93,9 +95,11 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
     const std::string ptx_raygen_filename = "./bin/PathtracingShader.ptx";
     OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
     OptixProgramGroup miss_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
+    OptixProgramGroup occl_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
-    _raygen_index = sbt->addRaygenEntry(raygen_prog_group);
-    sbt->addMissEntry(miss_prog_group);
+    _raygen_index         = sbt->addRaygenEntry(raygen_prog_group);
+    _surface_miss_index   = sbt->addMissEntry(miss_prog_group);
+    _occlusion_miss_index = sbt->addMissEntry(occl_prog_group);
 
     for(auto e: view)
     {
@@ -165,6 +169,16 @@ void PathtracingShader::generateRays(const atcg::ref_ptr<RayTracingPipeline>& pi
     params.emitters            = _emitter_tables.get();
 
     params.environment_emitter = _environment_emitter ? _environment_emitter->getVPtrTable() : nullptr;
+
+    params.surface_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
+    params.surface_trace_params.SBToffset    = 0;
+    params.surface_trace_params.SBTstride    = 1;
+    params.surface_trace_params.missSBTIndex = _surface_miss_index;
+
+    params.occlusion_trace_params.rayFlags  = OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT;
+    params.occlusion_trace_params.SBToffset = 0;
+    params.occlusion_trace_params.SBTstride = 1;
+    params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
 
     _launch_params.upload(&params);
 

@@ -49,7 +49,13 @@ extern "C" __global__ void __raygen__rg()
         next_ray_valid = false;
 
         atcg::SurfaceInteraction si;
-        traceWithDataPointer<atcg::SurfaceInteraction>(params.handle, ray_origin, ray_dir, 0.001f, 1e16f, &si);
+        traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
+                                                       ray_origin,
+                                                       ray_dir,
+                                                       0.001f,
+                                                       1e16f,
+                                                       &si,
+                                                       params.surface_trace_params);
 
         if(si.valid)
         {
@@ -76,15 +82,14 @@ extern "C" __global__ void __raygen__rg()
 
                     if(emitter_sampling.sampling_pdf == 0) continue;
 
-                    atcg::SurfaceInteraction emitter_si;
-                    traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
-                                                                   si.position,
-                                                                   emitter_sampling.direction_to_light,
-                                                                   1e-3f,
-                                                                   emitter_sampling.distance_to_light - 1e-3f,
-                                                                   &emitter_si);
+                    bool occluded = traceOcclusion(params.handle,
+                                                   si.position,
+                                                   emitter_sampling.direction_to_light,
+                                                   1e-3f,
+                                                   emitter_sampling.distance_to_light - 1e-3f,
+                                                   params.occlusion_trace_params);
 
-                    if(emitter_si.valid)
+                    if(occluded)
                     {
                         continue;
                     }
@@ -158,4 +163,9 @@ extern "C" __global__ void __miss__ms()
     si->valid              = false;
     si->incoming_distance  = std::numeric_limits<float>::infinity();
     si->incoming_direction = ray_dir;
+}
+
+extern "C" __global__ void __miss__occlusion()
+{
+    setOcclusionPayload(false);
 }

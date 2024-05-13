@@ -35,8 +35,10 @@ private:
     atcg::ref_ptr<OptixEmitter> _environment_emitter = nullptr;
     atcg::DeviceBuffer<const atcg::EmitterVPtrTable*> _emitter_tables;
 
-    uint32_t _frame_counter = 0;
-    uint32_t _raygen_index  = 0;
+    uint32_t _frame_counter        = 0;
+    uint32_t _raygen_index         = 0;
+    uint32_t _surface_miss_index   = 0;
+    uint32_t _occlusion_miss_index = 0;
 
     atcg::ref_ptr<IASAccelerationStructure> _accel;
 };

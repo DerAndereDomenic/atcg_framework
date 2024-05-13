@@ -4,6 +4,7 @@
 #include <Core/glm.h>
 #include <Pathtracing/BSDF/BSDFModels.cuh>
 #include <Pathtracing/Emitter/EmitterModels.cuh>
+#include <Pathtracing/Payload.h>
 
 struct PathtracingParams
 {
@@ -14,6 +15,9 @@ struct PathtracingParams
     uint32_t frame_counter;
 
     OptixTraversableHandle handle;
+
+    TraceParameters surface_trace_params;
+    TraceParameters occlusion_trace_params;
 
     // Emitters
     const atcg::EmitterVPtrTable** emitters;
