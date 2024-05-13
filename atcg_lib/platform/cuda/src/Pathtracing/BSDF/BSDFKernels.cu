@@ -29,6 +29,7 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
                                                                            const glm::vec3& outgoing_dir)
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
+    atcg::BSDFEvalResult result;
 
     float4 color_u          = tex2D<float4>(sbt_data->diffuse_texture, si.uv.x, si.uv.y);
     glm::vec3 diffuse_color = glm::vec3(color_u.x, color_u.y, color_u.z);
@@ -46,6 +47,8 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
     float NdotH = glm::max(glm::dot(si.normal, H), 0.0f);
     float NdotV = glm::max(glm::dot(si.normal, view_dir), 0.0f);
     float NdotL = glm::max(glm::dot(si.normal, light_dir), 0.0f);
+
+    if(NdotL <= 0.0f || NdotV <= 0.0f) return result;
 
     float NDF   = atcg::D_GGX(NdotH, roughness);
     float G     = atcg::geometrySmith(NdotL, NdotV, roughness);
@@ -68,7 +71,6 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
     float halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(outgoing_dir, H);    // 1 / (4*HdotV)
     float specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
 
-    atcg::BSDFEvalResult result;
     result.bsdf_value         = specular + kD * diffuse_color / glm::pi<float>();
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf + 1e-5f;
 
