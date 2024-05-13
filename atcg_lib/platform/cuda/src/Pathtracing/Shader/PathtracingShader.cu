@@ -40,6 +40,9 @@ extern "C" __global__ void __raygen__rg()
 
     bool next_ray_valid = true;
 
+    atcg::SurfaceInteraction last_si;
+    float last_bsdf_pdf = 1.0f;
+
     for(int n = 0; n < 10; ++n)
     {
         if(!next_ray_valid) break;
@@ -53,7 +56,10 @@ extern "C" __global__ void __raygen__rg()
             // Check for light source
             if(si.emitter)
             {
-                radiance += throughput * si.emitter->evalLight(si);
+                bool mis_valid             = last_si.valid;
+                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
+                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                radiance += mis_weight * throughput * si.emitter->evalLight(si);
             }
 
             // PBR Sampling
@@ -63,6 +69,8 @@ extern "C" __global__ void __raygen__rg()
                 for(uint32_t i = 0; i < params.num_emitters; ++i)
                 {
                     const atcg::EmitterVPtrTable* emitter = params.emitters[i];
+
+                    if(si.emitter == emitter) continue;
 
                     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
 
@@ -76,12 +84,19 @@ extern "C" __global__ void __raygen__rg()
                                                                    emitter_sampling.distance_to_light - 1e-3f,
                                                                    &emitter_si);
 
-                    if(!emitter_si.valid)
+                    if(emitter_si.valid)
                     {
-                        atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
-                        radiance += throughput * emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value *
-                                    glm::max(0.0f, glm::dot(si.normal, emitter_sampling.direction_to_light));
+                        continue;
                     }
+
+                    atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+
+                    float mis_weight = emitter_sampling.sampling_pdf /
+                                       (emitter_sampling.sampling_pdf + bsdf_result.sample_probability);
+
+                    radiance += mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
+                                bsdf_result.bsdf_value *
+                                glm::max(0.0f, glm::dot(si.normal, emitter_sampling.direction_to_light));
                 }
 
                 auto result = si.bsdf->sampleBSDF(si, rng);
@@ -92,6 +107,14 @@ extern "C" __global__ void __raygen__rg()
                     next_dir    = result.out_dir;
                     throughput *= result.bsdf_weight;
                     next_ray_valid = true;
+
+                    last_si       = si;
+                    last_bsdf_pdf = result.sample_probability;
+
+                    if((int)(si.bsdf->flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                    {
+                        last_si.valid = false;
+                    }
                 }
             }
         }
