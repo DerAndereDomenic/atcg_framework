@@ -42,6 +42,7 @@ struct EmitterVPtrTable
 {
     uint32_t evalCallIndex;
     uint32_t sampleCallIndex;
+    uint32_t evalPdfCallIndex;
 
 #ifdef __CUDACC__
 
@@ -53,6 +54,13 @@ struct EmitterVPtrTable
     __device__ EmitterSamplingResult sampleLight(const SurfaceInteraction& si, PCG32& rng) const
     {
         return optixDirectCall<EmitterSamplingResult, const SurfaceInteraction&, PCG32&>(sampleCallIndex, si, rng);
+    }
+
+    __device__ float evalLightSamplingPdf(const SurfaceInteraction& last_si, const SurfaceInteraction& si) const
+    {
+        return optixDirectCall<float, const SurfaceInteraction&, const SurfaceInteraction&>(evalPdfCallIndex,
+                                                                                            last_si,
+                                                                                            si);
     }
 
 #endif

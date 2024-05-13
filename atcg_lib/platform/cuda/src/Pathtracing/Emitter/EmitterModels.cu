@@ -162,12 +162,16 @@ void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pi
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_meshemitter"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_meshemitter"});
-    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
-    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
+    auto evalpdf_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_meshemitter"});
+    uint32_t sample_idx   = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_idx     = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_pdf_idx = sbt->addCallableEntry(evalpdf_prog_group, _mesh_emitter_data.get());
 
     EmitterVPtrTable table;
-    table.sampleCallIndex = sample_idx;
-    table.evalCallIndex   = eval_idx;
+    table.sampleCallIndex  = sample_idx;
+    table.evalCallIndex    = eval_idx;
+    table.evalPdfCallIndex = eval_pdf_idx;
 
     _vptr_table.upload(&table);
 }
@@ -202,12 +206,16 @@ void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeli
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_environmentemitter"});
     auto eval_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_environmentemitter"});
-    uint32_t sample_idx = sbt->addCallableEntry(sample_prog_group, _environment_emitter_data.get());
-    uint32_t eval_idx   = sbt->addCallableEntry(eval_prog_group, _environment_emitter_data.get());
+    auto evalpdf_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_environmentemitter"});
+    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, _environment_emitter_data.get());
+    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, _environment_emitter_data.get());
+    uint32_t evalpdf_idx = sbt->addCallableEntry(evalpdf_prog_group, _environment_emitter_data.get());
 
     EmitterVPtrTable table;
-    table.sampleCallIndex = sample_idx;
-    table.evalCallIndex   = eval_idx;
+    table.sampleCallIndex  = sample_idx;
+    table.evalCallIndex    = eval_idx;
+    table.evalPdfCallIndex = evalpdf_idx;
 
     _vptr_table.upload(&table);
 }

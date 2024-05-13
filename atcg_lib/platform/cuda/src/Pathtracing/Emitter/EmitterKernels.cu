@@ -98,6 +98,27 @@ extern "C" __device__ glm::vec3 __direct_callable__eval_meshemitter(const atcg::
     return emissive_color * sbt_data->emitter_scaling;
 }
 
+extern "C" __device__ float __direct_callable__evalpdf_meshemitter(const atcg::SurfaceInteraction& last_si,
+                                                                   const atcg::SurfaceInteraction& si)
+{
+    const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
+    // We can assume that outgoing ray dir actually intersects the light source.
+
+    // Some useful quantities
+    glm::vec3 light_normal         = si.normal;
+    glm::vec3 light_ray_dir        = glm::normalize(si.position - last_si.position);
+    float light_ray_length_squared = glm::length2(si.position - last_si.position);
+
+    // The probability of sampling any position on the surface of the mesh is the reciprocal of its surface area.
+    float light_position_pdf = 1 / sbt_data->total_area;
+
+    // Probability of sampling this direction via light source sampling
+    float cos_theta_on_light  = glm::abs(glm::dot(light_ray_dir, light_normal));
+    float light_direction_pdf = light_position_pdf * light_ray_length_squared / cos_theta_on_light;
+
+    return light_direction_pdf;
+}
+
 extern "C" __device__ atcg::EmitterSamplingResult
 __direct_callable__sample_environmentemitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
 {
@@ -143,4 +164,16 @@ extern "C" __device__ glm::vec3 __direct_callable__eval_environmentemitter(const
     float4 color = tex2D<float4>(sbt_data->environment_texture, uv.x, 1.0f - uv.y);
 
     return glm::vec3(color.x, color.y, color.z);
+}
+
+extern "C" __device__ float __direct_callable__evalpdf_environmentemitter(const atcg::SurfaceInteraction& last_si,
+                                                                          const atcg::SurfaceInteraction& si)
+{
+    const atcg::EnvironmentEmitterData* sbt_data =
+        *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
+    // We can assume that outgoing ray dir actually intersects the light source.
+
+    // Probability of sampling this direction via light source sampling
+    // TODO
+    return 1.0f;
 }
