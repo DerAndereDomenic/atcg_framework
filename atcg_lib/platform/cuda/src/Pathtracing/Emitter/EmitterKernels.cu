@@ -174,6 +174,8 @@ extern "C" __device__ float __direct_callable__evalpdf_environmentemitter(const 
     // We can assume that outgoing ray dir actually intersects the light source.
 
     // Probability of sampling this direction via light source sampling
-    // TODO
-    return 1.0f;
+    glm::mat3 local_frame     = atcg::compute_local_frame(last_si.normal);
+    glm::vec3 local_direction = glm::transpose(local_frame) * si.incoming_direction;
+
+    return atcg::warp_square_to_hemisphere_cosine_pdf(local_direction);
 }
