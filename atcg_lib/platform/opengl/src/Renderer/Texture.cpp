@@ -714,7 +714,7 @@ void Texture2D::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
-torch::Tensor Texture2D::getData(const torch::Device& device) const
+torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
     bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
@@ -723,13 +723,15 @@ torch::Tensor Texture2D::getData(const torch::Device& device) const
     torch::Tensor result;
 #ifdef ATCG_CUDA_BACKEND
     bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
+    int height              = glm::floor(_spec.height / (1 << mip_level));
+    int width               = glm::floor(_spec.width / (1 << mip_level));
     if(cuda_copy_possible && device.is_cuda())
     {
         result =
-            torch::empty({_spec.height, _spec.width, num_channels},
+            torch::empty({height, width, num_channels},
                          hdr ? atcg::TensorOptions::floatDeviceOptions() : atcg::TensorOptions::uint8DeviceOptions());
 
-        atcg::textureArray array = getTextureArray();
+        atcg::textureArray array = getTextureArray(mip_level);
 
         CUDA_SAFE_CALL(cudaMemcpy2DFromArray(result.data_ptr(),
                                              result.size(1) * result.size(2) * result.element_size(),
@@ -737,7 +739,7 @@ torch::Tensor Texture2D::getData(const torch::Device& device) const
                                              0,
                                              0,
                                              result.size(1) * result.size(2) * result.element_size(),
-                                             _spec.height,
+                                             height,
                                              cudaMemcpyDeviceToDevice));
 
         unmapPointers();
@@ -752,12 +754,12 @@ torch::Tensor Texture2D::getData(const torch::Device& device) const
 
     unmapPointers();
 
-    result = torch::empty({_spec.height, _spec.width, num_channels},
+    result = torch::empty({height, width, num_channels},
                           hdr ? atcg::TensorOptions::floatHostOptions() : atcg::TensorOptions::uint8HostOptions());
 
     use();
     glGetTexImage(GL_TEXTURE_2D,
-                  0,
+                  mip_level,
                   detail::toGLformat(_spec.format),
                   detail::toGLtype(_spec.format),
                   result.data_ptr());
@@ -940,7 +942,7 @@ void Texture3D::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
-torch::Tensor Texture3D::getData(const torch::Device& device) const
+torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
     bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
@@ -949,13 +951,16 @@ torch::Tensor Texture3D::getData(const torch::Device& device) const
     torch::Tensor result;
 #ifdef ATCG_CUDA_BACKEND
     bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
+    int depth               = glm::floor(_spec.depth / (1 << mip_level));
+    int height              = glm::floor(_spec.height / (1 << mip_level));
+    int width               = glm::floor(_spec.width / (1 << mip_level));
     if(cuda_copy_possible && device.is_cuda())
     {
         result =
-            torch::empty({_spec.depth, _spec.height, _spec.width, num_channels},
+            torch::empty({depth, height, width, num_channels},
                          hdr ? atcg::TensorOptions::floatDeviceOptions() : atcg::TensorOptions::uint8DeviceOptions());
 
-        atcg::textureArray array = getTextureArray();
+        atcg::textureArray array = getTextureArray(mip_level);
 
         cudaChannelFormatDesc desc = {};
         cudaExtent ext             = {};
@@ -986,12 +991,12 @@ torch::Tensor Texture3D::getData(const torch::Device& device) const
 
     unmapPointers();
 
-    result = torch::empty({_spec.depth, _spec.height, _spec.width, num_channels},
+    result = torch::empty({depth, height, width, num_channels},
                           hdr ? atcg::TensorOptions::floatHostOptions() : atcg::TensorOptions::uint8HostOptions());
 
     use();
     glGetTexImage(GL_TEXTURE_3D,
-                  0,
+                  mip_level,
                   detail::toGLformat(_spec.format),
                   detail::toGLtype(_spec.format),
                   result.data_ptr());
