@@ -3,6 +3,8 @@
 #include <Core/Memory.h>
 #include <Scene/Entity.h>
 
+#include <Scene/ComponentSerializer.h>
+
 #include <json.hpp>
 
 namespace atcg
@@ -29,9 +31,9 @@ public:
      * @brief Serialize the scene.
      *
      * @tparam CustomComponents... Optional custom components to serialize.
-     * 
+     *
      * To use custom components, a custom serializer has to be supplied.
-     * 
+     *
      * @param file_path The file path
      */
     template<typename... CustomComponents>
@@ -41,9 +43,9 @@ public:
      * @brief Deserialize the scene.
      *
      * @tparam CustomComponents... Optional custom components to serialize.
-     * 
+     *
      * To use custom components, a custom serializer has to be supplied.
-     * 
+     *
      * @param file_path The file path
      */
     template<typename... CustomComponents>
