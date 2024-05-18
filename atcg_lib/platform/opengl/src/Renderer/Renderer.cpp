@@ -51,8 +51,6 @@ public:
     bool cylinder_has_instance = false;
     bool culling_enabled       = false;
 
-    atcg::ref_ptr<Texture2D> white_pixel;
-
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
     glm::vec4 clear_color;
 
@@ -136,12 +134,6 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     initCube();
 
     initCameraFrustrum();
-
-    glm::u8vec4 white = glm::u8vec4(255);
-    TextureSpecification spec_color;
-    spec_color.width  = 1;
-    spec_color.height = 1;
-    white_pixel       = atcg::Texture2D::create(&white, spec_color);
 
     TextureSpecification spec_skybox;
     spec_skybox.width               = 1024;
@@ -762,8 +754,6 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         return;
     }
 
-    // renderer.shader->setInt("entityID", entity_id);
-    s_renderer->impl->white_pixel->use(0);
     geometry.graph->unmapAllPointers();
     if(entity.hasComponent<MeshRenderComponent>())
     {
@@ -789,6 +779,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
         if(renderer.visible)
         {
+            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
             s_renderer->impl->drawVAO(geometry.graph->getVerticesArray(),
@@ -825,6 +816,7 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
+            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, ShaderManager::getShader("edge"));
             ShaderManager::getShader("edge")->setInt("entityID", entity_id);
             atcg::ref_ptr<VertexBuffer> points = geometry.graph->getVerticesBuffer();
             points->bindStorage(0);
@@ -842,7 +834,6 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     if(entity.hasComponent<EdgeCylinderRenderComponent>())
     {
         EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
-
 
         if(renderer.visible)
         {
