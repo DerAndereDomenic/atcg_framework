@@ -721,10 +721,10 @@ torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip
                _spec.format == TextureFormat::RGBFLOAT;
 
     torch::Tensor result;
+    int height = glm::floor(_spec.height / (1 << mip_level));
+    int width  = glm::floor(_spec.width / (1 << mip_level));
 #ifdef ATCG_CUDA_BACKEND
     bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
-    int height              = glm::floor(_spec.height / (1 << mip_level));
-    int width               = glm::floor(_spec.width / (1 << mip_level));
     if(cuda_copy_possible && device.is_cuda())
     {
         result =
@@ -949,11 +949,11 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
                _spec.format == TextureFormat::RGBFLOAT;
 
     torch::Tensor result;
+    int depth  = glm::floor(_spec.depth / (1 << mip_level));
+    int height = glm::floor(_spec.height / (1 << mip_level));
+    int width  = glm::floor(_spec.width / (1 << mip_level));
 #ifdef ATCG_CUDA_BACKEND
     bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
-    int depth               = glm::floor(_spec.depth / (1 << mip_level));
-    int height              = glm::floor(_spec.height / (1 << mip_level));
-    int width               = glm::floor(_spec.width / (1 << mip_level));
     if(cuda_copy_possible && device.is_cuda())
     {
         result =
