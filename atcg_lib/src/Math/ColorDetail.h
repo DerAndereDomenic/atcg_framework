@@ -1,0 +1,99 @@
+#pragma once
+
+namespace atcg
+{
+namespace Color
+{
+
+namespace detail
+{
+static constexpr glm::mat3 lRGB_to_XYZ_transform(glm::vec3(0.4124f, 0.2126f, 0.0193f),
+                                                 glm::vec3(0.3576f, 0.7152f, 0.1192f),
+                                                 glm::vec3(0.1805f, 0.0722f, 0.9505f));
+
+static constexpr glm::mat3 XYZ_to_lRBB_transform(glm::vec3(+3.2406f, -0.9689, +0.0557f),
+                                                 glm::vec3(-1.5372f, +1.8758f, -0.2040f),
+                                                 glm::vec3(-0.4986f, +0.0415f, +1.0570f));
+
+ATCG_HOST_DEVICE inline uint8_t quantize_channel(const float c)
+{
+    return (uint8_t)(c * 255.0f);
+}
+
+ATCG_HOST_DEVICE inline float dequantize_channel(const uint8_t c)
+{
+    return (float)(c) / 255.0f;
+}
+
+ATCG_HOST_DEVICE inline float sRGB_to_lRGB_channel(const float c)
+{
+    return c <= 0.04045f ? c / 12.92f : glm::pow((c + 0.055f) / 1.055f, 2.4f);
+}
+
+ATCG_HOST_DEVICE inline float lRGB_to_sRGB_channel(const float c)
+{
+    return c <= 0.0031308 ? 12.92f * c : 1.055f * glm::pow(c, 1.0f / 2.4f) - 0.055f;
+}
+}    // namespace detail
+
+ATCG_HOST_DEVICE inline glm::u8vec3 quantize(const glm::vec3& color)
+{
+    return glm::u8vec3(detail::quantize_channel(color.x),
+                       detail::quantize_channel(color.y),
+                       detail::quantize_channel(color.z));
+}
+
+ATCG_HOST_DEVICE inline glm::vec3 dequantize(const glm::u8vec3& color)
+{
+    return glm::vec3(detail::dequantize_channel(color.x),
+                     detail::dequantize_channel(color.y),
+                     detail::dequantize_channel(color.z));
+}
+
+ATCG_HOST_DEVICE inline glm::u8vec4 quantize(const glm::vec4& color)
+{
+    return glm::u8vec4(quantize(glm::vec3(color)), detail::quantize_channel(color.a));
+}
+
+ATCG_HOST_DEVICE inline glm::vec4 dequantize(const glm::u8vec4& color)
+{
+    return glm::vec4(dequantize(glm::vec3(color)), detail::dequantize_channel(color.a));
+}
+
+ATCG_HOST_DEVICE inline glm::vec3 sRGB_to_lRGB(const glm::vec3& color)
+{
+    return glm::vec3(detail::sRGB_to_lRGB_channel(color.x),
+                     detail::sRGB_to_lRGB_channel(color.y),
+                     detail::sRGB_to_lRGB_channel(color.z));
+}
+
+ATCG_HOST_DEVICE inline glm::vec3 lRGB_to_sRGB(const glm::vec3& color)
+{
+    return glm::vec3(detail::lRGB_to_sRGB_channel(color.x),
+                     detail::lRGB_to_sRGB_channel(color.y),
+                     detail::lRGB_to_sRGB_channel(color.z));
+}
+
+ATCG_HOST_DEVICE inline glm::vec3 sRGB_to_XYZ(const glm::vec3& color)
+{
+    glm::vec3 lRGB = sRGB_to_lRGB(color);
+    return lRGB_to_XYZ(lRGB);
+}
+
+ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_sRGB(const glm::vec3& color)
+{
+    glm::vec3 lRGB = XYZ_to_lRGB(color);
+    return lRGB_to_sRGB(lRGB);
+}
+
+ATCG_HOST_DEVICE inline glm::vec3 lRGB_to_XYZ(const glm::vec3& color)
+{
+    return detail::lRGB_to_XYZ_transform * color;
+}
+
+ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_lRGB(const glm::vec3& color)
+{
+    return detail::XYZ_to_lRBB_transform * color;
+}
+}    // namespace Color
+}    // namespace atcg

@@ -49,6 +49,7 @@
 #include <Math/Functions.h>
 #include <Math/Utils.h>
 #include <Math/Tracing.h>
+#include <Math/Color.h>
 
 //-------- ImGui -----------
 #include <ImGui/Guizmo.h>
