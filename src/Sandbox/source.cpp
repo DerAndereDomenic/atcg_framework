@@ -23,6 +23,84 @@ public:
         atcg::Renderer::drawCircle(transform.getPosition(), 0.1f, 0.2f, glm::vec3(1), camera);
     }
 
+    atcg::ref_ptr<atcg::Texture2D> createWhiteNoiseTexture2D(glm::ivec2 dim)
+    {
+        atcg::ref_ptr<atcg::Shader> compute_shader = atcg::ShaderManager::getShader("white_noise_2D");
+
+        atcg::TextureSpecification spec;
+        spec.width                            = dim.x;
+        spec.height                           = dim.y;
+        spec.format                           = atcg::TextureFormat::RFLOAT;
+        atcg::ref_ptr<atcg::Texture2D> result = atcg::Texture2D::create(spec);
+
+        result->useForCompute();
+
+        // Use 8x8x1 = 64 thread sized work group
+        compute_shader->dispatch(glm::ivec3(ceil(dim.x / 8), ceil(dim.y / 8), 1));
+
+        return result;
+    }
+
+    atcg::ref_ptr<atcg::Texture3D> createWhiteNoiseTexture3D(glm::ivec3 dim)
+    {
+        atcg::ref_ptr<atcg::Shader> compute_shader = atcg::ShaderManager::getShader("white_noise_3D");
+
+        atcg::TextureSpecification spec;
+        spec.width                            = dim.x;
+        spec.height                           = dim.y;
+        spec.depth                            = dim.z;
+        spec.format                           = atcg::TextureFormat::RFLOAT;
+        atcg::ref_ptr<atcg::Texture3D> result = atcg::Texture3D::create(spec);
+
+        result->useForCompute();
+
+        // Use 4x4x4 = 64 thread sized work group
+        compute_shader->dispatch(glm::ivec3(ceil(dim.x / 4), ceil(dim.y / 4), ceil(dim.z / 4)));
+
+        return result;
+    }
+
+    atcg::ref_ptr<atcg::Texture2D> createWorleyNoiseTexture2D(glm::ivec2 dim, uint32_t num_points)
+    {
+        atcg::ref_ptr<atcg::Shader> compute_shader = atcg::ShaderManager::getShader("worly_noise_2D");
+
+        atcg::TextureSpecification spec;
+        spec.width                            = dim.x;
+        spec.height                           = dim.y;
+        spec.format                           = atcg::TextureFormat::RFLOAT;
+        atcg::ref_ptr<atcg::Texture2D> result = atcg::Texture2D::create(spec);
+
+
+        // Use 8x8x1 = 64 thread sized work group
+        compute_shader->setInt("num_points", num_points);
+        compute_shader->use();
+        result->useForCompute();
+        compute_shader->dispatch(glm::ivec3(ceil(dim.x / 8), ceil(dim.y / 8), 1));
+
+        return result;
+    }
+
+    atcg::ref_ptr<atcg::Texture3D> createWorleyNoiseTexture3D(glm::ivec3 dim, uint32_t num_points)
+    {
+        atcg::ref_ptr<atcg::Shader> compute_shader = atcg::ShaderManager::getShader("worly_noise_3D");
+
+        atcg::TextureSpecification spec;
+        spec.width                            = dim.x;
+        spec.height                           = dim.y;
+        spec.depth                            = dim.z;
+        spec.format                           = atcg::TextureFormat::RFLOAT;
+        atcg::ref_ptr<atcg::Texture3D> result = atcg::Texture3D::create(spec);
+
+
+        // Use 8x8x1 = 64 thread sized work group
+        compute_shader->setInt("num_points", num_points);
+        compute_shader->use();
+        result->useForCompute();
+        compute_shader->dispatch(glm::ivec3(ceil(dim.x / 4), ceil(dim.y / 4), ceil(dim.z / 4)));
+
+        return result;
+    }
+
     // This is run at the start of the program
     virtual void onAttach() override
     {
@@ -34,9 +112,19 @@ public:
 
         cube = atcg::IO::read_mesh("res/cube.obj");
 
-        atcg::ShaderManager::addShaderFromName("volume");
+        atcg::ShaderManager::addShader("volume",
+                                       atcg::make_ref<atcg::Shader>("src/Sandbox/volume.vs", "src/Sandbox/volume.fs"));
+        atcg::ShaderManager::addShader("white_noise_2D",
+                                       atcg::make_ref<atcg::Shader>("src/Sandbox/white_noise_2D.glsl"));
+        atcg::ShaderManager::addShader("white_noise_3D",
+                                       atcg::make_ref<atcg::Shader>("src/Sandbox/white_noise_3D.glsl"));
+        atcg::ShaderManager::addShader("worly_noise_2D",
+                                       atcg::make_ref<atcg::Shader>("src/Sandbox/worly_noise_2D.glsl"));
+        atcg::ShaderManager::addShader("worly_noise_3D",
+                                       atcg::make_ref<atcg::Shader>("src/Sandbox/worly_noise_3D.glsl"));
 
-        noise_texture = atcg::Noise::createWorleyNoiseTexture3D(glm::ivec3(128), num_points);
+
+        noise_texture = createWorleyNoiseTexture3D(glm::ivec3(128), num_points);
 
         scene       = atcg::make_ref<atcg::Scene>();
         cube_entity = scene->createEntity();
@@ -94,7 +182,7 @@ public:
 
             if(ImGui::SliderInt("Number of points", reinterpret_cast<int*>(&num_points), 1, 512))
             {
-                noise_texture = atcg::Noise::createWorleyNoiseTexture3D(glm::ivec3(128), num_points);
+                noise_texture = createWorleyNoiseTexture3D(glm::ivec3(128), num_points);
             }
 
             ImGui::InputFloat("sigma_s_base", &sigma_s_base);

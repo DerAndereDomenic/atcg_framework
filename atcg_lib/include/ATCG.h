@@ -50,9 +50,6 @@
 #include <Math/Utils.h>
 #include <Math/Tracing.h>
 
-//-------- Utility -----------
-#include <Noise/Noise.h>
-
 //-------- ImGui -----------
 #include <ImGui/Guizmo.h>
 

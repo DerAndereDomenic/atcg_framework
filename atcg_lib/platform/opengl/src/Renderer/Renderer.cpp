@@ -329,10 +329,6 @@ void Renderer::init(uint32_t width, uint32_t height)
     ShaderManager::addShaderFromName("cubeMapConvolution");
     ShaderManager::addShaderFromName("prefilter_cubemap");
     ShaderManager::addShaderFromName("vrScreen");
-    ShaderManager::addComputerShaderFromName("white_noise_2D");
-    ShaderManager::addComputerShaderFromName("white_noise_3D");
-    ShaderManager::addComputerShaderFromName("worly_noise_2D");
-    ShaderManager::addComputerShaderFromName("worly_noise_3D");
 }
 
 void Renderer::finishFrame()
