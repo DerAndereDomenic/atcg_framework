@@ -270,10 +270,6 @@ Math
    :project: ATCGLIB
 .. doxygenfunction:: atcg::Tracing::traceRay
    :project: ATCGLIB
-.. doxygenfunction:: atcg::areaFromMetric
-   :project: ATCGLIB
-.. doxygenfunction:: atcg::Math::sphericalHarmonic
-   :project: ATCGLIB
 .. doxygenfunction:: atcg::Math::ceil_div
    :project: ATCGLIB
 
