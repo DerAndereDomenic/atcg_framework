@@ -46,6 +46,7 @@
 #include <DataStructure/Image.h>
 
 //-------- Math -----------
+#include <Math/Constants.h>
 #include <Math/Functions.h>
 #include <Math/Utils.h>
 #include <Math/Tracing.h>
