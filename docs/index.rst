@@ -270,22 +270,7 @@ Math
    :project: ATCGLIB
 .. doxygenfunction:: atcg::Tracing::traceRay
    :project: ATCGLIB
-.. doxygenfunction:: atcg::areaFromMetric
-   :project: ATCGLIB
-.. doxygenfunction:: atcg::Math::sphericalHarmonic
-   :project: ATCGLIB
 .. doxygenfunction:: atcg::Math::ceil_div
-   :project: ATCGLIB
-
-Noise
-=====
-.. doxygenfunction:: atcg::Noise::createWhiteNoiseTexture2D
-   :project: ATCGLIB
-.. doxygenfunction:: atcg::Noise::createWhiteNoiseTexture3D
-   :project: ATCGLIB
-.. doxygenfunction:: atcg::Noise::createWorleyNoiseTexture2D
-   :project: ATCGLIB
-.. doxygenfunction:: atcg::Noise::createWorleyNoiseTexture3D
    :project: ATCGLIB
 
 OpenMesh

@@ -116,10 +116,12 @@ public:
      * a host-device memcpy is required.
      *
      * @param device The device
+     * @param mip_level The mip level
      *
      * @return The data
      */
-    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU)) const = 0;
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
+                                  const uint32_t mip_level    = 0) const = 0;
 
     /**
      * @brief Get the width of the texture
@@ -361,10 +363,12 @@ public:
      * a host-device memcpy is required.
      *
      * @param device The device
+     * @param mip_level The mip level
      *
      * @return The data
      */
-    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU)) const override;
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
+                                  const uint32_t mip_level    = 0) const override;
 
     /**
      * @brief Use this texture
@@ -448,10 +452,12 @@ public:
      * a host-device memcpy is required.
      *
      * @param device The device
+     * @param mip_level The mip level
      *
      * @return The data
      */
-    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU)) const override;
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
+                                  const uint32_t mip_level    = 0) const override;
 
     /**
      * @brief Use this texture
@@ -505,10 +511,15 @@ public:
      * a host-device memcpy is required.
      *
      * @param device The device
+     * @param mip_level The mip level
      *
      * @return The data
      */
-    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU)) const override { return {}; }
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
+                                  const uint32_t mip_level    = 0) const override
+    {
+        return {};
+    }
 
     /**
      * @brief Use this texture

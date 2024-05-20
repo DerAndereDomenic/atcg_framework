@@ -23,7 +23,7 @@ public:
     virtual void onAttach() override
     {
         atcg::Application::get()->enableDockSpace(true);
-        /*const auto& window = atcg::Application::get()->getWindow();
+        const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
@@ -69,8 +69,7 @@ public:
 
         plane = atcg::IO::read_mesh("res/plane_low.obj");
 
-        checkerboard_shader =
-            atcg::make_ref<atcg::Shader>("exercises/Cloth/checkerboard.vs", "exercises/Cloth/checkerboard.fs");
+        checkerboard_shader = atcg::make_ref<atcg::Shader>("src/Cloth/checkerboard.vs", "src/Cloth/checkerboard.fs");
         checkerboard_shader->setFloat("checker_size", 0.1f);
 
         scene = atcg::make_ref<atcg::Scene>();
@@ -78,7 +77,8 @@ public:
         atcg::Entity grid_entity = scene->createEntity("Cloth");
         grid_entity.addComponent<atcg::GeometryComponent>(grid);
         grid_entity.addComponent<atcg::PointSphereRenderComponent>();
-        grid_entity.addComponent<atcg::EdgeCylinderRenderComponent>();
+        auto& edge_renderer  = grid_entity.addComponent<atcg::EdgeCylinderRenderComponent>();
+        edge_renderer.radius = 0.5f;
         grid_entity.addComponent<atcg::TransformComponent>();
 
         atcg::Entity plane_entity = scene->createEntity("Plane");
@@ -88,29 +88,7 @@ public:
         transform.setScale(glm::vec3(100, 100, 100));
 
         atcg::Entity camera_entity = scene->createEntity("EditorCamera");
-        camera_entity.addComponent<atcg::EditorCameraComponent>(camera_controller->getCamera());*/
-
-        scene = atcg::make_ref<atcg::Scene>();
-        atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
-        serializer.deserialize("res/Cloth/Scene.yaml");
-
-        auto entities = scene->getEntitiesByName("EditorCamera");
-        auto& camera  = entities[0].getComponent<atcg::EditorCameraComponent>();
-        camera_controller =
-            atcg::make_ref<atcg::FocusedController>(std::dynamic_pointer_cast<atcg::PerspectiveCamera>(camera.camera));
-
-        entities   = scene->getEntitiesByName("Plane");
-        auto& comp = entities[0].getComponent<atcg::MeshRenderComponent>();
-        comp.shader->setFloat("checker_size", 0.1f);
-
-        // atcg::Entity entity     = scene->createEntity("Test Camera");
-        // auto& camera_component  = entity.addComponent<atcg::CameraComponent>();
-        // camera_component.camera = atcg::make_ref<atcg::PerspectiveCamera>(1.0f, glm::vec3(0, 0, -1));
-        // auto& transform         = entity.addComponent<atcg::TransformComponent>();
-        // transform.setPosition(camera_component.camera->getPosition());
-        // glm::vec3 rotation;
-        // glm::extractEulerAngleXYZ(camera_component.camera->getView(), rotation.x, rotation.y, rotation.z);
-        // transform.setRotation(rotation);
+        camera_entity.addComponent<atcg::EditorCameraComponent>(camera_controller->getCamera());
 
         panel = atcg::SceneHierarchyPanel(scene);
     }

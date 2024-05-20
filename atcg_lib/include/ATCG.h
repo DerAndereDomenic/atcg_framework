@@ -51,12 +51,11 @@
 #include <DataStructure/Image.h>
 
 //-------- Math -----------
+#include <Math/Constants.h>
 #include <Math/Functions.h>
 #include <Math/Utils.h>
 #include <Math/Random.h>
-
-//-------- Utility -----------
-#include <Noise/Noise.h>
+#include <Math/Color.h>
 
 //-------- ImGui -----------
 #include <ImGui/Guizmo.h>

@@ -9,7 +9,7 @@ This framework is primarily tested on Windows using MSVC. For Linux, gcc is reco
 After installing the dependencies, clone the repository recursively (to include submodules)
 
 ```
-git clone --recursive git@github.com:DerAndereDomenic/atcg_framework.git
+git clone --recursive https://grossglockner.cs.uni-bonn.de/zingsheim/atcg_framework.git
 ```
 
 If you already cloned the repository without recursive cloning, run
@@ -53,7 +53,7 @@ The project consists of the following components:
 
 -**atcg_lib**: This library handles the rendering and event handling of the application. It defines an entry point for each application that uses this library. Each executable uses this entry point to build its application.
 
--**exercises**: Contains the targets for each executable. See _How to use_ for more details on its structure.
+-**src**: Contains the targets for each executable. See _How to use_ for more details on its structure.
 
 -**shader**: Contains the opengl shaders used for rendering. You can add custom shaders by providing a vertex (`<name>.vs`), fragment (`<name>.fs`), and (optionally) a geometry (`<name>.gs`) shader. To use them in a project you have to add it via
 
@@ -211,19 +211,19 @@ p->foo();
 T* raw = p.get();
 ```
 
-This allows us to introduce host and device shared pointers if CUDA support is enabled. By using the device allocator
+This implementation is used to implement CUDA shared pointers (if enabled) and can be used like:
 
 ```c++
-atcg::ref_ptr<T, atcg::device_allocator> p;
+atcg::dref_ptr<T> p;
 ```
 
-this shared pointer acts as a standard std::shared_ptr but handles CUDA device memory (i.e. the memory is freed if the internal references count reaches zero).
+This shared pointer acts as a standard std::shared_ptr but handles CUDA device memory (i.e. the memory is freed if the internal references count reaches zero).
 
-IMPORTANT: Note that CUDAs memory API is more a C than C++ API. Therefore object construction works a bit differently. Do NOT use atcg::make_shared when constructing a device ptr but use the given constructors. To initialize an object correctly, you have to copy it from host.
+**IMPORTANT**: Note that CUDAs memory API is more a C than C++ API. Therefore object construction works a bit differently. Do NOT use atcg::make_shared when constructing a device ptr but use the given constructors. To initialize an object correctly, you have to copy it from host.
 
 ```c++
 // Creates a device buffer with 10 ints
-atcg::DeviceBuffer<int, atcg::device_allocator> p(10);
+atcg::DeviceBuffer<int> p(10);
 
 // ...
 
@@ -233,6 +233,20 @@ T host_object(...);
 atcg::dref_ptr<T> device_ptr;
 device_ptr.upload(&host_object);
 ```
+
+## Torch API
+
+Many (OpenGL) objects offer torch interfaces to handle device memory. This allows for efficient manipulation of device buffers with host-device memory uploads. For example, for meshes:
+
+```c++
+auto positions = graph->getPositions(atcg::GPU); // Get a direct pointer to OpenGL buffer
+auto colors    = graph->getDeviceColors();
+auto normals   = graph->getHostNormals(); // Map OpenGL buffer to host memory (requires copy)
+```
+
+When mapping OpenGL buffers to CUDA, one has to make sure that the memory is unmapped before any further OpenGL operations use this memory. This can be done using the `graph->unamp<Device|Host|All>Pointer()` methods.
+
+There is also a CUDA API for textures. However, because textures work differently to standard memory buffers, it is not possible to retreive a simple pointer to the memory addresses but the texture is binded to a `cudaArray_t` objet. This can be converted to a `cudaTextureObject_t` or `cudaSurfaceObject_t` to read or write to texture memory in CUDA kernels. Texture data can also be retreived/set using torch tensors. In this case (for 1 and 4 channel textures), the texture data is uploaded using a device-device copy.
 
 ## Dependencies (included)
 
