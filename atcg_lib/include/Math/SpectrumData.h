@@ -10,6 +10,7 @@ namespace Spectral
 constexpr int D65_MIN_LAMBDA  = 300;
 constexpr int D65_MAX_LAMBDA  = 780;
 constexpr int D65_STEP_LAMBDA = 5;
+constexpr int D65_SIZE        = 97;
 
 constexpr float D65_data[] = {
     0.0341f,  1.6643f,  3.2945f,  11.7652f, 20.236f,  28.6447f, 37.0535f, 38.5011f, 39.9488f, 42.4302f, 44.9117f,
@@ -27,6 +28,7 @@ constexpr float D65_data[] = {
 constexpr int SPECTRAL_BASIS_MIN_LAMBDA  = 380;
 constexpr int SPECTRAL_BASIS_MAX_LAMBDA  = 780;
 constexpr int SPECTRAL_BASIS_STEP_LAMBDA = 5;
+constexpr int SPECTRAL_BASIS_SIZE        = 81;
 
 constexpr float basis_Sr_data[] = {
     0.327457413827055f,   0.323750578270541f,   0.313439461251577f,   0.288879382755265f,   0.239205681158886f,

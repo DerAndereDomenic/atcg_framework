@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Math/Constants.h>
+#include <Math/Utils.h>
 
 namespace atcg
 {
@@ -41,6 +42,27 @@ template<typename T>
 ATCG_HOST_DEVICE inline T g(const T x, const T mu, const T t1, const T t2)
 {
     return x < mu ? glm::exp(-t1 * t1 * (x - mu) * (x - mu) / 2) : glm::exp(-t2 * t2 * (x - mu) * (x - mu) / 2);
+}
+
+/**
+ * @brief Read from an array and linear interpolate between neighboring entries.
+ *
+ * @tparam T The datatype
+ * @param data The array data
+ * @param size The array size
+ * @param index The float index
+ *
+ * @return The interpolated value
+ */
+template<typename T>
+ATCG_HOST_DEVICE T read_array_interpolated(const T* data, const uint32_t size, const float index)
+{
+    T idx              = glm::clamp(index, T(0), T(size - 1));
+    uint32_t bin_index = (uint32_t)idx;
+    T fract_index      = idx - T(bin_index);    // glm::fract
+
+    return bin_index < size - 1 ? (T(1.0) - fract_index) * data[bin_index] + fract_index * data[bin_index + 1]
+                                : (T(1.0) + fract_index) * data[bin_index] - fract_index * data[bin_index - 1];
 }
 }    // namespace detail
 
@@ -151,6 +173,41 @@ ATCG_HOST_DEVICE inline T planck(const T lambda, const T temperature)
          T(1.0));
 
     return num / denom;
+}
+
+template<typename T>
+ATCG_HOST_DEVICE inline T D65(const T lambda)
+{
+    float index = (lambda - atcg::Spectral::D65_MIN_LAMBDA) /
+                  (atcg::Spectral::D65_MAX_LAMBDA - atcg::Spectral::D65_MIN_LAMBDA) * atcg::Spectral::D65_SIZE;
+    return detail::read_array_interpolated(atcg::Spectral::D65_data, atcg::Spectral::D65_SIZE, index);
+}
+
+template<typename T>
+ATCG_HOST_DEVICE inline T Sr(const T lambda)
+{
+    float index = (lambda - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) /
+                  (atcg::Spectral::SPECTRAL_BASIS_MAX_LAMBDA - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) *
+                  atcg::Spectral::SPECTRAL_BASIS_SIZE;
+    return detail::read_array_interpolated(atcg::Spectral::basis_Sr_data, atcg::Spectral::SPECTRAL_BASIS_SIZE, index);
+}
+
+template<typename T>
+ATCG_HOST_DEVICE inline T Sg(const T lambda)
+{
+    float index = (lambda - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) /
+                  (atcg::Spectral::SPECTRAL_BASIS_MAX_LAMBDA - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) *
+                  atcg::Spectral::SPECTRAL_BASIS_SIZE;
+    return detail::read_array_interpolated(atcg::Spectral::basis_Sg_data, atcg::Spectral::SPECTRAL_BASIS_SIZE, index);
+}
+
+template<typename T>
+ATCG_HOST_DEVICE inline T Sb(const T lambda)
+{
+    float index = (lambda - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) /
+                  (atcg::Spectral::SPECTRAL_BASIS_MAX_LAMBDA - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) *
+                  atcg::Spectral::SPECTRAL_BASIS_SIZE;
+    return detail::read_array_interpolated(atcg::Spectral::basis_Sb_data, atcg::Spectral::SPECTRAL_BASIS_SIZE, index);
 }
 }    // namespace Color
 }    // namespace atcg

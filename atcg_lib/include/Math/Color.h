@@ -162,6 +162,62 @@ ATCG_HOST_DEVICE inline T color_matching_z(const T lambda);
  */
 template<typename T>
 ATCG_HOST_DEVICE inline T planck(const T lambda, const T temperature);
+
+/**
+ * @brief Evalute the D65 standard illuminant function.
+ * Values have to be between 300nm and 780nm.
+ * The spectral data is normalized s.t. the discrete version of D65(560) = 100. However, due to interpolation there
+ * might be deviations from this value.
+ *
+ * @tparam T The type
+ * @param lambda The wavelength in nm
+ *
+ * @return The spectral radiance
+ */
+template<typename T>
+ATCG_HOST_DEVICE inline T D65(const T lambda);
+
+/**
+ * @brief The red basis function for spectral upsampling from "Spectral Primary Decomposition for Rendering with sRGB
+ * Reflectance" by Mallett et al, 2019
+ *
+ * Wavelength between 380nm and 780nm
+ *
+ * @tparam T The data type
+ * @param lambda The wavelength in nm
+ *
+ * @return The spectral weight for the red channel
+ */
+template<typename T>
+ATCG_HOST_DEVICE inline T Sr(const T lambda);
+
+/**
+ * @brief The green basis function for spectral upsampling from "Spectral Primary Decomposition for Rendering with sRGB
+ * Reflectance" by Mallett et al, 2019
+ *
+ * Wavelength between 380nm and 780nm
+ *
+ * @tparam T The data type
+ * @param lambda The wavelength in nm
+ *
+ * @return The spectral weight for the green channel
+ */
+template<typename T>
+ATCG_HOST_DEVICE inline T Sg(const T lambda);
+
+/**
+ * @brief The blue basis function for spectral upsampling from "Spectral Primary Decomposition for Rendering with sRGB
+ * Reflectance" by Mallett et al, 2019
+ *
+ * Wavelength between 380nm and 780nm
+ *
+ * @tparam T The data type
+ * @param lambda The wavelength in nm
+ *
+ * @return The spectral weight for the blue channel
+ */
+template<typename T>
+ATCG_HOST_DEVICE inline T Sb(const T lambda);
 }    // namespace Color
 }    // namespace atcg
 
