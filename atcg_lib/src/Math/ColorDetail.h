@@ -34,6 +34,12 @@ ATCG_HOST_DEVICE inline float lRGB_to_sRGB_channel(const float c)
 {
     return c <= 0.0031308 ? 12.92f * c : 1.055f * glm::pow(c, 1.0f / 2.4f) - 0.055f;
 }
+
+template<typename T>
+ATCG_HOST_DEVICE inline T g(const T x, const T mu, const T t1, const T t2)
+{
+    return x < mu ? glm::exp(-t1 * t1 * (x - mu) * (x - mu) / 2) : glm::exp(-t2 * t2 * (x - mu) * (x - mu) / 2);
+}
 }    // namespace detail
 
 ATCG_HOST_DEVICE inline glm::u8vec3 quantize(const glm::vec3& color)
@@ -106,6 +112,28 @@ ATCG_HOST_DEVICE inline float sRGB_to_luminance(const glm::vec3& color)
 {
     auto lRGB = sRGB_to_lRGB(color);
     return lRGB_to_luminance(lRGB);
+}
+
+template<typename T>
+ATCG_HOST_DEVICE inline T color_matching_x(const T lambda)
+{
+    return T(1.056) * detail::g(lambda, T(599.8), T(0.0264), T(0.0323)) +
+           T(0.362) * detail::g(lambda, T(442.0), T(0.0624), T(0.0374)) -
+           T(0.065) * detail::g(lambda, T(501.1), T(0.0490), T(0.0382));
+}
+
+template<typename T>
+ATCG_HOST_DEVICE inline T color_matching_y(const T lambda)
+{
+    return T(0.821) * detail::g(lambda, T(568.8), T(0.0213), T(0.0247)) +
+           T(0.286) * detail::g(lambda, T(530.9), T(0.0613), T(0.0322));
+}
+
+template<typename T>
+ATCG_HOST_DEVICE inline T color_matching_z(const T lambda)
+{
+    return T(1.217) * detail::g(lambda, T(437.0), T(0.0845), T(0.0278)) +
+           T(0.681) * detail::g(lambda, T(459.0), T(0.0385), T(0.0725));
 }
 }    // namespace Color
 }    // namespace atcg

@@ -113,6 +113,42 @@ ATCG_HOST_DEVICE inline float lRGB_to_luminance(const glm::vec3& color);
  * @return The luminance
  */
 ATCG_HOST_DEVICE inline float sRGB_to_luminance(const glm::vec3& color);
+
+/**
+ * @brief The color matching function x_bar.
+ * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions)
+ *
+ * @tparam T The type
+ * @param lambda The wavelength in nm
+ *
+ * @return x_bar(lambda)
+ */
+template<typename T>
+ATCG_HOST_DEVICE inline T color_matching_x(const T lambda);
+
+/**
+ * @brief The color matching function y_bar.
+ * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions)
+ *
+ * @tparam T The type
+ * @param lambda The wavelength in nm
+ *
+ * @return y_bar(lambda)
+ */
+template<typename T>
+ATCG_HOST_DEVICE inline T color_matching_y(const T lambda);
+
+/**
+ * @brief The color matching function z_bar.
+ * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions)
+ *
+ * @tparam T The type
+ * @param lambda The wavelength in nm
+ *
+ * @return z_bar(lambda)
+ */
+template<typename T>
+ATCG_HOST_DEVICE inline T color_matching_z(const T lambda);
 }    // namespace Color
 }    // namespace atcg
 
