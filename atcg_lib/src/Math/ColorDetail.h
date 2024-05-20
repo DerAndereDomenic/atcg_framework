@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Math/Constants.h>
+
 namespace atcg
 {
 namespace Color
@@ -134,6 +136,21 @@ ATCG_HOST_DEVICE inline T color_matching_z(const T lambda)
 {
     return T(1.217) * detail::g(lambda, T(437.0), T(0.0845), T(0.0278)) +
            T(0.681) * detail::g(lambda, T(459.0), T(0.0385), T(0.0725));
+}
+
+template<typename T>
+ATCG_HOST_DEVICE inline T planck(const T lambda, const T temperature)
+{
+    T lambda_m      = lambda * T(1e-9);
+    constexpr T c_2 = Constants::c<T>() * Constants::c<T>();
+    T num           = T(2.0) * Constants::h<T>() * c_2;
+    T lambda_m_5    = lambda_m * lambda_m * lambda_m * lambda_m * lambda_m;
+    T denom =
+        lambda_m_5 *
+        (glm::exp((Constants::h<T>() * Constants::c<T>()) / (lambda_m * Constants::boltzmann<T>() * temperature)) -
+         T(1.0));
+
+    return num / denom;
 }
 }    // namespace Color
 }    // namespace atcg

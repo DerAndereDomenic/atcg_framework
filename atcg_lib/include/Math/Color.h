@@ -149,6 +149,18 @@ ATCG_HOST_DEVICE inline T color_matching_y(const T lambda);
  */
 template<typename T>
 ATCG_HOST_DEVICE inline T color_matching_z(const T lambda);
+
+/**
+ * @brief Get the planck spectrum for a given wavelength and temperature
+ *
+ * @tparam T The type
+ * @param lambda The wavelength (in nm)
+ * @param temperature The temperature (in K)
+ *
+ * @return The planck spectrum
+ */
+template<typename T>
+ATCG_HOST_DEVICE inline T planck(const T lambda, const T temperature);
 }    // namespace Color
 }    // namespace atcg
 
