@@ -95,5 +95,17 @@ ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_lRGB(const glm::vec3& color)
 {
     return detail::XYZ_to_lRBB_transform * color;
 }
+
+ATCG_HOST_DEVICE inline float lRGB_to_luminance(const glm::vec3& color)
+{
+    const glm::vec3 luminance_weights = glm::row(detail::lRGB_to_XYZ_transform, 1);
+    return glm::dot(luminance_weights, color);
+}
+
+ATCG_HOST_DEVICE inline float sRGB_to_luminance(const glm::vec3& color)
+{
+    auto lRGB = sRGB_to_lRGB(color);
+    return lRGB_to_luminance(lRGB);
+}
 }    // namespace Color
 }    // namespace atcg

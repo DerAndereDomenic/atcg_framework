@@ -95,6 +95,24 @@ ATCG_HOST_DEVICE inline glm::vec3 lRGB_to_XYZ(const glm::vec3& color);
  * @return The lRGB representation
  */
 ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_lRGB(const glm::vec3& color);
+
+/**
+ * @brief Get the luminace (Y) of the lRGB color
+ *
+ * @param color The lRGB color
+ *
+ * @return The luminance
+ */
+ATCG_HOST_DEVICE inline float lRGB_to_luminance(const glm::vec3& color);
+
+/**
+ * @brief Get the luminace (Y) of the sRGB color
+ *
+ * @param color The sRGB color
+ *
+ * @return The luminance
+ */
+ATCG_HOST_DEVICE inline float sRGB_to_luminance(const glm::vec3& color);
 }    // namespace Color
 }    // namespace atcg
 
