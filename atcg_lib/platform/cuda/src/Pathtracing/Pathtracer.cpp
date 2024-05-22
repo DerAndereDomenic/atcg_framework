@@ -20,6 +20,7 @@
 
 #include <Pathtracing/RaytracingShaderManager.h>
 #include <Pathtracing/Shader/PathtracingShader.h>
+#include <Pathtracing/Shader/BDPathtracingShader.h>
 
 namespace atcg
 {
@@ -123,8 +124,14 @@ void Pathtracer::init()
 
     OPTIX_CHECK(optixDeviceContextCreate(cuCtx, &options, &s_pathtracer->impl->context));
 
-    auto shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context);
-    atcg::RaytracingShaderManager::addShader("Pathtracing", shader);
+    {
+        auto shader = atcg::make_ref<PathtracingShader>(s_pathtracer->impl->context);
+        atcg::RaytracingShaderManager::addShader("Pathtracing", shader);
+    }
+    {
+        auto shader = atcg::make_ref<BDPathtracingShader>(s_pathtracer->impl->context);
+        atcg::RaytracingShaderManager::addShader("bdpt", shader);
+    }
 }
 
 void Pathtracer::destroy()
