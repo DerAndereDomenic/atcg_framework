@@ -75,7 +75,11 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         if(material.emissive)
         {
             glm::mat4 transform = entity.getComponent<atcg::TransformComponent>().getModel();
-            emitter = atcg::make_ref<MeshEmitter>(accel->getPositions(), accel->getFaces(), transform, material);
+            emitter             = atcg::make_ref<MeshEmitter>(accel->getPositions(),
+                                                  accel->getUVs(),
+                                                  accel->getFaces(),
+                                                  transform,
+                                                  material);
             emitter->initializePipeline(pipeline, sbt);
         }
 

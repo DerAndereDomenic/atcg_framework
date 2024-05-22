@@ -21,6 +21,7 @@ struct EmitterSamplingResult
 struct MeshEmitterData
 {
     glm::vec3* positions;
+    glm::vec3* uvs;
     glm::u32vec3* faces;
     uint32_t num_faces;
 

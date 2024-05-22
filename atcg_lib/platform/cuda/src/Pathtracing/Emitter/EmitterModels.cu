@@ -69,6 +69,7 @@ __global__ void normalizeMeshTriangleCDFKernel(torch::PackedTensorAccessor32<flo
 }    // namespace detail
 
 MeshEmitter::MeshEmitter(const torch::Tensor& positions,
+                         const torch::Tensor& uvs,
                          const torch::Tensor& faces,
                          const glm::mat4& transform,
                          const Material& material)
@@ -82,6 +83,7 @@ MeshEmitter::MeshEmitter(const torch::Tensor& positions,
     data.emitter_scaling = material.emission_scale;
 
     data.positions = (glm::vec3*)positions.data_ptr();
+    data.uvs       = (glm::vec3*)uvs.data_ptr();
     data.faces     = (glm::u32vec3*)faces.data_ptr();
     data.num_faces = faces.size(0);
 

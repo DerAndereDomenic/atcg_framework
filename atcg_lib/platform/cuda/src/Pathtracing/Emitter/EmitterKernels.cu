@@ -53,11 +53,19 @@ __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::
     glm::vec3 P1 = sbt_data->positions[vertex_indices.y];
     glm::vec3 P2 = sbt_data->positions[vertex_indices.z];
 
+    glm::vec3 UV0 = sbt_data->uvs[vertex_indices.x];
+    glm::vec3 UV1 = sbt_data->uvs[vertex_indices.y];
+    glm::vec3 UV2 = sbt_data->uvs[vertex_indices.z];
+
     // Compute local position
     glm::vec3 local_light_position =
         (1.0f - triangle_barys.x - triangle_barys.y) * P0 + triangle_barys.x * P1 + triangle_barys.y * P2;
     // Transform local position to world position
     glm::vec3 light_position = glm::vec3(sbt_data->local_to_world * glm::vec4(local_light_position, 1));
+
+    // Compute UVS
+    glm::vec3 uvs =
+        (1.0f - triangle_barys.x - triangle_barys.y) * UV0 + triangle_barys.x * UV1 + triangle_barys.y * UV2;
 
     // Compute local normal
     glm::vec3 local_light_normal = glm::cross(P1 - P0, P2 - P0);
@@ -77,7 +85,7 @@ __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::
     float cos_theta_on_light           = glm::abs(glm::dot(result.direction_to_light, light_normal));
     float one_over_light_direction_pdf = one_over_light_position_pdf * cos_theta_on_light / distance_to_light_squared;
 
-    float4 color_u           = tex2D<float4>(sbt_data->emissive_texture, si.uv.x, si.uv.y);
+    float4 color_u           = tex2D<float4>(sbt_data->emissive_texture, uvs.x, uvs.y);
     glm::vec3 emissive_color = glm::vec3(color_u.x, color_u.y, color_u.z);
 
     result.radiance_weight_at_receiver = sbt_data->emitter_scaling * emissive_color * one_over_light_direction_pdf;

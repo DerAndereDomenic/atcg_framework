@@ -11,6 +11,7 @@ class MeshEmitter : public OptixEmitter
 {
 public:
     MeshEmitter(const torch::Tensor& positions,
+                const torch::Tensor& uvs,
                 const torch::Tensor& faces,
                 const glm::mat4& transform,
                 const Material& material);
