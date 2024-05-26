@@ -96,7 +96,7 @@ void BDPathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipel
     _emitter_tables = atcg::DeviceBuffer<const atcg::EmitterVPtrTable*>(emitter_tables.size());
     _emitter_tables.upload(emitter_tables.data());
 
-    const std::string ptx_raygen_filename = "./bin/PathtracingShader.ptx";
+    const std::string ptx_raygen_filename = "./bin/BDPathtracingShader.ptx";
     OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
     OptixProgramGroup miss_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
     OptixProgramGroup occl_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});

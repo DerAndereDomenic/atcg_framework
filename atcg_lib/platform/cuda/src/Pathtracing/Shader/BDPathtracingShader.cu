@@ -13,37 +13,32 @@ extern "C"
     __constant__ BDPathtracingParams params;
 }
 
-extern "C" __global__ void __raygen__rg()
+#define CAMERA_PATH_LENGTH 10    // 0 - eye camera 1-14 - scatter events
+#define LIGHT_PATH_LENGTH  10
+
+struct PathVertex
 {
-    uint3 launch_idx = optixGetLaunchIndex();
+    atcg::SurfaceInteraction si;
+    glm::vec3 throughput = glm::vec3(1.0f);
+};
 
-    uint32_t pixel_index = launch_idx.x + params.image_width * launch_idx.y;
-    uint64_t seed        = atcg::sampleTEA64(pixel_index, params.frame_counter);
-    atcg::PCG32 rng(seed);
+__device__ inline void generateSubPath(PathVertex path[CAMERA_PATH_LENGTH],
+                                       const uint32_t size,
+                                       const glm::vec3& ray_origin_,
+                                       const glm::vec3& ray_dir_,
+                                       atcg::PCG32& rng)
+{
+    glm::vec3 ray_origin = ray_origin_;
+    glm::vec3 ray_dir    = ray_dir_;
 
-    glm::vec2 jitter = rng.next2d();
-    float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
-    float v = (((float)(params.image_height - launch_idx.y) + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
-
-    glm::vec3 cam_eye = glm::make_vec3(params.cam_eye);
-    glm::vec3 U       = glm::make_vec3(params.U) * (float)params.image_width / (float)params.image_height;
-    glm::vec3 V       = glm::make_vec3(params.V);
-    glm::vec3 W       = glm::make_vec3(params.W) / glm::tan(glm::radians(params.fov_y / 2.0f));
-
-    glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
-    glm::vec3 ray_origin = cam_eye;
-    glm::vec3 radiance(0);
-    glm::vec3 throughput(1);
+    bool next_ray_valid = true;
 
     glm::vec3 next_origin;
     glm::vec3 next_dir;
 
-    bool next_ray_valid = true;
+    glm::vec3 throughput = path[0].throughput;
 
-    atcg::SurfaceInteraction last_si;
-    float last_bsdf_pdf = 1.0f;
-
-    for(int n = 0; n < 10; ++n)
+    for(int n = 1; n < size; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;
@@ -57,82 +52,201 @@ extern "C" __global__ void __raygen__rg()
                                                        &si,
                                                        params.surface_trace_params);
 
-        if(si.valid)
+        if(!si.valid)
         {
-            // Check for light source
-            if(si.emitter)
-            {
-                bool mis_valid             = last_si.valid;
-                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                radiance += mis_weight * throughput * si.emitter->evalLight(si);
-            }
-
-            // PBR Sampling
-            if(si.bsdf)
-            {
-                // Next-event estimation
-                for(uint32_t i = 0; i < params.num_emitters; ++i)
-                {
-                    const atcg::EmitterVPtrTable* emitter = params.emitters[i];
-
-                    if(si.emitter == emitter) continue;
-
-                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
-
-                    if(emitter_sampling.sampling_pdf == 0) continue;
-
-                    bool occluded = traceOcclusion(params.handle,
-                                                   si.position,
-                                                   emitter_sampling.direction_to_light,
-                                                   1e-3f,
-                                                   emitter_sampling.distance_to_light - 1e-3f,
-                                                   params.occlusion_trace_params);
-
-                    if(occluded)
-                    {
-                        continue;
-                    }
-
-                    atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
-
-                    float mis_weight = emitter_sampling.sampling_pdf /
-                                       (emitter_sampling.sampling_pdf + bsdf_result.sample_probability);
-
-                    radiance += mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
-                                bsdf_result.bsdf_value *
-                                glm::max(0.0f, glm::dot(si.normal, emitter_sampling.direction_to_light));
-                }
-
-                auto result = si.bsdf->sampleBSDF(si, rng);
-
-                if(result.sample_probability > 0.0f)
-                {
-                    next_origin = si.position;
-                    next_dir    = result.out_dir;
-                    throughput *= result.bsdf_weight;
-                    next_ray_valid = true;
-
-                    last_si       = si;
-                    last_bsdf_pdf = result.sample_probability;
-
-                    if((int)(si.bsdf->flags & atcg::BSDFComponentType::AnyDelta) != 0)
-                    {
-                        last_si.valid = false;
-                    }
-                }
-            }
-        }
-        else
-        {
-            if(params.environment_emitter)
-            {
-                radiance += throughput * params.environment_emitter->evalLight(si);
-            }
+            next_ray_valid = false;
+            break;
         }
 
-        ray_origin = next_origin;
-        ray_dir    = next_dir;
+        if(!si.bsdf)
+        {
+            next_ray_valid = false;
+            break;
+        }
+
+        PathVertex vertex;
+        vertex.si         = si;
+        vertex.throughput = throughput;
+        path[n]           = vertex;
+
+        // PBR Sampling
+        auto bsdf_sampling_result = si.bsdf->sampleBSDF(si, rng);
+
+        if(bsdf_sampling_result.sample_probability > 0.0f)
+        {
+            next_origin = si.position;
+            next_dir    = bsdf_sampling_result.out_dir;
+            throughput *= bsdf_sampling_result.bsdf_weight;
+            next_ray_valid = true;
+            ray_origin     = next_origin;
+            ray_dir        = next_dir;
+        }
+    }
+}
+
+__device__ inline void
+generateCameraPath(const uint3& launch_idx, PathVertex path[CAMERA_PATH_LENGTH], atcg::PCG32& rng)
+{
+    glm::vec2 jitter = rng.next2d();
+    float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
+    float v = (((float)(params.image_height - launch_idx.y) + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
+
+    glm::vec3 cam_eye = glm::make_vec3(params.cam_eye);
+    glm::vec3 U       = glm::make_vec3(params.U) * (float)params.image_width / (float)params.image_height;
+    glm::vec3 V       = glm::make_vec3(params.V);
+    glm::vec3 W       = glm::make_vec3(params.W) / glm::tan(glm::radians(params.fov_y / 2.0f));
+
+    glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
+    glm::vec3 ray_origin = cam_eye;
+
+    atcg::SurfaceInteraction camera_si;
+    camera_si.position = ray_origin;
+    camera_si.valid    = false;
+    path[0].si         = camera_si;
+    path[0].throughput = glm::vec3(1);
+
+    generateSubPath(path, CAMERA_PATH_LENGTH, ray_origin, ray_dir, rng);
+}
+
+__device__ inline void generateLightPath(PathVertex path[LIGHT_PATH_LENGTH], atcg::PCG32& rng)
+{
+    uint32_t light_index = glm::clamp((uint32_t)(rng.nextFloat() * params.num_emitters), 0u, params.num_emitters - 1);
+    float light_pdf      = 1.0f / (float)params.num_emitters;
+
+    const atcg::EmitterVPtrTable* emitter = params.emitters[light_index];
+
+    auto result          = emitter->samplePhoton(rng);
+    glm::vec3 ray_origin = result.position;
+    glm::vec3 ray_dir    = result.direction;
+    result.pdf *= light_pdf;
+
+    atcg::SurfaceInteraction light_si;
+    light_si.position  = ray_origin;
+    light_si.valid     = true;
+    light_si.emitter   = emitter;
+    light_si.normal    = result.normal;
+    path[0].si         = light_si;
+    path[0].throughput = result.radiance_weight / light_pdf / glm::pi<float>();
+
+    generateSubPath(path, LIGHT_PATH_LENGTH, ray_origin, ray_dir, rng);
+}
+
+extern "C" __global__ void __raygen__rg()
+{
+    uint3 launch_idx = optixGetLaunchIndex();
+
+    uint32_t pixel_index = launch_idx.x + params.image_width * launch_idx.y;
+    uint64_t seed        = atcg::sampleTEA64(pixel_index, params.frame_counter);
+    atcg::PCG32 rng(seed);
+
+    glm::vec3 radiance(0);
+
+    PathVertex camera_path[CAMERA_PATH_LENGTH];
+    PathVertex light_path[LIGHT_PATH_LENGTH];
+
+    generateCameraPath(launch_idx, camera_path, rng);
+    generateLightPath(light_path, rng);
+
+    uint32_t num_samples = 0;
+    // t = 0, zero eye subpaths -> light directly hits sensor. We do not consider these paths here
+    // t = 1, a light path is connected to the eye path and has contribution to another pixel, we do not handle this
+    // here (for now)
+    for(uint32_t t = 2; t < CAMERA_PATH_LENGTH; ++t)
+    {
+        for(uint32_t s = 0; s < LIGHT_PATH_LENGTH; ++s)
+        {
+            if(s == 0)
+            {
+                // No light vertices, camera path randomly intersects light source
+                PathVertex camera_vertex = camera_path[t - 1];
+
+                if(!camera_vertex.si.valid) continue;
+
+                if(camera_vertex.si.emitter)
+                {
+                    glm::vec3 Le = camera_vertex.si.emitter->evalLight(camera_vertex.si);
+
+                    radiance += Le * camera_vertex.throughput;
+                }
+            }
+            else if(s == 1)
+            {
+                // TODO
+            }
+            else
+            {
+                PathVertex light_vertex  = light_path[s - 1];
+                PathVertex camera_vertex = camera_path[t - 1];
+
+                // End of path either one of these vertices was not samples
+                if(!light_vertex.si.valid || !camera_vertex.si.valid)
+                {
+                    continue;
+                }
+
+                glm::vec3 dir_to_light          = light_vertex.si.position - camera_vertex.si.position;
+                float distance_to_light_squared = glm::length2(dir_to_light);
+                float distance_to_light         = glm::sqrt(distance_to_light_squared);
+                dir_to_light /= distance_to_light;
+                glm::vec3 dir_to_camera = -dir_to_light;
+
+                float NdotL_camera = glm::max(0.0f, glm::dot(camera_vertex.si.normal, dir_to_light));
+                float NdotV_light  = glm::max(0.0f, glm::dot(light_vertex.si.normal, dir_to_camera));
+
+                // Points do not see each other
+                if(NdotL_camera <= 0.0f || NdotV_light <= 0.0f)
+                {
+                    continue;
+                }
+
+                // Vertices are occluded
+                if(traceOcclusion(params.handle,
+                                  camera_vertex.si.position,
+                                  dir_to_light,
+                                  1e-3f,
+                                  distance_to_light - 1e-3f,
+                                  params.occlusion_trace_params))
+                {
+                    continue;
+                }
+
+                // Connect
+                glm::vec3 alpha_L = light_vertex.throughput;
+                glm::vec3 alpha_E = camera_vertex.throughput;
+
+                float G                          = NdotL_camera * NdotV_light / distance_to_light_squared;
+                atcg::BSDFEvalResult bsdf_light  = light_vertex.si.bsdf->evalBSDF(light_vertex.si, dir_to_camera);
+                atcg::BSDFEvalResult bsdf_camera = camera_vertex.si.bsdf->evalBSDF(camera_vertex.si, dir_to_light);
+                glm::vec3 c_st                   = bsdf_camera.bsdf_value * G * bsdf_light.bsdf_value;
+
+                // TODO: weighting
+                radiance += alpha_L * c_st * alpha_E;
+            }
+
+            // PathVertex light_vertex  = light_path[s];
+            // PathVertex camera_vertex = camera_path[t];
+
+            // glm::vec3 light_direction = glm::normalize(light_vertex.si.position - camera_vertex.si.position);
+            // float light_distance      = glm::length(light_vertex.si.position - camera_vertex.si.position);
+
+            // float NdotL_camera = glm::max(0.0f, glm::dot(light_direction, camera_vertex.si.normal));
+            // float NdotV_light  = glm::max(0.0f, -glm::dot(light_direction, light_vertex.si.normal));
+
+            // if(NdotL_camera <= 0.0f || NdotV_light <= 0.0f) continue;
+            // // radiance += glm::vec3(1);
+
+            // if(!camera_vertex.si.valid || !light_vertex.si.valid) continue;
+
+            // if(traceOcclusion(params.handle,
+            //                   camera_vertex.si.position,
+            //                   light_direction,
+            //                   1e-3f,
+            //                   light_distance - 1e-3f,
+            //                   params.occlusion_trace_params))
+            // {
+            //     continue;
+            // }
+        }
     }
 
     if(params.frame_counter > 0)
