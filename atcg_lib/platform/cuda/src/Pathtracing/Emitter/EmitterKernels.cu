@@ -96,6 +96,72 @@ __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::
     return result;
 }
 
+extern "C" __device__ atcg::PhotonSamplingResult __direct_callable__sample_photon_meshemitter(atcg::PCG32& rng)
+{
+    const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
+    atcg::PhotonSamplingResult result;
+
+    // Select the triangle to sample a direction from uniformly at random, proportional to its surface area
+    uint32_t triangle_index = 0;
+    // Sample the barycentric coordinates on the triangle uniformly.
+    glm::vec2 triangle_barys = glm::vec2(0, 0);
+
+    triangle_index = binary_search(sbt_data->mesh_cdf, rng.next1d(), sbt_data->num_faces);
+
+    triangle_barys = rng.next2d();
+    // Mirror barys at diagonal line to cover a triangle instead of a square
+    if(triangle_barys.x + triangle_barys.y > 1) triangle_barys = glm::vec2(1) - triangle_barys;
+
+
+    // Compute the `light_position` using the triangle_index and the triangle_barys on the mesh:
+
+    // Indices of triangle vertices in the mesh
+    glm::u32vec3 vertex_indices = sbt_data->faces[triangle_index];
+
+    // Vertex positions of selected triangle
+    glm::vec3 P0 = sbt_data->positions[vertex_indices.x];
+    glm::vec3 P1 = sbt_data->positions[vertex_indices.y];
+    glm::vec3 P2 = sbt_data->positions[vertex_indices.z];
+
+    glm::vec3 UV0 = sbt_data->uvs[vertex_indices.x];
+    glm::vec3 UV1 = sbt_data->uvs[vertex_indices.y];
+    glm::vec3 UV2 = sbt_data->uvs[vertex_indices.z];
+
+    // Compute local position
+    glm::vec3 local_light_position =
+        (1.0f - triangle_barys.x - triangle_barys.y) * P0 + triangle_barys.x * P1 + triangle_barys.y * P2;
+    // Transform local position to world position
+    glm::vec3 light_position = glm::vec3(sbt_data->local_to_world * glm::vec4(local_light_position, 1));
+
+    // Compute UVS
+    glm::vec3 uvs =
+        (1.0f - triangle_barys.x - triangle_barys.y) * UV0 + triangle_barys.x * UV1 + triangle_barys.y * UV2;
+
+    // Compute local normal
+    glm::vec3 local_light_normal = glm::cross(P1 - P0, P2 - P0);
+    // Normals are transformed by (A^-1)^T instead of A
+    glm::vec3 light_normal = glm::normalize(glm::transpose(glm::mat3(sbt_data->world_to_local)) * local_light_normal);
+
+    // Assemble sampling result
+    result.pdf = 0;    // initialize with invalid sample
+
+    // light source sampling
+
+    float4 color_u           = tex2D<float4>(sbt_data->emissive_texture, uvs.x, uvs.y);
+    glm::vec3 emissive_color = glm::vec3(color_u.x, color_u.y, color_u.z);
+
+    glm::vec3 local_light_direction = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
+    float direction_pdf             = atcg::warp_square_to_hemisphere_cosine_pdf(local_light_direction);
+
+    result.position        = light_position;
+    result.direction       = atcg::compute_local_frame(light_normal) * local_light_direction;
+    result.pdf             = 1.0f / (sbt_data->total_area) * direction_pdf;
+    result.radiance_weight = emissive_color * sbt_data->emitter_scaling * (sbt_data->total_area);
+    result.normal          = light_normal;
+
+    return result;
+}
+
 extern "C" __device__ glm::vec3 __direct_callable__eval_meshemitter(const atcg::SurfaceInteraction& si)
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());

@@ -163,17 +163,21 @@ void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pi
     const std::string ptx_emitter_filename = "./bin/EmitterKernels.ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_meshemitter"});
+    auto sample_photon_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_photon_meshemitter"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_meshemitter"});
     auto evalpdf_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_meshemitter"});
-    uint32_t sample_idx   = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
-    uint32_t eval_idx     = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
-    uint32_t eval_pdf_idx = sbt->addCallableEntry(evalpdf_prog_group, _mesh_emitter_data.get());
+    uint32_t sample_idx        = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_idx          = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_pdf_idx      = sbt->addCallableEntry(evalpdf_prog_group, _mesh_emitter_data.get());
+    uint32_t sample_photon_idx = sbt->addCallableEntry(sample_photon_prog_group, _mesh_emitter_data.get());
 
     EmitterVPtrTable table;
-    table.sampleCallIndex  = sample_idx;
-    table.evalCallIndex    = eval_idx;
-    table.evalPdfCallIndex = eval_pdf_idx;
+    table.sampleCallIndex       = sample_idx;
+    table.evalCallIndex         = eval_idx;
+    table.evalPdfCallIndex      = eval_pdf_idx;
+    table.samplePhotonCallIndex = sample_photon_idx;
 
     _vptr_table.upload(&table);
 }
