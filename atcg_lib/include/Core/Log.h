@@ -2,6 +2,7 @@
 
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
+#include <Core/Platform.h>
 
 namespace atcg
 {
@@ -22,7 +23,7 @@ public:
      * @return The logger
      *
      */
-    inline static std::shared_ptr<spdlog::logger>& getLogger() { return s_logger; }
+    ATCG_INLINE static std::shared_ptr<spdlog::logger>& getLogger() { return s_logger; }
 
 private:
     static std::shared_ptr<spdlog::logger> s_logger;

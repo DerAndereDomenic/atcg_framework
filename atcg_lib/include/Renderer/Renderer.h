@@ -312,7 +312,7 @@ public:
     /**
      * @brief Destroys the renderer instance
      */
-    inline static void destroy() { delete s_renderer; }
+    ATCG_INLINE static void destroy() { delete s_renderer; }
 
 
     ~Renderer();

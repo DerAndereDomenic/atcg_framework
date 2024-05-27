@@ -476,7 +476,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostPositions() const { return getPositions(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostPositions() const { return getPositions(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex positions as device tensor.
@@ -486,7 +486,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDevicePositions() const { return getPositions(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDevicePositions() const { return getPositions(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get the vertex colors as host tensor.
@@ -496,7 +496,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostColors() const { return getColors(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostColors() const { return getColors(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex colors as device tensor.
@@ -506,7 +506,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDeviceColors() const { return getColors(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceColors() const { return getColors(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get the vertex normals as host tensor.
@@ -516,7 +516,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostNormals() const { return getNormals(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostNormals() const { return getNormals(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex normals as device tensor.
@@ -526,7 +526,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDeviceNormals() const { return getNormals(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceNormals() const { return getNormals(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get the vertex tangents as host tensor.
@@ -536,7 +536,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostTangents() const { return getTangents(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostTangents() const { return getTangents(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex tangents as device tensor.
@@ -546,7 +546,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDeviceTangents() const { return getTangents(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceTangents() const { return getTangents(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get the vertex uvs as host tensor.
@@ -556,7 +556,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostUVs() const { return getUVs(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostUVs() const { return getUVs(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex uvs as device tensor.
@@ -566,7 +566,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDeviceUVs() const { return getUVs(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceUVs() const { return getUVs(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get a tensor of edges the host. The data format is specified by atcg::Edge (i.e., (idx1, idx2,
@@ -580,7 +580,7 @@ public:
      *
      * @return A tensor that points to the vertex buffer.
      */
-    inline torch::Tensor getHostEdges() const { return getEdges(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostEdges() const { return getEdges(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get a tensor of edges the host. The data format is specified by atcg::Edge (i.e., (idx1, idx2,
@@ -594,7 +594,7 @@ public:
      *
      * @return A tensor that points to the vertex buffer.
      */
-    inline torch::Tensor getDeviceEdges() const { return getEdges(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceEdges() const { return getEdges(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get a tensor of face indices on the host.
@@ -607,7 +607,7 @@ public:
      *
      * @return A tensor that points to the vertex buffer.
      */
-    inline torch::Tensor getHostFaces() const { return getFaces(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostFaces() const { return getFaces(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get a tensor of face indices on the device.
@@ -620,7 +620,7 @@ public:
      *
      * @return A tensor that points to the vertex buffer.
      */
-    inline torch::Tensor getDeviceFaces() const { return getFaces(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceFaces() const { return getFaces(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Unmaps all host pointers of the vertex buffer

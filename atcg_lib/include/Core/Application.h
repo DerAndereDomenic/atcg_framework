@@ -5,7 +5,7 @@
 #include <Core/Window.h>
 #include <Events/WindowEvent.h>
 #include <ImGui/ImGuiLayer.h>
-
+#include <Core/Platform.h>
 
 namespace atcg
 {
@@ -83,28 +83,28 @@ public:
      *
      * @return const atcg::scope_ptr<Window>& The window
      */
-    inline const atcg::scope_ptr<Window>& getWindow() const { return _window; }
+    ATCG_INLINE const atcg::scope_ptr<Window>& getWindow() const { return _window; }
 
     /**
      * @brief Get an instance of the application
      *
      * @return Application* The application instance
      */
-    inline static Application* get() { return s_instance; }
+    ATCG_INLINE static Application* get() { return s_instance; }
 
     /**
      * @brief Enable or disable Dock spaces
      *
      * @param enable If dockspaces should be enabled
      */
-    inline void enableDockSpace(bool enable) { _imgui_layer->enableDockSpace(enable); }
+    ATCG_INLINE void enableDockSpace(bool enable) { _imgui_layer->enableDockSpace(enable); }
 
     /**
      * @brief Get the imgui layer.
      *
      * @return The imgui layer
      */
-    inline ImGuiLayer* getImGuiLayer() const { return _imgui_layer; }
+    ATCG_INLINE ImGuiLayer* getImGuiLayer() const { return _imgui_layer; }
 
 private:
     void run();

@@ -128,21 +128,21 @@ public:
      *
      * @return The width
      */
-    inline uint32_t width() const { return _spec.width; }
+    ATCG_INLINE uint32_t width() const { return _spec.width; }
 
     /**
      * @brief Get the height of the texture
      *
      * @return The height
      */
-    inline uint32_t height() const { return _spec.height; }
+    ATCG_INLINE uint32_t height() const { return _spec.height; }
 
     /**
      * @brief Get the depth of the texture
      *
      * @return The depth
      */
-    inline uint32_t depth() const { return _spec.depth; }
+    ATCG_INLINE uint32_t depth() const { return _spec.depth; }
 
     /**
      * @brief Get the number of channels
@@ -163,14 +163,14 @@ public:
      *
      * @return The id
      */
-    inline uint32_t getID() const { return _ID; }
+    ATCG_INLINE uint32_t getID() const { return _ID; }
 
     /**
      * @brief Get the texture specification.
      *
      * @return The specification
      */
-    inline TextureSpecification getSpecification() const { return _spec; }
+    ATCG_INLINE TextureSpecification getSpecification() const { return _spec; }
 
     /**
      * @brief Use this texture

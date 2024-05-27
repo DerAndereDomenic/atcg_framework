@@ -28,41 +28,41 @@ struct TransformComponent
     TransformComponent(const glm::mat4& model) : _model_matrix(model) { decomposeModelMatrix(); }
 
 
-    inline void setPosition(const glm::vec3& position)
+    ATCG_INLINE void setPosition(const glm::vec3& position)
     {
         _position = position;
         calculateModelMatrix();
     }
 
-    inline void setRotation(const glm::vec3& rotation)
+    ATCG_INLINE void setRotation(const glm::vec3& rotation)
     {
         _rotation = rotation;
         calculateModelMatrix();
     }
 
-    inline void setScale(const glm::vec3& scale)
+    ATCG_INLINE void setScale(const glm::vec3& scale)
     {
         _scale = scale;
         calculateModelMatrix();
     }
 
-    inline void setModel(const glm::mat4& model)
+    ATCG_INLINE void setModel(const glm::mat4& model)
     {
         _model_matrix = model;
         decomposeModelMatrix();
     }
 
-    inline glm::mat4 getModel() const { return _model_matrix; }
+    ATCG_INLINE glm::mat4 getModel() const { return _model_matrix; }
 
-    inline glm::vec3 getPosition() const { return _position; }
+    ATCG_INLINE glm::vec3 getPosition() const { return _position; }
 
-    inline glm::vec3 getScale() const { return _scale; }
+    ATCG_INLINE glm::vec3 getScale() const { return _scale; }
 
-    inline glm::vec3 getRotation() const { return _rotation; }
+    ATCG_INLINE glm::vec3 getRotation() const { return _rotation; }
 
-    inline operator glm::mat4() const { return _model_matrix; }
+    ATCG_INLINE operator glm::mat4() const { return _model_matrix; }
 
-    static constexpr inline const char* toString() { return "Transform"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Transform"; }
 
 private:
     void calculateModelMatrix();
@@ -98,7 +98,7 @@ struct GeometryComponent
 
     atcg::ref_ptr<Graph> graph;
 
-    static constexpr inline const char* toString() { return "Geometry"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Geometry"; }
 };
 
 struct AccelerationStructureComponent
@@ -122,7 +122,7 @@ struct CameraComponent
         }
     }
 
-    static constexpr inline const char* toString() { return "Camera"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Camera"; }
 
     atcg::ref_ptr<Camera> camera;
     glm::vec3 color  = glm::vec3(1);
@@ -151,7 +151,7 @@ struct MeshRenderComponent : public RenderComponent
     {
     }
 
-    static constexpr inline const char* toString() { return "Mesh Renderer"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Mesh Renderer"; }
 
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     Material material;
@@ -169,7 +169,7 @@ struct PointRenderComponent : public RenderComponent
     {
     }
 
-    static constexpr inline const char* toString() { return "Point Renderer"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Renderer"; }
 
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     glm::vec3 color              = glm::vec3(1);
@@ -186,7 +186,7 @@ struct PointSphereRenderComponent : public RenderComponent
     {
     }
 
-    static constexpr inline const char* toString() { return "Point Sphere Renderer"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Sphere Renderer"; }
 
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     float point_size             = 0.1f;
@@ -201,7 +201,7 @@ struct EdgeRenderComponent : public RenderComponent
     {
     }
 
-    static constexpr inline const char* toString() { return "Edge Renderer"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Edge Renderer"; }
 
     glm::vec3 color = glm::vec3(1);
 };
@@ -214,7 +214,7 @@ struct EdgeCylinderRenderComponent : public RenderComponent
     {
     }
 
-    static constexpr inline const char* toString() { return "Edge Cylinder Renderer"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Edge Cylinder Renderer"; }
 
     float radius = 0.001f;
     Material material;
@@ -230,7 +230,7 @@ struct InstanceRenderComponent : public RenderComponent
         instance_vbo->setLayout({{atcg::ShaderDataType::Mat4, "aModel"}, {atcg::ShaderDataType::Float3, "aColor"}});
     }
 
-    static constexpr inline const char* toString() { return "Instance Renderer"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Instance Renderer"; }
 
     atcg::ref_ptr<VertexBuffer> instance_vbo;
     Material material;

@@ -5,7 +5,7 @@ namespace atcg
 
 namespace detail
 {
-__device__ float atomicMax(float* address, float val)
+ATCG_DEVICE float atomicMax(float* address, float val)
 {
     int* address_as_i = (int*)address;
     int old           = *address_as_i, assumed;

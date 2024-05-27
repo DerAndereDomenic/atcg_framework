@@ -505,7 +505,7 @@ Serializer<ComponentSerializerT>::Serializer(const atcg::ref_ptr<Scene>& scene)
 
 template<typename ComponentSerializerT>
 template<typename... CustomComponents>
-inline void Serializer<ComponentSerializerT>::serialize(const std::string& file_path)
+ATCG_INLINE void Serializer<ComponentSerializerT>::serialize(const std::string& file_path)
 {
     nlohmann::json j;
 
@@ -541,7 +541,7 @@ inline void Serializer<ComponentSerializerT>::serialize(const std::string& file_
 
 template<typename ComponentSerializerT>
 template<typename... CustomComponents>
-inline void Serializer<ComponentSerializerT>::deserialize(const std::string& file_path)
+ATCG_INLINE void Serializer<ComponentSerializerT>::deserialize(const std::string& file_path)
 {
     std::ifstream i(file_path);
     nlohmann::json j;

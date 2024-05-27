@@ -1,6 +1,7 @@
 #pragma once
 
 //-------- CORE ---------
+#include <Core/Platform.h>
 #include <Core/Layer.h>
 #include <Core/LayerStack.h>
 #include <Core/Application.h>

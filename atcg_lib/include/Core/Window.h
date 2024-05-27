@@ -128,21 +128,21 @@ public:
      *
      * @return uint32_t width
      */
-    inline uint32_t getWidth() const { return _data.width; }
+    ATCG_INLINE uint32_t getWidth() const { return _data.width; }
 
     /**
      * @brief Get the Height object
      *
      * @return uint32_t height
      */
-    inline uint32_t getHeight() const { return _data.height; }
+    ATCG_INLINE uint32_t getHeight() const { return _data.height; }
 
     /**
      * @brief Get the context
      *
      * @return The context
      */
-    inline atcg::ref_ptr<Context> getContext() const { return _context; }
+    ATCG_INLINE atcg::ref_ptr<Context> getContext() const { return _context; }
 
 private:
     struct WindowData

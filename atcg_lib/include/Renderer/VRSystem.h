@@ -197,7 +197,7 @@ public:
      * @brief Destroys the Renderer instance. SHOULD NOT BE CALLED BY THE USER
      *
      */
-    inline static void destroy() { delete s_renderer; }
+    ATCG_INLINE static void destroy() { delete s_renderer; }
 
     ~VRSystem();
 

@@ -101,42 +101,42 @@ public:
      *
      * @return The width
      */
-    inline uint32_t width() const { return _width; }
+    ATCG_INLINE uint32_t width() const { return _width; }
 
     /**
      * @brief Get the height of the image
      *
      * @return The height
      */
-    inline uint32_t height() const { return _height; }
+    ATCG_INLINE uint32_t height() const { return _height; }
 
     /**
      * @brief Get the number of channels
      *
      * @return The number of channels
      */
-    inline uint32_t channels() const { return _channels; }
+    ATCG_INLINE uint32_t channels() const { return _channels; }
 
     /**
      * @brief Get the name/filepath of the image
      *
      * @return The filepath
      */
-    inline const std::string& name() const { return _filename; }
+    ATCG_INLINE const std::string& name() const { return _filename; }
 
     /**
      * @brief If this image is a HDR texture
      *
      * @return True if it's an hdr image
      */
-    inline bool isHDR() const { return _hdr; }
+    ATCG_INLINE bool isHDR() const { return _hdr; }
 
     /**
      * @brief Get the image data interpreted in a specific format.
      *
      * @return The data
      */
-    inline torch::Tensor data() const { return _img_data; }
+    ATCG_INLINE torch::Tensor data() const { return _img_data; }
 
 private:
     void loadLDR(const std::string& filename);
