@@ -10,13 +10,14 @@ namespace Color
 
 namespace detail
 {
-static ATCG_CONSTEXPR glm::mat3 lRGB_to_XYZ_transform(glm::vec3(0.4124f, 0.2126f, 0.0193f),
-                                                      glm::vec3(0.3576f, 0.7152f, 0.1192f),
-                                                      glm::vec3(0.1805f, 0.0722f, 0.9505f));
 
-static ATCG_CONSTEXPR glm::mat3 XYZ_to_lRBB_transform(glm::vec3(+3.2406f, -0.9689, +0.0557f),
-                                                      glm::vec3(-1.5372f, +1.8758f, -0.2040f),
-                                                      glm::vec3(-0.4986f, +0.0415f, +1.0570f));
+#define lRGB_TO_X glm::vec3(0.4124f, 0.2126f, 0.0193f)
+#define lRGB_TO_Y glm::vec3(0.3576f, 0.7152f, 0.1192f)
+#define lRGB_TO_Z glm::vec3(0.1805f, 0.0722f, 0.9505f)
+
+#define XYZ_TO_lR glm::vec3(+3.2406f, -0.9689, +0.0557f)
+#define XYZ_TO_lG glm::vec3(-1.5372f, +1.8758f, -0.2040f)
+#define XYZ_TO_lB glm::vec3(-0.4986f, +0.0415f, +1.0570f)
 
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE uint8_t quantize_channel(const float c)
 {
@@ -118,17 +119,19 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 XYZ_to_sRGB(const glm::vec3& color)
 
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 lRGB_to_XYZ(const glm::vec3& color)
 {
-    return detail::lRGB_to_XYZ_transform * color;
+    const glm::mat3 lRGB_to_XYZ_transform(lRGB_TO_X, lRGB_TO_Y, lRGB_TO_Z);
+    return lRGB_to_XYZ_transform * color;
 }
 
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 XYZ_to_lRGB(const glm::vec3& color)
 {
-    return detail::XYZ_to_lRBB_transform * color;
+    const glm::mat3 XYZ_to_lRGB_transform(XYZ_TO_lR, XYZ_TO_lG, XYZ_TO_lB);
+    return XYZ_to_lRGB_transform * color;
 }
 
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE float lRGB_to_luminance(const glm::vec3& color)
 {
-    const glm::vec3 luminance_weights = glm::row(detail::lRGB_to_XYZ_transform, 1);
+    const glm::vec3 luminance_weights = lRGB_TO_Y;
     return glm::dot(luminance_weights, color);
 }
 
