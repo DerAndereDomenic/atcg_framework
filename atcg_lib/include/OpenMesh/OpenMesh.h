@@ -11,4 +11,4 @@ namespace atcg
 {
 typedef OpenMesh::TriMesh_ArrayKernelT<GLMTraits> TriMesh;
 typedef OpenMesh::PolyMesh_ArrayKernelT<GLMTraits> PolyMesh;
-}
+}    // namespace atcg

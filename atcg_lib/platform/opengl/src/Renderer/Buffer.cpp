@@ -88,7 +88,10 @@ void VertexBuffer::Impl::mapResourceDevice()
 void VertexBuffer::Impl::unmapResourceDevice()
 {
 #ifdef ATCG_CUDA_BACKEND
-    if(mapped_device) { CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource)); }
+    if(mapped_device)
+    {
+        CUDA_SAFE_CALL(cudaGraphicsUnmapResources(1, &resource));
+    }
     mapped_device = false;
 #else
     if(mapped_host)
@@ -134,7 +137,8 @@ VertexBuffer::VertexBuffer(size_t size)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, std::max(size_t(1), size), nullptr, GL_DYNAMIC_DRAW);
+    ATCG_LOG_ALLOCATION("Allocated VertexBuffer of size {0}", size);
 
     impl           = atcg::make_scope<Impl>(_ID);
     impl->size     = size;
@@ -145,7 +149,8 @@ VertexBuffer::VertexBuffer(const void* data, size_t size)
 {
     glGenBuffers(1, &_ID);
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, std::max(size_t(1), size), data, GL_DYNAMIC_DRAW);
+    ATCG_LOG_ALLOCATION("Allocated VertexBuffer of size {0}", size);
 
     impl           = atcg::make_scope<Impl>(_ID);
     impl->size     = size;
@@ -155,7 +160,10 @@ VertexBuffer::VertexBuffer(const void* data, size_t size)
 VertexBuffer::~VertexBuffer()
 {
     unmapPointers();
-    if(impl->resource_ready) { impl->deinitResource(); }
+    if(impl->resource_ready)
+    {
+        impl->deinitResource();
+    }
     glDeleteBuffers(1, &_ID);
 }
 
@@ -181,14 +189,21 @@ void VertexBuffer::setData(const void* data, size_t size)
 
 void VertexBuffer::resize(std::size_t size)
 {
-    glBindBuffer(GL_ARRAY_BUFFER, _ID);
     if(size > impl->capacity)
     {
-        if(impl->resource_ready) { impl->deinitResource(); }
+        glBindBuffer(GL_ARRAY_BUFFER, _ID);
+        if(impl->resource_ready)
+        {
+            impl->deinitResource();
+        }
         glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+        ATCG_LOG_ALLOCATION("Allocated VertexBuffer of size {0}", size);
         impl->capacity = size;
     }
-    if(!impl->resource_ready) { impl->initResource(_ID); }
+    if(!impl->resource_ready)
+    {
+        impl->initResource(_ID);
+    }
     impl->size = size;
 }
 

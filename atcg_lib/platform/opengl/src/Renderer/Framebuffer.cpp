@@ -29,12 +29,18 @@ bool Framebuffer::complete() const
     use();
 
     std::vector<GLenum> buffers;
-    for(uint32_t i = 0; i < _color_attachements.size(); ++i) { buffers.push_back(GL_COLOR_ATTACHMENT0 + i); }
+    for(uint32_t i = 0; i < _color_attachements.size(); ++i)
+    {
+        buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+    }
     glDrawBuffers(buffers.size(), buffers.data());
 
     uint32_t error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     bool complete  = error == GL_FRAMEBUFFER_COMPLETE;
-    if(!complete) { ATCG_ERROR("ERROR: Framebuffer not complete!"); }
+    if(!complete)
+    {
+        ATCG_ERROR("ERROR: Framebuffer not complete!");
+    }
     useDefault();
     return complete;
 }
@@ -56,7 +62,7 @@ void Framebuffer::attachColor()
     useDefault();
 }
 
-void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
+void Framebuffer::attachTexture(const atcg::ref_ptr<Texture2D>& texture)
 {
     use();
     glFramebufferTexture2D(GL_FRAMEBUFFER,
@@ -70,12 +76,18 @@ void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
 
 void Framebuffer::attachDepth()
 {
-    use();
     TextureSpecification spec;
     spec.width         = _width;
     spec.height        = _height;
     spec.format        = TextureFormat::DEPTH;
     _depth_attachement = Texture2D::create(spec);
+    attachDepth(_depth_attachement);
+}
+
+void Framebuffer::attachDepth(const atcg::ref_ptr<Texture2D>& depth_map)
+{
+    use();
+    _depth_attachement = depth_map;
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depth_attachement->getID(), 0);
     useDefault();
 }

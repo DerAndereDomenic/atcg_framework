@@ -47,7 +47,7 @@ public:
      *
      * @param texture The texture to attach
      */
-    void attachTexture(const atcg::ref_ptr<Texture>& texture);
+    void attachTexture(const atcg::ref_ptr<Texture2D>& texture);
 
     /**
      * @brief Add a depth attachement
@@ -55,12 +55,19 @@ public:
     void attachDepth();
 
     /**
+     * @brief Attach a custom depth component
+     *
+     * @param depth_map The depth map component
+     */
+    void attachDepth(const atcg::ref_ptr<Texture2D>& depth_map);
+
+    /**
      * @brief Get a color attachement
      *
      * @param slot The number of which attachement to use
      * @return The specified texture
      */
-    inline atcg::ref_ptr<Texture2D> getColorAttachement(const uint32_t& slot = 0) const
+    ATCG_INLINE atcg::ref_ptr<Texture2D> getColorAttachement(const uint32_t& slot = 0) const
     {
         return _color_attachements[slot];
     }
@@ -70,28 +77,28 @@ public:
      *
      * @return The depth texture
      */
-    inline atcg::ref_ptr<Texture2D> getDepthAttachement() const { return _depth_attachement; }
+    ATCG_INLINE atcg::ref_ptr<Texture2D> getDepthAttachement() const { return _depth_attachement; }
 
     /**
      * @brief Get the ID of the framebuffer
      *
      * @return The ID
      */
-    inline uint32_t getID() const { return _ID; }
+    ATCG_INLINE uint32_t getID() const { return _ID; }
 
     /**
      * @brief Get the width of the framebuffer
      *
      * @return The width
      */
-    inline uint32_t width() const { return _width; }
+    ATCG_INLINE uint32_t width() const { return _width; }
 
     /**
      * @brief Get the height of the framebuffer
      *
      * @return The height
      */
-    inline uint32_t height() const { return _height; }
+    ATCG_INLINE uint32_t height() const { return _height; }
 
     /**
      * @brief Get the currently bound fbo

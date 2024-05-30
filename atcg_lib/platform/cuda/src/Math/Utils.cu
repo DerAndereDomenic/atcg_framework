@@ -5,11 +5,12 @@ namespace atcg
 
 namespace detail
 {
-__device__ float atomicMax(float* address, float val)
+ATCG_DEVICE float atomicMax(float* address, float val)
 {
     int* address_as_i = (int*)address;
     int old           = *address_as_i, assumed;
-    do {
+    do
+    {
         assumed = old;
         old     = ::atomicCAS(address_as_i, assumed, __float_as_int(::fmaxf(val, __int_as_float(assumed))));
     } while(assumed != old);
@@ -19,7 +20,10 @@ __device__ float atomicMax(float* address, float val)
 ATCG_GLOBAL void mean_and_scale_kernel(Vertex* points, uint32_t num_points, glm::vec3* mean_point, float* max_scale)
 {
     const std::size_t tid = atcg::threadIndex();
-    if(tid >= num_points) { return; }
+    if(tid >= num_points)
+    {
+        return;
+    }
 
     atomicAdd(&(mean_point->x), points[tid].position.x);
     atomicAdd(&(mean_point->y), points[tid].position.y);
@@ -37,7 +41,10 @@ ATCG_GLOBAL void
 translate_and_scale_kernel(Vertex* points, uint32_t num_points, glm::vec3* mean_point, float* max_scale)
 {
     const std::size_t tid = atcg::threadIndex();
-    if(tid >= num_points) { return; }
+    if(tid >= num_points)
+    {
+        return;
+    }
 
     glm::vec3 m = *mean_point / static_cast<float>(num_points);
 
@@ -52,8 +59,8 @@ void normalize(const atcg::ref_ptr<Graph>& graph)
     std::size_t threads = 128;
     std::size_t blocks  = atcg::configure(n_points);
 
-    atcg::DeviceBuffer<glm::vec3, atcg::device_allocator> mean_point(1);
-    atcg::DeviceBuffer<float, atcg::device_allocator> max_scale(1);
+    atcg::MemoryBuffer<glm::vec3, atcg::device_allocator> mean_point(1);
+    atcg::MemoryBuffer<float, atcg::device_allocator> max_scale(1);
 
     Vertex* vertices = (Vertex*)graph->getVerticesBuffer()->getDevicePointer();
 

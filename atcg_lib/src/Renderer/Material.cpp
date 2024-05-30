@@ -43,6 +43,11 @@ void Material::setDiffuseColor(const glm::vec4& color)
     _diffuse_texture = atcg::Texture2D::create(&color_quant, spec_diffuse);
 }
 
+void Material::setDiffuseColor(const glm::vec3& color)
+{
+    setDiffuseColor(glm::vec4(color, 1.0f));
+}
+
 void Material::setRoughness(const float roughness)
 {
     TextureSpecification spec_roughness;

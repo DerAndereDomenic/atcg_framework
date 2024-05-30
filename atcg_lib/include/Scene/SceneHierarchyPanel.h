@@ -3,6 +3,7 @@
 #include <Core/Memory.h>
 #include <Scene/Entity.h>
 #include <Renderer/PerspectiveCamera.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -11,7 +12,10 @@ class Framebuffer;
 
 /**
  * @brief A Scene hierarchy panel
+ *
+ * @tparam GUIHandler The class that handles gui drawing. Default = atcg::ComponentGUIHandler
  */
+template<typename GUIHandler = ComponentGUIHandler>
 class SceneHierarchyPanel
 {
 public:
@@ -30,7 +34,12 @@ public:
     /**
      * @brief Should be called in onImGuiRender.
      * Renders the panel
+     *
+     * @tparam CustomComponents... optional custom components that should be rendered.
+     *
+     * To support custom component rendering, a custom GUIHandler has to be provided.
      */
+    template<typename... CustomComponents>
     void renderPanel();
 
     /**
@@ -38,30 +47,34 @@ public:
      *
      * @param entity The entity
      */
-    inline void selectEntity(Entity entity) { _selected_entity = entity; }
+    ATCG_INLINE void selectEntity(Entity entity) { _selected_entity = entity; }
 
     /**
      * @brief Get the currently selected entity
      *
      * @return The selected entity
      */
-    inline Entity getSelectedEntity() const { return _selected_entity; }
+    ATCG_INLINE Entity getSelectedEntity() const { return _selected_entity; }
 
     /**
-     * @brief Get the framebuffer that is responsible for generating camera previews
+     * @brief Set a custom gui handler
      *
-     * @return The framebuffer
+     * @param gui_handler The gui handler instance
      */
-    inline atcg::ref_ptr<Framebuffer> getPreviewFramebuffer() const { return _camera_preview; }
+    ATCG_INLINE void setGuiHandler(const atcg::ref_ptr<GUIHandler>& gui_handler) { _gui_handler = gui_handler; }
 
 private:
     void drawEntityNode(Entity entity);
+
+    template<typename... Components>
     void drawComponents(Entity entity);
+
     void drawSceneProperties();
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
-    atcg::ref_ptr<atcg::Framebuffer> _camera_preview;
-    atcg::ref_ptr<atcg::Framebuffer> _object_preview;
-    atcg::ref_ptr<atcg::PerspectiveCamera> _object_preview_cam;
+    atcg::ref_ptr<GUIHandler> _gui_handler;
 };
 }    // namespace atcg
+
+
+#include "../../src/Scene/SceneHierarchyPanelDetails.h"

@@ -66,7 +66,7 @@ public:
      *
      * @return const atcg::ref_ptr<IndexBuffer>& The IndexBuffer
      */
-    inline const atcg::ref_ptr<IndexBuffer>& getIndexBuffer() const { return _ibo; }
+    ATCG_INLINE const atcg::ref_ptr<IndexBuffer>& getIndexBuffer() const { return _ibo; }
 
 private:
     /**

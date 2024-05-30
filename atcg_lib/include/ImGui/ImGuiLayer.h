@@ -59,21 +59,21 @@ public:
      *
      * @param block If events should be blocked
      */
-    inline void blockEvents(bool block) { _block_events = block; }
+    ATCG_INLINE void blockEvents(bool block) { _block_events = block; }
 
     /**
      * @brief Enable or disable Dock spaces
      *
      * @param enable If dockspaces should be enabled
      */
-    inline void enableDockSpace(bool enable) { _enable_dock_space = enable; }
+    ATCG_INLINE void enableDockSpace(bool enable) { _enable_dock_space = enable; }
 
     /**
      * @brief Check if dockspaces are enabled
      *
      * @return True if enabled
      */
-    inline bool dockspaceEnabled() const { return _enable_dock_space; }
+    ATCG_INLINE bool dockspaceEnabled() const { return _enable_dock_space; }
 
     /**
      * @brief Get the current viewport size (frame size, without title bar)

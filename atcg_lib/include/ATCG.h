@@ -1,6 +1,7 @@
 #pragma once
 
 //-------- CORE ---------
+#include <Core/Platform.h>
 #include <Core/Layer.h>
 #include <Core/LayerStack.h>
 #include <Core/Application.h>
@@ -18,6 +19,7 @@
 #include <Events/MouseEvent.h>
 #include <Events/WindowEvent.h>
 #include <Events/KeyEvent.h>
+#include <Events/VREvent.h>
 
 //-------- Renderer ------
 #include <Renderer/Renderer.h>
@@ -31,6 +33,7 @@
 #include <Renderer/Texture.h>
 #include <Renderer/Framebuffer.h>
 #include <Renderer/Material.h>
+#include <Renderer/VRSystem.h>
 
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
@@ -38,19 +41,17 @@
 //-------- DataStructure --
 #include <DataStructure/Graph.h>
 #include <DataStructure/Grid.h>
-#include <DataStructure/Laplacian.h>
 #include <DataStructure/Timer.h>
 #include <DataStructure/Statistics.h>
 #include <DataStructure/BufferView.h>
 #include <DataStructure/Image.h>
 
 //-------- Math -----------
+#include <Math/Constants.h>
 #include <Math/Functions.h>
 #include <Math/Utils.h>
 #include <Math/Tracing.h>
-
-//-------- Utility -----------
-#include <Noise/Noise.h>
+#include <Math/Color.h>
 
 //-------- ImGui -----------
 #include <ImGui/Guizmo.h>
@@ -61,3 +62,8 @@
 #include <Scene/Entity.h>
 #include <Scene/Serializer.h>
 #include <Scene/SceneHierarchyPanel.h>
+#include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentSerializer.h>
+
+//-------- Torch ------------
+#include <DataStructure/TorchUtils.h>

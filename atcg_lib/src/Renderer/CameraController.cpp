@@ -1,5 +1,8 @@
 #include <Renderer/CameraController.h>
 
+#include <Renderer/VRSystem.h>
+#include <openvr.h>
+
 #include <GLFW/glfw3.h>
 
 namespace atcg
@@ -13,13 +16,17 @@ CameraController::CameraController(const atcg::ref_ptr<PerspectiveCamera>& camer
 
 FocusedController::FocusedController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
 
-FocusedController::FocusedController(const atcg::ref_ptr<Camera>& camera) : CameraController(camera)
+FocusedController::FocusedController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera)
 {
     _distance = glm::length(_camera->getPosition() - _camera->getLookAt());
 }
 
 void FocusedController::onUpdate(float delta_time)
 {
+    glm::vec2 mouse_pos = Input::getMousePosition();
+    _currentX           = mouse_pos.x;
+    _currentY           = mouse_pos.y;
+
     if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_MIDDLE))
     {
         float offsetX = _lastX - _currentX;
@@ -72,7 +79,6 @@ void FocusedController::onEvent(Event* e)
     EventDispatcher dispatcher(e);
     dispatcher.dispatch<MouseScrolledEvent>(ATCG_BIND_EVENT_FN(FocusedController::onMouseZoom));
     dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(FocusedController::onWindowResize));
-    dispatcher.dispatch<MouseMovedEvent>(ATCG_BIND_EVENT_FN(FocusedController::onMouseMove));
 }
 
 bool FocusedController::onMouseZoom(MouseScrolledEvent* event)
@@ -93,14 +99,6 @@ bool FocusedController::onWindowResize(WindowResizeEvent* event)
     return false;
 }
 
-bool FocusedController::onMouseMove(MouseMovedEvent* event)
-{
-    _currentX = event->getX();
-    _currentY = event->getY();
-
-    return false;
-}
-
 
 FirstPersonController::FirstPersonController(const float& aspect_ratio,
                                              const glm::vec3& position,
@@ -111,11 +109,17 @@ FirstPersonController::FirstPersonController(const float& aspect_ratio,
 {
 }
 
-FirstPersonController::FirstPersonController(const atcg::ref_ptr<Camera>& camera) : CameraController(camera) {}
+FirstPersonController::FirstPersonController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera)
+{
+}
 
 void FirstPersonController::onUpdate(float delta_time)
 {
-    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+    glm::vec2 mouse_pos = Input::getMousePosition();
+    _currentX           = mouse_pos.x;
+    _currentY           = mouse_pos.y;
+
+    if(_clicked_right)
     {
         float offsetX = _lastX - _currentX;
         float offsetY = _lastY - _currentY;
@@ -149,7 +153,7 @@ void FirstPersonController::onUpdate(float delta_time)
             return deceleration_factor;
     };
 
-    if(Input::isKeyPressed(GLFW_KEY_W) && !Input::isKeyPressed(GLFW_KEY_S))    // forward
+    if(_pressed_W && !_pressed_S)    // forward
     {
         if(-_velocity_threshold < _velocity_forward && _velocity_forward < _velocity_threshold)
             _velocity_forward = _velocity_threshold;
@@ -158,7 +162,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(_velocity_forward < 0.0f)
             _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) - delta_velocity;
     }
-    else if(Input::isKeyPressed(GLFW_KEY_S) && !Input::isKeyPressed(GLFW_KEY_W))    // backward
+    else if(_pressed_S && !_pressed_W)    // backward
     {
         if(-_velocity_threshold < _velocity_forward && _velocity_forward < _velocity_threshold)
             _velocity_forward = -_velocity_threshold;
@@ -175,7 +179,7 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity);
     }
 
-    if(Input::isKeyPressed(GLFW_KEY_A) && !Input::isKeyPressed(GLFW_KEY_D))    // left
+    if(_pressed_A && !_pressed_D)    // left
     {
         if(-_velocity_threshold < _velocity_right && _velocity_right < _velocity_threshold)
             _velocity_right = -_velocity_threshold;
@@ -184,7 +188,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(0.0f < _velocity_right)
             _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) + delta_velocity;
     }
-    else if(Input::isKeyPressed(GLFW_KEY_D) && !Input::isKeyPressed(GLFW_KEY_A))    // right
+    else if(_pressed_D && !_pressed_A)    // right
     {
         if(-_velocity_threshold < _velocity_right && _velocity_right < _velocity_threshold)
             _velocity_right = _velocity_threshold;
@@ -201,7 +205,7 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity);
     }
 
-    if(Input::isKeyPressed(GLFW_KEY_E) && !Input::isKeyPressed(GLFW_KEY_Q))    // up
+    if(_pressed_E && !_pressed_Q)    // up
     {
         if(-_velocity_threshold < _velocity_up && _velocity_up < _velocity_threshold)
             _velocity_up = _velocity_threshold;
@@ -210,7 +214,7 @@ void FirstPersonController::onUpdate(float delta_time)
         else if(_velocity_up < 0.0)
             _velocity_up -= deceleration(delta_velocity, _velocity_up, max_velocity) - delta_velocity;
     }
-    else if(Input::isKeyPressed(GLFW_KEY_Q) && !Input::isKeyPressed(GLFW_KEY_E))    // down
+    else if(_pressed_Q && !_pressed_E)    // down
     {
         if(-_velocity_threshold < _velocity_up && _velocity_up < _velocity_threshold)
             _velocity_up = -_velocity_threshold;
@@ -246,6 +250,13 @@ void FirstPersonController::onUpdate(float delta_time)
     // update mouse position
     _lastX = _currentX;
     _lastY = _currentY;
+
+    if(!Input::isKeyPressed(GLFW_KEY_W)) _pressed_W = false;
+    if(!Input::isKeyPressed(GLFW_KEY_A)) _pressed_A = false;
+    if(!Input::isKeyPressed(GLFW_KEY_S)) _pressed_S = false;
+    if(!Input::isKeyPressed(GLFW_KEY_D)) _pressed_D = false;
+    if(!Input::isKeyPressed(GLFW_KEY_Q)) _pressed_Q = false;
+    if(!Input::isKeyPressed(GLFW_KEY_E)) _pressed_E = false;
 }
 
 void FirstPersonController::onEvent(Event* e)
@@ -254,6 +265,9 @@ void FirstPersonController::onEvent(Event* e)
     dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onWindowResize));
     dispatcher.dispatch<MouseMovedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onMouseMove));
     dispatcher.dispatch<KeyPressedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onKeyPressed));
+    dispatcher.dispatch<KeyReleasedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onKeyReleased));
+    dispatcher.dispatch<MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onMouseButtonPressed));
+    dispatcher.dispatch<MouseButtonReleasedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onMouseButtonReleased));
 }
 
 bool FirstPersonController::onWindowResize(WindowResizeEvent* event)
@@ -265,23 +279,270 @@ bool FirstPersonController::onWindowResize(WindowResizeEvent* event)
 
 bool FirstPersonController::onMouseMove(MouseMovedEvent* event)
 {
-    _currentX = event->getX();
-    _currentY = event->getY();
+    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+    {
+        _clicked_right = true;
+    }
 
     return false;
 }
 
 bool FirstPersonController::onKeyPressed(KeyPressedEvent* event)
 {
-    if(event->getCode() == GLFW_KEY_KP_ADD)    // faster
+    if(event->getKeyCode() == GLFW_KEY_KP_ADD)    // faster
     {
         _speed *= 1.25;
     }
-    if(event->getCode() == GLFW_KEY_KP_SUBTRACT)    // slower
+
+    if(event->getKeyCode() == GLFW_KEY_KP_SUBTRACT)    // slower
     {
         _speed *= 0.8;
     }
 
+    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = true;
+    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = true;
+    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = true;
+    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = true;
+    if(event->getKeyCode() == GLFW_KEY_Q) _pressed_Q = true;
+    if(event->getKeyCode() == GLFW_KEY_E) _pressed_E = true;
+
+    return true;
+}
+
+bool FirstPersonController::onKeyReleased(KeyReleasedEvent* event)
+{
+    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = false;
+    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = false;
+    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = false;
+    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = false;
+    if(event->getKeyCode() == GLFW_KEY_Q) _pressed_Q = false;
+    if(event->getKeyCode() == GLFW_KEY_E) _pressed_E = false;
+
+    return true;
+}
+
+bool FirstPersonController::onMouseButtonPressed(MouseButtonPressedEvent* event)
+{
+    if(event->getMouseButton() == GLFW_MOUSE_BUTTON_RIGHT) _clicked_right = true;
+
+    return true;
+}
+
+bool FirstPersonController::onMouseButtonReleased(MouseButtonReleasedEvent* event)
+{
+    if(event->getMouseButton() == GLFW_MOUSE_BUTTON_RIGHT) _clicked_right = false;
+
+    return true;
+}
+
+
+VRController::VRController(const float& aspect_ratio, const float& speed)
+    : CameraController(aspect_ratio, glm::vec3(0), glm::vec3(0, 0, 1)),
+      _speed(speed)
+{
+    _cam_left  = atcg::make_ref<PerspectiveCamera>(aspect_ratio);
+    _cam_right = atcg::make_ref<PerspectiveCamera>(aspect_ratio);
+    _camera    = _cam_left;
+
+    auto [p_left, p_right] = VRSystem::getProjections();
+    _cam_left->setProjection(p_left);
+    _cam_right->setProjection(p_right);
+}
+
+VRController::VRController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera) {}
+
+void VRController::onUpdate(float delta_time)
+{
+    float delta_velocity = _acceleration * delta_time;
+    float max_velocity   = _max_velocity;
+    auto deceleration    = [](float delta_velocity, float current_velocity, float max_velocity)
+    {
+        float relative_velocity = current_velocity / max_velocity;
+        float deceleration_factor =
+            delta_velocity * (6.0f * glm::sign(relative_velocity) * (relative_velocity * relative_velocity + 0.1));
+        if(deceleration_factor / current_velocity > 1.0f)
+            return current_velocity;
+        else
+            return deceleration_factor;
+    };
+
+    if(_pressed_W && !_pressed_S)    // forward
+    {
+        if(-_velocity_threshold < _velocity_forward && _velocity_forward < _velocity_threshold)
+            _velocity_forward = _velocity_threshold;
+        else if(0.0f < _velocity_forward && _velocity_forward <= max_velocity)
+            _velocity_forward += delta_velocity;
+        else if(_velocity_forward < 0.0f)
+            _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) - delta_velocity;
+    }
+    else if(_pressed_S && !_pressed_W)    // backward
+    {
+        if(-_velocity_threshold < _velocity_forward && _velocity_forward < _velocity_threshold)
+            _velocity_forward = -_velocity_threshold;
+        else if(-max_velocity <= _velocity_forward && _velocity_forward < 0.0f)
+            _velocity_forward -= delta_velocity;
+        else if(0.0f < _velocity_forward)
+            _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) + delta_velocity;
+    }
+    else
+    {
+        if(-_velocity_threshold < _velocity_forward && _velocity_forward < _velocity_threshold)
+            _velocity_forward = 0.0f;
+        else
+            _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity);
+    }
+
+    if(_pressed_A && !_pressed_D)    // left
+    {
+        if(-_velocity_threshold < _velocity_right && _velocity_right < _velocity_threshold)
+            _velocity_right = -_velocity_threshold;
+        else if(-max_velocity <= _velocity_right && _velocity_right < 0.0f)
+            _velocity_right -= delta_velocity;
+        else if(0.0f < _velocity_right)
+            _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) + delta_velocity;
+    }
+    else if(_pressed_D && !_pressed_A)    // right
+    {
+        if(-_velocity_threshold < _velocity_right && _velocity_right < _velocity_threshold)
+            _velocity_right = _velocity_threshold;
+        else if(0.0 < _velocity_right && _velocity_right <= max_velocity)
+            _velocity_right += delta_velocity;
+        else if(_velocity_right < 0.0)
+            _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) - delta_velocity;
+    }
+    else
+    {
+        if(-_velocity_threshold < _velocity_right && _velocity_right < _velocity_threshold)
+            _velocity_right = 0.0f;
+        else
+            _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity);
+    }
+
+    _velocity_forward = glm::clamp(_velocity_forward, -max_velocity, max_velocity);
+    _velocity_right   = glm::clamp(_velocity_right, -max_velocity, max_velocity);
+
+    // update camera position
+    auto [v_left, v_right] = VRSystem::getInverseViews();
+    _cam_left->setView(glm::inverse(v_left));
+    _cam_right->setView(glm::inverse(v_right));
+
+    glm::vec3 forward_left = -v_left[2];
+
+    forward_left[1]          = 0.0f;    // only horizontal movement
+    glm::vec3 upDirection    = glm::vec3(0, 1, 0);
+    glm::vec3 rightDirection = glm::normalize(glm::cross(forward_left, upDirection));
+
+    glm::vec3 total_velocity = _speed * (forward_left * _velocity_forward + rightDirection * _velocity_right);
+    glm::vec3 current_offset = VRSystem::getOffset();
+    current_offset += total_velocity * delta_time;
+
+
+    // The trigger is currently down
+    if(_trigger_pressed)
+    {
+        glm::mat4 pose        = VRSystem::getDevicePose(_device_index);
+        _controller_position  = glm::vec3(pose[3]);
+        _controller_direction = -pose[2];
+
+        float t = -_controller_position.y / _controller_direction.y;
+
+        if(std::abs(_controller_direction.y) > 1e-5f && t > 0.0f)
+        {
+            _controller_intersection = _controller_position + t * _controller_direction;
+        }
+        else
+        {
+            _controller_intersection = _controller_position + 1000.0f * _controller_direction;
+        }
+    }
+
+    // Update camera position
+    if(_trigger_release)
+    {
+        _trigger_release = false;
+
+        float t = -_controller_position.y / _controller_direction.y;
+
+        if(std::abs(_controller_direction.y) > 1e-5f && t > 0.0f)
+        {
+            auto rl_pos    = atcg::VRSystem::getPosition();
+            rl_pos.y       = 0;
+            current_offset = _controller_position + t * _controller_direction - rl_pos;
+        }
+    }
+
+    VRSystem::setOffset(current_offset);
+
+    if(!Input::isKeyPressed(GLFW_KEY_W)) _pressed_W = false;
+    if(!Input::isKeyPressed(GLFW_KEY_A)) _pressed_A = false;
+    if(!Input::isKeyPressed(GLFW_KEY_S)) _pressed_S = false;
+    if(!Input::isKeyPressed(GLFW_KEY_D)) _pressed_D = false;
+}
+
+void VRController::onEvent(Event* e)
+{
+    EventDispatcher dispatcher(e);
+    dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(VRController::onWindowResize));
+    dispatcher.dispatch<KeyPressedEvent>(ATCG_BIND_EVENT_FN(VRController::onKeyPressed));
+    dispatcher.dispatch<KeyReleasedEvent>(ATCG_BIND_EVENT_FN(VRController::onKeyReleased));
+    dispatcher.dispatch<VRButtonPressedEvent>(ATCG_BIND_EVENT_FN(VRController::onVRButtonPressed));
+    dispatcher.dispatch<VRButtonReleasedEvent>(ATCG_BIND_EVENT_FN(VRController::onVRButtonReleased));
+}
+
+bool VRController::onWindowResize(WindowResizeEvent* event)
+{
     return false;
+}
+
+bool VRController::onKeyPressed(KeyPressedEvent* event)
+{
+    if(event->getKeyCode() == GLFW_KEY_KP_ADD)    // faster
+    {
+        _speed *= 1.25;
+    }
+
+    if(event->getKeyCode() == GLFW_KEY_KP_SUBTRACT)    // slower
+    {
+        _speed *= 0.8;
+    }
+
+    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = true;
+    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = true;
+    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = true;
+    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = true;
+
+    return true;
+}
+
+bool VRController::onKeyReleased(KeyReleasedEvent* event)
+{
+    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = false;
+    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = false;
+    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = false;
+    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = false;
+
+    return true;
+}
+
+bool VRController::onVRButtonPressed(VRButtonPressedEvent* event)
+{
+    auto role = VRSystem::getDeviceRole(event->getDeviceIndex());
+    if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRSystem::Role::RIGHT_HAND)
+    {
+        _trigger_pressed = true;
+        _device_index    = event->getDeviceIndex();
+    }
+    return true;
+}
+
+bool VRController::onVRButtonReleased(VRButtonReleasedEvent* event)
+{
+    auto role = VRSystem::getDeviceRole(event->getDeviceIndex());
+    if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRSystem::Role::RIGHT_HAND)
+    {
+        _trigger_release = true;
+        _trigger_pressed = false;
+    }
+    return true;
 }
 }    // namespace atcg

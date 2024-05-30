@@ -2,6 +2,7 @@
 
 #include <string>
 #include <ostream>
+#include <Core/Platform.h>
 
 namespace atcg
 {
@@ -21,7 +22,11 @@ enum class EventType
     MouseButtonReleased,
     MouseMoved,
     MouseScrolled,
-    FileDropped
+    FileDropped,
+    VRButtonPressed,
+    VRButtonReleased,
+    VRButtonTouched,
+    VRButtonUntouched
 };
 
 #define BIT(x) (1 << x)
@@ -32,7 +37,9 @@ enum EventCategory
     EventCategoryInput       = BIT(1),
     EventCategoryKeyboard    = BIT(2),
     EventCategoryMouse       = BIT(3),
-    EventCategoryMouseButton = BIT(4)
+    EventCategoryMouseButton = BIT(4),
+    EventCategoryVR          = BIT(5),
+    EventCategroyVRButton    = BIT(6)
 };
 #undef BIT
 
@@ -92,7 +99,7 @@ private:
     Event* _event;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Event& e)
+ATCG_INLINE std::ostream& operator<<(std::ostream& os, const Event& e)
 {
     return os << e.toString();
 }

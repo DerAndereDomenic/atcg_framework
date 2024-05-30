@@ -11,6 +11,13 @@ bool Input::isKeyPressed(const int32_t& key)
     return state == GLFW_PRESS;
 }
 
+bool Input::isKeyReleased(const int32_t& key)
+{
+    auto* window = Application::get()->getWindow()->getNativeWindow();
+    auto state   = glfwGetKey((GLFWwindow*)window, key);
+    return state == GLFW_RELEASE;
+}
+
 bool Input::isMouseButtonPressed(const int32_t& button)
 {
     auto* window = Application::get()->getWindow()->getNativeWindow();

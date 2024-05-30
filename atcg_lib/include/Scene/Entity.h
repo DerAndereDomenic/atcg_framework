@@ -44,6 +44,38 @@ public:
     }
 
     /**
+     * @brief Set a component to the entity
+     *
+     * @tparam T The component type
+     * @tparam The component to replace
+     *
+     * @return Reference to the created component
+     */
+    template<typename T>
+    T& replaceComponent(T& component)
+    {
+        T& comp = _scene->_registry.replace<T>(_entity_handle, component);
+        return comp;
+    }
+
+    /**
+     * @brief Add or replace a component to the entity
+     *
+     * @tparam T The component type
+     * @tparam Args The arguments of the Component Constructor
+     *
+     * @param Args The constructor arguments
+     *
+     * @return Reference to the created component
+     */
+    template<typename T, typename... Args>
+    T& addOrReplaceComponent(Args&&... args)
+    {
+        T& comp = _scene->_registry.emplace_or_replace<T>(_entity_handle, std::forward<Args>(args)...);
+        return comp;
+    }
+
+    /**
      * @brief Get a component
      *
      * @tparam T The component type
@@ -59,7 +91,7 @@ public:
     /**
      * @brief Check if the Entity holds all components
      *
-     * @tparam T The component types
+     * @tparam T... The component types
      *
      * @return True if the entity has all of the component
      */
@@ -72,7 +104,7 @@ public:
     /**
      * @brief Check if the Entity holds any components
      *
-     * @tparam T The component types
+     * @tparam T... The component types
      *
      * @return True if the entity has any the component
      */

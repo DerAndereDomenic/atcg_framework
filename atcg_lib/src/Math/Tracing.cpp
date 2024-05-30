@@ -33,17 +33,26 @@ void Tracing::prepareAccelerationStructure(Entity entity)
     Vertex* vertices    = mesh->getVerticesBuffer()->getHostPointer<Vertex>();
     glm::u32vec3* faces = mesh->getFaceIndexBuffer()->getHostPointer<glm::u32vec3>();
 
-    acc_component.vertices = atcg::DeviceBuffer<glm::vec3>(mesh->n_vertices());
-    acc_component.faces    = atcg::DeviceBuffer<glm::u32vec3>(mesh->n_faces());
+    acc_component.vertices = atcg::MemoryBuffer<glm::vec3>(mesh->n_vertices());
+    acc_component.faces    = atcg::MemoryBuffer<glm::u32vec3>(mesh->n_faces());
 
     std::vector<glm::vec3> temp_vertices(mesh->n_vertices());
-    for(uint32_t i = 0; i < mesh->n_vertices(); ++i) { temp_vertices[i] = vertices[i].position; }
+    for(uint32_t i = 0; i < mesh->n_vertices(); ++i)
+    {
+        temp_vertices[i] = vertices[i].position;
+    }
     acc_component.vertices.copy(temp_vertices.data());
     acc_component.faces.copy(faces);
 
     // Restore original mapping relation
-    if(!vertices_mapped) { mesh->getVerticesBuffer()->unmapHostPointers(); }
-    if(!faces_mapped) { mesh->getFaceIndexBuffer()->unmapHostPointers(); }
+    if(!vertices_mapped)
+    {
+        mesh->getVerticesBuffer()->unmapHostPointers();
+    }
+    if(!faces_mapped)
+    {
+        mesh->getFaceIndexBuffer()->unmapHostPointers();
+    }
 
     nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(acc_component.vertices.get()),
                                               reinterpret_cast<const uint32_t*>(acc_component.faces.get()),

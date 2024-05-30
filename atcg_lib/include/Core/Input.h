@@ -20,6 +20,14 @@ public:
     static bool isKeyPressed(const int32_t& key);
 
     /**
+     * @brief Check if key is released
+     *
+     * @param key The keycode
+     * @return true If the key was released
+     */
+    static bool isKeyReleased(const int32_t& key);
+
+    /**
      * @brief Check if a mouse button is pressed
      *
      * @param button The button to check

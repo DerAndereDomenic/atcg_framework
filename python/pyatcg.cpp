@@ -1,6 +1,5 @@
 #define PYBIND11_DETAILED_ERROR_MESSAGES
 #include <pybind11/pybind11.h>
-#include <pybind11/eigen.h>
 #include <pybind11/numpy.h>
 #include <pybind11/cast.h>
 #include <pybind11/stl.h>
@@ -8,6 +7,7 @@
 #include <ATCG.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <torch/python.h>
 
 #include <imgui.h>
 
@@ -37,9 +37,12 @@ private:
 class PythonApplication : public atcg::Application
 {
 public:
-    PythonApplication() : atcg::Application() {}
+    PythonApplication(atcg::Layer* layer) : atcg::Application() { pushLayer(layer); }
 
-    PythonApplication(const atcg::WindowProps& props) : atcg::Application(props) {}
+    PythonApplication(atcg::Layer* layer, const atcg::WindowProps& props) : atcg::Application(props)
+    {
+        pushLayer(layer);
+    }
 
     ~PythonApplication() {}
 };
@@ -47,13 +50,11 @@ public:
 //* This function isn't called but is needed for the linker
 atcg::Application* atcg::createApplication()
 {
-    return new PythonApplication;
+    return nullptr;
 }
 
-int python_main(atcg::Layer* layer, const atcg::WindowProps& props)
+int python_main(atcg::Application* app)
 {
-    atcg::Application* app = new PythonApplication(props);
-    app->pushLayer(layer);
     return atcg::atcg_main(app);
 }
 
@@ -73,8 +74,10 @@ PYBIND11_MODULE(pyatcg, m)
     )pbdoc";
 
     // ---------------- CORE ---------------------
-    auto m_layer  = py::class_<atcg::Layer, PythonLayer, std::unique_ptr<atcg::Layer, py::nodelete>>(m, "Layer");
-    auto m_event  = py::class_<atcg::Event>(m, "Event");
+    py::class_<atcg::Application>(m, "Application");
+    auto m_application = py::class_<PythonApplication, atcg::Application>(m, "PythonApplication");
+    auto m_layer       = py::class_<atcg::Layer, PythonLayer, std::unique_ptr<atcg::Layer, py::nodelete>>(m, "Layer");
+    auto m_event       = py::class_<atcg::Event>(m, "Event");
     auto m_camera = py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");
     auto m_controller =
         py::class_<atcg::FirstPersonController, atcg::ref_ptr<atcg::FirstPersonController>>(m, "FirstPersonController");
@@ -100,8 +103,9 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("pos_y", &atcg::WindowProps::pos_y)
         .def_readwrite("vsync", &atcg::WindowProps::vsync);
 
-    m.def("show", &python_main, "layer"_a, py::arg("props"));
+    m.def("start", &python_main, py::arg("application"));
     m.def("print_statistics", &atcg::print_statistics);
+    m_application.def(py::init<atcg::Layer*>()).def(py::init<atcg::Layer*, atcg::WindowProps>());
     m_layer.def(py::init<>())
         .def(py::init<std::string>(), "name"_a)
         .def("onAttach", &atcg::Layer::onAttach)
@@ -136,15 +140,13 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::KeyPressedEvent, atcg::KeyEvent>(m, "KeyPressedEvent")
         .def(py::init<int32_t, bool>(), "key"_a, "key_pressed"_a)
         .def("isRepeat", &atcg::KeyPressedEvent::IsRepeat)
-        .def("getCode", &atcg::KeyPressedEvent::getCode);
+        .def("getCode", &atcg::KeyPressedEvent::getKeyCode);
     py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent").def(py::init<int32_t>());
     py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent").def(py::init<int32_t>());
     py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent")
         .def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
         .def("getWidth", &atcg::ViewportResizeEvent::getWidth)
         .def("getHeight", &atcg::ViewportResizeEvent::getHeight);
-
-    py::class_<atcg::Application, atcg::ref_ptr<atcg::Application>>(m, "Application");
 
     m.def("width",
           []()
@@ -361,11 +363,20 @@ PYBIND11_MODULE(pyatcg, m)
 
     m_mat3
         .def(py::init(
-                 [](py::array_t<float> b)
+                 [](py::array_t<float, py::array::c_style | py::array::forcecast> b)
                  {
                      py::buffer_info info = b.request();
 
-                     glm::mat3 M = glm::make_mat3(static_cast<float*>(info.ptr));
+                     glm::mat3 M;
+
+                     const float* data = static_cast<const float*>(b.data());
+                     for(int i = 0; i < 3; ++i)
+                     {
+                         for(int j = 0; j < 3; ++j)
+                         {
+                             M[i][j] = data[b.index_at(j, i)];
+                         }
+                     }
 
                      return M;
                  }),
@@ -373,21 +384,40 @@ PYBIND11_MODULE(pyatcg, m)
         .def_buffer(
             [](glm::mat3& M) -> py::buffer_info
             {
-                return py::buffer_info(glm::value_ptr(M),
+                float data[3][3];
+
+                for(int i = 0; i < 3; ++i)
+                {
+                    for(int j = 0; j < 3; ++j)
+                    {
+                        data[i][j] = M[j][i];
+                    }
+                }
+
+                return py::buffer_info(data,
                                        sizeof(float),
                                        py::format_descriptor<float>::format(),
                                        2,
                                        {3, 3},
-                                       {sizeof(float), sizeof(float) * 3});
+                                       {sizeof(float) * 3, sizeof(float)});
             });
 
     m_mat4
         .def(py::init(
-                 [](py::array_t<float> b)
+                 [](py::array_t<float, py::array::c_style | py::array::forcecast> b)
                  {
                      py::buffer_info info = b.request();
 
-                     glm::mat4 M = glm::make_mat4(static_cast<float*>(info.ptr));
+                     glm::mat4 M;
+
+                     const float* data = static_cast<const float*>(b.data());
+                     for(int i = 0; i < 4; ++i)
+                     {
+                         for(int j = 0; j < 4; ++j)
+                         {
+                             M[i][j] = data[b.index_at(j, i)];
+                         }
+                     }
 
                      return M;
                  }),
@@ -395,12 +425,22 @@ PYBIND11_MODULE(pyatcg, m)
         .def_buffer(
             [](glm::mat4& M) -> py::buffer_info
             {
-                return py::buffer_info(glm::value_ptr(M),
+                float data[4][4];
+
+                for(int i = 0; i < 4; ++i)
+                {
+                    for(int j = 0; j < 4; ++j)
+                    {
+                        data[i][j] = M[j][i];
+                    }
+                }
+
+                return py::buffer_info(data,
                                        sizeof(float),
                                        py::format_descriptor<float>::format(),
                                        2,
                                        {4, 4},
-                                       {sizeof(float), sizeof(float) * 4});
+                                       {sizeof(float) * 4, sizeof(float)});
             });
 
     // ------------------- Datastructure ---------------------------------
@@ -411,82 +451,92 @@ PYBIND11_MODULE(pyatcg, m)
         .def("ellapsedSeconds", &atcg::Timer::elapsedSeconds)
         .def("reset", &atcg::Timer::reset);
 
+    py::class_<atcg::VertexSpecification>(m, "VertexSpecification")
+        .def_readonly_static("POSITION_BEGIN", &atcg::VertexSpecification::POSITION_BEGIN)
+        .def_readonly_static("POSITION_END", &atcg::VertexSpecification::POSITION_END)
+        .def_readonly_static("COLOR_BEGIN", &atcg::VertexSpecification::COLOR_BEGIN)
+        .def_readonly_static("COLOR_END", &atcg::VertexSpecification::COLOR_END)
+        .def_readonly_static("NORMAL_BEGIN", &atcg::VertexSpecification::NORMAL_BEGIN)
+        .def_readonly_static("NORMAL_END", &atcg::VertexSpecification::NORMAL_END)
+        .def_readonly_static("TANGNET_BEGIN", &atcg::VertexSpecification::TANGNET_BEGIN)
+        .def_readonly_static("TANGNET_END", &atcg::VertexSpecification::TANGNET_END)
+        .def_readonly_static("UV_BEGIN", &atcg::VertexSpecification::UV_BEGIN)
+        .def_readonly_static("UV_END", &atcg::VertexSpecification::UV_END)
+        .def_readonly_static("VERTEX_SIZE", &atcg::VertexSpecification::VERTEX_SIZE);
+
+    py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification")
+        .def_readonly_static("INDICES_BEGIN", &atcg::EdgeSpecification::INDICES_BEGIN)
+        .def_readonly_static("INDICES_END", &atcg::EdgeSpecification::INDICES_END)
+        .def_readonly_static("COLOR_BEGIN", &atcg::EdgeSpecification::COLOR_BEGIN)
+        .def_readonly_static("COLOR_END", &atcg::EdgeSpecification::COLOR_END)
+        .def_readonly_static("RADIUS_BEGIN", &atcg::EdgeSpecification::RADIUS_BEGIN)
+        .def_readonly_static("RADIUS_END", &atcg::EdgeSpecification::RADIUS_END)
+        .def_readonly_static("EDGE_SIZE", &atcg::EdgeSpecification::EDGE_SIZE);
+
     py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph")
         .def(py::init<>())
         .def_static("createPointCloud", py::overload_cast<>(&atcg::Graph::createPointCloud))
-        .def_static("createPointCloud",
-                    [](py::array_t<float> vertex_data)
-                    {
-                        py::buffer_info info = vertex_data.request();
-                        std::vector<atcg::Vertex> vertices((atcg::Vertex*)info.ptr,
-                                                           (atcg::Vertex*)info.ptr +
-                                                               info.size * sizeof(float) / sizeof(atcg::Vertex));
-                        return atcg::Graph::createPointCloud(vertices);
-                    })
-        .def_static("createGraph", py::overload_cast<>(&atcg::Graph::createPointCloud))
+        .def_static("createPointCloud", py::overload_cast<const torch::Tensor&>(&atcg::Graph::createPointCloud))
+        .def_static("createTriangleMesh", py::overload_cast<>(&atcg::Graph::createTriangleMesh))
+        .def_static("createTriangleMesh",
+                    py::overload_cast<const torch::Tensor&, const torch::Tensor&>(&atcg::Graph::createTriangleMesh))
+        .def_static("createGraph", py::overload_cast<>(&atcg::Graph::createGraph))
         .def_static("createGraph",
-                    [](py::array_t<float> vertex_data, py::array_t<float> edge_data)
-                    {
-                        py::buffer_info info_vertices = vertex_data.request();
-                        std::vector<atcg::Vertex> vertices((atcg::Vertex*)info_vertices.ptr,
-                                                           (atcg::Vertex*)info_vertices.ptr + info_vertices.size *
-                                                                                                  sizeof(float) /
-                                                                                                  sizeof(atcg::Vertex));
-
-                        py::buffer_info info_edges = edge_data.request();
-                        std::vector<atcg::Edge> edges((atcg::Edge*)info_edges.ptr,
-                                                      (atcg::Edge*)info_edges.ptr +
-                                                          info_edges.size * sizeof(float) / sizeof(atcg::Edge));
-                        return atcg::Graph::createGraph(vertices, edges);
-                    })
-        .def("updateVertices",
-             [](const atcg::ref_ptr<atcg::Graph>& graph, py::array_t<float> vertex_data)
-             {
-                 py::buffer_info info = vertex_data.request();
-                 std::vector<atcg::Vertex> vertices((atcg::Vertex*)info.ptr,
-                                                    (atcg::Vertex*)info.ptr +
-                                                        info.size * sizeof(float) / sizeof(atcg::Vertex));
-                 graph->updateVertices(vertices);
-             })
-        .def("updateEdges",
-             [](const atcg::ref_ptr<atcg::Graph>& graph, py::array_t<float> edge_data)
-             {
-                 py::buffer_info info_edges = edge_data.request();
-                 std::vector<atcg::Edge> edges((atcg::Edge*)info_edges.ptr,
-                                               (atcg::Edge*)info_edges.ptr +
-                                                   info_edges.size * sizeof(float) / sizeof(atcg::Edge));
-                 graph->updateEdges(edges);
-             })
-        .def("getPositions",
-             [](const atcg::ref_ptr<atcg::Graph>& graph)
-             {
-                 atcg::Vertex* vertices = graph->getVerticesBuffer()->getHostPointer<atcg::Vertex>();
-                 return py::memoryview::from_buffer((void*)vertices,
-                                                    sizeof(float),
-                                                    py::format_descriptor<float>::value,
-                                                    {(int)graph->n_vertices(), 3},
-                                                    {sizeof(atcg::Vertex), sizeof(float)});
-             })
-        .def("getFaces",
-             [](const atcg::ref_ptr<atcg::Graph>& graph)
-             {
-                 uint32_t* faces = graph->getFaceIndexBuffer()->getHostPointer<uint32_t>();
-                 return py::memoryview::from_buffer((void*)faces,
-                                                    sizeof(uint32_t),
-                                                    py::format_descriptor<uint32_t>::value,
-                                                    {(int)graph->n_faces(), 3},
-                                                    {sizeof(uint32_t) * 3, sizeof(uint32_t)});
-             })
-        .def("unmapPointers",
-             [](const atcg::ref_ptr<atcg::Graph>& graph)
-             {
-                 graph->getVerticesBuffer()->unmapPointers();
-                 graph->getFaceIndexBuffer()->unmapPointers();
-                 graph->getEdgesBuffer()->unmapPointers();
-             });
+                    py::overload_cast<const torch::Tensor&, const torch::Tensor&>(&atcg::Graph::createGraph))
+        .def("updateVertices", py::overload_cast<const torch::Tensor&>(&atcg::Graph::updateVertices))
+        .def("updateFaces", py::overload_cast<const torch::Tensor&>(&atcg::Graph::updateFaces))
+        .def("updateEdges", py::overload_cast<const torch::Tensor&>(&atcg::Graph::updateEdges))
+        .def("getPositions", &atcg::Graph::getPositions)
+        .def("getHostPositions", &atcg::Graph::getHostPositions)
+        .def("getDevicePositions", &atcg::Graph::getDevicePositions)
+        .def("getColors", &atcg::Graph::getColors)
+        .def("getHostColors", &atcg::Graph::getHostColors)
+        .def("getDeviceColors", &atcg::Graph::getDeviceColors)
+        .def("getNormals", &atcg::Graph::getNormals)
+        .def("getHostNormals", &atcg::Graph::getHostNormals)
+        .def("getDeviceNormals", &atcg::Graph::getDeviceNormals)
+        .def("getTangents", &atcg::Graph::getTangents)
+        .def("getHostTangents", &atcg::Graph::getHostTangents)
+        .def("getDeviceTangents", &atcg::Graph::getDeviceTangents)
+        .def("getUVs", &atcg::Graph::getUVs)
+        .def("getHostUVs", &atcg::Graph::getHostUVs)
+        .def("getDeviceUVs", &atcg::Graph::getDeviceUVs)
+        .def("getEdges", &atcg::Graph::getEdges)
+        .def("getHostEdges", &atcg::Graph::getHostEdges)
+        .def("getDeviceEdges", &atcg::Graph::getDeviceEdges)
+        .def("n_vertices", &atcg::Graph::n_vertices)
+        .def("n_faces", &atcg::Graph::n_faces)
+        .def("n_edges", &atcg::Graph::n_edges)
+        .def("unmapVertexPointer", &atcg::Graph::unmapVertexPointer)
+        .def("unmapHostVertexPointer", &atcg::Graph::unmapHostVertexPointer)
+        .def("unmapDeviceVertexPointer", &atcg::Graph::unmapDeviceVertexPointer)
+        .def("unmapEdgePointer", &atcg::Graph::unmapEdgePointer)
+        .def("unmapHostEdgePointer", &atcg::Graph::unmapHostEdgePointer)
+        .def("unmapDeviceEdgePointer", &atcg::Graph::unmapDeviceEdgePointer)
+        .def("unmapFacePointer", &atcg::Graph::unmapEdgePointer)
+        .def("unmapHostFacePointer", &atcg::Graph::unmapHostFacePointer)
+        .def("unmapDeviceFacePointer", &atcg::Graph::unmapDeviceFacePointer)
+        .def("unmapAllHostPointers", &atcg::Graph::unmapAllHostPointers)
+        .def("unmapAllDevicePointers", &atcg::Graph::unmapAllDevicePointers)
+        .def("unmapAllPointers", &atcg::Graph::unmapAllPointers);
     m.def(
         "read_mesh",
         [](const std::string& path) { return atcg::IO::read_mesh(path); },
+        "path"_a);
+
+    m.def(
+        "read_pointcloud",
+        [](const std::string& path) { return atcg::IO::read_pointcloud(path); },
+        "path"_a);
+
+    m.def(
+        "read_lines",
+        [](const std::string& path) { return atcg::IO::read_lines(path); },
+        "path"_a);
+
+    m.def(
+        "read_scene",
+        [](const std::string& path) { return atcg::IO::read_scene(path); },
         "path"_a);
 
 
@@ -532,7 +582,17 @@ PYBIND11_MODULE(pyatcg, m)
             "scene"_a,
             "camera"_a)
         .def_static("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
-        .def_static("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a);
+        .def_static("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
+        .def_static(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const std::string& path) { atcg::Renderer::screenshot(scene, cam, width, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "path"_a);
 
     py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
         .def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
@@ -551,8 +611,14 @@ PYBIND11_MODULE(pyatcg, m)
         .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
 
     py::enum_<atcg::TextureFormat>(m, "TextureFormat")
+        .value("RG", atcg::TextureFormat::RG)
+        .value("RGB", atcg::TextureFormat::RGB)
         .value("RGBA", atcg::TextureFormat::RGBA)
+        .value("RGFLOAT", atcg::TextureFormat::RGFLOAT)
+        .value("RGBFLOAT", atcg::TextureFormat::RGBFLOAT)
+        .value("RGBAFLOAT", atcg::TextureFormat::RGBAFLOAT)
         .value("RINT", atcg::TextureFormat::RINT)
+        .value("RINT8", atcg::TextureFormat::RINT8)
         .value("RFLOAT", atcg::TextureFormat::RFLOAT)
         .value("DEPTH", atcg::TextureFormat::DEPTH);
 
@@ -574,8 +640,8 @@ PYBIND11_MODULE(pyatcg, m)
                      sampler.wrap_mode   = wrap_mode;
                      return sampler;
                  }),
-             "filter_mode"_a = atcg::TextureFilterMode::LINEAR,
-             "wrap_mode"_a   = atcg::TextureWrapMode::REPEAT)
+             py::arg_v("filter_mode", atcg::TextureFilterMode::LINEAR, "linear"),
+             py::arg_v("wrap_mode", atcg::TextureWrapMode::REPEAT, "size"))
         .def_readwrite("wrap_mode", &atcg::TextureSampler::wrap_mode)
         .def_readwrite("filter_mode", &atcg::TextureSampler::filter_mode);
 
@@ -607,23 +673,73 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("sampler", &atcg::TextureSpecification::sampler)
         .def_readwrite("format", &atcg::TextureSpecification::format);
 
+    py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image", py::buffer_protocol())
+        .def(py::init<>())
+        .def("load", &atcg::Image::load)
+        .def("store", &atcg::Image::store)
+        .def("applyGamma", &atcg::Image::applyGamma)
+        .def("width", &atcg::Image::width)
+        .def("height", &atcg::Image::height)
+        .def("channels", &atcg::Image::channels)
+        .def("name", &atcg::Image::name)
+        .def("isHDR", &atcg::Image::isHDR)
+        .def_buffer(
+            [](const atcg::Image& img) -> py::buffer_info
+            {
+                bool isHDR  = img.isHDR();
+                size_t size = isHDR ? sizeof(float) : sizeof(uint8_t);
+                void* data  = img.data().data_ptr();
+                return py::buffer_info(data,
+                                       size,
+                                       isHDR ? py::format_descriptor<float>::format()
+                                             : py::format_descriptor<uint8_t>::format(),
+                                       3,
+                                       {img.height(), img.width(), img.channels()},
+                                       {img.width() * img.channels() * size, img.channels() * size, size});
+            });
+
+    m.def("imread", &atcg::IO::imread);
+    m.def("imwrite", &atcg::IO::imwrite);
+
     py::class_<atcg::Texture2D, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D")
         .def_static(
             "create",
             [](atcg::TextureSpecification spec) { return atcg::Texture2D::create(spec); },
             "specification"_a)
+        .def_static(
+            "create",
+            [](const atcg::ref_ptr<atcg::Image>& img, atcg::TextureSpecification spec)
+            { return atcg::Texture2D::create(img, spec); },
+            "img"_a,
+            "specification"_a)
+        .def_static(
+            "create",
+            [](const atcg::ref_ptr<atcg::Image>& img) { return atcg::Texture2D::create(img); },
+            "img"_a)
         .def("getID", &atcg::Texture2D::getID)
-        .def(
-            "setData",
-            [](const atcg::ref_ptr<atcg::Texture2D>& texture, py::array_t<uint8_t> b)
-            {
-                py::buffer_info info = b.request();
-                texture->setData(info.ptr);
-            },
-            "data"_a);
+        .def("setData", &atcg::Texture2D::setData, "data"_a)
+        .def("getData", &atcg::Texture2D::getData);
 
     // ------------------- Scene ---------------------------------
     py::class_<entt::entity>(m, "EntityHandle").def(py::init<uint32_t>(), "handle"_a);
+
+    py::class_<atcg::Material>(m, "Material")
+        .def(py::init<>())
+        .def("getDiffuseTexture", &atcg::Material::getDiffuseTexture)
+        .def("getNormalTexture", &atcg::Material::getNormalTexture)
+        .def("getRoughnessTexture", &atcg::Material::getRoughnessTexture)
+        .def("getMetallicTexture", &atcg::Material::getMetallicTexture)
+        .def("setDiffuseTexture", &atcg::Material::setDiffuseTexture)
+        .def("setNormalTexture", &atcg::Material::setNormalTexture)
+        .def("setRoughnessTexture", &atcg::Material::setRoughnessTexture)
+        .def("setMetallicTexture", &atcg::Material::setMetallicTexture)
+        .def("setDiffuseColor",
+             [](atcg::Material& material, const glm::vec3& color) { material.setDiffuseColor(color); })
+        .def("setDiffuseColor",
+             [](atcg::Material& material, const glm::vec4& color) { material.setDiffuseColor(color); })
+        .def("setRoughness", &atcg::Material::setRoughness)
+        .def("setMetallic", &atcg::Material::setMetallic)
+        .def("removeNormalMap", &atcg::Material::removeNormalMap);
 
     py::class_<atcg::TransformComponent>(m, "TransformComponent")
         .def(py::init<glm::vec3, glm::vec3, glm::vec3>(), "position"_a, "scale"_a, "rotation"_a)
@@ -646,7 +762,8 @@ PYBIND11_MODULE(pyatcg, m)
         .def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&>(), "shader"_a)
         .def_readwrite("visible", &atcg::MeshRenderComponent::visible)
-        .def_readwrite("shader", &atcg::MeshRenderComponent::shader);
+        .def_readwrite("shader", &atcg::MeshRenderComponent::shader)
+        .def_readwrite("material", &atcg::MeshRenderComponent::material);
 
     py::class_<atcg::PointRenderComponent>(m, "PointRenderComponent")
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
@@ -657,7 +774,8 @@ PYBIND11_MODULE(pyatcg, m)
     py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent")
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, float>(), "shader"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointSphereRenderComponent::visible)
-        .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader);
+        .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader)
+        .def_readwrite("material", &atcg::PointSphereRenderComponent::material);
 
     py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent")
         .def(py::init<glm::vec3>(), "color"_a)
@@ -666,7 +784,8 @@ PYBIND11_MODULE(pyatcg, m)
 
     py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent")
         .def(py::init<float>(), "radius"_a)
-        .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible);
+        .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
+        .def_readwrite("material", &atcg::EdgeCylinderRenderComponent::material);
 
     py::class_<atcg::NameComponent>(m, "NameComponent")
         .def(py::init<>())
@@ -687,9 +806,9 @@ PYBIND11_MODULE(pyatcg, m)
             "scale"_a,
             "rotation"_a)
         .def(
-            "addTransformComponent",
-            [](atcg::Entity& entity, const atcg::TransformComponent& transform)
-            { return entity.addComponent<atcg::TransformComponent>(transform); },
+            "replaceTransformComponent",
+            [](atcg::Entity& entity, atcg::TransformComponent& transform)
+            { return entity.replaceComponent<atcg::TransformComponent>(transform); },
             "transform"_a)
         .def(
             "addGeometryComponent",
@@ -697,9 +816,9 @@ PYBIND11_MODULE(pyatcg, m)
             { return entity.addComponent<atcg::GeometryComponent>(graph); },
             "graph"_a)
         .def(
-            "addGeometryComponent",
-            [](atcg::Entity& entity, const atcg::GeometryComponent& geometry)
-            { return entity.addComponent<atcg::GeometryComponent>(geometry); },
+            "replaceGeometryComponent",
+            [](atcg::Entity& entity, atcg::GeometryComponent& geometry)
+            { return entity.replaceComponent<atcg::GeometryComponent>(geometry); },
             "geometry"_a)
         .def(
             "addMeshRenderComponent",
@@ -707,9 +826,9 @@ PYBIND11_MODULE(pyatcg, m)
             { return entity.addComponent<atcg::MeshRenderComponent>(shader); },
             "shader"_a)
         .def(
-            "addMeshRenderComponent",
-            [](atcg::Entity& entity, const atcg::MeshRenderComponent& component)
-            { return entity.addComponent<atcg::MeshRenderComponent>(component); },
+            "replaceMeshRenderComponent",
+            [](atcg::Entity& entity, atcg::MeshRenderComponent& component)
+            { return entity.replaceComponent<atcg::MeshRenderComponent>(component); },
             "component"_a)
         .def(
             "addPointRenderComponent",
@@ -721,9 +840,9 @@ PYBIND11_MODULE(pyatcg, m)
             "color"_a,
             "point_size"_a)
         .def(
-            "addPointRenderComponent",
-            [](atcg::Entity& entity, const atcg::PointRenderComponent& component)
-            { return entity.addComponent<atcg::PointRenderComponent>(component); },
+            "replacePointRenderComponent",
+            [](atcg::Entity& entity, atcg::PointRenderComponent& component)
+            { return entity.replaceComponent<atcg::PointRenderComponent>(component); },
             "component_a")
         .def(
             "addPointSphereRenderComponent",
@@ -732,9 +851,9 @@ PYBIND11_MODULE(pyatcg, m)
             "shader"_a,
             "point_size"_a)
         .def(
-            "addPointSphereRenderComponent",
-            [](atcg::Entity& entity, const atcg::PointSphereRenderComponent& component)
-            { return entity.addComponent<atcg::PointSphereRenderComponent>(component); },
+            "replacePointSphereRenderComponent",
+            [](atcg::Entity& entity, atcg::PointSphereRenderComponent& component)
+            { return entity.replaceComponent<atcg::PointSphereRenderComponent>(component); },
             "component"_a)
         .def(
             "addEdgeRenderComponent",
@@ -742,9 +861,9 @@ PYBIND11_MODULE(pyatcg, m)
             { return entity.addComponent<atcg::EdgeRenderComponent>(color); },
             "color"_a)
         .def(
-            "addEdgeRenderComponent",
-            [](atcg::Entity& entity, const atcg::EdgeRenderComponent& component)
-            { return entity.addComponent<atcg::EdgeRenderComponent>(component); },
+            "replaceEdgeRenderComponent",
+            [](atcg::Entity& entity, atcg::EdgeRenderComponent& component)
+            { return entity.replaceComponent<atcg::EdgeRenderComponent>(component); },
             "component"_a)
         .def(
             "addEdgeCylinderRenderComponent",
@@ -752,16 +871,16 @@ PYBIND11_MODULE(pyatcg, m)
             { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(radius); },
             "radius"_a)
         .def(
-            "addEdgeCylinderRenderComponent",
-            [](atcg::Entity& entity, const atcg::EdgeCylinderRenderComponent& component)
-            { return entity.addComponent<atcg::EdgeCylinderRenderComponent>(component); },
+            "replaceEdgeCylinderRenderComponent",
+            [](atcg::Entity& entity, atcg::EdgeCylinderRenderComponent& component)
+            { return entity.replaceComponent<atcg::EdgeCylinderRenderComponent>(component); },
             "component"_a)
         .def("addNameComponent",
              [](atcg::Entity& entity, const std::string& name)
              { return entity.addComponent<atcg::NameComponent>(name); })
-        .def("addNameComponent",
-             [](atcg::Entity& entity, const atcg::NameComponent& component)
-             { return entity.addComponent<atcg::NameComponent>(component); })
+        .def("replaceNameComponent",
+             [](atcg::Entity& entity, atcg::NameComponent& component)
+             { return entity.replaceComponent<atcg::NameComponent>(component); })
         .def("hasTransformComponent", &atcg::Entity::hasComponent<atcg::TransformComponent>)
         .def("hasGeometryComponent", &atcg::Entity::hasComponent<atcg::GeometryComponent>)
         .def("hasMeshRenderComponent", &atcg::Entity::hasComponent<atcg::MeshRenderComponent>)
@@ -787,7 +906,10 @@ PYBIND11_MODULE(pyatcg, m)
              {
                  std::vector<atcg::Entity> entities;
                  auto view = scene->getAllEntitiesWith<atcg::IDComponent>();
-                 for(auto e: view) { entities.push_back(atcg::Entity(e, scene.get())); }
+                 for(auto e: view)
+                 {
+                     entities.push_back(atcg::Entity(e, scene.get()));
+                 }
                  return entities;
              });
 
@@ -1111,6 +1233,37 @@ PYBIND11_MODULE(pyatcg, m)
     //              return py::array(buffer.size(), buffer.data());
     //          });
 
+    auto mutils = m.def_submodule("Utils");
+
+    mutils.def("AEMap", &atcg::Utils::AEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    mutils.def("relAEMap",
+               &atcg::Utils::relAEMap,
+               "groundtruth"_a,
+               "prediction"_a,
+               "channel_reduction"_a = "mean",
+               "delta"_a             = 1e-4f);
+    mutils.def("SEMap", &atcg::Utils::SEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    mutils.def("relSEMap",
+               &atcg::Utils::relSEMap,
+               "groundtruth"_a,
+               "prediction"_a,
+               "channel_reduction"_a = "mean",
+               "delta"_a             = 1e-4f);
+    mutils.def("MAE", &atcg::Utils::MAE, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    mutils.def("relMAE",
+               &atcg::Utils::relMAE,
+               "groundtruth"_a,
+               "prediction"_a,
+               "channel_reduction"_a = "mean",
+               "delta"_a             = 1e-4f);
+    mutils.def("MSE", &atcg::Utils::MSE, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    mutils.def("relMSE",
+               &atcg::Utils::relMSE,
+               "groundtruth"_a,
+               "prediction"_a,
+               "channel_reduction"_a = "mean",
+               "delta"_a             = 1e-4f);
+
     // IMGUI BINDINGS
 
     auto mimgui = m.def_submodule("ImGui");
@@ -1209,7 +1362,7 @@ PYBIND11_MODULE(pyatcg, m)
         "Image",
         [](uint32_t textureID, uint32_t width, uint32_t height)
         {
-            ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
+            ImGui::Image((void*)(uint64_t)(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
             return;
         },
         py::arg("textureID"),
