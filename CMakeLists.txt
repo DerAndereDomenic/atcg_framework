@@ -226,23 +226,5 @@ endif()
 if(ATCG_BUILD_TESTS)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     add_subdirectory(external/googletest)
-
-    enable_testing()
-
-    add_executable(atcg_lib_test)
-
-    target_sources(atcg_lib_test PRIVATE tests/HostBuffer_test.cpp
-                                         tests/DeviceBuffer_test.cpp)
-    target_link_libraries(atcg_lib_test PRIVATE atcg_lib
-                                                GTest::gtest_main)
-
-    target_include_directories(atcg_lib_test PRIVATE external/googletest/googletest/include)
-
-    if(MSVC)
-		set_target_properties(atcg_lib_test PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
-	endif()
-    target_compile_definitions(atcg_lib_test PUBLIC _USE_MATH_DEFINES OM_STATIC_BUILD)
-
-    include(GoogleTest)
-    gtest_discover_tests(atcg_lib_test)
+    add_subdirectory(tests)
 endif()
