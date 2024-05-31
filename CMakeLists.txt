@@ -229,25 +229,12 @@ if(ATCG_BUILD_TESTS)
 
     enable_testing()
 
-    add_executable(atcg_lib_test tests/HostBuffer_test.cpp
-                                 tests/DeviceBuffer_test.cpp)
+    add_executable(atcg_lib_test)
 
-    target_link_libraries( atcg_lib_test
-        atcg_lib
-        glfw
-        imgui
-        imguizmo
-        implot
-        glad
-        OpenGL::GL
-        OpenMeshCore
-        OpenMeshTools
-        yaml-cpp
-        stb_image
-        tinyobjloader
-        GTest::gtest_main
-        ${CUDA_LIBRARIES}
-    )
+    target_sources(atcg_lib_test PRIVATE tests/HostBuffer_test.cpp
+                                         tests/DeviceBuffer_test.cpp)
+    target_link_libraries(atcg_lib_test PRIVATE atcg_lib
+                                                GTest::gtest_main)
 
     target_include_directories(atcg_lib_test PRIVATE external/googletest/googletest/include)
 
