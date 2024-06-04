@@ -10,6 +10,19 @@ namespace IO
 {
 
 /**
+ * @brief This function tries to figure out what kind of geometry should be loaded.
+ * If faces are present, it assumes a triangle mesh (other tesselations are not supported).
+ * If line are present, it assumes a line collection.
+ * If points are present, it assumes a point cloud. Additionally, if no shape information is given (neither f, l, or p),
+ * it is assumed to be a point cloud file and all vertices are added to the geometry.
+ *
+ * @param path The path to the obj file
+ *
+ * @return The geometry representation
+ */
+atcg::ref_ptr<Graph> read_any(const std::string& path);
+
+/**
  * @brief Read an obj (triangle) mesh.
  * If the obj file contains multiple objects, they are all combined into one mesh representation.
  * Material files are ignored

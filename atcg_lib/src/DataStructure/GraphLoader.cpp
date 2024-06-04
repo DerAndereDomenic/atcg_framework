@@ -238,6 +238,49 @@ void load_line_data(const tinyobj::attrib_t& attrib,
 }    // namespace detail
 }    // namespace IO
 
+atcg::ref_ptr<Graph> IO::read_any(const std::string& path)
+{
+    tinyobj::ObjReader reader = detail::read_file(path);
+
+    const auto& attrib = reader.GetAttrib();
+    const auto& shapes = reader.GetShapes();
+
+    // Special case -> no face information is given. Techniqually this is not a valid obj but in most cases it is
+    // assumed to be pointcloud data -> load all vertices. No auxilarry information is loaded because it is missing.
+    if(shapes.size() == 0)
+    {
+        std::vector<Vertex> vertices;
+        uint32_t num_vertices = attrib.vertices.size() / 3;
+        std::cout << num_vertices << "\n";
+
+        for(int i = 0; i < num_vertices; ++i)
+        {
+            vertices.push_back(atcg::Vertex(
+                glm::vec3(attrib.vertices[3 * i + 0], attrib.vertices[3 * i + 1], attrib.vertices[3 * i + 2])));
+        }
+
+        return atcg::Graph::createPointCloud(vertices);
+    }
+
+    auto shape = shapes[0];    // We assume that these functions are only called with one object per obj. If not, we
+                               // choose the first one as representitive for the whole collection.
+
+    if(shape.mesh.indices.size() > 0)
+    {
+        return read_mesh(path);
+    }
+
+    if(shape.lines.indices.size() > 0)
+    {
+        return read_lines(path);
+    }
+
+    if(shape.points.indices.size() > 0)
+    {
+        return read_pointcloud(path);
+    }
+}
+
 atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
 {
     tinyobj::ObjReader reader = detail::read_file(path);

@@ -151,7 +151,7 @@ void ComponentGUIHandler::draw_component<GeometryComponent>(Entity entity, Geome
         auto files = f.result();
         if(!files.empty())
         {
-            auto mesh       = IO::read_mesh(files[0]);
+            auto mesh       = IO::read_any(files[0]);
             component.graph = mesh;
         }
     }
