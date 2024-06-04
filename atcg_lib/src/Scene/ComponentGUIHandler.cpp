@@ -14,6 +14,34 @@ void ComponentGUIHandler::draw_component(Entity entity, T& component)
 }
 
 template<>
+void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, TransformComponent& transform)
+{
+    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+
+    glm::vec3 position = transform.getPosition();
+    std::stringstream label;
+    label << "Position##" << id;
+    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position)))
+    {
+        transform.setPosition(position);
+    }
+    glm::vec3 scale = transform.getScale();
+    label.str(std::string());
+    label << "Scale##" << id;
+    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale)))
+    {
+        transform.setScale(scale);
+    }
+    glm::vec3 rotation = glm::degrees(transform.getRotation());
+    label.str(std::string());
+    label << "Rotation##" << id;
+    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation)))
+    {
+        transform.setRotation(glm::radians(rotation));
+    }
+}
+
+template<>
 void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraComponent& camera_component)
 {
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
@@ -102,34 +130,14 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     label.str(std::string());
     label << "Color##" << id;
     ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(camera_component.color));
-}
 
-template<>
-void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, TransformComponent& transform)
-{
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+    // Display camera extrinsic/intrinsic as transform
+    atcg::TransformComponent transform(camera->getAsTransform());
+    draw_component(entity, transform);
 
-    glm::vec3 position = transform.getPosition();
-    std::stringstream label;
-    label << "Position##" << id;
-    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position)))
-    {
-        transform.setPosition(position);
-    }
-    glm::vec3 scale = transform.getScale();
-    label.str(std::string());
-    label << "Scale##" << id;
-    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale)))
-    {
-        transform.setScale(scale);
-    }
-    glm::vec3 rotation = glm::degrees(transform.getRotation());
-    label.str(std::string());
-    label << "Rotation##" << id;
-    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation)))
-    {
-        transform.setRotation(glm::radians(rotation));
-    }
+    // May be updated
+    // ? Optimize this
+    camera->setFromTransform(transform);
 }
 
 template<>
