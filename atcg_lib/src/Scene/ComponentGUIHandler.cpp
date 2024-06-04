@@ -21,32 +21,19 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
     atcg::ref_ptr<atcg::PerspectiveCamera> camera =
         std::dynamic_pointer_cast<atcg::PerspectiveCamera>(camera_component.camera);
-    bool has_transform = false;
-    if(entity.hasComponent<atcg::TransformComponent>())
-    {
-        atcg::TransformComponent& transform_component = entity.getComponent<atcg::TransformComponent>();
-        camera->setFromTransform(transform_component.getModel());
-        has_transform = true;
-    }
 
     float aspect_ratio = camera->getAspectRatio();
     float fov          = camera->getFOV();
 
     std::stringstream label;
     label << "Aspect Ratio##" << id;
-    bool change_aspect = ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f);
-    bool change_fov    = ImGui::DragFloat(("FOV##" + id).c_str(), &fov, 0.5f, 10.0f, 120.0f);
-    if(change_aspect || change_fov && has_transform)
+    if(ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f))
     {
-        atcg::TransformComponent& transform_component = entity.getComponent<atcg::TransformComponent>();
-        glm::mat4 model                               = transform_component.getModel();
-        float scale_x                                 = glm::length(model[0]);
-        float scale_y                                 = glm::length(model[1]);
-        float scale_z                                 = glm::length(model[2]);
-        model =
-            model *
-            glm::scale(glm::vec3(aspect_ratio / scale_x, 1.0f / scale_y, glm::tan(glm::radians(fov) / 2.0f) / scale_z));
-        transform_component.setModel(model);
+        camera->setAspectRatio(aspect_ratio);
+    }
+
+    if(ImGui::DragFloat(("FOV##" + id).c_str(), &fov, 0.5f, 10.0f, 120.0f))
+    {
         camera->setFOV(fov);
     }
 
@@ -54,7 +41,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     uint32_t height        = 128;
     uint32_t width         = (uint32_t)(aspect_ratio * 128.0f);
 
-    if(fbo_aspect_ratio != aspect_ratio)
+    if(glm::abs(fbo_aspect_ratio - aspect_ratio) > 1e-5f)
     {
         camera->setAspectRatio((float)width / (float)height);
         _camera_preview = atcg::make_ref<atcg::Framebuffer>(width, height);

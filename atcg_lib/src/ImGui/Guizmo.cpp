@@ -18,7 +18,7 @@ void drawGuizmo(Entity entity, ImGuizmo::OPERATION operation, const atcg::ref_pt
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 {0, 0});
         ImGui::Begin("Viewport");
     }
-    if(entity && entity.hasComponent<atcg::TransformComponent>())
+    if(entity && (entity.hasAnyComponent<atcg::TransformComponent, atcg::CameraComponent>()))
     {
         ImGuizmo::SetOrthographic(false);
         ImGuizmo::BeginFrame();
@@ -35,14 +35,49 @@ void drawGuizmo(Entity entity, ImGuizmo::OPERATION operation, const atcg::ref_pt
         glm::mat4 camera_projection = camera->getProjection();
         glm::mat4 camera_view       = camera->getView();
 
-        atcg::TransformComponent& transform = entity.getComponent<atcg::TransformComponent>();
-        glm::mat4 model                     = transform.getModel();
+        glm::mat4 model;
+        bool has_transform = entity.hasComponent<atcg::TransformComponent>();
+        if(has_transform)
+        {
+            atcg::TransformComponent& transform = entity.getComponent<atcg::TransformComponent>();
+            model                               = transform.getModel();
+        }
+        else
+        {
+            atcg::CameraComponent& cam_component = entity.getComponent<atcg::CameraComponent>();
+            auto cam = std::dynamic_pointer_cast<atcg::PerspectiveCamera>(cam_component.camera);
+            model    = cam->getAsTransform();
+        }
+
+        float scale_x = 1.0f, scale_y = 1.0f, scale_z = 1.0f;
+        if(operation != ImGuizmo::SCALE)
+        {
+            scale_x = glm::length(glm::vec3(model[0]));
+            scale_y = glm::length(glm::vec3(model[1]));
+            scale_z = glm::length(glm::vec3(model[2]));
+
+            model = model * glm::scale(glm::vec3(1.0f / scale_x, 1.0f / scale_y, 1.0f / scale_z));
+        }
+
         ImGuizmo::Manipulate(glm::value_ptr(camera_view),
                              glm::value_ptr(camera_projection),
                              operation,
                              ImGuizmo::LOCAL,
                              glm::value_ptr(model));
-        transform.setModel(model);
+
+        model = model * glm::scale(glm::vec3(scale_x, scale_y, scale_z));
+
+        if(has_transform)
+        {
+            atcg::TransformComponent& transform = entity.getComponent<atcg::TransformComponent>();
+            transform.setModel(model);
+        }
+        else
+        {
+            atcg::CameraComponent& cam_component = entity.getComponent<atcg::CameraComponent>();
+            auto cam = std::dynamic_pointer_cast<atcg::PerspectiveCamera>(cam_component.camera);
+            cam->setFromTransform(model);
+        }
     }
 
     if(useViewports)
