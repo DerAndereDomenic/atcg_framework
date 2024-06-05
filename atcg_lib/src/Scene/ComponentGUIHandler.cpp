@@ -22,14 +22,14 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     glm::vec3 position = transform.getPosition();
     std::stringstream label;
     label << "Position##" << id;
-    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position), 0.1f))
+    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position), 0.05f))
     {
         transform.setPosition(position);
     }
     glm::vec3 scale = transform.getScale();
     label.str(std::string());
     label << "Scale##" << id;
-    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale), 0.1f, 1e-5f, FLT_MAX))
+    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale), 0.05f, 1e-5f, FLT_MAX))
     {
         scale = glm::clamp(scale, 1e-5f, FLT_MAX);
         transform.setScale(scale);
@@ -37,7 +37,7 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     glm::vec3 rotation = glm::degrees(transform.getRotation());
     label.str(std::string());
     label << "Rotation##" << id;
-    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation), 0.1f))
+    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation), 0.05f))
     {
         transform.setRotation(glm::radians(rotation));
     }
