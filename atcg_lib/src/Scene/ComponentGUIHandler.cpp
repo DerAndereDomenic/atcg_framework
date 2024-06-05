@@ -49,6 +49,12 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
             auto graph = entity.getComponent<atcg::GeometryComponent>().graph;
             applyTransform(graph, transform);
         }
+
+        if(ImGui::Button("Normalize"))
+        {
+            auto graph = entity.getComponent<atcg::GeometryComponent>().graph;
+            normalize(graph, transform);
+        }
     }
 }
 
