@@ -2,6 +2,7 @@
 
 #include <Core/Application.h>
 #include <Scene/Entity.h>
+#include <Math/Utils.h>
 
 #include <imgui.h>
 #include <portable-file-dialogs.h>
@@ -39,6 +40,15 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation), 0.1f))
     {
         transform.setRotation(glm::radians(rotation));
+    }
+
+    if(entity.hasComponent<atcg::GeometryComponent>())
+    {
+        if(ImGui::Button("Apply Transform"))
+        {
+            auto graph = entity.getComponent<atcg::GeometryComponent>().graph;
+            applyTransform(graph, transform);
+        }
     }
 }
 
