@@ -9,11 +9,19 @@
 namespace atcg
 {
 /**
- * @brief Normalizes a graph to the unit cupe
+ * @brief Normalizes a graph to the unit cube
  *
  * @param graph The graph to normalize
  */
 void normalize(const atcg::ref_ptr<Graph>& graph);
+
+/**
+ * @brief Normalizes a graph to the unit cube and writes the inverse transformation into a transform
+ *
+ * @param graph The graph to normalize
+ * @param transform The transform component
+ */
+void normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform);
 
 /**
  * @brief Apply a transform to a given mesh.

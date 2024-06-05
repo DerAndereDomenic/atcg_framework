@@ -2,6 +2,37 @@
 
 namespace atcg
 {
+
+void normalize(const atcg::ref_ptr<Graph>& graph)
+{
+    auto vertices = graph->getPositions(atcg::GPU);
+
+    auto max_scale  = torch::amax(torch::abs(vertices));
+    auto mean_point = torch::mean(vertices, 0);
+
+    vertices -= mean_point;
+    vertices /= max_scale;
+}
+
+void normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform)
+{
+    auto vertices = graph->getPositions(atcg::GPU);
+
+    auto max_scale  = torch::amax(torch::abs(vertices));
+    auto mean_point = torch::mean(vertices, 0);
+
+    vertices -= mean_point;
+    vertices /= max_scale;
+
+    glm::mat4 model = transform.getModel();
+
+    glm::vec3 mean_vector = glm::make_vec3((float*)mean_point.cpu().contiguous().data_ptr());
+
+    model = model * glm::translate(mean_vector) * glm::scale(glm::vec3(max_scale.item<float>()));
+
+    transform.setModel(model);
+}
+
 void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform)
 {
     auto vertices = graph->getPositions(atcg::GPU);
