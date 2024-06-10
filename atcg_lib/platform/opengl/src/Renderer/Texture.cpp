@@ -1098,6 +1098,29 @@ void TextureCube::setData(const torch::Tensor& data)
     }
 }
 
+torch::Tensor TextureCube::getData(const torch::Device& device, const uint32_t mip_level) const
+{
+    int num_channels = detail::num_channels(_spec.format);
+    bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
+               _spec.format == TextureFormat::RGBFLOAT;
+    auto result = torch::empty({6, _spec.height, _spec.width, num_channels},
+                               hdr ? atcg::TensorOptions::floatHostOptions() : atcg::TensorOptions::uint8HostOptions());
+
+    unmapPointers();
+    glBindTexture(GL_TEXTURE_CUBE_MAP, _ID);
+
+    for(int i = 0; i < 6; ++i)
+    {
+        glGetTexImage(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                      mip_level,
+                      detail::toGLformat(_spec.format),
+                      detail::toGLtype(_spec.format),
+                      (void*)result.index({i, 0, 0, 0}).data_ptr());
+    }
+
+    return result.to(device);
+}
+
 void TextureCube::generateMipmaps()
 {
     use();

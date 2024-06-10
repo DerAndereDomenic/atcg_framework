@@ -506,9 +506,8 @@ public:
 
     /**
      * @brief Get the data in the texture.
-     *
-     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
-     * a host-device memcpy is required.
+     * This function will always copy data between CPU and GPU via opengl. After construction, the tensor will be copied
+     * onto the specified device.
      *
      * @param device The device
      * @param mip_level The mip level
@@ -516,10 +515,7 @@ public:
      * @return The data
      */
     virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
-                                  const uint32_t mip_level    = 0) const override
-    {
-        return {};
-    }
+                                  const uint32_t mip_level    = 0) const override;
 
     /**
      * @brief Use this texture
