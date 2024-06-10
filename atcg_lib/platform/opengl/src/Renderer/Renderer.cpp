@@ -527,6 +527,11 @@ atcg::ref_ptr<Texture2D> Renderer::getSkyboxTexture()
     return s_renderer->impl->skybox_texture;
 }
 
+atcg::ref_ptr<TextureCube> Renderer::getSkyboxCubemap()
+{
+    return s_renderer->impl->skybox_cubemap;
+}
+
 void Renderer::resize(const uint32_t& width, const uint32_t& height)
 {
     setViewport(0, 0, width, height);

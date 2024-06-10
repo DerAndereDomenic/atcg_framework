@@ -131,6 +131,13 @@ public:
     static atcg::ref_ptr<Texture2D> getSkyboxTexture();
 
     /**
+     * @brief Get the cube map of the skybox
+     * 
+     * @return The skybox cubemap
+    */
+    static atcg::ref_ptr<TextureCube> getSkyboxCubemap();
+
+    /**
      * @brief Change the size of the renderer
      *
      * @param width The width
