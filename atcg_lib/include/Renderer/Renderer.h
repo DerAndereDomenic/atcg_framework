@@ -112,6 +112,13 @@ public:
     static void setSkybox(const atcg::ref_ptr<Image>& skybox);
 
     /**
+     * @brief Set a skybox
+     *
+     * @param skybox An equirectangular representation of the skybox
+     */
+    static void setSkybox(const atcg::ref_ptr<Texture2D>& skybox);
+
+    /**
      * @brief If a skybox is set.
      *
      * @return True if there is a skybox set.
@@ -132,9 +139,9 @@ public:
 
     /**
      * @brief Get the cube map of the skybox
-     * 
+     *
      * @return The skybox cubemap
-    */
+     */
     static atcg::ref_ptr<TextureCube> getSkyboxCubemap();
 
     /**

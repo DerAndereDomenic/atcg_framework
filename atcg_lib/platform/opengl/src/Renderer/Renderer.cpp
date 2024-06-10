@@ -383,6 +383,11 @@ void Renderer::setDefaultViewport()
 
 void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
 {
+    setSkybox(atcg::Texture2D::create(skybox));
+}
+
+void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
+{
     bool culling                 = s_renderer->impl->culling_enabled;
     s_renderer->impl->has_skybox = true;
     toggleCulling(false);
@@ -400,7 +405,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     capture_cam->setProjection(captureProjection);
     // convert HDR equirectangular environment map to cubemap equivalent
 
-    s_renderer->impl->skybox_texture = atcg::Texture2D::create(skybox);
+    s_renderer->impl->skybox_texture = skybox;
 
     uint32_t current_fbo = atcg::Framebuffer::currentFramebuffer();
     int old_viewport[4];
