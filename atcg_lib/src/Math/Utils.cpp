@@ -1,5 +1,7 @@
 #include <Math/Utils.h>
 
+#include <fstream>
+
 namespace atcg
 {
 
@@ -75,4 +77,14 @@ void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent&
 
     transform.setModel(glm::mat4(1));
 }
+
+namespace IO
+{
+void dumpBinary(const std::string& path, const torch::Tensor& data)
+{
+    auto data_ = data.to(atcg::CPU);
+    std::ofstream out(path, std::ios::out | std::ios::binary);
+    out.write((const char*)data_.data_ptr(), data_.numel() * data_.element_size());
+}
+}    // namespace IO
 }    // namespace atcg

@@ -32,4 +32,15 @@ void normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& tran
  */
 void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform);
 
+namespace IO
+{
+/**
+ * @brief Dump data as raw binary file to disk.
+ *
+ * @param path The path
+ * @param data The data
+ */
+void dumpBinary(const std::string& path, const torch::Tensor& data);
+}    // namespace IO
+
 }    // namespace atcg
