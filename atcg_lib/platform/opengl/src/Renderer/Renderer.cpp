@@ -423,6 +423,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
     int old_viewport[4];
     glGetIntegerv(GL_VIEWPORT, old_viewport);
 
+    uint32_t cubemap_id = popTextureID();
+
     // * Create a cubemap from the equirectangular map
     {
         atcg::ref_ptr<Shader> equirect_shader = ShaderManager::getShader("equirectangularToCubemap");
@@ -435,8 +437,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
         captureFBO.use();
 
         equirect_shader->use();
-        s_renderer->impl->skybox_texture->use(Renderer::Impl::TextureBindings::COUNT);
-        equirect_shader->setInt("equirectangularMap", Renderer::Impl::TextureBindings::COUNT);
+        s_renderer->impl->skybox_texture->use(cubemap_id);
+        equirect_shader->setInt("equirectangularMap", cubemap_id);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -466,8 +468,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
         captureFBO.use();
 
         cubeconv_shader->use();
-        s_renderer->impl->skybox_cubemap->use(Renderer::Impl::TextureBindings::COUNT);
-        cubeconv_shader->setInt("skybox", Renderer::Impl::TextureBindings::COUNT);
+        s_renderer->impl->skybox_cubemap->use(cubemap_id);
+        cubeconv_shader->setInt("skybox", cubemap_id);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -490,7 +492,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
         float height                           = s_renderer->impl->prefiltered_cubemap->height();
 
         prefilter_shader->use();
-        prefilter_shader->setInt("skybox", Renderer::Impl::TextureBindings::COUNT);
+        prefilter_shader->setInt("skybox", cubemap_id);
         unsigned int max_mip_levels = 5;
         for(unsigned int mip = 0; mip < max_mip_levels; ++mip)
         {
@@ -502,7 +504,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
             captureFBO.attachDepth();
             captureFBO.use();
 
-            s_renderer->impl->skybox_cubemap->use(Renderer::Impl::TextureBindings::COUNT);
+            s_renderer->impl->skybox_cubemap->use(cubemap_id);
 
             glViewport(0, 0, mip_width, mip_height);
 
@@ -524,6 +526,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
         }
     }
 
+    pushTextureID(cubemap_id);
     Framebuffer::bindByID(current_fbo);
     setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
     toggleCulling(culling);
