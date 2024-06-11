@@ -7,6 +7,8 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 
+#include <queue>
+
 namespace atcg
 {
 Renderer* Renderer::s_renderer = new Renderer;
@@ -97,6 +99,7 @@ public:
         SKYBOX_TEXTURE    = 7,
         COUNT
     };
+    std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
 };
 
 Renderer::Renderer() {}
@@ -176,6 +179,15 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     screen_fbo->attachTexture(Texture2D::create(spec_int));
     screen_fbo->attachDepth();
     screen_fbo->complete();
+
+    int total_units;
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &total_units);
+    for(uint32_t i = TextureBindings::COUNT; i < (uint32_t)total_units; ++i)
+    {
+        texture_ids.push(i);
+    }
+
+    ATCG_INFO("Renderer supports {0} texture units.", total_units);
 }
 
 void Renderer::Impl::initGrid()
@@ -1194,5 +1206,17 @@ std::vector<float> Renderer::getZBuffer()
     glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, (void*)buffer.data());
 
     return buffer;
+}
+
+uint32_t Renderer::popTextureID()
+{
+    uint32_t id = s_renderer->impl->texture_ids.top();
+    s_renderer->impl->texture_ids.pop();
+    return id;
+}
+
+void Renderer::pushTextureID(const uint32_t id)
+{
+    s_renderer->impl->texture_ids.push(id);
 }
 }    // namespace atcg
