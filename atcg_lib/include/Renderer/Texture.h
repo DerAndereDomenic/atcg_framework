@@ -530,4 +530,93 @@ public:
     virtual void generateMipmaps() override;
 };
 
+/**
+ * @brief A class to model a texture
+ */
+class TextureArray : public Texture
+{
+public:
+    /**
+     * @brief Create an empty texture array.
+     *
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureArray> create(const TextureSpecification& spec);
+
+    /**
+     * @brief Create a texture array.
+     *
+     * @param data The texture data
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureArray> create(const void* data, const TextureSpecification& spec);
+
+    /**
+     * @brief Create a texture array.
+     *
+     * @param data The image (host data)
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureArray> create(const torch::Tensor& img);
+
+    /**
+     * @brief Create a texture array.
+     *
+     * @param data The image (host data)
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureArray> create(const torch::Tensor& img, const TextureSpecification& spec);
+
+    /**
+     *  @brief Destructor
+     */
+    virtual ~TextureArray();
+
+    /**
+     * @brief Set the data of the texture.
+     * The tensor can be a host or device tensor if CUDA is enabled.
+     * For CPU tensors a host-device memcpy is performed.
+     * For Device Tensors a device-device copy is performed.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
+     *
+     * @param data The data
+     */
+    virtual void setData(const torch::Tensor& data) override;
+
+    /**
+     * @brief Get the data in the texture.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
+     *
+     * @param device The device
+     * @param mip_level The mip level
+     *
+     * @return The data
+     */
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
+                                  const uint32_t mip_level    = 0) const override;
+
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Generate mipmap levels
+     */
+    virtual void generateMipmaps() override;
+};
+
 }    // namespace atcg

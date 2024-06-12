@@ -1132,4 +1132,241 @@ void TextureCube::generateMipmaps()
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
 
+atcg::ref_ptr<TextureArray> TextureArray::create(const TextureSpecification& spec)
+{
+    return create(nullptr, spec);
+}
+
+atcg::ref_ptr<TextureArray> TextureArray::create(const void* data, const TextureSpecification& spec)
+{
+    atcg::ref_ptr<TextureArray> result = atcg::make_ref<TextureArray>();
+    result->_spec                      = spec;
+    result->_spec.width                = std::max<uint32_t>(1, result->_spec.width);
+    result->_spec.height               = std::max<uint32_t>(1, result->_spec.height);
+    result->_spec.depth                = std::max<uint32_t>(1, result->_spec.depth);
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_2D_ARRAY, result->_ID);
+
+    glTexImage3D(GL_TEXTURE_2D_ARRAY,
+                 0,
+                 detail::to2GLinternalFormat(spec.format),
+                 result->_spec.width,
+                 result->_spec.height,
+                 result->_spec.depth,
+                 0,
+                 detail::toGLformat(result->_spec.format),
+                 detail::toGLtype(result->_spec.format),
+                 (void*)data);
+    ATCG_LOG_ALLOCATION("Allocated Texture of size {} x {} x {}",
+                        result->_spec.width,
+                        result->_spec.height,
+                        result->_spec.depth);
+
+    auto filtermode = detail::toGLFilterMode(result->_spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, detail::toGLWrapMode(result->_spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, filtermode);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+
+    if(result->_spec.sampler.mip_map)
+    {
+        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+    }
+
+    if(result->_spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_2D_ARRAY);
+
+    return result;
+}
+
+atcg::ref_ptr<TextureArray> TextureArray::create(const torch::Tensor& img)
+{
+    TextureSpecification spec;
+    spec.width  = std::max<uint32_t>(1, img.size(2));
+    spec.height = std::max<uint32_t>(1, img.size(1));
+    spec.depth  = std::max<uint32_t>(1, img.size(0));
+    switch(img.size(3))
+    {
+        case 1:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RFLOAT : TextureFormat::RINT8);
+        }
+        break;
+        case 2:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGFLOAT : TextureFormat::RG);
+        }
+        break;
+        case 3:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
+        }
+        break;
+        case 4:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        }
+        break;
+    }
+    return create(img.data_ptr(), spec);
+}
+
+atcg::ref_ptr<TextureArray> TextureArray::create(const torch::Tensor& img, const TextureSpecification& spec)
+{
+    return create(img.data_ptr(), spec);
+}
+
+TextureArray::~TextureArray()
+{
+    unmapPointers();
+    glDeleteTextures(1, &_ID);
+}
+
+void TextureArray::setData(const torch::Tensor& data)
+{
+    TORCH_CHECK_GE(data.ndimension(), 3);
+    TORCH_CHECK_LE(data.ndimension(), 4);
+    if(data.ndimension() < 4)
+    {
+        data.unsqueeze(-1);
+    }
+
+    TORCH_CHECK_EQ(data.numel() * data.element_size(),
+                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.size(0), _spec.depth);
+    TORCH_CHECK_EQ(data.size(1), _spec.height);
+    TORCH_CHECK_EQ(data.size(2), _spec.width);
+    int num_channels = detail::num_channels(_spec.format);
+    TORCH_CHECK_EQ(data.size(3), num_channels);
+
+    torch::Tensor pixel_data = data;
+    bool cuda_copy_possible  = num_channels == 1 || num_channels == 4;
+    if(data.is_cuda())
+    {
+        if(cuda_copy_possible)
+        {
+#ifdef ATCG_CUDA_BACKEND
+            atcg::textureArray array   = getTextureArray();
+            cudaChannelFormatDesc desc = {};
+            cudaExtent ext             = {};
+            unsigned int array_flags   = 0;
+
+            CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
+
+            cudaMemcpy3DParms p = {0};
+            p.dstArray          = array;
+            p.kind              = cudaMemcpyDeviceToDevice;
+            p.srcPtr.ptr        = pixel_data.contiguous().data_ptr();
+            p.srcPtr.pitch      = ext.width * num_channels;
+            p.srcPtr.xsize      = ext.width;
+            p.srcPtr.ysize      = ext.height;
+            p.extent            = ext;
+
+            CUDA_SAFE_CALL(cudaMemcpy3D(&p));
+            unmapPointers();
+#endif
+            return;
+        }
+        ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy");
+        pixel_data = data.to(atcg::CPU);
+    }
+
+    unmapPointers();
+    glBindTexture(GL_TEXTURE_2D_ARRAY, _ID);
+
+    glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
+                    0,
+                    0,
+                    0,
+                    0,
+                    _spec.width,
+                    _spec.height,
+                    _spec.depth,
+                    detail::toGLformat(_spec.format),
+                    detail::toGLtype(_spec.format),
+                    (void*)pixel_data.data_ptr());
+}
+
+torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t mip_level) const
+{
+    int num_channels = detail::num_channels(_spec.format);
+    bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
+               _spec.format == TextureFormat::RGBFLOAT;
+
+    torch::Tensor result;
+    int depth  = glm::floor(_spec.depth / (1 << mip_level));
+    int height = glm::floor(_spec.height / (1 << mip_level));
+    int width  = glm::floor(_spec.width / (1 << mip_level));
+#ifdef ATCG_CUDA_BACKEND
+    bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
+    if(cuda_copy_possible && device.is_cuda())
+    {
+        result =
+            torch::empty({depth, height, width, num_channels},
+                         hdr ? atcg::TensorOptions::floatDeviceOptions() : atcg::TensorOptions::uint8DeviceOptions());
+
+        atcg::textureArray array = getTextureArray(mip_level);
+
+        cudaChannelFormatDesc desc = {};
+        cudaExtent ext             = {};
+        unsigned int array_flags   = 0;
+
+        CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
+
+        cudaMemcpy3DParms p = {0};
+        p.srcArray          = array;
+        p.kind              = cudaMemcpyDeviceToDevice;
+        p.dstPtr.ptr        = result.contiguous().data_ptr();
+        p.dstPtr.pitch      = ext.width * num_channels;
+        p.dstPtr.xsize      = ext.width;
+        p.dstPtr.ysize      = ext.height;
+        p.extent            = ext;
+
+        CUDA_SAFE_CALL(cudaMemcpy3D(&p));
+
+        unmapPointers();
+
+        return result;
+    }
+    else if(device.is_cuda())
+    {
+        ATCG_WARN("Can not copy texture data via device copy. Fall back to host-device copy");
+    }
+#endif
+
+    unmapPointers();
+
+    result = torch::empty({depth, height, width, num_channels},
+                          hdr ? atcg::TensorOptions::floatHostOptions() : atcg::TensorOptions::uint8HostOptions());
+
+    use();
+    glGetTexImage(GL_TEXTURE_2D_ARRAY,
+                  mip_level,
+                  detail::toGLformat(_spec.format),
+                  detail::toGLtype(_spec.format),
+                  result.data_ptr());
+    return result.to(device);
+}
+
+void TextureArray::use(const uint32_t& slot) const
+{
+    unmapPointers();
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, _ID);
+}
+
+void TextureArray::generateMipmaps()
+{
+    use();
+    _spec.sampler.mip_map = true;
+    auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+}
+
 }    // namespace atcg
