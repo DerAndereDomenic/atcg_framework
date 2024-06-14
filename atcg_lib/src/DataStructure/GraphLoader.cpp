@@ -279,6 +279,8 @@ atcg::ref_ptr<Graph> IO::read_any(const std::string& path)
     {
         return read_pointcloud(path);
     }
+
+    return nullptr;
 }
 
 atcg::ref_ptr<Graph> IO::read_mesh(const std::string& path)
