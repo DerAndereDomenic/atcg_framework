@@ -7,7 +7,6 @@
     #include "cuda_runtime.h"
     #include "device_launch_parameters.h"
     #include <Core/glm.h>
-    #include <Math/Functions.h>
     #include <Core/Log.h>
 
     #ifdef NDEBUG
@@ -61,14 +60,20 @@ ATCG_DEVICE ATCG_FORCE_INLINE glm::vec3 threadIndex3D()
                      threadIdx.z + blockIdx.z * blockDim.z);
 }
 
+template<typename T>
+T ceil_div(T num, T den)
+{
+    return (num - T(1)) / den + T(1);
+}
+
 ATCG_INLINE size_t configure(size_t size, size_t n_threads = 128)
 {
-    return Math::ceil_div<size_t>(size, n_threads);
+    return ceil_div<size_t>(size, n_threads);
 }
 
 ATCG_INLINE dim3 configure(glm::u32vec3 thread_count, glm::u32vec3 block_size)
 {
-    glm::u32vec3 block_count = Math::ceil_div<glm::u32vec3>(thread_count, block_size);
+    glm::u32vec3 block_count = ceil_div<glm::u32vec3>(thread_count, block_size);
     return {block_count.x, block_count.y, block_count.z};
 }
 
