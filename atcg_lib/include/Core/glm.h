@@ -47,7 +47,7 @@ struct dispatch_print_vector<2, T>
 {
     static ATCG_INLINE std::ostream& apply(std::ostream& os, const glm::vec<2, T>& vector)
     {
-        os << "[" << vector.x << ", " << vector.y "]";
+        os << "[" << vector.x << ", " << vector.y << "]";
         return os;
     }
 };
