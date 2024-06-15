@@ -25,8 +25,13 @@ public:
      * @param size The size in bytes
      * @param stride The strde between consecutive elements in bytes
      */
-    ATCG_HOST_DEVICE
-    BufferView(uint8_t* ptr, uint32_t size, uint32_t stride = sizeof(T)) : _ptr(ptr), _size(size), _stride(stride) {}
+    template<typename Q>
+    ATCG_HOST_DEVICE BufferView(Q* ptr, uint32_t size, uint32_t stride = sizeof(T))
+        : _ptr((uint8_t*)ptr),
+          _size(size),
+          _stride(stride)
+    {
+    }
 
     /**
      * @brief Get the element at a given index
@@ -80,6 +85,11 @@ public:
      * @return The stride in bytes
      */
     ATCG_HOST_DEVICE ATCG_INLINE uint32_t stride() const { return _stride; }
+
+    /**
+     * @brief Reset to the base pointer
+     */
+    ATCG_HOST_DEVICE ATCG_INLINE void reset() { _idx = 0; }
 
 private:
     uint8_t* _ptr    = nullptr;
