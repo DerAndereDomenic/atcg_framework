@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Memory.h>
 #include <torch/types.h>
 
 namespace atcg
@@ -83,11 +84,26 @@ public:
     void applyGamma(const float gamma);
 
     /**
-     * @brief Set image data
+     * @brief Set image data.
+     * The data is copied
      *
      * @param data The image data
+     * @param width The image width
+     * @param height The image height
+     * @param channels The number of channels
      */
-    void setData(uint8_t* data);
+    void setData(uint8_t* data, uint32_t width, uint32_t height, uint32_t channels);
+
+    /**
+     * @brief Set image data.
+     * The data is copied
+     *
+     * @param data The image data
+     * @param width The image width
+     * @param height The image height
+     * @param channels The number of channels
+     */
+    void setData(float* data, uint32_t width, uint32_t height, uint32_t channels);
 
     /**
      * @brief Set image data
