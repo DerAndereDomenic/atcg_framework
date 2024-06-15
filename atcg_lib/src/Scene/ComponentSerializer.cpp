@@ -41,6 +41,9 @@ namespace atcg
 #define PERSPECTIVE_CAMERA_KEY     "PerspectiveCamera"
 #define ASPECT_RATIO_KEY           "AspectRatio"
 #define FOVY_KEY                   "FoVy"
+#define LOOKAT_KEY                 "LookAt"
+#define NEAR_KEY                   "Near"
+#define FAR_KEY                    "Far"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -264,8 +267,17 @@ void ComponentSerializer::serialize_component<CameraComponent>(const std::string
 {
     atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(component.camera);
 
+    glm::vec3 position = cam->getPosition();
+    glm::vec3 look_at  = cam->getLookAt();
+    float n            = cam->getNear();
+    float f            = cam->getFar();
+
     j[PERSPECTIVE_CAMERA_KEY][ASPECT_RATIO_KEY] = cam->getAspectRatio();
     j[PERSPECTIVE_CAMERA_KEY][FOVY_KEY]         = cam->getFOV();
+    j[PERSPECTIVE_CAMERA_KEY][POSITION_KEY]     = nlohmann::json::array({position.x, position.y, position.z});
+    j[PERSPECTIVE_CAMERA_KEY][LOOKAT_KEY]       = nlohmann::json::array({look_at.x, look_at.y, look_at.z});
+    j[PERSPECTIVE_CAMERA_KEY][NEAR_KEY]         = n;
+    j[PERSPECTIVE_CAMERA_KEY][FAR_KEY]          = f;
 }
 
 template<>
@@ -430,18 +442,18 @@ void ComponentSerializer::deserialize_component<CameraComponent>(const std::stri
         return;
     }
 
-    float aspect_ratio = j[PERSPECTIVE_CAMERA_KEY].value(ASPECT_RATIO_KEY, 1.0f);
-    float fov          = j[PERSPECTIVE_CAMERA_KEY].value(FOVY_KEY, 60.0f);
-    auto& camera       = entity.addComponent<CameraComponent>(
-        atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio, glm::vec3(0), glm::vec3(0, 0, 1)));
-    atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(camera.camera);
-    // TODO: Keep consistent
-    cam->setFOV(fov);
-    // Should always have a transform, otherwise construct default camera
-    if(entity.hasComponent<TransformComponent>())
-    {
-        cam->setFromTransform(entity.getComponent<TransformComponent>().getModel());
-    }
+    float aspect_ratio          = j[PERSPECTIVE_CAMERA_KEY].value(ASPECT_RATIO_KEY, 1.0f);
+    float fov                   = j[PERSPECTIVE_CAMERA_KEY].value(FOVY_KEY, 60.0f);
+    float n                     = j[PERSPECTIVE_CAMERA_KEY].value(NEAR_KEY, 0.01f);
+    float f                     = j[PERSPECTIVE_CAMERA_KEY].value(FAR_KEY, 1000.0f);
+    std::vector<float> position = j[PERSPECTIVE_CAMERA_KEY].value(POSITION_KEY, std::vector<float> {0.0f, 0.0f, -1.0f});
+    std::vector<float> lookat   = j[PERSPECTIVE_CAMERA_KEY].value(LOOKAT_KEY, std::vector<float> {0.0f, 0.0f, 0.0f});
+
+    auto cam = atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio,
+                                                       glm::make_vec3(position.data()),
+                                                       glm::make_vec3(lookat.data()));
+
+    entity.addComponent<CameraComponent>(cam);
 }
 
 

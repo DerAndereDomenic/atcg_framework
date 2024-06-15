@@ -15,15 +15,15 @@ namespace atcg
  * class as template argument to the atcg::SceneHierarchyPanel.
  *
  * @code{.cpp}
- * class MyComponentGUIHandler : ComponentGUIHandler
+ * class MyComponentGUIHandler : public ComponentGUIHandler
  * {
  * public:
- *      MyComponentGUIHandler(atcg::ref_ptr<Scene>& scene) :ComponentGUIHandler(scene) {}
+ *      MyComponentGUIHandler(const atcg::ref_ptr<Scene>& scene) :ComponentGUIHandler(scene) {}
  *
  *      template<typename T>
  *      void draw_component(Entity entity, T& component)
  *      {
- *          ComponentGUIHandler::draw_component<T>(entity, component)
+ *          atcg::ComponentGUIHandler::draw_component<T>(entity, component)
  *      }
  *
  *      template<>

@@ -101,6 +101,13 @@ public:
     void setFromTransform(const glm::mat4& transform);
 
     /**
+     * @brief Convert the camera representation into a transform (object to world transform)
+     *
+     * @return The transform
+     */
+    glm::mat4 getAsTransform() const;
+
+    /**
      * @brief Set the Position
      *
      * @param position The new position

@@ -7,6 +7,8 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 
+#include <queue>
+
 namespace atcg
 {
 Renderer* Renderer::s_renderer = new Renderer;
@@ -97,6 +99,7 @@ public:
         SKYBOX_TEXTURE    = 7,
         COUNT
     };
+    std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
 };
 
 Renderer::Renderer() {}
@@ -176,6 +179,15 @@ Renderer::Impl::Impl(uint32_t width, uint32_t height)
     screen_fbo->attachTexture(Texture2D::create(spec_int));
     screen_fbo->attachDepth();
     screen_fbo->complete();
+
+    int total_units;
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &total_units);
+    for(uint32_t i = TextureBindings::COUNT; i < (uint32_t)total_units; ++i)
+    {
+        texture_ids.push(i);
+    }
+
+    ATCG_INFO("Renderer supports {0} texture units.", total_units);
 }
 
 void Renderer::Impl::initGrid()
@@ -383,6 +395,11 @@ void Renderer::setDefaultViewport()
 
 void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
 {
+    setSkybox(atcg::Texture2D::create(skybox));
+}
+
+void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
+{
     bool culling                 = s_renderer->impl->culling_enabled;
     s_renderer->impl->has_skybox = true;
     toggleCulling(false);
@@ -400,11 +417,13 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
     capture_cam->setProjection(captureProjection);
     // convert HDR equirectangular environment map to cubemap equivalent
 
-    s_renderer->impl->skybox_texture = atcg::Texture2D::create(skybox);
+    s_renderer->impl->skybox_texture = skybox;
 
     uint32_t current_fbo = atcg::Framebuffer::currentFramebuffer();
     int old_viewport[4];
     glGetIntegerv(GL_VIEWPORT, old_viewport);
+
+    uint32_t cubemap_id = popTextureID();
 
     // * Create a cubemap from the equirectangular map
     {
@@ -418,8 +437,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
         captureFBO.use();
 
         equirect_shader->use();
-        s_renderer->impl->skybox_texture->use(Renderer::Impl::TextureBindings::COUNT);
-        equirect_shader->setInt("equirectangularMap", Renderer::Impl::TextureBindings::COUNT);
+        s_renderer->impl->skybox_texture->use(cubemap_id);
+        equirect_shader->setInt("equirectangularMap", cubemap_id);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -449,8 +468,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
         captureFBO.use();
 
         cubeconv_shader->use();
-        s_renderer->impl->skybox_cubemap->use(Renderer::Impl::TextureBindings::COUNT);
-        cubeconv_shader->setInt("skybox", Renderer::Impl::TextureBindings::COUNT);
+        s_renderer->impl->skybox_cubemap->use(cubemap_id);
+        cubeconv_shader->setInt("skybox", cubemap_id);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -473,7 +492,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
         float height                           = s_renderer->impl->prefiltered_cubemap->height();
 
         prefilter_shader->use();
-        prefilter_shader->setInt("skybox", Renderer::Impl::TextureBindings::COUNT);
+        prefilter_shader->setInt("skybox", cubemap_id);
         unsigned int max_mip_levels = 5;
         for(unsigned int mip = 0; mip < max_mip_levels; ++mip)
         {
@@ -485,7 +504,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
             captureFBO.attachDepth();
             captureFBO.use();
 
-            s_renderer->impl->skybox_cubemap->use(Renderer::Impl::TextureBindings::COUNT);
+            s_renderer->impl->skybox_cubemap->use(cubemap_id);
 
             glViewport(0, 0, mip_width, mip_height);
 
@@ -507,6 +526,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
         }
     }
 
+    pushTextureID(cubemap_id);
     Framebuffer::bindByID(current_fbo);
     setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
     toggleCulling(culling);
@@ -525,6 +545,11 @@ void Renderer::removeSkybox()
 atcg::ref_ptr<Texture2D> Renderer::getSkyboxTexture()
 {
     return s_renderer->impl->skybox_texture;
+}
+
+atcg::ref_ptr<TextureCube> Renderer::getSkyboxCubemap()
+{
+    return s_renderer->impl->skybox_cubemap;
 }
 
 void Renderer::resize(const uint32_t& width, const uint32_t& height)
@@ -1184,5 +1209,17 @@ std::vector<float> Renderer::getZBuffer()
     glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, (void*)buffer.data());
 
     return buffer;
+}
+
+uint32_t Renderer::popTextureID()
+{
+    uint32_t id = s_renderer->impl->texture_ids.top();
+    s_renderer->impl->texture_ids.pop();
+    return id;
+}
+
+void Renderer::pushTextureID(const uint32_t id)
+{
+    s_renderer->impl->texture_ids.push(id);
 }
 }    // namespace atcg

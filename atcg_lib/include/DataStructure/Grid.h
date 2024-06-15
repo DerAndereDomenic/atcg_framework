@@ -136,7 +136,7 @@ public:
      *
      * @return The grid dimension
      */
-    inline GridDimension getGridDimensions() const { return _dim; }
+    ATCG_INLINE GridDimension getGridDimensions() const { return _dim; }
 
 private:
     GridDimension _dim  = {};

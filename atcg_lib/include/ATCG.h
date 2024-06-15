@@ -40,6 +40,7 @@
 
 //-------- DataStructure --
 #include <DataStructure/Graph.h>
+#include <DataStructure/GraphLoader.h>
 #include <DataStructure/Grid.h>
 #include <DataStructure/Timer.h>
 #include <DataStructure/Statistics.h>

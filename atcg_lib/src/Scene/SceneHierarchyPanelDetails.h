@@ -82,7 +82,7 @@ ATCG_INLINE void displayAddComponentEntry<CameraComponent>(Entity entity)
 template<typename GUIHandler>
 SceneHierarchyPanel<GUIHandler>::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene)
     : _scene(scene),
-      _gui_handler(atcg::make_ref<atcg::ComponentGUIHandler>(scene))
+      _gui_handler(atcg::make_ref<GUIHandler>(scene))
 {
 }
 

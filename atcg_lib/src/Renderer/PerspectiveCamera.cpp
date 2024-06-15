@@ -67,4 +67,9 @@ void PerspectiveCamera::setFromTransform(const glm::mat4& transform)
     recalculateProjection();
 }
 
+glm::mat4 PerspectiveCamera::getAsTransform() const
+{
+    return glm::inverse(_view) * glm::scale(glm::vec3(_aspect_ratio, 1.0f, glm::tan(glm::radians(_fovy) / 2.0f)));
+}
+
 }    // namespace atcg

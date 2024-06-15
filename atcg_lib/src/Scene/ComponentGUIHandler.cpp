@@ -2,6 +2,7 @@
 
 #include <Core/Application.h>
 #include <Scene/Entity.h>
+#include <Math/Utils.h>
 
 #include <imgui.h>
 #include <portable-file-dialogs.h>
@@ -14,6 +15,50 @@ void ComponentGUIHandler::draw_component(Entity entity, T& component)
 }
 
 template<>
+void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, TransformComponent& transform)
+{
+    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+
+    glm::vec3 position = transform.getPosition();
+    std::stringstream label;
+    label << "Position##" << id;
+    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position), 0.05f))
+    {
+        transform.setPosition(position);
+    }
+    glm::vec3 scale = transform.getScale();
+    label.str(std::string());
+    label << "Scale##" << id;
+    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale), 0.05f, 1e-5f, FLT_MAX))
+    {
+        scale = glm::clamp(scale, 1e-5f, FLT_MAX);
+        transform.setScale(scale);
+    }
+    glm::vec3 rotation = glm::degrees(transform.getRotation());
+    label.str(std::string());
+    label << "Rotation##" << id;
+    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation), 0.05f))
+    {
+        transform.setRotation(glm::radians(rotation));
+    }
+
+    if(entity.hasComponent<atcg::GeometryComponent>())
+    {
+        if(ImGui::Button("Apply Transform"))
+        {
+            auto graph = entity.getComponent<atcg::GeometryComponent>().graph;
+            applyTransform(graph, transform);
+        }
+
+        if(ImGui::Button("Normalize"))
+        {
+            auto graph = entity.getComponent<atcg::GeometryComponent>().graph;
+            normalize(graph, transform);
+        }
+    }
+}
+
+template<>
 void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraComponent& camera_component)
 {
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
@@ -21,32 +66,19 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
     atcg::ref_ptr<atcg::PerspectiveCamera> camera =
         std::dynamic_pointer_cast<atcg::PerspectiveCamera>(camera_component.camera);
-    bool has_transform = false;
-    if(entity.hasComponent<atcg::TransformComponent>())
-    {
-        atcg::TransformComponent& transform_component = entity.getComponent<atcg::TransformComponent>();
-        camera->setFromTransform(transform_component.getModel());
-        has_transform = true;
-    }
 
     float aspect_ratio = camera->getAspectRatio();
     float fov          = camera->getFOV();
 
     std::stringstream label;
     label << "Aspect Ratio##" << id;
-    bool change_aspect = ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f);
-    bool change_fov    = ImGui::DragFloat(("FOV##" + id).c_str(), &fov, 0.5f, 10.0f, 120.0f);
-    if(change_aspect || change_fov && has_transform)
+    if(ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f))
     {
-        atcg::TransformComponent& transform_component = entity.getComponent<atcg::TransformComponent>();
-        glm::mat4 model                               = transform_component.getModel();
-        float scale_x                                 = glm::length(model[0]);
-        float scale_y                                 = glm::length(model[1]);
-        float scale_z                                 = glm::length(model[2]);
-        model =
-            model *
-            glm::scale(glm::vec3(aspect_ratio / scale_x, 1.0f / scale_y, glm::tan(glm::radians(fov) / 2.0f) / scale_z));
-        transform_component.setModel(model);
+        camera->setAspectRatio(aspect_ratio);
+    }
+
+    if(ImGui::DragFloat(("FOV##" + id).c_str(), &fov, 0.5f, 10.0f, 120.0f))
+    {
         camera->setFOV(fov);
     }
 
@@ -54,7 +86,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     uint32_t height        = 128;
     uint32_t width         = (uint32_t)(aspect_ratio * 128.0f);
 
-    if(fbo_aspect_ratio != aspect_ratio)
+    if(glm::abs(fbo_aspect_ratio - aspect_ratio) > 1e-5f)
     {
         camera->setAspectRatio((float)width / (float)height);
         _camera_preview = atcg::make_ref<atcg::Framebuffer>(width, height);
@@ -115,34 +147,14 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     label.str(std::string());
     label << "Color##" << id;
     ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(camera_component.color));
-}
 
-template<>
-void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, TransformComponent& transform)
-{
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+    // Display camera extrinsic/intrinsic as transform
+    atcg::TransformComponent transform(camera->getAsTransform());
+    draw_component(entity, transform);
 
-    glm::vec3 position = transform.getPosition();
-    std::stringstream label;
-    label << "Position##" << id;
-    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position)))
-    {
-        transform.setPosition(position);
-    }
-    glm::vec3 scale = transform.getScale();
-    label.str(std::string());
-    label << "Scale##" << id;
-    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale)))
-    {
-        transform.setScale(scale);
-    }
-    glm::vec3 rotation = glm::degrees(transform.getRotation());
-    label.str(std::string());
-    label << "Rotation##" << id;
-    if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation)))
-    {
-        transform.setRotation(glm::radians(rotation));
-    }
+    // May be updated
+    // ? Optimize this
+    camera->setFromTransform(transform);
 }
 
 template<>
@@ -155,7 +167,7 @@ void ComponentGUIHandler::draw_component<GeometryComponent>(Entity entity, Geome
         auto files = f.result();
         if(!files.empty())
         {
-            auto mesh       = IO::read_mesh(files[0]);
+            auto mesh       = IO::read_any(files[0]);
             component.graph = mesh;
         }
     }
