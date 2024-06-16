@@ -24,6 +24,42 @@ public:
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
+
+        auto shader = atcg::make_ref<atcg::Shader>("src/Mandelbulb/Mandelbulb.glsl");
+        atcg::ShaderManager::addShader("Mandelbulb", shader);
+
+        atcg::TextureSpecification spec;
+        spec.width  = window->getWidth();
+        spec.height = window->getHeight();
+        spec.format = atcg::TextureFormat::RGBAFLOAT;
+        texture     = atcg::Texture2D::create(spec);
+
+        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1.0f, -1.0f, 0.0f),
+                                                           glm::vec3(1),
+                                                           glm::vec3(0),
+                                                           glm::vec3(0),
+                                                           glm::vec3(0.0f, 0.0f, 0.0f)),
+                                              atcg::Vertex(glm::vec3(1.0f, -1.0f, 0.0f),
+                                                           glm::vec3(1),
+                                                           glm::vec3(0),
+                                                           glm::vec3(0),
+                                                           glm::vec3(1.0f, 0.0f, 0.0f)),
+                                              atcg::Vertex(glm::vec3(1.0f, 1.0f, 0.0f),
+                                                           glm::vec3(1),
+                                                           glm::vec3(0),
+                                                           glm::vec3(0),
+                                                           glm::vec3(1.0f, 1.0f, 0.0f)),
+                                              atcg::Vertex(glm::vec3(-1.0f, 1.0f, 0.0f),
+                                                           glm::vec3(1),
+                                                           glm::vec3(0),
+                                                           glm::vec3(0),
+                                                           glm::vec3(0.0f, 1.0f, 0.0f))};
+
+        std::vector<glm::u32vec3> indices = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+
+        quad_mesh = atcg::Graph::createTriangleMesh(vertices, indices);
+
+        screen_id = atcg::Renderer::popTextureID();
     }
 
     // This gets called each frame
@@ -32,6 +68,17 @@ public:
         camera_controller->onUpdate(delta_time);
 
         atcg::Renderer::clear();
+
+        atcg::ShaderManager::getShader("Mandelbulb")->use();
+        texture->useForCompute();
+        atcg::ShaderManager::getShader("Mandelbulb")->dispatch(glm::ivec3(texture->width(), texture->height(), 1));
+
+        atcg::ShaderManager::getShader("screen")->setInt("screen_texture", screen_id);
+        atcg::ShaderManager::getShader("screen")->use();
+
+        texture->use(screen_id);
+
+        atcg::Renderer::draw(quad_mesh, {}, glm::mat4(1), glm::vec3(1), atcg::ShaderManager::getShader("screen"));
     }
 
     virtual void onImGuiRender() override {}
@@ -49,12 +96,22 @@ public:
     {
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
+        atcg::TextureSpecification spec;
+        spec.width  = event->getWidth();
+        spec.height = event->getHeight();
+        spec.format = atcg::TextureFormat::RGBAFLOAT;
+        texture     = atcg::Texture2D::create(spec);
         return false;
     }
 
 
 private:
     atcg::ref_ptr<atcg::FirstPersonController> camera_controller;
+
+    atcg::ref_ptr<atcg::Texture2D> texture;
+    atcg::ref_ptr<atcg::Graph> quad_mesh;
+
+    int screen_id;
 };
 
 class Mandelbulb : public atcg::Application
