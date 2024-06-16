@@ -5,7 +5,27 @@ namespace atcg
 {
 Shader::Shader(const std::string& compute_path)
 {
-    // File reading
+    recompile(compute_path);
+}
+
+Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
+{
+    recompile(vertexPath, fragmentPath);
+}
+
+Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath)
+{
+    recompile(vertexPath, fragmentPath, geometryPath);
+}
+
+Shader::~Shader()
+{
+    glDeleteProgram(_ID);
+    _ID = 0;
+}
+
+void Shader::recompile(const std::string& compute_path)
+{    // File reading
     std::string compute_buffer;
 
     readShaderCode(compute_path, &compute_buffer);
@@ -25,22 +45,6 @@ Shader::Shader(const std::string& compute_path)
     _has_geometry = false;
     _is_compute   = true;
     _compute_path = compute_path;
-}
-
-Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath)
-{
-    recompile(vertexPath, fragmentPath);
-}
-
-Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath, const std::string& geometryPath)
-{
-    recompile(vertexPath, fragmentPath, geometryPath);
-}
-
-Shader::~Shader()
-{
-    glDeleteProgram(_ID);
-    _ID = 0;
 }
 
 void Shader::recompile(const std::string& vertex_path, const std::string& fragment_path)

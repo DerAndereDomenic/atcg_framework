@@ -51,6 +51,13 @@ public:
     ~Shader();
 
     /**
+     * @brief Recompile a compute shader with new source
+     *
+     * @param compute_path The path to the compute shader
+     */
+    void recompile(const std::string& compute_path);
+
+    /**
      * @brief Recompile a shader with new source
      *
      * @param vertex_path The path to the vertex shader
