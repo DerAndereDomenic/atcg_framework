@@ -34,26 +34,10 @@ public:
         spec.format = atcg::TextureFormat::RGBAFLOAT;
         texture     = atcg::Texture2D::create(spec);
 
-        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1.0f, -1.0f, 0.0f),
-                                                           glm::vec3(1),
-                                                           glm::vec3(0),
-                                                           glm::vec3(0),
-                                                           glm::vec3(0.0f, 0.0f, 0.0f)),
-                                              atcg::Vertex(glm::vec3(1.0f, -1.0f, 0.0f),
-                                                           glm::vec3(1),
-                                                           glm::vec3(0),
-                                                           glm::vec3(0),
-                                                           glm::vec3(1.0f, 0.0f, 0.0f)),
-                                              atcg::Vertex(glm::vec3(1.0f, 1.0f, 0.0f),
-                                                           glm::vec3(1),
-                                                           glm::vec3(0),
-                                                           glm::vec3(0),
-                                                           glm::vec3(1.0f, 1.0f, 0.0f)),
-                                              atcg::Vertex(glm::vec3(-1.0f, 1.0f, 0.0f),
-                                                           glm::vec3(1),
-                                                           glm::vec3(0),
-                                                           glm::vec3(0),
-                                                           glm::vec3(0.0f, 1.0f, 0.0f))};
+        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)),
+                                              atcg::Vertex(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)),
+                                              atcg::Vertex(glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f)),
+                                              atcg::Vertex(glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f))};
 
         std::vector<glm::u32vec3> indices = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
 
@@ -69,9 +53,18 @@ public:
 
         atcg::Renderer::clear();
 
+        atcg::ShaderManager::getShader("Mandelbulb")
+            ->setVec3("camera_position", camera_controller->getCamera()->getPosition());
+        atcg::ShaderManager::getShader("Mandelbulb")->setMat4("V", camera_controller->getCamera()->getView());
+        atcg::ShaderManager::getShader("Mandelbulb")->setMat4("P", camera_controller->getCamera()->getProjection());
+        atcg::ShaderManager::getShader("Mandelbulb")
+            ->setMat4("VP", camera_controller->getCamera()->getViewProjection());
+        atcg::ShaderManager::getShader("Mandelbulb")
+            ->setMat4("invVP", glm::inverse(camera_controller->getCamera()->getViewProjection()));
         atcg::ShaderManager::getShader("Mandelbulb")->use();
         texture->useForCompute();
-        atcg::ShaderManager::getShader("Mandelbulb")->dispatch(glm::ivec3(texture->width(), texture->height(), 1));
+        atcg::ShaderManager::getShader("Mandelbulb")
+            ->dispatch(glm::ivec3(ceil(texture->width() / 8), ceil(texture->height() / 8), 1));
 
         atcg::ShaderManager::getShader("screen")->setInt("screen_texture", screen_id);
         atcg::ShaderManager::getShader("screen")->use();
