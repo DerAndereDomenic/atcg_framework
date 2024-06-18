@@ -117,7 +117,9 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float sRGB_to_luminance(const glm::vec3& colo
 
 /**
  * @brief The color matching function x_bar.
- * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions)
+ * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions).
+ * No additional normalization is done. For converting spectral data to RGB via integration, normalize by the integral
+ * over Y (atcg::Constants::Y_integral())
  *
  * @tparam T The type
  * @param lambda The wavelength in nm
@@ -130,6 +132,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE T color_matching_x(const T lambda);
 /**
  * @brief The color matching function y_bar.
  * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions)
+ * No additional normalization is done. For converting spectral data to RGB via integration, normalize by the integral
+ * over Y (atcg::Constants::Y_integral())
  *
  * @tparam T The type
  * @param lambda The wavelength in nm
@@ -142,6 +146,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE T color_matching_y(const T lambda);
 /**
  * @brief The color matching function z_bar.
  * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions)
+ * No additional normalization is done. For converting spectral data to RGB via integration, normalize by the integral
+ * over Y (atcg::Constants::Y_integral())
  *
  * @tparam T The type
  * @param lambda The wavelength in nm
