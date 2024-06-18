@@ -5,7 +5,7 @@ project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
 option(ATCG_CUDA_BACKEND "Compile cuda backend" OFF)
 option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
-option(ATCG_BUILD_TESTS "Build documentation" OFF)
+option(ATCG_BUILD_TESTS "Build tests" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
