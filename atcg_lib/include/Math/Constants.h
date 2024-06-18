@@ -217,5 +217,12 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_CONSTEXPR T g()
 {
     return T(9.80665);
 }
+
+// Integral over the color matching function Y. Used to normalize the integration of spectral data
+template<typename T>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_CONSTEXPR T Y_integral()
+{
+    return T(106.83626556396484);
+}
 }    // namespace Constants
 }    // namespace atcg

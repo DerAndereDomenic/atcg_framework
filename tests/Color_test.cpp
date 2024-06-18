@@ -196,6 +196,24 @@ TEST(ColorTest, colorMatchingNormalizationY)
     EXPECT_NEAR(integral_y, atcg::Constants::Y_integral<float>(), 1e-5f);
 }
 
+TEST(ColorTest, colorMatchingNormalizationIlluminationY)
+{
+    float step_size  = 0.01f;
+    float lambda_min = 380.0f;
+    float lambda_max = 780.0f;
+
+    float integral_y = 0.0f;
+
+    for(float lambda = lambda_min; lambda <= lambda_max; lambda += step_size)
+    {
+        integral_y += atcg::Color::color_matching_y(lambda) * atcg::Color::D65(lambda);
+    }
+
+    integral_y *= step_size;
+
+    EXPECT_NEAR(integral_y, atcg::Constants::Y_illum<float>(), 1e-5f);
+}
+
 TEST(ColorTest, D65sRGBNormalization)
 {
     float step_size  = 0.01f;
