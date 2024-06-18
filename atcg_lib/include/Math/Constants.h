@@ -224,5 +224,12 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_CONSTEXPR T Y_integral()
 {
     return T(106.83626556396484);
 }
+
+// The luminance of the D65 observer
+template<typename T>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_CONSTEXPR T Y_illum()
+{
+    return T(10505.341797);
+}
 }    // namespace Constants
 }    // namespace atcg
