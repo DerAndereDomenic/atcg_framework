@@ -2,6 +2,7 @@
 
 #include <Math/Constants.h>
 #include <Math/Utils.h>
+#include <Math/Color.h>
 
 namespace atcg
 {
