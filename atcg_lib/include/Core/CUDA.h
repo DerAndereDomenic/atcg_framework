@@ -37,7 +37,7 @@ ATCG_INLINE void check(cudaError_t error, char const* const func, const char* co
     }
 }
 
-ATCG_CONSTEXPR bool cuda_available()
+ATCG_CONSTEXPR ATCG_FORCE_INLINE bool cuda_available()
 {
     return true;
 }

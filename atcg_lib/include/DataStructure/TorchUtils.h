@@ -9,11 +9,11 @@ namespace atcg
 
 /// These types are used to easily switch between compilation with and without CUDA
 
-ATCG_CONSTEXPR torch::DeviceType CPU = torch::kCPU;
+ATCG_CONSTEXPR ATCG_INLINE torch::DeviceType CPU = torch::kCPU;
 #ifdef ATCG_CUDA_BACKEND
-ATCG_CONSTEXPR torch::DeviceType GPU = torch::kCUDA;
+ATCG_CONSTEXPR ATCG_INLINE torch::DeviceType GPU = torch::kCUDA;
 #else
-ATCG_CONSTEXPR torch::DeviceType GPU = torch::kCPU;
+ATCG_CONSTEXPR ATCG_INLINE torch::DeviceType GPU = torch::kCPU;
 #endif
 
 /**
