@@ -165,10 +165,7 @@ PYBIND11_MODULE(pyatcg, m)
     m.def("getViewportSize", []() { return atcg::Application::get()->getViewportSize(); });
     m.def("getViewportPosition", []() { return atcg::Application::get()->getViewportPosition(); });
 
-    m.def(
-        "enableDockSpace",
-        [](bool enable) { atcg::Application::get()->enableDockSpace(enable); },
-        "enable"_a);
+    m.def("enableDockSpace", [](bool enable) { atcg::Application::get()->enableDockSpace(enable); }, "enable"_a);
 
     // ---------------- MATH -------------------------
     m_vec2.def(py::init<float, float>(), "x"_a, "y"_a)
@@ -519,25 +516,13 @@ PYBIND11_MODULE(pyatcg, m)
         .def("unmapAllHostPointers", &atcg::Graph::unmapAllHostPointers)
         .def("unmapAllDevicePointers", &atcg::Graph::unmapAllDevicePointers)
         .def("unmapAllPointers", &atcg::Graph::unmapAllPointers);
-    m.def(
-        "read_mesh",
-        [](const std::string& path) { return atcg::IO::read_mesh(path); },
-        "path"_a);
+    m.def("read_mesh", [](const std::string& path) { return atcg::IO::read_mesh(path); }, "path"_a);
 
-    m.def(
-        "read_pointcloud",
-        [](const std::string& path) { return atcg::IO::read_pointcloud(path); },
-        "path"_a);
+    m.def("read_pointcloud", [](const std::string& path) { return atcg::IO::read_pointcloud(path); }, "path"_a);
 
-    m.def(
-        "read_lines",
-        [](const std::string& path) { return atcg::IO::read_lines(path); },
-        "path"_a);
+    m.def("read_lines", [](const std::string& path) { return atcg::IO::read_lines(path); }, "path"_a);
 
-    m.def(
-        "read_scene",
-        [](const std::string& path) { return atcg::IO::read_scene(path); },
-        "path"_a);
+    m.def("read_scene", [](const std::string& path) { return atcg::IO::read_scene(path); }, "path"_a);
 
 
     m_camera
@@ -556,10 +541,10 @@ PYBIND11_MODULE(pyatcg, m)
         .def("onEvent", &atcg::FirstPersonController::onEvent, "event"_a)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
 
-    py::class_<atcg::Serializer>(m, "Serializer")
+    py::class_<atcg::Serializer<atcg::ComponentSerializer>>(m, "Serializer")
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
-        .def("serialize", &atcg::Serializer::serialize, "file_path"_a)
-        .def("deserialize", &atcg::Serializer::deserialize, "file_path"_a);
+        .def("serialize", &atcg::Serializer<atcg::ComponentSerializer>::serialize<>, "file_path"_a)
+        .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
 
     // ------------------- RENDERER ---------------------------------
     py::class_<atcg::Renderer>(m, "Renderer")
@@ -913,12 +898,12 @@ PYBIND11_MODULE(pyatcg, m)
                  return entities;
              });
 
-    py::class_<atcg::SceneHierarchyPanel>(m, "SceneHierarchyPanel")
+    py::class_<atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>>(m, "SceneHierarchyPanel")
         .def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
-        .def("renderPanel", &atcg::SceneHierarchyPanel::renderPanel)
-        .def("selectEntity", &atcg::SceneHierarchyPanel::selectEntity, "entity"_a)
-        .def("getSelectedEntity", &atcg::SceneHierarchyPanel::getSelectedEntity);
+        .def("renderPanel", &atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>::renderPanel<>)
+        .def("selectEntity", &atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>::selectEntity, "entity"_a)
+        .def("getSelectedEntity", &atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>::getSelectedEntity);
 
     py::class_<atcg::SurfaceInteraction>(m, "SurfaceInteraction")
         .def_readonly("hit", &atcg::SurfaceInteraction::valid)

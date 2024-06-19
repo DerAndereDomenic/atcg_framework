@@ -36,7 +36,7 @@ public:
      * Renders the panel
      *
      * @tparam CustomComponents... optional custom components that should be rendered.
-     * 
+     *
      * To support custom component rendering, a custom GUIHandler has to be provided.
      */
     template<typename... CustomComponents>
@@ -47,21 +47,21 @@ public:
      *
      * @param entity The entity
      */
-    inline void selectEntity(Entity entity) { _selected_entity = entity; }
+    ATCG_INLINE void selectEntity(Entity entity) { _selected_entity = entity; }
 
     /**
      * @brief Get the currently selected entity
      *
      * @return The selected entity
      */
-    inline Entity getSelectedEntity() const { return _selected_entity; }
+    ATCG_INLINE Entity getSelectedEntity() const { return _selected_entity; }
 
     /**
      * @brief Set a custom gui handler
      *
      * @param gui_handler The gui handler instance
      */
-    inline void setGuiHandler(const atcg::ref_ptr<GUIHandler>& gui_handler) { _gui_handler = gui_handler; }
+    ATCG_INLINE void setGuiHandler(const atcg::ref_ptr<GUIHandler>& gui_handler) { _gui_handler = gui_handler; }
 
 private:
     void drawEntityNode(Entity entity);

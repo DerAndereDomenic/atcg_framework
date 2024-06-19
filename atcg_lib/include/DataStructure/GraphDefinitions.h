@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/glm.h>
+#include <Core/Platform.h>
 #include <torch/types.h>
 
 namespace atcg
@@ -20,22 +21,22 @@ namespace atcg
  */
 struct VertexSpecification
 {
-    static constexpr int POSITION_BEGIN = 0;
-    static constexpr int POSITION_END   = 3;
+    static ATCG_CONST ATCG_CONSTEXPR int POSITION_BEGIN = 0;
+    static ATCG_CONST ATCG_CONSTEXPR int POSITION_END   = 3;
 
-    static constexpr int COLOR_BEGIN = 3;
-    static constexpr int COLOR_END   = 6;
+    static ATCG_CONST ATCG_CONSTEXPR int COLOR_BEGIN = 3;
+    static ATCG_CONST ATCG_CONSTEXPR int COLOR_END   = 6;
 
-    static constexpr int NORMAL_BEGIN = 6;
-    static constexpr int NORMAL_END   = 9;
+    static ATCG_CONST ATCG_CONSTEXPR int NORMAL_BEGIN = 6;
+    static ATCG_CONST ATCG_CONSTEXPR int NORMAL_END   = 9;
 
-    static constexpr int TANGNET_BEGIN = 9;
-    static constexpr int TANGNET_END   = 12;
+    static ATCG_CONST ATCG_CONSTEXPR int TANGNET_BEGIN = 9;
+    static ATCG_CONST ATCG_CONSTEXPR int TANGNET_END   = 12;
 
-    static constexpr int UV_BEGIN = 12;
-    static constexpr int UV_END   = 15;
+    static ATCG_CONST ATCG_CONSTEXPR int UV_BEGIN = 12;
+    static ATCG_CONST ATCG_CONSTEXPR int UV_END   = 15;
 
-    static constexpr int VERTEX_SIZE = 15;
+    static ATCG_CONST ATCG_CONSTEXPR int VERTEX_SIZE = 15;
 };
 
 /**
@@ -79,16 +80,16 @@ struct Vertex
  */
 struct EdgeSpecification
 {
-    static constexpr int INDICES_BEGIN = 0;
-    static constexpr int INDICES_END   = 2;
+    static ATCG_CONST ATCG_CONSTEXPR int INDICES_BEGIN = 0;
+    static ATCG_CONST ATCG_CONSTEXPR int INDICES_END   = 2;
 
-    static constexpr int COLOR_BEGIN = 2;
-    static constexpr int COLOR_END   = 5;
+    static ATCG_CONST ATCG_CONSTEXPR int COLOR_BEGIN = 2;
+    static ATCG_CONST ATCG_CONSTEXPR int COLOR_END   = 5;
 
-    static constexpr int RADIUS_BEGIN = 5;
-    static constexpr int RADIUS_END   = 6;
+    static ATCG_CONST ATCG_CONSTEXPR int RADIUS_BEGIN = 5;
+    static ATCG_CONST ATCG_CONSTEXPR int RADIUS_END   = 6;
 
-    static constexpr int EDGE_SIZE = 6;
+    static ATCG_CONST ATCG_CONSTEXPR int EDGE_SIZE = 6;
 };
 
 /**

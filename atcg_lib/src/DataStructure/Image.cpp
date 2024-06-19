@@ -9,30 +9,17 @@ namespace atcg
 
 Image::Image(uint8_t* data, uint32_t width, uint32_t height, uint32_t channels)
 {
-    _width    = width;
-    _height   = height;
-    _channels = channels;
-
-    _img_data = atcg::createHostTensorFromPointer<uint8_t>(data, {(int)height, (int)width, (int)channels}).clone();
+    setData(data, width, height, channels);
 }
 
 Image::Image(float* data, uint32_t width, uint32_t height, uint32_t channels)
 {
-    _width    = width;
-    _height   = height;
-    _hdr      = true;
-    _channels = channels;
-
-    _img_data = atcg::createHostTensorFromPointer<float>(data, {(int)height, (int)width, (int)channels}).clone();
+    setData(data, width, height, channels);
 }
 
 Image::Image(const torch::Tensor& tensor)
-    : _img_data(tensor),
-      _width(tensor.size(1)),
-      _height(tensor.size(0)),
-      _channels(tensor.size(2)),
-      _hdr(tensor.dtype() == torch::kFloat32)
 {
+    setData(tensor);
 }
 
 Image::~Image()
@@ -102,23 +89,34 @@ void Image::applyGamma(const float gamma)
     }
 }
 
-void Image::setData(uint8_t* data)
+void Image::setData(uint8_t* data, uint32_t width, uint32_t height, uint32_t channels)
 {
-    if(_hdr)
-    {
-        _img_data =
-            atcg::createHostTensorFromPointer<float>((float*)data, {(int)_height, (int)_width, (int)_channels}).clone();
-    }
-    else
-    {
-        _img_data =
-            atcg::createHostTensorFromPointer<uint8_t>(data, {(int)_height, (int)_width, (int)_channels}).clone();
-    }
+    _width    = width;
+    _height   = height;
+    _channels = channels;
+
+    _img_data = atcg::createHostTensorFromPointer<uint8_t>(data, {(int)height, (int)width, (int)channels}).clone();
 }
 
-void Image::setData(const torch::Tensor& data)
+void Image::setData(float* data, uint32_t width, uint32_t height, uint32_t channels)
 {
-    _img_data = data;
+    _width    = width;
+    _height   = height;
+    _hdr      = true;
+    _channels = channels;
+
+    _img_data = atcg::createHostTensorFromPointer<float>(data, {(int)height, (int)width, (int)channels}).clone();
+}
+
+void Image::setData(const torch::Tensor& tensor)
+{
+    TORCH_CHECK_EQ(tensor.scalar_type() == torch::kFloat32 || tensor.scalar_type() == torch::kUInt8, true);
+
+    _img_data = tensor;
+    _width    = tensor.size(1);
+    _height   = tensor.size(0);
+    _channels = tensor.size(2);
+    _hdr      = tensor.dtype() == torch::kFloat32;
 }
 
 void Image::loadLDR(const std::string& filename)
@@ -130,7 +128,7 @@ void Image::loadLDR(const std::string& filename)
         ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename);
     }
 
-    setData(data);
+    setData(data, _width, _height, _channels);
     stbi_image_free(data);
 }
 
@@ -144,7 +142,7 @@ void Image::loadHDR(const std::string& filename)
         ATCG_ERROR("Image::loadLDR: Error loading image {0}", filename);
     }
 
-    setData((uint8_t*)data);
+    setData(data, _width, _height, _channels);
     stbi_image_free(data);
 }
 

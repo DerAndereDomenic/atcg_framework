@@ -54,14 +54,14 @@ public:
      *
      * @return const atcg::scope_ptr<Camera>& The camera
      */
-    inline const atcg::ref_ptr<PerspectiveCamera>& getCamera() const { return _camera; }
+    ATCG_INLINE const atcg::ref_ptr<PerspectiveCamera>& getCamera() const { return _camera; }
 
     /**
      * @brief Set the Camera object
      *
      * @param camera The camera
      */
-    inline void setCamera(const atcg::ref_ptr<PerspectiveCamera>& camera) { _camera = camera; }
+    ATCG_INLINE void setCamera(const atcg::ref_ptr<PerspectiveCamera>& camera) { _camera = camera; }
 
 protected:
     atcg::ref_ptr<PerspectiveCamera> _camera;
@@ -207,28 +207,28 @@ public:
      *
      * @return The camera
      */
-    inline atcg::ref_ptr<atcg::PerspectiveCamera> getCameraLeft() const { return _cam_left; }
+    ATCG_INLINE atcg::ref_ptr<atcg::PerspectiveCamera> getCameraLeft() const { return _cam_left; }
 
     /**
      * @brief Get the camera of the right eye
      *
      * @return The camera
      */
-    inline atcg::ref_ptr<atcg::PerspectiveCamera> getCameraRight() const { return _cam_right; }
+    ATCG_INLINE atcg::ref_ptr<atcg::PerspectiveCamera> getCameraRight() const { return _cam_right; }
 
     /**
      * @brief Get the position of the controller if the trigger is pressed for movement
      *
      * @return The Controller position
      */
-    inline glm::vec3 getControllerPosition() const { return _controller_position; }
+    ATCG_INLINE glm::vec3 getControllerPosition() const { return _controller_position; }
 
     /**
      * @brief Get the direction of the controller if the trigger is pressed for movement
      *
      * @return The Controller direction
      */
-    inline glm::vec3 getControllerDirection() const { return _controller_direction; }
+    ATCG_INLINE glm::vec3 getControllerDirection() const { return _controller_direction; }
 
     /**
      * @brief Get the position of the intersection of the controller with the floor plane if the trigger is pressed for
@@ -236,14 +236,14 @@ public:
      *
      * @return The intersection
      */
-    inline glm::vec3 getControllerIntersection() const { return _controller_intersection; }
+    ATCG_INLINE glm::vec3 getControllerIntersection() const { return _controller_intersection; }
 
     /**
      * @brief Check if we are currently trying to move
      *
      * @return True if the trigger is pressed and we try to move
      */
-    inline bool inMovement() const { return _trigger_pressed; }
+    ATCG_INLINE bool inMovement() const { return _trigger_pressed; }
 
 private:
     bool onWindowResize(WindowResizeEvent* event);

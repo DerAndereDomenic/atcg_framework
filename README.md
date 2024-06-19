@@ -46,6 +46,15 @@ This way you can include high performant GPU code into your application. Note th
 
 There is a (not very complete) documentation that can be build using [doxygen](https://www.doxygen.nl/index.html) and [sphinx](https://www.sphinx-doc.org/en/master/). Install the dependencies listed in this [Blog Post](https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/) and set the ATCG_BUILD_DOCS option to true when generating the CMake project.
 
+### Building tests (eperimental)
+
+To build the unit tests, set the ATCG_BUILD_TESTS option to true.
+
+```
+cmake . -B build -DATCG_BUILD_TESTS=On
+```
+Run the ```atcg_lib_test``` target to run the tests.
+
 ## Project Structure
 
 The code base is based on the [Hazel Game Engine](https://github.com/TheCherno/Hazel). The framework also includes several dependencies that are used to implement different computer graphics algorithms.

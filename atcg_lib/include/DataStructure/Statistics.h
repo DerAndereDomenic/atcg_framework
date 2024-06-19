@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/CUDA.h>
+#include <Core/Memory.h>
 #include <iostream>
 #include <vector>
 

@@ -261,7 +261,7 @@ public:
      * @return The pointer
      */
     template<typename T>
-    inline T* getDevicePointer() const
+    ATCG_INLINE T* getDevicePointer() const
     {
         return reinterpret_cast<T*>(getDevicePointer());
     }
@@ -295,7 +295,7 @@ public:
      * @return The pointer
      */
     template<typename T>
-    inline T* getHostPointer() const
+    ATCG_INLINE T* getHostPointer() const
     {
         return reinterpret_cast<T*>(getHostPointer());
     }
@@ -332,14 +332,14 @@ public:
      *
      * @return const BufferLayout& The layout of the buffer
      */
-    inline const BufferLayout& getLayout() const { return _layout; }
+    ATCG_INLINE const BufferLayout& getLayout() const { return _layout; }
 
     /**
      * @brief Set the Layout
      *
      * @param layout The layout
      */
-    inline void setLayout(const BufferLayout& layout) { _layout = layout; }
+    ATCG_INLINE void setLayout(const BufferLayout& layout) { _layout = layout; }
 
     /**
      * @brief Get the size in use in bytes
@@ -360,7 +360,7 @@ public:
      *
      * @return The renderer ID
      */
-    inline uint32_t ID() const { return _ID; }
+    ATCG_INLINE uint32_t ID() const { return _ID; }
 
 protected:
     class Impl;
@@ -420,7 +420,7 @@ public:
      *
      * @return uint32_t The count
      */
-    inline size_t getCount() const { return size() / sizeof(uint32_t); }
+    ATCG_INLINE size_t getCount() const { return size() / sizeof(uint32_t); }
 
 private:
 };

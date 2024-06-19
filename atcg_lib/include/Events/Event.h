@@ -2,6 +2,7 @@
 
 #include <string>
 #include <ostream>
+#include <Core/Platform.h>
 
 namespace atcg
 {
@@ -98,7 +99,7 @@ private:
     Event* _event;
 };
 
-inline std::ostream& operator<<(std::ostream& os, const Event& e)
+ATCG_INLINE std::ostream& operator<<(std::ostream& os, const Event& e)
 {
     return os << e.toString();
 }

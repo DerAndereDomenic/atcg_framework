@@ -2,6 +2,7 @@
 
 #include <Math/Constants.h>
 #include <Math/Utils.h>
+#include <Math/Color.h>
 
 namespace atcg
 {
@@ -10,36 +11,37 @@ namespace Color
 
 namespace detail
 {
-static constexpr glm::mat3 lRGB_to_XYZ_transform(glm::vec3(0.4124f, 0.2126f, 0.0193f),
-                                                 glm::vec3(0.3576f, 0.7152f, 0.1192f),
-                                                 glm::vec3(0.1805f, 0.0722f, 0.9505f));
 
-static constexpr glm::mat3 XYZ_to_lRBB_transform(glm::vec3(+3.2406f, -0.9689, +0.0557f),
-                                                 glm::vec3(-1.5372f, +1.8758f, -0.2040f),
-                                                 glm::vec3(-0.4986f, +0.0415f, +1.0570f));
+#define lRGB_TO_X glm::vec3(0.4124f, 0.2126f, 0.0193f)
+#define lRGB_TO_Y glm::vec3(0.3576f, 0.7152f, 0.1192f)
+#define lRGB_TO_Z glm::vec3(0.1805f, 0.0722f, 0.9505f)
 
-ATCG_HOST_DEVICE inline uint8_t quantize_channel(const float c)
+#define XYZ_TO_lR glm::vec3(+3.2406f, -0.9689, +0.0557f)
+#define XYZ_TO_lG glm::vec3(-1.5372f, +1.8758f, -0.2040f)
+#define XYZ_TO_lB glm::vec3(-0.4986f, +0.0415f, +1.0570f)
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE uint8_t quantize_channel(const float c)
 {
     return (uint8_t)(c * 255.0f);
 }
 
-ATCG_HOST_DEVICE inline float dequantize_channel(const uint8_t c)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float dequantize_channel(const uint8_t c)
 {
     return (float)(c) / 255.0f;
 }
 
-ATCG_HOST_DEVICE inline float sRGB_to_lRGB_channel(const float c)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float sRGB_to_lRGB_channel(const float c)
 {
     return c <= 0.04045f ? c / 12.92f : glm::pow((c + 0.055f) / 1.055f, 2.4f);
 }
 
-ATCG_HOST_DEVICE inline float lRGB_to_sRGB_channel(const float c)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float lRGB_to_sRGB_channel(const float c)
 {
     return c <= 0.0031308 ? 12.92f * c : 1.055f * glm::pow(c, 1.0f / 2.4f) - 0.055f;
 }
 
 template<typename T>
-ATCG_HOST_DEVICE inline T g(const T x, const T mu, const T t1, const T t2)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T g(const T x, const T mu, const T t1, const T t2)
 {
     return x < mu ? glm::exp(-t1 * t1 * (x - mu) * (x - mu) / 2) : glm::exp(-t2 * t2 * (x - mu) * (x - mu) / 2);
 }
@@ -66,80 +68,82 @@ ATCG_HOST_DEVICE T read_array_interpolated(const T* data, const uint32_t size, c
 }
 }    // namespace detail
 
-ATCG_HOST_DEVICE inline glm::u8vec3 quantize(const glm::vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::u8vec3 quantize(const glm::vec3& color)
 {
     return glm::u8vec3(detail::quantize_channel(color.x),
                        detail::quantize_channel(color.y),
                        detail::quantize_channel(color.z));
 }
 
-ATCG_HOST_DEVICE inline glm::vec3 dequantize(const glm::u8vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 dequantize(const glm::u8vec3& color)
 {
     return glm::vec3(detail::dequantize_channel(color.x),
                      detail::dequantize_channel(color.y),
                      detail::dequantize_channel(color.z));
 }
 
-ATCG_HOST_DEVICE inline glm::u8vec4 quantize(const glm::vec4& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::u8vec4 quantize(const glm::vec4& color)
 {
     return glm::u8vec4(quantize(glm::vec3(color)), detail::quantize_channel(color.a));
 }
 
-ATCG_HOST_DEVICE inline glm::vec4 dequantize(const glm::u8vec4& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec4 dequantize(const glm::u8vec4& color)
 {
     return glm::vec4(dequantize(glm::vec3(color)), detail::dequantize_channel(color.a));
 }
 
-ATCG_HOST_DEVICE inline glm::vec3 sRGB_to_lRGB(const glm::vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 sRGB_to_lRGB(const glm::vec3& color)
 {
     return glm::vec3(detail::sRGB_to_lRGB_channel(color.x),
                      detail::sRGB_to_lRGB_channel(color.y),
                      detail::sRGB_to_lRGB_channel(color.z));
 }
 
-ATCG_HOST_DEVICE inline glm::vec3 lRGB_to_sRGB(const glm::vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 lRGB_to_sRGB(const glm::vec3& color)
 {
     return glm::vec3(detail::lRGB_to_sRGB_channel(color.x),
                      detail::lRGB_to_sRGB_channel(color.y),
                      detail::lRGB_to_sRGB_channel(color.z));
 }
 
-ATCG_HOST_DEVICE inline glm::vec3 sRGB_to_XYZ(const glm::vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 sRGB_to_XYZ(const glm::vec3& color)
 {
     glm::vec3 lRGB = sRGB_to_lRGB(color);
     return lRGB_to_XYZ(lRGB);
 }
 
-ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_sRGB(const glm::vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 XYZ_to_sRGB(const glm::vec3& color)
 {
     glm::vec3 lRGB = XYZ_to_lRGB(color);
     return lRGB_to_sRGB(lRGB);
 }
 
-ATCG_HOST_DEVICE inline glm::vec3 lRGB_to_XYZ(const glm::vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 lRGB_to_XYZ(const glm::vec3& color)
 {
-    return detail::lRGB_to_XYZ_transform * color;
+    const glm::mat3 lRGB_to_XYZ_transform(lRGB_TO_X, lRGB_TO_Y, lRGB_TO_Z);
+    return lRGB_to_XYZ_transform * color;
 }
 
-ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_lRGB(const glm::vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 XYZ_to_lRGB(const glm::vec3& color)
 {
-    return detail::XYZ_to_lRBB_transform * color;
+    const glm::mat3 XYZ_to_lRGB_transform(XYZ_TO_lR, XYZ_TO_lG, XYZ_TO_lB);
+    return XYZ_to_lRGB_transform * color;
 }
 
-ATCG_HOST_DEVICE inline float lRGB_to_luminance(const glm::vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float lRGB_to_luminance(const glm::vec3& color)
 {
-    const glm::vec3 luminance_weights = glm::row(detail::lRGB_to_XYZ_transform, 1);
+    const glm::vec3 luminance_weights = lRGB_TO_Y;
     return glm::dot(luminance_weights, color);
 }
 
-ATCG_HOST_DEVICE inline float sRGB_to_luminance(const glm::vec3& color)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float sRGB_to_luminance(const glm::vec3& color)
 {
     auto lRGB = sRGB_to_lRGB(color);
     return lRGB_to_luminance(lRGB);
 }
 
 template<typename T>
-ATCG_HOST_DEVICE inline T color_matching_x(const T lambda)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T color_matching_x(const T lambda)
 {
     return T(1.056) * detail::g(lambda, T(599.8), T(0.0264), T(0.0323)) +
            T(0.362) * detail::g(lambda, T(442.0), T(0.0624), T(0.0374)) -
@@ -147,21 +151,21 @@ ATCG_HOST_DEVICE inline T color_matching_x(const T lambda)
 }
 
 template<typename T>
-ATCG_HOST_DEVICE inline T color_matching_y(const T lambda)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T color_matching_y(const T lambda)
 {
     return T(0.821) * detail::g(lambda, T(568.8), T(0.0213), T(0.0247)) +
            T(0.286) * detail::g(lambda, T(530.9), T(0.0613), T(0.0322));
 }
 
 template<typename T>
-ATCG_HOST_DEVICE inline T color_matching_z(const T lambda)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T color_matching_z(const T lambda)
 {
     return T(1.217) * detail::g(lambda, T(437.0), T(0.0845), T(0.0278)) +
            T(0.681) * detail::g(lambda, T(459.0), T(0.0385), T(0.0725));
 }
 
 template<typename T>
-ATCG_HOST_DEVICE inline T planck(const T lambda, const T temperature)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T planck(const T lambda, const T temperature)
 {
     T lambda_m      = lambda * T(1e-9);
     constexpr T c_2 = Constants::c<T>() * Constants::c<T>();
@@ -176,7 +180,7 @@ ATCG_HOST_DEVICE inline T planck(const T lambda, const T temperature)
 }
 
 template<typename T>
-ATCG_HOST_DEVICE inline T D65(const T lambda)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T D65(const T lambda)
 {
     float index = (lambda - atcg::Spectral::D65_MIN_LAMBDA) /
                   (atcg::Spectral::D65_MAX_LAMBDA - atcg::Spectral::D65_MIN_LAMBDA) * atcg::Spectral::D65_SIZE;
@@ -184,7 +188,7 @@ ATCG_HOST_DEVICE inline T D65(const T lambda)
 }
 
 template<typename T>
-ATCG_HOST_DEVICE inline T Sr(const T lambda)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T Sr(const T lambda)
 {
     float index = (lambda - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) /
                   (atcg::Spectral::SPECTRAL_BASIS_MAX_LAMBDA - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) *
@@ -193,7 +197,7 @@ ATCG_HOST_DEVICE inline T Sr(const T lambda)
 }
 
 template<typename T>
-ATCG_HOST_DEVICE inline T Sg(const T lambda)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T Sg(const T lambda)
 {
     float index = (lambda - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) /
                   (atcg::Spectral::SPECTRAL_BASIS_MAX_LAMBDA - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) *
@@ -202,7 +206,7 @@ ATCG_HOST_DEVICE inline T Sg(const T lambda)
 }
 
 template<typename T>
-ATCG_HOST_DEVICE inline T Sb(const T lambda)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T Sb(const T lambda)
 {
     float index = (lambda - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) /
                   (atcg::Spectral::SPECTRAL_BASIS_MAX_LAMBDA - atcg::Spectral::SPECTRAL_BASIS_MIN_LAMBDA) *

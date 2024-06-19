@@ -10,10 +10,10 @@
 #include <vector>
 #include <DataStructure/TorchUtils.h>
 #include <DataStructure/GraphDefinitions.h>
+#include <DataStructure/GraphLoader.h>
 
 namespace atcg
 {
-class Scene;
 
 /**
  * @brief An enum to distinguish between different graph types
@@ -476,7 +476,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostPositions() const { return getPositions(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostPositions() const { return getPositions(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex positions as device tensor.
@@ -486,7 +486,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDevicePositions() const { return getPositions(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDevicePositions() const { return getPositions(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get the vertex colors as host tensor.
@@ -496,7 +496,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostColors() const { return getColors(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostColors() const { return getColors(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex colors as device tensor.
@@ -506,7 +506,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDeviceColors() const { return getColors(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceColors() const { return getColors(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get the vertex normals as host tensor.
@@ -516,7 +516,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostNormals() const { return getNormals(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostNormals() const { return getNormals(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex normals as device tensor.
@@ -526,7 +526,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDeviceNormals() const { return getNormals(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceNormals() const { return getNormals(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get the vertex tangents as host tensor.
@@ -536,7 +536,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostTangents() const { return getTangents(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostTangents() const { return getTangents(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex tangents as device tensor.
@@ -546,7 +546,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDeviceTangents() const { return getTangents(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceTangents() const { return getTangents(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get the vertex uvs as host tensor.
@@ -556,7 +556,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getHostUVs() const { return getUVs(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostUVs() const { return getUVs(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get the vertex uvs as device tensor.
@@ -566,7 +566,7 @@ public:
      *
      * @return The Tensor
      */
-    inline torch::Tensor getDeviceUVs() const { return getUVs(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceUVs() const { return getUVs(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get a tensor of edges the host. The data format is specified by atcg::Edge (i.e., (idx1, idx2,
@@ -580,7 +580,7 @@ public:
      *
      * @return A tensor that points to the vertex buffer.
      */
-    inline torch::Tensor getHostEdges() const { return getEdges(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostEdges() const { return getEdges(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get a tensor of edges the host. The data format is specified by atcg::Edge (i.e., (idx1, idx2,
@@ -594,7 +594,7 @@ public:
      *
      * @return A tensor that points to the vertex buffer.
      */
-    inline torch::Tensor getDeviceEdges() const { return getEdges(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceEdges() const { return getEdges(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Get a tensor of face indices on the host.
@@ -607,7 +607,7 @@ public:
      *
      * @return A tensor that points to the vertex buffer.
      */
-    inline torch::Tensor getHostFaces() const { return getFaces(torch::Device(atcg::CPU)); }
+    ATCG_INLINE torch::Tensor getHostFaces() const { return getFaces(torch::Device(atcg::CPU)); }
 
     /**
      * @brief Get a tensor of face indices on the device.
@@ -620,7 +620,7 @@ public:
      *
      * @return A tensor that points to the vertex buffer.
      */
-    inline torch::Tensor getDeviceFaces() const { return getFaces(torch::Device(atcg::GPU)); }
+    ATCG_INLINE torch::Tensor getDeviceFaces() const { return getFaces(torch::Device(atcg::GPU)); }
 
     /**
      * @brief Unmaps all host pointers of the vertex buffer
@@ -686,69 +686,5 @@ private:
     class Impl;
     atcg::scope_ptr<Impl> impl;
 };
-
-namespace IO
-{
-
-/**
- * @brief Read an obj (triangle) mesh.
- * If the obj file contains multiple objects, they are all combined into one mesh representation.
- * Material files are ignored
- *
- * @param path The path to the obj file
- *
- * @return The mesh representation
- */
-atcg::ref_ptr<Graph> read_mesh(const std::string& path);
-
-/**
- * @brief Read an obj triangle cloud.
- * This method expects shapes that are created using the obj p tag. Face information is ignored.
- * If the obj file contains multiple objects, they are all combined into one point cloud representation.
- * Material files are ignored.
- *
- * @param path The path to the obj file
- *
- * @return The point cloud representation
- */
-atcg::ref_ptr<Graph> read_pointcloud(const std::string& path);
-
-/**
- * @brief Read an obj file representing a line collection.
- * This method ignores all surface models (triangle meshes) and only creates geometry from the line tag (l).
- * Only line segments with two vertices are supported (i.e. l x y).
- * Material files are ignored
- *
- * @param path The path to the obj file
- *
- * @return The line representation
- */
-atcg::ref_ptr<Graph> read_lines(const std::string& path);
-
-/**
- * @brief Read a scene representation from an obj file.
- * Create a scene object where each object is either a triangle mesh (f tag), a point cloud (p tag) or a line
- * collection. To use material files, export the obj with the pbr extension. The following parameters are used:
- *
- * - Kd - diffuse base color
- * - Ke - emissive color
- * - Ni - index of refraction
- * - Pr - surface roughness
- * - Pm - surface metallic
- * - map_Kd - diffuse base color texture
- * - map_Pr - roughness texture
- * - map_Pm - metallic texture
- * - map_Bump - normal texture
- * - map_Ke - emissive texture
- * - illum -  If illum == 4, we treat it as glass, otherwise ignored
- *
- * @note We do not use per-face materials but only per object materials
- *
- * @param path The path to the obj file
- *
- * @return The line representation
- */
-atcg::ref_ptr<Scene> read_scene(const std::string& path);
-}    // namespace IO
 
 }    // namespace atcg

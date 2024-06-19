@@ -9,11 +9,11 @@ namespace atcg
 
 /// These types are used to easily switch between compilation with and without CUDA
 
-constexpr torch::DeviceType CPU = torch::kCPU;
+ATCG_CONSTEXPR torch::DeviceType CPU = torch::kCPU;
 #ifdef ATCG_CUDA_BACKEND
-constexpr torch::DeviceType GPU = torch::kCUDA;
+ATCG_CONSTEXPR torch::DeviceType GPU = torch::kCUDA;
 #else
-constexpr torch::DeviceType GPU = torch::kCPU;
+ATCG_CONSTEXPR torch::DeviceType GPU = torch::kCPU;
 #endif
 
 /**
@@ -21,163 +21,163 @@ constexpr torch::DeviceType GPU = torch::kCPU;
  */
 namespace TensorOptions
 {
-inline torch::TensorOptions uint8HostOptions()
+ATCG_INLINE torch::TensorOptions uint8HostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kUInt8).device(atcg::CPU);
 }
 
-inline torch::TensorOptions int8HostOptions()
+ATCG_INLINE torch::TensorOptions int8HostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt8).device(atcg::CPU);
 }
 
-inline torch::TensorOptions int16HostOptions()
+ATCG_INLINE torch::TensorOptions int16HostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt16).device(atcg::CPU);
 }
 
-inline torch::TensorOptions int32HostOptions()
+ATCG_INLINE torch::TensorOptions int32HostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt32).device(atcg::CPU);
 }
 
-inline torch::TensorOptions int64HostOptions()
+ATCG_INLINE torch::TensorOptions int64HostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt64).device(atcg::CPU);
 }
 
-inline torch::TensorOptions floatHostOptions()
+ATCG_INLINE torch::TensorOptions floatHostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kFloat32).device(atcg::CPU);
 }
 
-inline torch::TensorOptions doubleHostOptions()
+ATCG_INLINE torch::TensorOptions doubleHostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kFloat64).device(atcg::CPU);
 }
 
-inline torch::TensorOptions int8DeviceOptions()
+ATCG_INLINE torch::TensorOptions int8DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt8).device(atcg::GPU);
 }
 
-inline torch::TensorOptions uint8DeviceOptions()
+ATCG_INLINE torch::TensorOptions uint8DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kUInt8).device(atcg::GPU);
 }
 
-inline torch::TensorOptions int16DeviceOptions()
+ATCG_INLINE torch::TensorOptions int16DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt16).device(atcg::GPU);
 }
 
-inline torch::TensorOptions int32DeviceOptions()
+ATCG_INLINE torch::TensorOptions int32DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt32).device(atcg::GPU);
 }
 
-inline torch::TensorOptions int64DeviceOptions()
+ATCG_INLINE torch::TensorOptions int64DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt64).device(atcg::GPU);
 }
 
-inline torch::TensorOptions floatDeviceOptions()
+ATCG_INLINE torch::TensorOptions floatDeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kFloat32).device(atcg::GPU);
 }
 
-inline torch::TensorOptions doubleDeviceOptions()
+ATCG_INLINE torch::TensorOptions doubleDeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kFloat64).device(atcg::GPU);
 }
 
 template<typename T>
-inline torch::TensorOptions HostOptions();
+ATCG_INLINE torch::TensorOptions HostOptions();
 
 template<typename T>
-inline torch::TensorOptions DeviceOptions();
+ATCG_INLINE torch::TensorOptions DeviceOptions();
 
 template<>
-inline torch::TensorOptions HostOptions<int8_t>()
+ATCG_INLINE torch::TensorOptions HostOptions<int8_t>()
 {
     return int8HostOptions();
 }
 
 template<>
-inline torch::TensorOptions HostOptions<uint8_t>()
+ATCG_INLINE torch::TensorOptions HostOptions<uint8_t>()
 {
     return uint8HostOptions();
 }
 
 
 template<>
-inline torch::TensorOptions HostOptions<int16_t>()
+ATCG_INLINE torch::TensorOptions HostOptions<int16_t>()
 {
     return int16HostOptions();
 }
 
 template<>
-inline torch::TensorOptions HostOptions<int32_t>()
+ATCG_INLINE torch::TensorOptions HostOptions<int32_t>()
 {
     return int32HostOptions();
 }
 
 template<>
-inline torch::TensorOptions HostOptions<int64_t>()
+ATCG_INLINE torch::TensorOptions HostOptions<int64_t>()
 {
     return int64HostOptions();
 }
 
 template<>
-inline torch::TensorOptions HostOptions<float>()
+ATCG_INLINE torch::TensorOptions HostOptions<float>()
 {
     return floatHostOptions();
 }
 
 template<>
-inline torch::TensorOptions HostOptions<double>()
+ATCG_INLINE torch::TensorOptions HostOptions<double>()
 {
     return doubleHostOptions();
 }
 
 template<>
-inline torch::TensorOptions DeviceOptions<int8_t>()
+ATCG_INLINE torch::TensorOptions DeviceOptions<int8_t>()
 {
     return int8DeviceOptions();
 }
 
 template<>
-inline torch::TensorOptions DeviceOptions<uint8_t>()
+ATCG_INLINE torch::TensorOptions DeviceOptions<uint8_t>()
 {
     return uint8DeviceOptions();
 }
 
 template<>
-inline torch::TensorOptions DeviceOptions<int16_t>()
+ATCG_INLINE torch::TensorOptions DeviceOptions<int16_t>()
 {
     return int16DeviceOptions();
 }
 
 template<>
-inline torch::TensorOptions DeviceOptions<int32_t>()
+ATCG_INLINE torch::TensorOptions DeviceOptions<int32_t>()
 {
     return int32DeviceOptions();
 }
 
 template<>
-inline torch::TensorOptions DeviceOptions<int64_t>()
+ATCG_INLINE torch::TensorOptions DeviceOptions<int64_t>()
 {
     return int64DeviceOptions();
 }
 
 template<>
-inline torch::TensorOptions DeviceOptions<float>()
+ATCG_INLINE torch::TensorOptions DeviceOptions<float>()
 {
     return floatDeviceOptions();
 }
 
 template<>
-inline torch::TensorOptions DeviceOptions<double>()
+ATCG_INLINE torch::TensorOptions DeviceOptions<double>()
 {
     return doubleDeviceOptions();
 }
@@ -195,7 +195,7 @@ inline torch::TensorOptions DeviceOptions<double>()
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor
+ATCG_INLINE torch::Tensor
 createTensorFromPointer(void* pointer, const at::IntArrayRef& size, const torch::TensorOptions& options)
 {
     return torch::from_blob(pointer, size, options);
@@ -213,10 +213,10 @@ createTensorFromPointer(void* pointer, const at::IntArrayRef& size, const torch:
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor createTensorFromPointer(void* pointer,
-                                             const at::IntArrayRef& size,
-                                             const at::IntArrayRef& stride,
-                                             const torch::TensorOptions& options)
+ATCG_INLINE torch::Tensor createTensorFromPointer(void* pointer,
+                                                  const at::IntArrayRef& size,
+                                                  const at::IntArrayRef& stride,
+                                                  const torch::TensorOptions& options)
 {
     return torch::from_blob(pointer, size, stride, options);
 }
@@ -232,7 +232,7 @@ inline torch::Tensor createTensorFromPointer(void* pointer,
  * @return A tensor that wraps around the data pointer
  */
 template<typename T>
-inline torch::Tensor createHostTensorFromPointer(T* pointer, const at::IntArrayRef& size)
+ATCG_INLINE torch::Tensor createHostTensorFromPointer(T* pointer, const at::IntArrayRef& size)
 {
     return createTensorFromPointer(pointer, size, TensorOptions::HostOptions<T>());
 }
@@ -249,7 +249,8 @@ inline torch::Tensor createHostTensorFromPointer(T* pointer, const at::IntArrayR
  * @return A tensor that wraps around the data pointer
  */
 template<typename T>
-inline torch::Tensor createHostTensorFromPointer(T* pointer, const at::IntArrayRef& size, const at::IntArrayRef& stride)
+ATCG_INLINE torch::Tensor
+createHostTensorFromPointer(T* pointer, const at::IntArrayRef& size, const at::IntArrayRef& stride)
 {
     return createTensorFromPointer(pointer, size, stride, TensorOptions::HostOptions<T>());
 }
@@ -265,7 +266,7 @@ inline torch::Tensor createHostTensorFromPointer(T* pointer, const at::IntArrayR
  * @return A tensor that wraps around the data pointer
  */
 template<typename T>
-inline torch::Tensor createDeviceTensorFromPointer(T* pointer, const at::IntArrayRef& size)
+ATCG_INLINE torch::Tensor createDeviceTensorFromPointer(T* pointer, const at::IntArrayRef& size)
 {
     return createTensorFromPointer(pointer, size, TensorOptions::DeviceOptions<T>());
 }
@@ -282,7 +283,7 @@ inline torch::Tensor createDeviceTensorFromPointer(T* pointer, const at::IntArra
  * @return A tensor that wraps around the data pointer
  */
 template<typename T>
-inline torch::Tensor
+ATCG_INLINE torch::Tensor
 createDeviceTensorFromPointer(T* pointer, const at::IntArrayRef& size, const at::IntArrayRef& stride)
 {
     return createTensorFromPointer(pointer, size, stride, TensorOptions::DeviceOptions<T>());
@@ -298,7 +299,7 @@ createDeviceTensorFromPointer(T* pointer, const at::IntArrayRef& size, const at:
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getVertexBufferAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getVertexBufferAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -315,7 +316,7 @@ inline torch::Tensor getVertexBufferAsHostTensor(const atcg::ref_ptr<atcg::Verte
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getVertexBufferAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getVertexBufferAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -332,7 +333,7 @@ inline torch::Tensor getVertexBufferAsDeviceTensor(const atcg::ref_ptr<atcg::Ver
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getPositionsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getPositionsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -349,7 +350,7 @@ inline torch::Tensor getPositionsAsHostTensor(const atcg::ref_ptr<atcg::VertexBu
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getPositionsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getPositionsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -366,7 +367,7 @@ inline torch::Tensor getPositionsAsDeviceTensor(const atcg::ref_ptr<atcg::Vertex
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getColorsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getColorsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -383,7 +384,7 @@ inline torch::Tensor getColorsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffe
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getColorsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getColorsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -400,7 +401,7 @@ inline torch::Tensor getColorsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuf
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getNormalsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getNormalsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -417,7 +418,7 @@ inline torch::Tensor getNormalsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuff
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getNormalsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getNormalsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -434,7 +435,7 @@ inline torch::Tensor getNormalsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBu
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getTangentsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getTangentsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -451,7 +452,7 @@ inline torch::Tensor getTangentsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuf
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getTangentsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getTangentsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -468,7 +469,7 @@ inline torch::Tensor getTangentsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexB
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getUVsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getUVsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
@@ -485,7 +486,7 @@ inline torch::Tensor getUVsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuffer>&
  *
  * @return A tensor that wraps around the data pointer
  */
-inline torch::Tensor getUVsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
+ATCG_INLINE torch::Tensor getUVsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexBuffer>& buffer)
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);

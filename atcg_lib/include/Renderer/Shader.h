@@ -51,6 +51,13 @@ public:
     ~Shader();
 
     /**
+     * @brief Recompile a compute shader with new source
+     *
+     * @param compute_path The path to the compute shader
+     */
+    void recompile(const std::string& compute_path);
+
+    /**
      * @brief Recompile a shader with new source
      *
      * @param vertex_path The path to the vertex shader
@@ -176,17 +183,17 @@ public:
      */
     void dispatch(const glm::ivec3& work_groups) const;
 
-    inline bool hasGeometryShader() const { return _has_geometry; }
+    ATCG_INLINE bool hasGeometryShader() const { return _has_geometry; }
 
-    inline bool isComputeShader() const { return _is_compute; }
+    ATCG_INLINE bool isComputeShader() const { return _is_compute; }
 
-    inline const std::string& getVertexPath() const { return _vertex_path; }
+    ATCG_INLINE const std::string& getVertexPath() const { return _vertex_path; }
 
-    inline const std::string& getGeometryPath() const { return _geometry_path; }
+    ATCG_INLINE const std::string& getGeometryPath() const { return _geometry_path; }
 
-    inline const std::string& getFragmentPath() const { return _fragment_path; }
+    ATCG_INLINE const std::string& getFragmentPath() const { return _fragment_path; }
 
-    inline const std::string& getComputePath() const { return _compute_path; }
+    ATCG_INLINE const std::string& getComputePath() const { return _compute_path; }
 
 private:
     struct Uniform

@@ -24,7 +24,7 @@ public:
      * @param name Name of the shader
      * @param shader The shader
      */
-    inline static void addShader(const std::string& name, const atcg::ref_ptr<Shader>& shader)
+    ATCG_INLINE static void addShader(const std::string& name, const atcg::ref_ptr<Shader>& shader)
     {
         s_instance->addShaderImpl(name, shader);
     }
@@ -34,7 +34,7 @@ public:
      *
      * @param name The name of the .vs, .fs and optionally .gs file (without file ending)
      */
-    inline static void addShaderFromName(const std::string& name) { s_instance->addShaderFromNameImpl(name); }
+    ATCG_INLINE static void addShaderFromName(const std::string& name) { s_instance->addShaderFromNameImpl(name); }
 
     /**
      * @brief Add a compute shader by loading it from file
@@ -42,7 +42,7 @@ public:
      * @param name The name of the .glsl file (without file ending)
      *
      */
-    inline static void addComputerShaderFromName(const std::string& name)
+    ATCG_INLINE static void addComputerShaderFromName(const std::string& name)
     {
         s_instance->addComputeShaderFromNameImpl(name);
     }
@@ -53,7 +53,7 @@ public:
      * @param name The name
      * @return const atcg::ref_ptr<Shader>& The shader
      */
-    inline static const atcg::ref_ptr<Shader>& getShader(const std::string& name)
+    ATCG_INLINE static const atcg::ref_ptr<Shader>& getShader(const std::string& name)
     {
         return s_instance->getShaderImpl(name);
     }
@@ -64,14 +64,14 @@ public:
      * @param name The name
      * @return True if the shader exists in the shader manager
      */
-    inline static bool hasShader(const std::string& name) { return s_instance->hasShaderImpl(name); }
+    ATCG_INLINE static bool hasShader(const std::string& name) { return s_instance->hasShaderImpl(name); }
 
     /**
      * @brief This gets called by the application. Don't call manually
      */
-    inline static void onUpdate() { s_instance->onUpdateImpl(); }
+    ATCG_INLINE static void onUpdate() { s_instance->onUpdateImpl(); }
 
-    inline static void destroy() { delete s_instance; }
+    ATCG_INLINE static void destroy() { delete s_instance; }
 
 private:
     void addShaderImpl(const std::string& name, const atcg::ref_ptr<Shader>& shader);

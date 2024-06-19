@@ -9,18 +9,24 @@ void ShaderManager::addShaderImpl(const std::string& name, const atcg::ref_ptr<S
 {
     _shader.insert(std::make_pair(name, shader));
 
-    if(shader->isComputeShader()) return;
-
-    const std::string& vertex_path   = shader->getVertexPath();
-    const std::string& fragment_path = shader->getFragmentPath();
-
-    _time_stamps.insert(std::make_pair(vertex_path, std::filesystem::last_write_time(vertex_path)));
-    _time_stamps.insert(std::make_pair(fragment_path, std::filesystem::last_write_time(fragment_path)));
-
-    if(shader->hasGeometryShader())
+    if(shader->isComputeShader())
     {
-        const std::string& geometry_path = shader->getGeometryPath();
-        _time_stamps.insert(std::make_pair(geometry_path, std::filesystem::last_write_time(geometry_path)));
+        const std::string& compute_path = shader->getComputePath();
+        _time_stamps.insert(std::make_pair(compute_path, std::filesystem::last_write_time(compute_path)));
+    }
+    else
+    {
+        const std::string& vertex_path   = shader->getVertexPath();
+        const std::string& fragment_path = shader->getFragmentPath();
+
+        _time_stamps.insert(std::make_pair(vertex_path, std::filesystem::last_write_time(vertex_path)));
+        _time_stamps.insert(std::make_pair(fragment_path, std::filesystem::last_write_time(fragment_path)));
+
+        if(shader->hasGeometryShader())
+        {
+            const std::string& geometry_path = shader->getGeometryPath();
+            _time_stamps.insert(std::make_pair(geometry_path, std::filesystem::last_write_time(geometry_path)));
+        }
     }
 }
 
@@ -78,44 +84,58 @@ void ShaderManager::onUpdateImpl()
 {
     for(auto& shader: _shader)
     {
-        if(shader.second->isComputeShader()) continue;
-
-        const std::string& vertex_path   = shader.second->getVertexPath();
-        const std::string& fragment_path = shader.second->getFragmentPath();
-        const std::string& geometry_path = shader.second->getGeometryPath();
-        bool has_geoemtry                = shader.second->hasGeometryShader();
-        bool recompile                   = false;
-
-        auto time_stamp_vs = std::filesystem::last_write_time(vertex_path);
-        if(_time_stamps[vertex_path] != time_stamp_vs)
+        if(shader.second->isComputeShader())
         {
-            _time_stamps[vertex_path] = time_stamp_vs;
-            recompile                 = true;
-        }
+            const std::string& compute_path = shader.second->getComputePath();
+            bool recompile                  = false;
 
-        auto time_stamp_fs = std::filesystem::last_write_time(fragment_path);
-        if(_time_stamps[fragment_path] != time_stamp_fs)
-        {
-            _time_stamps[fragment_path] = time_stamp_fs;
-            recompile                   = true;
-        }
-
-        if(has_geoemtry)
-        {
-            auto time_stamp_gs = std::filesystem::last_write_time(geometry_path);
-            if(_time_stamps[geometry_path] != time_stamp_gs)
+            auto time_stamp_cs = std::filesystem::last_write_time(compute_path);
+            if(_time_stamps[compute_path] != time_stamp_cs)
             {
-                _time_stamps[geometry_path] = time_stamp_gs;
-                recompile                   = true;
+                _time_stamps[compute_path] = time_stamp_cs;
+
+                shader.second->recompile(compute_path);
             }
         }
-
-        if(recompile)
+        else
         {
+            const std::string& vertex_path   = shader.second->getVertexPath();
+            const std::string& fragment_path = shader.second->getFragmentPath();
+            const std::string& geometry_path = shader.second->getGeometryPath();
+            bool has_geoemtry                = shader.second->hasGeometryShader();
+            bool recompile                   = false;
+
+            auto time_stamp_vs = std::filesystem::last_write_time(vertex_path);
+            if(_time_stamps[vertex_path] != time_stamp_vs)
+            {
+                _time_stamps[vertex_path] = time_stamp_vs;
+                recompile                 = true;
+            }
+
+            auto time_stamp_fs = std::filesystem::last_write_time(fragment_path);
+            if(_time_stamps[fragment_path] != time_stamp_fs)
+            {
+                _time_stamps[fragment_path] = time_stamp_fs;
+                recompile                   = true;
+            }
+
             if(has_geoemtry)
-                shader.second->recompile(vertex_path, fragment_path, geometry_path);
-            else
-                shader.second->recompile(vertex_path, fragment_path);
+            {
+                auto time_stamp_gs = std::filesystem::last_write_time(geometry_path);
+                if(_time_stamps[geometry_path] != time_stamp_gs)
+                {
+                    _time_stamps[geometry_path] = time_stamp_gs;
+                    recompile                   = true;
+                }
+            }
+
+            if(recompile)
+            {
+                if(has_geoemtry)
+                    shader.second->recompile(vertex_path, fragment_path, geometry_path);
+                else
+                    shader.second->recompile(vertex_path, fragment_path);
+            }
         }
     }
 }

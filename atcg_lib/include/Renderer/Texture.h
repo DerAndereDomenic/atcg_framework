@@ -128,21 +128,21 @@ public:
      *
      * @return The width
      */
-    inline uint32_t width() const { return _spec.width; }
+    ATCG_INLINE uint32_t width() const { return _spec.width; }
 
     /**
      * @brief Get the height of the texture
      *
      * @return The height
      */
-    inline uint32_t height() const { return _spec.height; }
+    ATCG_INLINE uint32_t height() const { return _spec.height; }
 
     /**
      * @brief Get the depth of the texture
      *
      * @return The depth
      */
-    inline uint32_t depth() const { return _spec.depth; }
+    ATCG_INLINE uint32_t depth() const { return _spec.depth; }
 
     /**
      * @brief Get the number of channels
@@ -163,14 +163,14 @@ public:
      *
      * @return The id
      */
-    inline uint32_t getID() const { return _ID; }
+    ATCG_INLINE uint32_t getID() const { return _ID; }
 
     /**
      * @brief Get the texture specification.
      *
      * @return The specification
      */
-    inline TextureSpecification getSpecification() const { return _spec; }
+    ATCG_INLINE TextureSpecification getSpecification() const { return _spec; }
 
     /**
      * @brief Use this texture
@@ -506,6 +506,94 @@ public:
 
     /**
      * @brief Get the data in the texture.
+     * This function will always copy data between CPU and GPU via opengl. After construction, the tensor will be copied
+     * onto the specified device.
+     *
+     * @param device The device
+     * @param mip_level The mip level
+     *
+     * @return The data
+     */
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
+                                  const uint32_t mip_level    = 0) const override;
+
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Generate mipmap levels
+     */
+    virtual void generateMipmaps() override;
+};
+
+/**
+ * @brief A class to model a texture
+ */
+class TextureArray : public Texture
+{
+public:
+    /**
+     * @brief Create an empty texture array.
+     *
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureArray> create(const TextureSpecification& spec);
+
+    /**
+     * @brief Create a texture array.
+     *
+     * @param data The texture data
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureArray> create(const void* data, const TextureSpecification& spec);
+
+    /**
+     * @brief Create a texture array.
+     *
+     * @param data The image (host data)
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureArray> create(const torch::Tensor& img);
+
+    /**
+     * @brief Create a texture array.
+     *
+     * @param data The image (host data)
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureArray> create(const torch::Tensor& img, const TextureSpecification& spec);
+
+    /**
+     *  @brief Destructor
+     */
+    virtual ~TextureArray();
+
+    /**
+     * @brief Set the data of the texture.
+     * The tensor can be a host or device tensor if CUDA is enabled.
+     * For CPU tensors a host-device memcpy is performed.
+     * For Device Tensors a device-device copy is performed.
+     *
+     * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
+     * a host-device memcpy is required.
+     *
+     * @param data The data
+     */
+    virtual void setData(const torch::Tensor& data) override;
+
+    /**
+     * @brief Get the data in the texture.
      *
      * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
      * a host-device memcpy is required.
@@ -516,10 +604,7 @@ public:
      * @return The data
      */
     virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
-                                  const uint32_t mip_level    = 0) const override
-    {
-        return {};
-    }
+                                  const uint32_t mip_level    = 0) const override;
 
     /**
      * @brief Use this texture

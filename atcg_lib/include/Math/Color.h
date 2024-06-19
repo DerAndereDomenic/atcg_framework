@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/CUDA.h>
+#include <Core/glm.h>
 #include <Math/SpectrumData.h>
 
 namespace atcg
@@ -14,7 +15,7 @@ namespace Color
  *
  * @return The quanitized color
  */
-ATCG_HOST_DEVICE inline glm::u8vec3 quantize(const glm::vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::u8vec3 quantize(const glm::vec3& color);
 
 /**
  * @brief Dequantize a color
@@ -23,7 +24,7 @@ ATCG_HOST_DEVICE inline glm::u8vec3 quantize(const glm::vec3& color);
  *
  * @return The dequanized color
  */
-ATCG_HOST_DEVICE inline glm::vec3 dequantize(const glm::u8vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 dequantize(const glm::u8vec3& color);
 
 /**
  * @brief Quantize a color 8 bit
@@ -32,7 +33,7 @@ ATCG_HOST_DEVICE inline glm::vec3 dequantize(const glm::u8vec3& color);
  *
  * @return The quanitized color
  */
-ATCG_HOST_DEVICE inline glm::u8vec4 quantize(const glm::vec4& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::u8vec4 quantize(const glm::vec4& color);
 
 /**
  * @brief Dequantize a color
@@ -41,7 +42,7 @@ ATCG_HOST_DEVICE inline glm::u8vec4 quantize(const glm::vec4& color);
  *
  * @return The dequanized color
  */
-ATCG_HOST_DEVICE inline glm::vec4 dequantize(const glm::u8vec4& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec4 dequantize(const glm::u8vec4& color);
 
 /**
  * @brief Convert from sRGB to lRGB (linear) using the D65 observer
@@ -50,7 +51,7 @@ ATCG_HOST_DEVICE inline glm::vec4 dequantize(const glm::u8vec4& color);
  *
  * @return The lRGB color
  */
-ATCG_HOST_DEVICE inline glm::vec3 sRGB_to_lRGB(const glm::vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 sRGB_to_lRGB(const glm::vec3& color);
 
 /**
  * @brief Convert from lRGB (linear) to sRGB using the D65 observer
@@ -59,7 +60,7 @@ ATCG_HOST_DEVICE inline glm::vec3 sRGB_to_lRGB(const glm::vec3& color);
  *
  * @return The sRGB color
  */
-ATCG_HOST_DEVICE inline glm::vec3 lRGB_to_sRGB(const glm::vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 lRGB_to_sRGB(const glm::vec3& color);
 
 /**
  * @brief Convert from sRGB to XYZ (D65)
@@ -68,7 +69,7 @@ ATCG_HOST_DEVICE inline glm::vec3 lRGB_to_sRGB(const glm::vec3& color);
  *
  * @return The XYZ representation
  */
-ATCG_HOST_DEVICE inline glm::vec3 sRGB_to_XYZ(const glm::vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 sRGB_to_XYZ(const glm::vec3& color);
 
 /**
  * @brief Convert from XYZ to sRGB (D65)
@@ -77,7 +78,7 @@ ATCG_HOST_DEVICE inline glm::vec3 sRGB_to_XYZ(const glm::vec3& color);
  *
  * @return The sRGB representation
  */
-ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_sRGB(const glm::vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 XYZ_to_sRGB(const glm::vec3& color);
 
 /**
  * @brief Convert from lRGB to XYZ (D65)
@@ -86,7 +87,7 @@ ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_sRGB(const glm::vec3& color);
  *
  * @return The XYZ representation
  */
-ATCG_HOST_DEVICE inline glm::vec3 lRGB_to_XYZ(const glm::vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 lRGB_to_XYZ(const glm::vec3& color);
 
 /**
  * @brief Convert from XYZ to lRGB (D65)
@@ -95,7 +96,7 @@ ATCG_HOST_DEVICE inline glm::vec3 lRGB_to_XYZ(const glm::vec3& color);
  *
  * @return The lRGB representation
  */
-ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_lRGB(const glm::vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 XYZ_to_lRGB(const glm::vec3& color);
 
 /**
  * @brief Get the luminace (Y) of the lRGB color
@@ -104,7 +105,7 @@ ATCG_HOST_DEVICE inline glm::vec3 XYZ_to_lRGB(const glm::vec3& color);
  *
  * @return The luminance
  */
-ATCG_HOST_DEVICE inline float lRGB_to_luminance(const glm::vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float lRGB_to_luminance(const glm::vec3& color);
 
 /**
  * @brief Get the luminace (Y) of the sRGB color
@@ -113,11 +114,13 @@ ATCG_HOST_DEVICE inline float lRGB_to_luminance(const glm::vec3& color);
  *
  * @return The luminance
  */
-ATCG_HOST_DEVICE inline float sRGB_to_luminance(const glm::vec3& color);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float sRGB_to_luminance(const glm::vec3& color);
 
 /**
  * @brief The color matching function x_bar.
- * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions)
+ * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions).
+ * No additional normalization is done. For converting spectral data to RGB via integration, normalize by the integral
+ * over Y (atcg::Constants::Y_integral())
  *
  * @tparam T The type
  * @param lambda The wavelength in nm
@@ -125,11 +128,13 @@ ATCG_HOST_DEVICE inline float sRGB_to_luminance(const glm::vec3& color);
  * @return x_bar(lambda)
  */
 template<typename T>
-ATCG_HOST_DEVICE inline T color_matching_x(const T lambda);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T color_matching_x(const T lambda);
 
 /**
  * @brief The color matching function y_bar.
  * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions)
+ * No additional normalization is done. For converting spectral data to RGB via integration, normalize by the integral
+ * over Y (atcg::Constants::Y_integral())
  *
  * @tparam T The type
  * @param lambda The wavelength in nm
@@ -137,11 +142,13 @@ ATCG_HOST_DEVICE inline T color_matching_x(const T lambda);
  * @return y_bar(lambda)
  */
 template<typename T>
-ATCG_HOST_DEVICE inline T color_matching_y(const T lambda);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T color_matching_y(const T lambda);
 
 /**
  * @brief The color matching function z_bar.
  * Uses the analytical approximation (https://en.wikipedia.org/wiki/CIE_1931_color_space#Color_matching_functions)
+ * No additional normalization is done. For converting spectral data to RGB via integration, normalize by the integral
+ * over Y (atcg::Constants::Y_integral())
  *
  * @tparam T The type
  * @param lambda The wavelength in nm
@@ -149,7 +156,7 @@ ATCG_HOST_DEVICE inline T color_matching_y(const T lambda);
  * @return z_bar(lambda)
  */
 template<typename T>
-ATCG_HOST_DEVICE inline T color_matching_z(const T lambda);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T color_matching_z(const T lambda);
 
 /**
  * @brief Get the planck spectrum for a given wavelength and temperature
@@ -161,7 +168,7 @@ ATCG_HOST_DEVICE inline T color_matching_z(const T lambda);
  * @return The planck spectrum
  */
 template<typename T>
-ATCG_HOST_DEVICE inline T planck(const T lambda, const T temperature);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T planck(const T lambda, const T temperature);
 
 /**
  * @brief Evalute the D65 standard illuminant function.
@@ -175,7 +182,7 @@ ATCG_HOST_DEVICE inline T planck(const T lambda, const T temperature);
  * @return The spectral radiance
  */
 template<typename T>
-ATCG_HOST_DEVICE inline T D65(const T lambda);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T D65(const T lambda);
 
 /**
  * @brief The red basis function for spectral upsampling from "Spectral Primary Decomposition for Rendering with sRGB
@@ -189,7 +196,7 @@ ATCG_HOST_DEVICE inline T D65(const T lambda);
  * @return The spectral weight for the red channel
  */
 template<typename T>
-ATCG_HOST_DEVICE inline T Sr(const T lambda);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T Sr(const T lambda);
 
 /**
  * @brief The green basis function for spectral upsampling from "Spectral Primary Decomposition for Rendering with sRGB
@@ -203,7 +210,7 @@ ATCG_HOST_DEVICE inline T Sr(const T lambda);
  * @return The spectral weight for the green channel
  */
 template<typename T>
-ATCG_HOST_DEVICE inline T Sg(const T lambda);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T Sg(const T lambda);
 
 /**
  * @brief The blue basis function for spectral upsampling from "Spectral Primary Decomposition for Rendering with sRGB
@@ -217,7 +224,7 @@ ATCG_HOST_DEVICE inline T Sg(const T lambda);
  * @return The spectral weight for the blue channel
  */
 template<typename T>
-ATCG_HOST_DEVICE inline T Sb(const T lambda);
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T Sb(const T lambda);
 }    // namespace Color
 }    // namespace atcg
 
