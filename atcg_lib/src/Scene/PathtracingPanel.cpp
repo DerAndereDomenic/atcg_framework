@@ -50,7 +50,7 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
             {
                 atcg::Pathtracer::draw(_scene,
                                        camera,
-                                       atcg::RaytracingShaderManager::getShader("bdpt"),
+                                       atcg::RaytracingShaderManager::getShader("Pathtracing"),
                                        _width,
                                        _height,
                                        (uint32_t)_num_samples);
@@ -59,7 +59,7 @@ void PathtracingPanel::renderPanel(const atcg::ref_ptr<PerspectiveCamera>& camer
             {
                 atcg::Pathtracer::draw(_scene,
                                        camera,
-                                       atcg::RaytracingShaderManager::getShader("bdpt"),
+                                       atcg::RaytracingShaderManager::getShader("Pathtracing"),
                                        _width,
                                        _height,
                                        (float)_rendering_time);
