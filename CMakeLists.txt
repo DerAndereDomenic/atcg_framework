@@ -173,6 +173,7 @@ if(ATCG_CUDA_BACKEND)
     target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
+    target_link_libraries(atcg_lib PUBLIC CUDA::nvjpeg)
 
     string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
 endif()
