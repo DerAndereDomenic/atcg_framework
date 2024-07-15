@@ -667,14 +667,14 @@ void Texture2D::setData(const torch::Tensor& data)
     TORCH_CHECK_LE(data.ndimension(), 3);
     if(data.ndimension() < 3)
     {
-        data.unsqueeze(-1);
+        data.unsqueeze_(-1);
     }
 
-    TORCH_CHECK_EQ(data.numel() * data.element_size(), _spec.width * _spec.height * detail::toSize(_spec.format));
     TORCH_CHECK_EQ(data.size(0), _spec.height);
     TORCH_CHECK_EQ(data.size(1), _spec.width);
     int num_channels = detail::num_channels(_spec.format);
     TORCH_CHECK_EQ(data.size(2), num_channels);
+    TORCH_CHECK_EQ(data.numel() * data.element_size(), _spec.width * _spec.height * detail::toSize(_spec.format));
 
     torch::Tensor pixel_data = data;
     bool cuda_copy_possible  = num_channels == 1 || num_channels == 4;
@@ -883,16 +883,16 @@ void Texture3D::setData(const torch::Tensor& data)
     TORCH_CHECK_LE(data.ndimension(), 4);
     if(data.ndimension() < 4)
     {
-        data.unsqueeze(-1);
+        data.unsqueeze_(-1);
     }
 
-    TORCH_CHECK_EQ(data.numel() * data.element_size(),
-                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
     TORCH_CHECK_EQ(data.size(0), _spec.depth);
     TORCH_CHECK_EQ(data.size(1), _spec.height);
     TORCH_CHECK_EQ(data.size(2), _spec.width);
     int num_channels = detail::num_channels(_spec.format);
     TORCH_CHECK_EQ(data.size(3), num_channels);
+    TORCH_CHECK_EQ(data.numel() * data.element_size(),
+                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
 
     torch::Tensor pixel_data = data;
     bool cuda_copy_possible  = num_channels == 1 || num_channels == 4;
@@ -1231,16 +1231,16 @@ void TextureArray::setData(const torch::Tensor& data)
     TORCH_CHECK_LE(data.ndimension(), 4);
     if(data.ndimension() < 4)
     {
-        data.unsqueeze(-1);
+        data.unsqueeze_(-1);
     }
 
-    TORCH_CHECK_EQ(data.numel() * data.element_size(),
-                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
     TORCH_CHECK_EQ(data.size(0), _spec.depth);
     TORCH_CHECK_EQ(data.size(1), _spec.height);
     TORCH_CHECK_EQ(data.size(2), _spec.width);
     int num_channels = detail::num_channels(_spec.format);
     TORCH_CHECK_EQ(data.size(3), num_channels);
+    TORCH_CHECK_EQ(data.numel() * data.element_size(),
+                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
 
     torch::Tensor pixel_data = data;
     bool cuda_copy_possible  = num_channels == 1 || num_channels == 4;
