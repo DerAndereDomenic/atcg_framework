@@ -47,7 +47,7 @@ public:
      *
      * @param entity The entity
      */
-    ATCG_INLINE void selectEntity(Entity entity) { _selected_entity = entity; }
+    ATCG_INLINE void selectEntity(Entity entity);
 
     /**
      * @brief Get the currently selected entity
@@ -73,6 +73,8 @@ private:
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
     atcg::ref_ptr<GUIHandler> _gui_handler;
+
+    bool _focues_components = false;
 };
 }    // namespace atcg
 
