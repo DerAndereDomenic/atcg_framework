@@ -153,7 +153,8 @@ void ImGuiLayer::begin()
         uint64_t textureID = Renderer::getFramebuffer()->getColorAttachement(0)->getID();
         ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2 {0, 1}, ImVec2 {1, 0});
 
-        if(ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered())
+        if((ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered()) ||
+           (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()))
         {
             ImGui::SetWindowFocus("Viewport");
         }
