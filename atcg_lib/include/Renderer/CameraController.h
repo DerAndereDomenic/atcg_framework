@@ -145,7 +145,6 @@ public:
 
 private:
     bool onWindowResize(WindowResizeEvent* event);
-    bool onMouseMove(MouseMovedEvent* event);
     bool onKeyPressed(KeyPressedEvent* event);
     bool onKeyReleased(KeyReleasedEvent* event);
     bool onMouseButtonPressed(MouseButtonPressedEvent* event);
