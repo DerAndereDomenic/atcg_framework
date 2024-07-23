@@ -546,7 +546,20 @@ PYBIND11_MODULE(pyatcg, m)
         .def("getView", &atcg::PerspectiveCamera::getView)
         .def("setView", &atcg::PerspectiveCamera::setView)
         .def("getProjection", &atcg::PerspectiveCamera::getProjection)
-        .def("setProjection", &atcg::PerspectiveCamera::setProjection);
+        .def("setProjection", &atcg::PerspectiveCamera::setProjection)
+        .def("getLookAt", &atcg::PerspectiveCamera::getLookAt)
+        .def("setLookAt", &atcg::PerspectiveCamera::setLookAt)
+        .def("getDirection", &atcg::PerspectiveCamera::getDirection)
+        .def("getUp", &atcg::PerspectiveCamera::getUp)
+        .def("getViewProjection", &atcg::PerspectiveCamera::getViewProjection)
+        .def("getAspectRatio", &atcg::PerspectiveCamera::getAspectRatio)
+        .def("setAspectRatio", &atcg::PerspectiveCamera::setAspectRatio)
+        .def("setFOV", &atcg::PerspectiveCamera::setFOV)
+        .def("getFOV", &atcg::PerspectiveCamera::getFOV)
+        .def("getNear", &atcg::PerspectiveCamera::getNear)
+        .def("setNear", &atcg::PerspectiveCamera::setNear)
+        .def("getFar", &atcg::PerspectiveCamera::getFar)
+        .def("setFar", &atcg::PerspectiveCamera::setFar);
 
     m_controller
         .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::FirstPersonController>(aspect_ratio); }))
@@ -581,6 +594,10 @@ PYBIND11_MODULE(pyatcg, m)
             "camera"_a)
         .def_static("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
         .def_static("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
+        .def_static("screenshot",
+                    [](const atcg::ref_ptr<atcg::Scene>& scene,
+                       const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+                       const uint32_t width) { return atcg::Renderer::screenshot(scene, cam, width); })
         .def_static(
             "screenshot",
             [](const atcg::ref_ptr<atcg::Scene>& scene,
