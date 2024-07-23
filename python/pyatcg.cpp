@@ -101,7 +101,8 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("height", &atcg::WindowProps::height)
         .def_readwrite("pos_x", &atcg::WindowProps::pos_x)
         .def_readwrite("pos_y", &atcg::WindowProps::pos_y)
-        .def_readwrite("vsync", &atcg::WindowProps::vsync);
+        .def_readwrite("vsync", &atcg::WindowProps::vsync)
+        .def_readwrite("hidden", &atcg::WindowProps::hidden);
 
     m.def("start", &python_main, py::arg("application"));
     m.def("print_statistics", &atcg::print_statistics);
