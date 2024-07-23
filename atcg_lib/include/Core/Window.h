@@ -22,19 +22,22 @@ struct WindowProps
     int32_t pos_x;
     int32_t pos_y;
     bool vsync;
+    bool hidden;
 
     WindowProps(const std::string& title = "ATCG",
                 uint32_t width           = 1600,
                 uint32_t height          = 900,
                 int32_t pos_x            = std::numeric_limits<int32_t>::max(),
                 int32_t pos_y            = std::numeric_limits<int32_t>::max(),
-                bool vsync               = true)
+                bool vsync               = true,
+                bool hidden              = false)
         : title(title),
           width(width),
           height(height),
           pos_x(pos_x),
           pos_y(pos_y),
-          vsync(vsync)
+          vsync(vsync),
+          hidden(hidden)
     {
     }
 };
