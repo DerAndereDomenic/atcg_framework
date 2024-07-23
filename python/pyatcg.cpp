@@ -67,7 +67,7 @@ using namespace pybind11::literals;
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
 
-PYBIND11_MODULE(pyatcg, m)
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 {
     m.doc() = R"pbdoc(
         Pybind11 atcg plugin
