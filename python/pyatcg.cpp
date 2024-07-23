@@ -37,6 +37,10 @@ private:
 class PythonApplication : public atcg::Application
 {
 public:
+    PythonApplication() : atcg::Application() {}
+
+    PythonApplication(const atcg::WindowProps& props) : atcg::Application(props) {}
+
     PythonApplication(atcg::Layer* layer) : atcg::Application() { pushLayer(layer); }
 
     PythonApplication(atcg::Layer* layer, const atcg::WindowProps& props) : atcg::Application(props)
@@ -105,6 +109,14 @@ PYBIND11_MODULE(pyatcg, m)
         .def_readwrite("hidden", &atcg::WindowProps::hidden);
 
     m.def("start", &python_main, py::arg("application"));
+    m.def("init",
+          []()
+          {
+              atcg::WindowProps props;
+              props.hidden                           = true;
+              std::unique_ptr<PythonApplication> app = std::make_unique<PythonApplication>(props);
+              return app;
+          });
     m.def("print_statistics", &atcg::print_statistics);
     m_application.def(py::init<atcg::Layer*>()).def(py::init<atcg::Layer*, atcg::WindowProps>());
     m_layer.def(py::init<>())
