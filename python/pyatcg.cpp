@@ -11,45 +11,11 @@
 
 #include <imgui.h>
 
+#include "Modules.h"
+
 #define STRINGIFY(x)       #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
-
-class PythonLayer : public atcg::Layer
-{
-public:
-    PythonLayer(const std::string& name = "Layer") : atcg::Layer(name) {}
-
-    // This is run at the start of the program
-    virtual void onAttach() override { PYBIND11_OVERRIDE(void, atcg::Layer, onAttach); }
-
-    // This gets called each frame
-    virtual void onUpdate(float delta_time) override { PYBIND11_OVERRIDE(void, atcg::Layer, onUpdate, delta_time); }
-
-    virtual void onImGuiRender() override { PYBIND11_OVERRIDE(void, atcg::Layer, onImGuiRender); }
-
-    // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
-    virtual void onEvent(atcg::Event* event) override { PYBIND11_OVERRIDE(void, atcg::Layer, onEvent, event); }
-
-private:
-};
-
-class PythonApplication : public atcg::Application
-{
-public:
-    PythonApplication() : atcg::Application() {}
-
-    PythonApplication(const atcg::WindowProps& props) : atcg::Application(props) {}
-
-    PythonApplication(atcg::Layer* layer) : atcg::Application() { pushLayer(layer); }
-
-    PythonApplication(atcg::Layer* layer, const atcg::WindowProps& props) : atcg::Application(props)
-    {
-        pushLayer(layer);
-    }
-
-    ~PythonApplication() {}
-};
 
 //* This function isn't called but is needed for the linker
 atcg::Application* atcg::createApplication()
@@ -78,27 +44,10 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
     )pbdoc";
 
     // ---------------- CORE ---------------------
-    py::class_<atcg::Application>(m, "Application");
-    auto m_application = py::class_<PythonApplication, atcg::Application>(m, "PythonApplication");
-    auto m_layer       = py::class_<atcg::Layer, PythonLayer, std::unique_ptr<atcg::Layer, py::nodelete>>(m, "Layer");
-    auto m_event       = py::class_<atcg::Event>(m, "Event");
-    auto m_camera = py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");
-    auto m_controller =
-        py::class_<atcg::FirstPersonController, atcg::ref_ptr<atcg::FirstPersonController>>(m, "FirstPersonController");
-    auto m_entity  = py::class_<atcg::Entity>(m, "Entity");
-    auto m_scene   = py::class_<atcg::Scene, atcg::ref_ptr<atcg::Scene>>(m, "Scene");
-    auto m_vec2    = py::class_<glm::vec2>(m, "vec2", py::buffer_protocol());
-    auto m_ivec2   = py::class_<glm::ivec2>(m, "ivec2", py::buffer_protocol());
-    auto m_vec3    = py::class_<glm::vec3>(m, "vec3", py::buffer_protocol());
-    auto m_ivec3   = py::class_<glm::ivec3>(m, "ivec3", py::buffer_protocol());
-    auto m_u32vec3 = py::class_<glm::u32vec3>(m, "u32vec3", py::buffer_protocol());
-    auto m_vec4    = py::class_<glm::vec4>(m, "vec4", py::buffer_protocol());
-    auto m_ivec4   = py::class_<glm::ivec4>(m, "ivec4", py::buffer_protocol());
-    auto m_mat3    = py::class_<glm::mat3>(m, "mat3", py::buffer_protocol());
-    auto m_mat4    = py::class_<glm::mat4>(m, "mat4", py::buffer_protocol());
+    ATCG_DEFINE_MODULES(m)
 
-    py::class_<atcg::WindowProps>(m, "WindowProps")
-        .def(py::init<>([]() { return atcg::WindowProps(); }))
+
+    m_window_props.def(py::init<>([]() { return atcg::WindowProps(); }))
         .def(py::init<const std::string&, uint32_t, uint32_t, int32_t, int32_t, bool>())
         .def_readwrite("tile", &atcg::WindowProps::title)
         .def_readwrite("width", &atcg::WindowProps::width)
@@ -128,36 +77,27 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 
     m_event.def("getName", &atcg::Event::getName).def_readwrite("handled", &atcg::Event::handled);
 
-    py::class_<atcg::WindowCloseEvent, atcg::Event>(m, "WindowCloseEvent");
-    py::class_<atcg::WindowResizeEvent, atcg::Event>(m, "WindowResizeEvent")
-        .def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
+    m_window_resize_event.def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
         .def("getWidth", &atcg::WindowResizeEvent::getWidth)
         .def("getHeight", &atcg::WindowResizeEvent::getHeight);
-    py::class_<atcg::MouseButtonEvent, atcg::Event>(m, "MouseButtonEvent")
-        .def("getMouseButton", &atcg::MouseButtonEvent::getMouseButton)
+    m_mouse_button_event.def("getMouseButton", &atcg::MouseButtonEvent::getMouseButton)
         .def("getX", &atcg::MouseButtonEvent::getX)
         .def("getY", &atcg::MouseButtonEvent::getY);
-    py::class_<atcg::MouseButtonPressedEvent, atcg::MouseButtonEvent>(m, "MouseButtonPressedEvent")
-        .def(py::init<int32_t, float, float>(), "button"_a, "x"_a, "y"_a);
-    py::class_<atcg::MouseButtonReleasedEvent, atcg::MouseButtonEvent>(m, "MouseButtonReleasedEvent")
-        .def(py::init<int32_t, float, float>(), "button"_a, "x"_a, "y"_a);
-    py::class_<atcg::MouseMovedEvent, atcg::Event>(m, "MouseMovedEvent")
-        .def(py::init<float, float>(), "x"_a, "y"_a)
+    m_mouse_button_pressed_event.def(py::init<int32_t, float, float>(), "button"_a, "x"_a, "y"_a);
+    m_mouse_button_released_event.def(py::init<int32_t, float, float>(), "button"_a, "x"_a, "y"_a);
+    m_mouse_moved_event.def(py::init<float, float>(), "x"_a, "y"_a)
         .def("getX", &atcg::MouseMovedEvent::getX)
         .def("getY", &atcg::MouseMovedEvent::getY);
-    py::class_<atcg::MouseScrolledEvent, atcg::Event>(m, "MouseScrolledEvent")
-        .def(py::init<float, float>(), "x"_a, "y"_a)
+    m_mouse_scrolled_event.def(py::init<float, float>(), "x"_a, "y"_a)
         .def("getXOffset", &atcg::MouseScrolledEvent::getXOffset)
         .def("getYOffset", &atcg::MouseScrolledEvent::getYOffset);
-    py::class_<atcg::KeyEvent, atcg::Event>(m, "KeyEvent").def("getKeyCode", &atcg::KeyEvent::getKeyCode);
-    py::class_<atcg::KeyPressedEvent, atcg::KeyEvent>(m, "KeyPressedEvent")
-        .def(py::init<int32_t, bool>(), "key"_a, "key_pressed"_a)
+    m_key_event.def("getKeyCode", &atcg::KeyEvent::getKeyCode);
+    m_key_pressed_event.def(py::init<int32_t, bool>(), "key"_a, "key_pressed"_a)
         .def("isRepeat", &atcg::KeyPressedEvent::IsRepeat)
         .def("getCode", &atcg::KeyPressedEvent::getKeyCode);
-    py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent").def(py::init<int32_t>());
-    py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent").def(py::init<int32_t>());
-    py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent")
-        .def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
+    m_key_released_event.def(py::init<int32_t>());
+    m_key_typed_event.def(py::init<int32_t>());
+    m_viewport_resize_event.def(py::init<unsigned int, unsigned int>(), "width"_a, "height"_a)
         .def("getWidth", &atcg::ViewportResizeEvent::getWidth)
         .def("getHeight", &atcg::ViewportResizeEvent::getHeight);
 
@@ -455,14 +395,12 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
 
     // ------------------- Datastructure ---------------------------------
 
-    py::class_<atcg::Timer>(m, "Timer")
-        .def(py::init<>())
+    m_timer.def(py::init<>())
         .def("ellapsedMillis", &atcg::Timer::elapsedMillis)
         .def("ellapsedSeconds", &atcg::Timer::elapsedSeconds)
         .def("reset", &atcg::Timer::reset);
 
-    py::class_<atcg::VertexSpecification>(m, "VertexSpecification")
-        .def_readonly_static("POSITION_BEGIN", &atcg::VertexSpecification::POSITION_BEGIN)
+    m_vertex_specification.def_readonly_static("POSITION_BEGIN", &atcg::VertexSpecification::POSITION_BEGIN)
         .def_readonly_static("POSITION_END", &atcg::VertexSpecification::POSITION_END)
         .def_readonly_static("COLOR_BEGIN", &atcg::VertexSpecification::COLOR_BEGIN)
         .def_readonly_static("COLOR_END", &atcg::VertexSpecification::COLOR_END)
@@ -474,8 +412,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .def_readonly_static("UV_END", &atcg::VertexSpecification::UV_END)
         .def_readonly_static("VERTEX_SIZE", &atcg::VertexSpecification::VERTEX_SIZE);
 
-    py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification")
-        .def_readonly_static("INDICES_BEGIN", &atcg::EdgeSpecification::INDICES_BEGIN)
+    m_edge_specification.def_readonly_static("INDICES_BEGIN", &atcg::EdgeSpecification::INDICES_BEGIN)
         .def_readonly_static("INDICES_END", &atcg::EdgeSpecification::INDICES_END)
         .def_readonly_static("COLOR_BEGIN", &atcg::EdgeSpecification::COLOR_BEGIN)
         .def_readonly_static("COLOR_END", &atcg::EdgeSpecification::COLOR_END)
@@ -483,8 +420,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .def_readonly_static("RADIUS_END", &atcg::EdgeSpecification::RADIUS_END)
         .def_readonly_static("EDGE_SIZE", &atcg::EdgeSpecification::EDGE_SIZE);
 
-    py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph")
-        .def(py::init<>())
+    m_graph.def(py::init<>())
         .def_static("createPointCloud", py::overload_cast<>(&atcg::Graph::createPointCloud))
         .def_static("createPointCloud", py::overload_cast<const torch::Tensor&>(&atcg::Graph::createPointCloud))
         .def_static("createTriangleMesh", py::overload_cast<>(&atcg::Graph::createTriangleMesh))
@@ -567,14 +503,12 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .def("onEvent", &atcg::FirstPersonController::onEvent, "event"_a)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
 
-    py::class_<atcg::Serializer<atcg::ComponentSerializer>>(m, "Serializer")
-        .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
+    m_serializer.def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
         .def("serialize", &atcg::Serializer<atcg::ComponentSerializer>::serialize<>, "file_path"_a)
         .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
 
     // ------------------- RENDERER ---------------------------------
-    py::class_<atcg::Renderer>(m, "Renderer")
-        .def_static("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
+    m_renderer.def_static("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
         .def_static("clear", &atcg::Renderer::clear)
         .def_static(
             "draw",
@@ -609,8 +543,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
             "width"_a,
             "path"_a);
 
-    py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
-        .def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
+    m_shader.def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
         .def(py::init<std::string, std::string, std::string>(), "vertex_path"_a, "fragment_path"_a, "geometry_path"_a)
         .def("use", &atcg::Shader::use)
         .def("setInt", &atcg::Shader::setInt, "uniform_name"_a, "value"_a)
@@ -620,13 +553,11 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .def("setMat4", &atcg::Shader::setMat4, "uniform_name"_a, "value"_a)
         .def("setMVP", &atcg::Shader::setMVP, "model"_a, "view"_a, "projection"_a);
 
-    py::class_<atcg::ShaderManager>(m, "ShaderManager")
-        .def_static("getShader", &atcg::ShaderManager::getShader, "name"_a)
+    m_shader_manager.def_static("getShader", &atcg::ShaderManager::getShader, "name"_a)
         .def_static("addShader", &atcg::ShaderManager::addShader, "name"_a, "shader"_a)
         .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
 
-    py::enum_<atcg::TextureFormat>(m, "TextureFormat")
-        .value("RG", atcg::TextureFormat::RG)
+    m_texture_format.value("RG", atcg::TextureFormat::RG)
         .value("RGB", atcg::TextureFormat::RGB)
         .value("RGBA", atcg::TextureFormat::RGBA)
         .value("RGFLOAT", atcg::TextureFormat::RGFLOAT)
@@ -637,16 +568,13 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .value("RFLOAT", atcg::TextureFormat::RFLOAT)
         .value("DEPTH", atcg::TextureFormat::DEPTH);
 
-    py::enum_<atcg::TextureWrapMode>(m, "TextureWrapMode")
-        .value("REPEAT", atcg::TextureWrapMode::REPEAT)
+    m_texture_wrap_mode.value("REPEAT", atcg::TextureWrapMode::REPEAT)
         .value("CLAMP_TO_EDGE", atcg::TextureWrapMode::CLAMP_TO_EDGE);
 
-    py::enum_<atcg::TextureFilterMode>(m, "TextureFilterMode")
-        .value("NEAREST", atcg::TextureFilterMode::NEAREST)
+    m_texture_filter_mode.value("NEAREST", atcg::TextureFilterMode::NEAREST)
         .value("LINEAR", atcg::TextureFilterMode::LINEAR);
 
-    py::class_<atcg::TextureSampler>(m, "TextureSampler")
-        .def(py::init<>())
+    m_texture_sampler.def(py::init<>())
         .def(py::init<>(
                  [](atcg::TextureFilterMode filter_mode, atcg::TextureWrapMode wrap_mode)
                  {
@@ -660,8 +588,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .def_readwrite("wrap_mode", &atcg::TextureSampler::wrap_mode)
         .def_readwrite("filter_mode", &atcg::TextureSampler::filter_mode);
 
-    py::class_<atcg::TextureSpecification>(m, "TextureSpecification")
-        .def(py::init<>())
+    m_texture_specification.def(py::init<>())
         .def(py::init<>(
                  [](uint32_t width,
                     uint32_t height,
@@ -688,8 +615,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .def_readwrite("sampler", &atcg::TextureSpecification::sampler)
         .def_readwrite("format", &atcg::TextureSpecification::format);
 
-    py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image", py::buffer_protocol())
-        .def(py::init<>())
+    m_image.def(py::init<>())
         .def("load", &atcg::Image::load)
         .def("store", &atcg::Image::store)
         .def("applyGamma", &atcg::Image::applyGamma)
@@ -716,7 +642,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
     m.def("imread", &atcg::IO::imread);
     m.def("imwrite", &atcg::IO::imwrite);
 
-    py::class_<atcg::Texture2D, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D")
+    m_texture2d
         .def_static(
             "create",
             [](atcg::TextureSpecification spec) { return atcg::Texture2D::create(spec); },
@@ -736,10 +662,9 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .def("getData", &atcg::Texture2D::getData);
 
     // ------------------- Scene ---------------------------------
-    py::class_<entt::entity>(m, "EntityHandle").def(py::init<uint32_t>(), "handle"_a);
+    m_entity_handle.def(py::init<uint32_t>(), "handle"_a);
 
-    py::class_<atcg::Material>(m, "Material")
-        .def(py::init<>())
+    m_material.def(py::init<>())
         .def("getDiffuseTexture", &atcg::Material::getDiffuseTexture)
         .def("getNormalTexture", &atcg::Material::getNormalTexture)
         .def("getRoughnessTexture", &atcg::Material::getRoughnessTexture)
@@ -756,8 +681,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .def("setMetallic", &atcg::Material::setMetallic)
         .def("removeNormalMap", &atcg::Material::removeNormalMap);
 
-    py::class_<atcg::TransformComponent>(m, "TransformComponent")
-        .def(py::init<glm::vec3, glm::vec3, glm::vec3>(), "position"_a, "scale"_a, "rotation"_a)
+    m_transform.def(py::init<glm::vec3, glm::vec3, glm::vec3>(), "position"_a, "scale"_a, "rotation"_a)
         .def(py::init<glm::mat4>(), "model"_a)
         .def("setPosition", &atcg::TransformComponent::setPosition, "position"_a)
         .def("setRotation", &atcg::TransformComponent::setRotation, "rotation"_a)
@@ -768,44 +692,36 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         .def("getScale", &atcg::TransformComponent::getScale)
         .def("getModel", &atcg::TransformComponent::getModel);
 
-    py::class_<atcg::GeometryComponent>(m, "GeometryComponent")
-        .def(py::init<>())
+    m_geometry.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Graph>&>(), "graph"_a)
         .def_readwrite("graph", &atcg::GeometryComponent::graph);
 
-    py::class_<atcg::MeshRenderComponent>(m, "MeshRenderComponent")
-        .def(py::init<>())
+    m_mesh_renderer.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&>(), "shader"_a)
         .def_readwrite("visible", &atcg::MeshRenderComponent::visible)
         .def_readwrite("shader", &atcg::MeshRenderComponent::shader)
         .def_readwrite("material", &atcg::MeshRenderComponent::material);
 
-    py::class_<atcg::PointRenderComponent>(m, "PointRenderComponent")
+    m_point_renderer
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointRenderComponent::visible)
         .def_readwrite("color", &atcg::PointRenderComponent::color)
         .def_readwrite("shader", &atcg::PointRenderComponent::shader);
 
-    py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent")
-        .def(py::init<const atcg::ref_ptr<atcg::Shader>&, float>(), "shader"_a, "point_size"_a)
+    m_point_sphere_renderer.def(py::init<const atcg::ref_ptr<atcg::Shader>&, float>(), "shader"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointSphereRenderComponent::visible)
         .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader)
         .def_readwrite("material", &atcg::PointSphereRenderComponent::material);
 
-    py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent")
-        .def(py::init<glm::vec3>(), "color"_a)
+    m_edge_renderer.def(py::init<glm::vec3>(), "color"_a)
         .def_readwrite("visible", &atcg::EdgeRenderComponent::visible)
         .def_readwrite("color", &atcg::EdgeRenderComponent::color);
 
-    py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent")
-        .def(py::init<float>(), "radius"_a)
+    m_edge_cylinder_renderer.def(py::init<float>(), "radius"_a)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
         .def_readwrite("material", &atcg::EdgeCylinderRenderComponent::material);
 
-    py::class_<atcg::NameComponent>(m, "NameComponent")
-        .def(py::init<>())
-        .def(py::init<std::string>(), "name"_a)
-        .def_readwrite("name", &atcg::NameComponent::name);
+    m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def_readwrite("name", &atcg::NameComponent::name);
 
     m_entity.def(py::init<>())
         .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)
@@ -928,15 +844,13 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
                  return entities;
              });
 
-    py::class_<atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>>(m, "SceneHierarchyPanel")
-        .def(py::init<>())
+    m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
         .def("renderPanel", &atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>::renderPanel<>)
         .def("selectEntity", &atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>::selectEntity, "entity"_a)
         .def("getSelectedEntity", &atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>::getSelectedEntity);
 
-    py::class_<atcg::Tracing::HitInfo>(m, "HitInfo")
-        .def_readonly("hit", &atcg::Tracing::HitInfo::hit)
+    m_hit_info.def_readonly("hit", &atcg::Tracing::HitInfo::hit)
         .def_readonly("position", &atcg::Tracing::HitInfo::p)
         .def_readonly("triangle_index", &atcg::Tracing::HitInfo::primitive_idx);
 
@@ -974,320 +888,42 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
               return std::make_tuple(result_hit, result_p, result_idx);
           });
 
-    // m.def("width",
-    //       []()
-    //       {
-    //           const auto& window = atcg::Application::get()->getWindow();
-    //           return (float)window->getWidth();
-    //       });
-
-    // m.def("height",
-    //       []()
-    //       {
-    //           const auto& window = atcg::Application::get()->getWindow();
-    //           return (float)window->getHeight();
-    //       });
-
-    // m.def("setSize",
-    //       [](uint32_t width, uint32_t height)
-    //       {
-    //           const auto& window = atcg::Application::get()->getWindow();
-    //           window->resize(width, height);
-    //       });
-
-
-    // py::class_<atcg::Input>(m, "Input")
-    //     .def_static("isKeyPressed", &atcg::Input::isKeyPressed)
-    //     .def_static("isMouseButtonPressed", &atcg::Input::isMouseButtonPressed)
-    //     .def("getMousePosition",
-    //          []()
-    //          {
-    //              glm::vec2 mouse_position = atcg::Input::getMousePosition();
-    //              return py::array(2, reinterpret_cast<float*>(&mouse_position));
-    //          });
-
-
-    // py::class_<glm::vec3>(m, "Vector3", py::buffer_protocol())
-    //     .def(py::init<float, float, float>())
-    //     .def(py::init(
-    //         [](py::buffer b)
-    //         {
-    //             py::buffer_info info = b.request();
-
-    //             // Copy for now, is there a better method?
-    //             glm::vec3 v;
-    //             if(info.format == py::format_descriptor<float>::format())
-    //             {
-    //                 v = glm::make_vec3(static_cast<float*>(info.ptr));
-    //             }
-    //             else if(info.format == py::format_descriptor<double>::format())
-    //             {
-    //                 v = glm::make_vec3(static_cast<double*>(info.ptr));
-    //             }
-    //             else if(info.format == py::format_descriptor<int>::format())
-    //             {
-    //                 v = glm::make_vec3(static_cast<int*>(info.ptr));
-    //             }
-
-    //             return v;
-    //         }))
-    //     .def_buffer(
-    //         [](glm::vec3& v) -> py::buffer_info
-    //         {
-    //             return py::buffer_info(glm::value_ptr(v),
-    //                                    sizeof(float),
-    //                                    py::format_descriptor<float>::format(),
-    //                                    1,
-    //                                    {3},
-    //                                    {sizeof(float)});
-    //         });
-
-    // py::class_<glm::vec4>(m, "Vector4", py::buffer_protocol())
-    //     .def(py::init(
-    //         [](py::buffer b)
-    //         {
-    //             py::buffer_info info = b.request();
-
-    //             // Copy for now, is there a better method?
-    //             glm::vec4 v;
-    //             if(info.format == py::format_descriptor<float>::format())
-    //             {
-    //                 v = glm::make_vec4(static_cast<float*>(info.ptr));
-    //             }
-    //             else if(info.format == py::format_descriptor<double>::format())
-    //             {
-    //                 v = glm::make_vec4(static_cast<double*>(info.ptr));
-    //             }
-    //             else if(info.format == py::format_descriptor<int>::format())
-    //             {
-    //                 v = glm::make_vec4(static_cast<int*>(info.ptr));
-    //             }
-
-    //             return v;
-    //         }))
-    //     .def_buffer(
-    //         [](glm::vec4& v) -> py::buffer_info
-    //         {
-    //             return py::buffer_info(glm::value_ptr(v),
-    //                                    sizeof(float),
-    //                                    py::format_descriptor<float>::format(),
-    //                                    1,
-    //                                    {4},
-    //                                    {sizeof(float)});
-    //         });
-
-    // py::class_<glm::mat3>(m, "Matrix3", py::buffer_protocol())
-    //     .def(py::init(
-    //         [](py::buffer b)
-    //         {
-    //             py::buffer_info info = b.request();
-
-    //             glm::mat3 M;
-
-    //             if(info.format == py::format_descriptor<float>::format())
-    //             {
-    //                 M = glm::make_mat3(static_cast<float*>(info.ptr));
-    //             }
-    //             else if(info.format == py::format_descriptor<double>::format())
-    //             {
-    //                 M = glm::make_mat3(static_cast<double*>(info.ptr));
-    //             }
-    //             else if(info.format == py::format_descriptor<int>::format())
-    //             {
-    //                 M = glm::make_mat3(static_cast<int*>(info.ptr));
-    //             }
-
-    //             return M;
-    //         }))
-    //     .def_buffer(
-    //         [](glm::mat3& M) -> py::buffer_info
-    //         {
-    //             return py::buffer_info(glm::value_ptr(M),
-    //                                    sizeof(float),
-    //                                    py::format_descriptor<float>::format(),
-    //                                    2,
-    //                                    {3, 3},
-    //                                    {sizeof(float), sizeof(float) * 3});
-    //         });
-
-    // py::class_<glm::mat4>(m, "Matrix4", py::buffer_protocol())
-    //     .def(py::init(
-    //         [](py::buffer b)
-    //         {
-    //             py::buffer_info info = b.request();
-
-    //             glm::mat4 M;
-
-    //             if(info.format == py::format_descriptor<float>::format())
-    //             {
-    //                 M = glm::make_mat4(static_cast<float*>(info.ptr));
-    //             }
-    //             else if(info.format == py::format_descriptor<double>::format())
-    //             {
-    //                 M = glm::make_mat4(static_cast<double*>(info.ptr));
-    //             }
-    //             else if(info.format == py::format_descriptor<int>::format())
-    //             {
-    //                 M = glm::make_mat4(static_cast<int*>(info.ptr));
-    //             }
-
-    //             return glm::transpose(M);
-    //         }))
-    //     .def_buffer(
-    //         [](glm::mat4& M) -> py::buffer_info
-    //         {
-    //             return py::buffer_info(glm::value_ptr(M),
-    //                                    sizeof(float),
-    //                                    py::format_descriptor<float>::format(),
-    //                                    2,
-    //                                    {4, 4},
-    //                                    {sizeof(float), sizeof(float) * 4});
-    //         });
-
-
-    // py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera")
-    //     .def(py::init<float>())
-    //     .def("getPosition", &atcg::PerspectiveCamera::getPosition)
-    //     .def("setPosition", &atcg::PerspectiveCamera::setPosition)
-    //     .def("getView", &atcg::PerspectiveCamera::getView)
-    //     .def("setView", &atcg::PerspectiveCamera::setView)
-    //     .def("getProjection", &atcg::PerspectiveCamera::getProjection)
-    //     .def("setProjection", &atcg::PerspectiveCamera::setProjection);
-
-    // py::class_<atcg::CameraController>(m, "CameraController")
-    //     .def(py::init<float>())
-    //     .def("onUpdate", &atcg::CameraController::onUpdate)
-    //     .def("onEvent", &atcg::CameraController::onEvent)
-    //     .def("getCamera", &atcg::CameraController::getCamera);
-
-    // py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader")
-    //     .def(py::init<std::string, std::string>())
-    //     .def(py::init<std::string, std::string, std::string>())
-    //     .def("use", &atcg::Shader::use)
-    //     .def("setInt", &atcg::Shader::setInt)
-    //     .def("setFloat", &atcg::Shader::setFloat)
-    //     .def("setVec3", &atcg::Shader::setVec3)
-    //     .def("setVec4", &atcg::Shader::setVec4)
-    //     .def("setMat4", &atcg::Shader::setMat4)
-    //     .def("setMVP", &atcg::Shader::setMVP);
-
-    // py::class_<atcg::ShaderManager>(m, "ShaderManager")
-    //     .def_static("getShader", &atcg::ShaderManager::getShader)
-    //     .def_static("addShader", &atcg::ShaderManager::addShader)
-    //     .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName);
-
-    // py::class_<atcg::Mesh, atcg::ref_ptr<atcg::Mesh>>(m, "Mesh")
-    //     .def("uploadData", &atcg::Mesh::uploadData)
-    //     .def("setPosition", &atcg::Mesh::setPosition)
-    //     .def("setScale", &atcg::Mesh::setScale)
-    //     .def("setColor", &atcg::Mesh::setColor)
-    //     .def("setColors", &atcg::Mesh::setColors)
-    //     .def("requestVertexColors", &atcg::Mesh::request_vertex_colors)
-    //     .def("requestVertexNormals", &atcg::Mesh::request_vertex_normals);
-    // py::class_<atcg::PointCloud, atcg::ref_ptr<atcg::PointCloud>>(m, "PointCloud")
-    //     .def("uploadData", &atcg::PointCloud::uploadData)
-    //     .def("asMatrix", &atcg::PointCloud::asMatrix)
-    //     .def("fromMatrix", &atcg::PointCloud::fromMatrix)
-    //     .def("setColor", &atcg::PointCloud::setColor);
-
-    // m.def("readMesh", &atcg::IO::read_mesh);
-    // m.def("readPointCloud", &atcg::IO::read_pointcloud);
-
-    // m.def("rayMeshIntersection", &atcg::Tracing::rayMeshIntersection);
-
-    // py::enum_<atcg::DrawMode>(m, "DrawMode")
-    //     .value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
-    //     .value("ATCG_DRAW_MODE_POINTS", atcg::DrawMode::ATCG_DRAW_MODE_POINTS)
-    //     .value("ATCG_DRAW_MODE_POINTS_SPHERE", atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE)
-    //     .value("ATCG_DRAW_MODE_EDGES", atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
-
-    // py::class_<atcg::Renderer>(m, "Renderer")
-    //     .def("init",
-    //          [](uint32_t width, uint32_t height)
-    //          {
-    //              atcg::ref_ptr<atcg::Application> app = atcg::make_ref<atcg::Application>();
-    //              const auto& window                   = app->getWindow();
-
-    //              window->hide();
-    //              window->resize(width, height);
-
-    //              atcg::Renderer::useScreenBuffer();
-    //              return app;
-    //          })
-    //     .def("setClearColor",
-    //          [](const float r, const float g, const float b, const float a)
-    //          { atcg::Renderer::setClearColor(glm::vec4(r, g, b, a)); })
-    //     .def_static("setPointSize", &atcg::Renderer::setPointSize)
-    //     .def_static("clear", &atcg::Renderer::clear)
-    //     .def(
-    //         "draw",
-    //         [](const atcg::ref_ptr<atcg::Mesh>& mesh,
-    //            const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-    //            const glm::vec3& color,
-    //            const atcg::ref_ptr<atcg::Shader>& shader,
-    //            atcg::DrawMode draw_mode) { atcg::Renderer::draw(mesh, camera, color, shader, draw_mode); },
-    //         py::return_value_policy::automatic_reference)
-    //     .def(
-    //         "draw",
-    //         [](const atcg::ref_ptr<atcg::PointCloud>& cloud,
-    //            const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-    //            const glm::vec3& color,
-    //            const atcg::ref_ptr<atcg::Shader>& shader)
-    //         { atcg::Renderer::draw(cloud, camera, color, shader, atcg::DrawMode::ATCG_DRAW_MODE_POINTS); },
-    //         py::return_value_policy::automatic_reference)
-    //     .def("getFrame",
-    //          []()
-    //          {
-    //              std::vector<uint8_t> buffer = atcg::Renderer::getFrame();
-    //              return py::array(buffer.size(), buffer.data());
-    //          })
-    //     .def("getZBuffer",
-    //          []()
-    //          {
-    //              std::vector<float> buffer = atcg::Renderer::getZBuffer();
-    //              return py::array(buffer.size(), buffer.data());
-    //          });
-
-    auto mutils = m.def_submodule("Utils");
-
-    mutils.def("AEMap", &atcg::Utils::AEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
-    mutils.def("relAEMap",
-               &atcg::Utils::relAEMap,
-               "groundtruth"_a,
-               "prediction"_a,
-               "channel_reduction"_a = "mean",
-               "delta"_a             = 1e-4f);
-    mutils.def("SEMap", &atcg::Utils::SEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
-    mutils.def("relSEMap",
-               &atcg::Utils::relSEMap,
-               "groundtruth"_a,
-               "prediction"_a,
-               "channel_reduction"_a = "mean",
-               "delta"_a             = 1e-4f);
-    mutils.def("MAE", &atcg::Utils::MAE, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
-    mutils.def("relMAE",
-               &atcg::Utils::relMAE,
-               "groundtruth"_a,
-               "prediction"_a,
-               "channel_reduction"_a = "mean",
-               "delta"_a             = 1e-4f);
-    mutils.def("MSE", &atcg::Utils::MSE, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
-    mutils.def("relMSE",
-               &atcg::Utils::relMSE,
-               "groundtruth"_a,
-               "prediction"_a,
-               "channel_reduction"_a = "mean",
-               "delta"_a             = 1e-4f);
+    m_utils.def("AEMap", &atcg::Utils::AEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    m_utils.def("relAEMap",
+                &atcg::Utils::relAEMap,
+                "groundtruth"_a,
+                "prediction"_a,
+                "channel_reduction"_a = "mean",
+                "delta"_a             = 1e-4f);
+    m_utils.def("SEMap", &atcg::Utils::SEMap, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    m_utils.def("relSEMap",
+                &atcg::Utils::relSEMap,
+                "groundtruth"_a,
+                "prediction"_a,
+                "channel_reduction"_a = "mean",
+                "delta"_a             = 1e-4f);
+    m_utils.def("MAE", &atcg::Utils::MAE, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    m_utils.def("relMAE",
+                &atcg::Utils::relMAE,
+                "groundtruth"_a,
+                "prediction"_a,
+                "channel_reduction"_a = "mean",
+                "delta"_a             = 1e-4f);
+    m_utils.def("MSE", &atcg::Utils::MSE, "groundtruth"_a, "prediction"_a, "channel_reduction"_a = "mean");
+    m_utils.def("relMSE",
+                &atcg::Utils::relMSE,
+                "groundtruth"_a,
+                "prediction"_a,
+                "channel_reduction"_a = "mean",
+                "delta"_a             = 1e-4f);
 
     // IMGUI BINDINGS
 
-    auto mimgui = m.def_submodule("ImGui");
-
-    mimgui.def("BeginMainMenuBar", &ImGui::BeginMainMenuBar);
-    mimgui.def("EndMainMenuBar", &ImGui::EndMainMenuBar);
-    mimgui.def("BeginMenu", &ImGui::BeginMenu, py::arg("label"), py::arg("enabled") = true);
-    mimgui.def("EndMenu", &ImGui::EndMenu);
-    mimgui.def(
+    m_imgui.def("BeginMainMenuBar", &ImGui::BeginMainMenuBar);
+    m_imgui.def("EndMainMenuBar", &ImGui::EndMainMenuBar);
+    m_imgui.def("BeginMenu", &ImGui::BeginMenu, py::arg("label"), py::arg("enabled") = true);
+    m_imgui.def("EndMenu", &ImGui::EndMenu);
+    m_imgui.def(
         "MenuItem",
         [](const char* label, const char* shortcut, bool* p_selected, bool enabled)
         {
@@ -1299,7 +935,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         py::arg("p_selected"),
         py::arg("enabled") = true,
         py::return_value_policy::automatic_reference);
-    mimgui.def(
+    m_imgui.def(
         "Begin",
         [](const char* name, bool* p_open, ImGuiWindowFlags flags)
         {
@@ -1310,8 +946,8 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         py::arg("p_open") = nullptr,
         py::arg("flags")  = 0,
         py::return_value_policy::automatic_reference);
-    mimgui.def("End", &ImGui::End);
-    mimgui.def(
+    m_imgui.def("End", &ImGui::End);
+    m_imgui.def(
         "Checkbox",
         [](const char* label, bool* v)
         {
@@ -1321,7 +957,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         py::arg("label"),
         py::arg("v"),
         py::return_value_policy::automatic_reference);
-    mimgui.def(
+    m_imgui.def(
         "Button",
         [](const char* label)
         {
@@ -1330,7 +966,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         },
         py::arg("label"),
         py::return_value_policy::automatic_reference);
-    mimgui.def(
+    m_imgui.def(
         "SliderInt",
         [](const char* label, int* v, int v_min, int v_max, const char* format = "%d", ImGuiSliderFlags flags = 0)
         {
@@ -1344,7 +980,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         py::arg("format") = "%d",
         py::arg("flags")  = 0,
         py::return_value_policy::automatic_reference);
-    mimgui.def(
+    m_imgui.def(
         "SliderFloat",
         [](const char* label,
            float* v,
@@ -1363,7 +999,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         py::arg("format") = "%.3f",
         py::arg("flags")  = 0,
         py::return_value_policy::automatic_reference);
-    mimgui.def(
+    m_imgui.def(
         "Text",
         [](const char* fmt)
         {
@@ -1373,7 +1009,7 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         py::arg("fmt"),
         py::return_value_policy::automatic_reference);
 
-    mimgui.def(
+    m_imgui.def(
         "Image",
         [](uint32_t textureID, uint32_t width, uint32_t height)
         {
@@ -1385,14 +1021,13 @@ PYBIND11_MODULE(TORCH_EXTENSION_NAME, m)
         py::arg("height"),
         py::return_value_policy::automatic_reference);
 
-    mimgui.def("isUsing", &ImGuizmo::IsUsing);
+    m_imgui.def("isUsing", &ImGuizmo::IsUsing);
 
-    py::enum_<ImGuizmo::OPERATION>(mimgui, "GuizmoOperation")
-        .value("TRANSLATE", ImGuizmo::OPERATION::TRANSLATE)
+    m_guizmo_operation.value("TRANSLATE", ImGuizmo::OPERATION::TRANSLATE)
         .value("ROTATE", ImGuizmo::OPERATION::ROTATE)
         .value("SCALE", ImGuizmo::OPERATION::SCALE)
         .export_values();
-    mimgui.def("drawGuizmo", atcg::drawGuizmo);
+    m_imgui.def("drawGuizmo", atcg::drawGuizmo);
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);
