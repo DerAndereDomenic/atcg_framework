@@ -146,6 +146,7 @@ target_precompile_headers(atcg_lib PRIVATE "atcg_lib/include/atcgpch.h")
 target_include_directories(atcg_lib PUBLIC "atcg_lib/include"
                                            "atcg_lib/platform/${ATCG_BACKEND}/include"
                                            "atcg_lib/platform/opengl/include"
+                                           "python"
 )
 
 target_link_libraries(atcg_lib PUBLIC glfw
