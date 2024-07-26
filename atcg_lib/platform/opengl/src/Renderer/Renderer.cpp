@@ -1171,7 +1171,7 @@ Renderer::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Came
     atcg::Renderer::getFramebuffer()->use();
     atcg::Renderer::setDefaultViewport();
 
-    std::vector<uint8_t> buffer = getFrame(screenshot_buffer);
+    // std::vector<uint8_t> buffer = getFrame(screenshot_buffer);
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
