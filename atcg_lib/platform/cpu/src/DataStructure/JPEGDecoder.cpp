@@ -16,9 +16,7 @@ public:
 
     void allocateBuffers();
 
-    // Rendering buffers
     torch::Tensor output_tensor;
-    torch::Tensor intermediate_tensor;
 
     uint32_t num_images;
     uint32_t img_width;
@@ -54,7 +52,15 @@ torch::Tensor JPEGDecoder::decompressImages(const std::vector<std::string>& file
 
 torch::Tensor JPEGDecoder::decompressImages(const std::vector<std::string>& filenames, const torch::Tensor& host_valid)
 {
-    // TODO
+    for(int i = 0; i < host_valid.numel(); ++i)
+    {
+        if(host_valid.index({i}).item<int>() == 0) continue;
+
+        auto img = atcg::IO::imread(filenames[i]);
+
+        impl->output_tensor.index_put_({i}, img->data());
+    }
+
     return impl->output_tensor;
 }
 
