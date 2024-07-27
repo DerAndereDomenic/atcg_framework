@@ -1,6 +1,6 @@
 # ATCG FRAMEWORK
 
-This repository contains a C++ 3D rendering for research applications and scientific computation/visualization. It combines the OpenGL rendering pipeline with high performance CUDA integration using torch.
+This repository contains a C++ 3D rendering framework for research applications and scientific computation/visualization. It combines the OpenGL rendering pipeline with high performance CUDA integration using torch.
 
 ## Building
 
@@ -27,7 +27,7 @@ cmake . -B build
 From the main folder of this project (aka the folder where this file is located), run
 
 ```
-cmake --build build --config <Debug|Release>
+cmake --build build --parallel --config <Debug|Release>
 ```
 
 to compile the project.
@@ -44,7 +44,13 @@ This way you can include high performant GPU code into your application. Note th
 
 ### Building the documentation (experimental)
 
-There is a (not very complete) documentation that can be build using [doxygen](https://www.doxygen.nl/index.html) and [sphinx](https://www.sphinx-doc.org/en/master/). Install the dependencies listed in this [Blog Post](https://devblogs.microsoft.com/cppblog/clear-functional-c-documentation-with-sphinx-breathe-doxygen-cmake/) and set the ATCG_BUILD_DOCS option to true when generating the CMake project.
+There is a (not very complete) documentation that can be build using [doxygen](https://www.doxygen.nl/index.html) and [sphinx](https://www.sphinx-doc.org/en/master/). Install the dependencies using pip
+
+```
+pip install sphinx, sphinx_rtd_theme, breathe
+```
+
+and set the ATCG_BUILD_DOCS option to true when generating the CMake project.
 
 ### Building tests (eperimental)
 
@@ -53,7 +59,8 @@ To build the unit tests, set the ATCG_BUILD_TESTS option to true.
 ```
 cmake . -B build -DATCG_BUILD_TESTS=On
 ```
-Run the ```atcg_lib_test``` target to run the tests.
+
+Run the `atcg_lib_test` target to run the tests.
 
 ## Project Structure
 
@@ -81,6 +88,12 @@ You can edit shaders while the program is running!
 -**res**: Contains resources (meshes and textures)
 
 -**external**: Contains the exernal libraries used in this framework. There is no need to install any external libraries (except for OpenGL/Driver and torch) as all dependencies come with this repository.
+
+-**python**: Contains the python bindings.
+
+-**tests**: Contains the tests.
+
+-**docs**: Contains the documentation.
 
 ## Usage
 
@@ -276,3 +289,4 @@ There is also a CUDA API for textures. However, because textures work differentl
 - [json](https://github.com/nlohmann/json) - For serializing JSON files.
 - [charonload](https://github.com/nlohmann/json) - For torch integration.
 - [openvr](https://github.com/ValveSoftware/openvr) - For VR support.
+- [googletest](https://github.com/google/googletest) - For testing.
