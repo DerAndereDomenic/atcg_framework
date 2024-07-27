@@ -15,8 +15,6 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`search`
-
 
 Core
 ====
@@ -156,6 +154,8 @@ DataStructure
 .. doxygenclass:: atcg::Graph
    :members:
    :undoc-members:
+.. doxygenfunction:: atcg::IO::read_any
+   :project: ATCGLIB
 .. doxygenfunction:: atcg::IO::read_mesh
    :project: ATCGLIB
 .. doxygenfunction:: atcg::IO::read_pointcloud
@@ -180,6 +180,9 @@ DataStructure
    :members:
    :undoc-members:
 .. doxygenclass:: atcg::Timer
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::JPEGDecoder
    :members:
    :undoc-members:
 .. doxygenfunction:: atcg::TensorOptions::uint8HostOptions
@@ -261,7 +264,139 @@ ImGui
 
 Math
 ====
-.. doxygenfunction:: atcg::normalize
+.. doxygenfunction:: atcg::Math::map(const T& value, const T& old_left, const T& old_right, const T& new_left, const T& new_right)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Math::map(const glm::vec<N, T>& value, const glm::vec<N, T>& old_left, const glm::vec<N, T>& old_right, const glm::vec<N, T>& new_left, const glm::vec<N, T>& new_right)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Math::uv2ndc(const T& val)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Math::uv2ndc(const glm::vec<N, T>& val)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Math::ndc2uv(const T& val)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Math::ndc2uv(const glm::vec<N, T>& val)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Math::ndc2linearDepth
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Math::linearDepth2ndc
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::quantize(const glm::vec3& color)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::dequantize(const glm::u8vec3& color)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::quantize(const glm::vec4& color)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::dequantize(const glm::u8vec4& color)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::sRGB_to_lRGB
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::lRGB_to_sRGB
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::sRGB_to_XYZ
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::XYZ_to_sRGB
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::lRGB_to_XYZ
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::XYZ_to_lRGB
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::lRGB_to_luminance
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::sRGB_to_luminance
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::color_matching_x
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::color_matching_y
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::color_matching_z
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::D65
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::Sr
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::Sg
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Color::Sb
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::zero
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::one
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::two_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::root_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::half_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::three_over_two_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::quarter_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::one_over_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::one_over_two_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::two_over_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::four_over_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::two_over_root_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::one_over_root_two
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::root_half_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::root_two_pi
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::root_ln_four
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::e
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::euler
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::root_two
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::root_three
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::root_five
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::ln_two
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::ln_ten
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::ln_ln_two
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::half
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::third
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::two_thirds
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::golden_ratio
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::boltzmann
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::h
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::c
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::G
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::g
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::Y_integral
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::Constants::Y_illum
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::normalize(const atcg::ref_ptr<Graph>& graph)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform)
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::applyTransform
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::IO::dumpBinary
    :project: ATCGLIB
 .. doxygenstruct:: atcg::Tracing::HitInfo
    :members:
@@ -269,8 +404,6 @@ Math
 .. doxygenfunction:: atcg::Tracing::prepareAccelerationStructure
    :project: ATCGLIB
 .. doxygenfunction:: atcg::Tracing::traceRay
-   :project: ATCGLIB
-.. doxygenfunction:: atcg::Math::ceil_div
    :project: ATCGLIB
 
 OpenMesh

@@ -20,6 +20,13 @@ extensions = ["breathe"]
 # }
 
 breathe_default_project = "ATCGLIB"
+breathe_domain_by_extension = {
+    "h": "cpp",
+    "cpp": "cpp"
+}
+cpp_index_common_prefix = [
+    'atcg::',
+]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
