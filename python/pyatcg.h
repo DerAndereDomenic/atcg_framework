@@ -637,7 +637,8 @@ inline void defineBindings(py::module_& m)
             "scene"_a,
             "camera"_a,
             "width"_a,
-            "path"_a);
+            "path"_a)
+        .def_static("resize", &atcg::Renderer::resize);
 
     m_shader.def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
         .def(py::init<std::string, std::string, std::string>(), "vertex_path"_a, "fragment_path"_a, "geometry_path"_a)
