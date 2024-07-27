@@ -16,6 +16,9 @@ Indices and tables
 
 * :ref:`genindex`
 
+.. include:: ../README.md
+   :parser: myst
+
 Core
 ====
 
