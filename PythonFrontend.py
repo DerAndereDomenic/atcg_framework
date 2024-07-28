@@ -7,16 +7,21 @@ charonload.module_config["pyatcg"] = charonload.Config(
     # All paths must be absolute
     project_directory=pathlib.Path(__file__).parent,
     build_directory=pathlib.Path(__file__).parent / "build_python",
-    cmake_options={"ATCG_CUDA_BACKEND": "On", "ATCG_PYTHON_BINDINGS" : "On"},
+    cmake_options={
+        "ATCG_CUDA_BACKEND": "On",
+        "ATCG_PYTHON_BINDINGS": "On",
+        "ATCG_PYTHON_MODULE": "On",
+    },
     stubs_directory=VSCODE_STUBS_DIRECTORY,
     build_type="RelWithDebInfo",
     verbose=True,
-    stubs_invalid_ok=True
+    stubs_invalid_ok=True,
 )
 
 import pyatcg as atcg
 import torch
 import numpy as np
+
 
 class PythonLayer(atcg.Layer):
 
@@ -25,7 +30,7 @@ class PythonLayer(atcg.Layer):
 
     def onAttach(self):
         atcg.enableDockSpace(True)
-        atcg.Renderer.setClearColor(atcg.vec4(0,0,0,1))
+        atcg.Renderer.setClearColor(atcg.vec4(0, 0, 0, 1))
         aspect_ratio = atcg.width() / atcg.height()
 
         self.camera_controller = atcg.FirstPersonController(aspect_ratio)
@@ -74,25 +79,28 @@ class PythonLayer(atcg.Layer):
 
         selected_entity = self.panel.getSelectedEntity()
 
-        atcg.ImGui.drawGuizmo(selected_entity, self.current_operation, self.camera_controller.getCamera())
+        atcg.ImGui.drawGuizmo(
+            selected_entity, self.current_operation, self.camera_controller.getCamera()
+        )
 
     def onEvent(self, event):
         self.camera_controller.onEvent(event)
-        
+
         if event.getName() == "ViewportResize":
             resize_event = atcg.WindowResizeEvent(event.getWidth(), event.getHeight())
             self.camera_controller.onEvent(resize_event)
-            
+
 
 def main():
     props = atcg.WindowProps()
-    props.width = 2560 
+    props.width = 2560
     props.height = 1440
-    
+
     layer = PythonLayer()
     app = atcg.PythonApplication(layer, props)
 
     atcg.start(app)
+
 
 main()
 atcg.print_statistics()

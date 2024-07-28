@@ -4,6 +4,7 @@
 #include <openvr.h>
 
 #include <GLFW/glfw3.h>
+#include <Core/Application.h>
 
 namespace atcg
 {
@@ -263,7 +264,6 @@ void FirstPersonController::onEvent(Event* e)
 {
     EventDispatcher dispatcher(e);
     dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onWindowResize));
-    dispatcher.dispatch<MouseMovedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onMouseMove));
     dispatcher.dispatch<KeyPressedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onKeyPressed));
     dispatcher.dispatch<KeyReleasedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onKeyReleased));
     dispatcher.dispatch<MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(FirstPersonController::onMouseButtonPressed));
@@ -274,16 +274,6 @@ bool FirstPersonController::onWindowResize(WindowResizeEvent* event)
 {
     float aspect_ratio = (float)event->getWidth() / (float)event->getHeight();
     _camera->setAspectRatio(aspect_ratio);
-    return false;
-}
-
-bool FirstPersonController::onMouseMove(MouseMovedEvent* event)
-{
-    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
-    {
-        _clicked_right = true;
-    }
-
     return false;
 }
 
@@ -323,7 +313,18 @@ bool FirstPersonController::onKeyReleased(KeyReleasedEvent* event)
 
 bool FirstPersonController::onMouseButtonPressed(MouseButtonPressedEvent* event)
 {
-    if(event->getMouseButton() == GLFW_MOUSE_BUTTON_RIGHT) _clicked_right = true;
+    if(event->getMouseButton() == GLFW_MOUSE_BUTTON_RIGHT)
+    {
+        const atcg::Application* app = atcg::Application::get();
+        glm::ivec2 offset            = app->getViewportPosition();
+        int height                   = app->getViewportSize().y;
+        glm::vec2 mouse_pos          = glm::vec2(event->getX() - offset.x, height - (event->getY() - offset.y));
+
+        bool in_viewport =
+            mouse_pos.x >= 0 && mouse_pos.y >= 0 && mouse_pos.y < height && mouse_pos.x < app->getViewportSize().x;
+
+        if(in_viewport) _clicked_right = true;
+    }
 
     return true;
 }

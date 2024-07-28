@@ -4,6 +4,7 @@ project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
 
 option(ATCG_CUDA_BACKEND "Compile cuda backend" OFF)
 option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
+option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
 
@@ -174,6 +175,7 @@ target_precompile_headers(atcg_lib PRIVATE "atcg_lib/include/atcgpch.h")
 target_include_directories(atcg_lib PUBLIC "atcg_lib/include"
                                            "atcg_lib/platform/${ATCG_BACKEND}/include"
                                            "atcg_lib/platform/opengl/include"
+                                           "python"
 )
 
 target_link_libraries(atcg_lib PUBLIC glfw
@@ -251,11 +253,35 @@ function(ATCG_add_executable target_name_base target_name_var source)
 	endif()
 endfunction()
 
+function(ATCG_add_library target_name_base target_name_var source)
+    set(target_name ${target_name_base})
+    set(${target_name_var} ${target_name} PARENT_SCOPE)
+
+    add_library(${target_name} STATIC)
+    
+    target_sources(${target_name} PRIVATE ${source})
+    target_link_libraries(${target_name} PRIVATE atcg_lib)
+
+	if(MSVC)
+		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+	endif()
+endfunction()
+
+function(ATCG_add_pythonmodule source)
+    find_package(charonload)
+
+    if(charonload_FOUND)
+        charonload_add_torch_library(${TORCH_EXTENSION_NAME} MODULE)
+        target_sources(${TORCH_EXTENSION_NAME} PRIVATE ${source})
+        target_link_libraries(${TORCH_EXTENSION_NAME} PRIVATE atcg_lib)
+    endif()
+endfunction()
+
 add_subdirectory(src)
 
 # PYTHON BINDINGS
 
-if(ATCG_PYTHON_BINDINGS)
+if(ATCG_PYTHON_MODULE)
     find_package(charonload)
 
     if(charonload_FOUND)

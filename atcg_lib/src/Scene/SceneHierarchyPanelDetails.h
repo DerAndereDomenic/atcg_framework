@@ -100,7 +100,7 @@ void SceneHierarchyPanel<GUIHandler>::drawEntityNode(Entity entity)
     bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity.getComponent<IDComponent>().ID, flags, tag.c_str());
     if(ImGui::IsItemClicked())
     {
-        _selected_entity = entity;
+        selectEntity(entity);
     }
 
     // bool entityDeleted = false;
@@ -225,10 +225,22 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::drawComponents(Entity entity)
 }
 
 template<typename GUIHandler>
+ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::selectEntity(Entity entity)
+{
+    _selected_entity   = entity;
+    _focues_components = true;
+}
+
+template<typename GUIHandler>
 template<typename... CustomComponents>
 ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
 {
     ImGui::Begin("Scene Hierarchy");
+
+    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
+    {
+        selectEntity({});
+    }
 
     for(auto e: _scene->getAllEntitiesWith<NameComponent>())
     {
@@ -237,17 +249,13 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
         drawEntityNode(entity);
     }
 
-    if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
-    {
-        _selected_entity = {};
-    }
 
     if(ImGui::BeginPopupContextWindow(0, 1))
     {
         if(ImGui::MenuItem("Create Empty Entity"))
         {
-            Entity entity    = _scene->createEntity("Empty Entity");
-            _selected_entity = entity;
+            Entity entity = _scene->createEntity("Empty Entity");
+            selectEntity(entity);
         }
         ImGui::EndPopup();
     }
@@ -255,10 +263,17 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
     ImGui::End();
 
     ImGui::Begin("Properties");
+    ImGuiTabItemFlags flags = 0;
+    if(_focues_components)
+    {
+        ImGui::SetWindowFocus();
+        flags |= ImGuiTabItemFlags_SetSelected;
+        _focues_components = false;
+    }
 
     if(ImGui::BeginTabBar("TabBarComponents"))
     {
-        if(ImGui::BeginTabItem("Components"))
+        if(ImGui::BeginTabItem("Components", (bool*)0, flags))
         {
             if(_selected_entity)
             {

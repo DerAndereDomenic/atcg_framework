@@ -147,7 +147,8 @@ Window::Window(const WindowProps& props)
                         });
 
     toggleVSync(props.vsync);
-    glfwShowWindow((GLFWwindow*)_window);
+
+    if(!props.hidden) show();
 }
 
 Window::~Window()
