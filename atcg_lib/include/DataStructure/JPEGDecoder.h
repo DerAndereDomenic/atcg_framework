@@ -13,7 +13,6 @@ namespace atcg
  * @brief A wrapper around nvjpeg for fast jpeg decompression.
  * When built with CUDA (ATCG_CUDA_BACKEND=true), this class will use nvjpeg and return device tensors. Otherwise, a CPU
  * loader will be used and will return host tensors.
- * TODO
  */
 class JPEGDecoder
 {

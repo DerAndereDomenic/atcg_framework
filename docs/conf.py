@@ -13,13 +13,25 @@ author = 'Domenic Zingsheim'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ["breathe"]
+extensions = [
+    "breathe",
+    "myst_parser"
+]
+
+source_suffix = ['.rst', '.md']
 
 # breathe_projects = {
 #     "ATCG Lib": "../bin/doxygen/xml/",
 # }
 
 breathe_default_project = "ATCGLIB"
+breathe_domain_by_extension = {
+    "h": "cpp",
+    "cpp": "cpp"
+}
+cpp_index_common_prefix = [
+    'atcg::',
+]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
