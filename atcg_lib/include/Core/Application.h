@@ -106,8 +106,9 @@ public:
      */
     ATCG_INLINE ImGuiLayer* getImGuiLayer() const { return _imgui_layer; }
 
+protected:
+    virtual void run();
 private:
-    void run();
     bool onWindowClose(WindowCloseEvent* e);
     bool onWindowResize(WindowResizeEvent* e);
     bool onViewportResize(ViewportResizeEvent* e);
