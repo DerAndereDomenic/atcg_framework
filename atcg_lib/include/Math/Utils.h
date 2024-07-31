@@ -32,6 +32,31 @@ void normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& tran
  */
 void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform);
 
+/**
+ * @brief Convert datatype from network to host byte order.
+ * @note Currently only implemented for int_t types
+ *
+ * @tparam T The data type
+ * @param network The network representation
+ * @return The host representation
+ */
+template<typename T>
+T ntoh(T network);
+
+/**
+ * @brief Convert datatype from network to host byte order
+ * @note Currently only implemented for int_t types
+ *
+ * @tparam T The data type
+ * @param host The host representation
+ * @return The network representation
+ */
+template<typename T>
+T hton(T host)
+{
+    return ntoh(host);
+}
+
 namespace IO
 {
 /**

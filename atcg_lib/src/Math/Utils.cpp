@@ -78,6 +78,76 @@ void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent&
     transform.setModel(glm::mat4(1));
 }
 
+template<>
+int16_t ntoh<int16_t>(int16_t network)
+{
+    if(isLittleEndian())
+    {
+        unsigned char* data = (unsigned char*)&network;
+        return (data[1] << 0) | ((unsigned)data[0] << 8);
+    }
+    return network;
+}
+
+template<>
+uint16_t ntoh<uint16_t>(uint16_t network)
+{
+    if(isLittleEndian())
+    {
+        unsigned char* data = (unsigned char*)&network;
+        return (data[1] << 0) | ((unsigned)data[0] << 8);
+    }
+    return network;
+}
+
+template<>
+int32_t ntoh<int32_t>(int32_t network)
+{
+    if(isLittleEndian())
+    {
+        unsigned char* data = (unsigned char*)&network;
+        return (data[3] << 0) | (data[2] << 8) | (data[1] << 16) | ((unsigned)data[0] << 24);
+    }
+    return network;
+}
+
+template<>
+uint32_t ntoh<uint32_t>(uint32_t network)
+{
+    if(isLittleEndian())
+    {
+        unsigned char* data = (unsigned char*)&network;
+        return (data[3] << 0) | (data[2] << 8) | (data[1] << 16) | ((unsigned)data[0] << 24);
+    }
+    return network;
+}
+
+template<>
+int64_t ntoh<int64_t>(int64_t network)
+{
+    if(isLittleEndian())
+    {
+        unsigned char* data = (unsigned char*)&network;
+        return ((int64_t)data[7] << 0) | ((int64_t)data[6] << 8) | ((int64_t)data[5] << 16) | ((int64_t)data[4] << 24) |
+               ((int64_t)data[3] << 32) | ((int64_t)data[2] << 40) | ((int64_t)data[1] << 48) |
+               ((int64_t)(unsigned)data[0] << 56);
+    }
+    return network;
+}
+
+template<>
+uint64_t ntoh<uint64_t>(uint64_t network)
+{
+    if(isLittleEndian())
+    {
+        unsigned char* data = (unsigned char*)&network;
+        return ((uint64_t)data[7] << 0) | ((uint64_t)data[6] << 8) | ((uint64_t)data[5] << 16) |
+               ((uint64_t)data[4] << 24) | ((uint64_t)data[3] << 32) | ((uint64_t)data[2] << 40) |
+               ((uint64_t)data[1] << 48) | ((uint64_t)(unsigned)data[0] << 56);
+    }
+    return network;
+}
+
 namespace IO
 {
 void dumpBinary(const std::string& path, const torch::Tensor& data)
