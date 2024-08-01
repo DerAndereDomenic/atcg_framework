@@ -1,7 +1,5 @@
 #include <Network/TCPServer.h>
 
-#include <sfml/Network.hpp>
-
 #include <unordered_map>
 #include <thread>
 #include <mutex>

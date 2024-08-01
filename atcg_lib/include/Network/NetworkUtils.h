@@ -83,7 +83,7 @@ ATCG_INLINE void writeByte(uint8_t* data, uint32_t& offset, const uint8_t toWrit
  * @param toWrite The data to write
  */
 template<typename T>
-ATCG_INLINE ATCG_INLINE void writeInt(uint8_t* data, uint32_t& offset, T toWrite)
+ATCG_INLINE void writeInt(uint8_t* data, uint32_t& offset, T toWrite)
 {
     *(T*)(data + offset) = atcg::hton(toWrite);
     offset += sizeof(T);

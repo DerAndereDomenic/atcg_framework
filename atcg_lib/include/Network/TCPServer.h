@@ -1,6 +1,6 @@
 #pragma once
 
-#include <sfml/Network.hpp>
+#include <SFML/Network.hpp>
 
 #include <memory>
 #include <functional>
