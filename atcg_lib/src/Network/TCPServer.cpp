@@ -9,6 +9,8 @@
 #include <DataStructure/TorchUtils.h>
 #include <Network/NetworkUtils.h>
 
+#include <DataStructure/Timer.h>
+
 
 namespace atcg
 {
@@ -62,12 +64,13 @@ public:
         DataPacket() = default;
 
         DataPacket(uint8_t* data, const uint32_t size, const uint64_t client_id)
-            : data(atcg::createHostTensorFromPointer<uint8_t>(data, {size}).clone()),
+            : data(std::vector<uint8_t>(size)),
               client_id(client_id)
         {
+            std::memcpy(this->data.data(), data, size);
         }
 
-        torch::Tensor data;
+        std::vector<uint8_t> data;
         uint64_t client_id;
     };
 
@@ -192,7 +195,7 @@ void TCPServer::Impl::networkLoop()
         {
             auto& client = sockets[data->client_id];
             sf::Packet packet;
-            packet.append(data->data.data_ptr(), data->data.numel());
+            packet.append(data->data.data(), data->data.size());
 
             if(client->send(packet) != sf::Socket::Status::Done)
             {
