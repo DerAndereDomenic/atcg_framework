@@ -1,6 +1,165 @@
 #include <gtest/gtest.h>
 #include <Math/Utils.h>
 #include <Core/Platform.h>
+#include <Network/NetworkUtils.h>
+
+TEST(NetworkTest, readWriteByte)
+{
+    uint32_t write_offset = 0;
+    uint32_t read_offset  = 0;
+
+    uint8_t* buffer = new uint8_t[1024];
+
+    uint8_t message = 42;
+
+    atcg::NetworkUtils::writeByte(buffer, write_offset, message);
+    uint8_t received = atcg::NetworkUtils::readByte(buffer, read_offset);
+
+    EXPECT_EQ(message, received);
+    EXPECT_EQ(write_offset, sizeof(uint8_t));
+    EXPECT_EQ(read_offset, sizeof(uint8_t));
+
+    delete[] buffer;
+}
+
+TEST(NetworkTest, readWriteByteStream)
+{
+    uint32_t write_offset = 0;
+    uint32_t read_offset  = 0;
+
+    uint8_t* buffer = new uint8_t[1024];
+
+    for(int i = 0; i < 1024; ++i)
+    {
+        uint8_t message = i % 256;
+        atcg::NetworkUtils::writeByte(buffer, write_offset, message);
+    }
+
+    for(int i = 0; i < 1024; ++i)
+    {
+        uint8_t message  = i % 256;
+        uint8_t received = atcg::NetworkUtils::readByte(buffer, read_offset);
+        EXPECT_EQ(message, received);
+    }
+
+
+    delete[] buffer;
+}
+
+TEST(NetworkTest, readWriteInt)
+{
+    uint32_t write_offset = 0;
+    uint32_t read_offset  = 0;
+
+    uint8_t* buffer = new uint8_t[1024];
+
+    uint32_t message = 42;
+
+    atcg::NetworkUtils::writeInt(buffer, write_offset, message);
+    uint32_t received = atcg::NetworkUtils::readInt<uint32_t>(buffer, read_offset);
+
+    EXPECT_EQ(message, received);
+    EXPECT_EQ(write_offset, sizeof(uint32_t));
+    EXPECT_EQ(read_offset, sizeof(uint32_t));
+
+    delete[] buffer;
+}
+
+TEST(NetworkTest, readWriteIntStream)
+{
+    uint32_t write_offset = 0;
+    uint32_t read_offset  = 0;
+
+    uint8_t* buffer = new uint8_t[1024];
+
+    for(int32_t i = -1024 / 2; i < 1024 / 2; ++i)
+    {
+        atcg::NetworkUtils::writeInt(buffer, write_offset, i);
+    }
+
+    for(int32_t i = -1024 / 2; i < 1024 / 2; ++i)
+    {
+        int32_t received = atcg::NetworkUtils::readInt<int32_t>(buffer, read_offset);
+        EXPECT_EQ(i, received);
+    }
+
+
+    delete[] buffer;
+}
+
+TEST(NetworkTest, readWriteString)
+{
+    uint32_t write_offset = 0;
+    uint32_t read_offset  = 0;
+
+    uint8_t* buffer = new uint8_t[1024];
+
+    std::string message = "Hello World";
+
+    atcg::NetworkUtils::writeString(buffer, write_offset, message);
+    std::string received = atcg::NetworkUtils::readString(buffer, read_offset);
+
+    EXPECT_EQ(message, received);
+    EXPECT_EQ(write_offset, sizeof(char) * message.length() + sizeof(uint32_t));
+    EXPECT_EQ(read_offset, sizeof(char) * message.length() + sizeof(uint32_t));
+
+    delete[] buffer;
+}
+
+TEST(NetworkTest, readWriteStringStream)
+{
+    uint32_t write_offset = 0;
+    uint32_t read_offset  = 0;
+
+    uint8_t* buffer = new uint8_t[1024];
+
+    std::string message1 = "Hallo Welt";
+    std::string message2 = "Kannst du mich hören";
+    std::string message3 = "Du darfst mich nicht beim chatten stören";
+
+    atcg::NetworkUtils::writeString(buffer, write_offset, message1);
+    atcg::NetworkUtils::writeString(buffer, write_offset, message2);
+    atcg::NetworkUtils::writeString(buffer, write_offset, message3);
+    std::string received1 = atcg::NetworkUtils::readString(buffer, read_offset);
+    std::string received2 = atcg::NetworkUtils::readString(buffer, read_offset);
+    std::string received3 = atcg::NetworkUtils::readString(buffer, read_offset);
+
+    EXPECT_EQ(message1, received1);
+    EXPECT_EQ(message2, received2);
+    EXPECT_EQ(message3, received3);
+    EXPECT_EQ(write_offset,
+              sizeof(char) * (message1.length() + message2.length() + message3.length()) + 3 * sizeof(uint32_t));
+    EXPECT_EQ(read_offset,
+              sizeof(char) * (message1.length() + message2.length() + message3.length()) + 3 * sizeof(uint32_t));
+
+    delete[] buffer;
+}
+
+TEST(NetworkTest, readWriteBuffer)
+{
+    uint32_t write_offset = 0;
+    uint32_t read_offset  = 0;
+
+    uint8_t* buffer  = new uint8_t[1024];
+    float* send_data = new float[1024 / sizeof(float) - 1];
+
+    for(int i = 0; i < 1024 / sizeof(float); ++i)
+    {
+        send_data[i] = float(i);
+    }
+
+    atcg::NetworkUtils::writeBuffer(buffer, write_offset, (uint8_t*)send_data, 1020);
+
+    uint32_t buffer_size = atcg::NetworkUtils::readInt<uint32_t>(buffer, read_offset);
+    EXPECT_EQ(buffer_size, 1020);
+    for(int i = read_offset; i < 1024; ++i)
+    {
+        EXPECT_EQ(((uint8_t*)send_data)[i], buffer[i]);
+    }
+
+    delete[] buffer;
+    delete[] send_data;
+}
 
 // 16 bit
 TEST(NetworkTest, int16toNetwork)
@@ -18,7 +177,7 @@ TEST(NetworkTest, int16toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, highint16toNetwork)
+TEST(NetworkTest, highint16toNetwork)
 {
     int16_t local = 0xff00;
 
@@ -33,7 +192,7 @@ TEST(EndianTest, highint16toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, uint16toNetwork)
+TEST(NetworkTest, uint16toNetwork)
 {
     uint16_t local = 0x0102;
 
@@ -48,7 +207,7 @@ TEST(EndianTest, uint16toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, highuint16toNetwork)
+TEST(NetworkTest, highuint16toNetwork)
 {
     uint16_t local = 0xff00;
 
@@ -63,7 +222,7 @@ TEST(EndianTest, highuint16toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, int16toNetworkRound)
+TEST(NetworkTest, int16toNetworkRound)
 {
     int16_t local = 0x0102;
 
@@ -72,7 +231,7 @@ TEST(EndianTest, int16toNetworkRound)
     EXPECT_EQ(local, atcg::ntoh(network));
 }
 
-TEST(EndianTest, highint16toNetworkRound)
+TEST(NetworkTest, highint16toNetworkRound)
 {
     int16_t local = 0x00ff;
 
@@ -81,7 +240,7 @@ TEST(EndianTest, highint16toNetworkRound)
     EXPECT_EQ(local, atcg::ntoh(network));
 }
 
-TEST(EndianTest, uint16toNetworkRound)
+TEST(NetworkTest, uint16toNetworkRound)
 {
     uint16_t local = 0x0102;
 
@@ -90,7 +249,7 @@ TEST(EndianTest, uint16toNetworkRound)
     EXPECT_EQ(local, atcg::ntoh(network));
 }
 
-TEST(EndianTest, highuint16toNetworkRound)
+TEST(NetworkTest, highuint16toNetworkRound)
 {
     uint16_t local = 0x00ff;
 
@@ -100,7 +259,7 @@ TEST(EndianTest, highuint16toNetworkRound)
 }
 
 // 32 bit
-TEST(EndianTest, int32toNetwork)
+TEST(NetworkTest, int32toNetwork)
 {
     int32_t local = 0x01020304;
 
@@ -115,7 +274,7 @@ TEST(EndianTest, int32toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, highint32toNetwork)
+TEST(NetworkTest, highint32toNetwork)
 {
     int32_t local = 0xff00ff00;
 
@@ -130,7 +289,7 @@ TEST(EndianTest, highint32toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, uint32toNetwork)
+TEST(NetworkTest, uint32toNetwork)
 {
     uint32_t local = 0x01020304;
 
@@ -145,7 +304,7 @@ TEST(EndianTest, uint32toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, highuint32toNetwork)
+TEST(NetworkTest, highuint32toNetwork)
 {
     uint32_t local = 0xff00ff00;
 
@@ -160,7 +319,7 @@ TEST(EndianTest, highuint32toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, int32toNetworkRound)
+TEST(NetworkTest, int32toNetworkRound)
 {
     int32_t local = 0x01020304;
 
@@ -169,7 +328,7 @@ TEST(EndianTest, int32toNetworkRound)
     EXPECT_EQ(local, atcg::ntoh(network));
 }
 
-TEST(EndianTest, highint32toNetworkRound)
+TEST(NetworkTest, highint32toNetworkRound)
 {
     int32_t local = 0x00ff00ff;
 
@@ -178,7 +337,7 @@ TEST(EndianTest, highint32toNetworkRound)
     EXPECT_EQ(local, atcg::ntoh(network));
 }
 
-TEST(EndianTest, uint32toNetworkRound)
+TEST(NetworkTest, uint32toNetworkRound)
 {
     uint32_t local = 0x01020304;
 
@@ -187,7 +346,7 @@ TEST(EndianTest, uint32toNetworkRound)
     EXPECT_EQ(local, atcg::ntoh(network));
 }
 
-TEST(EndianTest, highuint32toNetworkRound)
+TEST(NetworkTest, highuint32toNetworkRound)
 {
     uint32_t local = 0x00ff00ff;
 
@@ -197,7 +356,7 @@ TEST(EndianTest, highuint32toNetworkRound)
 }
 
 // 64 bit
-TEST(EndianTest, int64toNetwork)
+TEST(NetworkTest, int64toNetwork)
 {
     int64_t local = 0x0102030405060708;
 
@@ -212,7 +371,7 @@ TEST(EndianTest, int64toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, highint64toNetwork)
+TEST(NetworkTest, highint64toNetwork)
 {
     int64_t local = 0xff00ff00ff00ff00;
 
@@ -227,7 +386,7 @@ TEST(EndianTest, highint64toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, uint64toNetwork)
+TEST(NetworkTest, uint64toNetwork)
 {
     uint64_t local = 0x0102030405060708;
 
@@ -242,7 +401,7 @@ TEST(EndianTest, uint64toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, highuint64toNetwork)
+TEST(NetworkTest, highuint64toNetwork)
 {
     uint64_t local = 0xff00ff00ff00ff00;
 
@@ -257,7 +416,7 @@ TEST(EndianTest, highuint64toNetwork)
     EXPECT_EQ(network, expected);
 }
 
-TEST(EndianTest, int64toNetworkRound)
+TEST(NetworkTest, int64toNetworkRound)
 {
     int64_t local = 0x0102030405060708;
 
@@ -266,7 +425,7 @@ TEST(EndianTest, int64toNetworkRound)
     EXPECT_EQ(local, atcg::ntoh(network));
 }
 
-TEST(EndianTest, highint64toNetworkRound)
+TEST(NetworkTest, highint64toNetworkRound)
 {
     int64_t local = 0x00ff00ff00ff00ff;
 
@@ -275,7 +434,7 @@ TEST(EndianTest, highint64toNetworkRound)
     EXPECT_EQ(local, atcg::ntoh(network));
 }
 
-TEST(EndianTest, uint64toNetworkRound)
+TEST(NetworkTest, uint64toNetworkRound)
 {
     uint64_t local = 0x0102030405060708;
 
@@ -284,7 +443,7 @@ TEST(EndianTest, uint64toNetworkRound)
     EXPECT_EQ(local, atcg::ntoh(network));
 }
 
-TEST(EndianTest, highuint64toNetworkRound)
+TEST(NetworkTest, highuint64toNetworkRound)
 {
     uint64_t local = 0x00ff00ff00ff00ff;
 
