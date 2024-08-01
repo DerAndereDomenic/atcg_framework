@@ -3,7 +3,7 @@
 #include <Core/Platform.h>
 
 // 16 bit
-TEST(EndianTest, int16toNetwork)
+TEST(NetworkTest, int16toNetwork)
 {
     int16_t local = 0x0102;
 
