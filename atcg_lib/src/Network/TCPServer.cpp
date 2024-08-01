@@ -9,6 +9,8 @@
 #include <Core/Memory.h>
 #include <Core/UUID.h>
 #include <DataStructure/TorchUtils.h>
+#include <Network/NetworkUtils.h>
+
 
 namespace atcg
 {
@@ -91,6 +93,7 @@ void TCPServer::Impl::networkLoop()
     selector.add(listener);
     ATCG_TRACE("Server listening on {0}", port);
 
+    // TODO: Make this loop better maintainable...
     while(running)
     {
         if(selector.wait(sf::milliseconds(1.0f)))
@@ -116,6 +119,7 @@ void TCPServer::Impl::networkLoop()
                     auto& client = it->second;
                     if(selector.isReady(*client))
                     {
+                        // TODO: Random 5.000.000 bytes
                         torch::Tensor rec_data = torch::empty({5000000}, atcg::TensorOptions::uint8HostOptions());
                         std::size_t received;
                         std::size_t total_received = 0;
@@ -144,7 +148,9 @@ void TCPServer::Impl::networkLoop()
 
                         if(disconnected) continue;
 
-                        uint32_t expected_size = *((uint32_t*)(rec_data.data_ptr()));
+                        uint32_t read_offset = 0;
+                        uint32_t expected_size =
+                            NetworkUtils::readInt<uint32_t>(rec_data.data_ptr<uint8_t>(), read_offset);
 
                         // Do not count header as part of the message
                         total_received = 0;
