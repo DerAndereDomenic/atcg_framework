@@ -57,6 +57,7 @@
 
 //-------- Network ------------
 #include <Network/TCPServer.h>
+#include <Network/NetworkUtils.h>
 
 //-------- ImGui -----------
 #include <ImGui/Guizmo.h>
