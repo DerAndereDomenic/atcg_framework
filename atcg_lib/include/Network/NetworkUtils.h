@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Platform.h>
 #include <Math/Utils.h>
 
 namespace atcg
@@ -14,7 +15,7 @@ namespace NetworkUtils
  * @param offset The read offset into the buffer. This value gets advanced by the number of read bytes
  * @return The requested data
  */
-uint8_t readByte(uint8_t* data, uint32_t& offset)
+ATCG_INLINE uint8_t readByte(uint8_t* data, uint32_t& offset)
 {
     uint8_t result = *(data + offset);
     offset += sizeof(uint8_t);
@@ -33,7 +34,7 @@ uint8_t readByte(uint8_t* data, uint32_t& offset)
  * @return The requested data
  */
 template<typename T>
-T readInt(uint8_t* data, uint32_t& offset)
+ATCG_INLINE T readInt(uint8_t* data, uint32_t& offset)
 {
     T result = atcg::ntoh(*(T*)(data + offset));
     offset += sizeof(T);
@@ -49,7 +50,7 @@ T readInt(uint8_t* data, uint32_t& offset)
  * @param offset The read offset into the buffer. This value gets advanced by the number of read bytes
  * @return The requested data
  */
-std::string readString(uint8_t* data, uint32_t& offset)
+ATCG_INLINE std::string readString(uint8_t* data, uint32_t& offset)
 {
     uint32_t stringlen = readInt<uint32_t>(data, offset);
     std::string result = std::string((char*)(data + offset), stringlen);
@@ -64,7 +65,7 @@ std::string readString(uint8_t* data, uint32_t& offset)
  * @param offset The write offset. This value gets advanced by the number of written bytes
  * @param toWrite The data to write
  */
-void writeByte(uint8_t* data, uint32_t& offset, const uint8_t toWrite)
+ATCG_INLINE void writeByte(uint8_t* data, uint32_t& offset, const uint8_t toWrite)
 {
     *(uint8_t*)(data + offset) = toWrite;
     offset += sizeof(uint8_t);
@@ -82,7 +83,7 @@ void writeByte(uint8_t* data, uint32_t& offset, const uint8_t toWrite)
  * @param toWrite The data to write
  */
 template<typename T>
-void writeInt(uint8_t* data, uint32_t& offset, T toWrite)
+ATCG_INLINE ATCG_INLINE void writeInt(uint8_t* data, uint32_t& offset, T toWrite)
 {
     *(T*)(data + offset) = atcg::hton(toWrite);
     offset += sizeof(T);
@@ -98,7 +99,7 @@ void writeInt(uint8_t* data, uint32_t& offset, T toWrite)
  * @param toWrite The data to write
  * @param size The size of the toWrite buffer
  */
-void writeBuffer(uint8_t* data, uint32_t& offset, uint8_t* toWrite, const uint32_t size)
+ATCG_INLINE void writeBuffer(uint8_t* data, uint32_t& offset, uint8_t* toWrite, const uint32_t size)
 {
     writeInt(data, offset, size);
     std::memcpy(data + offset, toWrite, size);
@@ -114,7 +115,7 @@ void writeBuffer(uint8_t* data, uint32_t& offset, uint8_t* toWrite, const uint32
  * @param offset The read offset into the buffer. This value gets advanced by the number of read bytes
  * @param toWrite The data to write
  */
-void writeString(uint8_t* data, uint32_t& offset, const std::string toWrite)
+ATCG_INLINE void writeString(uint8_t* data, uint32_t& offset, const std::string toWrite)
 {
     writeBuffer(data, offset, (uint8_t*)toWrite.c_str(), toWrite.length());
 }

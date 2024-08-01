@@ -18,7 +18,7 @@
 
 namespace atcg
 {
-constexpr bool isLittleEndian()
+ATCG_INLINE ATCG_CONSTEXPR bool isLittleEndian()
 {
     int num = 1;
     return (*(char*)&num) == char(1);
