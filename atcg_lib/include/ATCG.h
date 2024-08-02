@@ -47,6 +47,7 @@
 #include <DataStructure/BufferView.h>
 #include <DataStructure/Image.h>
 #include <DataStructure/JPEGDecoder.h>
+#include <DataStructure/JPEGEncoder.h>
 
 //-------- Math -----------
 #include <Math/Constants.h>
