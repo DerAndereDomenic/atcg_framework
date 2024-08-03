@@ -50,7 +50,15 @@ void PathtracingShader::initializePipeline()
 
         auto& material = entity.getComponent<MeshRenderComponent>().material;
 
-        auto bsdf = atcg::make_ref<PBRBSDF>(material);
+        atcg::ref_ptr<CPUBSDF> bsdf = nullptr;
+        if(material.glass)
+        {
+            bsdf = atcg::make_ref<RefractiveBSDF>(material);
+        }
+        else
+        {
+            bsdf = atcg::make_ref<PBRBSDF>(material);
+        }
         _bsdfs.push_back(bsdf);
     }
 

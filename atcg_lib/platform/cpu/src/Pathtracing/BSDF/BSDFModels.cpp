@@ -120,4 +120,73 @@ BSDFEvalResult PBRBSDF::evalBSDF(const SurfaceInteraction& si, const glm::vec3& 
 
     return result;
 }
+
+RefractiveBSDF::RefractiveBSDF(const Material& material)
+{
+    _diffuse_image = material.getDiffuseTexture()->getData(atcg::CPU);
+    _ior           = material.ior;
+}
+
+RefractiveBSDF::~RefractiveBSDF() {}
+
+BSDFSamplingResult RefractiveBSDF::sampleBSDF(const SurfaceInteraction& si, PCG32& rng) const
+{
+    glm::vec3 diffuse_color = detail::read_image(_diffuse_image, si.uv);
+
+    // Determine surface parameters
+    bool outsidein             = glm::dot(si.incoming_direction, si.normal) < 0;
+    glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
+    float eta                  = outsidein ? 1.0f / _ior : _ior;
+
+    // Compute outgoing ray directions
+    glm::vec3 transmitted_ray_dir = glm::refract(si.incoming_direction, interface_normal, eta);
+    glm::vec3 reflected_ray_dir   = glm::reflect(si.incoming_direction, interface_normal);
+
+    // Fresnel reflectance at normal incidence
+    float F0 = (eta - 1) / (eta + 1);
+    F0       = F0 * F0;
+
+    float NdotL = glm::abs(glm::dot(si.incoming_direction, interface_normal));
+
+    // Reflection an transmission probabilities
+    float reflection_probability   = atcg::fresnel_schlick(F0, NdotL);
+    float transmission_probability = 1.0f - reflection_probability;
+    if(glm::dot(transmitted_ray_dir, transmitted_ray_dir) < 1e-6f)
+    {
+        // Total internal reflection!
+        transmission_probability = 0.0f;
+        reflection_probability   = 1.0f;
+    }
+
+
+    // Compute sampling result
+    atcg::BSDFSamplingResult result;
+    result.sample_probability = 0;
+
+    // Stochastically select a reflection or transmission via russian roulette
+    if(rng.next1d() < reflection_probability)
+    {
+        // Select the reflection event
+        // We sample the BDSF exactly.
+        result.bsdf_weight        = diffuse_color;
+        result.out_dir            = reflected_ray_dir;
+        result.sample_probability = reflection_probability;
+    }
+    else
+    {
+        // Select the transmission event
+        // We sample the BDSF exactly.
+        result.bsdf_weight        = diffuse_color;
+        result.out_dir            = transmitted_ray_dir;
+        result.sample_probability = transmission_probability;
+    }
+
+    return result;
+}
+
+BSDFEvalResult RefractiveBSDF::evalBSDF(const SurfaceInteraction& si, const glm::vec3& outgoing_dir)
+{    // TODO: Return empty result for now because most of the time a randomly sampled direction will not hit the delta
+    // function of a perfect reflection/transmission
+    return atcg::BSDFEvalResult();
+}
 }    // namespace atcg
