@@ -6,6 +6,8 @@
 #include <Scene/Entity.h>
 #include <Pathtracing/Tracing.h>
 
+#include <Math/Utils.h>
+
 #include <thread>
 #include <mutex>
 #include <execution>
@@ -27,11 +29,6 @@ void PathtracingShader::initializePipeline()
     _diffuse_images.clear();
     _roughness_images.clear();
     _metallic_images.clear();
-    _positions.clear();
-    _normals.clear();
-    _uvs.clear();
-    _faces.clear();
-    _mesh_idx.clear();
 
     auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
 
@@ -60,54 +57,56 @@ void PathtracingShader::initializePipeline()
         _metallic_images.push_back(atcg::make_ref<Image>(material.getMetallicTexture()));
     }
 
-    _positions.resize(total_vertices);
-    _normals.resize(total_vertices);
-    _uvs.resize(total_vertices);
-    _faces.resize(total_faces);
-    _mesh_idx.resize(total_faces);
+    _positions = torch::empty({total_vertices, 3}, atcg::TensorOptions::floatHostOptions());
+    _normals   = torch::empty({total_vertices, 3}, atcg::TensorOptions::floatHostOptions());
+    _uvs       = torch::empty({total_vertices, 3}, atcg::TensorOptions::floatHostOptions());
+    _faces     = torch::empty({total_faces, 3}, atcg::TensorOptions::int32HostOptions());
+    _mesh_idx  = torch::empty({total_faces}, atcg::TensorOptions::int32HostOptions());
 
     uint32_t vertex_idx = 0;
     uint32_t face_idx   = 0;
 
     for(int i = 0; i < geometry.size(); ++i)
     {
-        auto& graph      = geometry[i];
-        Vertex* vertices = graph->getVerticesBuffer()->getHostPointer<Vertex>();
+        auto& graph = geometry[i];
 
         TransformComponent& transform = transforms[i];
-        glm::mat4 model               = transform.getModel();
-        glm::mat4 normal_matrix       = glm::transpose(glm::inverse(model));
+        auto positions                = graph->getHostPositions().clone();
+        auto normals                  = graph->getHostNormals().clone();
+        auto uvs                      = graph->getHostUVs().clone();
+        auto tangents                 = graph->getHostTangents().clone();
+        auto faces                    = graph->getHostFaces().clone();
+        applyTransform(positions, normals, tangents, transform);
 
-        glm::u32vec3* faces = graph->getFaceIndexBuffer()->getHostPointer<glm::u32vec3>();
-
-        for(int j = 0; j < graph->n_faces(); ++j)
-        {
-            _faces[face_idx]    = faces[j] + vertex_idx;
-            _mesh_idx[face_idx] = i;
-            ++face_idx;
-        }
-
-        for(int j = 0; j < graph->n_vertices(); ++j)
-        {
-            _positions[vertex_idx] = model * glm::vec4(vertices[j].position, 1.0f);
-            _normals[vertex_idx]   = glm::normalize(glm::vec3(normal_matrix * glm::vec4(vertices[j].normal, 0.0f)));
-            _uvs[vertex_idx]       = vertices[j].uv;
-            ++vertex_idx;
-        }
-
-        graph->getVerticesBuffer()->unmapHostPointers();
-        graph->getFaceIndexBuffer()->unmapHostPointers();
+        _positions.index_put_(
+            {torch::indexing::Slice(vertex_idx, vertex_idx + graph->n_vertices()), torch::indexing::Slice()},
+            positions);
+        _normals.index_put_(
+            {torch::indexing::Slice(vertex_idx, vertex_idx + graph->n_vertices()), torch::indexing::Slice()},
+            normals);
+        _uvs.index_put_(
+            {torch::indexing::Slice(vertex_idx, vertex_idx + graph->n_vertices()), torch::indexing::Slice()},
+            uvs);
+        _faces.index_put_({torch::indexing::Slice(face_idx, face_idx + graph->n_faces()), torch::indexing::Slice()},
+                          faces + (int32_t)vertex_idx);
+        _mesh_idx.index_put_({torch::indexing::Slice(face_idx, face_idx + graph->n_faces())}, i);
+        vertex_idx += graph->n_vertices();
+        face_idx += graph->n_faces();
     }
+
+    _positions.contiguous();
+    _normals.contiguous();
+    _uvs.contiguous();
+    _faces.contiguous();
+    _mesh_idx.contiguous();
 
     _accel = atcg::make_ref<BVHAccelerationStructure>();
 
     nanort::BVHAccel<float> accel;
-    nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(_positions.data()),
-                                              reinterpret_cast<const uint32_t*>(_faces.data()),
-                                              sizeof(float) * 3);
-    nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const float*>(_positions.data()),
-                                                 reinterpret_cast<const uint32_t*>(_faces.data()),
-                                                 sizeof(float) * 3);
+    float* p_positions = _positions.data_ptr<float>();
+    int32_t* p_faces   = _faces.data_ptr<int32_t>();
+    nanort::TriangleMesh<float> triangle_mesh(p_positions, (uint32_t*)p_faces, sizeof(glm::vec3));
+    nanort::TriangleSAHPred<float> triangle_pred(p_positions, (uint32_t*)p_faces, sizeof(glm::vec3));
     bool ret = accel.Build(total_faces, triangle_mesh, triangle_pred);
     assert(ret);
 
@@ -198,17 +197,8 @@ void PathtracingShader::generateRays(torch::Tensor& output)
             torch::zeros({output.size(0), output.size(1), 3}, atcg::TensorOptions::floatDeviceOptions());
         setTensor("HDR", accumulation_buffer);
 
-        _horizontalScanLine.resize(output.size(1));
-        _verticalScanLine.resize(output.size(0));
-        for(int i = 0; i < output.size(1); ++i)
-        {
-            _horizontalScanLine[i] = i;
-        }
-
-        for(int i = 0; i < output.size(0); ++i)
-        {
-            _verticalScanLine[i] = i;
-        }
+        _horizontalScanLine = torch::arange(output.size(1), atcg::TensorOptions::int32HostOptions());
+        _verticalScanLine   = torch::arange(output.size(0), atcg::TensorOptions::int32HostOptions());
     }
 
     glm::mat4 camera_view = _inv_camera_view;
@@ -224,15 +214,15 @@ void PathtracingShader::generateRays(torch::Tensor& output)
 
     std::for_each(
         std::execution::par,
-        _verticalScanLine.begin(),
-        _verticalScanLine.end(),
-        [&](uint32_t y)
+        _verticalScanLine.data_ptr<int32_t>(),
+        _verticalScanLine.data_ptr<int32_t>() + _verticalScanLine.numel(),
+        [&](int32_t y)
         {
             std::for_each(
                 std::execution::par,
-                _horizontalScanLine.begin(),
-                _horizontalScanLine.end(),
-                [&](uint32_t x)
+                _horizontalScanLine.data_ptr<int32_t>(),
+                _horizontalScanLine.data_ptr<int32_t>() + _horizontalScanLine.numel(),
+                [&](int32_t x)
                 {
                     uint64_t seed = sampleTEA64(x + width * y, _frame_counter);
                     atcg::PCG32 rng(seed);
@@ -255,21 +245,19 @@ void PathtracingShader::generateRays(torch::Tensor& output)
 
                     for(int n = 0; n < max_trace_depth; ++n)
                     {
-#define CREATE_TENSOR(vector, type) atcg::createHostTensorFromPointer((type*)vector.data(), {(int)vector.size(), 3})
                         SurfaceInteraction si = Tracing::traceRay(_accel,
-                                                                  CREATE_TENSOR(_positions, float),
-                                                                  CREATE_TENSOR(_normals, float),
-                                                                  CREATE_TENSOR(_uvs, float),
-                                                                  CREATE_TENSOR(_faces, int32_t),
+                                                                  _positions,
+                                                                  _normals,
+                                                                  _uvs,
+                                                                  _faces,
                                                                   ray_origin,
                                                                   ray_dir,
                                                                   1e-3f,
                                                                   1e6f);
-#undef CREATE_TENSOR
                         if(si.valid)
                         {
                             // PBR Sampling
-                            uint32_t mesh_index     = _mesh_idx[si.primitive_idx];
+                            int32_t mesh_index      = _mesh_idx.index({(int)si.primitive_idx}).item<int32_t>();
                             glm::vec3 diffuse_color = read_image(_diffuse_images[mesh_index], si.uv);
                             float metallic          = read_image(_metallic_images[mesh_index], si.uv).x;
                             float roughness         = read_image(_roughness_images[mesh_index], si.uv).x;

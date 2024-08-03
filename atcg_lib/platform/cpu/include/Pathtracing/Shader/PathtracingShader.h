@@ -35,17 +35,17 @@ private:
     std::vector<atcg::ref_ptr<Image>> _roughness_images;
     std::vector<atcg::ref_ptr<Image>> _metallic_images;
 
-    std::vector<glm::vec3> _positions;
-    std::vector<glm::vec3> _normals;
-    std::vector<glm::vec3> _uvs;
-    std::vector<glm::u32vec3> _faces;
-    std::vector<uint32_t> _mesh_idx;
+    torch::Tensor _positions;
+    torch::Tensor _normals;
+    torch::Tensor _uvs;
+    torch::Tensor _faces;
+    torch::Tensor _mesh_idx;
 
     atcg::ref_ptr<BVHAccelerationStructure> _accel;
     bool _hasSkybox = false;
     atcg::ref_ptr<Image> _skybox_image;
 
-    std::vector<uint32_t> _horizontalScanLine;
-    std::vector<uint32_t> _verticalScanLine;
+    torch::Tensor _horizontalScanLine;
+    torch::Tensor _verticalScanLine;
 };
 }    // namespace atcg
