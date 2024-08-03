@@ -3,6 +3,7 @@
 #include <Pathtracing/Shader/CPURaytracingShader.h>
 #include <DataStructure/Image.h>
 #include <Pathtracing/AccelerationStructure.h>
+#include <Pathtracing/BSDF/BSDFModels.h>
 
 #include <nanort.h>
 
@@ -31,9 +32,7 @@ private:
 
     uint32_t _frame_counter = 0;
 
-    std::vector<atcg::ref_ptr<Image>> _diffuse_images;
-    std::vector<atcg::ref_ptr<Image>> _roughness_images;
-    std::vector<atcg::ref_ptr<Image>> _metallic_images;
+    std::vector<atcg::ref_ptr<CPUBSDF>> _bsdfs;
 
     torch::Tensor _positions;
     torch::Tensor _normals;

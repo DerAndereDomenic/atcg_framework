@@ -26,9 +26,7 @@ PathtracingShader::~PathtracingShader()
 
 void PathtracingShader::initializePipeline()
 {
-    _diffuse_images.clear();
-    _roughness_images.clear();
-    _metallic_images.clear();
+    _bsdfs.clear();
 
     auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
 
@@ -52,9 +50,8 @@ void PathtracingShader::initializePipeline()
 
         auto& material = entity.getComponent<MeshRenderComponent>().material;
 
-        _diffuse_images.push_back(atcg::make_ref<Image>(material.getDiffuseTexture()));
-        _roughness_images.push_back(atcg::make_ref<Image>(material.getRoughnessTexture()));
-        _metallic_images.push_back(atcg::make_ref<Image>(material.getMetallicTexture()));
+        auto bsdf = atcg::make_ref<PBRBSDF>(material);
+        _bsdfs.push_back(bsdf);
     }
 
     _positions = torch::empty({total_vertices, 3}, atcg::TensorOptions::floatHostOptions());
@@ -257,15 +254,9 @@ void PathtracingShader::generateRays(torch::Tensor& output)
                         if(si.valid)
                         {
                             // PBR Sampling
-                            int32_t mesh_index      = _mesh_idx.index({(int)si.primitive_idx}).item<int32_t>();
-                            glm::vec3 diffuse_color = read_image(_diffuse_images[mesh_index], si.uv);
-                            float metallic          = read_image(_metallic_images[mesh_index], si.uv).x;
-                            float roughness         = read_image(_roughness_images[mesh_index], si.uv).x;
+                            int32_t mesh_index = _mesh_idx.index({(int)si.primitive_idx}).item<int32_t>();
 
-                            glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04) + metallic * diffuse_color;
-
-                            BSDFSamplingResult result =
-                                sampleGGX(si, diffuse_color, metallic_color, metallic, roughness, rng);
+                            BSDFSamplingResult result = _bsdfs[mesh_index]->sampleBSDF(si, rng);
                             if(result.sample_probability > 0.0f)
                             {
                                 next_origin = si.position;
