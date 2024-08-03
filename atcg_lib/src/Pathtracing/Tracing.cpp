@@ -98,9 +98,9 @@ SurfaceInteraction Tracing::traceRay(const atcg::ref_ptr<BVHAccelerationStructur
     si.barys         = glm::vec2(isect.u, isect.v);
     si.primitive_idx = isect.prim_id;
 
-    glm::u32vec3 face = glm::u32vec3(faces.index({(int)isect.prim_id, 0}).item<uint32_t>(),
-                                     faces.index({(int)isect.prim_id, 1}).item<uint32_t>(),
-                                     faces.index({(int)isect.prim_id, 2}).item<uint32_t>());
+    glm::u32vec3 face = glm::u32vec3(faces.index({(int)isect.prim_id, 0}).item<int32_t>(),
+                                     faces.index({(int)isect.prim_id, 1}).item<int32_t>(),
+                                     faces.index({(int)isect.prim_id, 2}).item<int32_t>());
 
     glm::vec3 n1 = glm::vec3(normals.index({(int)face.x, 0}).item<float>(),
                              normals.index({(int)face.x, 1}).item<float>(),

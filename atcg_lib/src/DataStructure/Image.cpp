@@ -2,6 +2,8 @@
 
 #include <stb_image.h>
 #include <stb_image_write.h>
+
+#include <Renderer/Texture.h>
 #include <DataStructure/TorchUtils.h>
 
 namespace atcg
@@ -20,6 +22,11 @@ Image::Image(float* data, uint32_t width, uint32_t height, uint32_t channels)
 Image::Image(const torch::Tensor& tensor)
 {
     setData(tensor);
+}
+
+Image::Image(const atcg::ref_ptr<Texture2D>& texture)
+{
+    setData(texture->getData(atcg::CPU));
 }
 
 Image::~Image()

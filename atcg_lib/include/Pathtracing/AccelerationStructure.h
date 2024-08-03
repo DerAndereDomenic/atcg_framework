@@ -28,11 +28,15 @@ protected:
 class BVHAccelerationStructure : public AccelerationStructure
 {
 public:
+    BVHAccelerationStructure() = default;
+
     BVHAccelerationStructure(const atcg::ref_ptr<Graph>& graph);
 
     ~BVHAccelerationStructure();
 
     inline const nanort::BVHAccel<float>& getBVH() const { return _bvh; }
+
+    inline void setBVH(const nanort::BVHAccel<float>& bvh) { _bvh = bvh; }
 
 private:
     nanort::BVHAccel<float> _bvh;
