@@ -465,8 +465,8 @@ ATCG_INLINE torch::Tensor getTangentsAsHostTensor(const atcg::ref_ptr<atcg::Vert
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
     return createHostTensorFromPointer(
-        vertex_buffer + atcg::VertexSpecification::TANGNET_BEGIN,
-        {num_vertices, atcg::VertexSpecification::TANGNET_END - atcg::VertexSpecification::TANGNET_BEGIN},
+        vertex_buffer + atcg::VertexSpecification::TANGENT_BEGIN,
+        {num_vertices, atcg::VertexSpecification::TANGENT_END - atcg::VertexSpecification::TANGENT_BEGIN},
         {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
@@ -486,8 +486,8 @@ ATCG_INLINE torch::Tensor getTangentsAsDeviceTensor(const atcg::ref_ptr<atcg::Ve
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
     return createDeviceTensorFromPointer(
-        vertex_buffer + atcg::VertexSpecification::TANGNET_BEGIN,
-        {num_vertices, atcg::VertexSpecification::TANGNET_END - atcg::VertexSpecification::TANGNET_BEGIN},
+        vertex_buffer + atcg::VertexSpecification::TANGENT_BEGIN,
+        {num_vertices, atcg::VertexSpecification::TANGENT_END - atcg::VertexSpecification::TANGENT_BEGIN},
         {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
