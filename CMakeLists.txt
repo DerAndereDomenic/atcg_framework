@@ -120,6 +120,12 @@ set_target_properties(${ATCG_OPENVR_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY 
 add_library(json INTERFACE)
 target_include_directories(json INTERFACE "external/json")
 
+#sfml
+set(SFML_BUILD_WINDOW OFF CACHE BOOL "" FORCE)
+set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
+set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/sfml)
+
 if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
     set(CMAKE_CUDA_ARCHITECTURES "native")
@@ -195,6 +201,8 @@ target_link_libraries(atcg_lib PUBLIC glfw
                                       glm
                                       spdlog_header_only
                                       json
+                                      SFML::System
+                                      SFML::Network
                                       ${ATCG_OPENVR_TARGET}
 )
 

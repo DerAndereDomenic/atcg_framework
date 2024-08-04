@@ -52,6 +52,7 @@
 #include <DataStructure/BufferView.h>
 #include <DataStructure/Image.h>
 #include <DataStructure/JPEGDecoder.h>
+#include <DataStructure/JPEGEncoder.h>
 
 //-------- Math -----------
 #include <Math/Constants.h>
@@ -59,6 +60,10 @@
 #include <Math/Utils.h>
 #include <Math/Random.h>
 #include <Math/Color.h>
+
+//-------- Network ------------
+#include <Network/TCPServer.h>
+#include <Network/NetworkUtils.h>
 
 //-------- ImGui -----------
 #include <ImGui/Guizmo.h>
