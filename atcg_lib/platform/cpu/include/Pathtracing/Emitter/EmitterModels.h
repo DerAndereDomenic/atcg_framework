@@ -21,8 +21,6 @@ public:
 
     virtual EmitterSamplingResult sampleLight(const SurfaceInteraction& si, PCG32& rng) const override;
 
-    virtual PhotonSamplingResult samplePhoton(PCG32& rng) const override;
-
     virtual float evalLightSamplingPdf(const SurfaceInteraction& last_si, const SurfaceInteraction& si) const override;
 
 private:
@@ -52,8 +50,6 @@ public:
     virtual glm::vec3 evalLight(const SurfaceInteraction& si) const override;
 
     virtual EmitterSamplingResult sampleLight(const SurfaceInteraction& si, PCG32& rng) const override;
-
-    virtual PhotonSamplingResult samplePhoton(PCG32& rng) const override;
 
     virtual float evalLightSamplingPdf(const SurfaceInteraction& last_si, const SurfaceInteraction& si) const override;
 

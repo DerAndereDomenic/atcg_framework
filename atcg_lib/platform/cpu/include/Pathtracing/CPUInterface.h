@@ -24,8 +24,6 @@ public:
 
     virtual EmitterSamplingResult sampleLight(const SurfaceInteraction& si, PCG32& rng) const = 0;
 
-    virtual PhotonSamplingResult samplePhoton(PCG32& rng) const = 0;
-
     virtual float evalLightSamplingPdf(const SurfaceInteraction& last_si, const SurfaceInteraction& si) const = 0;
 
 protected:

@@ -159,5 +159,22 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::mat3 compute_local_frame(const glm::vec3
     return frame;
 }
 
+template<typename T>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE uint32_t binary_search(const T* sorted_array, T value, uint32_t size)
+{
+    // Find first element in sorted_array that is larger than value.
+    uint32_t left  = 0;
+    uint32_t right = size - 1;
+    while(left < right)
+    {
+        uint32_t mid = (left + right) / 2;
+        if(sorted_array[mid] < value)
+            left = mid + 1;
+        else
+            right = mid;
+    }
+    return left;
+}
+
 }    // namespace Math
 }    // namespace atcg
