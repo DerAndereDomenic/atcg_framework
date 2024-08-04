@@ -5,7 +5,7 @@ namespace atcg
 
 namespace detail
 {
-glm::vec3 read_image(const torch::Tensor& image, const glm::vec2& uv)
+static glm::vec3 read_image(const torch::Tensor& image, const glm::vec2& uv)
 {
     glm::vec4 result(0);
 

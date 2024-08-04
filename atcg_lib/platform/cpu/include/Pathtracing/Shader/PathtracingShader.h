@@ -4,6 +4,7 @@
 #include <DataStructure/Image.h>
 #include <Pathtracing/AccelerationStructure.h>
 #include <Pathtracing/BSDF/BSDFModels.h>
+#include <Pathtracing/Emitter/EmitterModels.h>
 
 #include <nanort.h>
 
@@ -33,6 +34,8 @@ private:
     uint32_t _frame_counter = 0;
 
     std::vector<atcg::ref_ptr<CPUBSDF>> _bsdfs;
+    std::vector<atcg::ref_ptr<CPUEmitter>> _emitter;
+    atcg::ref_ptr<EnvironmentEmitter> _environment_emitter;
 
     torch::Tensor _positions;
     torch::Tensor _normals;
@@ -41,8 +44,6 @@ private:
     torch::Tensor _mesh_idx;
 
     atcg::ref_ptr<BVHAccelerationStructure> _accel;
-    bool _hasSkybox = false;
-    atcg::ref_ptr<Image> _skybox_image;
 
     torch::Tensor _horizontalScanLine;
     torch::Tensor _verticalScanLine;
