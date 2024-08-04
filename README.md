@@ -290,3 +290,4 @@ There is also a CUDA API for textures. However, because textures work differentl
 - [charonload](https://github.com/nlohmann/json) - For torch integration.
 - [openvr](https://github.com/ValveSoftware/openvr) - For VR support.
 - [googletest](https://github.com/google/googletest) - For testing.
+- [sfml](https://github.com/SFML/SFML) - For networking. (*Note: Might require additional dependencies on Linux, see SFML repositoriy.*) 
