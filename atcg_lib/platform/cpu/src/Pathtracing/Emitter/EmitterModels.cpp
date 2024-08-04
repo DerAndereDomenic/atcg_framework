@@ -1,4 +1,5 @@
 #include <Pathtracing/Emitter/EmitterModels.h>
+#include <Math/Functions.h>
 
 namespace atcg
 {
@@ -313,7 +314,7 @@ PhotonSamplingResult MeshEmitter::samplePhoton(PCG32& rng) const
     float direction_pdf             = atcg::warp_square_to_hemisphere_cosine_pdf(local_light_direction);
 
     result.position        = light_position;
-    result.direction       = atcg::compute_local_frame(light_normal) * local_light_direction;
+    result.direction       = atcg::Math::compute_local_frame(light_normal) * local_light_direction;
     result.pdf             = 1.0f / (_total_area)*direction_pdf;
     result.radiance_weight = emissive_color * _emitter_scaling * (_total_area);
     result.normal          = light_normal;
@@ -365,7 +366,7 @@ EmitterSamplingResult EnvironmentEmitter::sampleLight(const SurfaceInteraction& 
 
     glm::vec3 random_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
     float pdf            = atcg::warp_square_to_hemisphere_cosine_pdf(random_dir);
-    glm::mat3 frame      = atcg::compute_local_frame(si.normal);
+    glm::mat3 frame      = atcg::Math::compute_local_frame(si.normal);
 
     random_dir = frame * random_dir;
 
@@ -394,7 +395,7 @@ float EnvironmentEmitter::evalLightSamplingPdf(const SurfaceInteraction& last_si
     // We can assume that outgoing ray dir actually intersects the light source.
 
     // Probability of sampling this direction via light source sampling
-    glm::mat3 local_frame     = atcg::compute_local_frame(last_si.normal);
+    glm::mat3 local_frame     = atcg::Math::compute_local_frame(last_si.normal);
     glm::vec3 local_direction = glm::transpose(local_frame) * si.incoming_direction;
 
     return atcg::warp_square_to_hemisphere_cosine_pdf(local_direction);

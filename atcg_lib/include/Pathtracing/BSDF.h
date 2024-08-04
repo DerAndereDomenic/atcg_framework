@@ -5,6 +5,7 @@
 #include <Pathtracing/BSDFFlags.h>
 #include <Pathtracing/SurfaceInteraction.h>
 #include <Math/Random.h>
+#include <Math/Functions.h>
 
 namespace atcg
 {
@@ -32,36 +33,14 @@ struct BSDFEvalResult
     float sample_probability = 0.0f;
 };
 
-inline ATCG_HOST_DEVICE glm::mat3 compute_local_frame(const glm::vec3& localZ)
-{
-    float x  = localZ.x;
-    float y  = localZ.y;
-    float z  = localZ.z;
-    float sz = (z >= 0) ? 1 : -1;
-    float a  = 1 / (sz + z);
-    float ya = y * a;
-    float b  = x * ya;
-    float c  = x * sz;
-
-    glm::vec3 localX = glm::vec3(c * x * a - 1, sz * b, c);
-    glm::vec3 localY = glm::vec3(b, y * ya - sz, y);
-
-    glm::mat3 frame;
-    // Set columns of matrix
-    frame[0] = localX;
-    frame[1] = localY;
-    frame[2] = localZ;
-    return frame;
-}
-
-inline ATCG_HOST_DEVICE float D_GGX(const float NdotH, const float roughness)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float D_GGX(const float NdotH, const float roughness)
 {
     float a2 = roughness * roughness;
     float d  = (NdotH * a2 - NdotH) * NdotH + 1.0f;
     return a2 / (glm::pi<float>() * d * d + 1e-5f);
 }
 
-inline ATCG_HOST_DEVICE glm::vec3 warp_square_to_hemisphere_ggx(const glm::vec2& uv, float roughness)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_ggx(const glm::vec2& uv, float roughness)
 {
     // GGX NDF sampling
     float cos_theta = glm::sqrt((1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x));
@@ -75,13 +54,13 @@ inline ATCG_HOST_DEVICE glm::vec3 warp_square_to_hemisphere_ggx(const glm::vec2&
     return glm::vec3(x, y, z);
 }
 
-inline ATCG_HOST_DEVICE float warp_square_to_hemisphere_ggx_pdf(const glm::vec3& result, float roughness)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_square_to_hemisphere_ggx_pdf(const glm::vec3& result, float roughness)
 {
     return D_GGX(result.z, roughness) * glm::max(0.0f, result.z);
 }
 
 
-inline ATCG_HOST_DEVICE glm::vec3 warp_square_to_hemisphere_cosine(const glm::vec2& uv)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_cosine(const glm::vec2& uv)
 {
     // Sample disk uniformly
     float r   = glm::sqrt(uv.x);
@@ -95,28 +74,28 @@ inline ATCG_HOST_DEVICE glm::vec3 warp_square_to_hemisphere_cosine(const glm::ve
     return glm::vec3(x, y, z);
 }
 
-inline ATCG_HOST_DEVICE float warp_square_to_hemisphere_cosine_pdf(const glm::vec3& result)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_square_to_hemisphere_cosine_pdf(const glm::vec3& result)
 {
     return glm::max(0.0f, result.z) / glm::pi<float>();
 }
 
-inline ATCG_HOST_DEVICE float warp_normal_to_reflected_direction_pdf(const glm::vec3& reflected_dir,
-                                                                     const glm::vec3& normal)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_normal_to_reflected_direction_pdf(const glm::vec3& reflected_dir,
+                                                                                const glm::vec3& normal)
 {
     return 1 / glm::abs(4 * glm::dot(reflected_dir, normal));
 }
 
-inline ATCG_HOST_DEVICE float fresnel_schlick(const float F0, const float VdotH)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_HOST_DEVICE float fresnel_schlick(const float F0, const float VdotH)
 {
     return F0 + (1.0f - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
 }
 
-inline ATCG_HOST_DEVICE glm::vec3 fresnel_schlick(const glm::vec3& F0, const float VdotH)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 fresnel_schlick(const glm::vec3& F0, const float VdotH)
 {
     return F0 + (glm::vec3(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
 }
 
-inline ATCG_HOST_DEVICE float geometrySchlickGGX(float NdotV, float roughness)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float geometrySchlickGGX(float NdotV, float roughness)
 {
     float r = (roughness + 1.0f);
     float k = (r * r) / 8.0f;
@@ -127,7 +106,7 @@ inline ATCG_HOST_DEVICE float geometrySchlickGGX(float NdotV, float roughness)
     return nom / denom;
 }
 
-inline ATCG_HOST_DEVICE float geometrySmith(float NdotL, float NdotV, float roughness)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float geometrySmith(float NdotL, float NdotV, float roughness)
 {
     float ggx2 = geometrySchlickGGX(NdotV, roughness);
     float ggx1 = geometrySchlickGGX(NdotL, roughness);
@@ -135,17 +114,12 @@ inline ATCG_HOST_DEVICE float geometrySmith(float NdotL, float NdotV, float roug
     return ggx1 * ggx2;
 }
 
-inline ATCG_HOST_DEVICE float rgb2scalar(const glm::vec3& rgb)
-{
-    return (rgb.x + rgb.y + rgb.z) / 3.0f;
-}
-
-inline ATCG_HOST_DEVICE BSDFSamplingResult sampleGGX(const SurfaceInteraction& si,
-                                                     const glm::vec3& diffuse_color,
-                                                     const glm::vec3& specular_F0,
-                                                     const float& metallic,
-                                                     const float& roughness,
-                                                     PCG32& rng)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE BSDFSamplingResult samplePBR(const SurfaceInteraction& si,
+                                                                const glm::vec3& diffuse_color,
+                                                                const glm::vec3& specular_F0,
+                                                                const float& metallic,
+                                                                const float& roughness,
+                                                                PCG32& rng)
 {
     BSDFSamplingResult result;
 
@@ -162,7 +136,7 @@ inline ATCG_HOST_DEVICE BSDFSamplingResult sampleGGX(const SurfaceInteraction& s
 
     // The matrix local_frame transforms a vector from the coordinate system where geom.N corresponds to the z-axis to
     // the world coordinate system.
-    glm::mat3 local_frame = compute_local_frame(normal);
+    glm::mat3 local_frame = Math::compute_local_frame(normal);
 
     float diffuse_probability = glm::dot(diffuse_color, glm::vec3(1)) /
                                 (glm::dot(diffuse_color, glm::vec3(1)) + glm::dot(specular_F0, glm::vec3(1)) + 1e-5f);
@@ -231,6 +205,117 @@ inline ATCG_HOST_DEVICE BSDFSamplingResult sampleGGX(const SurfaceInteraction& s
     result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / result.sample_probability;
 
     return result;
+}
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE BSDFEvalResult evalPBR(const SurfaceInteraction& si,
+                                                          const glm::vec3& outgoing_dir,
+                                                          const glm::vec3& diffuse_color,
+                                                          const glm::vec3& metallic_color,
+                                                          const float roughness,
+                                                          const float metallic)
+{
+    atcg::BSDFEvalResult result;
+
+    glm::vec3 light_dir = outgoing_dir;
+    glm::vec3 view_dir  = -si.incoming_direction;
+
+    glm::vec3 H = glm::normalize(light_dir + view_dir);
+
+    float NdotH = glm::max(glm::dot(si.normal, H), 0.0f);
+    float NdotV = glm::max(glm::dot(si.normal, view_dir), 0.0f);
+    float NdotL = glm::max(glm::dot(si.normal, light_dir), 0.0f);
+
+    if(NdotL <= 0.0f || NdotV <= 0.0f) return result;
+
+    float NDF   = atcg::D_GGX(NdotH, roughness);
+    float G     = atcg::geometrySmith(NdotL, NdotV, roughness);
+    glm::vec3 F = atcg::fresnel_schlick(metallic_color, glm::max(glm::dot(H, view_dir), 0.0f));
+
+    glm::vec3 numerator = NDF * G * F;
+    float denominator   = 4.0 * NdotV * NdotL + 1e-5f;
+    glm::vec3 specular  = numerator / denominator;
+
+    glm::vec3 kS = F;
+    glm::vec3 kD = glm::vec3(1.0) - kS;
+    kD *= (1.0 - metallic);
+
+    float diffuse_probability =
+        glm::dot(diffuse_color, glm::vec3(1)) /
+        (glm::dot(diffuse_color, glm::vec3(1)) + glm::dot(metallic_color, glm::vec3(1)) + 1e-5f);
+    float specular_probability    = 1 - diffuse_probability;
+    float diffuse_pdf             = NdotL / glm::pi<float>();
+    float halfway_pdf             = NDF * NdotH;
+    float halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(outgoing_dir, H);    // 1 / (4*HdotV)
+    float specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
+
+    result.bsdf_value         = specular + kD * diffuse_color / glm::pi<float>();
+    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf + 1e-5f;
+
+    return result;
+}
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE BSDFSamplingResult sampleRefractive(const SurfaceInteraction& si,
+                                                                       const glm::vec3& diffuse_color,
+                                                                       const float ior,
+                                                                       PCG32& rng)
+{
+    // Determine surface parameters
+    bool outsidein             = glm::dot(si.incoming_direction, si.normal) < 0;
+    glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
+    float eta                  = outsidein ? 1.0f / ior : ior;
+
+    // Compute outgoing ray directions
+    glm::vec3 transmitted_ray_dir = glm::refract(si.incoming_direction, interface_normal, eta);
+    glm::vec3 reflected_ray_dir   = glm::reflect(si.incoming_direction, interface_normal);
+
+    // Fresnel reflectance at normal incidence
+    float F0 = (eta - 1) / (eta + 1);
+    F0       = F0 * F0;
+
+    float NdotL = glm::abs(glm::dot(si.incoming_direction, interface_normal));
+
+    // Reflection an transmission probabilities
+    float reflection_probability   = atcg::fresnel_schlick(F0, NdotL);
+    float transmission_probability = 1.0f - reflection_probability;
+    if(glm::dot(transmitted_ray_dir, transmitted_ray_dir) < 1e-6f)
+    {
+        // Total internal reflection!
+        transmission_probability = 0.0f;
+        reflection_probability   = 1.0f;
+    }
+
+
+    // Compute sampling result
+    atcg::BSDFSamplingResult result;
+    result.sample_probability = 0;
+
+    // Stochastically select a reflection or transmission via russian roulette
+    if(rng.next1d() < reflection_probability)
+    {
+        // Select the reflection event
+        // We sample the BDSF exactly.
+        result.bsdf_weight        = diffuse_color;
+        result.out_dir            = reflected_ray_dir;
+        result.sample_probability = reflection_probability;
+    }
+    else
+    {
+        // Select the transmission event
+        // We sample the BDSF exactly.
+        result.bsdf_weight        = diffuse_color;
+        result.out_dir            = transmitted_ray_dir;
+        result.sample_probability = transmission_probability;
+    }
+
+    return result;
+}
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE BSDFEvalResult evalRefractive(const SurfaceInteraction& si,
+                                                                 const glm::vec3& outgoing_dir)
+{
+    // TODO: Return empty result for now because most of the time a randomly sampled direction will not hit the delta
+    // function of a perfect reflection/transmission
+    return atcg::BSDFEvalResult();
 }
 
 }    // namespace atcg
