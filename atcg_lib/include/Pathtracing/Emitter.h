@@ -2,6 +2,7 @@
 
 #include <Core/glm.h>
 #include <Math/Functions.h>
+#include <Pathtracing/BSDF.h>
 
 namespace atcg
 {
