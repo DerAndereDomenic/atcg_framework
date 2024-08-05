@@ -224,104 +224,160 @@ void PathtracingShader::generateRays(torch::Tensor& output)
     int width  = output.size(1);
     int height = output.size(0);
 
-    std::for_each(std::execution::par,
-                  _verticalScanLine.data_ptr<int32_t>(),
-                  _verticalScanLine.data_ptr<int32_t>() + _verticalScanLine.numel(),
-                  [&](int32_t y)
-                  {
-                      std::for_each(std::execution::par,
-                                    _horizontalScanLine.data_ptr<int32_t>(),
-                                    _horizontalScanLine.data_ptr<int32_t>() + _horizontalScanLine.numel(),
-                                    [&](int32_t x)
+    std::for_each(
+        std::execution::par,
+        _verticalScanLine.data_ptr<int32_t>(),
+        _verticalScanLine.data_ptr<int32_t>() + _verticalScanLine.numel(),
+        [&](int32_t y)
+        {
+            std::for_each(
+                std::execution::par,
+                _horizontalScanLine.data_ptr<int32_t>(),
+                _horizontalScanLine.data_ptr<int32_t>() + _horizontalScanLine.numel(),
+                [&](int32_t x)
+                {
+                    uint64_t seed = sampleTEA64(x + width * y, _frame_counter);
+                    atcg::PCG32 rng(seed);
+
+                    glm::vec2 jitter = rng.next2d();
+                    float u          = (((float)x + jitter.x) / (float)width - 0.5f) * 2.0f;
+                    float v          = (((float)(height - y) + jitter.y) / (float)height - 0.5f) * 2.0f;
+
+                    glm::vec3 U = U_ * (float)width / (float)height;
+                    glm::vec3 V = V_;
+                    glm::vec3 W = W_ / glm::tan(glm::radians(_fov_y / 2.0f));
+
+                    glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
+                    glm::vec3 ray_origin = cam_eye_;
+                    glm::vec3 radiance(0);
+                    glm::vec3 throughput(1);
+
+                    glm::vec3 next_origin;
+                    glm::vec3 next_dir;
+
+                    atcg::SurfaceInteraction last_si;
+                    float last_bsdf_pdf = 1.0f;
+
+                    for(int n = 0; n < max_trace_depth; ++n)
+                    {
+                        SurfaceInteraction si = Tracing::traceRay(_accel,
+                                                                  _positions,
+                                                                  _normals,
+                                                                  _uvs,
+                                                                  _faces,
+                                                                  ray_origin,
+                                                                  ray_dir,
+                                                                  1e-3f,
+                                                                  1e6f);
+                        if(si.valid)
+                        {
+                            // PBR Sampling
+                            int32_t mesh_index = _mesh_idx.index({(int)si.primitive_idx}).item<int32_t>();
+
+                            if(_emitter[mesh_index])
+                            {
+                                bool mis_valid = last_si.valid;
+                                float emitter_sampling_pdf =
+                                    mis_valid ? _emitter[mesh_index]->evalLightSamplingPdf(last_si, si) : 0.0f;
+                                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                                radiance += mis_weight * throughput * _emitter[mesh_index]->evalLight(si);
+                            }
+
+                            if(si.bsdf)
+                            {
+                                // Next-event estimation
+                                for(uint32_t i = 0; i < _emitter.size(); ++i)
+                                {
+                                    auto emitter = _emitter[i];
+                                    if(!emitter || _emitter[mesh_index] == emitter) continue;
+
+                                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+
+                                    if(emitter_sampling.sampling_pdf == 0) continue;
+
+                                    bool occluded = Tracing::traceRay(_accel,
+                                                                      _positions,
+                                                                      _normals,
+                                                                      _uvs,
+                                                                      _faces,
+                                                                      si.position,
+                                                                      emitter_sampling.direction_to_light,
+                                                                      1e-3f,
+                                                                      emitter_sampling.distance_to_light - 1e-3f)
+                                                        .valid;
+
+                                    if(occluded)
                                     {
-                                        uint64_t seed = sampleTEA64(x + width * y, _frame_counter);
-                                        atcg::PCG32 rng(seed);
+                                        continue;
+                                    }
 
-                                        glm::vec2 jitter = rng.next2d();
-                                        float u          = (((float)x + jitter.x) / (float)width - 0.5f) * 2.0f;
-                                        float v = (((float)(height - y) + jitter.y) / (float)height - 0.5f) * 2.0f;
+                                    atcg::BSDFEvalResult bsdf_result =
+                                        _bsdfs[mesh_index]->evalBSDF(si, emitter_sampling.direction_to_light);
 
-                                        glm::vec3 U = U_ * (float)width / (float)height;
-                                        glm::vec3 V = V_;
-                                        glm::vec3 W = W_ / glm::tan(glm::radians(_fov_y / 2.0f));
+                                    float mis_weight = emitter_sampling.sampling_pdf /
+                                                       (emitter_sampling.sampling_pdf + bsdf_result.sample_probability);
 
-                                        glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
-                                        glm::vec3 ray_origin = cam_eye_;
-                                        glm::vec3 radiance(0);
-                                        glm::vec3 throughput(1);
+                                    radiance +=
+                                        mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
+                                        bsdf_result.bsdf_value *
+                                        glm::max(0.0f, glm::dot(si.normal, emitter_sampling.direction_to_light));
+                                }
 
-                                        glm::vec3 next_origin;
-                                        glm::vec3 next_dir;
+                                BSDFSamplingResult result = _bsdfs[mesh_index]->sampleBSDF(si, rng);
+                                if(result.sample_probability > 0.0f)
+                                {
+                                    next_origin = si.position;
+                                    next_dir    = result.out_dir;
+                                    throughput *= result.bsdf_weight;
 
-                                        for(int n = 0; n < max_trace_depth; ++n)
-                                        {
-                                            SurfaceInteraction si = Tracing::traceRay(_accel,
-                                                                                      _positions,
-                                                                                      _normals,
-                                                                                      _uvs,
-                                                                                      _faces,
-                                                                                      ray_origin,
-                                                                                      ray_dir,
-                                                                                      1e-3f,
-                                                                                      1e6f);
-                                            if(si.valid)
-                                            {
-                                                // PBR Sampling
-                                                int32_t mesh_index =
-                                                    _mesh_idx.index({(int)si.primitive_idx}).item<int32_t>();
 
-                                                if(_emitter[mesh_index])
-                                                {
-                                                    radiance += throughput * _emitter[mesh_index]->evalLight(si);
-                                                }
+                                    last_si       = si;
+                                    last_bsdf_pdf = result.sample_probability;
 
-                                                BSDFSamplingResult result = _bsdfs[mesh_index]->sampleBSDF(si, rng);
-                                                if(result.sample_probability > 0.0f)
-                                                {
-                                                    next_origin = si.position;
-                                                    next_dir    = result.out_dir;
-                                                    throughput *= result.bsdf_weight;
-                                                }
-                                                else
-                                                {
-                                                    break;
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if(_environment_emitter)
-                                                    radiance += throughput * _environment_emitter->evalLight(si);
+                                    if((int)(_bsdfs[mesh_index]->flags() & atcg::BSDFComponentType::AnyDelta) != 0)
+                                    {
+                                        last_si.valid = false;
+                                    }
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // Can't hit environment emitter via bsdf sampling
+                            if(_environment_emitter) radiance += throughput * _environment_emitter->evalLight(si);
 
-                                                break;
-                                            }
+                            break;
+                        }
 
-                                            ray_origin = next_origin;
-                                            ray_dir    = next_dir;
-                                        }
+                        ray_origin = next_origin;
+                        ray_dir    = next_dir;
+                    }
 
-                                        if(_frame_counter > 0)
-                                        {
-                                            // Mix with previous subframes if present!
-                                            const float a = 1.0f / static_cast<float>(_frame_counter + 1);
-                                            const glm::vec3 prev_output_radiance =
-                                                ((const glm::vec3*)accumulation_buffer.data_ptr())[x + width * y];
-                                            radiance = glm::lerp(prev_output_radiance, radiance, a);
-                                        }
+                    if(_frame_counter > 0)
+                    {
+                        // Mix with previous subframes if present!
+                        const float a = 1.0f / static_cast<float>(_frame_counter + 1);
+                        const glm::vec3 prev_output_radiance =
+                            ((const glm::vec3*)accumulation_buffer.data_ptr())[x + width * y];
+                        radiance = glm::lerp(prev_output_radiance, radiance, a);
+                    }
 
-                                        ((glm::vec3*)accumulation_buffer.data_ptr())[x + width * y] = radiance;
+                    ((glm::vec3*)accumulation_buffer.data_ptr())[x + width * y] = radiance;
 
-                                        glm::vec3 tone_mapped =
-                                            glm::clamp(glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.2f)),
+                    glm::vec3 tone_mapped = glm::clamp(glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.2f)),
                                                        glm::vec3(0),
                                                        glm::vec3(1));
 
-                                        ((glm::u8vec4*)output.data_ptr())[x + width * y] =
-                                            glm::u8vec4((uint8_t)(tone_mapped.x * 255.0f),
-                                                        (uint8_t)(tone_mapped.y * 255.0f),
-                                                        (uint8_t)(tone_mapped.z * 255.0f),
-                                                        255);
-                                    });
-                  });
+                    ((glm::u8vec4*)output.data_ptr())[x + width * y] = glm::u8vec4((uint8_t)(tone_mapped.x * 255.0f),
+                                                                                   (uint8_t)(tone_mapped.y * 255.0f),
+                                                                                   (uint8_t)(tone_mapped.z * 255.0f),
+                                                                                   255);
+                });
+        });
     ++_frame_counter;
 }
 }    // namespace atcg

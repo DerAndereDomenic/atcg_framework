@@ -16,6 +16,8 @@ public:
 
     virtual ~BSDF() {}
 
+    ATCG_INLINE const BSDFComponentType& flags() const { return _flags; }
+
 protected:
     BSDFComponentType _flags;
 };
