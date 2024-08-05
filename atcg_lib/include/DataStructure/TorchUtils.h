@@ -533,4 +533,16 @@ ATCG_INLINE torch::Tensor getUVsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexB
         {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
+/**
+ * @brief Read from a torch tensor like a texture.
+ * Uses nearest-neighbor lookup and always returns a 4D float vector. If img has uint8_t data type, it is normalized
+ * between [0,1].
+ *
+ * @param img The image tensor of shape (H,W,C)
+ * @param uv The uv coordinates in [0,1]^2
+ *
+ * @return The color at that pixel
+ */
+glm::vec4 texture(const torch::Tensor& img, const glm::vec2& uv);
+
 }    // namespace atcg
