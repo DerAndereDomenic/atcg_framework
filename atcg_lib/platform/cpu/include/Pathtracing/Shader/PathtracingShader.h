@@ -26,8 +26,6 @@ public:
     virtual void generateRays(torch::Tensor& output) override;
 
 private:
-    glm::vec3 read_image(const atcg::ref_ptr<Image>& image, const glm::vec2& uv);
-
     glm::mat4 _inv_camera_view;
     float _fov_y;
 

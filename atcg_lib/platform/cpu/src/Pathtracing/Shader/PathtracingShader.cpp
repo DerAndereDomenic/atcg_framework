@@ -152,53 +152,6 @@ void PathtracingShader::setCamera(const atcg::ref_ptr<PerspectiveCamera>& camera
     _fov_y           = camera->getFOV();
 }
 
-glm::vec3 PathtracingShader::read_image(const atcg::ref_ptr<Image>& image, const glm::vec2& uv)
-{
-    glm::vec4 result(0);
-
-    glm::ivec2 pixel(uv.x * image->width(), image->height() - uv.y * image->height());
-    pixel = glm::clamp(pixel, glm::ivec2(0), glm::ivec2(image->width() - 1, image->height() - 1));
-
-    glm::vec3 color;
-
-    uint32_t channels = image->channels();
-    if(image->isHDR())
-    {
-        if(channels == 4)
-        {
-            color = image->dataAt<glm::vec4>(pixel.x + image->width() * pixel.y);
-        }
-        else if(channels == 3)
-        {
-            color = image->dataAt<glm::vec3>(pixel.x + image->width() * pixel.y);
-        }
-        else
-        {
-            color = glm::vec3(image->dataAt<float>(pixel.x + image->width() * pixel.y));
-        }
-    }
-    else
-    {
-        if(channels == 4)
-        {
-            glm::u8vec4 val = image->dataAt<glm::u8vec4>(pixel.x + image->width() * pixel.y);
-            color           = glm::vec3((float)val.x, (float)val.y, (float)val.z) / 255.0f;
-        }
-        else if(channels == 3)
-        {
-            glm::u8vec3 val = image->dataAt<glm::u8vec3>(pixel.x + image->width() * pixel.y);
-            color           = glm::vec3((float)val.x, (float)val.y, (float)val.z) / 255.0f;
-        }
-        else
-        {
-            uint8_t val = image->dataAt<uint8_t>(pixel.x + image->width() * pixel.y);
-            color       = glm::vec3((float)val) / 255.0f;
-        }
-    }
-
-    return color;
-}
-
 void PathtracingShader::generateRays(torch::Tensor& output)
 {
     auto accumulation_buffer = getTensor("HDR");
