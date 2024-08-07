@@ -6,11 +6,21 @@
 
 namespace atcg
 {
+/**
+ * @brief Class to model an emitter. This class is only used for high level storage. The real interface of an emitter is
+ * backend dependent.
+ */
 class Emitter
 {
 public:
+    /**
+     * @brief Constructor
+     */
     Emitter() = default;
 
+    /**
+     * @brief Destructor
+     */
     virtual ~Emitter() {}
 };
 
@@ -34,12 +44,36 @@ struct PhotonSamplingResult
     glm::vec3 uvs;
 };
 
+/**
+ * @brief Eval a mesh emitter
+ *
+ * @param emissive_color The emissive color
+ * @param emitter_scaling The scaling (intensity) of the emitter
+ *
+ * @return The radiance value
+ */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 evalMeshEmitter(const glm::vec3& emissive_color,
                                                              const float emitter_scaling)
 {
     return emissive_color * emitter_scaling;
 }
 
+/**
+ * @brief Sample a mesh emitter
+ *
+ * @param si The surface interaction to sample from
+ * @param mesh_cdf The cdf of the mesh triangles
+ * @param positions Vertex positions
+ * @param uvs Vertex uvs
+ * @param faces Face data
+ * @param num_faces The number of total faces
+ * @param total_area The surface area of the mesh
+ * @param local_to_world Local to world transform
+ * @param world_to_local World to local transform
+ * @param rng The rng
+ *
+ * @return The sampling result
+ */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleMeshEmitter(const atcg::SurfaceInteraction& si,
                                                                                  const float* mesh_cdf,
                                                                                  const glm::vec3* positions,
@@ -114,6 +148,15 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleMeshEmitter
     return result;
 }
 
+/**
+ * @brief Evaluate the pdf of a mesh emitter
+ *
+ * @param last_si The last surface interaction
+ * @param total_area The mesh area
+ * @param si The current surface interaction
+ *
+ * @return The pdf
+ */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE float
 evalMeshEmitterPDF(const SurfaceInteraction& last_si, const float total_area, const SurfaceInteraction& si)
 {
@@ -134,6 +177,13 @@ evalMeshEmitterPDF(const SurfaceInteraction& last_si, const float total_area, co
     return light_direction_pdf;
 }
 
+/**
+ * @brief Evaluate an environment emitter
+ *
+ * @param si The surface interaction
+ *
+ * @return The uv cooridnates to perform the texture lookup
+ */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec2 evalEnvironmentEmitter(const SurfaceInteraction& si)
 {
     glm::vec3 ray_dir = si.incoming_direction;
@@ -146,6 +196,14 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec2 evalEnvironmentEmitter(const Surfac
     return uv;
 }
 
+/**
+ * @brief Sample an environment emitter
+ *
+ * @param si The surface interaction
+ * @param rng The rng
+ *
+ * @return The sampling result
+ */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE EmitterSamplingResult sampleEnvironmentEmitter(const SurfaceInteraction& si,
                                                                                   PCG32& rng)
 {
@@ -171,6 +229,14 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE EmitterSamplingResult sampleEnvironmentEmitte
     return result;
 }
 
+/**
+ * @brief Evaluate the pdf of an environment emitter
+ *
+ * @param last_si The last surface interaction
+ * @param si The current surface interaction
+ *
+ * @return The pdf
+ */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalEnvironmentEmitterSamplingPdf(const SurfaceInteraction& last_si,
                                                                            const SurfaceInteraction& si)
 {
