@@ -784,6 +784,42 @@ void Texture2D::generateMipmaps()
     glGenerateMipmap(GL_TEXTURE_2D);
 }
 
+atcg::ref_ptr<Texture> Texture2D::clone() const
+{
+    auto result = atcg::Texture2D::create(_spec);
+
+    use();
+
+    int max_level = _spec.sampler.mip_map
+                        ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
+                        : 1;
+    for(int lvl = 0; lvl < max_level; lvl++)
+    {
+        int width, height;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, lvl, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, lvl, GL_TEXTURE_HEIGHT, &height);
+
+        glCopyImageSubData(_ID,
+                           GL_TEXTURE_2D,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           result->getID(),
+                           GL_TEXTURE_2D,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           width,
+                           height,
+                           1);
+    }
+
+
+    return result;
+}
+
 atcg::ref_ptr<Texture3D> Texture3D::create(const TextureSpecification& spec)
 {
     return create(nullptr, spec);
@@ -1021,6 +1057,43 @@ void Texture3D::generateMipmaps()
     glGenerateMipmap(GL_TEXTURE_3D);
 }
 
+atcg::ref_ptr<Texture> Texture3D::clone() const
+{
+    auto result = atcg::Texture2D::create(_spec);
+
+    use();
+
+    int max_level = _spec.sampler.mip_map
+                        ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
+                        : 1;
+    for(int lvl = 0; lvl < max_level + 1; lvl++)
+    {
+        int width, height, depth;
+        glGetTexLevelParameteriv(GL_TEXTURE_3D, lvl, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_3D, lvl, GL_TEXTURE_HEIGHT, &height);
+        glGetTexLevelParameteriv(GL_TEXTURE_3D, lvl, GL_TEXTURE_DEPTH, &depth);
+
+        glCopyImageSubData(_ID,
+                           GL_TEXTURE_3D,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           result->getID(),
+                           GL_TEXTURE_3D,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           width,
+                           height,
+                           depth);
+    }
+
+
+    return result;
+}
+
 atcg::ref_ptr<TextureCube> TextureCube::create(const TextureSpecification& spec)
 {
     atcg::ref_ptr<TextureCube> result = atcg::make_ref<TextureCube>();
@@ -1131,6 +1204,46 @@ void TextureCube::generateMipmaps()
                     filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 }
+
+atcg::ref_ptr<Texture> TextureCube::clone() const
+{
+    auto result = atcg::TextureCube::create(_spec);
+
+    use();
+
+    int max_level = _spec.sampler.mip_map
+                        ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
+                        : 1;
+    for(int i = 0; i < 6; ++i)
+    {
+        for(int lvl = 0; lvl < max_level + 1; lvl++)
+        {
+            int width, height;
+            glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, lvl, GL_TEXTURE_WIDTH, &width);
+            glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, lvl, GL_TEXTURE_HEIGHT, &height);
+
+            glCopyImageSubData(_ID,
+                               GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                               lvl,
+                               0,
+                               0,
+                               0,
+                               result->getID(),
+                               GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                               lvl,
+                               0,
+                               0,
+                               0,
+                               width,
+                               height,
+                               1);
+        }
+    }
+
+
+    return result;
+}
+
 
 atcg::ref_ptr<TextureArray> TextureArray::create(const TextureSpecification& spec)
 {
@@ -1367,6 +1480,42 @@ void TextureArray::generateMipmaps()
                     GL_TEXTURE_MAG_FILTER,
                     filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
     glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+}
+
+atcg::ref_ptr<Texture> TextureArray::clone() const
+{
+    auto result = atcg::TextureArray::create(_spec);
+
+    use();
+
+    int max_level = _spec.sampler.mip_map
+                        ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
+                        : 1;
+    for(int lvl = 0; lvl < max_level + 1; lvl++)
+    {
+        int width, height;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, lvl, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D_ARRAY, lvl, GL_TEXTURE_HEIGHT, &height);
+
+        glCopyImageSubData(_ID,
+                           GL_TEXTURE_2D_ARRAY,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           result->getID(),
+                           GL_TEXTURE_2D_ARRAY,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           width,
+                           height,
+                           _spec.depth);
+    }
+
+
+    return result;
 }
 
 }    // namespace atcg

@@ -192,6 +192,13 @@ public:
     virtual void generateMipmaps() = 0;
 
     /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const = 0;
+
+    /**
      * @brief Get the underlying data as a cudaArray.
      * This only returns a valid cudaArray if the CUDA backend is enabled. Otherwise this will return the buffer
      * mapped to host space.
@@ -381,6 +388,13 @@ public:
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
 };
 
 /**
@@ -470,6 +484,13 @@ public:
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
 };
 
 /**
@@ -528,6 +549,13 @@ public:
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
 };
 
 /**
@@ -617,6 +645,13 @@ public:
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
 };
 
 }    // namespace atcg
