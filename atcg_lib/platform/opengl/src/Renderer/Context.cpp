@@ -92,4 +92,14 @@ void Context::swapBuffers()
 {
     glfwSwapBuffers((GLFWwindow*)_window);
 }
+
+void Context::makeCurrent()
+{
+    glfwMakeContextCurrent((GLFWwindow*)_window);
+}
+
+void Context::deactivate()
+{
+    glfwMakeContextCurrent(NULL);
+}
 }    // namespace atcg
