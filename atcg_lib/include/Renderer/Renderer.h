@@ -273,6 +273,21 @@ public:
                            const std::string& path);
 
     /**
+     * @brief Take a screenshot and save it to disk
+     *
+     * @param scene The scene
+     * @param camera The camera
+     * @param width The output width
+     * @param height The output height
+     * @param path The output path
+     */
+    static void screenshot(const atcg::ref_ptr<Scene>& scene,
+                           const atcg::ref_ptr<Camera>& camera,
+                           const uint32_t width,
+                           const uint32_t height,
+                           const std::string& path);
+
+    /**
      * @brief Take a screenshot and return it as tensor
      *
      * @param scene The scene

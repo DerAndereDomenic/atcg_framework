@@ -1172,6 +1172,32 @@ void Renderer::screenshot(const atcg::ref_ptr<Scene>& scene,
     img.store(path);
 }
 
+void Renderer::screenshot(const atcg::ref_ptr<Scene>& scene,
+                          const atcg::ref_ptr<Camera>& camera,
+                          const uint32_t width,
+                          const uint32_t height,
+                          const std::string& path)
+{
+    atcg::ref_ptr<PerspectiveCamera> cam         = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
+    atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
+    screenshot_buffer->attachColor();
+    screenshot_buffer->attachDepth();
+    screenshot_buffer->complete();
+
+    screenshot_buffer->use();
+    atcg::Renderer::clear();
+    atcg::Renderer::setViewport(0, 0, width, height);
+    atcg::Renderer::draw(scene, cam);
+    atcg::Renderer::getFramebuffer()->use();
+    atcg::Renderer::setDefaultViewport();
+
+    auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
+
+    Image img(data);
+
+    img.store(path);
+}
+
 torch::Tensor
 Renderer::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
 {
