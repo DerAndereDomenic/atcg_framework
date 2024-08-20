@@ -267,28 +267,24 @@ public:
 
     /**
      * @brief Get a buffer representing the color attachement of the screen frame buffer.
-     * @note This copies memory between GPU and CPU
+     * @note This copies memory between GPU and CPU if device = CPU
+     *
+     * @param device The device
      *
      * @return The buffer containing the frame image.
      */
-    static std::vector<uint8_t> getFrame();
+    static torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU);
 
     /**
-     * @brief Get a buffer representing the color attachement of given frame buffer
-     * @note This copies memory between GPU and CPU
+     * @brief Get the Z-buffer of the current frame as torch tensor
+     * @note This function always does a GPU-CPU memcopy because depth maps can not be mapped from OpenGL to CUDA. If
+     * device = GPU is specified, an additional memcpy from CPU to GPU is performed.
      *
-     * @param fbo The framebuffer holding the image information
-     *
-     * @return The buffer containing the frame image.
-     */
-    static std::vector<uint8_t> getFrame(const atcg::ref_ptr<Framebuffer>& fbo);
-
-    /**
-     * @brief Generate a Z-Buffer buffer.
+     * @param device The device
      *
      * @return The depth buffer
      */
-    static std::vector<float> getZBuffer();
+    static torch::Tensor getZBuffer(const torch::DeviceType& device = atcg::GPU);
 
     /**
      * @brief Clear the currently bound framebuffer

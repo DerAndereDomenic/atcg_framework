@@ -1171,44 +1171,28 @@ Renderer::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Came
     atcg::Renderer::getFramebuffer()->use();
     atcg::Renderer::setDefaultViewport();
 
-    // std::vector<uint8_t> buffer = getFrame(screenshot_buffer);
-
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
     return data;
 }
 
-std::vector<uint8_t> Renderer::getFrame()
+torch::Tensor Renderer::getFrame(const torch::DeviceType& device)
 {
-    return getFrame(s_renderer->impl->screen_fbo);
+    return s_renderer->impl->screen_fbo->getColorAttachement(0)->getData(device);
 }
 
-std::vector<uint8_t> Renderer::getFrame(const atcg::ref_ptr<Framebuffer>& fbo)
+torch::Tensor Renderer::getZBuffer(const torch::DeviceType& device)
 {
-    auto frame      = fbo->getColorAttachement();
-    uint32_t width  = frame->width();
-    uint32_t height = frame->height();
-    std::vector<uint8_t> buffer(width * height * 4);
-
-    fbo->use();
-
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, (void*)buffer.data());
-
-    return buffer;
-}
-
-std::vector<float> Renderer::getZBuffer()
-{
-    auto frame      = s_renderer->impl->screen_fbo->getDepthAttachement();
-    uint32_t width  = frame->width();
-    uint32_t height = frame->height();
-    std::vector<float> buffer(width * height);
+    auto frame           = s_renderer->impl->screen_fbo->getDepthAttachement();
+    uint32_t width       = frame->width();
+    uint32_t height      = frame->height();
+    torch::Tensor buffer = torch::empty({height, width, 1}, atcg::TensorOptions::floatHostOptions());
 
     useScreenBuffer();
 
-    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, (void*)buffer.data());
+    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer.data_ptr());
 
-    return buffer;
+    return buffer.to(device);
 }
 
 uint32_t Renderer::popTextureID()
