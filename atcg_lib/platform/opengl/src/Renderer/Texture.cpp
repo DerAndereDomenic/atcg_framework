@@ -548,6 +548,11 @@ void Texture::unmapPointers() const
     unmapDevicePointers();
 }
 
+void Texture::fill(void* value)
+{
+    glClearTexImage(_ID, 0, detail::toGLformat(_spec.format), detail::toGLtype(_spec.format), value);
+}
+
 void Texture::useForCompute(const uint32_t& slot) const
 {
     unmapPointers();

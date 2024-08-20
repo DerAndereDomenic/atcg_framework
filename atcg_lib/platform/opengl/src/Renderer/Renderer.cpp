@@ -583,11 +583,7 @@ void Renderer::clear()
     if(Framebuffer::currentFramebuffer() == s_renderer->impl->screen_fbo->getID())
     {
         int value = -1;
-        glClearTexImage(s_renderer->impl->screen_fbo->getColorAttachement(1)->getID(),
-                        0,
-                        GL_RED_INTEGER,
-                        GL_INT,
-                        &value);
+        s_renderer->impl->screen_fbo->getColorAttachement(1)->fill(&value);
     }
 }
 

@@ -274,6 +274,13 @@ public:
      */
     void unmapPointers() const;
 
+    /**
+     * @brief Fill a texture with a specified value.
+     *
+     * @param value The fill value
+     */
+    void fill(void* value);
+
 protected:
     uint32_t _ID;
     TextureSpecification _spec;
