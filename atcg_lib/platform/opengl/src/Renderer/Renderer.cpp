@@ -1133,6 +1133,24 @@ void Renderer::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& tra
     glDepthFunc(GL_LESS);
 }
 
+void Renderer::drawImage(const atcg::ref_ptr<Framebuffer>& img)
+{
+    drawImage(img->getColorAttachement(0));
+}
+
+void Renderer::drawImage(const atcg::ref_ptr<Texture2D>& img)
+{
+    s_renderer->impl->quad_vao->use();
+    auto shader = ShaderManager::getShader("screen");
+    shader->setInt("screen_texture", 0);
+
+    shader->use();
+    img->use();
+
+    const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
+}
+
 int Renderer::getEntityIndex(const glm::vec2& mouse)
 {
     useScreenBuffer();
