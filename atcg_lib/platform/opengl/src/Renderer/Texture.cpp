@@ -146,7 +146,7 @@ GLenum toGLtype(TextureFormat format)
         }
         case TextureFormat::RINT:
         {
-            return GL_UNSIGNED_BYTE;
+            return GL_INT;
         }
         case TextureFormat::RINT8:
         {
