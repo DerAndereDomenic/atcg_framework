@@ -15,11 +15,12 @@ inline void check_nvjpeg(nvjpegStatus_t error, char const* const func, const cha
 {
     if(error != NVJPEG_STATUS_SUCCESS)
     {
-        ATCG_ERROR("NVJPEG error at {0}:{1} code=({3}) \"{4}\" \n", file, line, static_cast<unsigned int>(error), func);
+        std::cout << "NVJPEG error at " << file << ":" << line << "code=(" << static_cast<unsigned int>(error) << ") \""
+                  << func << "\" \n";
     }
 }
 
-int dev_malloc(void** p, size_t s)
+inline static int dev_malloc(void** p, size_t s)
 {
     try
     {
@@ -32,7 +33,7 @@ int dev_malloc(void** p, size_t s)
     }
 }
 
-int dev_free(void* p)
+inline static int dev_free(void* p)
 {
     try
     {
@@ -45,12 +46,12 @@ int dev_free(void* p)
     }
 }
 
-int host_malloc(void** p, size_t s, unsigned int f)
+inline static int host_malloc(void** p, size_t s, unsigned int f)
 {
     return (int)cudaHostAlloc(p, s, f);
 }
 
-int host_free(void* p)
+inline static int host_free(void* p)
 {
     return (int)cudaFreeHost(p);
 }
@@ -260,4 +261,4 @@ void JPEGDecoder::copyToOutput(atcg::textureArray output_texture)
 {
     impl->copyImagesToOutput(output_texture);
 }
-}
+}    // namespace atcg
