@@ -1,4 +1,4 @@
-#include <Pathtracing/Emitter/EmitterModels.h>
+#include <Pathtracing/EmitterModels.h>
 #include <Math/Functions.h>
 
 namespace atcg
@@ -64,93 +64,90 @@ MeshEmitter::MeshEmitter(const torch::Tensor& positions,
                          const glm::mat4& transform,
                          const Material& material)
 {
-    _emissive_texture = material.getEmissiveTexture()->getData(atcg::CPU);
+    MeshEmitterData data;
+    data.emissive_texture = material.getEmissiveTexture()->getData(atcg::CPU);
 
-    _emitter_scaling = material.emission_scale;
+    data.emitter_scaling = material.emission_scale;
 
-    _positions = positions.clone();
-    _uvs       = uvs.clone();
-    _faces     = faces.clone();
+    data.positions = positions.clone();
+    data.uvs       = uvs.clone();
+    data.faces     = faces.clone();
 
-    _mesh_cdf = torch::zeros({faces.size(0)}, atcg::TensorOptions::floatHostOptions());
+    data.mesh_cdf = torch::zeros({faces.size(0)}, atcg::TensorOptions::floatHostOptions());
 
     {
-        detail::computeMeshTrianglePDFKernel(positions, faces, transform, _mesh_cdf);
+        detail::computeMeshTrianglePDFKernel(positions, faces, transform, data.mesh_cdf);
     }
 
     {
-        detail::computeMeshTriangleCDFKernel(_mesh_cdf);
+        detail::computeMeshTriangleCDFKernel(data.mesh_cdf);
     }
 
-    _total_area = _mesh_cdf.index({_mesh_cdf.size(0) - 1}).item<float>();
+    data.total_area = data.mesh_cdf.index({data.mesh_cdf.size(0) - 1}).item<float>();
     {
-        detail::normalizeMeshTriangleCDFKernel(_mesh_cdf, _total_area);
+        detail::normalizeMeshTriangleCDFKernel(data.mesh_cdf, data.total_area);
     }
 
-    _local_to_world = transform;
-    _world_to_local = glm::inverse(transform);
+    data.local_to_world = transform;
+    data.world_to_local = glm::inverse(transform);
+
+    _mesh_emitter_data = atcg::make_ref<MeshEmitterData>(data);
+}
+
+void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                     const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    const std::string ptx_emitter_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/"
+                                             "EmitterModels.dll";
+    auto sample_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_meshemitter"});
+    auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_meshemitter"});
+    auto evalpdf_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_meshemitter"});
+    uint32_t sample_idx   = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_idx     = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_pdf_idx = sbt->addCallableEntry(evalpdf_prog_group, _mesh_emitter_data.get());
+
+    EmitterVPtrTable table;
+    table.sampleCallIndex  = sample_idx;
+    table.evalCallIndex    = eval_idx;
+    table.evalPdfCallIndex = eval_pdf_idx;
+
+    _vptr_table = atcg::make_ref<EmitterVPtrTable>(table);
 }
 
 MeshEmitter::~MeshEmitter() {}
 
-glm::vec3 MeshEmitter::evalLight(const SurfaceInteraction& si) const
-{
-    glm::vec3 emissive_color = texture(_emissive_texture, si.uv);
-
-    return evalMeshEmitter(emissive_color, _emitter_scaling);
-}
-
-EmitterSamplingResult MeshEmitter::sampleLight(const SurfaceInteraction& si, PCG32& rng) const
-{
-    EmitterSamplingResult result = sampleMeshEmitter(si,
-                                                     _mesh_cdf.data_ptr<float>(),
-                                                     (glm::vec3*)_positions.data_ptr(),
-                                                     (glm::vec3*)_uvs.data_ptr(),
-                                                     (glm::u32vec3*)_faces.data_ptr(),
-                                                     _faces.size(0),
-                                                     _total_area,
-                                                     _local_to_world,
-                                                     _world_to_local,
-                                                     rng);
-
-    glm::vec3 emissive_color = texture(_emissive_texture, si.uv);
-
-    result.radiance_weight_at_receiver = _emitter_scaling * emissive_color / result.sampling_pdf;
-
-    return result;
-}
-
-float MeshEmitter::evalLightSamplingPdf(const SurfaceInteraction& last_si, const SurfaceInteraction& si) const
-{
-    // We can assume that outgoing ray dir actually intersects the light source.
-
-    return evalMeshEmitterPDF(last_si, _total_area, si);
-}
-
 EnvironmentEmitter::EnvironmentEmitter(const atcg::ref_ptr<atcg::Texture2D>& environment_texture)
 {
-    _environment_texture = environment_texture->getData(atcg::CPU);
+    EnvironmentEmitterData data;
+    data.environment_texture = environment_texture->getData(atcg::CPU);
+
+    _environment_emitter_data = atcg::make_ref<EnvironmentEmitterData>(data);
 }
 
 EnvironmentEmitter::~EnvironmentEmitter() {}
 
-glm::vec3 EnvironmentEmitter::evalLight(const SurfaceInteraction& si) const
+void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                            const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    auto uv = evalEnvironmentEmitter(si);
+    const std::string ptx_emitter_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/"
+                                             "EmitterModels.dll";
+    auto sample_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_environmentemitter"});
+    auto eval_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_environmentemitter"});
+    auto evalpdf_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_environmentemitter"});
+    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, _environment_emitter_data.get());
+    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, _environment_emitter_data.get());
+    uint32_t evalpdf_idx = sbt->addCallableEntry(evalpdf_prog_group, _environment_emitter_data.get());
 
-    return texture(_environment_texture, uv);
-}
+    EmitterVPtrTable table;
+    table.sampleCallIndex  = sample_idx;
+    table.evalCallIndex    = eval_idx;
+    table.evalPdfCallIndex = evalpdf_idx;
 
-EmitterSamplingResult EnvironmentEmitter::sampleLight(const SurfaceInteraction& si, PCG32& rng) const
-{
-    auto result                        = sampleEnvironmentEmitter(si, rng);
-    result.radiance_weight_at_receiver = texture(_environment_texture, result.uvs) / result.sampling_pdf;
-
-    return result;
-}
-
-float EnvironmentEmitter::evalLightSamplingPdf(const SurfaceInteraction& last_si, const SurfaceInteraction& si) const
-{
-    return evalEnvironmentEmitterSamplingPdf(last_si, si);
+    _vptr_table = atcg::make_ref<EmitterVPtrTable>(table);
 }
 }    // namespace atcg
