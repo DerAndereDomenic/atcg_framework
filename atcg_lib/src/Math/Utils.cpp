@@ -41,6 +41,16 @@ void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent&
     auto normals  = graph->getNormals(atcg::GPU);
     auto tangents = graph->getTangents(atcg::GPU);
 
+    applyTransform(vertices, normals, tangents, transform);
+
+    transform.setModel(glm::mat4(1));
+}
+
+void applyTransform(torch::Tensor& vertices,
+                    torch::Tensor& normals,
+                    torch::Tensor& tangents,
+                    atcg::TransformComponent& transform)
+{
     glm::mat4 model_matrix  = transform.getModel();
     glm::mat4 normal_matrix = glm::inverse(glm::transpose(model_matrix));
 
@@ -54,8 +64,8 @@ void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent&
         options       = atcg::TensorOptions::DeviceOptions<float>();
     }
 
-    torch::Tensor ones  = torch::ones({graph->n_vertices(), 1}, options);
-    torch::Tensor zeros = torch::zeros({graph->n_vertices(), 1}, options);
+    torch::Tensor ones  = torch::ones({vertices.size(0), 1}, options);
+    torch::Tensor zeros = torch::zeros({vertices.size(0), 1}, options);
 
     auto vertices_hom = torch::hstack({vertices, ones});
     auto normals_hom  = torch::hstack({normals, zeros});
@@ -64,9 +74,8 @@ void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent&
     vertices_hom = torch::matmul(vertices_hom, model_tensor);
     normals_hom  = torch::matmul(normals_hom, normal_tensor);
     tangents_hom = torch::matmul(tangents_hom, normal_tensor);
-
-    normals_hom  = normals_hom / (torch::norm(normals_hom, -1) + 1e-5f);
-    tangents_hom = tangents_hom / (torch::norm(tangents_hom, -1) + 1e-5f);
+    normals_hom  = normals_hom / (torch::norm(normals_hom, 2, -1, true) + 1e-5f);
+    tangents_hom = tangents_hom / (torch::norm(tangents_hom, 2, -1, true) + 1e-5f);
 
     vertices.index_put_({torch::indexing::Slice(), torch::indexing::Slice()},
                         vertices_hom.index({torch::indexing::Slice(), torch::indexing::Slice(0, 3)}));
@@ -74,8 +83,6 @@ void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent&
                        normals_hom.index({torch::indexing::Slice(), torch::indexing::Slice(0, 3)}));
     tangents.index_put_({torch::indexing::Slice(), torch::indexing::Slice()},
                         tangents_hom.index({torch::indexing::Slice(), torch::indexing::Slice(0, 3)}));
-
-    transform.setModel(glm::mat4(1));
 }
 
 template<>

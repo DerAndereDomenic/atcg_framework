@@ -33,6 +33,20 @@ void normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& tran
 void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform);
 
 /**
+ * @brief Apply a transform to a given mesh.
+ * After this, the mesh vertices will be in world space and the transform will be the identity.
+ *
+ * @param positions The positions
+ * @param normals The normals
+ * @param tangents The tangents
+ * @param transform The transform
+ */
+void applyTransform(torch::Tensor& positions,
+                    torch::Tensor& normals,
+                    torch::Tensor& tangents,
+                    atcg::TransformComponent& transform);
+
+/**
  * @brief Convert datatype from network to host byte order.
  * @note Currently only implemented for int_t types
  *
