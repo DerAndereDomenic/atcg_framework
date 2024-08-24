@@ -108,6 +108,7 @@ public:
 
 protected:
     virtual void run();
+
 private:
     bool onWindowClose(WindowCloseEvent* e);
     bool onWindowResize(WindowResizeEvent* e);
@@ -119,6 +120,9 @@ private:
     atcg::scope_ptr<Window> _window;
     ImGuiLayer* _imgui_layer;
     LayerStack _layer_stack;
+
+    // Systems
+    atcg::ref_ptr<Logger> _logger;
 
     friend int atcg::atcg_main(Application* app);
     friend int ::python_main(atcg::Application* app);    // Entry point for python bindings

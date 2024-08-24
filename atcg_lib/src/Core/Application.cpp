@@ -1,5 +1,6 @@
 #include <Core/Application.h>
 
+#include <Core/SystemRegistry.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/ShaderManager.h>
@@ -23,7 +24,10 @@ Application::~Application() {}
 
 void Application::init(const WindowProps& props)
 {
-    Logger::init();
+    SystemRegistry::init();
+
+    _logger = atcg::make_ref<Logger>();
+    SystemRegistry::instance()->registerSystem(_logger.get());
 
     _window = atcg::make_scope<Window>(props);
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
