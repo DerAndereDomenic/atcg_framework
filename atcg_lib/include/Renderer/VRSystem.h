@@ -34,7 +34,7 @@ public:
      *
      * @param callback The callback function
      */
-    static void init(const EventCallbackFn& callback);
+    void init(const EventCallbackFn& callback);
 
     /**
      * @brief Initialize controller renderings.
@@ -193,20 +193,13 @@ public:
      */
     static glm::vec3 getOffset();
 
-    /**
-     * @brief Destroys the Renderer instance. SHOULD NOT BE CALLED BY THE USER
-     *
-     */
-    ATCG_INLINE static void destroy() { delete s_renderer; }
+    VRSystem();
 
     ~VRSystem();
 
 private:
-    VRSystem();
 
     class Impl;
     atcg::scope_ptr<Impl> impl;
-
-    static VRSystem* s_renderer;
 };
 }    // namespace atcg

@@ -1,5 +1,6 @@
 #include <Renderer/VRSystem.h>
 
+#include <Core/SystemRegistry.h>
 #include <Core/Log.h>
 #include <glad/glad.h>
 #include <DataStructure/Graph.h>
@@ -12,7 +13,6 @@
 
 namespace atcg
 {
-VRSystem* VRSystem::s_renderer = new VRSystem;
 
 class VRSystem::Impl
 {
@@ -127,17 +127,17 @@ void VRSystem::Impl::deinit()
 
 void VRSystem::init(const EventCallbackFn& callback)
 {
-    s_renderer->impl = atcg::make_scope<Impl>();
+    SystemRegistry::instance()->getSystem<VRSystem>()->impl = atcg::make_scope<Impl>();
 
-    s_renderer->impl->init();
-    s_renderer->impl->on_event = callback;
+    SystemRegistry::instance()->getSystem<VRSystem>()->impl->init();
+    SystemRegistry::instance()->getSystem<VRSystem>()->impl->on_event = callback;
 
     doTracking();
 }
 
 void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
 {
-    if(!s_renderer->impl->vr_available) return;
+    if(!SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available) return;
 
     // Left
     {
@@ -148,14 +148,22 @@ void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
         auto roughness  = atcg::IO::imread("res/VRController/Quest/controller_l_lo_roughness.png");
         auto metallic   = atcg::IO::imread("res/VRController/Quest/controller_l_lo_metallic.png");
 
-        s_renderer->impl->left_controller_entity = scene->createEntity("Left Controller");
-        s_renderer->impl->left_controller_entity.addComponent<atcg::TransformComponent>();
-        auto& renderer = s_renderer->impl->left_controller_entity.addComponent<atcg::MeshRenderComponent>();
+        SystemRegistry::instance()->getSystem<VRSystem>()->impl->left_controller_entity = scene->createEntity("Left "
+                                                                                                              "Controll"
+                                                                                                              "er");
+        SystemRegistry::instance()
+            ->getSystem<VRSystem>()
+            ->impl->left_controller_entity.addComponent<atcg::TransformComponent>();
+        auto& renderer = SystemRegistry::instance()
+                             ->getSystem<VRSystem>()
+                             ->impl->left_controller_entity.addComponent<atcg::MeshRenderComponent>();
         renderer.material.setDiffuseTexture(atcg::Texture2D::create(base_color));
         renderer.material.setNormalTexture(atcg::Texture2D::create(normal));
         renderer.material.setRoughnessTexture(atcg::Texture2D::create(roughness));
         renderer.material.setMetallicTexture(atcg::Texture2D::create(metallic));
-        s_renderer->impl->left_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
+        SystemRegistry::instance()
+            ->getSystem<VRSystem>()
+            ->impl->left_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
     }
 
     // Right
@@ -167,29 +175,43 @@ void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
         auto roughness  = atcg::IO::imread("res/VRController/Quest/controller_r_lo_roughness.png");
         auto metallic   = atcg::IO::imread("res/VRController/Quest/controller_r_lo_metallic.png");
 
-        s_renderer->impl->right_controller_entity = scene->createEntity("Right Controller");
-        s_renderer->impl->right_controller_entity.addComponent<atcg::TransformComponent>();
-        auto& renderer = s_renderer->impl->right_controller_entity.addComponent<atcg::MeshRenderComponent>();
+        SystemRegistry::instance()->getSystem<VRSystem>()->impl->right_controller_entity = scene->createEntity("Right "
+                                                                                                               "Control"
+                                                                                                               "ler");
+        SystemRegistry::instance()
+            ->getSystem<VRSystem>()
+            ->impl->right_controller_entity.addComponent<atcg::TransformComponent>();
+        auto& renderer = SystemRegistry::instance()
+                             ->getSystem<VRSystem>()
+                             ->impl->right_controller_entity.addComponent<atcg::MeshRenderComponent>();
         renderer.material.setDiffuseTexture(atcg::Texture2D::create(base_color));
         renderer.material.setNormalTexture(atcg::Texture2D::create(normal));
         renderer.material.setRoughnessTexture(atcg::Texture2D::create(roughness));
         renderer.material.setMetallicTexture(atcg::Texture2D::create(metallic));
-        s_renderer->impl->right_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
+        SystemRegistry::instance()
+            ->getSystem<VRSystem>()
+            ->impl->right_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
     }
 
-    s_renderer->impl->controller_initialized = true;
+    SystemRegistry::instance()->getSystem<VRSystem>()->impl->controller_initialized = true;
 }
 
 void VRSystem::onUpdate(const float delta_time)
 {
-    if(!s_renderer->impl->vr_available) return;
+    if(!SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available) return;
 
     // Upload to HMD
     {
-        vr::Texture_t left_eye_texture  = {(void*)s_renderer->impl->render_target_left->getColorAttachement()->getID(),
+        vr::Texture_t left_eye_texture  = {(void*)SystemRegistry::instance()
+                                               ->getSystem<VRSystem>()
+                                               ->impl->render_target_left->getColorAttachement()
+                                               ->getID(),
                                            vr::TextureType_OpenGL,
                                            vr::ColorSpace::ColorSpace_Linear};
-        vr::Texture_t right_eye_texture = {(void*)s_renderer->impl->render_target_right->getColorAttachement()->getID(),
+        vr::Texture_t right_eye_texture = {(void*)SystemRegistry::instance()
+                                               ->getSystem<VRSystem>()
+                                               ->impl->render_target_right->getColorAttachement()
+                                               ->getID(),
                                            vr::TextureType_OpenGL,
                                            vr::ColorSpace::ColorSpace_Linear};
 
@@ -202,52 +224,69 @@ void VRSystem::onUpdate(const float delta_time)
     }
 
     // Update controller transforms
-    if(s_renderer->impl->controller_initialized)
+    if(SystemRegistry::instance()->getSystem<VRSystem>()->impl->controller_initialized)
     {
         {
-            uint32_t device_idx = s_renderer->impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
-                vr::ETrackedControllerRole::TrackedControllerRole_RightHand);
+            uint32_t device_idx = SystemRegistry::instance()
+                                      ->getSystem<VRSystem>()
+                                      ->impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
+                                          vr::ETrackedControllerRole::TrackedControllerRole_RightHand);
 
             if(device_idx >= vr::k_unMaxTrackedDeviceCount) return;
 
             glm::mat4 model = VRSystem::getDevicePose(device_idx);
 
-            s_renderer->impl->right_controller_entity.getComponent<atcg::TransformComponent>().setModel(model);
+            SystemRegistry::instance()
+                ->getSystem<VRSystem>()
+                ->impl->right_controller_entity.getComponent<atcg::TransformComponent>()
+                .setModel(model);
         }
 
         {
-            uint32_t device_idx = s_renderer->impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
-                vr::ETrackedControllerRole::TrackedControllerRole_LeftHand);
+            uint32_t device_idx = SystemRegistry::instance()
+                                      ->getSystem<VRSystem>()
+                                      ->impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
+                                          vr::ETrackedControllerRole::TrackedControllerRole_LeftHand);
 
             if(device_idx >= vr::k_unMaxTrackedDeviceCount) return;
 
             glm::mat4 model = VRSystem::getDevicePose(device_idx);
 
-            s_renderer->impl->left_controller_entity.getComponent<atcg::TransformComponent>().setModel(model);
+            SystemRegistry::instance()
+                ->getSystem<VRSystem>()
+                ->impl->left_controller_entity.getComponent<atcg::TransformComponent>()
+                .setModel(model);
         }
     }
 }
 
 void VRSystem::doTracking()
 {
-    if(!s_renderer->impl->vr_available) return;
+    if(!SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available) return;
 
-    vr::VRCompositor()->WaitGetPoses(s_renderer->impl->renderPoses, vr::k_unMaxTrackedDeviceCount, nullptr, 0);
+    vr::VRCompositor()->WaitGetPoses(SystemRegistry::instance()->getSystem<VRSystem>()->impl->renderPoses,
+                                     vr::k_unMaxTrackedDeviceCount,
+                                     nullptr,
+                                     0);
 
     // Update position
-    vr::TrackedDevicePose_t trackedDevicePose = s_renderer->impl->renderPoses[vr::k_unTrackedDeviceIndex_Hmd];
+    vr::TrackedDevicePose_t trackedDevicePose =
+        SystemRegistry::instance()->getSystem<VRSystem>()->impl->renderPoses[vr::k_unTrackedDeviceIndex_Hmd];
 
     {
-        s_renderer->impl->position = glm::vec3(trackedDevicePose.mDeviceToAbsoluteTracking.m[0][3],
-                                               trackedDevicePose.mDeviceToAbsoluteTracking.m[1][3],
-                                               trackedDevicePose.mDeviceToAbsoluteTracking.m[2][3]);
+        SystemRegistry::instance()->getSystem<VRSystem>()->impl->position =
+            glm::vec3(trackedDevicePose.mDeviceToAbsoluteTracking.m[0][3],
+                      trackedDevicePose.mDeviceToAbsoluteTracking.m[1][3],
+                      trackedDevicePose.mDeviceToAbsoluteTracking.m[2][3]);
     }
 
     // Update view matrices
     {
-        vr::HmdMatrix34_t e = s_renderer->impl->vr_pointer->GetEyeToHeadTransform(vr::EVREye::Eye_Left);
-        glm::mat4 result    = glm::mat4(1);
-        glm::mat4 eye2head  = glm::mat4(1);
+        vr::HmdMatrix34_t e =
+            SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_pointer->GetEyeToHeadTransform(
+                vr::EVREye::Eye_Left);
+        glm::mat4 result   = glm::mat4(1);
+        glm::mat4 eye2head = glm::mat4(1);
         if(trackedDevicePose.bPoseIsValid)
         {
             for(int i = 0; i < 3; ++i)
@@ -261,15 +300,17 @@ void VRSystem::doTracking()
         }
 
         result = result * eye2head;
-        result[3] += glm::vec4(s_renderer->impl->offset, 0);
+        result[3] += glm::vec4(SystemRegistry::instance()->getSystem<VRSystem>()->impl->offset, 0);
 
-        s_renderer->impl->inv_view_left = result;
+        SystemRegistry::instance()->getSystem<VRSystem>()->impl->inv_view_left = result;
     }
 
     {
-        vr::HmdMatrix34_t e = s_renderer->impl->vr_pointer->GetEyeToHeadTransform(vr::EVREye::Eye_Right);
-        glm::mat4 result    = glm::mat4(1);
-        glm::mat4 eye2head  = glm::mat4(1);
+        vr::HmdMatrix34_t e =
+            SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_pointer->GetEyeToHeadTransform(
+                vr::EVREye::Eye_Right);
+        glm::mat4 result   = glm::mat4(1);
+        glm::mat4 eye2head = glm::mat4(1);
         if(trackedDevicePose.bPoseIsValid)
         {
             for(int i = 0; i < 3; ++i)
@@ -283,15 +324,18 @@ void VRSystem::doTracking()
         }
 
         result = result * eye2head;
-        result[3] += glm::vec4(s_renderer->impl->offset, 0);
+        result[3] += glm::vec4(SystemRegistry::instance()->getSystem<VRSystem>()->impl->offset, 0);
 
-        s_renderer->impl->inv_view_right = result;
+        SystemRegistry::instance()->getSystem<VRSystem>()->impl->inv_view_right = result;
     }
 
     // Update projection matrices
     {
         vr::HmdMatrix44_t projection =
-            s_renderer->impl->vr_pointer->GetProjectionMatrix(vr::EVREye::Eye_Left, 0.01f, 1000.0f);
+            SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_pointer->GetProjectionMatrix(
+                vr::EVREye::Eye_Left,
+                0.01f,
+                1000.0f);
         glm::mat4 result = glm::mat4(1);
         for(int i = 0; i < 4; ++i)
         {
@@ -301,12 +345,15 @@ void VRSystem::doTracking()
             }
         }
 
-        s_renderer->impl->projection_left = result;
+        SystemRegistry::instance()->getSystem<VRSystem>()->impl->projection_left = result;
     }
 
     {
         vr::HmdMatrix44_t projection =
-            s_renderer->impl->vr_pointer->GetProjectionMatrix(vr::EVREye::Eye_Right, 0.01f, 1000.0f);
+            SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_pointer->GetProjectionMatrix(
+                vr::EVREye::Eye_Right,
+                0.01f,
+                1000.0f);
         glm::mat4 result = glm::mat4(1);
         for(int i = 0; i < 4; ++i)
         {
@@ -316,36 +363,36 @@ void VRSystem::doTracking()
             }
         }
 
-        s_renderer->impl->projection_right = result;
+        SystemRegistry::instance()->getSystem<VRSystem>()->impl->projection_right = result;
     }
 }
 
 void VRSystem::emitEvents()
 {
-    if(!s_renderer->impl->vr_available) return;
+    if(!SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available) return;
 
     vr::VREvent_t vrevent;
-    if(s_renderer->impl->vr_pointer->PollNextEvent(&vrevent, sizeof(vrevent)))
+    if(SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_pointer->PollNextEvent(&vrevent, sizeof(vrevent)))
     {
         if(vrevent.eventType == vr::EVREventType::VREvent_ButtonPress)
         {
             VRButtonPressedEvent event(vrevent.data.controller.button, vrevent.trackedDeviceIndex);
-            s_renderer->impl->on_event(&event);
+            SystemRegistry::instance()->getSystem<VRSystem>()->impl->on_event(&event);
         }
         else if(vrevent.eventType == vr::EVREventType::VREvent_ButtonUnpress)
         {
             VRButtonReleasedEvent event(vrevent.data.controller.button, vrevent.trackedDeviceIndex);
-            s_renderer->impl->on_event(&event);
+            SystemRegistry::instance()->getSystem<VRSystem>()->impl->on_event(&event);
         }
         else if(vrevent.eventType == vr::EVREventType::VREvent_ButtonTouch)
         {
             VRButtonTouchedEvent event(vrevent.data.controller.button, vrevent.trackedDeviceIndex);
-            s_renderer->impl->on_event(&event);
+            SystemRegistry::instance()->getSystem<VRSystem>()->impl->on_event(&event);
         }
         else if(vrevent.eventType == vr::EVREventType::VREvent_ButtonUntouch)
         {
             VRButtonUntouchedEvent event(vrevent.data.controller.button, vrevent.trackedDeviceIndex);
-            s_renderer->impl->on_event(&event);
+            SystemRegistry::instance()->getSystem<VRSystem>()->impl->on_event(&event);
         }
     }
 }
@@ -354,9 +401,9 @@ glm::mat4 VRSystem::getInverseView(const Eye& eye)
 {
     if(eye == Eye::LEFT)
     {
-        return s_renderer->impl->inv_view_left;
+        return SystemRegistry::instance()->getSystem<VRSystem>()->impl->inv_view_left;
     }
-    return s_renderer->impl->inv_view_right;
+    return SystemRegistry::instance()->getSystem<VRSystem>()->impl->inv_view_right;
 }
 
 std::tuple<glm::mat4, glm::mat4> VRSystem::getInverseViews()
@@ -369,9 +416,9 @@ glm::mat4 VRSystem::getProjection(const Eye& eye)
 {
     if(eye == Eye::LEFT)
     {
-        return s_renderer->impl->projection_left;
+        return SystemRegistry::instance()->getSystem<VRSystem>()->impl->projection_left;
     }
-    return s_renderer->impl->projection_right;
+    return SystemRegistry::instance()->getSystem<VRSystem>()->impl->projection_right;
 }
 
 std::tuple<glm::mat4, glm::mat4> VRSystem::getProjections()
@@ -383,9 +430,9 @@ atcg::ref_ptr<Framebuffer> VRSystem::getRenderTarget(const Eye& eye)
 {
     if(eye == Eye::LEFT)
     {
-        return s_renderer->impl->render_target_left;
+        return SystemRegistry::instance()->getSystem<VRSystem>()->impl->render_target_left;
     }
-    return s_renderer->impl->render_target_right;
+    return SystemRegistry::instance()->getSystem<VRSystem>()->impl->render_target_right;
 }
 
 std::tuple<atcg::ref_ptr<Framebuffer>, atcg::ref_ptr<Framebuffer>> VRSystem::getRenderTargets()
@@ -396,43 +443,49 @@ std::tuple<atcg::ref_ptr<Framebuffer>, atcg::ref_ptr<Framebuffer>> VRSystem::get
 
 void VRSystem::renderToScreen()
 {
-    if(!s_renderer->impl->vr_available) return;
+    if(!SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available) return;
 
     auto vr_shader = atcg::ShaderManager::getShader("vrScreen");
     vr_shader->setInt("texture_left", 10);
     vr_shader->setInt("texture_right", 11);
-    s_renderer->impl->render_target_left->getColorAttachement()->use(10);
-    s_renderer->impl->render_target_right->getColorAttachement()->use(11);
-    atcg::Renderer::draw(s_renderer->impl->quad, {}, glm::mat4(1), glm::vec3(1), vr_shader);
+    SystemRegistry::instance()->getSystem<VRSystem>()->impl->render_target_left->getColorAttachement()->use(10);
+    SystemRegistry::instance()->getSystem<VRSystem>()->impl->render_target_right->getColorAttachement()->use(11);
+    atcg::Renderer::draw(SystemRegistry::instance()->getSystem<VRSystem>()->impl->quad,
+                         {},
+                         glm::mat4(1),
+                         glm::vec3(1),
+                         vr_shader);
 }
 
 glm::vec3 VRSystem::getPosition()
 {
-    return s_renderer->impl->position;
+    return SystemRegistry::instance()->getSystem<VRSystem>()->impl->position;
 }
 
 bool VRSystem::isVRAvailable()
 {
-    return s_renderer->impl->vr_available;
+    return SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available;
 }
 
 uint32_t VRSystem::width()
 {
-    return s_renderer->impl->width;
+    return SystemRegistry::instance()->getSystem<VRSystem>()->impl->width;
 }
 
 uint32_t VRSystem::height()
 {
-    return s_renderer->impl->height;
+    return SystemRegistry::instance()->getSystem<VRSystem>()->impl->height;
 }
 
 VRSystem::Role VRSystem::getDeviceRole(const uint32_t device_index)
 {
-    if(!s_renderer->impl->vr_available) return VRSystem::Role::INVALID;
+    if(!SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available) return VRSystem::Role::INVALID;
 
     if(device_index == vr::k_unTrackedDeviceIndex_Hmd) return VRSystem::Role::HMD;
 
-    auto device_role = s_renderer->impl->vr_pointer->GetControllerRoleForTrackedDeviceIndex(device_index);
+    auto device_role =
+        SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_pointer->GetControllerRoleForTrackedDeviceIndex(
+            device_index);
 
     if(device_role == vr::ETrackedControllerRole::TrackedControllerRole_LeftHand)
     {
@@ -448,9 +501,9 @@ VRSystem::Role VRSystem::getDeviceRole(const uint32_t device_index)
 
 glm::mat4 VRSystem::getDevicePose(const uint32_t device_index)
 {
-    if(!s_renderer->impl->vr_available) return glm::mat4(1);
+    if(!SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available) return glm::mat4(1);
 
-    auto trackedDevicePose = s_renderer->impl->renderPoses[device_index];
+    auto trackedDevicePose = SystemRegistry::instance()->getSystem<VRSystem>()->impl->renderPoses[device_index];
 
     glm::mat4 result = glm::mat4(1);
     if(trackedDevicePose.bPoseIsValid)
@@ -464,30 +517,30 @@ glm::mat4 VRSystem::getDevicePose(const uint32_t device_index)
         }
     }
 
-    result[3] += glm::vec4(s_renderer->impl->offset, 0);
+    result[3] += glm::vec4(SystemRegistry::instance()->getSystem<VRSystem>()->impl->offset, 0);
 
     return result;
 }
 
 void VRSystem::setMovementLine(const glm::vec3& start, const glm::vec3& end)
 {
-    if(!s_renderer->impl->vr_available) return;
+    if(!SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available) return;
 
-    auto positions = s_renderer->impl->movement_line->getDevicePositions();
+    auto positions = SystemRegistry::instance()->getSystem<VRSystem>()->impl->movement_line->getDevicePositions();
 
     torch::Tensor line_tensor =
         torch::tensor({{start.x, start.y, start.z}, {end.x, end.y, end.z}}, atcg::TensorOptions::floatDeviceOptions());
 
     positions.index_put_({torch::indexing::Slice(), torch::indexing::Slice()}, line_tensor);
 
-    s_renderer->impl->movement_line->unmapAllPointers();
+    SystemRegistry::instance()->getSystem<VRSystem>()->impl->movement_line->unmapAllPointers();
 }
 
 void VRSystem::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
 {
-    if(!s_renderer->impl->vr_available) return;
+    if(!SystemRegistry::instance()->getSystem<VRSystem>()->impl->vr_available) return;
 
-    atcg::Renderer::draw(s_renderer->impl->movement_line,
+    atcg::Renderer::draw(SystemRegistry::instance()->getSystem<VRSystem>()->impl->movement_line,
                          camera,
                          glm::mat4(1),
                          glm::vec3(1),
@@ -497,12 +550,12 @@ void VRSystem::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& ca
 
 void VRSystem::setOffset(const glm::vec3& offset)
 {
-    s_renderer->impl->offset = offset;
+    SystemRegistry::instance()->getSystem<VRSystem>()->impl->offset = offset;
 }
 
 glm::vec3 VRSystem::getOffset()
 {
-    return s_renderer->impl->offset;
+    return SystemRegistry::instance()->getSystem<VRSystem>()->impl->offset;
 }
 
 }    // namespace atcg

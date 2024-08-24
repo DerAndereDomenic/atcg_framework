@@ -33,7 +33,6 @@ int atcg_main(Application* app)
     app->run();
 
     {
-        atcg::VRSystem::destroy();
         atcg::SystemRegistry::shutdown();
     }
 

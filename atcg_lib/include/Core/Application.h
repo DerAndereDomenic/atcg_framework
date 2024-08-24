@@ -8,6 +8,7 @@
 #include <Core/Platform.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Renderer.h>
+#include <Renderer/VRSystem.h>
 
 namespace atcg
 {
@@ -127,6 +128,7 @@ private:
     atcg::ref_ptr<Logger> _logger;
     atcg::ref_ptr<ShaderManager> _shader_manager;
     atcg::ref_ptr<Renderer> _renderer;
+    atcg::ref_ptr<VRSystem> _vr_system;
 
     friend int atcg::atcg_main(Application* app);
     friend int ::python_main(atcg::Application* app);    // Entry point for python bindings
