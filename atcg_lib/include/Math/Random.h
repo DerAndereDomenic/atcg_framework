@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/CUDA.h>
+#include <Core/glm.h>
 
 namespace atcg
 {
