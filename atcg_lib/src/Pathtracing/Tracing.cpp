@@ -22,7 +22,7 @@ void Tracing::prepareAccelerationStructure(Entity entity)
 
     auto& geometry = entity.getComponent<GeometryComponent>();
 
-    acc_component.accel = atcg::make_ref<BVHAccelerationStructure>(geometry.graph);
+    acc_component.accel = atcg::make_ref<GASAccelerationStructure>(geometry.graph);
 }
 
 SurfaceInteraction
@@ -36,7 +36,7 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
 
     auto& acc_component = entity.getComponent<AccelerationStructureComponent>();
 
-    atcg::ref_ptr<BVHAccelerationStructure> bvh_accel = std::dynamic_pointer_cast<BVHAccelerationStructure>(
+    atcg::ref_ptr<GASAccelerationStructure> bvh_accel = std::dynamic_pointer_cast<GASAccelerationStructure>(
         entity.getComponent<AccelerationStructureComponent>().accel);
 
     if(!bvh_accel->getBVH().IsValid())
@@ -45,22 +45,10 @@ Tracing::traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& r
         return SurfaceInteraction();
     }
 
-    return traceRay(bvh_accel,
-                    bvh_accel->getPositions(),
-                    bvh_accel->getNormals(),
-                    bvh_accel->getUVs(),
-                    bvh_accel->getFaces(),
-                    ray_origin,
-                    ray_dir,
-                    t_min,
-                    t_max);
+    return traceRay(bvh_accel, ray_origin, ray_dir, t_min, t_max);
 }
 
 SurfaceInteraction Tracing::traceRay(const atcg::ref_ptr<BVHAccelerationStructure>& accel,
-                                     const torch::Tensor& positions,
-                                     const torch::Tensor& normals,
-                                     const torch::Tensor& uvs,
-                                     const torch::Tensor& faces,
                                      const glm::vec3& origin,
                                      const glm::vec3& dir,
                                      float tmin,
@@ -71,6 +59,11 @@ SurfaceInteraction Tracing::traceRay(const atcg::ref_ptr<BVHAccelerationStructur
         ATCG_WARN("Acceleration Structure not valid. Aborting...");
         return SurfaceInteraction();
     }
+
+    auto positions = accel->getPositions();
+    auto normals   = accel->getNormals();
+    auto uvs       = accel->getUVs();
+    auto faces     = accel->getFaces();
 
     SurfaceInteraction si;
     si.incoming_direction = dir;
