@@ -8,6 +8,8 @@
 #include <Core/glm.h>
 #include <Scene/Scene.h>
 #include <Renderer/PerspectiveCamera.h>
+#include <Pathtracing/ShaderBindingTable.h>
+#include <Pathtracing/RaytracingPipeline.h>
 
 namespace atcg
 {
@@ -171,6 +173,13 @@ public:
      * @return The value
      */
     torch::Tensor getTensor(const std::string& name) const;
+
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
+
+    virtual void reset() = 0;
+
+    virtual void generateRays(torch::Tensor& output) = 0;
 
 protected:
     using Parameter = std::variant<int, float, glm::vec2, glm::vec3, glm::vec4, glm::mat3, glm::mat4, torch::Tensor>;

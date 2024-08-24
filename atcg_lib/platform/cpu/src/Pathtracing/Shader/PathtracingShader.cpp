@@ -1,10 +1,12 @@
-#include <Pathtracing/Shader/PathtracingShader.h>
+#include <Pathtracing/PathtracingShader.h>
 
 #include <DataStructure/TorchUtils.h>
 
 #include <Scene/Components.h>
 #include <Scene/Entity.h>
 #include <Pathtracing/Tracing.h>
+#include <Pathtracing/MeshShapeData.cuh>
+#include <Pathtracing/Launch.h>
 
 #include <Math/Utils.h>
 
@@ -14,7 +16,7 @@
 
 namespace atcg
 {
-PathtracingShader::PathtracingShader() : CPURaytracingShader()
+PathtracingShader::PathtracingShader() : RaytracingShader()
 {
     setTensor("HDR", torch::zeros({1, 1, 3}, atcg::TensorOptions::floatDeviceOptions()));
 }
@@ -24,33 +26,31 @@ PathtracingShader::~PathtracingShader()
     reset();
 }
 
-void PathtracingShader::initializePipeline()
+void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                           const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    _bsdfs.clear();
+    reset();
+
+    if(Renderer::hasSkybox())
+    {
+        auto skybox_texture = Renderer::getSkyboxTexture();
+
+        _environment_emitter = atcg::make_ref<EnvironmentEmitter>(skybox_texture);
+        _environment_emitter->initializePipeline(pipeline, sbt);
+    }
 
     auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
-
-    uint32_t total_vertices = 0;
-    uint32_t total_faces    = 0;
-    std::vector<atcg::ref_ptr<Graph>> geometry;
-    std::vector<TransformComponent> transforms;
     for(auto e: view)
     {
         Entity entity(e, _scene.get());
 
-        TransformComponent transform = entity.getComponent<TransformComponent>();
+        Material material = entity.getComponent<atcg::MeshRenderComponent>().material;
 
-        transforms.push_back(transform);
+        auto graph                                    = entity.getComponent<GeometryComponent>().graph;
+        atcg::ref_ptr<GASAccelerationStructure> accel = atcg::make_ref<GASAccelerationStructure>(graph);
+        accel->initializePipeline(pipeline, sbt);
 
-        atcg::ref_ptr<Graph> graph = entity.getComponent<GeometryComponent>().graph;
-        geometry.push_back(graph);
-
-        total_vertices += graph->n_vertices();
-        total_faces += graph->n_faces();
-
-        auto& material = entity.getComponent<MeshRenderComponent>().material;
-
-        atcg::ref_ptr<CPUBSDF> bsdf = nullptr;
+        atcg::ref_ptr<BSDF> bsdf = nullptr;
         if(material.glass)
         {
             bsdf = atcg::make_ref<RefractiveBSDF>(material);
@@ -59,85 +59,69 @@ void PathtracingShader::initializePipeline()
         {
             bsdf = atcg::make_ref<PBRBSDF>(material);
         }
-        _bsdfs.push_back(bsdf);
+        bsdf->initializePipeline(pipeline, sbt);
+        entity.addOrReplaceComponent<atcg::BSDFComponent>(bsdf);
 
-        atcg::ref_ptr<CPUEmitter> emitter = nullptr;
+        entity.addOrReplaceComponent<AccelerationStructureComponent>(accel);
+
+        atcg::ref_ptr<Emitter> emitter = nullptr;
         if(material.emissive)
         {
-            auto positions = graph->getHostPositions();
-            auto uvs       = graph->getHostUVs();
-            auto faces     = graph->getHostFaces();
-            emitter        = atcg::make_ref<MeshEmitter>(positions, uvs, faces, transform, material);
+            glm::mat4 transform = entity.getComponent<atcg::TransformComponent>().getModel();
+            auto positions      = graph->getHostPositions();
+            auto uvs            = graph->getHostUVs();
+            auto faces          = graph->getHostFaces();
+            emitter             = atcg::make_ref<MeshEmitter>(accel->getPositions(),
+                                                  accel->getUVs(),
+                                                  accel->getFaces(),
+                                                  transform,
+                                                  material);
+            emitter->initializePipeline(pipeline, sbt);
         }
-        _emitter.push_back(emitter);
+        entity.addOrReplaceComponent<atcg::EmitterComponent>(emitter);
+        if(emitter) _emitter.push_back(emitter->getVPtrTable());
     }
 
-    _positions = torch::empty({total_vertices, 3}, atcg::TensorOptions::floatHostOptions());
-    _normals   = torch::empty({total_vertices, 3}, atcg::TensorOptions::floatHostOptions());
-    _uvs       = torch::empty({total_vertices, 3}, atcg::TensorOptions::floatHostOptions());
-    _faces     = torch::empty({total_faces, 3}, atcg::TensorOptions::int32HostOptions());
-    _mesh_idx  = torch::empty({total_faces}, atcg::TensorOptions::int32HostOptions());
-
-    uint32_t vertex_idx = 0;
-    uint32_t face_idx   = 0;
-
-    for(int i = 0; i < geometry.size(); ++i)
+    if(_environment_emitter)
     {
-        auto& graph = geometry[i];
-
-        TransformComponent& transform = transforms[i];
-        auto positions                = graph->getHostPositions().clone();
-        auto normals                  = graph->getHostNormals().clone();
-        auto uvs                      = graph->getHostUVs().clone();
-        auto tangents                 = graph->getHostTangents().clone();
-        auto faces                    = graph->getHostFaces().clone();
-        applyTransform(positions, normals, tangents, transform);
-
-        _positions.index_put_(
-            {torch::indexing::Slice(vertex_idx, vertex_idx + graph->n_vertices()), torch::indexing::Slice()},
-            positions);
-        _normals.index_put_(
-            {torch::indexing::Slice(vertex_idx, vertex_idx + graph->n_vertices()), torch::indexing::Slice()},
-            normals);
-        _uvs.index_put_(
-            {torch::indexing::Slice(vertex_idx, vertex_idx + graph->n_vertices()), torch::indexing::Slice()},
-            uvs);
-        _faces.index_put_({torch::indexing::Slice(face_idx, face_idx + graph->n_faces()), torch::indexing::Slice()},
-                          faces + (int32_t)vertex_idx);
-        _mesh_idx.index_put_({torch::indexing::Slice(face_idx, face_idx + graph->n_faces())}, i);
-        vertex_idx += graph->n_vertices();
-        face_idx += graph->n_faces();
+        _emitter.push_back(_environment_emitter->getVPtrTable());
     }
 
-    _positions.contiguous();
-    _normals.contiguous();
-    _uvs.contiguous();
-    _faces.contiguous();
-    _mesh_idx.contiguous();
+    auto ptx_file     = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/PathtracingShader.dll";
+    auto raygen_group = pipeline->addRaygenShader({ptx_file, "__raygen__main"});
+    auto miss_group   = pipeline->addMissShader({ptx_file, "__miss__main"});
+    _raygen_idx       = sbt->addRaygenEntry(raygen_group);
+    sbt->addMissEntry(miss_group);
+    // TODO: Miss
 
-    _accel = atcg::make_ref<BVHAccelerationStructure>();
-
-    nanort::BVHAccel<float> accel;
-    float* p_positions = _positions.data_ptr<float>();
-    int32_t* p_faces   = _faces.data_ptr<int32_t>();
-    nanort::TriangleMesh<float> triangle_mesh(p_positions, (uint32_t*)p_faces, sizeof(glm::vec3));
-    nanort::TriangleSAHPred<float> triangle_pred(p_positions, (uint32_t*)p_faces, sizeof(glm::vec3));
-    bool ret = accel.Build(total_faces, triangle_mesh, triangle_pred);
-    assert(ret);
-
-    nanort::BVHBuildStatistics stats = accel.GetStatistics();
-
-    ATCG_INFO("BVH statistics:");
-    ATCG_INFO("\t# of leaf   nodes: {0}", stats.num_leaf_nodes);
-    ATCG_INFO("\t# of branch nodes: {0}", stats.num_branch_nodes);
-    ATCG_INFO("\tMax tree depth   : {0}", stats.max_tree_depth);
-
-    _accel->setBVH(accel);
-
-    if(Renderer::hasSkybox())
+    for(auto e: view)
     {
-        _environment_emitter = atcg::make_ref<EnvironmentEmitter>(atcg::Renderer::getSkyboxTexture());
+        Entity entity(e, _scene.get());
+
+        AccelerationStructureComponent& acc           = entity.getComponent<AccelerationStructureComponent>();
+        atcg::ref_ptr<GASAccelerationStructure> accel = std::dynamic_pointer_cast<GASAccelerationStructure>(acc.accel);
+
+        atcg::ref_ptr<BSDF> bsdf       = entity.getComponent<BSDFComponent>().bsdf;
+        atcg::ref_ptr<Emitter> emitter = entity.getComponent<EmitterComponent>().emitter;
+
+        MeshShapeData hit_data;
+        hit_data.positions    = (glm::vec3*)accel->getPositions().data_ptr();
+        hit_data.normals      = (glm::vec3*)accel->getNormals().data_ptr();
+        hit_data.uvs          = (glm::vec3*)accel->getUVs().data_ptr();
+        hit_data.faces        = (glm::u32vec3*)accel->getFaces().data_ptr();
+        hit_data.bsdf         = bsdf->getVPtrTable();
+        hit_data.emitter      = emitter ? emitter->getVPtrTable() : nullptr;
+        hit_data.num_vertices = accel->getPositions().size(0);
+        hit_data.num_faces    = accel->getFaces().size(0);
+
+        sbt->addHitEntry(accel->getHitGroup(), hit_data);
     }
+
+    _accel    = atcg::make_ref<IASAccelerationStructure>(_scene);
+    _sbt      = sbt;
+    _pipeline = pipeline;
+
+    _sbt->createSBT();
 }
 
 void PathtracingShader::reset()
@@ -161,176 +145,35 @@ void PathtracingShader::generateRays(torch::Tensor& output)
         accumulation_buffer =
             torch::zeros({output.size(0), output.size(1), 3}, atcg::TensorOptions::floatDeviceOptions());
         setTensor("HDR", accumulation_buffer);
-
-        _horizontalScanLine = torch::arange(output.size(1), atcg::TensorOptions::int32HostOptions());
-        _verticalScanLine   = torch::arange(output.size(0), atcg::TensorOptions::int32HostOptions());
     }
 
+    PathtracingParams params;
+
     glm::mat4 camera_view = _inv_camera_view;
-    glm::vec3 cam_eye_    = camera_view[3];
-    glm::vec3 U_          = glm::normalize(camera_view[0]);
-    glm::vec3 V_          = glm::normalize(camera_view[1]);
-    glm::vec3 W_          = -glm::normalize(camera_view[2]);
+    std::memcpy(params.cam_eye, glm::value_ptr(camera_view[3]), sizeof(glm::vec3));
+    std::memcpy(params.U, glm::value_ptr(glm::normalize(camera_view[0])), sizeof(glm::vec3));
+    std::memcpy(params.V, glm::value_ptr(glm::normalize(camera_view[1])), sizeof(glm::vec3));
+    std::memcpy(params.W, glm::value_ptr(-glm::normalize(camera_view[2])), sizeof(glm::vec3));
+    params.image_height        = output.size(0);
+    params.image_width         = output.size(1);
+    params.accumulation_buffer = (glm::vec3*)accumulation_buffer.data_ptr();
+    params.output_image        = (glm::u8vec4*)output.data_ptr();
+    params.fov_y               = _fov_y;
+    params.emitters            = _emitter.data();
+    params.num_emitters        = _emitter.size();
+    params.bsdfs               = _bsdfs.data();
+    params.num_bsdfs           = _bsdfs.size();
+    params.environment_emitter = _environment_emitter ? _environment_emitter->getVPtrTable() : nullptr;
+    params.frame_counter       = _frame_counter++;
+    params.handle              = _accel.get();
 
-    int max_trace_depth = 10;
-
-    int width  = output.size(1);
-    int height = output.size(0);
-
-    std::for_each(
-        std::execution::par,
-        _verticalScanLine.data_ptr<int32_t>(),
-        _verticalScanLine.data_ptr<int32_t>() + _verticalScanLine.numel(),
-        [&](int32_t y)
-        {
-            std::for_each(
-                std::execution::par,
-                _horizontalScanLine.data_ptr<int32_t>(),
-                _horizontalScanLine.data_ptr<int32_t>() + _horizontalScanLine.numel(),
-                [&](int32_t x)
-                {
-                    uint64_t seed = sampleTEA64(x + width * y, _frame_counter);
-                    atcg::PCG32 rng(seed);
-
-                    glm::vec2 jitter = rng.next2d();
-                    float u          = (((float)x + jitter.x) / (float)width - 0.5f) * 2.0f;
-                    float v          = (((float)(height - y) + jitter.y) / (float)height - 0.5f) * 2.0f;
-
-                    glm::vec3 U = U_ * (float)width / (float)height;
-                    glm::vec3 V = V_;
-                    glm::vec3 W = W_ / glm::tan(glm::radians(_fov_y / 2.0f));
-
-                    glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
-                    glm::vec3 ray_origin = cam_eye_;
-                    glm::vec3 radiance(0);
-                    glm::vec3 throughput(1);
-
-                    glm::vec3 next_origin;
-                    glm::vec3 next_dir;
-
-                    atcg::SurfaceInteraction last_si;
-                    float last_bsdf_pdf = 1.0f;
-
-                    for(int n = 0; n < max_trace_depth; ++n)
-                    {
-                        SurfaceInteraction si = Tracing::traceRay(_accel,
-                                                                  _positions,
-                                                                  _normals,
-                                                                  _uvs,
-                                                                  _faces,
-                                                                  ray_origin,
-                                                                  ray_dir,
-                                                                  1e-3f,
-                                                                  1e6f);
-                        if(si.valid)
-                        {
-                            // PBR Sampling
-                            int32_t mesh_index = _mesh_idx.index({(int)si.primitive_idx}).item<int32_t>();
-
-                            if(_emitter[mesh_index])
-                            {
-                                bool mis_valid = last_si.valid;
-                                float emitter_sampling_pdf =
-                                    mis_valid ? _emitter[mesh_index]->evalLightSamplingPdf(last_si, si) : 0.0f;
-                                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                                radiance += mis_weight * throughput * _emitter[mesh_index]->evalLight(si);
-                            }
-
-                            if(si.bsdf)
-                            {
-                                // Next-event estimation
-                                for(uint32_t i = 0; i < _emitter.size(); ++i)
-                                {
-                                    auto emitter = _emitter[i];
-                                    if(!emitter || _emitter[mesh_index] == emitter) continue;
-
-                                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
-
-                                    if(emitter_sampling.sampling_pdf == 0) continue;
-
-                                    bool occluded = Tracing::traceRay(_accel,
-                                                                      _positions,
-                                                                      _normals,
-                                                                      _uvs,
-                                                                      _faces,
-                                                                      si.position,
-                                                                      emitter_sampling.direction_to_light,
-                                                                      1e-3f,
-                                                                      emitter_sampling.distance_to_light - 1e-3f)
-                                                        .valid;
-
-                                    if(occluded)
-                                    {
-                                        continue;
-                                    }
-
-                                    atcg::BSDFEvalResult bsdf_result =
-                                        _bsdfs[mesh_index]->evalBSDF(si, emitter_sampling.direction_to_light);
-
-                                    float mis_weight = emitter_sampling.sampling_pdf /
-                                                       (emitter_sampling.sampling_pdf + bsdf_result.sample_probability);
-
-                                    radiance +=
-                                        mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
-                                        bsdf_result.bsdf_value *
-                                        glm::max(0.0f, glm::dot(si.normal, emitter_sampling.direction_to_light));
-                                }
-
-                                BSDFSamplingResult result = _bsdfs[mesh_index]->sampleBSDF(si, rng);
-                                if(result.sample_probability > 0.0f)
-                                {
-                                    next_origin = si.position;
-                                    next_dir    = result.out_dir;
-                                    throughput *= result.bsdf_weight;
-
-
-                                    last_si       = si;
-                                    last_bsdf_pdf = result.sample_probability;
-
-                                    if((int)(_bsdfs[mesh_index]->flags() & atcg::BSDFComponentType::AnyDelta) != 0)
-                                    {
-                                        last_si.valid = false;
-                                    }
-                                }
-                                else
-                                {
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // Can't hit environment emitter via bsdf sampling
-                            if(_environment_emitter) radiance += throughput * _environment_emitter->evalLight(si);
-
-                            break;
-                        }
-
-                        ray_origin = next_origin;
-                        ray_dir    = next_dir;
-                    }
-
-                    if(_frame_counter > 0)
-                    {
-                        // Mix with previous subframes if present!
-                        const float a = 1.0f / static_cast<float>(_frame_counter + 1);
-                        const glm::vec3 prev_output_radiance =
-                            ((const glm::vec3*)accumulation_buffer.data_ptr())[x + width * y];
-                        radiance = glm::lerp(prev_output_radiance, radiance, a);
-                    }
-
-                    ((glm::vec3*)accumulation_buffer.data_ptr())[x + width * y] = radiance;
-
-                    glm::vec3 tone_mapped = glm::clamp(glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.2f)),
-                                                       glm::vec3(0),
-                                                       glm::vec3(1));
-
-                    ((glm::u8vec4*)output.data_ptr())[x + width * y] = glm::u8vec4((uint8_t)(tone_mapped.x * 255.0f),
-                                                                                   (uint8_t)(tone_mapped.y * 255.0f),
-                                                                                   (uint8_t)(tone_mapped.z * 255.0f),
-                                                                                   255);
-                });
-        });
-    ++_frame_counter;
+    launch(_pipeline->getPipeline(),
+           nullptr,
+           &params,
+           sizeof(PathtracingParams),
+           _sbt->getSBT(_raygen_idx),
+           output.size(1),
+           output.size(0),
+           1);
 }
 }    // namespace atcg
