@@ -28,13 +28,16 @@ void print_statistics()
               dev_bytes_allocated - dev_bytes_deallocated);
 }
 
-int atcg_main(Application* app)
+int atcg_main()
 {
+    auto logger = atcg::make_ref<atcg::Logger>();
+    atcg::SystemRegistry::init();
+    atcg::SystemRegistry::instance()->registerSystem(logger.get());
+    atcg::Application* app = atcg::createApplication();
     app->run();
-
-    {
-        atcg::SystemRegistry::shutdown();
-    }
+    delete app;
+    atcg::print_statistics();
+    atcg::SystemRegistry::shutdown();
 
     return 0;
 }
@@ -42,9 +45,5 @@ int atcg_main(Application* app)
 
 int main(int argc, char** argv)
 {
-    atcg::Application* app = atcg::createApplication();
-    int ret                = atcg::atcg_main(app);
-    delete app;
-    atcg::print_statistics();
-    return ret;
+    return atcg::atcg_main();
 }

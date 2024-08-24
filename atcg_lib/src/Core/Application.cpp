@@ -24,11 +24,6 @@ Application::~Application() {}
 
 void Application::init(const WindowProps& props)
 {
-    SystemRegistry::init();
-
-    _logger = atcg::make_ref<Logger>();
-    SystemRegistry::instance()->registerSystem(_logger.get());
-
     _shader_manager = atcg::make_ref<ShaderManager>();
     SystemRegistry::instance()->registerSystem(_shader_manager.get());
 

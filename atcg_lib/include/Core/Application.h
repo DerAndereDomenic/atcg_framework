@@ -13,7 +13,7 @@
 namespace atcg
 {
 class Application;
-int atcg_main(Application* app);
+int atcg_main();
 }    // namespace atcg
 int python_main(atcg::Application* app);
 
@@ -125,12 +125,11 @@ private:
     LayerStack _layer_stack;
 
     // Systems
-    atcg::ref_ptr<Logger> _logger;
     atcg::ref_ptr<ShaderManager> _shader_manager;
     atcg::ref_ptr<Renderer> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
 
-    friend int atcg::atcg_main(Application* app);
+    friend int atcg::atcg_main();
     friend int ::python_main(atcg::Application* app);    // Entry point for python bindings
     static Application* s_instance;
 };
