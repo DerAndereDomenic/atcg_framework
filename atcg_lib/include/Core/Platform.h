@@ -8,12 +8,14 @@
     #define ATCG_CONSTEXPR
     #define ATCG_CONSTANT __constant__
     #define ATCG_CONST    const
+    #define ATCG_RT_EXPORT
 #else
     #define ATCG_INLINE       inline
     #define ATCG_FORCE_INLINE ATCG_INLINE
     #define ATCG_CONSTEXPR    constexpr
     #define ATCG_CONSTANT
-    #define ATCG_CONST const
+    #define ATCG_CONST     const
+    #define ATCG_RT_EXPORT __declspec(dllexport)
 #endif
 
 namespace atcg
