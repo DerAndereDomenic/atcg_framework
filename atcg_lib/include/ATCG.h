@@ -39,6 +39,8 @@
 #include <Pathtracing/Pathtracer.h>
 #include <Pathtracing/Tracing.h>
 #include <Pathtracing/RaytracingShaderManager.h>
+#include <Pathtracing/RaytracingPipeline.h>
+#include <Pathtracing/ShaderBindingTable.h>
 
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
