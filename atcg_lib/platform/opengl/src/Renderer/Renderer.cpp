@@ -1,6 +1,8 @@
 #include <Renderer/Renderer.h>
 #include <glad/glad.h>
 
+#include <Core/SystemRegistry.h>
+
 #include <Renderer/ShaderManager.h>
 #include <Scene/Components.h>
 
@@ -11,8 +13,6 @@
 
 namespace atcg
 {
-Renderer* Renderer::s_renderer = new Renderer;
-
 class Renderer::Impl
 {
 public:
@@ -318,7 +318,7 @@ void Renderer::init(uint32_t width, uint32_t height)
     ATCG_INFO("    Version: {0}", (const char*)glGetString(GL_VERSION));
     ATCG_INFO("---------------------------------");
 
-    s_renderer->impl = atcg::make_scope<Impl>(width, height);
+    impl = atcg::make_scope<Impl>(width, height);
 
     // General settings
     toggleDepthTesting(true);
@@ -347,39 +347,40 @@ void Renderer::finishFrame()
 {
     Framebuffer::useDefault();
     clear();
-    s_renderer->impl->quad_vao->use();
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->quad_vao->use();
     auto shader = ShaderManager::getShader("screen");
     shader->setInt("screen_texture", 0);
 
     shader->use();
-    s_renderer->impl->screen_fbo->getColorAttachement()->use();
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->getColorAttachement()->use();
 
-    const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
+    const atcg::ref_ptr<IndexBuffer> ibo =
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->quad_vao->getIndexBuffer();
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
 
-    ++s_renderer->impl->frame_counter;
+    ++SystemRegistry::instance()->getSystem<Renderer>()->impl->frame_counter;
 }
 
 void Renderer::setClearColor(const glm::vec4& color)
 {
-    s_renderer->impl->clear_color = color;
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->clear_color = color;
     glClearColor(color.r, color.g, color.b, color.a);
 }
 
 glm::vec4 Renderer::getClearColor()
 {
-    return s_renderer->impl->clear_color;
+    return SystemRegistry::instance()->getSystem<Renderer>()->impl->clear_color;
 }
 
 void Renderer::setPointSize(const float& size)
 {
-    s_renderer->impl->point_size = size;
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->point_size = size;
     glPointSize(size);
 }
 
 void Renderer::setLineSize(const float& size)
 {
-    s_renderer->impl->line_size = size;
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->line_size = size;
     glLineWidth(size);
 }
 
@@ -400,8 +401,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Image>& skybox)
 
 void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
 {
-    bool culling                 = s_renderer->impl->culling_enabled;
-    s_renderer->impl->has_skybox = true;
+    bool culling = SystemRegistry::instance()->getSystem<Renderer>()->impl->culling_enabled;
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->has_skybox = true;
     toggleCulling(false);
     atcg::ref_ptr<PerspectiveCamera> capture_cam = atcg::make_ref<atcg::PerspectiveCamera>(1.0f);
     glm::mat4 captureProjection                  = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -417,7 +418,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
     capture_cam->setProjection(captureProjection);
     // convert HDR equirectangular environment map to cubemap equivalent
 
-    s_renderer->impl->skybox_texture = skybox;
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_texture = skybox;
 
     uint32_t current_fbo = atcg::Framebuffer::currentFramebuffer();
     int old_viewport[4];
@@ -428,8 +429,8 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
     // * Create a cubemap from the equirectangular map
     {
         atcg::ref_ptr<Shader> equirect_shader = ShaderManager::getShader("equirectangularToCubemap");
-        float width                           = s_renderer->impl->skybox_cubemap->width();
-        float height                          = s_renderer->impl->skybox_cubemap->height();
+        float width  = SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_cubemap->width();
+        float height = SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_cubemap->height();
         Framebuffer captureFBO(width, height);
         captureFBO.attachDepth();
 
@@ -437,7 +438,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
         captureFBO.use();
 
         equirect_shader->use();
-        s_renderer->impl->skybox_texture->use(cubemap_id);
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_texture->use(cubemap_id);
         equirect_shader->setInt("equirectangularMap", cubemap_id);
         for(unsigned int i = 0; i < 6; ++i)
         {
@@ -445,22 +446,26 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
             glFramebufferTexture2D(GL_FRAMEBUFFER,
                                    GL_COLOR_ATTACHMENT0,
                                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                                   s_renderer->impl->skybox_cubemap->getID(),
+                                   SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_cubemap->getID(),
                                    0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), equirect_shader);
+            draw(SystemRegistry::instance()->getSystem<Renderer>()->impl->cube,
+                 capture_cam,
+                 glm::mat4(1),
+                 glm::vec3(1),
+                 equirect_shader);
             // renderCube();    // renders a 1x1 cube
         }
 
-        s_renderer->impl->skybox_cubemap->generateMipmaps();
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_cubemap->generateMipmaps();
     }
 
     // * Convolution of cube map for irradiance map
     {
         atcg::ref_ptr<Shader> cubeconv_shader = ShaderManager::getShader("cubeMapConvolution");
-        float width                           = s_renderer->impl->irradiance_cubemap->width();
-        float height                          = s_renderer->impl->irradiance_cubemap->height();
+        float width  = SystemRegistry::instance()->getSystem<Renderer>()->impl->irradiance_cubemap->width();
+        float height = SystemRegistry::instance()->getSystem<Renderer>()->impl->irradiance_cubemap->height();
         Framebuffer captureFBO(width, height);
         captureFBO.attachDepth();
 
@@ -468,7 +473,7 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
         captureFBO.use();
 
         cubeconv_shader->use();
-        s_renderer->impl->skybox_cubemap->use(cubemap_id);
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_cubemap->use(cubemap_id);
         cubeconv_shader->setInt("skybox", cubemap_id);
         for(unsigned int i = 0; i < 6; ++i)
         {
@@ -476,11 +481,15 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
             glFramebufferTexture2D(GL_FRAMEBUFFER,
                                    GL_COLOR_ATTACHMENT0,
                                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                                   s_renderer->impl->irradiance_cubemap->getID(),
+                                   SystemRegistry::instance()->getSystem<Renderer>()->impl->irradiance_cubemap->getID(),
                                    0);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), cubeconv_shader);
+            draw(SystemRegistry::instance()->getSystem<Renderer>()->impl->cube,
+                 capture_cam,
+                 glm::mat4(1),
+                 glm::vec3(1),
+                 cubeconv_shader);
             // renderCube();    // renders a 1x1 cube
         }
     }
@@ -488,23 +497,27 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
     // * Prefilter environment map
     {
         atcg::ref_ptr<Shader> prefilter_shader = ShaderManager::getShader("prefilter_cubemap");
-        float width                            = s_renderer->impl->prefiltered_cubemap->width();
-        float height                           = s_renderer->impl->prefiltered_cubemap->height();
+        float width  = SystemRegistry::instance()->getSystem<Renderer>()->impl->prefiltered_cubemap->width();
+        float height = SystemRegistry::instance()->getSystem<Renderer>()->impl->prefiltered_cubemap->height();
 
         prefilter_shader->use();
         prefilter_shader->setInt("skybox", cubemap_id);
         unsigned int max_mip_levels = 5;
         for(unsigned int mip = 0; mip < max_mip_levels; ++mip)
         {
-            unsigned int mip_width  = s_renderer->impl->prefiltered_cubemap->width() * std::pow(0.5, mip);
-            unsigned int mip_height = s_renderer->impl->prefiltered_cubemap->height() * std::pow(0.5, mip);
+            unsigned int mip_width =
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->prefiltered_cubemap->width() *
+                std::pow(0.5, mip);
+            unsigned int mip_height =
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->prefiltered_cubemap->height() *
+                std::pow(0.5, mip);
 
             // Recreate captureFBO with new resolution
             Framebuffer captureFBO(mip_width, mip_height);
             captureFBO.attachDepth();
             captureFBO.use();
 
-            s_renderer->impl->skybox_cubemap->use(cubemap_id);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_cubemap->use(cubemap_id);
 
             glViewport(0, 0, mip_width, mip_height);
 
@@ -513,14 +526,19 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
             for(unsigned int i = 0; i < 6; ++i)
             {
                 capture_cam->setView(captureViews[i]);
-                glFramebufferTexture2D(GL_FRAMEBUFFER,
-                                       GL_COLOR_ATTACHMENT0,
-                                       GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                                       s_renderer->impl->prefiltered_cubemap->getID(),
-                                       mip);
+                glFramebufferTexture2D(
+                    GL_FRAMEBUFFER,
+                    GL_COLOR_ATTACHMENT0,
+                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                    SystemRegistry::instance()->getSystem<Renderer>()->impl->prefiltered_cubemap->getID(),
+                    mip);
                 glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-                draw(s_renderer->impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), prefilter_shader);
+                draw(SystemRegistry::instance()->getSystem<Renderer>()->impl->cube,
+                     capture_cam,
+                     glm::mat4(1),
+                     glm::vec3(1),
+                     prefilter_shader);
                 // renderCube();    // renders a 1x1 cube
             }
         }
@@ -534,68 +552,69 @@ void Renderer::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
 
 bool Renderer::hasSkybox()
 {
-    return s_renderer->impl->has_skybox;
+    return SystemRegistry::instance()->getSystem<Renderer>()->impl->has_skybox;
 }
 
 void Renderer::removeSkybox()
 {
-    s_renderer->impl->has_skybox = false;
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->has_skybox = false;
 }
 
 atcg::ref_ptr<Texture2D> Renderer::getSkyboxTexture()
 {
-    return s_renderer->impl->skybox_texture;
+    return SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_texture;
 }
 
 atcg::ref_ptr<TextureCube> Renderer::getSkyboxCubemap()
 {
-    return s_renderer->impl->skybox_cubemap;
+    return SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_cubemap;
 }
 
 void Renderer::resize(const uint32_t& width, const uint32_t& height)
 {
     setViewport(0, 0, width, height);
-    s_renderer->impl->screen_fbo = atcg::make_ref<Framebuffer>(width, height);
-    s_renderer->impl->screen_fbo->attachColor();
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo = atcg::make_ref<Framebuffer>(width, height);
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->attachColor();
     TextureSpecification spec_int;
     spec_int.width  = width;
     spec_int.height = height;
     spec_int.format = TextureFormat::RINT;
-    s_renderer->impl->screen_fbo->attachTexture(Texture2D::create(spec_int));
-    s_renderer->impl->screen_fbo->attachDepth();
-    s_renderer->impl->screen_fbo->complete();
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->attachTexture(Texture2D::create(spec_int));
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->attachDepth();
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->complete();
 }
 
 void Renderer::useScreenBuffer()
 {
-    s_renderer->impl->screen_fbo->use();
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->use();
 }
 
 atcg::ref_ptr<Framebuffer> Renderer::getFramebuffer()
 {
-    return s_renderer->impl->screen_fbo;
+    return SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo;
 }
 
 void Renderer::clear()
 {
-    glClear(s_renderer->impl->clear_flag);
+    glClear(SystemRegistry::instance()->getSystem<Renderer>()->impl->clear_flag);
 
-    if(Framebuffer::currentFramebuffer() == s_renderer->impl->screen_fbo->getID())
+    if(Framebuffer::currentFramebuffer() ==
+       SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->getID())
     {
         int value = -1;
-        s_renderer->impl->screen_fbo->getColorAttachement(1)->fill(&value);
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->getColorAttachement(1)->fill(&value);
     }
 }
 
 void Renderer::toggleDepthTesting(bool enable)
 {
-    s_renderer->impl->clear_flag = GL_COLOR_BUFFER_BIT;
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->clear_flag = GL_COLOR_BUFFER_BIT;
     switch(enable)
     {
         case true:
         {
             glEnable(GL_DEPTH_TEST);
-            s_renderer->impl->clear_flag |= GL_DEPTH_BUFFER_BIT;
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->clear_flag |= GL_DEPTH_BUFFER_BIT;
         }
         break;
         case false:
@@ -608,7 +627,7 @@ void Renderer::toggleDepthTesting(bool enable)
 
 void Renderer::toggleCulling(bool enable)
 {
-    s_renderer->impl->culling_enabled = enable;
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->culling_enabled = enable;
     switch(enable)
     {
         case true:
@@ -648,7 +667,7 @@ void Renderer::setCullFace(CullMode mode)
 
 uint32_t Renderer::getFrameCounter()
 {
-    return s_renderer->impl->frame_counter;
+    return SystemRegistry::instance()->getSystem<Renderer>()->impl->frame_counter;
 }
 
 void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
@@ -664,65 +683,90 @@ void Renderer::draw(const atcg::ref_ptr<Graph>& mesh,
         case ATCG_DRAW_MODE_TRIANGLE:
         {
             shader->setInt("entityID", -1);
-            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, shader);
-            s_renderer->impl->drawVAO(mesh->getVerticesArray(),
-                                      camera,
-                                      color,
-                                      shader,
-                                      model,
-                                      GL_TRIANGLES,
-                                      mesh->n_vertices());    // TODO
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->standard_material,
+                shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawVAO(mesh->getVerticesArray(),
+                                                                             camera,
+                                                                             color,
+                                                                             shader,
+                                                                             model,
+                                                                             GL_TRIANGLES,
+                                                                             mesh->n_vertices());    // TODO
         }
         break;
         case ATCG_DRAW_MODE_POINTS:
         {
             shader->setInt("entityID", -1);
-            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, shader);
-            s_renderer->impl
-                ->drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->standard_material,
+                shader);
+            SystemRegistry::instance()
+                ->getSystem<Renderer>()
+                ->impl->drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
             shader->setInt("entityID", -1);
-            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, shader);
-            s_renderer->impl->drawPointCloudSpheres(mesh->getVerticesArray()->peekVertexBuffer(),
-                                                    camera,
-                                                    model,
-                                                    color,
-                                                    shader,
-                                                    mesh->n_vertices());
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->standard_material,
+                shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawPointCloudSpheres(
+                mesh->getVerticesArray()->peekVertexBuffer(),
+                camera,
+                model,
+                color,
+                shader,
+                mesh->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_EDGES:
         {
             auto edge_shader = ShaderManager::getShader("edge");
             edge_shader->setInt("entityID", -1);
-            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, edge_shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->standard_material,
+                edge_shader);
             atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
             points->bindStorage(0);
-            s_renderer->impl
-                ->drawVAO(mesh->getEdgesArray(), camera, color, edge_shader, model, GL_POINTS, mesh->n_edges(), 1);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawVAO(mesh->getEdgesArray(),
+                                                                             camera,
+                                                                             color,
+                                                                             edge_shader,
+                                                                             model,
+                                                                             GL_POINTS,
+                                                                             mesh->n_edges(),
+                                                                             1);
         }
         break;
         case ATCG_DRAW_MODE_EDGES_CYLINDER:
         {
             auto edge_shader = ShaderManager::getShader("cylinder_edge");
             edge_shader->setInt("entityID", -1);
-            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, edge_shader);
-            s_renderer->impl
-                ->drawGrid(mesh->getVerticesBuffer(), mesh->getEdgesBuffer(), edge_shader, camera, model, color);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->standard_material,
+                edge_shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawGrid(mesh->getVerticesBuffer(),
+                                                                              mesh->getEdgesBuffer(),
+                                                                              edge_shader,
+                                                                              camera,
+                                                                              model,
+                                                                              color);
         }
         break;
         case ATCG_DRAW_MODE_INSTANCED:
         {
             shader->setInt("entityID", -1);
-            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->standard_material,
+                shader);
             atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
             atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
             uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
-            s_renderer->impl
-                ->drawVAO(vao_mesh, camera, color, shader, model, GL_TRIANGLES, mesh->n_vertices(), n_instances);
+            SystemRegistry::instance()
+                ->getSystem<Renderer>()
+                ->impl->drawVAO(vao_mesh, camera, color, shader, model, GL_TRIANGLES, mesh->n_vertices(), n_instances);
         }
         break;
     }
@@ -779,15 +823,15 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
-            s_renderer->impl->setMaterial(renderer.material, renderer.shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(renderer.material, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
-            s_renderer->impl->drawVAO(geometry.graph->getVerticesArray(),
-                                      camera,
-                                      glm::vec3(1),
-                                      renderer.shader,
-                                      transform.getModel(),
-                                      GL_TRIANGLES,
-                                      geometry.graph->n_vertices());
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawVAO(geometry.graph->getVerticesArray(),
+                                                                             camera,
+                                                                             glm::vec3(1),
+                                                                             renderer.shader,
+                                                                             transform.getModel(),
+                                                                             GL_TRIANGLES,
+                                                                             geometry.graph->n_vertices());
         }
     }
 
@@ -796,16 +840,18 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
         if(renderer.visible)
         {
-            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, renderer.shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->standard_material,
+                renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
-            s_renderer->impl->drawVAO(geometry.graph->getVerticesArray(),
-                                      camera,
-                                      renderer.color,
-                                      renderer.shader,
-                                      transform.getModel(),
-                                      GL_POINTS,
-                                      geometry.graph->n_vertices());
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawVAO(geometry.graph->getVerticesArray(),
+                                                                             camera,
+                                                                             renderer.color,
+                                                                             renderer.shader,
+                                                                             transform.getModel(),
+                                                                             GL_POINTS,
+                                                                             geometry.graph->n_vertices());
         }
     }
 
@@ -815,15 +861,16 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
-            s_renderer->impl->setMaterial(renderer.material, renderer.shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(renderer.material, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
-            s_renderer->impl->drawPointCloudSpheres(geometry.graph->getVerticesArray()->peekVertexBuffer(),
-                                                    camera,
-                                                    transform.getModel(),
-                                                    glm::vec3(1),
-                                                    renderer.shader,
-                                                    geometry.graph->n_vertices());
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawPointCloudSpheres(
+                geometry.graph->getVerticesArray()->peekVertexBuffer(),
+                camera,
+                transform.getModel(),
+                glm::vec3(1),
+                renderer.shader,
+                geometry.graph->n_vertices());
         }
     }
 
@@ -833,18 +880,20 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
-            s_renderer->impl->setMaterial(s_renderer->impl->standard_material, ShaderManager::getShader("edge"));
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(
+                SystemRegistry::instance()->getSystem<Renderer>()->impl->standard_material,
+                ShaderManager::getShader("edge"));
             ShaderManager::getShader("edge")->setInt("entityID", entity_id);
             atcg::ref_ptr<VertexBuffer> points = geometry.graph->getVerticesBuffer();
             points->bindStorage(0);
-            s_renderer->impl->drawVAO(geometry.graph->getEdgesArray(),
-                                      camera,
-                                      renderer.color,
-                                      ShaderManager::getShader("edge"),
-                                      transform.getModel(),
-                                      GL_POINTS,
-                                      geometry.graph->n_edges(),
-                                      1);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawVAO(geometry.graph->getEdgesArray(),
+                                                                             camera,
+                                                                             renderer.color,
+                                                                             ShaderManager::getShader("edge"),
+                                                                             transform.getModel(),
+                                                                             GL_POINTS,
+                                                                             geometry.graph->n_edges(),
+                                                                             1);
         }
     }
 
@@ -855,15 +904,15 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             auto& shader = ShaderManager::getShader("cylinder_edge");
-            s_renderer->impl->setMaterial(renderer.material, shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(renderer.material, shader);
             shader->setInt("entityID", entity_id);
             shader->setFloat("edge_radius", renderer.radius);
-            s_renderer->impl->drawGrid(geometry.graph->getVerticesBuffer(),
-                                       geometry.graph->getEdgesBuffer(),
-                                       ShaderManager::getShader("cylinder_edge"),
-                                       camera,
-                                       transform.getModel(),
-                                       glm::vec3(1));
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawGrid(geometry.graph->getVerticesBuffer(),
+                                                                              geometry.graph->getEdgesBuffer(),
+                                                                              ShaderManager::getShader("cylinder_edge"),
+                                                                              camera,
+                                                                              transform.getModel(),
+                                                                              glm::vec3(1));
         }
     }
 
@@ -880,18 +929,18 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
             auto instance_shader = ShaderManager::getShader("instanced");
             instance_shader->setInt("entityID", entity_id);
-            s_renderer->impl->setMaterial(renderer.material, instance_shader);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->setMaterial(renderer.material, instance_shader);
             atcg::ref_ptr<VertexArray> vao_mesh      = geometry.graph->getVerticesArray();
             atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
             uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
-            s_renderer->impl->drawVAO(vao_mesh,
-                                      camera,
-                                      glm::vec3(1),
-                                      instance_shader,
-                                      transform.getModel(),
-                                      GL_TRIANGLES,
-                                      geometry.graph->n_vertices(),
-                                      n_instances);
+            SystemRegistry::instance()->getSystem<Renderer>()->impl->drawVAO(vao_mesh,
+                                                                             camera,
+                                                                             glm::vec3(1),
+                                                                             instance_shader,
+                                                                             transform.getModel(),
+                                                                             GL_TRIANGLES,
+                                                                             geometry.graph->n_vertices(),
+                                                                             n_instances);
         }
     }
 }
@@ -900,17 +949,22 @@ void Renderer::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 void Renderer::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
 {
     // TODO: Just raw opengl rendering code here
-    if(s_renderer->impl->has_skybox)
+    if(SystemRegistry::instance()->getSystem<Renderer>()->impl->has_skybox)
     {
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
-        bool culling = s_renderer->impl->culling_enabled;
+        bool culling = SystemRegistry::instance()->getSystem<Renderer>()->impl->culling_enabled;
         toggleCulling(false);
         ShaderManager::getShader("skybox")->use();
         ShaderManager::getShader("skybox")->setInt("skybox", Renderer::Impl::TextureBindings::SKYBOX_TEXTURE);
-        s_renderer->impl->skybox_cubemap->use(Renderer::Impl::TextureBindings::SKYBOX_TEXTURE);
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->skybox_cubemap->use(
+            Renderer::Impl::TextureBindings::SKYBOX_TEXTURE);
 
-        draw(s_renderer->impl->cube, camera, glm::mat4(1), glm::vec3(1), ShaderManager::getShader("skybox"));
+        draw(SystemRegistry::instance()->getSystem<Renderer>()->impl->cube,
+             camera,
+             glm::mat4(1),
+             glm::vec3(1),
+             ShaderManager::getShader("skybox"));
 
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
@@ -942,7 +996,7 @@ void Renderer::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
         glm::mat4 scale =
             glm::scale(glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)));
         glm::mat4 model = glm::inverse(cam->getView()) * scale;
-        Renderer::draw(s_renderer->impl->camera_frustrum,
+        Renderer::draw(SystemRegistry::instance()->getSystem<Renderer>()->impl->camera_frustrum,
                        camera,
                        model,
                        comp.color,
@@ -961,23 +1015,24 @@ void Renderer::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vb
     atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVerticesArray();
     if(vao_sphere->peekVertexBuffer() != vbo)
     {
-        if(s_renderer->impl->sphere_has_instance)
+        if(SystemRegistry::instance()->getSystem<Renderer>()->impl->sphere_has_instance)
         {
             vao_sphere->popVertexBuffer();
         }
         vao_sphere->pushInstanceBuffer(vbo);
-        s_renderer->impl->sphere_has_instance = true;
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->sphere_has_instance = true;
     }
     glm::mat4 model_new = model;
-    shader->setFloat("point_size", s_renderer->impl->point_size);
-    s_renderer->impl->drawVAO(vao_sphere,
-                              camera,
-                              color,
-                              shader,
-                              model_new,
-                              GL_TRIANGLES,
-                              s_renderer->impl->sphere_mesh->n_vertices(),
-                              n_instances);
+    shader->setFloat("point_size", SystemRegistry::instance()->getSystem<Renderer>()->impl->point_size);
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->drawVAO(
+        vao_sphere,
+        camera,
+        color,
+        shader,
+        model_new,
+        GL_TRIANGLES,
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->sphere_mesh->n_vertices(),
+        n_instances);
 }
 
 void Renderer::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
@@ -1018,7 +1073,7 @@ void Renderer::drawCircle(const glm::vec3& position,
                           const glm::vec3& color,
                           const atcg::ref_ptr<Camera>& camera)
 {
-    s_renderer->impl->quad_vao->use();
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->quad_vao->use();
     const auto& shader = ShaderManager::getShader("circle");
     shader->setVec3("flat_color", color);
     shader->setFloat("radius", radius);
@@ -1029,7 +1084,8 @@ void Renderer::drawCircle(const glm::vec3& position,
         shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
     }
 
-    const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
+    const atcg::ref_ptr<IndexBuffer> ibo =
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->quad_vao->getIndexBuffer();
 
     shader->use();
     if(ibo)
@@ -1063,7 +1119,7 @@ void Renderer::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
 void Renderer::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency_)
 {
     float distance     = glm::abs(camera->getPosition().y);
-    float current_size = s_renderer->impl->line_size;
+    float current_size = SystemRegistry::instance()->getSystem<Renderer>()->impl->line_size;
 
     setLineSize(1.0f);
 
@@ -1106,7 +1162,7 @@ void Renderer::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& tra
 
             shader->setFloat("base_transparency", base_transparency * transparency);
 
-            draw(s_renderer->impl->grid,
+            draw(SystemRegistry::instance()->getSystem<Renderer>()->impl->grid,
                  camera,
                  glm::translate(resolution * glm::vec3(x, 0, z)) * glm::scale(glm::vec3(resolution)),
                  glm::vec3(1),
@@ -1121,7 +1177,12 @@ void Renderer::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& tra
     shader->setFloat("base_transparency", 1.0f);
 
     setLineSize(2.0f);
-    draw(s_renderer->impl->cross, camera, glm::mat4(1), glm::vec3(1), shader, atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+    draw(SystemRegistry::instance()->getSystem<Renderer>()->impl->cross,
+         camera,
+         glm::mat4(1),
+         glm::vec3(1),
+         shader,
+         atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
     setLineSize(current_size);
 
     shader->setFloat("fall_off_edge", 1000.0f);
@@ -1136,14 +1197,15 @@ void Renderer::drawImage(const atcg::ref_ptr<Framebuffer>& img)
 
 void Renderer::drawImage(const atcg::ref_ptr<Texture2D>& img)
 {
-    s_renderer->impl->quad_vao->use();
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->quad_vao->use();
     auto shader = ShaderManager::getShader("screen");
     shader->setInt("screen_texture", 0);
 
     shader->use();
     img->use();
 
-    const atcg::ref_ptr<IndexBuffer> ibo = s_renderer->impl->quad_vao->getIndexBuffer();
+    const atcg::ref_ptr<IndexBuffer> ibo =
+        SystemRegistry::instance()->getSystem<Renderer>()->impl->quad_vao->getIndexBuffer();
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
 }
 
@@ -1218,12 +1280,12 @@ Renderer::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Came
 
 torch::Tensor Renderer::getFrame(const torch::DeviceType& device)
 {
-    return s_renderer->impl->screen_fbo->getColorAttachement(0)->getData(device);
+    return SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->getColorAttachement(0)->getData(device);
 }
 
 torch::Tensor Renderer::getZBuffer(const torch::DeviceType& device)
 {
-    auto frame           = s_renderer->impl->screen_fbo->getDepthAttachement();
+    auto frame           = SystemRegistry::instance()->getSystem<Renderer>()->impl->screen_fbo->getDepthAttachement();
     uint32_t width       = frame->width();
     uint32_t height      = frame->height();
     torch::Tensor buffer = torch::empty({height, width, 1}, atcg::TensorOptions::floatHostOptions());
@@ -1237,13 +1299,13 @@ torch::Tensor Renderer::getZBuffer(const torch::DeviceType& device)
 
 uint32_t Renderer::popTextureID()
 {
-    uint32_t id = s_renderer->impl->texture_ids.top();
-    s_renderer->impl->texture_ids.pop();
+    uint32_t id = SystemRegistry::instance()->getSystem<Renderer>()->impl->texture_ids.top();
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->texture_ids.pop();
     return id;
 }
 
 void Renderer::pushTextureID(const uint32_t id)
 {
-    s_renderer->impl->texture_ids.push(id);
+    SystemRegistry::instance()->getSystem<Renderer>()->impl->texture_ids.push(id);
 }
 }    // namespace atcg

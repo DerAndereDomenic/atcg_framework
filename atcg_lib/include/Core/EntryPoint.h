@@ -34,7 +34,6 @@ int atcg_main(Application* app)
 
     {
         atcg::VRSystem::destroy();
-        atcg::Renderer::destroy();
         atcg::SystemRegistry::shutdown();
     }
 

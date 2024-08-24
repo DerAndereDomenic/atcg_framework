@@ -35,7 +35,10 @@ void Application::init(const WindowProps& props)
     _window = atcg::make_scope<Window>(props);
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
-    Renderer::init(_window->getWidth(), _window->getHeight());
+    _renderer = atcg::make_ref<Renderer>();
+    SystemRegistry::instance()->registerSystem(_renderer.get());
+    _renderer->init(_window->getWidth(), _window->getHeight());
+
     VRSystem::init(ATCG_BIND_EVENT_FN(Application::onEvent));
 
     Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);

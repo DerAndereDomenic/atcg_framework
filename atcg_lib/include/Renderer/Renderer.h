@@ -53,7 +53,7 @@ public:
      * @param width The width
      * @param height The height
      */
-    static void init(uint32_t width, uint32_t height);
+    void init(uint32_t width, uint32_t height);
 
     /**
      * @brief Finished the currently drawn frame (should not be called by client!)
@@ -372,20 +372,12 @@ public:
      */
     static void pushTextureID(const uint32_t id);
 
-    /**
-     * @brief Destroys the renderer instance
-     */
-    ATCG_INLINE static void destroy() { delete s_renderer; }
-
+    Renderer();
 
     ~Renderer();
 
 private:
-    Renderer();
-
     class Impl;
     atcg::scope_ptr<Impl> impl;
-
-    static Renderer* s_renderer;
 };
 }    // namespace atcg

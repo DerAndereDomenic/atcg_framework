@@ -7,6 +7,7 @@
 #include <ImGui/ImGuiLayer.h>
 #include <Core/Platform.h>
 #include <Renderer/ShaderManager.h>
+#include <Renderer/Renderer.h>
 
 namespace atcg
 {
@@ -125,6 +126,7 @@ private:
     // Systems
     atcg::ref_ptr<Logger> _logger;
     atcg::ref_ptr<ShaderManager> _shader_manager;
+    atcg::ref_ptr<Renderer> _renderer;
 
     friend int atcg::atcg_main(Application* app);
     friend int ::python_main(atcg::Application* app);    // Entry point for python bindings
