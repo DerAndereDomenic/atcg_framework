@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Memory.h>
+#include <Core/SystemRegistry.h>
 
 #include <string>
 #include <unordered_map>
@@ -18,6 +19,8 @@ class Shader;
 class ShaderManager
 {
 public:
+    ShaderManager() = default;
+
     /**
      * @brief Add a shader
      *
@@ -26,7 +29,7 @@ public:
      */
     ATCG_INLINE static void addShader(const std::string& name, const atcg::ref_ptr<Shader>& shader)
     {
-        s_instance->addShaderImpl(name, shader);
+        SystemRegistry::instance()->getSystem<ShaderManager>()->addShaderImpl(name, shader);
     }
 
     /**
@@ -34,7 +37,10 @@ public:
      *
      * @param name The name of the .vs, .fs and optionally .gs file (without file ending)
      */
-    ATCG_INLINE static void addShaderFromName(const std::string& name) { s_instance->addShaderFromNameImpl(name); }
+    ATCG_INLINE static void addShaderFromName(const std::string& name)
+    {
+        SystemRegistry::instance()->getSystem<ShaderManager>()->addShaderFromNameImpl(name);
+    }
 
     /**
      * @brief Add a compute shader by loading it from file
@@ -44,7 +50,7 @@ public:
      */
     ATCG_INLINE static void addComputerShaderFromName(const std::string& name)
     {
-        s_instance->addComputeShaderFromNameImpl(name);
+        SystemRegistry::instance()->getSystem<ShaderManager>()->addComputeShaderFromNameImpl(name);
     }
 
     /**
@@ -55,7 +61,7 @@ public:
      */
     ATCG_INLINE static const atcg::ref_ptr<Shader>& getShader(const std::string& name)
     {
-        return s_instance->getShaderImpl(name);
+        return SystemRegistry::instance()->getSystem<ShaderManager>()->getShaderImpl(name);
     }
 
     /**
@@ -64,14 +70,15 @@ public:
      * @param name The name
      * @return True if the shader exists in the shader manager
      */
-    ATCG_INLINE static bool hasShader(const std::string& name) { return s_instance->hasShaderImpl(name); }
+    ATCG_INLINE static bool hasShader(const std::string& name)
+    {
+        return SystemRegistry::instance()->getSystem<ShaderManager>()->hasShaderImpl(name);
+    }
 
     /**
      * @brief This gets called by the application. Don't call manually
      */
-    ATCG_INLINE static void onUpdate() { s_instance->onUpdateImpl(); }
-
-    ATCG_INLINE static void destroy() { delete s_instance; }
+    ATCG_INLINE static void onUpdate() { SystemRegistry::instance()->getSystem<ShaderManager>()->onUpdateImpl(); }
 
 private:
     void addShaderImpl(const std::string& name, const atcg::ref_ptr<Shader>& shader);
@@ -80,7 +87,6 @@ private:
     bool hasShaderImpl(const std::string& name);
     const atcg::ref_ptr<Shader>& getShaderImpl(const std::string& name);
     void onUpdateImpl();
-    static ShaderManager* s_instance;
 
     std::unordered_map<std::string, atcg::ref_ptr<Shader>> _shader;
     std::unordered_map<std::string, std::filesystem::file_time_type> _time_stamps;

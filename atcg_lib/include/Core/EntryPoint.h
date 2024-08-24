@@ -33,7 +33,6 @@ int atcg_main(Application* app)
     app->run();
 
     {
-        atcg::ShaderManager::destroy();
         atcg::VRSystem::destroy();
         atcg::Renderer::destroy();
         atcg::SystemRegistry::shutdown();

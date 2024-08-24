@@ -29,6 +29,9 @@ void Application::init(const WindowProps& props)
     _logger = atcg::make_ref<Logger>();
     SystemRegistry::instance()->registerSystem(_logger.get());
 
+    _shader_manager = atcg::make_ref<ShaderManager>();
+    SystemRegistry::instance()->registerSystem(_shader_manager.get());
+
     _window = atcg::make_scope<Window>(props);
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 

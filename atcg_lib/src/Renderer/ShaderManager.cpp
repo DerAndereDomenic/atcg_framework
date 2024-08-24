@@ -3,7 +3,6 @@
 
 namespace atcg
 {
-ShaderManager* ShaderManager::s_instance = new ShaderManager;
 
 void ShaderManager::addShaderImpl(const std::string& name, const atcg::ref_ptr<Shader>& shader)
 {
