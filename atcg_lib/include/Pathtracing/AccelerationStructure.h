@@ -1,8 +1,12 @@
 #pragma once
 
-#include <torch/types.h>
 #include <DataStructure/Graph.h>
+#include <Scene/Scene.h>
+#include <torch/types.h>
 #include <nanort.h>
+#include <Pathtracing/PathtracingPlatform.h>
+#include <Pathtracing/ShaderBindingTable.h>
+#include <Pathtracing/RaytracingPipeline.h>
 
 namespace atcg
 {
@@ -58,29 +62,9 @@ protected:
     torch::Tensor _faces;
 };
 
-/**
- * @brief A BVH acceleration structure for CPU-based ray triangle intersection
- */
 class BVHAccelerationStructure : public AccelerationStructure
 {
 public:
-    /**
-     * @brief Default Constructor
-     */
-    BVHAccelerationStructure() = default;
-
-    /**
-     * @brief Constructor
-     *
-     * @param graph The geometry to build the BVH
-     */
-    BVHAccelerationStructure(const atcg::ref_ptr<Graph>& graph);
-
-    /**
-     * @brief Destructor
-     */
-    ~BVHAccelerationStructure();
-
     /**
      * @brief Get the acceleration structure handle
      *
@@ -95,8 +79,64 @@ public:
      */
     inline void setBVH(const nanort::BVHAccel<float>& bvh) { _bvh = bvh; }
 
-private:
+protected:
     nanort::BVHAccel<float> _bvh;
+};
+
+/**
+ * @brief A BVH acceleration structure for CPU-based ray triangle intersection
+ */
+class GASAccelerationStructure : public BVHAccelerationStructure
+{
+public:
+    /**
+     * @brief Default Constructor
+     */
+    GASAccelerationStructure() = default;
+
+    /**
+     * @brief Constructor
+     *
+     * @param graph The geometry to build the BVH
+     */
+    GASAccelerationStructure(const atcg::ref_ptr<Graph>& graph);
+
+    /**
+     * @brief Destructor
+     */
+    ~GASAccelerationStructure();
+
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt);
+
+    inline ATCGProgramGroup getHitGroup() const { return _hit_group; }
+
+private:
+    ATCGProgramGroup _hit_group;
+};
+
+class IASAccelerationStructure : public BVHAccelerationStructure
+{
+public:
+    IASAccelerationStructure() = default;
+
+    IASAccelerationStructure(const atcg::ref_ptr<Scene>& scene);
+
+    ~IASAccelerationStructure();
+
+    inline torch::Tensor getMeshIDs() const { return _mesh_idx; }
+
+    inline atcg::ref_ptr<Scene> getScene() const { return _scene; }
+
+    inline const std::vector<glm::mat4>& getTransforms() const { return _transforms; }
+
+    inline const std::vector<uint32_t>& getOffsets() const { return _offsets; }
+
+private:
+    torch::Tensor _mesh_idx;
+    std::vector<glm::mat4> _transforms;
+    std::vector<uint32_t> _offsets;
+    atcg::ref_ptr<Scene> _scene;
 };
 
 }    // namespace atcg
