@@ -23,7 +23,7 @@ Application::~Application() {}
 
 void Application::init(const WindowProps& props)
 {
-    Log::init();
+    Logger::init();
 
     _window = atcg::make_scope<Window>(props);
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));

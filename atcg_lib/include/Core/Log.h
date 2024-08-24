@@ -9,7 +9,7 @@ namespace atcg
 /**
  * @brief A class to handle logging
  */
-class Log
+class Logger
 {
 public:
     /**
@@ -31,15 +31,15 @@ private:
 }    // namespace atcg
 
 #ifdef NDEBUG
-    #define ATCG_ERROR(...) atcg::Log::getLogger()->error(__VA_ARGS__)
+    #define ATCG_ERROR(...) atcg::Logger::getLogger()->error(__VA_ARGS__)
     #define ATCG_WARN(...)
-    #define ATCG_INFO(...) atcg::Log::getLogger()->info(__VA_ARGS__)
+    #define ATCG_INFO(...) atcg::Logger::getLogger()->info(__VA_ARGS__)
     #define ATCG_TRACE(...)
 #else
-    #define ATCG_ERROR(...) atcg::Log::getLogger()->error(__VA_ARGS__)
-    #define ATCG_WARN(...)  atcg::Log::getLogger()->warn(__VA_ARGS__)
-    #define ATCG_INFO(...)  atcg::Log::getLogger()->info(__VA_ARGS__)
-    #define ATCG_TRACE(...) atcg::Log::getLogger()->trace(__VA_ARGS__)
+    #define ATCG_ERROR(...) atcg::Logger::getLogger()->error(__VA_ARGS__)
+    #define ATCG_WARN(...)  atcg::Logger::getLogger()->warn(__VA_ARGS__)
+    #define ATCG_INFO(...)  atcg::Logger::getLogger()->info(__VA_ARGS__)
+    #define ATCG_TRACE(...) atcg::Logger::getLogger()->trace(__VA_ARGS__)
 #endif
 
 #if 0
