@@ -1,59 +1,62 @@
-#include <Pathtracing/BSDF/BSDFModels.h>
+#include <Pathtracing/BSDFModels.h>
 #include <DataStructure/TorchUtils.h>
 
 namespace atcg
 {
 PBRBSDF::PBRBSDF(const Material& material)
 {
-    _diffuse_image   = material.getDiffuseTexture()->getData(atcg::CPU);
-    _roughness_image = material.getRoughnessTexture()->getData(atcg::CPU);
-    _metallic_image  = material.getMetallicTexture()->getData(atcg::CPU);
+    PBRBSDFData data;
+    data.diffuse_texture   = material.getDiffuseTexture()->getData(atcg::CPU);
+    data.roughness_texture = material.getRoughnessTexture()->getData(atcg::CPU);
+    data.metallic_texture  = material.getMetallicTexture()->getData(atcg::CPU);
+
+    _bsdf_data_buffer = atcg::make_ref<PBRBSDFData>(data);
+}
+
+void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                 const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    _vptr_table = atcg::make_ref<BSDFVPtrTable>();
+
+    auto ptx_file     = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/BSDFModels.dll";
+    auto sample_group = pipeline->addCallableShader({ptx_file, "__direct_callable__sample_pbrbsdf"});
+    auto eval_group   = pipeline->addCallableShader({ptx_file, "__direct_callable__eval_pbrbsdf"});
+
+    auto sample_idx = sbt->addCallableEntry(sample_group, _bsdf_data_buffer.get());
+    auto eval_idx   = sbt->addCallableEntry(eval_group, _bsdf_data_buffer.get());
+
+    _vptr_table->sampleCallIndex = sample_idx;
+    _vptr_table->evalCallIndex   = eval_idx;
+    _vptr_table->flags           = _flags;
 }
 
 PBRBSDF::~PBRBSDF() {}
 
-BSDFSamplingResult PBRBSDF::sampleBSDF(const SurfaceInteraction& si, PCG32& rng) const
-{
-    glm::vec3 diffuse_color = texture(_diffuse_image, si.uv);
-    float metallic          = texture(_metallic_image, si.uv).x;
-    float roughness         = texture(_roughness_image, si.uv).x;
-
-    glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04) + metallic * diffuse_color;
-
-    return samplePBR(si, diffuse_color, metallic_color, metallic, roughness, rng);
-}
-
-BSDFEvalResult PBRBSDF::evalBSDF(const SurfaceInteraction& si, const glm::vec3& outgoing_dir)
-{
-    atcg::BSDFEvalResult result;
-
-    glm::vec3 diffuse_color = texture(_diffuse_image, si.uv);
-    float metallic          = texture(_metallic_image, si.uv).x;
-    float roughness         = texture(_roughness_image, si.uv).x;
-    roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
-
-    glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
-
-    return evalPBR(si, outgoing_dir, diffuse_color, metallic_color, roughness, metallic);
-}
-
 RefractiveBSDF::RefractiveBSDF(const Material& material)
 {
-    _diffuse_image = material.getDiffuseTexture()->getData(atcg::CPU);
-    _ior           = material.ior;
+    RefractiveBSDFData data;
+    data.diffuse_texture = material.getDiffuseTexture()->getData(atcg::CPU);
+    data.ior             = material.ior;
+
+    _bsdf_data_buffer = atcg::make_ref<RefractiveBSDFData>(data);
 }
 
 RefractiveBSDF::~RefractiveBSDF() {}
 
-BSDFSamplingResult RefractiveBSDF::sampleBSDF(const SurfaceInteraction& si, PCG32& rng) const
+void RefractiveBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                        const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    glm::vec3 diffuse_color = texture(_diffuse_image, si.uv);
+    _vptr_table = atcg::make_ref<BSDFVPtrTable>();
 
-    return sampleRefractive(si, diffuse_color, _ior, rng);
-}
+    auto ptx_file     = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/BSDFModels.dll";
+    auto sample_group = pipeline->addCallableShader({ptx_file, "__direct_callable__sample_refractivebsdf"});
+    auto eval_group   = pipeline->addCallableShader({ptx_file, "__direct_callable__eval_refractivebsdf"});
 
-BSDFEvalResult RefractiveBSDF::evalBSDF(const SurfaceInteraction& si, const glm::vec3& outgoing_dir)
-{
-    return evalRefractive(si, outgoing_dir);
+    auto sample_idx = sbt->addCallableEntry(sample_group, _bsdf_data_buffer.get());
+    auto eval_idx   = sbt->addCallableEntry(eval_group, _bsdf_data_buffer.get());
+
+    _vptr_table->sampleCallIndex = sample_idx;
+    _vptr_table->evalCallIndex   = eval_idx;
+    _vptr_table->flags           = _flags;
 }
 }    // namespace atcg
