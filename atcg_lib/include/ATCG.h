@@ -13,6 +13,7 @@
 #include <Core/CUDA.h>
 #include <Core/glm.h>
 #include <Core/UUID.h>
+#include <Core/SystemRegistry.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>
