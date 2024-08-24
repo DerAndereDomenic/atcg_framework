@@ -3,19 +3,19 @@
 namespace atcg
 {
 
-static const SystemRegistry* s_registry = nullptr;
+static SystemRegistry* s_registry = nullptr;
 
 void SystemRegistry::init()
 {
     s_registry = new SystemRegistry;
 }
 
-const SystemRegistry* SystemRegistry::instance()
+SystemRegistry* SystemRegistry::instance()
 {
     return s_registry;
 }
 
-void SystemRegistry::setInstance(const SystemRegistry* registry)
+void SystemRegistry::setInstance(SystemRegistry* registry)
 {
     s_registry = registry;
 }

@@ -25,14 +25,14 @@ public:
      *
      * @return The instance
      */
-    static const SystemRegistry* instance();
+    static SystemRegistry* instance();
 
     /**
      * @brief Initialize the registry by an outside source, for example to initialize dynamically loaded dlls.
      *
      * @param regsitry The registry
      */
-    static void setInstance(const SystemRegistry* registry);
+    static void setInstance(SystemRegistry* registry);
 
     /**
      * @brief Shutdown the system. This is done by the application.
@@ -46,7 +46,7 @@ public:
      * @param system The system to register
      */
     template<typename T>
-    void registerSystem(const T* system)
+    void registerSystem(T* system)
     {
         _systems[typeid(T).name()] = system;
     }
@@ -70,15 +70,15 @@ public:
      * @return The system
      */
     template<typename T>
-    const T* getSystem()
+    T* getSystem()
     {
         return static_cast<T*>(_systems[typeid(T).name()]);
     }
 
 private:
-    SystemRegistry();
+    SystemRegistry() = default;
 
-    ~SystemRegistry();
+    ~SystemRegistry() = default;
 
     std::unordered_map<std::string, void*> _systems;
 };
