@@ -3,12 +3,10 @@
 
 namespace atcg
 {
-std::shared_ptr<spdlog::logger> Logger::s_logger;
-
-void Logger::init()
+Logger::Logger()
 {
     spdlog::set_pattern("%^[%T] %n: %v%$");
-    s_logger = spdlog::stdout_color_mt("ATCG");
-    s_logger->set_level(spdlog::level::trace);
+    _logger = spdlog::stdout_color_mt("ATCG");
+    _logger->set_level(spdlog::level::trace);
 }
 }    // namespace atcg
