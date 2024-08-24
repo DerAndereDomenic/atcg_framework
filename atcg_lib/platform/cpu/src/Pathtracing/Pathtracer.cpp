@@ -9,7 +9,7 @@
 #include <Pathtracing/RaytracingShader.h>
 #include <Pathtracing/RaytracingShaderManager.h>
 
-#include <Pathtracing/Shader/PathtracingShader.h>
+#include <Pathtracing/PathtracingShader.h>
 
 #include <thread>
 #include <mutex>
@@ -39,7 +39,7 @@ public:
     float rendering_time = 0.0f;
     uint32_t subframe    = 0;
 
-    atcg::ref_ptr<CPURaytracingShader> shader = nullptr;
+    atcg::ref_ptr<RaytracingShader> shader = nullptr;
     atcg::ref_ptr<atcg::Texture2D> output_texture;
 
     std::thread worker_thread;
@@ -55,6 +55,9 @@ public:
     bool samples_mode = true;
 
     uint32_t width = 0, height = 0;
+
+    atcg::ref_ptr<RayTracingPipeline> pipeline;
+    atcg::ref_ptr<ShaderBindingTable> sbt;
 };
 
 void Pathtracer::Impl::worker()
@@ -160,12 +163,15 @@ void Pathtracer::Impl::draw(const atcg::ref_ptr<Scene>& scene,
 {
     swap_index = 1;
 
+    pipeline = atcg::make_ref<RayTracingPipeline>(nullptr);
+    sbt      = atcg::make_ref<ShaderBindingTable>(nullptr);
+
     resize(width, height);
 
-    shader = std::dynamic_pointer_cast<CPURaytracingShader>(pshader);
+    shader = std::dynamic_pointer_cast<RaytracingShader>(pshader);
     shader->setScene(scene);
     shader->setCamera(camera);
-    shader->initializePipeline();
+    shader->initializePipeline(pipeline, sbt);
 
     start();
 }
