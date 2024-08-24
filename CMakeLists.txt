@@ -147,28 +147,26 @@ file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform
 set(source_files "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_renderer_files}")
 
 set(ptx_files "")
-if(ATCG_CUDA_BACKEND)
-    foreach(source_file IN LISTS source_files)
-        # Define the pragma we use to determine the value of CUDA_SOURCE_PROPERTY_FORMAT
-        set(pragma_expression "^[ \t]*#[ \t]*pragma[ \t]+cuda_source_property_format[ \t]+=[ \t]+([a-z,A-Z]+)[ \t]*$")
-        # Process any *.cu source files
-        if(${source_file} MATCHES "\\.cu$")
-            # Read all lines from the source file defining the pragma we are looking for.
-            file(STRINGS ${source_file} matched_content REGEX ${pragma_expression})
-            if (matched_content)
-                # For all pragma definitions that we found, should only be one usually...
-                foreach(line_string ${matched_content})
-                    # Filter out the defined value
-                    string(REGEX REPLACE ${pragma_expression} "\\1" source_property_format ${line_string})
-                    # Apply the property to the source file
-                    if(${source_property_format} MATCHES "PTX")
-                        list(APPEND ptx_files ${source_file})
-                    endif()
-                endforeach()
-            endif()
+foreach(source_file IN LISTS source_files)
+    # Define the pragma we use to determine the value of CUDA_SOURCE_PROPERTY_FORMAT
+    set(pragma_expression "^[ \t]*#[ \t]*pragma[ \t]+cuda_source_property_format[ \t]+=[ \t]+([a-z,A-Z]+)[ \t]*$")
+    # Process any *.cu source files
+    if(${source_file} MATCHES "\\.cu$")
+        # Read all lines from the source file defining the pragma we are looking for.
+        file(STRINGS ${source_file} matched_content REGEX ${pragma_expression})
+        if (matched_content)
+            # For all pragma definitions that we found, should only be one usually...
+            foreach(line_string ${matched_content})
+                # Filter out the defined value
+                string(REGEX REPLACE ${pragma_expression} "\\1" source_property_format ${line_string})
+                # Apply the property to the source file
+                if(${source_property_format} MATCHES "PTX")
+                    list(APPEND ptx_files ${source_file})
+                endif()
+            endforeach()
         endif()
-    endforeach()
-endif()
+    endif()
+endforeach()
 
 list(REMOVE_ITEM source_files ${ptx_files})
 
@@ -232,6 +230,23 @@ if(ATCG_CUDA_BACKEND)
         $<TARGET_OBJECTS:ptxmodules> ${ATCG_PTX_OUTPUT_DIRECTORY}
         COMMAND_EXPAND_LISTS
     )
+else()
+    foreach(SOURCE_FILE ${ptx_files})
+        # Get the filename without the directory and extension
+        get_filename_component(FILENAME_WE ${SOURCE_FILE} NAME_WE)
+        set_source_files_properties(${SOURCE_FILE} PROPERTIES LANGUAGE CXX)
+
+        # Create a target for each file
+        add_library(${FILENAME_WE} SHARED ${SOURCE_FILE})
+        target_link_libraries(${FILENAME_WE} PRIVATE atcg_lib)
+        target_compile_definitions(${FILENAME_WE} PRIVATE _USE_MATH_DEFINES ATCG_RT_MODULE)
+
+        # Optionally, set the output directory for the DLLs
+        set_target_properties(${FILENAME_WE} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+        )
+    endforeach()
 endif()
 
 function(ATCG_add_executable target_name_base target_name_var source)
