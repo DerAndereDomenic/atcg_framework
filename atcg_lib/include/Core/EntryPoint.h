@@ -9,6 +9,8 @@ namespace atcg
 
 void print_statistics()
 {
+    ATCG_ASSERT(atcg::SystemRegistry::instance()->hasSystem<atcg::Logger>(), "No Logger");
+
     atcg::host_allocator alloc_host;
     std::size_t host_bytes_allocated   = alloc_host.bytes_allocated;
     std::size_t host_bytes_deallocated = alloc_host.bytes_deallocated;

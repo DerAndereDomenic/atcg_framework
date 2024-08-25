@@ -1,6 +1,7 @@
 #include <Core/Application.h>
 
 #include <Core/SystemRegistry.h>
+#include <Core/Assert.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/ShaderManager.h>
@@ -24,6 +25,9 @@ Application::~Application() {}
 
 void Application::init(const WindowProps& props)
 {
+    ATCG_ASSERT(!s_instance, "There can only be one application instance at a time.");
+    ATCG_ASSERT(SystemRegistry::instance(), "SystemRegistry must be initialized before initializing the Application");
+
     _shader_manager = atcg::make_ref<ShaderManagerSystem>();
     SystemRegistry::instance()->registerSystem(_shader_manager.get());
 
@@ -49,12 +53,16 @@ void Application::init(const WindowProps& props)
 
 void Application::pushLayer(Layer* layer)
 {
+    ATCG_ASSERT(layer, "Layer cannot be nullptr");
+
     _layer_stack.pushLayer(layer);
     layer->onAttach();
 }
 
 void Application::close()
 {
+    ATCG_ASSERT(!_running, "Can only close running applications");
+
     _running = false;
 }
 
@@ -94,6 +102,17 @@ glm::ivec2 Application::getViewportPosition() const
 
 void Application::run()
 {
+    ATCG_ASSERT(!_running, "Can only start application once");
+    ATCG_ASSERT(SystemRegistry::instance(), "System registry must be initalized before running the app");
+    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<RendererSystem>(),
+                "There must be a registered Renderer before starting the app");
+    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<ShaderManagerSystem>(),
+                "There must be a registered ShaderManager before starting the app");
+    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<VRSystem>(),
+                "There must be a registered VRSystem before starting the app");
+    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<Logger>(),
+                "There must be a registered Logger before starting the app");
+
     _running          = true;
     auto last_time    = std::chrono::high_resolution_clock::now();
     auto current_time = std::chrono::high_resolution_clock::now();

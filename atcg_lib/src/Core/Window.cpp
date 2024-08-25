@@ -1,4 +1,5 @@
 #include <Core/Window.h>
+#include <Core/Assert.h>
 
 #include <GLFW/glfw3.h>
 
@@ -159,6 +160,8 @@ Window::~Window()
 
 void Window::onUpdate()
 {
+    ATCG_ASSERT(_context, "No valid context");
+
     glfwPollEvents();
     _context->swapBuffers();
 }
