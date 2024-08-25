@@ -721,7 +721,7 @@ ATCG_INLINE void screenshot(const atcg::ref_ptr<Scene>& scene,
 ATCG_INLINE torch::Tensor
 screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->screenshot(scene, camera, width);
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->screenshot(scene, camera, width);
 }
 
 /**
