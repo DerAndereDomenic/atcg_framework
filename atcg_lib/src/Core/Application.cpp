@@ -30,7 +30,7 @@ void Application::init(const WindowProps& props)
     _window = atcg::make_scope<Window>(props);
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
-    _renderer = atcg::make_ref<Renderer>();
+    _renderer = atcg::make_ref<RendererSystem>();
     SystemRegistry::instance()->registerSystem(_renderer.get());
     _renderer->init(_window->getWidth(), _window->getHeight());
 

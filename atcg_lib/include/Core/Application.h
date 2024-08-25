@@ -126,7 +126,7 @@ private:
 
     // Systems
     atcg::ref_ptr<ShaderManager> _shader_manager;
-    atcg::ref_ptr<Renderer> _renderer;
+    atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
 
     friend int atcg::atcg_main();
