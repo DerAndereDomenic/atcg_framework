@@ -71,7 +71,7 @@ public:
      *
      * @return The clear color
      */
-    glm::vec4 getClearColor();
+    glm::vec4 getClearColor() const;
 
     /**
      * @brief Set the size of rendered points
@@ -122,7 +122,7 @@ public:
      *
      * @return True if there is a skybox set.
      */
-    bool hasSkybox();
+    bool hasSkybox() const;
 
     /**
      * @brief Remove the skybox
@@ -134,14 +134,14 @@ public:
      *
      * @return A pointer to the texture (only is valid if hasSkybox() == true)
      */
-    atcg::ref_ptr<Texture2D> getSkyboxTexture();
+    atcg::ref_ptr<Texture2D> getSkyboxTexture() const;
 
     /**
      * @brief Get the cube map of the skybox
      *
      * @return The skybox cubemap
      */
-    atcg::ref_ptr<TextureCube> getSkyboxCubemap();
+    atcg::ref_ptr<TextureCube> getSkyboxCubemap() const;
 
     /**
      * @brief Change the size of the renderer
@@ -154,7 +154,7 @@ public:
     /**
      * @brief Use the default screen fbo
      */
-    void useScreenBuffer();
+    void useScreenBuffer() const;
 
     /**
      * @brief Render a mesh
@@ -248,7 +248,7 @@ public:
      *
      * @return The fbo
      */
-    atcg::ref_ptr<Framebuffer> getFramebuffer();
+    atcg::ref_ptr<Framebuffer> getFramebuffer() const;
 
     /**
      * @brief Get the entity index that was rendered onto the given pixel
@@ -256,7 +256,7 @@ public:
      * @param mouse The mouse position
      * @return The entity id
      */
-    int getEntityIndex(const glm::vec2& mouse);
+    int getEntityIndex(const glm::vec2& mouse) const;
 
     /**
      * @brief Take a screenshot and save it to disk
@@ -306,7 +306,7 @@ public:
      *
      * @return The buffer containing the frame image.
      */
-    torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU);
+    torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU) const;
 
     /**
      * @brief Get the Z-buffer of the current frame as torch tensor
@@ -317,12 +317,12 @@ public:
      *
      * @return The depth buffer
      */
-    torch::Tensor getZBuffer(const torch::DeviceType& device = atcg::GPU);
+    torch::Tensor getZBuffer(const torch::DeviceType& device = atcg::GPU) const;
 
     /**
      * @brief Clear the currently bound framebuffer
      */
-    void clear();
+    void clear() const;
 
     /**
      * @brief Toggle depth testing
@@ -350,7 +350,7 @@ public:
      *
      * @return The index of the current frame
      */
-    uint32_t getFrameCounter();
+    uint32_t getFrameCounter() const;
 
     /**
      * @brief Generates a new texture ID that is not used yet.

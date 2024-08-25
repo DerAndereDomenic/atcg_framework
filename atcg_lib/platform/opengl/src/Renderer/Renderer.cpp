@@ -366,7 +366,7 @@ void RendererSystem::setClearColor(const glm::vec4& color)
     glClearColor(color.r, color.g, color.b, color.a);
 }
 
-glm::vec4 RendererSystem::getClearColor()
+glm::vec4 RendererSystem::getClearColor() const
 {
     return impl->clear_color;
 }
@@ -532,7 +532,7 @@ void RendererSystem::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
     toggleCulling(culling);
 }
 
-bool RendererSystem::hasSkybox()
+bool RendererSystem::hasSkybox() const
 {
     return impl->has_skybox;
 }
@@ -542,12 +542,12 @@ void RendererSystem::removeSkybox()
     impl->has_skybox = false;
 }
 
-atcg::ref_ptr<Texture2D> RendererSystem::getSkyboxTexture()
+atcg::ref_ptr<Texture2D> RendererSystem::getSkyboxTexture() const
 {
     return impl->skybox_texture;
 }
 
-atcg::ref_ptr<TextureCube> RendererSystem::getSkyboxCubemap()
+atcg::ref_ptr<TextureCube> RendererSystem::getSkyboxCubemap() const
 {
     return impl->skybox_cubemap;
 }
@@ -566,17 +566,17 @@ void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
     impl->screen_fbo->complete();
 }
 
-void RendererSystem::useScreenBuffer()
+void RendererSystem::useScreenBuffer() const
 {
     impl->screen_fbo->use();
 }
 
-atcg::ref_ptr<Framebuffer> RendererSystem::getFramebuffer()
+atcg::ref_ptr<Framebuffer> RendererSystem::getFramebuffer() const
 {
     return impl->screen_fbo;
 }
 
-void RendererSystem::clear()
+void RendererSystem::clear() const
 {
     glClear(impl->clear_flag);
 
@@ -646,7 +646,7 @@ void RendererSystem::setCullFace(CullMode mode)
     }
 }
 
-uint32_t RendererSystem::getFrameCounter()
+uint32_t RendererSystem::getFrameCounter() const
 {
     return impl->frame_counter;
 }
@@ -1141,7 +1141,7 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img)
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
 }
 
-int RendererSystem::getEntityIndex(const glm::vec2& mouse)
+int RendererSystem::getEntityIndex(const glm::vec2& mouse) const
 {
     useScreenBuffer();
     glReadBuffer(GL_COLOR_ATTACHMENT1);
@@ -1210,12 +1210,12 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     return data;
 }
 
-torch::Tensor RendererSystem::getFrame(const torch::DeviceType& device)
+torch::Tensor RendererSystem::getFrame(const torch::DeviceType& device) const
 {
     return impl->screen_fbo->getColorAttachement(0)->getData(device);
 }
 
-torch::Tensor RendererSystem::getZBuffer(const torch::DeviceType& device)
+torch::Tensor RendererSystem::getZBuffer(const torch::DeviceType& device) const
 {
     auto frame           = impl->screen_fbo->getDepthAttachement();
     uint32_t width       = frame->width();
