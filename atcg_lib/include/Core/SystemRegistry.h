@@ -63,6 +63,18 @@ public:
     }
 
     /**
+     * @brief Check if a System is registered
+     *
+     * @tparam T The parameter
+     * @return True if the system has a specific system
+     */
+    template<typename T>
+    bool hasSystem() const
+    {
+        return _systems.find(typeid(T).name()) != _systems.end();
+    }
+
+    /**
      * @brief Get a system
      *
      * @tparam T The data type
