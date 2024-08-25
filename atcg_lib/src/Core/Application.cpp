@@ -24,15 +24,15 @@ Application::~Application() {}
 
 void Application::init(const WindowProps& props)
 {
-    _shader_manager = atcg::make_ref<ShaderManager>();
+    _shader_manager = atcg::make_ref<ShaderManagerSystem>();
     SystemRegistry::instance()->registerSystem(_shader_manager.get());
 
     _window = atcg::make_scope<Window>(props);
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
     _renderer = atcg::make_ref<RendererSystem>();
-    SystemRegistry::instance()->registerSystem(_renderer.get());
     _renderer->init(_window->getWidth(), _window->getHeight());
+    SystemRegistry::instance()->registerSystem(_renderer.get());
 
     _vr_system = atcg::make_ref<VRSystem>();
     SystemRegistry::instance()->registerSystem(_vr_system.get());
