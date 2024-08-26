@@ -53,7 +53,7 @@ GASAccelerationStructure::~GASAccelerationStructure() {}
 void GASAccelerationStructure::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                                   const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    auto ptx_file = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/MeshShape.dll";
+    auto ptx_file = "./bin/MeshShape.ptx";
     _hit_group    = pipeline->addTrianglesHitGroupShader({ptx_file, "__closesthit__mesh"}, {});
 }
 

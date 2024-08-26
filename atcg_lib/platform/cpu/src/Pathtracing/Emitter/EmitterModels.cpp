@@ -97,8 +97,7 @@ MeshEmitter::MeshEmitter(const torch::Tensor& positions,
 void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                      const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_emitter_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/"
-                                             "EmitterModels.dll";
+    const std::string ptx_emitter_filename = "./bin/EmitterModels.ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_meshemitter"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_meshemitter"});
@@ -131,8 +130,7 @@ EnvironmentEmitter::~EnvironmentEmitter() {}
 void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                             const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_emitter_filename = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/"
-                                             "EmitterModels.dll";
+    const std::string ptx_emitter_filename = "./bin/EmitterModels.ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_environmentemitter"});
     auto eval_prog_group =

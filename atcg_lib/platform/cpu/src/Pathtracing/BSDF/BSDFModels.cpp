@@ -18,7 +18,7 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
 {
     _vptr_table = atcg::make_ref<BSDFVPtrTable>();
 
-    auto ptx_file     = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/BSDFModels.dll";
+    auto ptx_file     = "./bin/BSDFModels.ptx";
     auto sample_group = pipeline->addCallableShader({ptx_file, "__direct_callable__sample_pbrbsdf"});
     auto eval_group   = pipeline->addCallableShader({ptx_file, "__direct_callable__eval_pbrbsdf"});
 
@@ -48,7 +48,7 @@ void RefractiveBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>&
 {
     _vptr_table = atcg::make_ref<BSDFVPtrTable>();
 
-    auto ptx_file     = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/BSDFModels.dll";
+    auto ptx_file     = "./bin/BSDFModels.ptx";
     auto sample_group = pipeline->addCallableShader({ptx_file, "__direct_callable__sample_refractivebsdf"});
     auto eval_group   = pipeline->addCallableShader({ptx_file, "__direct_callable__eval_refractivebsdf"});
 

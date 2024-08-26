@@ -241,10 +241,12 @@ else()
         target_link_libraries(${FILENAME_WE} PRIVATE atcg_lib)
         target_compile_definitions(${FILENAME_WE} PRIVATE _USE_MATH_DEFINES ATCG_RT_MODULE)
 
-        # Optionally, set the output directory for the DLLs
         set_target_properties(${FILENAME_WE} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
-            LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+            RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+            RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+            RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_CURRENT_SOURCE_DIR}/bin"
+            OUTPUT_NAME "${FILENAME_WE}" 
+            SUFFIX ".ptx"                
         )
     endforeach()
 endif()

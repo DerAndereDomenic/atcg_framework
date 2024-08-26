@@ -87,7 +87,7 @@ void PathtracingShader::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         _emitter.push_back(_environment_emitter->getVPtrTable());
     }
 
-    auto ptx_file     = "C:/Users/Domenic/Documents/Repositories/atcg_framework/bin/Debug/PathtracingShader.dll";
+    auto ptx_file     = "./bin/PathtracingShader.ptx";
     auto raygen_group = pipeline->addRaygenShader({ptx_file, "__raygen__main"});
     auto miss_group   = pipeline->addMissShader({ptx_file, "__miss__main"});
     _raygen_idx       = sbt->addRaygenEntry(raygen_group);
