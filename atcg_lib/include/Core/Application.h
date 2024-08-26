@@ -9,6 +9,7 @@
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
+#include <Pathtracing/Pathtracer.h>
 
 namespace atcg
 {
@@ -129,6 +130,7 @@ private:
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
+    atcg::ref_ptr<PathtracingSystem> _pt_system;
 
     friend int atcg::atcg_main();
     static Application* s_instance;

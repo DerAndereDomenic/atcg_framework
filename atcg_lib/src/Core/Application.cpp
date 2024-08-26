@@ -39,6 +39,10 @@ void Application::init(const WindowProps& props)
     _renderer->init(_window->getWidth(), _window->getHeight());
     SystemRegistry::instance()->registerSystem(_renderer.get());
 
+    _pt_system = atcg::make_ref<PathtracingSystem>();
+    _pt_system->init();
+    SystemRegistry::instance()->registerSystem(_pt_system.get());
+
     _vr_system = atcg::make_ref<VRSystem>();
     _vr_system->init(ATCG_BIND_EVENT_FN(Application::onEvent));
     SystemRegistry::instance()->registerSystem(_vr_system.get());

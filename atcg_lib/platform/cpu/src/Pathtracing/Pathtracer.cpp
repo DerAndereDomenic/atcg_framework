@@ -17,10 +17,7 @@
 
 namespace atcg
 {
-
-Pathtracer* Pathtracer::s_pathtracer = new Pathtracer;
-
-class Pathtracer::Impl
+class PathtracingSystem::Impl
 {
 public:
     Impl() {}
@@ -60,7 +57,7 @@ public:
     atcg::ref_ptr<ShaderBindingTable> sbt;
 };
 
-void Pathtracer::Impl::worker()
+void PathtracingSystem::Impl::worker()
 {
     rendering_time = 0.0f;
     subframe       = 0;
@@ -94,15 +91,18 @@ void Pathtracer::Impl::worker()
     running = false;
 }
 
-Pathtracer::Pathtracer() {}
+PathtracingSystem::PathtracingSystem() {}
 
-Pathtracer::~Pathtracer() {}
-
-void Pathtracer::init()
+PathtracingSystem::~PathtracingSystem()
 {
-    s_pathtracer->impl = std::make_unique<Impl>();
+    stop();
+}
 
-    s_pathtracer->impl->resize(1, 1);
+void PathtracingSystem::init()
+{
+    impl = std::make_unique<Impl>();
+
+    impl->resize(1, 1);
 
     {
         auto shader = atcg::make_ref<PathtracingShader>();
@@ -110,56 +110,49 @@ void Pathtracer::init()
     }
 }
 
-void Pathtracer::destroy()
-{
-    stop();
-    delete s_pathtracer;
-}
-
-void Pathtracer::Impl::start()
+void PathtracingSystem::Impl::start()
 {
     if(!running)
     {
         running = true;
-        if(s_pathtracer->impl->worker_thread.joinable()) s_pathtracer->impl->worker_thread.join();
-        worker_thread = std::thread(&Pathtracer::Impl::worker, this);
+        if(worker_thread.joinable()) worker_thread.join();
+        worker_thread = std::thread(&PathtracingSystem::Impl::worker, this);
     }
 }
 
-void Pathtracer::stop()
+void PathtracingSystem::stop()
 {
-    s_pathtracer->impl->running = false;
+    impl->running = false;
 
-    if(s_pathtracer->impl->worker_thread.joinable()) s_pathtracer->impl->worker_thread.join();
+    if(impl->worker_thread.joinable()) impl->worker_thread.join();
 }
 
-bool Pathtracer::isRunning()
+bool PathtracingSystem::isRunning() const
 {
-    return s_pathtracer->impl->running;
+    return impl->running;
 }
 
-void Pathtracer::Impl::resize(const uint32_t width, const uint32_t height)
+void PathtracingSystem::Impl::resize(const uint32_t width, const uint32_t height)
 {
     // Resize
-    s_pathtracer->impl->swap_chain_buffer =
-        torch::zeros({2, height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
+    swap_chain_buffer = torch::zeros({2, height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
 
-    s_pathtracer->impl->output_buffer = (glm::u8vec4*)s_pathtracer->impl->swap_chain_buffer.index({0}).data_ptr();
+    output_buffer = (glm::u8vec4*)swap_chain_buffer.index({0}).data_ptr();
 
     TextureSpecification spec;
-    spec.width                         = width;
-    spec.height                        = height;
-    s_pathtracer->impl->output_texture = atcg::Texture2D::create(spec);
+    spec.width     = width;
+    spec.height    = height;
+    output_texture = atcg::Texture2D::create(spec);
 
-    s_pathtracer->impl->width  = width;
-    s_pathtracer->impl->height = height;
+    this->width  = width;
+    this->height = height;
 }
 
-void Pathtracer::Impl::draw(const atcg::ref_ptr<Scene>& scene,
-                            const atcg::ref_ptr<PerspectiveCamera>& camera,
-                            const atcg::ref_ptr<RaytracingShader>& pshader,
-                            uint32_t width,
-                            uint32_t height)
+void PathtracingSystem::Impl::draw(const atcg::ref_ptr<Scene>& scene,
+                                   const atcg::ref_ptr<PerspectiveCamera>& camera,
+                                   const atcg::ref_ptr<RaytracingShader>& pshader,
+                                   uint32_t width,
+                                   uint32_t height)
 {
     swap_index = 1;
 
@@ -177,71 +170,70 @@ void Pathtracer::Impl::draw(const atcg::ref_ptr<Scene>& scene,
 }
 
 
-atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
+atcg::ref_ptr<Texture2D> PathtracingSystem::getOutputTexture()
 {
     {
-        std::lock_guard guard(s_pathtracer->impl->swap_chain_mutex);
+        std::lock_guard guard(impl->swap_chain_mutex);
 
-        if(s_pathtracer->impl->dirty)
+        if(impl->dirty)
         {
-            s_pathtracer->impl->output_texture->setData(
-                s_pathtracer->impl->swap_chain_buffer.index({s_pathtracer->impl->swap_index}));
-            s_pathtracer->impl->dirty = false;
+            impl->output_texture->setData(impl->swap_chain_buffer.index({impl->swap_index}));
+            impl->dirty = false;
         }
     }
 
-    return s_pathtracer->impl->output_texture;
+    return impl->output_texture;
 }
 
-void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
-                      const atcg::ref_ptr<PerspectiveCamera>& camera,
-                      const atcg::ref_ptr<RaytracingShader>& shader,
-                      uint32_t width,
-                      uint32_t height,
-                      const uint32_t num_samples)
+void PathtracingSystem::draw(const atcg::ref_ptr<Scene>& scene,
+                             const atcg::ref_ptr<PerspectiveCamera>& camera,
+                             const atcg::ref_ptr<RaytracingShader>& shader,
+                             uint32_t width,
+                             uint32_t height,
+                             const uint32_t num_samples)
 {
-    s_pathtracer->impl->samples_mode    = true;
-    s_pathtracer->impl->max_num_samples = num_samples;
+    impl->samples_mode    = true;
+    impl->max_num_samples = num_samples;
 
-    s_pathtracer->impl->draw(scene, camera, shader, width, height);
+    impl->draw(scene, camera, shader, width, height);
 }
 
-void Pathtracer::draw(const atcg::ref_ptr<Scene>& scene,
-                      const atcg::ref_ptr<PerspectiveCamera>& camera,
-                      const atcg::ref_ptr<RaytracingShader>& shader,
-                      uint32_t width,
-                      uint32_t height,
-                      const float time)
+void PathtracingSystem::draw(const atcg::ref_ptr<Scene>& scene,
+                             const atcg::ref_ptr<PerspectiveCamera>& camera,
+                             const atcg::ref_ptr<RaytracingShader>& shader,
+                             uint32_t width,
+                             uint32_t height,
+                             const float time)
 {
-    s_pathtracer->impl->samples_mode       = false;
-    s_pathtracer->impl->max_rendering_time = time;
+    impl->samples_mode       = false;
+    impl->max_rendering_time = time;
 
-    s_pathtracer->impl->draw(scene, camera, shader, width, height);
+    impl->draw(scene, camera, shader, width, height);
 }
 
-uint32_t Pathtracer::getFrameIndex()
+uint32_t PathtracingSystem::getFrameIndex() const
 {
-    return s_pathtracer->impl->subframe;
+    return impl->subframe;
 }
 
-uint32_t Pathtracer::getWidth()
+uint32_t PathtracingSystem::getWidth() const
 {
-    return s_pathtracer->impl->width;
+    return impl->width;
 }
 
-uint32_t Pathtracer::getHeight()
+uint32_t PathtracingSystem::getHeight() const
 {
-    return s_pathtracer->impl->height;
+    return impl->height;
 }
 
-float Pathtracer::getLastRenderingTime()
+float PathtracingSystem::getLastRenderingTime() const
 {
-    return s_pathtracer->impl->rendering_time;
+    return impl->rendering_time;
 }
 
-uint32_t Pathtracer::getSampleCount()
+uint32_t PathtracingSystem::getSampleCount() const
 {
-    return s_pathtracer->impl->subframe;
+    return impl->subframe;
 }
 
 // class Pathtracer::Impl
@@ -466,47 +458,47 @@ uint32_t Pathtracer::getSampleCount()
 
 // void Pathtracer::init()
 // {
-//     s_pathtracer->impl = std::make_unique<Impl>();
+//     impl = std::make_unique<Impl>();
 
-//     s_pathtracer->impl->swap_chain_buffer = atcg::DeviceBuffer<glm::u8vec4>(
-//         2 * s_pathtracer->impl->width * s_pathtracer->impl->height);    // 2 swap chain buffers
-//     s_pathtracer->impl->output_buffer = s_pathtracer->impl->swap_chain_buffer.get();
+//     impl->swap_chain_buffer = atcg::DeviceBuffer<glm::u8vec4>(
+//         2 * impl->width * impl->height);    // 2 swap chain buffers
+//     impl->output_buffer = impl->swap_chain_buffer.get();
 
-//     s_pathtracer->impl->accumulation_buffer.resize(s_pathtracer->impl->width * s_pathtracer->impl->height);
-//     memset(s_pathtracer->impl->accumulation_buffer.data(),
+//     impl->accumulation_buffer.resize(impl->width * impl->height);
+//     memset(impl->accumulation_buffer.data(),
 //            0,
-//            sizeof(glm::vec3) * s_pathtracer->impl->accumulation_buffer.size());
+//            sizeof(glm::vec3) * impl->accumulation_buffer.size());
 
 //     TextureSpecification spec;
-//     spec.width                         = s_pathtracer->impl->width;
-//     spec.height                        = s_pathtracer->impl->height;
-//     s_pathtracer->impl->output_texture = atcg::Texture2D::create(spec);
+//     spec.width                         = impl->width;
+//     spec.height                        = impl->height;
+//     impl->output_texture = atcg::Texture2D::create(spec);
 
-//     s_pathtracer->impl->horizontalScanLine.resize(s_pathtracer->impl->width);
-//     s_pathtracer->impl->verticalScanLine.resize(s_pathtracer->impl->height);
-//     for(int i = 0; i < s_pathtracer->impl->width; ++i)
+//     impl->horizontalScanLine.resize(impl->width);
+//     impl->verticalScanLine.resize(impl->height);
+//     for(int i = 0; i < impl->width; ++i)
 //     {
-//         s_pathtracer->impl->horizontalScanLine[i] = i;
+//         impl->horizontalScanLine[i] = i;
 //     }
 
-//     for(int i = 0; i < s_pathtracer->impl->height; ++i)
+//     for(int i = 0; i < impl->height; ++i)
 //     {
-//         s_pathtracer->impl->verticalScanLine[i] = i;
+//         impl->verticalScanLine[i] = i;
 //     }
 // }
 
 // void Pathtracer::bakeScene(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<PerspectiveCamera>& camera)
 // {
-//     s_pathtracer->impl->diffuse_images.clear();
-//     s_pathtracer->impl->roughness_images.clear();
-//     s_pathtracer->impl->metallic_images.clear();
-//     s_pathtracer->impl->positions.clear();
-//     s_pathtracer->impl->normals.clear();
-//     s_pathtracer->impl->uvs.clear();
-//     s_pathtracer->impl->faces.clear();
-//     s_pathtracer->impl->mesh_idx.clear();
+//     impl->diffuse_images.clear();
+//     impl->roughness_images.clear();
+//     impl->metallic_images.clear();
+//     impl->positions.clear();
+//     impl->normals.clear();
+//     impl->uvs.clear();
+//     impl->faces.clear();
+//     impl->mesh_idx.clear();
 
-//     s_pathtracer->impl->camera = camera;
+//     impl->camera = camera;
 
 //     auto view = scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
 
@@ -530,16 +522,16 @@ uint32_t Pathtracer::getSampleCount()
 
 //         auto& material = entity.getComponent<MeshRenderComponent>().material;
 
-//         s_pathtracer->impl->diffuse_images.push_back(atcg::make_ref<Image>(material.getDiffuseTexture()));
-//         s_pathtracer->impl->roughness_images.push_back(atcg::make_ref<Image>(material.getRoughnessTexture()));
-//         s_pathtracer->impl->metallic_images.push_back(atcg::make_ref<Image>(material.getMetallicTexture()));
+//         impl->diffuse_images.push_back(atcg::make_ref<Image>(material.getDiffuseTexture()));
+//         impl->roughness_images.push_back(atcg::make_ref<Image>(material.getRoughnessTexture()));
+//         impl->metallic_images.push_back(atcg::make_ref<Image>(material.getMetallicTexture()));
 //     }
 
-//     s_pathtracer->impl->positions.resize(total_vertices);
-//     s_pathtracer->impl->normals.resize(total_vertices);
-//     s_pathtracer->impl->uvs.resize(total_vertices);
-//     s_pathtracer->impl->faces.resize(total_faces);
-//     s_pathtracer->impl->mesh_idx.resize(total_faces);
+//     impl->positions.resize(total_vertices);
+//     impl->normals.resize(total_vertices);
+//     impl->uvs.resize(total_vertices);
+//     impl->faces.resize(total_faces);
+//     impl->mesh_idx.resize(total_faces);
 
 //     uint32_t vertex_idx = 0;
 //     uint32_t face_idx   = 0;
@@ -557,17 +549,17 @@ uint32_t Pathtracer::getSampleCount()
 
 //         for(int j = 0; j < graph->n_faces(); ++j)
 //         {
-//             s_pathtracer->impl->faces[face_idx]    = faces[j] + vertex_idx;
-//             s_pathtracer->impl->mesh_idx[face_idx] = i;
+//             impl->faces[face_idx]    = faces[j] + vertex_idx;
+//             impl->mesh_idx[face_idx] = i;
 //             ++face_idx;
 //         }
 
 //         for(int j = 0; j < graph->n_vertices(); ++j)
 //         {
-//             s_pathtracer->impl->positions[vertex_idx] = model * glm::vec4(vertices[j].position, 1.0f);
-//             s_pathtracer->impl->normals[vertex_idx] =
+//             impl->positions[vertex_idx] = model * glm::vec4(vertices[j].position, 1.0f);
+//             impl->normals[vertex_idx] =
 //                 glm::normalize(glm::vec3(normal_matrix * glm::vec4(vertices[j].normal, 0.0f)));
-//             s_pathtracer->impl->uvs[vertex_idx] = vertices[j].uv;
+//             impl->uvs[vertex_idx] = vertices[j].uv;
 //             ++vertex_idx;
 //         }
 
@@ -575,67 +567,67 @@ uint32_t Pathtracer::getSampleCount()
 //         graph->getFaceIndexBuffer()->unmapHostPointers();
 //     }
 
-//     nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(s_pathtracer->impl->positions.data()),
-//                                               reinterpret_cast<const uint32_t*>(s_pathtracer->impl->faces.data()),
+//     nanort::TriangleMesh<float> triangle_mesh(reinterpret_cast<const float*>(impl->positions.data()),
+//                                               reinterpret_cast<const uint32_t*>(impl->faces.data()),
 //                                               sizeof(float) * 3);
 //     nanort::TriangleSAHPred<float> triangle_pred(reinterpret_cast<const
-//     float*>(s_pathtracer->impl->positions.data()),
-//                                                  reinterpret_cast<const uint32_t*>(s_pathtracer->impl->faces.data()),
+//     float*>(impl->positions.data()),
+//                                                  reinterpret_cast<const uint32_t*>(impl->faces.data()),
 //                                                  sizeof(float) * 3);
-//     bool ret = s_pathtracer->impl->accel.Build(total_faces, triangle_mesh, triangle_pred);
+//     bool ret = impl->accel.Build(total_faces, triangle_mesh, triangle_pred);
 //     assert(ret);
 
-//     nanort::BVHBuildStatistics stats = s_pathtracer->impl->accel.GetStatistics();
+//     nanort::BVHBuildStatistics stats = impl->accel.GetStatistics();
 
 //     ATCG_INFO("BVH statistics:");
 //     ATCG_INFO("\t# of leaf   nodes: {0}", stats.num_leaf_nodes);
 //     ATCG_INFO("\t# of branch nodes: {0}", stats.num_branch_nodes);
 //     ATCG_INFO("\tMax tree depth   : {0}", stats.max_tree_depth);
 
-//     s_pathtracer->impl->hasSkybox = Renderer::hasSkybox();
-//     if(s_pathtracer->impl->hasSkybox)
+//     impl->hasSkybox = Renderer::hasSkybox();
+//     if(impl->hasSkybox)
 //     {
 //         atcg::ref_ptr<Texture2D> skybox_texture = atcg::Renderer::getSkyboxTexture();
 
-//         s_pathtracer->impl->skybox_image = atcg::make_ref<Image>(skybox_texture);
+//         impl->skybox_image = atcg::make_ref<Image>(skybox_texture);
 //     }
 // }
 
 // void Pathtracer::start()
 // {
-//     if(!s_pathtracer->impl->running)
+//     if(!impl->running)
 //     {
-//         memset(s_pathtracer->impl->accumulation_buffer.data(),
+//         memset(impl->accumulation_buffer.data(),
 //                0,
-//                sizeof(glm::vec3) * s_pathtracer->impl->accumulation_buffer.size());
-//         s_pathtracer->impl->running       = true;
-//         s_pathtracer->impl->worker_thread = std::thread(&Pathtracer::Impl::worker, s_pathtracer->impl.get());
+//                sizeof(glm::vec3) * impl->accumulation_buffer.size());
+//         impl->running       = true;
+//         impl->worker_thread = std::thread(&Pathtracer::Impl::worker, impl.get());
 //     }
 // }
 
 // void Pathtracer::stop()
 // {
-//     s_pathtracer->impl->running = false;
+//     impl->running = false;
 
-//     if(s_pathtracer->impl->worker_thread.joinable()) s_pathtracer->impl->worker_thread.join();
+//     if(impl->worker_thread.joinable()) impl->worker_thread.join();
 // }
 
 // atcg::ref_ptr<Texture2D> Pathtracer::getOutputTexture()
 // {
 //     {
-//         std::lock_guard guard(s_pathtracer->impl->swap_chain_mutex);
+//         std::lock_guard guard(impl->swap_chain_mutex);
 
-//         if(s_pathtracer->impl->dirty)
+//         if(impl->dirty)
 //         {
-//             glm::u8vec4* data_ptr = s_pathtracer->impl->swap_chain_buffer.get() + s_pathtracer->impl->swap_index *
-//                                                                                       s_pathtracer->impl->width *
-//                                                                                       s_pathtracer->impl->height;
-//             s_pathtracer->impl->output_texture->setData((void*)data_ptr);
-//             s_pathtracer->impl->dirty = false;
+//             glm::u8vec4* data_ptr = impl->swap_chain_buffer.get() + impl->swap_index *
+//                                                                                       impl->width *
+//                                                                                       impl->height;
+//             impl->output_texture->setData((void*)data_ptr);
+//             impl->dirty = false;
 //         }
 //     }
 
-//     return s_pathtracer->impl->output_texture;
+//     return impl->output_texture;
 // }
 
 }    // namespace atcg
