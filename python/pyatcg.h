@@ -45,6 +45,28 @@ public:
     ~PythonApplication() {}
 };
 
+class PythonContext
+{
+public:
+    PythonContext()
+    {
+        _logger = atcg::make_ref<atcg::Logger>();
+        atcg::SystemRegistry::init();
+        atcg::SystemRegistry::instance()->registerSystem(_logger.get());
+    }
+
+    void onExit()
+    {
+        atcg::print_statistics();
+        atcg::SystemRegistry::shutdown();
+    }
+
+    const atcg::ref_ptr<atcg::Logger> getLogger() const { return _logger; }
+
+private:
+    atcg::ref_ptr<atcg::Logger> _logger;
+};
+
 
 //* This function isn't called but is needed for the linker
 atcg::Application* atcg::createApplication()
@@ -52,18 +74,6 @@ atcg::Application* atcg::createApplication()
     return nullptr;
 }
 
-int python_main(atcg::Application* app)
-{
-    auto logger = atcg::make_ref<atcg::Logger>();
-    atcg::SystemRegistry::init();
-    atcg::SystemRegistry::instance()->registerSystem(logger.get());
-    app->run();
-    delete app;
-    atcg::print_statistics();
-    atcg::SystemRegistry::shutdown();
-
-    return 0;
-}
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
 #define ATCG_DEFINE_MODULES(m)                                                                                                  \
@@ -150,6 +160,15 @@ inline void defineBindings(py::module_& m)
     // ---------------- CORE ---------------------
     ATCG_DEFINE_MODULES(m)
 
+    // On module initialization and destruction
+    py::class_<PythonContext>(m, "PythonContext").def(py::init<>());
+    static PythonContext context;
+
+    py::module atexit = py::module::import("atexit");
+    atexit.attr("register")(py::cpp_function([]() { context.onExit(); }));
+
+    // py::object python_context = py::cast(new PythonContext());
+    // m.attr("_python_context") = python_context;
 
     m_window_props.def(py::init<>([]() { return atcg::WindowProps(); }))
         .def(py::init<const std::string&, uint32_t, uint32_t, int32_t, int32_t, bool>())
@@ -161,7 +180,6 @@ inline void defineBindings(py::module_& m)
         .def_readwrite("vsync", &atcg::WindowProps::vsync)
         .def_readwrite("hidden", &atcg::WindowProps::hidden);
 
-    m.def("start", &python_main, py::arg("application"));
     m.def("init",
           []()
           {
@@ -170,8 +188,9 @@ inline void defineBindings(py::module_& m)
               std::unique_ptr<PythonApplication> app = std::make_unique<PythonApplication>(props);
               return app;
           });
-    m.def("print_statistics", &atcg::print_statistics);
-    m_application.def(py::init<atcg::Layer*>()).def(py::init<atcg::Layer*, atcg::WindowProps>());
+    m_application.def(py::init<atcg::Layer*>())
+        .def(py::init<atcg::Layer*, atcg::WindowProps>())
+        .def("run", &atcg::Application::run);
     m_layer.def(py::init<>())
         .def(py::init<std::string>(), "name"_a)
         .def("onAttach", &atcg::Layer::onAttach)

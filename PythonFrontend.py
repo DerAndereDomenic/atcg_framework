@@ -99,8 +99,7 @@ def main():
     layer = PythonLayer()
     app = atcg.PythonApplication(layer, props)
 
-    atcg.start(app)
+    app.run()
 
 
 main()
-atcg.print_statistics()

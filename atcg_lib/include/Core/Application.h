@@ -15,7 +15,6 @@ namespace atcg
 class Application;
 int atcg_main();
 }    // namespace atcg
-int python_main(atcg::Application* app);
 
 namespace atcg
 {
@@ -109,7 +108,9 @@ public:
      */
     ATCG_INLINE ImGuiLayer* getImGuiLayer() const { return _imgui_layer; }
 
-protected:
+    /**
+     * @brief Run the application
+     */
     virtual void run();
 
 private:
@@ -130,7 +131,6 @@ private:
     atcg::ref_ptr<VRSystem> _vr_system;
 
     friend int atcg::atcg_main();
-    friend int ::python_main(atcg::Application* app);    // Entry point for python bindings
     static Application* s_instance;
 };
 
