@@ -6,13 +6,15 @@
 #include <Events/WindowEvent.h>
 #include <ImGui/ImGuiLayer.h>
 #include <Core/Platform.h>
+#include <Renderer/ShaderManager.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/VRSystem.h>
 
 namespace atcg
 {
 class Application;
-int atcg_main(Application* app);
+int atcg_main();
 }    // namespace atcg
-int python_main(atcg::Application* app);
 
 namespace atcg
 {
@@ -106,8 +108,11 @@ public:
      */
     ATCG_INLINE ImGuiLayer* getImGuiLayer() const { return _imgui_layer; }
 
-protected:
+    /**
+     * @brief Run the application
+     */
     virtual void run();
+
 private:
     bool onWindowClose(WindowCloseEvent* e);
     bool onWindowResize(WindowResizeEvent* e);
@@ -120,8 +125,12 @@ private:
     ImGuiLayer* _imgui_layer;
     LayerStack _layer_stack;
 
-    friend int atcg::atcg_main(Application* app);
-    friend int ::python_main(atcg::Application* app);    // Entry point for python bindings
+    // Systems
+    atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
+    atcg::ref_ptr<RendererSystem> _renderer;
+    atcg::ref_ptr<VRSystem> _vr_system;
+
+    friend int atcg::atcg_main();
     static Application* s_instance;
 };
 

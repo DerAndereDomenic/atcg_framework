@@ -207,6 +207,23 @@ void VertexBuffer::resize(std::size_t size)
     impl->size = size;
 }
 
+atcg::ref_ptr<VertexBuffer> VertexBuffer::clone() const
+{
+    auto result = atcg::make_ref<VertexBuffer>();
+    result->resize(impl->size);
+    result->_layout = _layout;
+
+    glBindBuffer(GL_COPY_READ_BUFFER, _ID);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, result->ID());
+
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, impl->size);
+
+    glBindBuffer(GL_COPY_READ_BUFFER, 0);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+
+    return result;
+}
+
 void* VertexBuffer::getDevicePointer() const
 {
 #ifdef ATCG_CUDA_BACKEND

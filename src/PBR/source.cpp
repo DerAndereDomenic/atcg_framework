@@ -34,11 +34,11 @@ public:
 
         pt_panel = atcg::PathtracingPanel(scene);
 
-        if(atcg::VRSystem::isVRAvailable())
+        if(atcg::VR::isVRAvailable())
         {
-            float vr_aspect   = (float)atcg::VRSystem::width() / (float)atcg::VRSystem::height();
+            float vr_aspect   = (float)atcg::VR::width() / (float)atcg::VR::height();
             camera_controller = atcg::make_ref<atcg::VRController>(vr_aspect);
-            atcg::VRSystem::initControllerMeshes(scene);
+            atcg::VR::initControllerMeshes(scene);
         }
         else
         {
@@ -59,21 +59,20 @@ public:
 
         atcg::Renderer::clear();
 
-        if(atcg::VRSystem::isVRAvailable())
+        if(atcg::VR::isVRAvailable())
         {
             atcg::ref_ptr<atcg::VRController> controller =
                 std::dynamic_pointer_cast<atcg::VRController>(camera_controller);
 
             if(controller->inMovement())
             {
-                atcg::VRSystem::setMovementLine(controller->getControllerPosition(),
-                                                controller->getControllerIntersection());
+                atcg::VR::setMovementLine(controller->getControllerPosition(), controller->getControllerIntersection());
             }
 
-            auto [t_left, t_right] = atcg::VRSystem::getRenderTargets();
+            auto [t_left, t_right] = atcg::VR::getRenderTargets();
 
             t_left->use();
-            atcg::Renderer::setViewport(0, 0, atcg::VRSystem::width(), atcg::VRSystem::height());
+            atcg::Renderer::setViewport(0, 0, atcg::VR::width(), atcg::VR::height());
 
             atcg::Renderer::clear();
 
@@ -85,7 +84,7 @@ public:
 
             if(controller->inMovement())
             {
-                atcg::VRSystem::drawMovementLine(controller->getCameraLeft());
+                atcg::VR::drawMovementLine(controller->getCameraLeft());
             }
 
             t_right->use();
@@ -100,13 +99,13 @@ public:
 
             if(controller->inMovement())
             {
-                atcg::VRSystem::drawMovementLine(controller->getCameraRight());
+                atcg::VR::drawMovementLine(controller->getCameraRight());
             }
 
             atcg::Renderer::useScreenBuffer();
             atcg::Renderer::setDefaultViewport();
 
-            atcg::VRSystem::renderToScreen();
+            atcg::VR::renderToScreen();
         }
         else
         {

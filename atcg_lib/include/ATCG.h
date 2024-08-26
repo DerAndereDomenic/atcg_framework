@@ -1,6 +1,7 @@
 #pragma once
 
 //-------- CORE ---------
+#include <Core/Assert.h>
 #include <Core/Platform.h>
 #include <Core/Layer.h>
 #include <Core/LayerStack.h>
@@ -13,6 +14,7 @@
 #include <Core/CUDA.h>
 #include <Core/glm.h>
 #include <Core/UUID.h>
+#include <Core/SystemRegistry.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>

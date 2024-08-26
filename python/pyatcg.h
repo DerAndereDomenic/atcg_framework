@@ -45,6 +45,28 @@ public:
     ~PythonApplication() {}
 };
 
+class PythonContext
+{
+public:
+    PythonContext()
+    {
+        _logger = atcg::make_ref<atcg::Logger>();
+        atcg::SystemRegistry::init();
+        atcg::SystemRegistry::instance()->registerSystem(_logger.get());
+    }
+
+    void onExit()
+    {
+        atcg::print_statistics();
+        atcg::SystemRegistry::shutdown();
+    }
+
+    const atcg::ref_ptr<atcg::Logger> getLogger() const { return _logger; }
+
+private:
+    atcg::ref_ptr<atcg::Logger> _logger;
+};
+
 
 //* This function isn't called but is needed for the linker
 atcg::Application* atcg::createApplication()
@@ -52,10 +74,6 @@ atcg::Application* atcg::createApplication()
     return nullptr;
 }
 
-int python_main(atcg::Application* app)
-{
-    return atcg::atcg_main(app);
-}
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
 #define ATCG_DEFINE_MODULES(m)                                                                                                  \
@@ -100,9 +118,9 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");                                 \
     auto m_graph                 = py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph");                             \
     auto m_serializer            = py::class_<atcg::Serializer<atcg::ComponentSerializer>>(m, "Serializer");                    \
-    auto m_renderer              = py::class_<atcg::Renderer>(m, "Renderer");                                                   \
+    auto m_renderer              = m.def_submodule("Renderer");                                                                 \
     auto m_shader                = py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader");                          \
-    auto m_shader_manager        = py::class_<atcg::ShaderManager>(m, "ShaderManager");                                         \
+    auto m_shader_manager        = m.def_submodule("ShaderManager");                                                            \
     auto m_texture_format        = py::enum_<atcg::TextureFormat>(m, "TextureFormat");                                          \
     auto m_texture_wrap_mode     = py::enum_<atcg::TextureWrapMode>(m, "TextureWrapMode");                                      \
     auto m_texture_filter_mode   = py::enum_<atcg::TextureFilterMode>(m, "TextureFilterMode");                                  \
@@ -142,6 +160,15 @@ inline void defineBindings(py::module_& m)
     // ---------------- CORE ---------------------
     ATCG_DEFINE_MODULES(m)
 
+    // On module initialization and destruction
+    py::class_<PythonContext>(m, "PythonContext").def(py::init<>());
+    static PythonContext context;
+
+    py::module atexit = py::module::import("atexit");
+    atexit.attr("register")(py::cpp_function([]() { context.onExit(); }));
+
+    // py::object python_context = py::cast(new PythonContext());
+    // m.attr("_python_context") = python_context;
 
     m_window_props.def(py::init<>([]() { return atcg::WindowProps(); }))
         .def(py::init<const std::string&, uint32_t, uint32_t, int32_t, int32_t, bool>())
@@ -153,7 +180,6 @@ inline void defineBindings(py::module_& m)
         .def_readwrite("vsync", &atcg::WindowProps::vsync)
         .def_readwrite("hidden", &atcg::WindowProps::hidden);
 
-    m.def("start", &python_main, py::arg("application"));
     m.def("init",
           []()
           {
@@ -162,8 +188,9 @@ inline void defineBindings(py::module_& m)
               std::unique_ptr<PythonApplication> app = std::make_unique<PythonApplication>(props);
               return app;
           });
-    m.def("print_statistics", &atcg::print_statistics);
-    m_application.def(py::init<atcg::Layer*>()).def(py::init<atcg::Layer*, atcg::WindowProps>());
+    m_application.def(py::init<atcg::Layer*>())
+        .def(py::init<atcg::Layer*, atcg::WindowProps>())
+        .def("run", &atcg::Application::run);
     m_layer.def(py::init<>())
         .def(py::init<std::string>(), "name"_a)
         .def("onAttach", &atcg::Layer::onAttach)
@@ -604,31 +631,31 @@ inline void defineBindings(py::module_& m)
         .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
 
     // ------------------- RENDERER ---------------------------------
-    m_renderer.def_static("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
-        .def_static("clear", &atcg::Renderer::clear)
-        .def_static(
+    m_renderer.def("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
+        .def("clear", &atcg::Renderer::clear)
+        .def(
             "draw",
             [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
             { atcg::Renderer::draw(scene, camera); },
             "scene"_a,
             "camera"_a)
-        .def_static(
+        .def(
             "drawCADGrid",
             [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::drawCADGrid(camera); },
             "camera"_a)
-        .def_static(
+        .def(
             "drawCameras",
             [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
             { atcg::Renderer::drawCameras(scene, camera); },
             "scene"_a,
             "camera"_a)
-        .def_static("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
-        .def_static("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
-        .def_static("screenshot",
-                    [](const atcg::ref_ptr<atcg::Scene>& scene,
-                       const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-                       const uint32_t width) { return atcg::Renderer::screenshot(scene, cam, width); })
-        .def_static(
+        .def("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
+        .def("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
+        .def("screenshot",
+             [](const atcg::ref_ptr<atcg::Scene>& scene,
+                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+                const uint32_t width) { return atcg::Renderer::screenshot(scene, cam, width); })
+        .def(
             "screenshot",
             [](const atcg::ref_ptr<atcg::Scene>& scene,
                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
@@ -638,7 +665,7 @@ inline void defineBindings(py::module_& m)
             "camera"_a,
             "width"_a,
             "path"_a)
-        .def_static("resize", &atcg::Renderer::resize);
+        .def("resize", &atcg::Renderer::resize);
 
     m_shader.def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
         .def(py::init<std::string, std::string, std::string>(), "vertex_path"_a, "fragment_path"_a, "geometry_path"_a)
@@ -650,9 +677,9 @@ inline void defineBindings(py::module_& m)
         .def("setMat4", &atcg::Shader::setMat4, "uniform_name"_a, "value"_a)
         .def("setMVP", &atcg::Shader::setMVP, "model"_a, "view"_a, "projection"_a);
 
-    m_shader_manager.def_static("getShader", &atcg::ShaderManager::getShader, "name"_a)
-        .def_static("addShader", &atcg::ShaderManager::addShader, "name"_a, "shader"_a)
-        .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
+    m_shader_manager.def("getShader", &atcg::ShaderManager::getShader, "name"_a)
+        .def("addShader", &atcg::ShaderManager::addShader, "name"_a, "shader"_a)
+        .def("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
 
     m_texture_format.value("RG", atcg::TextureFormat::RG)
         .value("RGB", atcg::TextureFormat::RGB)

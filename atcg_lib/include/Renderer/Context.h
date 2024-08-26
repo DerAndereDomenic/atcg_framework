@@ -34,6 +34,17 @@ public:
      */
     void swapBuffers();
 
+    /**
+     * @brief Make this the current context for the thread
+     */
+    void makeCurrent();
+
+    /**
+     * @brief Deactivate this context for the current thread.
+     * This function does not destroy the context.
+     */
+    void deactivate();
+
 private:
     void* _window;
 };

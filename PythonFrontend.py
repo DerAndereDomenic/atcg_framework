@@ -1,3 +1,4 @@
+import torch
 import charonload
 import pathlib
 
@@ -19,7 +20,6 @@ charonload.module_config["pyatcg"] = charonload.Config(
 )
 
 import pyatcg as atcg
-import torch
 import numpy as np
 
 
@@ -99,8 +99,7 @@ def main():
     layer = PythonLayer()
     app = atcg.PythonApplication(layer, props)
 
-    atcg.start(app)
+    app.run()
 
 
 main()
-atcg.print_statistics()

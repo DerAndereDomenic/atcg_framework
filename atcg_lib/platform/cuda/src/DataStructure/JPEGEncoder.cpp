@@ -21,7 +21,7 @@ inline void check_nvjpeg(nvjpegStatus_t error, char const* const func, const cha
     }
 }
 
-int dev_malloc(void** p, size_t s)
+inline static int dev_malloc(void** p, size_t s)
 {
     try
     {
@@ -34,7 +34,7 @@ int dev_malloc(void** p, size_t s)
     }
 }
 
-int dev_free(void* p)
+inline static int dev_free(void* p)
 {
     try
     {
@@ -47,12 +47,12 @@ int dev_free(void* p)
     }
 }
 
-int host_malloc(void** p, size_t s, unsigned int f)
+inline static int host_malloc(void** p, size_t s, unsigned int f)
 {
     return (int)cudaHostAlloc(p, s, f);
 }
 
-int host_free(void* p)
+inline static int host_free(void* p)
 {
     return (int)cudaFreeHost(p);
 }
