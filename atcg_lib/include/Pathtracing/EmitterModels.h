@@ -46,7 +46,11 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    atcg::ref_ptr<MeshEmitterData> _mesh_emitter_data;
+    torch::Tensor _emissive_texture;
+
+    torch::Tensor _mesh_cdf;
+
+    atcg::dref_ptr<MeshEmitterData> _mesh_emitter_data;
 };
 
 /**
@@ -79,6 +83,8 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    atcg::ref_ptr<EnvironmentEmitterData> _environment_emitter_data;
+    torch::Tensor _environment_texture;
+
+    atcg::dref_ptr<EnvironmentEmitterData> _environment_emitter_data;
 };
 }    // namespace atcg

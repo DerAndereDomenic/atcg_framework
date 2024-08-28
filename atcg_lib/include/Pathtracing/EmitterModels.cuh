@@ -6,30 +6,27 @@
 #include <Pathtracing/BSDFModels.cuh>
 #include <Pathtracing/DirectCall.h>
 
-// TODO: Has to be removed at some point
-#include <torch/types.h>
-
 namespace atcg
 {
 struct MeshEmitterData
 {
-    torch::Tensor positions;
-    torch::Tensor uvs;
-    torch::Tensor faces;
+    glm::vec3* positions;
+    glm::vec3* uvs;
+    glm::u32vec3* faces;
     uint32_t num_faces;
 
     float emitter_scaling;
-    torch::Tensor emissive_texture;
+    atcg::textureArray emissive_texture;
 
     glm::mat4 world_to_local;
     glm::mat4 local_to_world;
-    torch::Tensor mesh_cdf;
+    float* mesh_cdf;
     float total_area;
 };
 
 struct EnvironmentEmitterData
 {
-    torch::Tensor environment_texture;
+    atcg::textureArray environment_texture;
 };
 
 struct EmitterSamplingResult

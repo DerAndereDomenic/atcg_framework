@@ -1,6 +1,8 @@
 #include <Pathtracing/EmitterModels.h>
 #include <Math/Functions.h>
 
+#include <Pathtracing/Common.h>
+
 namespace atcg
 {
 
@@ -64,34 +66,39 @@ MeshEmitter::MeshEmitter(const torch::Tensor& positions,
                          const glm::mat4& transform,
                          const Material& material)
 {
+    auto emissive_texture = material.getEmissiveTexture()->getData(atcg::GPU);
+
     MeshEmitterData data;
-    data.emissive_texture = material.getEmissiveTexture()->getData(atcg::CPU);
+
+    ::detail::convertToTextureObject(emissive_texture, _emissive_texture, data.emissive_texture);
 
     data.emitter_scaling = material.emission_scale;
 
-    data.positions = positions.clone();
-    data.uvs       = uvs.clone();
-    data.faces     = faces.clone();
+    data.positions = (glm::vec3*)positions.data_ptr();
+    data.uvs       = (glm::vec3*)uvs.data_ptr();
+    data.faces     = (glm::u32vec3*)faces.data_ptr();
 
-    data.mesh_cdf = torch::zeros({faces.size(0)}, atcg::TensorOptions::floatHostOptions());
+    _mesh_cdf = torch::zeros({faces.size(0)}, atcg::TensorOptions::floatHostOptions());
 
     {
-        detail::computeMeshTrianglePDFKernel(positions, faces, transform, data.mesh_cdf);
+        detail::computeMeshTrianglePDFKernel(positions, faces, transform, _mesh_cdf);
     }
 
     {
-        detail::computeMeshTriangleCDFKernel(data.mesh_cdf);
+        detail::computeMeshTriangleCDFKernel(_mesh_cdf);
     }
 
-    data.total_area = data.mesh_cdf.index({data.mesh_cdf.size(0) - 1}).item<float>();
+    data.total_area = _mesh_cdf.index({_mesh_cdf.size(0) - 1}).item<float>();
     {
-        detail::normalizeMeshTriangleCDFKernel(data.mesh_cdf, data.total_area);
+        detail::normalizeMeshTriangleCDFKernel(_mesh_cdf, data.total_area);
     }
 
     data.local_to_world = transform;
     data.world_to_local = glm::inverse(transform);
+    data.num_faces      = faces.size(0);
+    data.mesh_cdf       = _mesh_cdf.data_ptr<float>();
 
-    _mesh_emitter_data = atcg::make_ref<MeshEmitterData>(data);
+    _mesh_emitter_data.upload(&data);
 }
 
 void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
@@ -112,19 +119,24 @@ void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pi
     table.evalCallIndex    = eval_idx;
     table.evalPdfCallIndex = eval_pdf_idx;
 
-    _vptr_table = atcg::make_ref<EmitterVPtrTable>(table);
+    _vptr_table.upload(&table);
 }
 
+// TODO
 MeshEmitter::~MeshEmitter() {}
 
-EnvironmentEmitter::EnvironmentEmitter(const atcg::ref_ptr<atcg::Texture2D>& environment_texture)
+EnvironmentEmitter::EnvironmentEmitter(const atcg::ref_ptr<atcg::Texture2D>& texture)
 {
-    EnvironmentEmitterData data;
-    data.environment_texture = environment_texture->getData(atcg::CPU);
+    auto environment_texture = texture->getData(atcg::GPU);
 
-    _environment_emitter_data = atcg::make_ref<EnvironmentEmitterData>(data);
+    EnvironmentEmitterData data;
+
+    ::detail::convertToTextureObject(environment_texture, _environment_texture, data.environment_texture);
+
+    _environment_emitter_data.upload(&data);
 }
 
+// TODO:
 EnvironmentEmitter::~EnvironmentEmitter() {}
 
 void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
@@ -146,6 +158,6 @@ void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeli
     table.evalCallIndex    = eval_idx;
     table.evalPdfCallIndex = evalpdf_idx;
 
-    _vptr_table = atcg::make_ref<EmitterVPtrTable>(table);
+    _vptr_table.upload(&table);
 }
 }    // namespace atcg

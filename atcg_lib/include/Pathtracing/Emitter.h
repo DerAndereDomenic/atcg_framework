@@ -30,6 +30,6 @@ public:
     const EmitterVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
 
 protected:
-    atcg::ref_ptr<EmitterVPtrTable> _vptr_table;
+    atcg::dref_ptr<EmitterVPtrTable> _vptr_table;
 };
 }    // namespace atcg
