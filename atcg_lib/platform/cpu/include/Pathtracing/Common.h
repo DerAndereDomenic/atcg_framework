@@ -5,7 +5,7 @@
 namespace detail
 {
 inline void
-convertToTextureObject(const torch::Tensor& tensor, torch::Tensor& output_texture, atcg::textureArray& output_array)
+convertToTextureObject(const torch::Tensor& tensor, torch::Tensor& output_texture, atcg::textureObject& output_array)
 {
     output_texture        = tensor;
     output_array.width    = tensor.size(1);

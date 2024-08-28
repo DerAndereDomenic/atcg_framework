@@ -24,14 +24,14 @@ struct BSDFEvalResult
 
 struct PBRBSDFData
 {
-    atcg::textureArray diffuse_texture;
-    atcg::textureArray metallic_texture;
-    atcg::textureArray roughness_texture;
+    atcg::textureObject diffuse_texture;
+    atcg::textureObject metallic_texture;
+    atcg::textureObject roughness_texture;
 };
 
 struct RefractiveBSDFData
 {
-    atcg::textureArray diffuse_texture;
+    atcg::textureObject diffuse_texture;
     float ior;
 };
 

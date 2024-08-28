@@ -7,7 +7,7 @@
 #include <Pathtracing/Stubs.h>
 
 // TODO:
-ATCG_INLINE glm::vec4 texture(const atcg::textureArray& texture, const glm::vec2& uv)
+ATCG_INLINE glm::vec4 texture(const atcg::textureObject& texture, const glm::vec2& uv)
 {
     uint32_t image_width  = texture.width;
     uint32_t image_height = texture.height;

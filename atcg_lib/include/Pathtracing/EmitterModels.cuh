@@ -16,7 +16,7 @@ struct MeshEmitterData
     uint32_t num_faces;
 
     float emitter_scaling;
-    atcg::textureArray emissive_texture;
+    atcg::textureObject emissive_texture;
 
     glm::mat4 world_to_local;
     glm::mat4 local_to_world;
@@ -26,7 +26,7 @@ struct MeshEmitterData
 
 struct EnvironmentEmitterData
 {
-    atcg::textureArray environment_texture;
+    atcg::textureObject environment_texture;
 };
 
 struct EmitterSamplingResult
