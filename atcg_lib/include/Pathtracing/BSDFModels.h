@@ -33,7 +33,11 @@ public:
                             const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    atcg::ref_ptr<PBRBSDFData> _bsdf_data_buffer;
+    torch::Tensor _diffuse_texture;
+    torch::Tensor _metallic_texture;
+    torch::Tensor _roughness_texture;
+
+    atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
 };
 
 /**
@@ -66,6 +70,7 @@ public:
                             const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    atcg::ref_ptr<RefractiveBSDFData> _bsdf_data_buffer;
+    torch::Tensor _diffuse_texture;
+    atcg::dref_ptr<RefractiveBSDFData> _bsdf_data_buffer;
 };
 }    // namespace atcg

@@ -39,7 +39,7 @@ public:
 
 protected:
     BSDFComponentType _flags;
-    atcg::ref_ptr<BSDFVPtrTable> _vptr_table;
+    atcg::dref_ptr<BSDFVPtrTable> _vptr_table;
 };
 
 }    // namespace atcg

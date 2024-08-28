@@ -3,8 +3,9 @@
 #include <Core/glm.h>
 #include <Core/Platform.h>
 #include <Pathtracing/PathtracingPlatform.h>
-
 #include <Pathtracing/ShaderBindingTableDefinition.h>
+
+#include <unordered_map>
 
 namespace atcg
 {

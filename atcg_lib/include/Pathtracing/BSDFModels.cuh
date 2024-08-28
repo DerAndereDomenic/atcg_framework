@@ -6,9 +6,6 @@
 #include <Pathtracing/SurfaceInteraction.h>
 #include <Pathtracing/DirectCall.h>
 
-// TODO: Has to be removed from here at some point
-#include <torch/types.h>
-
 namespace atcg
 {
 
@@ -27,14 +24,14 @@ struct BSDFEvalResult
 
 struct PBRBSDFData
 {
-    torch::Tensor diffuse_texture;
-    torch::Tensor metallic_texture;
-    torch::Tensor roughness_texture;
+    atcg::textureArray diffuse_texture;
+    atcg::textureArray metallic_texture;
+    atcg::textureArray roughness_texture;
 };
 
 struct RefractiveBSDFData
 {
-    torch::Tensor diffuse_texture;
+    atcg::textureArray diffuse_texture;
     float ior;
 };
 

@@ -88,7 +88,15 @@ constexpr bool cuda_available()
 {
     return false;
 }
-typedef void* textureArray;
+struct textureArray
+{
+    uint32_t width;
+    uint32_t height;
+    uint32_t channels;
+    bool is_hdr;
+
+    void* data = nullptr;
+};
 typedef void* textureObject;
 typedef void* surfaceObject;
 }    // namespace atcg
