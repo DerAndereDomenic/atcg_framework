@@ -59,7 +59,7 @@ void Context::create()
 {
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     _context_handle = (void*)glfwCreateWindow(1, 1, "ATCG", nullptr, nullptr);
-    ATCG_ASSERT(_context_handle, "Could note create context");
+    ATCG_ASSERT(_context_handle, "Could not create context");
     makeCurrent();
 }
 
