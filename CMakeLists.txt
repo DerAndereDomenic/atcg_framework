@@ -15,6 +15,13 @@ list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
+# Check for CUDA
+if(ATCG_CUDA_BACKEND)
+    enable_language(CUDA)
+    set(CMAKE_CUDA_ARCHITECTURES "native")
+    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
+endif()
+
 # OpenGL
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
@@ -126,67 +133,8 @@ set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/sfml)
 
-if(ATCG_CUDA_BACKEND)
-    enable_language(CUDA)
-    set(CMAKE_CUDA_ARCHITECTURES "native")
-    set(ATCG_BACKEND "cuda")
-else()
-    set(ATCG_BACKEND "cpu")
-endif()
-
-file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "atcg_lib/src/**.c*"
-                                                          "atcg_lib/include/**.h")
-
-file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "atcg_lib/platform/${ATCG_BACKEND}/**.c*"
-                                                          "atcg_lib/platform/${ATCG_BACKEND}/**.h")
-
-file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform/opengl/**.c*"
-                                                              "atcg_lib/platform/opengl/**.h")
-
-charonload_add_torch_library(atcg_lib STATIC)
-target_sources(atcg_lib PRIVATE ${atcg_lib_files} ${atcg_backend_files} ${atcg_renderer_files})
-
-target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES NO_WARN_MBCS_MFC_DEPRECATION _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
-target_precompile_headers(atcg_lib PRIVATE "atcg_lib/include/atcgpch.h")
-
-target_include_directories(atcg_lib PUBLIC "atcg_lib/include"
-                                           "atcg_lib/platform/${ATCG_BACKEND}/include"
-                                           "atcg_lib/platform/opengl/include"
-                                           "python"
-)
-
-target_link_libraries(atcg_lib PUBLIC glfw
-                                      imgui
-                                      imguizmo
-                                      implot
-                                      glad
-                                      OpenGL::GL
-                                      OpenMeshCore
-                                      OpenMeshTools
-                                      stb_image
-                                      tinyobjloader
-                                      entt
-                                      nanort
-                                      portable_file_dialogs
-                                      nanoflann
-                                      glm
-                                      spdlog_header_only
-                                      json
-                                      SFML::System
-                                      SFML::Network
-                                      ${ATCG_OPENVR_TARGET}
-)
-
-if(ATCG_CUDA_BACKEND)
-    find_package(CUDAToolkit REQUIRED)
-
-    target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-    target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
-    target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
-    target_link_libraries(atcg_lib PUBLIC CUDA::nvjpeg)
-
-    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
-endif()
+#atcg_lib
+add_subdirectory(atcg_lib)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set(target_name ${target_name_base})
