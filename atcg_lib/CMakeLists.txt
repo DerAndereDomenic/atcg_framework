@@ -25,7 +25,13 @@ file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}
 file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/**.c*"
                                                               "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/**.h")
 
-target_sources(atcg_lib PRIVATE ${atcg_lib_files} ${atcg_backend_files} ${atcg_renderer_files})
+file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/glfw/**.c*"
+                                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/glfw/**.h")
+
+target_sources(atcg_lib PRIVATE ${atcg_lib_files} 
+                                ${atcg_backend_files} 
+                                ${atcg_renderer_files} 
+                                ${atcg_window_files})
 
 target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES NO_WARN_MBCS_MFC_DEPRECATION _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
 target_precompile_headers(atcg_lib PRIVATE "${CMAKE_SOURCE_DIR}/atcg_lib/include/atcgpch.h")
