@@ -46,9 +46,11 @@ void Application::init(const WindowProps& props)
 
     s_instance = this;
 
+#ifndef ATCG_HEADLESS
     _imgui_layer = new ImGuiLayer();
     _layer_stack.pushOverlay(_imgui_layer);
     _imgui_layer->onAttach();
+#endif
 }
 
 void Application::pushLayer(Layer* layer)
@@ -82,20 +84,24 @@ void Application::onEvent(Event* e)
 
 glm::ivec2 Application::getViewportSize() const
 {
+#ifndef ATCG_HEADLESS
     if(_imgui_layer->dockspaceEnabled())
     {
         return _imgui_layer->getViewportSize();
     }
+#endif
 
     return glm::ivec2(_window->getWidth(), _window->getHeight());
 }
 
 glm::ivec2 Application::getViewportPosition() const
 {
+#ifndef ATCG_HEADLESS
     if(_imgui_layer->dockspaceEnabled())
     {
         return _imgui_layer->getViewportPosition();
     }
+#endif
 
     return glm::ivec2(0);
 }
@@ -131,17 +137,21 @@ void Application::run()
         }
         Renderer::finishFrame();
 
-        // First finish the main content of all layers before doing any imgui stuff
+// First finish the main content of all layers before doing any imgui stuff
+#ifndef ATCG_HEADLESS
         _imgui_layer->begin();
         for(Layer* layer: _layer_stack)
         {
             layer->onImGuiRender();
         }
         _imgui_layer->end();
+#endif
 
         VR::onUpdate(delta_time);
         VR::emitEvents();
         _window->onUpdate();
+
+#ifndef ATCG_HEADLESS
         glm::ivec2 viewport_size = _imgui_layer->getViewportSize();
         if(_imgui_layer->dockspaceEnabled() && (viewport_size.x != Renderer::getFramebuffer()->width() ||
                                                 viewport_size.y != Renderer::getFramebuffer()->height()))
@@ -149,6 +159,7 @@ void Application::run()
             ViewportResizeEvent event(viewport_size.x, viewport_size.y);
             onEvent(&event);
         }
+#endif
 
         current_time = std::chrono::high_resolution_clock::now();
 

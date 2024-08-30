@@ -99,7 +99,12 @@ public:
      *
      * @param enable If dockspaces should be enabled
      */
-    ATCG_INLINE void enableDockSpace(bool enable) { _imgui_layer->enableDockSpace(enable); }
+    ATCG_INLINE void enableDockSpace(bool enable)
+    {
+#ifndef ATCG_HEADLESS
+        _imgui_layer->enableDockSpace(enable);
+#endif
+    }
 
     /**
      * @brief Get the imgui layer.
