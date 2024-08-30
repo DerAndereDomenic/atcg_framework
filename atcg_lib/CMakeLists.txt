@@ -25,8 +25,14 @@ file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}
 file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/**.c*"
                                                               "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/**.h")
 
-file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/glfw/**.c*"
-                                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/glfw/**.h")
+if(ATCG_HEADLESS)
+    file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/headless/**.c*"
+                                                                "${CMAKE_SOURCE_DIR}/atcg_lib/platform/headless/**.h")
+    target_compile_definitions(atcg_lib PUBLIC ATCG_HEADLESS)
+else()
+    file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/glfw/**.c*"
+                                                                "${CMAKE_SOURCE_DIR}/atcg_lib/platform/glfw/**.h")
+endif()
 
 target_sources(atcg_lib PRIVATE ${atcg_lib_files} 
                                 ${atcg_backend_files} 
@@ -42,7 +48,7 @@ target_include_directories(atcg_lib PUBLIC "${CMAKE_SOURCE_DIR}/atcg_lib/include
                                            "python"
 )
 
-target_link_libraries(atcg_lib PUBLIC glfw
+target_link_libraries(atcg_lib PUBLIC ${ATCG_CONTEXT_LIBRARY}
                                       imgui
                                       imguizmo
                                       implot

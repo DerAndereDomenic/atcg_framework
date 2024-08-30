@@ -7,6 +7,27 @@ option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
 option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
+option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
+
+if(ATCG_HEADLESS)
+    message("Building in Headless mode")
+    if(NOT UNIX)
+        message(FATAL_ERROR "Headless mode only supported on linux.")
+    endif()
+
+    if(NOT ATCG_CUDA_BACKEND)
+        message(FATAL_ERROR "Headless mode only supported with CUDA backend.")
+    endif()
+
+    # We use EGL for context management, otherwise glfw
+    set(ATCG_CONTEXT_LIBRARY OpenGL::EGL)
+else()
+    message("Using glfw backend")
+
+    # GLFW
+    add_subdirectory(external/glfw)
+    set(ATCG_CONTEXT_LIBRARY glfw)
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -25,9 +46,6 @@ endif()
 # OpenGL
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
-
-# GLFW
-add_subdirectory(external/glfw)
 
 # OpenMesh
 add_subdirectory(external/openmesh)
