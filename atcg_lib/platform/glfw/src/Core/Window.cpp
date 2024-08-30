@@ -7,16 +7,39 @@
 
 namespace atcg
 {
+namespace detail
+{
+static bool s_glfw_initialized = false;
+
+static void GLFWErrorCallback(int error, const char* description)
+{
+    ATCG_ERROR("GLFW Error: {0}: {1}", error, description);
+}
+}    // namespace detail
+
 Window::Window(const WindowProps& props)
 {
     _context = atcg::make_ref<Context>();
-    _context->initWindowingAPI();
+
+    // Initialize glfw
+    if(!detail::s_glfw_initialized)
+    {
+        int success = glfwInit();
+        if(success != GLFW_TRUE) return;
+
+        detail::s_glfw_initialized = true;
+        glfwSetErrorCallback(detail::GLFWErrorCallback);
+    }
+
+    _context->create();
+    _context->initGraphicsAPI();
 
     _data.width  = props.width;
     _data.height = props.height;
 
-    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-    _window = (void*)glfwCreateWindow((int)props.width, (int)props.height, props.title.c_str(), nullptr, nullptr);
+    void* window = _context->getContextHandle();
+    glfwSetWindowTitle((GLFWwindow*)window, props.title.c_str());
+    glfwSetWindowSize((GLFWwindow*)window, props.width, props.height);
 
     int pos_x = props.pos_x;
     int pos_y = props.pos_y;
@@ -31,14 +54,12 @@ Window::Window(const WindowProps& props)
         pos_y = monitorY + (videoMode->height - _data.height) / 2;
     }
 
-    glfwSetWindowPos((GLFWwindow*)_window, pos_x, pos_y);
+    glfwSetWindowPos((GLFWwindow*)window, pos_x, pos_y);
 
-    _context->initGraphicsAPI(_window);
-
-    glfwSetWindowUserPointer((GLFWwindow*)_window, &_data);
+    glfwSetWindowUserPointer((GLFWwindow*)window, &_data);
 
     // Set GLFW callbacks
-    glfwSetWindowSizeCallback((GLFWwindow*)_window,
+    glfwSetWindowSizeCallback((GLFWwindow*)window,
                               [](GLFWwindow* window, int width, int height)
                               {
                                   WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -49,7 +70,7 @@ Window::Window(const WindowProps& props)
                                   data.on_event(&event);
                               });
 
-    glfwSetWindowCloseCallback((GLFWwindow*)_window,
+    glfwSetWindowCloseCallback((GLFWwindow*)window,
                                [](GLFWwindow* window)
                                {
                                    WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -57,7 +78,7 @@ Window::Window(const WindowProps& props)
                                    data.on_event(&event);
                                });
 
-    glfwSetKeyCallback((GLFWwindow*)_window,
+    glfwSetKeyCallback((GLFWwindow*)window,
                        [](GLFWwindow* window, int key, int scancode, int action, int mods)
                        {
                            WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -85,7 +106,7 @@ Window::Window(const WindowProps& props)
                            }
                        });
 
-    glfwSetCharCallback((GLFWwindow*)_window,
+    glfwSetCharCallback((GLFWwindow*)window,
                         [](GLFWwindow* window, unsigned int keycode)
                         {
                             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -95,7 +116,7 @@ Window::Window(const WindowProps& props)
                         });
 
     glfwSetMouseButtonCallback(
-        (GLFWwindow*)_window,
+        (GLFWwindow*)window,
         [](GLFWwindow* window, int button, int action, int mods)
         {
             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -117,7 +138,7 @@ Window::Window(const WindowProps& props)
             }
         });
 
-    glfwSetScrollCallback((GLFWwindow*)_window,
+    glfwSetScrollCallback((GLFWwindow*)window,
                           [](GLFWwindow* window, double xOffset, double yOffset)
                           {
                               WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -126,7 +147,7 @@ Window::Window(const WindowProps& props)
                               data.on_event(&event);
                           });
 
-    glfwSetCursorPosCallback((GLFWwindow*)_window,
+    glfwSetCursorPosCallback((GLFWwindow*)window,
                              [](GLFWwindow* window, double xPos, double yPos)
                              {
                                  WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -138,7 +159,7 @@ Window::Window(const WindowProps& props)
                                  data.on_event(&event);
                              });
 
-    glfwSetDropCallback((GLFWwindow*)_window,
+    glfwSetDropCallback((GLFWwindow*)window,
                         [](GLFWwindow* window, int path_count, const char* paths[])
                         {
                             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
@@ -154,8 +175,12 @@ Window::Window(const WindowProps& props)
 
 Window::~Window()
 {
-    glfwDestroyWindow((GLFWwindow*)_window);
-    _context->deinitWindowingAPI();
+    _context->destroy();
+    if(detail::s_glfw_initialized)
+    {
+        glfwTerminate();
+        detail::s_glfw_initialized = false;
+    }
 }
 
 void Window::onUpdate()
@@ -173,7 +198,7 @@ void Window::setEventCallback(const EventCallbackFn& callback)
 
 void* Window::getNativeWindow() const
 {
-    return _window;
+    return _context->getContextHandle();
 }
 
 void Window::resize(const uint32_t& _width, const uint32_t& _height)
@@ -181,7 +206,7 @@ void Window::resize(const uint32_t& _width, const uint32_t& _height)
     _data.width  = _width;
     _data.height = _height;
 
-    glfwSetWindowSize((GLFWwindow*)_window, _width, _height);
+    glfwSetWindowSize((GLFWwindow*)_context->getContextHandle(), _width, _height);
 }
 
 void Window::toggleVSync(bool vsync)
@@ -193,24 +218,24 @@ glm::vec2 Window::getPosition() const
 {
     int x;
     int y;
-    glfwGetWindowPos((GLFWwindow*)_window, &x, &y);
+    glfwGetWindowPos((GLFWwindow*)_context->getContextHandle(), &x, &y);
     return glm::vec2(x, y);
 }
 
 float Window::getContentScale() const
 {
     float xscale;
-    glfwGetWindowContentScale((GLFWwindow*)_window, &xscale, NULL);
+    glfwGetWindowContentScale((GLFWwindow*)_context->getContextHandle(), &xscale, NULL);
     return xscale;
 }
 
 void Window::hide()
 {
-    glfwHideWindow((GLFWwindow*)_window);
+    glfwHideWindow((GLFWwindow*)_context->getContextHandle());
 }
 
 void Window::show()
 {
-    glfwShowWindow((GLFWwindow*)_window);
+    glfwShowWindow((GLFWwindow*)_context->getContextHandle());
 }
 }    // namespace atcg

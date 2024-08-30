@@ -2,13 +2,13 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <Core/Assert.h>
 
 namespace atcg
 {
 
 namespace detail
 {
-static bool s_glfw_initialized   = false;
 static bool s_opengl_initialized = false;
 
 void GLAPIENTRY MessageCallback(GLenum source,
@@ -46,39 +46,33 @@ static void GLFWErrorCallback(int error, const char* description)
 
 }    // namespace detail
 
-void Context::initWindowingAPI()
+void Context::destroy()
 {
-    if(!detail::s_glfw_initialized)
+    if(_context_handle)
     {
-        int success = glfwInit();
-        if(success != GLFW_TRUE) return;
-
-        detail::s_glfw_initialized = true;
-        glfwSetErrorCallback(detail::GLFWErrorCallback);
+        deactivate();
+        glfwDestroyWindow((GLFWwindow*)_context_handle);
     }
 }
 
-void Context::deinitWindowingAPI()
+void Context::create()
 {
-    if(detail::s_glfw_initialized)
-    {
-        glfwTerminate();
-        detail::s_glfw_initialized = false;
-    }
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    _context_handle = (void*)glfwCreateWindow(1, 1, "ATCG", nullptr, nullptr);
+    ATCG_ASSERT(_context_handle, "Could note create context");
+    makeCurrent();
 }
 
-void Context::initGraphicsAPI(void* window)
+void Context::initGraphicsAPI()
 {
     if(!detail::s_opengl_initialized)
     {
-        glfwMakeContextCurrent((GLFWwindow*)window);
+        makeCurrent();
 
         if(!gladLoadGL())
         {
             ATCG_ERROR("Error loading glad!");
         }
-
-        _window = window;
 
 #ifndef NDEBUG
         glEnable(GL_DEBUG_OUTPUT);
@@ -90,12 +84,12 @@ void Context::initGraphicsAPI(void* window)
 
 void Context::swapBuffers()
 {
-    glfwSwapBuffers((GLFWwindow*)_window);
+    glfwSwapBuffers((GLFWwindow*)_context_handle);
 }
 
 void Context::makeCurrent()
 {
-    glfwMakeContextCurrent((GLFWwindow*)_window);
+    glfwMakeContextCurrent((GLFWwindow*)_context_handle);
 }
 
 void Context::deactivate()

@@ -14,20 +14,19 @@ public:
     Context() = default;
 
     /**
-     * @brief Initialize the windowing API for the current module
+     * @brief Destroy the context
      */
-    void initWindowingAPI();
-
-    /**
-     * @brief Deinit the windowing API
-     */
-    void deinitWindowingAPI();
+    void destroy();
 
     /**
      *   @brief Initiliaze the context
-     *   @param window The window for the context
      */
-    void initGraphicsAPI(void* window);
+    void initGraphicsAPI();
+
+    /**
+     * @brief Create the context
+     */
+    void create();
 
     /**
      *   @brief Swap buffers in the swap chain
@@ -45,7 +44,15 @@ public:
      */
     void deactivate();
 
+    /**
+     * @brief The native context handle
+     * For glfw backend it's the glfw window
+     *
+     * @return The handle
+     */
+    inline void* getContextHandle() const { return _context_handle; }
+
 private:
-    void* _window;
+    void* _context_handle = nullptr;
 };
 }    // namespace atcg
