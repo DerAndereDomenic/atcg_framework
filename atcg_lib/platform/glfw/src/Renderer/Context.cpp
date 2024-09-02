@@ -55,10 +55,35 @@ void Context::destroy()
     }
 }
 
-void Context::create()
+void Context::create(const int device_id)
 {
+    ATCG_ASSERT(!_context_handle, "Context already created");
+
+    if(device_id != 0)
+    {
+        ATCG_WARN("A device id that is not 0 ({0}) was requested for glfw backend. This is unsupported", device_id);
+    }
+
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     _context_handle = (void*)glfwCreateWindow(1, 1, "ATCG", nullptr, nullptr);
+    ATCG_ASSERT(_context_handle, "Could not create context");
+    makeCurrent();
+}
+
+void Context::create(const atcg::ref_ptr<Context>& shared)
+{
+    ATCG_ASSERT(!_context_handle, "Context already created");
+
+    glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+    GLFWwindow* glfwShared = nullptr;
+
+    if(shared)
+    {
+        shared->deactivate();
+        glfwShared = (GLFWwindow*)shared->getContextHandle();
+    }
+
+    _context_handle = (void*)glfwCreateWindow(1, 1, "ATCG", nullptr, glfwShared);
     ATCG_ASSERT(_context_handle, "Could not create context");
     makeCurrent();
 }
