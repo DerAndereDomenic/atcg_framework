@@ -16,6 +16,7 @@ bool Input::isKeyPressed(const int32_t& key)
 
     auto* window = Application::get()->getWindow()->getNativeWindow();
     auto state   = glfwGetKey((GLFWwindow*)window, key);
+    return state == GLFW_PRESS;
 #else
     return false;
 #endif
