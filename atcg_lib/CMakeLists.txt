@@ -15,6 +15,13 @@ else()
     set(ATCG_BACKEND "cpu")
 endif()
 
+if(ATCG_HEADLESS)
+    target_compile_definitions(atcg_lib PUBLIC ATCG_HEADLESS)
+    set(ATCG_CONTEXT "headless")
+else()
+    set(ATCG_CONTEXT "glfw")
+endif()
+
 # Find backend files
 file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/src/**.c*"
                                                           "${CMAKE_SOURCE_DIR}/atcg_lib/include/**.h")
@@ -25,14 +32,9 @@ file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}
 file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/**.c*"
                                                               "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/**.h")
 
-if(ATCG_HEADLESS)
-    file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/headless/**.c*"
-                                                                "${CMAKE_SOURCE_DIR}/atcg_lib/platform/headless/**.h")
-    target_compile_definitions(atcg_lib PUBLIC ATCG_HEADLESS)
-else()
-    file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/glfw/**.c*"
-                                                                "${CMAKE_SOURCE_DIR}/atcg_lib/platform/glfw/**.h")
-endif()
+
+file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.c*"
+                                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.h")
 
 target_sources(atcg_lib PRIVATE ${atcg_lib_files} 
                                 ${atcg_backend_files} 
@@ -44,6 +46,7 @@ target_precompile_headers(atcg_lib PRIVATE "${CMAKE_SOURCE_DIR}/atcg_lib/include
 
 target_include_directories(atcg_lib PUBLIC "${CMAKE_SOURCE_DIR}/atcg_lib/include"
                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_BACKEND}/include"
+                                           "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/include"
                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/include"
                                            "python"
 )
