@@ -39,27 +39,46 @@ void GLAPIENTRY MessageCallback(GLenum source,
             break;
     }
 }
-}    // namespace detail
 
-void Context::destroy()
+static EGLDeviceEXT getDeviceFromIndex(const int device_id)
 {
-    if(_context_handle)
+    PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT = (PFNEGLQUERYDEVICESEXTPROC)eglGetProcAddress("eglQueryDevicesEX"
+                                                                                                "T");
+
+    PFNEGLQUERYDEVICEBINARYEXTPROC eglQueryDeviceBinaryEXT = (PFNEGLQUERYDEVICEBINARYEXTPROC)eglGetProcAddress("eglQuer"
+                                                                                                               "yDevice"
+                                                                                                               "BinaryE"
+                                                                                                               "XT");
+
+    // Query devices
+    EGLint numDevices;
+    bool query = eglQueryDevicesEXT(0, NULL, &numDevices);
+    ATCG_ASSERT(query, "Could not query available devices");
+    EGLDeviceEXT devices[numDevices];
+    eglQueryDevicesEXT(numDevices, devices, &numDevices);
+
+    cudaDeviceProp deviceProp;
+    CUDA_SAFE_CALL(cudaGetDeviceProperties(&deviceProp, device_id));
+    uint64_t query_uuid = *(uint64_t*)&deviceProp.uuid;
+
+    EGLDeviceEXT selected_device;
+    for(EGLint i = 0; i < numDevices; i++)
     {
-        ContextData* data = (ContextData*)_context_handle;
-        deactivate();
-        eglDestroyContext(data->display, data->context);
-        eglDestroySurface(data->display, data->surface);
-        delete data;
-        _context_handle = nullptr;
+        uint64_t uuid;
+        int size;
+        eglQueryDeviceBinaryEXT(devices[i], EGL_DEVICE_UUID_EXT, sizeof(uint64_t), &uuid, &size);
+
+        if(uuid == query_uuid)
+        {
+            selected_device = devices[i];
+            break;
+        }
     }
+
+    return selected_device;
 }
 
-void Context::create()
-{
-    create(nullptr);
-}
-
-void Context::create(const atcg::ref_ptr<Context>& shared)
+static void create(const atcg::ref_ptr<Context>& shared, const int device_id, void** context_handle)
 {
     EGLContext eglShared = EGL_NO_CONTEXT;
 
@@ -69,7 +88,7 @@ void Context::create(const atcg::ref_ptr<Context>& shared)
         shared->deactivate();
     }
 
-    ATCG_ASSERT(!_context_handle, "Handle already created");
+    ATCG_ASSERT(!(*context_handle), "Handle already created");
 
     bool api = eglBindAPI(EGL_OPENGL_API);
     ATCG_ASSERT(api, "Could not bind opengl API");
@@ -78,9 +97,17 @@ void Context::create(const atcg::ref_ptr<Context>& shared)
     data->display     = EGL_NO_DISPLAY;
     data->context     = EGL_NO_CONTEXT;
     data->surface     = EGL_NO_SURFACE;
-    _context_handle   = (void*)data;
+    data->device_id   = device_id;
+    *context_handle   = (void*)data;
 
-    data->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+    PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT = (PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress("eglG"
+                                                                                                                  "etPl"
+                                                                                                                  "atfo"
+                                                                                                                  "rmDi"
+                                                                                                                  "spla"
+                                                                                                                  "yEX"
+                                                                                                                  "T");
+    data->display = eglGetPlatformDisplayEXT(EGL_PLATFORM_DEVICE_EXT, detail::getDeviceFromIndex(device_id), NULL);
     ATCG_ASSERT(data->display != EGL_NO_DISPLAY, "Could not create EGL display");
 
     bool initialiazed = eglInitialize(data->display, nullptr, nullptr);
@@ -97,7 +124,36 @@ void Context::create(const atcg::ref_ptr<Context>& shared)
     EGLint contextAttribs[] = {EGL_CONTEXT_MAJOR_VERSION, 4, EGL_CONTEXT_MINOR_VERSION, 6, EGL_NONE};
     data->context           = eglCreateContext(data->display, eglConfig, eglShared, contextAttribs);
     ATCG_ASSERT(data->context != EGL_NO_CONTEXT, "Failed to create context");
+}
+}    // namespace detail
 
+void Context::destroy()
+{
+    if(_context_handle)
+    {
+        ContextData* data = (ContextData*)_context_handle;
+        deactivate();
+        eglDestroyContext(data->display, data->context);
+        eglDestroySurface(data->display, data->surface);
+        delete data;
+        _context_handle = nullptr;
+    }
+}
+
+void Context::create(const int device_id)
+{
+    detail::create(nullptr, device_id, &_context_handle);
+    makeCurrent();
+}
+
+void Context::create(const atcg::ref_ptr<Context>& shared)
+{
+    int device_id = 0;
+    if(shared)
+    {
+        device_id = ((ContextData*)shared->getContextHandle())->device_id;
+    }
+    detail::create(shared, device_id, &_context_handle);
     makeCurrent();
 }
 

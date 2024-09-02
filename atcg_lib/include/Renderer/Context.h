@@ -29,12 +29,17 @@ public:
      * @brief Create the context
      * @note After creation this context will be the current context. Therefore, it is assumed that no context is
      * associated with this thread when this function is called.
+     *
+     * @param device_id The device id on which the context should be created
+     * @note This is only used for headless rendering (on linux). For normal in-window rendering, this value is ignored
      */
-    void create();
+    void create(const int device_id = 0);
 
     /**
      * @brief Create the context
      * This function is used to create a shared context.
+     * @note After creation this context will be the current context. The device of this context will be the same as the
+     * shared context.
      *
      * @param shared The context to share from
      */
