@@ -56,6 +56,19 @@ void Context::destroy()
 
 void Context::create()
 {
+    create(nullptr);
+}
+
+void Context::create(const atcg::ref_ptr<Context>& shared)
+{
+    EGLContext eglShared = EGL_NO_CONTEXT;
+
+    if(shared)
+    {
+        eglShared = ((ContextData*)shared->getContextHandle())->context;
+        shared->deactivate();
+    }
+
     ATCG_ASSERT(!_context_handle, "Handle already created");
 
     bool api = eglBindAPI(EGL_OPENGL_API);
@@ -82,11 +95,8 @@ void Context::create()
 
     // Create an EGL context
     EGLint contextAttribs[] = {EGL_CONTEXT_MAJOR_VERSION, 4, EGL_CONTEXT_MINOR_VERSION, 6, EGL_NONE};
-    data->context           = eglCreateContext(data->display, eglConfig, EGL_NO_CONTEXT, contextAttribs);
+    data->context           = eglCreateContext(data->display, eglConfig, eglShared, contextAttribs);
     ATCG_ASSERT(data->context != EGL_NO_CONTEXT, "Failed to create context");
-
-    // Make the context current
-    eglMakeCurrent(data->display, data->surface, data->surface, data->context);
 
     makeCurrent();
 }

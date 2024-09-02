@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/Memory.h>
+
 namespace atcg
 {
 /**
@@ -25,8 +27,18 @@ public:
 
     /**
      * @brief Create the context
+     * @note After creation this context will be the current context. Therefore, it is assumed that no context is
+     * associated with this thread when this function is called.
      */
     void create();
+
+    /**
+     * @brief Create the context
+     * This function is used to create a shared context.
+     *
+     * @param shared The context to share from
+     */
+    void create(const atcg::ref_ptr<Context>& shared);
 
     /**
      *   @brief Swap buffers in the swap chain
