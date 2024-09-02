@@ -62,6 +62,9 @@ void Context::create()
     ATCG_ASSERT(api, "Could not bind opengl API");
 
     ContextData* data = new ContextData;
+    data->display     = EGL_NO_DISPLAY;
+    data->context     = EGL_NO_CONTEXT;
+    data->surface     = EGL_NO_SURFACE;
     _context_handle   = (void*)data;
 
     data->display = eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -81,23 +84,6 @@ void Context::create()
     EGLint contextAttribs[] = {EGL_CONTEXT_MAJOR_VERSION, 4, EGL_CONTEXT_MINOR_VERSION, 6, EGL_NONE};
     data->context           = eglCreateContext(data->display, eglConfig, EGL_NO_CONTEXT, contextAttribs);
     ATCG_ASSERT(data->context != EGL_NO_CONTEXT, "Failed to create context");
-
-    // Create an EGL window surface from the GLFW window
-    EGLint pbufferAttribs[] = {EGL_WIDTH,
-                               1024,
-                               EGL_HEIGHT,
-                               1024,
-                               EGL_TEXTURE_FORMAT,
-                               EGL_TEXTURE_RGBA,
-                               EGL_TEXTURE_TARGET,
-                               EGL_TEXTURE_2D,
-                               EGL_MIPMAP_TEXTURE,
-                               EGL_TRUE,
-                               EGL_NONE};    // TODO
-    data->surface           = eglCreatePbufferSurface(data->display, eglConfig, pbufferAttribs);
-    // data->surface =
-    //     eglCreateWindowSurface(data->display, eglConfig, glfwGetX11Window((GLFWwindow*)window), nullptr);
-    // ATCG_ASSERT(data->surface != EGL_NO_SURFACE, "Failed to create surface");
 
     // Make the context current
     eglMakeCurrent(data->display, data->surface, data->surface, data->context);
