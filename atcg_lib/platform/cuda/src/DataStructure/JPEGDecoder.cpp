@@ -66,12 +66,12 @@ inline static int host_free(void* p)
 class JPEGDecoder::Impl
 {
 public:
-    Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height);
+    Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height, JPEGBackend backend);
 
     ~Impl();
 
     void allocateBuffers();
-    void initializeNVJPEG();
+    void initializeNVJPEG(JPEGBackend backend);
     void loadFiles(const std::vector<std::string>& filenames, const torch::Tensor& valid);
     void decompressImages();
     void copyImagesToOutput(atcg::textureArray texture);
@@ -103,13 +103,13 @@ public:
     cudaStream_t decoding_stream;
 };
 
-JPEGDecoder::Impl::Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height)
+JPEGDecoder::Impl::Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height, JPEGBackend backend)
 {
     this->num_images = num_images;
     this->img_width  = img_width;
     this->img_height = img_height;
     allocateBuffers();
-    initializeNVJPEG();
+    initializeNVJPEG(backend);
 }
 
 JPEGDecoder::Impl::~Impl()
@@ -130,9 +130,12 @@ void JPEGDecoder::Impl::allocateBuffers()
     CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&decoding_stream, cudaStreamNonBlocking));
 }
 
-void JPEGDecoder::Impl::initializeNVJPEG()
+void JPEGDecoder::Impl::initializeNVJPEG(JPEGBackend backend)
 {
-    NVJPEG_SAFE_CALL(nvjpegCreateEx(NVJPEG_BACKEND_DEFAULT, &dev_allocator, &pinned_allocator, flags, &nvjpeg_handle));
+    nvjpegBackend_t nvjpeg_backend =
+        backend == JPEGBackend::SOFTWARE ? NVJPEG_BACKEND_DEFAULT : NVJPEG_BACKEND_HARDWARE;
+
+    NVJPEG_SAFE_CALL(nvjpegCreateEx(nvjpeg_backend, &dev_allocator, &pinned_allocator, flags, &nvjpeg_handle));
     NVJPEG_SAFE_CALL(nvjpegJpegStateCreate(nvjpeg_handle, &nvjpeg_state));
     NVJPEG_SAFE_CALL(nvjpegDecodeBatchedInitialize(nvjpeg_handle, nvjpeg_state, num_images, 1, fmt));
 
@@ -227,9 +230,9 @@ void JPEGDecoder::Impl::deinitializeNVJPEG()
     NVJPEG_SAFE_CALL(nvjpegDestroy(nvjpeg_handle));
 }
 
-JPEGDecoder::JPEGDecoder(uint32_t num_images, uint32_t img_width, uint32_t img_height)
+JPEGDecoder::JPEGDecoder(uint32_t num_images, uint32_t img_width, uint32_t img_height, JPEGBackend backend)
 {
-    impl = std::make_unique<Impl>(num_images, img_width, img_height);
+    impl = std::make_unique<Impl>(num_images, img_width, img_height, backend);
 }
 
 JPEGDecoder::~JPEGDecoder() {}
