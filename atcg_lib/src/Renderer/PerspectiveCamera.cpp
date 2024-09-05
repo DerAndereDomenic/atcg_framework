@@ -35,8 +35,8 @@ void PerspectiveCamera::setProjection(const glm::mat4& projection)
     _aspect_ratio   = _projection[1][1] / _projection[0][0];
     _fovy           = glm::degrees(2.0f * glm::atan(1.0f / _projection[1][1]));
     _optical_center = glm::vec2(_projection[2][0], _projection[2][1]);
-    _near           = -_projection[3][2] / (_projection[2][2] - 1.0f);
-    _far            = -_projection[3][2] / (_projection[2][2] + 1.0f);
+    _near           = _projection[3][2] / (_projection[2][2] - 1.0f);
+    _far            = _projection[3][2] / (_projection[2][2] + 1.0f);
 }
 
 void PerspectiveCamera::setView(const glm::mat4& view)
