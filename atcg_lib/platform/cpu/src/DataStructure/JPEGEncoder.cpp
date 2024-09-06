@@ -17,7 +17,7 @@ JPEGEncoder::Impl::Impl() {}
 
 JPEGEncoder::Impl::~Impl() {}
 
-JPEGEncoder::JPEGEncoder()
+JPEGEncoder::JPEGEncoder(JPEGBackend backend)
 {
     impl = std::make_unique<Impl>();
 }

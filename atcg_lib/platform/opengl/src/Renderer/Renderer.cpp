@@ -342,6 +342,7 @@ void RendererSystem::init(uint32_t width, uint32_t height)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    setViewport(0, 0, width, height);
 
     ShaderManager::addShaderFromName("base");
     ShaderManager::addShaderFromName("flat");
@@ -359,6 +360,7 @@ void RendererSystem::init(uint32_t width, uint32_t height)
 
 void RendererSystem::finishFrame()
 {
+#ifndef ATCG_HEADLESS
     Framebuffer::useDefault();
     clear();
     impl->quad_vao->use();
@@ -370,7 +372,7 @@ void RendererSystem::finishFrame()
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
-
+#endif
     ++impl->frame_counter;
 }
 

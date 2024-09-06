@@ -157,7 +157,6 @@ private:
     };
 
     WindowData _data;
-    void* _window;
     atcg::ref_ptr<Context> _context;
 };
 }    // namespace atcg

@@ -2,6 +2,8 @@
 
 #include <Core/Memory.h>
 #include <Renderer/Texture.h>
+#include <DataStructure/JPEGConfig.h>
+
 #include <vector>
 
 #include <torch/types.h>
@@ -18,9 +20,11 @@ class JPEGEncoder
 {
 public:
     /**
-     * @brief Default constructor
+     * @brief Constructor
+     *
+     * @param backend The backend. default = SOFTWARE. Onyl pass HARDWARE if the GPU is capable of hardware encoding
      */
-    JPEGEncoder();
+    JPEGEncoder(JPEGBackend backend = JPEGBackend::SOFTWARE);
 
     /**
      * @brief Destructor

@@ -2,6 +2,8 @@
 
 #include <Core/Memory.h>
 #include <Renderer/Texture.h>
+#include <DataStructure/JPEGConfig.h>
+
 #include <vector>
 
 #include <torch/types.h>
@@ -28,8 +30,12 @@ public:
      * @param num_images The number of images
      * @param img_width The width of each image
      * @param img_height The height of each image
+     * @param backend The backend. default = SOFTWARE. Only pass HARDWARE if the GPU supports hardware decoding
      */
-    JPEGDecoder(uint32_t num_images, uint32_t img_width, uint32_t img_height);
+    JPEGDecoder(uint32_t num_images,
+                uint32_t img_width,
+                uint32_t img_height,
+                JPEGBackend backend = JPEGBackend::SOFTWARE);
 
     /**
      * @brief Destructor

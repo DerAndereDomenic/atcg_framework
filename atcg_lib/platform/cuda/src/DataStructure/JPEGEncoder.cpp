@@ -67,12 +67,12 @@ inline static int host_free(void* p)
 class JPEGEncoder::Impl
 {
 public:
-    Impl();
+    Impl(JPEGBackend backend);
 
     ~Impl();
 
     void allocateBuffers();
-    void initializeNVJPEG();
+    void initializeNVJPEG(JPEGBackend backend);
     torch::Tensor compressImage(const torch::Tensor& tensor);
 
     void deinitializeNVJPEG();
@@ -90,10 +90,10 @@ public:
     cudaStream_t encoding_stream;
 };
 
-JPEGEncoder::Impl::Impl()
+JPEGEncoder::Impl::Impl(JPEGBackend backend)
 {
     allocateBuffers();
-    initializeNVJPEG();
+    initializeNVJPEG(backend);
 }
 
 JPEGEncoder::Impl::~Impl()
@@ -107,9 +107,12 @@ void JPEGEncoder::Impl::allocateBuffers()
     CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&encoding_stream, cudaStreamNonBlocking));
 }
 
-void JPEGEncoder::Impl::initializeNVJPEG()
+void JPEGEncoder::Impl::initializeNVJPEG(JPEGBackend backend)
 {
-    NVJPEG_SAFE_CALL(nvjpegCreateEx(NVJPEG_BACKEND_DEFAULT, &dev_allocator, &pinned_allocator, flags, &nvjpeg_handle));
+    nvjpegBackend_t nvjpeg_backend =
+        backend == JPEGBackend::SOFTWARE ? NVJPEG_BACKEND_DEFAULT : NVJPEG_BACKEND_HARDWARE;
+
+    NVJPEG_SAFE_CALL(nvjpegCreateEx(nvjpeg_backend, &dev_allocator, &pinned_allocator, flags, &nvjpeg_handle));
     NVJPEG_SAFE_CALL(nvjpegJpegStateCreate(nvjpeg_handle, &nvjpeg_state));
     NVJPEG_SAFE_CALL(nvjpegEncoderStateCreate(nvjpeg_handle, &encoder_state, encoding_stream));
     NVJPEG_SAFE_CALL(nvjpegEncoderParamsCreate(nvjpeg_handle, &encode_params, encoding_stream));
@@ -165,9 +168,9 @@ void JPEGEncoder::Impl::deinitializeNVJPEG()
     NVJPEG_SAFE_CALL(nvjpegDestroy(nvjpeg_handle));
 }
 
-JPEGEncoder::JPEGEncoder()
+JPEGEncoder::JPEGEncoder(JPEGBackend backend)
 {
-    impl = std::make_unique<Impl>();
+    impl = std::make_unique<Impl>(backend);
 }
 
 JPEGEncoder::~JPEGEncoder() {}

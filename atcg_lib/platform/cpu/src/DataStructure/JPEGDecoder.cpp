@@ -38,7 +38,7 @@ void JPEGDecoder::Impl::allocateBuffers()
     output_tensor = torch::zeros({num_images, img_height, img_width, 3}, atcg::TensorOptions::uint8HostOptions());
 }
 
-JPEGDecoder::JPEGDecoder(uint32_t num_images, uint32_t img_width, uint32_t img_height)
+JPEGDecoder::JPEGDecoder(uint32_t num_images, uint32_t img_width, uint32_t img_height, JPEGBackend backend)
 {
     impl = std::make_unique<Impl>(num_images, img_width, img_height);
 }

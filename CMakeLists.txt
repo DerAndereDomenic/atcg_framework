@@ -7,6 +7,27 @@ option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
 option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
+option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
+
+if(ATCG_HEADLESS)
+    message("Building in Headless mode")
+    if(NOT UNIX)
+        message(FATAL_ERROR "Headless mode only supported on linux.")
+    endif()
+
+    if(NOT ATCG_CUDA_BACKEND)
+        message(FATAL_ERROR "Headless mode only supported with CUDA backend.")
+    endif()
+
+    # We use EGL for context management, otherwise glfw
+    set(ATCG_CONTEXT_LIBRARY OpenGL::EGL)
+else()
+    message("Using glfw backend")
+
+    # GLFW
+    add_subdirectory(external/glfw)
+    set(ATCG_CONTEXT_LIBRARY glfw)
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -15,12 +36,16 @@ list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
+# Check for CUDA
+if(ATCG_CUDA_BACKEND)
+    enable_language(CUDA)
+    set(CMAKE_CUDA_ARCHITECTURES "native")
+    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
+endif()
+
 # OpenGL
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
-
-# GLFW
-add_subdirectory(external/glfw)
 
 # OpenMesh
 add_subdirectory(external/openmesh)
@@ -126,130 +151,8 @@ set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/sfml)
 
-if(ATCG_CUDA_BACKEND)
-    enable_language(CUDA)
-    set(CMAKE_CUDA_ARCHITECTURES "native")
-    set(ATCG_BACKEND "cuda")
-    find_package(OptiX REQUIRED)
-else()
-    set(ATCG_BACKEND "cpu")
-endif()
-
-file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "atcg_lib/src/**.c*"
-                                                          "atcg_lib/include/**.h")
-
-file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "atcg_lib/platform/${ATCG_BACKEND}/**.c*"
-                                                          "atcg_lib/platform/${ATCG_BACKEND}/**.h")
-
-file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform/opengl/**.c*"
-                                                              "atcg_lib/platform/opengl/**.h")
-
-set(source_files "${atcg_lib_files}" "${atcg_backend_files}" "${atcg_renderer_files}")
-
-set(ptx_files "")
-foreach(source_file IN LISTS source_files)
-    # Define the pragma we use to determine the value of CUDA_SOURCE_PROPERTY_FORMAT
-    set(pragma_expression "^[ \t]*#[ \t]*pragma[ \t]+cuda_source_property_format[ \t]+=[ \t]+([a-z,A-Z]+)[ \t]*$")
-    # Process any *.cu source files
-    if(${source_file} MATCHES "\\.cu$")
-        # Read all lines from the source file defining the pragma we are looking for.
-        file(STRINGS ${source_file} matched_content REGEX ${pragma_expression})
-        if (matched_content)
-            # For all pragma definitions that we found, should only be one usually...
-            foreach(line_string ${matched_content})
-                # Filter out the defined value
-                string(REGEX REPLACE ${pragma_expression} "\\1" source_property_format ${line_string})
-                # Apply the property to the source file
-                if(${source_property_format} MATCHES "PTX")
-                    list(APPEND ptx_files ${source_file})
-                endif()
-            endforeach()
-        endif()
-    endif()
-endforeach()
-
-list(REMOVE_ITEM source_files ${ptx_files})
-
-charonload_add_torch_library(atcg_lib STATIC)
-target_sources(atcg_lib PRIVATE ${source_files})
-
-target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES NO_WARN_MBCS_MFC_DEPRECATION _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
-target_precompile_headers(atcg_lib PRIVATE "atcg_lib/include/atcgpch.h")
-
-target_include_directories(atcg_lib PUBLIC "atcg_lib/include"
-                                           "atcg_lib/platform/${ATCG_BACKEND}/include"
-                                           "atcg_lib/platform/opengl/include"
-                                           "python"
-)
-
-target_link_libraries(atcg_lib PUBLIC glfw
-                                      imgui
-                                      imguizmo
-                                      implot
-                                      glad
-                                      OpenGL::GL
-                                      OpenMeshCore
-                                      OpenMeshTools
-                                      stb_image
-                                      tinyobjloader
-                                      entt
-                                      nanort
-                                      portable_file_dialogs
-                                      nanoflann
-                                      glm
-                                      spdlog_header_only
-                                      json
-                                      SFML::System
-                                      SFML::Network
-                                      ${ATCG_OPENVR_TARGET}
-)
-
-if(ATCG_CUDA_BACKEND)
-    find_package(CUDAToolkit REQUIRED)
-
-    target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} 
-                                               "${OptiX_INCLUDE}")
-    target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
-    target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
-    target_link_libraries(atcg_lib PUBLIC CUDA::nvjpeg)
-
-    string(APPEND CMAKE_CUDA_FLAGS " --use_fast_math")
-
-    add_library(ptxmodules OBJECT ${ptx_files})
-    set_target_properties(ptxmodules PROPERTIES
-        CUDA_PTX_COMPILATION ON
-        CUDA_SEPARABLE_COMPILATION ON)
-    target_compile_definitions(ptxmodules PUBLIC ATCG_CUDA_BACKEND _USE_MATH_DEFINES)
-    target_compile_options(ptxmodules PRIVATE -ptx)
-    target_link_libraries(ptxmodules PRIVATE atcg_lib)
-
-    set(ATCG_PTX_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-    add_custom_target(ptxmodules-copy
-        DEPENDS ptxmodules
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        $<TARGET_OBJECTS:ptxmodules> ${ATCG_PTX_OUTPUT_DIRECTORY}
-        COMMAND_EXPAND_LISTS
-    )
-else()
-    foreach(SOURCE_FILE ${ptx_files})
-        # Get the filename without the directory and extension
-        get_filename_component(FILENAME_WE ${SOURCE_FILE} NAME_WE)
-        set_source_files_properties(${SOURCE_FILE} PROPERTIES LANGUAGE CXX)
-
-        # Create a target for each file
-        add_library(${FILENAME_WE} SHARED ${SOURCE_FILE})
-        target_link_libraries(${FILENAME_WE} PRIVATE atcg_lib)
-        target_compile_definitions(${FILENAME_WE} PRIVATE _USE_MATH_DEFINES ATCG_RT_MODULE)
-
-        set_target_properties(${FILENAME_WE} PROPERTIES
-            RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/bin"
-            RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/bin"
-            RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO "${CMAKE_CURRENT_SOURCE_DIR}/bin"
-            OUTPUT_NAME "${FILENAME_WE}" 
-            SUFFIX ".ptx"                
-        )
-    endforeach()
-endif()
+#atcg_lib
+add_subdirectory(atcg_lib)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set(target_name ${target_name_base})

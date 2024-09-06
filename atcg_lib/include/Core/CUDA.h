@@ -105,6 +105,8 @@ typedef void* surfaceObject;
     #define ATCG_DEVICE
     #define ATCG_HOST_DEVICE
     #define ATCG_GLOBAL
+    #define SET_DEVICE(dev)
+    #define SET_DEFAULT_DEVICE
 
 
 #endif
