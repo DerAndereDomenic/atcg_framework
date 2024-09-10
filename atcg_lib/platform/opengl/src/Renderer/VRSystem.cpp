@@ -433,7 +433,9 @@ void VRSystem::renderToScreen()
     vr_shader->setInt("texture_right", 11);
     impl->render_target_left->getColorAttachement()->use(10);
     impl->render_target_right->getColorAttachement()->use(11);
+    atcg::Renderer::toggleDepthTesting(false);
     atcg::Renderer::draw(impl->quad, {}, glm::mat4(1), glm::vec3(1), vr_shader);
+    atcg::Renderer::toggleDepthTesting(true);
 }
 
 glm::vec3 VRSystem::getPosition()
