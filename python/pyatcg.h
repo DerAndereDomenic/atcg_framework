@@ -781,6 +781,10 @@ inline void defineBindings(py::module_& m)
             "create",
             [](const atcg::ref_ptr<atcg::Image>& img) { return atcg::Texture2D::create(img); },
             "img"_a)
+        .def_static(
+            "create",
+            [](const torch::Tensor& img) { return atcg::Texture2D::create(img); },
+            "img"_a)
         .def("getID", &atcg::Texture2D::getID)
         .def("setData", &atcg::Texture2D::setData, "data"_a)
         .def("getData", &atcg::Texture2D::getData);
