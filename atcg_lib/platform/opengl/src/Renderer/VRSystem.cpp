@@ -519,6 +519,8 @@ void VRSystem::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& ca
 {
     if(!impl->vr_available) return;
 
+    atcg::ShaderManager::getShader("edge")->setFloat("fall_off_edge", 1000.0f);
+    atcg::ShaderManager::getShader("edge")->setFloat("base_transparency", 1.0f);
     atcg::Renderer::draw(impl->movement_line,
                          camera,
                          glm::mat4(1),
