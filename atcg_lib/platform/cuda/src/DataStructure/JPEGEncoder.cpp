@@ -148,7 +148,6 @@ torch::Tensor JPEGEncoder::Impl::compressImage(const torch::Tensor& img)
     size_t length;
     NVJPEG_SAFE_CALL(nvjpegEncodeRetrieveBitstream(nvjpeg_handle, encoder_state, NULL, &length, encoding_stream));
     CUDA_SAFE_CALL(cudaStreamSynchronize(encoding_stream));
-    ATCG_TRACE(length);
 
     torch::Tensor output = torch::empty({(int)length}, atcg::TensorOptions::uint8HostOptions());
     NVJPEG_SAFE_CALL(nvjpegEncodeRetrieveBitstream(nvjpeg_handle,
