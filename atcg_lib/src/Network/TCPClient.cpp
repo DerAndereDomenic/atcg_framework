@@ -3,6 +3,7 @@
 #include <Core/Assert.h>
 #include <DataStructure/TorchUtils.h>
 #include <Math/Utils.h>
+#include <Network/NetworkUtils.h>
 
 namespace atcg
 {
@@ -52,9 +53,11 @@ void TCPClient::disconnect()
     impl->connected = false;
 }
 
-torch::Tensor TCPClient::sendAndWait(uint8_t* data, const uint32_t data_size)
+torch::Tensor TCPClient::sendAndWait(uint8_t* data)
 {
-    if(impl->socket.send(data, data_size) != sf::Socket::Status::Done)
+    uint32_t read_offset = 0;
+    uint32_t data_size   = atcg::NetworkUtils::readInt<uint32_t>(data, read_offset);
+    if(impl->socket.send(data, data_size + sizeof(uint32_t)) != sf::Socket::Status::Done)
     {
         ATCG_ERROR("Could not send data...");
         return {};

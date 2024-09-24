@@ -511,7 +511,7 @@ TEST(NetworkTest, simpleEcho)
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
-    auto response = client.sendAndWait(send_buffer, sizeof(uint32_t) * 2);
+    auto response = client.sendAndWait(send_buffer);
 
     uint32_t read_offset = 0;
     EXPECT_EQ(atcg::NetworkUtils::readInt<uint32_t>(response.data_ptr<uint8_t>(), read_offset), 42);
@@ -536,7 +536,7 @@ TEST(NetworkTest, streamEcho)
         atcg::NetworkUtils::writeInt<uint32_t>(send_buffer, write_offset, sizeof(uint32_t));
         atcg::NetworkUtils::writeInt<uint32_t>(send_buffer, write_offset, i);
 
-        auto response        = client.sendAndWait(send_buffer, sizeof(uint32_t) * 2);
+        auto response        = client.sendAndWait(send_buffer);
         uint32_t read_offset = 0;
         EXPECT_EQ(atcg::NetworkUtils::readInt<uint32_t>(response.data_ptr<uint8_t>(), read_offset), i);
     }
@@ -564,7 +564,7 @@ TEST(NetworkTest, echoLargeData)
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
-    auto response = client.sendAndWait(send_buffer, buffer.numel() * buffer.element_size() + sizeof(uint32_t));
+    auto response = client.sendAndWait(send_buffer);
 
     float* float_ptr = reinterpret_cast<float*>(response.data_ptr());
 
@@ -595,7 +595,7 @@ TEST(NetworkTest, echoExtraLargeData)
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
-    auto response = client.sendAndWait(send_buffer, buffer.numel() * buffer.element_size() + sizeof(uint32_t));
+    auto response = client.sendAndWait(send_buffer);
 
     float* float_ptr = reinterpret_cast<float*>(response.data_ptr());
 
@@ -637,7 +637,7 @@ TEST(NetworkTest, calculateExtraLargeData)
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
-    auto response = client.sendAndWait(send_buffer, buffer.numel() * buffer.element_size() + sizeof(uint32_t));
+    auto response = client.sendAndWait(send_buffer);
 
     float* float_ptr = reinterpret_cast<float*>(response.data_ptr());
 
