@@ -121,16 +121,16 @@ void TCPServer::Impl::networkLoop()
                     if(selector.isReady(*client))
                     {
                         // TODO: Random 5.000.000 bytes
-                        torch::Tensor rec_data = torch::empty({5000000}, atcg::TensorOptions::uint8HostOptions());
                         std::size_t received;
                         std::size_t total_received = 0;
 
-                        bool disconnected = false;
+                        uint32_t message_size = 0;
+                        bool disconnected     = false;
                         // First, we need to fetch data until we have received the first 4 bytes -> number of expected
                         // bytes
                         do
                         {
-                            auto state = client->receive((char*)rec_data.data_ptr() + total_received,
+                            auto state = client->receive((char*)(&message_size) + total_received,
                                                          sizeof(uint32_t) - total_received,
                                                          received);
                             total_received += received;
@@ -149,9 +149,10 @@ void TCPServer::Impl::networkLoop()
 
                         if(disconnected) continue;
 
-                        uint32_t read_offset = 0;
-                        uint32_t expected_size =
-                            NetworkUtils::readInt<uint32_t>(rec_data.data_ptr<uint8_t>(), read_offset);
+                        uint32_t read_offset   = 0;
+                        uint32_t expected_size = atcg::ntoh(message_size);
+                        torch::Tensor rec_data =
+                            torch::empty({(int)expected_size}, atcg::TensorOptions::uint8HostOptions());
 
                         // Do not count header as part of the message
                         total_received = 0;
@@ -162,15 +163,7 @@ void TCPServer::Impl::networkLoop()
                                                           received);
 
                             total_received += received;
-
-                            if(total_received >= rec_data.numel())
-                            {
-                                // If we overflow our buffer, resize
-                                rec_data.resize_(2 * rec_data.numel());
-                            }
                         }
-
-                        rec_data.resize_(total_received);
 
                         receive_callback((uint8_t*)rec_data.contiguous().data_ptr(), rec_data.numel(), it->first);
                     }

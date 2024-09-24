@@ -72,27 +72,18 @@ torch::Tensor TCPClient::sendAndWait(uint8_t* data, const uint32_t data_size)
         total_received += received;
     } while(total_received < sizeof(uint32_t));
 
-    torch::Tensor rec_data = torch::empty({(int)message_size}, atcg::TensorOptions::uint8HostOptions());
-
     uint32_t expected_size = atcg::hton<uint32_t>(message_size);
-
-    total_received = 0;
+    torch::Tensor rec_data = torch::empty({(int)expected_size}, atcg::TensorOptions::uint8HostOptions());
+    total_received         = 0;
     while(total_received < expected_size)
     {
         impl->socket.receive((char*)((uint8_t*)rec_data.data_ptr() + total_received),
                              rec_data.numel() - total_received,
                              received);
         total_received += received;
-
-        if(total_received >= rec_data.numel())
-        {
-            // If we overflow our buffer, resize
-            rec_data.resize_(2 * rec_data.numel());
-        }
     }
 
     // Zero terminate data
-    rec_data.resize_(total_received);
     return rec_data;
 }
 }    // namespace atcg
