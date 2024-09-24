@@ -1,6 +1,5 @@
 #include <Renderer/VRSystem.h>
 
-#include <Core/SystemRegistry.h>
 #include <Core/Log.h>
 #include <glad/glad.h>
 #include <DataStructure/Graph.h>
@@ -151,19 +150,14 @@ void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
         impl->left_controller_entity = scene->createEntity("Left "
                                                            "Controll"
                                                            "er");
-        SystemRegistry::instance()
-            ->getSystem<VRSystem>()
-            ->impl->left_controller_entity.addComponent<atcg::TransformComponent>();
-        auto& renderer = SystemRegistry::instance()
-                             ->getSystem<VRSystem>()
-                             ->impl->left_controller_entity.addComponent<atcg::MeshRenderComponent>();
+        impl->left_controller_entity.addComponent<atcg::TransformComponent>();
+        auto& renderer = impl->left_controller_entity.addComponent<atcg::MeshRenderComponent>();
         renderer.material.setDiffuseTexture(atcg::Texture2D::create(base_color));
         renderer.material.setNormalTexture(atcg::Texture2D::create(normal));
         renderer.material.setRoughnessTexture(atcg::Texture2D::create(roughness));
         renderer.material.setMetallicTexture(atcg::Texture2D::create(metallic));
-        SystemRegistry::instance()
-            ->getSystem<VRSystem>()
-            ->impl->left_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
+
+        impl->left_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
     }
 
     // Right
@@ -178,19 +172,13 @@ void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
         impl->right_controller_entity = scene->createEntity("Right "
                                                             "Control"
                                                             "ler");
-        SystemRegistry::instance()
-            ->getSystem<VRSystem>()
-            ->impl->right_controller_entity.addComponent<atcg::TransformComponent>();
-        auto& renderer = SystemRegistry::instance()
-                             ->getSystem<VRSystem>()
-                             ->impl->right_controller_entity.addComponent<atcg::MeshRenderComponent>();
+        impl->right_controller_entity.addComponent<atcg::TransformComponent>();
+        auto& renderer = impl->right_controller_entity.addComponent<atcg::MeshRenderComponent>();
         renderer.material.setDiffuseTexture(atcg::Texture2D::create(base_color));
         renderer.material.setNormalTexture(atcg::Texture2D::create(normal));
         renderer.material.setRoughnessTexture(atcg::Texture2D::create(roughness));
         renderer.material.setMetallicTexture(atcg::Texture2D::create(metallic));
-        SystemRegistry::instance()
-            ->getSystem<VRSystem>()
-            ->impl->right_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
+        impl->right_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
     }
 
     impl->controller_initialized = true;
@@ -202,16 +190,10 @@ void VRSystem::onUpdate(const float delta_time)
 
     // Upload to HMD
     {
-        vr::Texture_t left_eye_texture  = {(void*)SystemRegistry::instance()
-                                               ->getSystem<VRSystem>()
-                                               ->impl->render_target_left->getColorAttachement()
-                                               ->getID(),
+        vr::Texture_t left_eye_texture  = {(void*)(uint64_t*)impl->render_target_left->getColorAttachement()->getID(),
                                            vr::TextureType_OpenGL,
                                            vr::ColorSpace::ColorSpace_Linear};
-        vr::Texture_t right_eye_texture = {(void*)SystemRegistry::instance()
-                                               ->getSystem<VRSystem>()
-                                               ->impl->render_target_right->getColorAttachement()
-                                               ->getID(),
+        vr::Texture_t right_eye_texture = {(void*)(uint64_t*)impl->render_target_right->getColorAttachement()->getID(),
                                            vr::TextureType_OpenGL,
                                            vr::ColorSpace::ColorSpace_Linear};
 
@@ -227,35 +209,25 @@ void VRSystem::onUpdate(const float delta_time)
     if(impl->controller_initialized)
     {
         {
-            uint32_t device_idx = SystemRegistry::instance()
-                                      ->getSystem<VRSystem>()
-                                      ->impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
-                                          vr::ETrackedControllerRole::TrackedControllerRole_RightHand);
+            uint32_t device_idx = impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
+                vr::ETrackedControllerRole::TrackedControllerRole_RightHand);
 
             if(device_idx >= vr::k_unMaxTrackedDeviceCount) return;
 
             glm::mat4 model = VRSystem::getDevicePose(device_idx);
 
-            SystemRegistry::instance()
-                ->getSystem<VRSystem>()
-                ->impl->right_controller_entity.getComponent<atcg::TransformComponent>()
-                .setModel(model);
+            impl->right_controller_entity.getComponent<atcg::TransformComponent>().setModel(model);
         }
 
         {
-            uint32_t device_idx = SystemRegistry::instance()
-                                      ->getSystem<VRSystem>()
-                                      ->impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
-                                          vr::ETrackedControllerRole::TrackedControllerRole_LeftHand);
+            uint32_t device_idx = impl->vr_pointer->GetTrackedDeviceIndexForControllerRole(
+                vr::ETrackedControllerRole::TrackedControllerRole_LeftHand);
 
             if(device_idx >= vr::k_unMaxTrackedDeviceCount) return;
 
             glm::mat4 model = VRSystem::getDevicePose(device_idx);
 
-            SystemRegistry::instance()
-                ->getSystem<VRSystem>()
-                ->impl->left_controller_entity.getComponent<atcg::TransformComponent>()
-                .setModel(model);
+            impl->left_controller_entity.getComponent<atcg::TransformComponent>().setModel(model);
         }
     }
 }
