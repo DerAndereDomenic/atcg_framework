@@ -48,8 +48,10 @@
 #include <DataStructure/Statistics.h>
 #include <DataStructure/BufferView.h>
 #include <DataStructure/Image.h>
-#include <DataStructure/JPEGDecoder.h>
-#include <DataStructure/JPEGEncoder.h>
+#ifdef ATCG_CUDA_BACKEND
+    #include <DataStructure/JPEGDecoder.h>
+    #include <DataStructure/JPEGEncoder.h>
+#endif
 
 //-------- Math -----------
 #include <Math/Constants.h>
