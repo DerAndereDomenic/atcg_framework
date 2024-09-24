@@ -62,6 +62,7 @@
 
 //-------- Network ------------
 #include <Network/TCPServer.h>
+#include <Network/TCPClient.h>
 #include <Network/NetworkUtils.h>
 
 //-------- ImGui -----------
