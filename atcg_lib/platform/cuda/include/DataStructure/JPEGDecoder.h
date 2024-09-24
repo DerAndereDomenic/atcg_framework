@@ -45,21 +45,11 @@ public:
     /**
      * @brief Decompress a batch of images
      *
-     * @param filenames A vector containing filenames of images to be decompressed
+     * @param jpeg_files A vector containing the raw jpeg files
      *
      * @return The tensor containing the loaded images
      */
-    torch::Tensor decompressImages(const std::vector<std::string>& filenames);
-
-    /**
-     * @brief Decompress a batch of images
-     *
-     * @param filenames A vector containing filenames of images to be decompressed
-     * @param valid A tensor of valid cameras
-     *
-     * @return The tensor containing the loaded images
-     */
-    torch::Tensor decompressImages(const std::vector<std::string>& filenames, const torch::Tensor& valid);
+    torch::Tensor decompressImages(const std::vector<std::vector<uint8_t>>& jpeg_files);
 
     /**
      * @brief Upload and return the decompressed image tensor to the renderer

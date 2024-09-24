@@ -72,7 +72,7 @@ public:
 
     void allocateBuffers();
     void initializeNVJPEG(JPEGBackend backend);
-    void loadFiles(const std::vector<std::string>& filenames, const torch::Tensor& valid);
+    void loadFiles(const std::vector<std::vector<uint8_t>>& jpeg_files);
     void decompressImages();
     void copyImagesToOutput(atcg::textureArray texture);
 
@@ -152,37 +152,13 @@ void JPEGDecoder::Impl::initializeNVJPEG(JPEGBackend backend)
     }
 }
 
-void JPEGDecoder::Impl::loadFiles(const std::vector<std::string>& filenames, const torch::Tensor& valid)
+void JPEGDecoder::Impl::loadFiles(const std::vector<std::vector<uint8_t>>& jpeg_files)
 {
-    torch::Tensor host_valid = valid.to(torch::kCPU);
-    int index                = 0;
-    for(uint32_t i = 0; i < filenames.size(); ++i)
+    for(uint32_t i = 0; i < jpeg_files.size(); ++i)
     {
-        if(host_valid.index({(int)i}).item<int>() == 0)
-        {
-            continue;
-        }
+        file_lengths[i] = jpeg_files[i].size();
 
-        std::ifstream input(filenames[i], std::ios::in | std::ios::binary | std::ios::ate);
-
-        // Get the size
-        std::streamsize file_size = input.tellg();
-        input.seekg(0, std::ios::beg);
-        // resize if buffer is too small
-        if(file_data[index].size() < file_size)
-        {
-            file_data[index].resize(file_size);
-        }
-        if(!input.read(file_data[index].data(), file_size))
-        {
-            ATCG_ERROR("JPEGDecoder: Cannot read from file: {0}", filenames[i]);
-        }
-        file_lengths[index] = file_size;
-
-        raw_inputs[index] = (const unsigned char*)file_data[index].data();
-
-        ++index;
-        if(index >= num_images) break;
+        raw_inputs[i] = (const unsigned char*)jpeg_files[i].data();
     }
 }
 
@@ -237,14 +213,9 @@ JPEGDecoder::JPEGDecoder(uint32_t num_images, uint32_t img_width, uint32_t img_h
 
 JPEGDecoder::~JPEGDecoder() {}
 
-torch::Tensor JPEGDecoder::decompressImages(const std::vector<std::string>& filenames)
+torch::Tensor JPEGDecoder::decompressImages(const std::vector<std::vector<uint8_t>>& jpeg_files)
 {
-    return decompressImages(filenames, torch::ones(impl->num_images, atcg::TensorOptions::int32HostOptions()));
-}
-
-torch::Tensor JPEGDecoder::decompressImages(const std::vector<std::string>& filenames, const torch::Tensor& valid)
-{
-    impl->loadFiles(filenames, valid);
+    impl->loadFiles(jpeg_files);
     impl->decompressImages();
 
     return impl->output_tensor;
