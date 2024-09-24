@@ -21,7 +21,7 @@ jobs:
       - run: sudo apt-get -y update
       - run: sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev xorg-dev
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
-      - run: cmake -B ./build -S .
+      - run: cmake -B ./build -S . -DATCG_CUDA_BACKEND=Off
       - run: cmake --build build
   
   windows-build:
@@ -36,16 +36,46 @@ jobs:
           python-version: '3.9'
           cache: 'pip'
       - run: pip install torch torchvision torchaudio
+      - run: cmake -B ./build -S . -DATCG_CUDA_BACKEND=Off
+      - run: cmake --build build
+
+  ubuntu-cuda-build:
+    name: Ubuntu Compile Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - uses: Jimver/cuda-toolkit@v0.2.17
+        id: cuda-toolkit
+        with:
+          cuda: '12.1.0'
+
+      - run: sudo apt-get -y update
+      - run: sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev xorg-dev
+      - run: pip3 install torch torchvision torchaudio
       - run: cmake -B ./build -S .
       - run: cmake --build build
-      
-  #macos-build:
-  #  name: MacOS Compile Check
-  #  runs-on: macos-latest
-  #  steps:
-  #    - uses: actions/checkout@main
-  #      with:
-  #        submodules: recursive
-  #    - run: cmake -B ./build -S .
-  #    - run: cmake --build build
-      
+  
+  windows-cuda-build:
+    name: Windows Compile Check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@main
+        with:
+          submodules: recursive
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'pip'
+      - uses: Jimver/cuda-toolkit@v0.2.17
+        id: cuda-toolkit
+        with:
+          cuda: '12.1.0'
+      - run: pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+      - run: cmake -B ./build -S .
+      - run: cmake --build build
