@@ -4,7 +4,7 @@ This repository contains a C++ 3D rendering framework for research applications 
 
 ## Building
 
-This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are [CMake](https://cmake.org), [Python3.9](https://www.python.org), and [pytorch2.2.0](https://pytorch.org). Newer versions should also work.
+This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are [CMake>=3.27](https://cmake.org), [Python3.9](https://www.python.org), and [pytorch2.4.0](https://pytorch.org). Newer versions should also work.
 
 After installing the dependencies, clone the repository recursively (to include submodules)
 
