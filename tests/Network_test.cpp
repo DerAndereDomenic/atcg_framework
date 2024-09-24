@@ -70,16 +70,16 @@ TEST(NetworkTest, readWriteIntStream)
     uint32_t write_offset = 0;
     uint32_t read_offset  = 0;
 
-    uint8_t* buffer = new uint8_t[1024];
+    uint32_t* buffer = new uint32_t[1024];
 
     for(int32_t i = -1024 / 2; i < 1024 / 2; ++i)
     {
-        atcg::NetworkUtils::writeInt(buffer, write_offset, i);
+        atcg::NetworkUtils::writeInt((uint8_t*)buffer, write_offset, i);
     }
 
     for(int32_t i = -1024 / 2; i < 1024 / 2; ++i)
     {
-        int32_t received = atcg::NetworkUtils::readInt<int32_t>(buffer, read_offset);
+        int32_t received = atcg::NetworkUtils::readInt<int32_t>((uint8_t*)buffer, read_offset);
         EXPECT_EQ(i, received);
     }
 
@@ -141,9 +141,10 @@ TEST(NetworkTest, readWriteBuffer)
     uint32_t read_offset  = 0;
 
     uint8_t* buffer  = new uint8_t[1024];
-    float* send_data = new float[1024 / sizeof(float) - 1];
+    int num_floats   = 1024 / sizeof(float) - 1;
+    float* send_data = new float[num_floats];
 
-    for(int i = 0; i < 1024 / sizeof(float); ++i)
+    for(int i = 0; i < num_floats; ++i)
     {
         send_data[i] = float(i);
     }
@@ -152,9 +153,9 @@ TEST(NetworkTest, readWriteBuffer)
 
     uint32_t buffer_size = atcg::NetworkUtils::readInt<uint32_t>(buffer, read_offset);
     EXPECT_EQ(buffer_size, 1020);
-    for(int i = read_offset; i < 1024; ++i)
+    for(int i = 0; i < buffer_size; ++i)
     {
-        EXPECT_EQ(((uint8_t*)send_data)[i], buffer[i]);
+        EXPECT_EQ(((uint8_t*)send_data)[i], buffer[i + read_offset]);
     }
 
     delete[] buffer;
