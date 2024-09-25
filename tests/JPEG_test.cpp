@@ -171,7 +171,7 @@ TEST(JPEGDecoderTest, encode)
     file_data[0] =
         std::vector<uint8_t>(compressed.data_ptr<uint8_t>(), compressed.data_ptr<uint8_t>() + compressed.numel());
 
-    atcg::JPEGDecoder decoder(1, original->width(), original->height(), false);
+    atcg::JPEGDecoder decoder(1, original->width(), original->height());
     auto output = decoder.decompressImages(file_data).to(torch::kFloat32) / 255.0f;
 
     auto error = torch::mean(torch::square(output.cpu() - target_tensor.unsqueeze(0)));
