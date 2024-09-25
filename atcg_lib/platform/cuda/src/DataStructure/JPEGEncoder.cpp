@@ -67,7 +67,7 @@ inline static int host_free(void* p)
 class JPEGEncoder::Impl
 {
 public:
-    Impl(JPEGBackend backend);
+    Impl(bool flip_vertically, JPEGBackend backend);
 
     ~Impl();
 
@@ -88,10 +88,13 @@ public:
     nvjpegInputFormat_t fmt = NVJPEG_INPUT_RGBI;
 
     cudaStream_t encoding_stream;
+
+    bool flip_vertically = true;
 };
 
-JPEGEncoder::Impl::Impl(JPEGBackend backend)
+JPEGEncoder::Impl::Impl(bool flip_vertically, JPEGBackend backend)
 {
+    this->flip_vertically = flip_vertically;
     allocateBuffers();
     initializeNVJPEG(backend);
 }
@@ -128,10 +131,17 @@ torch::Tensor JPEGEncoder::Impl::compressImage(const torch::Tensor& img)
     torch::Tensor intermediate_img = img;
     if(num_channels == 4)
     {
-        intermediate_img = img.index({torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice(0, 3)})
-                               .clone()
-                               .contiguous();
+        intermediate_img =
+            img.index({torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice(0, 3)}).clone();
     }
+
+    if(flip_vertically)
+    {
+        intermediate_img = intermediate_img.flip(0);
+    }
+
+    intermediate_img = intermediate_img.contiguous();
+
     nvjpegImage_t source = {};
     source.pitch[0]      = 3 * intermediate_img.size(1);
     source.channel[0]    = intermediate_img.data_ptr<unsigned char>();
@@ -167,9 +177,9 @@ void JPEGEncoder::Impl::deinitializeNVJPEG()
     NVJPEG_SAFE_CALL(nvjpegDestroy(nvjpeg_handle));
 }
 
-JPEGEncoder::JPEGEncoder(JPEGBackend backend)
+JPEGEncoder::JPEGEncoder(bool flip_vertically, JPEGBackend backend)
 {
-    impl = std::make_unique<Impl>(backend);
+    impl = std::make_unique<Impl>(flip_vertically, backend);
 }
 
 JPEGEncoder::~JPEGEncoder() {}
