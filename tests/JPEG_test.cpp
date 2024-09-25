@@ -183,4 +183,49 @@ TEST(JPEGDecoderTest, encode)
     EXPECT_EQ(output.size(3), 3);
 }
 
+TEST(JPEGDecoderTest, multiDecode)
+{
+    std::string path = "res/test_data/test.jpeg";
+    auto target      = atcg::IO::imread(path);
+
+    auto target_tensor = target->data().to(torch::kFloat32) / 255.0f;
+
+    atcg::JPEGDecoder decoder(1, target->width(), target->height());
+
+    std::ifstream input("res/test_data/test.jpeg", std::ios::in | std::ios::binary | std::ios::ate);
+    std::streamsize file_size = input.tellg();
+    input.seekg(0, std::ios::beg);
+
+    std::vector<std::vector<uint8_t>> file_data(1);
+
+    if(file_data[0].size() < file_size)
+    {
+        file_data[0].resize(file_size);
+    }
+    if(!input.read((char*)file_data[0].data(), file_size))
+    {
+        std::cerr << "JPEGDecoder: Cannot read from file: " << path << "\n";
+    }
+
+    auto output = decoder.decompressImages(file_data).to(torch::kFloat32) / 255.0f;
+
+    auto error = torch::mean(torch::square(output.squeeze(0).cpu() - target_tensor));
+
+    EXPECT_NEAR(error.item<float>(), 0.0f, 1e-3f);
+    EXPECT_EQ(output.size(0), 1);
+    EXPECT_EQ(output.size(1), target->height());
+    EXPECT_EQ(output.size(2), target->width());
+    EXPECT_EQ(output.size(3), 3);
+
+    output = decoder.decompressImages(file_data).to(torch::kFloat32) / 255.0f;
+
+    error = torch::mean(torch::square(output.squeeze(0).cpu() - target_tensor));
+
+    EXPECT_NEAR(error.item<float>(), 0.0f, 1e-3f);
+    EXPECT_EQ(output.size(0), 1);
+    EXPECT_EQ(output.size(1), target->height());
+    EXPECT_EQ(output.size(2), target->width());
+    EXPECT_EQ(output.size(3), 3);
+}
+
 #endif
