@@ -66,7 +66,7 @@ inline static int host_free(void* p)
 class JPEGDecoder::Impl
 {
 public:
-    Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height, JPEGBackend backend);
+    Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height, bool flip_vertically, JPEGBackend backend);
 
     ~Impl();
 
@@ -101,13 +101,20 @@ public:
     uint32_t img_height;
 
     cudaStream_t decoding_stream;
+
+    bool flip_vertically = true;
 };
 
-JPEGDecoder::Impl::Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height, JPEGBackend backend)
+JPEGDecoder::Impl::Impl(uint32_t num_images,
+                        uint32_t img_width,
+                        uint32_t img_height,
+                        bool flip_vertically,
+                        JPEGBackend backend)
 {
-    this->num_images = num_images;
-    this->img_width  = img_width;
-    this->img_height = img_height;
+    this->num_images      = num_images;
+    this->img_width       = img_width;
+    this->img_height      = img_height;
+    this->flip_vertically = flip_vertically;
     allocateBuffers();
     initializeNVJPEG(backend);
 }
@@ -171,6 +178,11 @@ void JPEGDecoder::Impl::decompressImages()
                                          output_images.data(),
                                          decoding_stream));
     CUDA_SAFE_CALL(cudaStreamSynchronize(decoding_stream));
+
+    if(flip_vertically)
+    {
+        output_tensor = output_tensor.flip(1);
+    }
 }
 
 void JPEGDecoder::Impl::copyImagesToOutput(atcg::textureArray texture)
@@ -206,9 +218,13 @@ void JPEGDecoder::Impl::deinitializeNVJPEG()
     NVJPEG_SAFE_CALL(nvjpegDestroy(nvjpeg_handle));
 }
 
-JPEGDecoder::JPEGDecoder(uint32_t num_images, uint32_t img_width, uint32_t img_height, JPEGBackend backend)
+JPEGDecoder::JPEGDecoder(uint32_t num_images,
+                         uint32_t img_width,
+                         uint32_t img_height,
+                         bool flip_vertically,
+                         JPEGBackend backend)
 {
-    impl = std::make_unique<Impl>(num_images, img_width, img_height, backend);
+    impl = std::make_unique<Impl>(num_images, img_width, img_height, flip_vertically, backend);
 }
 
 JPEGDecoder::~JPEGDecoder() {}
