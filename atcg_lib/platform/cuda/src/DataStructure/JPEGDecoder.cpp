@@ -102,7 +102,7 @@ public:
 
     cudaStream_t decoding_stream;
 
-    bool flip_vertically = false;
+    bool flip_vertically = true;
 };
 
 JPEGDecoder::Impl::Impl(uint32_t num_images,
