@@ -80,6 +80,7 @@ public:
 
     // Rendering buffers
     torch::Tensor output_tensor;
+    torch::Tensor data_tensor;
     torch::Tensor intermediate_tensor;
 
     // File buffers
@@ -132,7 +133,7 @@ void JPEGDecoder::Impl::allocateBuffers()
     file_lengths.resize(num_images);
     raw_inputs.resize(num_images);
 
-    output_tensor = torch::zeros({num_images, img_height, img_width, 3}, atcg::TensorOptions::uint8DeviceOptions());
+    data_tensor = torch::zeros({num_images, img_height, img_width, 3}, atcg::TensorOptions::uint8DeviceOptions());
 
     CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&decoding_stream, cudaStreamNonBlocking));
 }
@@ -155,7 +156,7 @@ void JPEGDecoder::Impl::initializeNVJPEG(JPEGBackend backend)
     for(int i = 0; i < num_images; i++)
     {
         output_images[i].pitch[0]   = 3 * img_width;
-        output_images[i].channel[0] = (unsigned char*)output_tensor.index({i, 0, 0, 0}).data_ptr();
+        output_images[i].channel[0] = (unsigned char*)data_tensor.index({i, 0, 0, 0}).data_ptr();
     }
 }
 
@@ -179,9 +180,15 @@ void JPEGDecoder::Impl::decompressImages()
                                          decoding_stream));
     CUDA_SAFE_CALL(cudaStreamSynchronize(decoding_stream));
 
+    // Unfortunetly, nvjpeg does not support inplace flipping of decoded images.
+    // We therefore create a copy of the data although it is not super efficient...
     if(flip_vertically)
     {
-        output_tensor = output_tensor.flip(1);
+        output_tensor = data_tensor.flip(1);
+    }
+    else
+    {
+        output_tensor = data_tensor.clone();
     }
 }
 
