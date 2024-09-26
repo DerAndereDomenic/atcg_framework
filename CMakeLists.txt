@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.27)
 
 project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
 
-option(ATCG_CUDA_BACKEND "Compile cuda backend" OFF)
+option(ATCG_CUDA_BACKEND "Compile cuda backend" ON)
 option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
 option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)

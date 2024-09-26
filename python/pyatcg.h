@@ -119,8 +119,12 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_graph                 = py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph");                             \
     auto m_serializer            = py::class_<atcg::Serializer<atcg::ComponentSerializer>>(m, "Serializer");                    \
     auto m_renderer              = m.def_submodule("Renderer");                                                                 \
-    auto m_shader                = py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader");                          \
-    auto m_shader_manager        = m.def_submodule("ShaderManager");                                                            \
+    auto m_renderer_system =                                                                                                    \
+        py::class_<atcg::RendererSystem, atcg::ref_ptr<atcg::RendererSystem>>(m, "RendererSystem");                             \
+    auto m_shader         = py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader");                                 \
+    auto m_shader_manager = m.def_submodule("ShaderManager");                                                                   \
+    auto m_shader_manager_system =                                                                                              \
+        py::class_<atcg::ShaderManagerSystem, atcg::ref_ptr<atcg::ShaderManagerSystem>>(m, "ShaderManagerSystem");              \
     auto m_texture_format        = py::enum_<atcg::TextureFormat>(m, "TextureFormat");                                          \
     auto m_texture_wrap_mode     = py::enum_<atcg::TextureWrapMode>(m, "TextureWrapMode");                                      \
     auto m_texture_filter_mode   = py::enum_<atcg::TextureFilterMode>(m, "TextureFilterMode");                                  \
@@ -143,7 +147,9 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_hit_info         = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                 \
     auto m_utils            = m.def_submodule("Utils");                                                                         \
     auto m_imgui            = m.def_submodule("ImGui");                                                                         \
-    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
+    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");                                       \
+    auto m_draw_mode        = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                         \
+    auto m_cull_mode        = py::enum_<atcg::CullMode>(m, "CullMode");
 
 inline void defineBindings(py::module_& m)
 {
@@ -631,7 +637,41 @@ inline void defineBindings(py::module_& m)
         .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
 
     // ------------------- RENDERER ---------------------------------
+    m_draw_mode.value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+        .value("ATCG_DRAW_MODE_POINTS", atcg::DrawMode::ATCG_DRAW_MODE_POINTS)
+        .value("ATCG_DRAW_MODE_POINTS_SPHERE", atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE)
+        .value("ATCG_DRAW_MODE_EDGES", atcg::DrawMode::ATCG_DRAW_MODE_EDGES)
+        .value("ATCG_DRAW_MODE_EDGES_CYLINDER", atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER)
+        .value("ATCG_DRAW_MODE_INSTANCED", atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED)
+        .export_values();
+
+    m_cull_mode.value("ATCG_FRONT_FACE_CULLING", atcg::CullMode::ATCG_FRONT_FACE_CULLING)
+        .value("ATCG_BACK_FACE_CULLING", atcg::CullMode::ATCG_BACK_FACE_CULLING)
+        .value("ATCG_BOTH_FACE_CULLING", atcg::CullMode::ATCG_BOTH_FACE_CULLING)
+        .export_values();
+
     m_renderer.def("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
+        .def("init", &atcg::Renderer::init)
+        .def("finishFrame", &atcg::Renderer::finishFrame)
+        .def("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
+        .def("getClearColor", &atcg::Renderer::getClearColor)
+        .def("setPointSize", &atcg::Renderer::setPointSize, "size"_a)
+        .def("setLineSize", &atcg::Renderer::setLineSize, "size"_a)
+        .def("setViewport", &atcg::Renderer::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
+        .def("setDefaultViewport", &atcg::Renderer::setDefaultViewport)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Image>& skybox) { atcg::Renderer::setSkybox(skybox); },
+            "skybox"_a)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Texture2D>& skybox) { atcg::Renderer::setSkybox(skybox); },
+            "skybox"_a)
+        .def("hasSkybox", &atcg::Renderer::hasSkybox)
+        .def("removeSkybox", &atcg::Renderer::removeSkybox)
+        .def("getSkyboxTexture", &atcg::Renderer::getSkyboxTexture)
+        .def("getSkyboxCubeMap", &atcg::Renderer::getSkyboxCubemap)
+        .def("useScreenBuffer", &atcg::Renderer::useScreenBuffer)
         .def("clear", &atcg::Renderer::clear)
         .def(
             "draw",
@@ -639,6 +679,26 @@ inline void defineBindings(py::module_& m)
             { atcg::Renderer::draw(scene, camera); },
             "scene"_a,
             "camera"_a)
+        .def(
+            "draw",
+            [](atcg::Entity entity, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            { atcg::Renderer::draw(entity, camera); },
+            "entity"_a,
+            "camera"_a)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::Graph>& mesh,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+               const glm::mat4& model,
+               const glm::vec3& color,
+               const atcg::ref_ptr<atcg::Shader>& shader,
+               atcg::DrawMode draw_mode) { atcg::Renderer::draw(mesh, camera, model, color, shader, draw_mode); },
+            "graph"_a,
+            "camera"_a,
+            "model"_a,
+            "color"_a,
+            "shader"_a,
+            "draw_mode"_a)
         .def(
             "drawCADGrid",
             [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::drawCADGrid(camera); },
@@ -649,6 +709,16 @@ inline void defineBindings(py::module_& m)
             { atcg::Renderer::drawCameras(scene, camera); },
             "scene"_a,
             "camera"_a)
+        .def("drawCircle", &atcg::Renderer::drawCircle, "position"_a, "radius"_a, "thickness"_a, "color"_a, "camera"_a)
+        .def(
+            "drawImage",
+            [](const atcg::ref_ptr<atcg::Framebuffer>& img) { atcg::Renderer::drawImage(img); },
+            "img"_a)
+        .def(
+            "drawImage",
+            [](const atcg::ref_ptr<atcg::Texture2D>& img) { atcg::Renderer::drawImage(img); },
+            "img"_a)
+        .def("getFramebuffer", &atcg::Renderer::getFramebuffer)
         .def("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
         .def("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
         .def("screenshot",
@@ -665,21 +735,179 @@ inline void defineBindings(py::module_& m)
             "camera"_a,
             "width"_a,
             "path"_a)
-        .def("resize", &atcg::Renderer::resize);
+        .def("resize", &atcg::Renderer::resize)
+        .def("getFrame", &atcg::Renderer::getFrame, "device"_a)
+        .def("getZBuffer", &atcg::Renderer::getZBuffer, "device"_a)
+        .def("toggleDepthTesting", &atcg::Renderer::toggleDepthTesting, "enabled"_a)
+        .def("setCullFace", &atcg::Renderer::setCullFace, "mode"_a)
+        .def("getFrameCounter", &atcg::Renderer::getFrameCounter)
+        .def("popTextureID", &atcg::Renderer::popTextureID)
+        .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a);
 
-    m_shader.def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
+    m_renderer_system.def(py::init<>())
+        .def("setClearColor", &atcg::RendererSystem::setClearColor, "color"_a)
+        .def("init", &atcg::RendererSystem::init)
+        .def("finishFrame", &atcg::RendererSystem::finishFrame)
+        .def("setClearColor", &atcg::RendererSystem::setClearColor, "color"_a)
+        .def("getClearColor", &atcg::RendererSystem::getClearColor)
+        .def("setPointSize", &atcg::RendererSystem::setPointSize, "size"_a)
+        .def("setLineSize", &atcg::RendererSystem::setLineSize, "size"_a)
+        .def("setViewport", &atcg::RendererSystem::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
+        .def("setDefaultViewport", &atcg::RendererSystem::setDefaultViewport)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Image>& skybox)
+            { self->setSkybox(skybox); },
+            "skybox"_a)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Texture2D>& skybox)
+            { self->setSkybox(skybox); },
+            "skybox"_a)
+        .def("hasSkybox", &atcg::RendererSystem::hasSkybox)
+        .def("removeSkybox", &atcg::RendererSystem::removeSkybox)
+        .def("getSkyboxTexture", &atcg::RendererSystem::getSkyboxTexture)
+        .def("getSkyboxCubeMap", &atcg::RendererSystem::getSkyboxCubemap)
+        .def("useScreenBuffer", &atcg::RendererSystem::useScreenBuffer)
+        .def("clear", &atcg::RendererSystem::clear)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(scene, camera); },
+            "scene"_a,
+            "camera"_a)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               atcg::Entity entity,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(entity, camera); },
+            "entity"_a,
+            "camera"_a)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Graph>& mesh,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+               const glm::mat4& model,
+               const glm::vec3& color,
+               const atcg::ref_ptr<atcg::Shader>& shader,
+               atcg::DrawMode draw_mode) { self->draw(mesh, camera, model, color, shader, draw_mode); },
+            "graph"_a,
+            "camera"_a,
+            "model"_a,
+            "color"_a,
+            "shader"_a,
+            "draw_mode"_a)
+        .def(
+            "drawCADGrid",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            { self->drawCADGrid(camera); },
+            "camera"_a)
+        .def(
+            "drawCameras",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->drawCameras(scene, camera); },
+            "scene"_a,
+            "camera"_a)
+        .def("drawCircle",
+             &atcg::RendererSystem::drawCircle,
+             "position"_a,
+             "radius"_a,
+             "thickness"_a,
+             "color"_a,
+             "camera"_a)
+        .def(
+            "drawImage",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Framebuffer>& img)
+            { self->drawImage(img); },
+            "img"_a)
+        .def(
+            "drawImage",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Texture2D>& img)
+            { self->drawImage(img); },
+            "img"_a)
+        .def("getFramebuffer", &atcg::RendererSystem::getFramebuffer)
+        .def("getEntityIndex", &atcg::RendererSystem::getEntityIndex, "mouse_pos"_a)
+        .def("toggleCulling", &atcg::RendererSystem::toggleCulling, "enabled"_a)
+        .def("screenshot",
+             [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+                const atcg::ref_ptr<atcg::Scene>& scene,
+                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+                const uint32_t width) { return self->screenshot(scene, cam, width); })
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const std::string& path) { self->screenshot(scene, cam, width, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "path"_a)
+        .def("resize", &atcg::RendererSystem::resize)
+        .def("getFrame", &atcg::RendererSystem::getFrame, "device"_a)
+        .def("getZBuffer", &atcg::RendererSystem::getZBuffer, "device"_a)
+        .def("toggleDepthTesting", &atcg::RendererSystem::toggleDepthTesting, "enabled"_a)
+        .def("setCullFace", &atcg::RendererSystem::setCullFace, "mode"_a)
+        .def("getFrameCounter", &atcg::RendererSystem::getFrameCounter)
+        .def("popTextureID", &atcg::RendererSystem::popTextureID)
+        .def("pushTextureID", &atcg::RendererSystem::pushTextureID, "id"_a);
+
+    m_shader.def(py::init<std::string>(), "compute_path"_a)
+        .def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
         .def(py::init<std::string, std::string, std::string>(), "vertex_path"_a, "fragment_path"_a, "geometry_path"_a)
+        .def(
+            "recompile",
+            [](const atcg::ref_ptr<atcg::Shader>& self, const std::string& compute_path)
+            { self->recompile(compute_path); },
+            "compute_path"_a)
+        .def(
+            "recompile",
+            [](const atcg::ref_ptr<atcg::Shader>& self,
+               const std::string& vertex_path,
+               const std::string& fragment_path) { self->recompile(vertex_path, fragment_path); },
+            "vertex_path"_a,
+            "fragment_path"_a)
+        .def(
+            "recompile",
+            [](const atcg::ref_ptr<atcg::Shader>& self,
+               const std::string& vertex_path,
+               const std::string& fragment_path,
+               const std::string& geometry_path) { self->recompile(vertex_path, fragment_path, geometry_path); },
+            "vertex_path"_a,
+            "fragment_path"_a,
+            "geometry_path"_a)
         .def("use", &atcg::Shader::use)
         .def("setInt", &atcg::Shader::setInt, "uniform_name"_a, "value"_a)
         .def("setFloat", &atcg::Shader::setFloat, "uniform_name"_a, "value"_a)
         .def("setVec3", &atcg::Shader::setVec3, "uniform_name"_a, "value"_a)
         .def("setVec4", &atcg::Shader::setVec4, "uniform_name"_a, "value"_a)
         .def("setMat4", &atcg::Shader::setMat4, "uniform_name"_a, "value"_a)
-        .def("setMVP", &atcg::Shader::setMVP, "model"_a, "view"_a, "projection"_a);
+        .def("setMVP", &atcg::Shader::setMVP, "model"_a, "view"_a, "projection"_a)
+        .def("dispatch", &atcg::Shader::dispatch, "work_groups"_a)
+        .def("hasGeometryShader", &atcg::Shader::hasGeometryShader)
+        .def("isComputeShader", &atcg::Shader::isComputeShader)
+        .def("getVertexPath", &atcg::Shader::getVertexPath)
+        .def("getGeometryPath", &atcg::Shader::getGeometryPath)
+        .def("getFragmentPath", &atcg::Shader::getFragmentPath)
+        .def("getComputePath", &atcg::Shader::getComputePath);
 
     m_shader_manager.def("getShader", &atcg::ShaderManager::getShader, "name"_a)
         .def("addShader", &atcg::ShaderManager::addShader, "name"_a, "shader"_a)
-        .def("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
+        .def("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a)
+        .def("addComputeShaderFromName", &atcg::ShaderManager::addComputeShaderFromName, "name"_a)
+        .def("hasShader", &atcg::ShaderManager::hasShader, "name"_a)
+        .def("onUpdate", &atcg::ShaderManager::onUpdate);
+
+    m_shader_manager_system.def("getShader", &atcg::ShaderManagerSystem::getShader, "name"_a)
+        .def("addShader", &atcg::ShaderManagerSystem::addShader, "name"_a, "shader"_a)
+        .def("addShaderFromName", &atcg::ShaderManagerSystem::addShaderFromName, "name"_a)
+        .def("addComputeShaderFromName", &atcg::ShaderManagerSystem::addComputeShaderFromName, "name"_a)
+        .def("hasShader", &atcg::ShaderManagerSystem::hasShader, "name"_a)
+        .def("onUpdate", &atcg::ShaderManagerSystem::onUpdate);
 
     m_texture_format.value("RG", atcg::TextureFormat::RG)
         .value("RGB", atcg::TextureFormat::RGB)
@@ -780,6 +1008,10 @@ inline void defineBindings(py::module_& m)
         .def_static(
             "create",
             [](const atcg::ref_ptr<atcg::Image>& img) { return atcg::Texture2D::create(img); },
+            "img"_a)
+        .def_static(
+            "create",
+            [](const torch::Tensor& img) { return atcg::Texture2D::create(img); },
             "img"_a)
         .def("getID", &atcg::Texture2D::getID)
         .def("setData", &atcg::Texture2D::setData, "data"_a)

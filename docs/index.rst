@@ -185,9 +185,6 @@ DataStructure
 .. doxygenclass:: atcg::Timer
    :members:
    :undoc-members:
-.. doxygenclass:: atcg::JPEGDecoder
-   :members:
-   :undoc-members:
 .. doxygenfunction:: atcg::TensorOptions::uint8HostOptions
    :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::int8HostOptions
@@ -397,7 +394,9 @@ Math
    :project: ATCGLIB
 .. doxygenfunction:: atcg::normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform)
    :project: ATCGLIB
-.. doxygenfunction:: atcg::applyTransform
+.. doxygenfunction:: applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform)
+   :project: ATCGLIB
+.. doxygenfunction:: applyTransform(torch::Tensor& positions, torch::Tensor& normals, torch::Tensor& tangents, atcg::TransformComponent& transform)
    :project: ATCGLIB
 .. doxygenfunction:: atcg::IO::dumpBinary
    :project: ATCGLIB
@@ -416,6 +415,9 @@ Math
 Network
 =======
 .. doxygenclass:: atcg::TCPServer
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::TCPClient
    :members:
    :undoc-members:
 .. doxygenfunction:: atcg::NetworkUtils::readByte
@@ -515,7 +517,7 @@ Renderer
 .. doxygenclass:: atcg::Shader
    :members:
    :undoc-members:
-.. doxygenclass:: atcg::ShaderManager
+.. doxygenclass:: atcg::ShaderManagerSystem
    :members:
    :undoc-members:
 .. doxygenstruct:: atcg::Material
@@ -525,7 +527,7 @@ Renderer
    :project: ATCGLIB
 .. doxygenenum:: atcg::CullMode
    :project: ATCGLIB
-.. doxygenclass:: atcg::Renderer
+.. doxygenclass:: atcg::RendererSystem
    :members:
    :undoc-members:
 .. doxygenclass:: atcg::VRSystem

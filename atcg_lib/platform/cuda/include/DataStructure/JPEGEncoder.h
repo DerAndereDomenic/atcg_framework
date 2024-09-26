@@ -13,18 +13,21 @@ namespace atcg
 
 /**
  * @brief A wrapper around nvjpeg for fast jpeg compression.
- * When built with CUDA (ATCG_CUDA_BACKEND=true), this class will use nvjpeg and return device tensors.
- * @note Currently, there is no CPU implementation.
+ * @note This is only built with the CUDA backend
  */
 class JPEGEncoder
 {
 public:
     /**
      * @brief Constructor
+     * @note The vertically flip option is true per default. This is due to compatibility reasons with opengl. If the
+     * compressed to be compressed is an opengl texture and then saved to disk, the image will have the "correct"
+     * orientation.
      *
+     * @param flip_vertically If the image should be flipped vertically
      * @param backend The backend. default = SOFTWARE. Onyl pass HARDWARE if the GPU is capable of hardware encoding
      */
-    JPEGEncoder(JPEGBackend backend = JPEGBackend::SOFTWARE);
+    JPEGEncoder(bool flip_vertically = true, JPEGBackend backend = JPEGBackend::SOFTWARE);
 
     /**
      * @brief Destructor
