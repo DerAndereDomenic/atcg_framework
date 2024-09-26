@@ -18,8 +18,13 @@ endif()
 if(ATCG_HEADLESS)
     target_compile_definitions(atcg_lib PUBLIC ATCG_HEADLESS)
     set(ATCG_CONTEXT "headless")
+    target_link_libraries(atcg_lib PUBLIC OpenGL::EGL)
 else()
     set(ATCG_CONTEXT "glfw")
+    target_link_libraries(atcg_lib PUBLIC glfw
+                                          imgui
+                                          imguizmo
+                                          implot)
 endif()
 
 # Find backend files
@@ -51,11 +56,7 @@ target_include_directories(atcg_lib PUBLIC "${CMAKE_SOURCE_DIR}/atcg_lib/include
                                            "python"
 )
 
-target_link_libraries(atcg_lib PUBLIC ${ATCG_CONTEXT_LIBRARY}
-                                      imgui
-                                      imguizmo
-                                      implot
-                                      glad
+target_link_libraries(atcg_lib PUBLIC glad
                                       OpenGL::GL
                                       OpenMeshCore
                                       OpenMeshTools
