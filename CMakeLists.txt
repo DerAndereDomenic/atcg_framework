@@ -18,15 +18,11 @@ if(ATCG_HEADLESS)
     if(NOT ATCG_CUDA_BACKEND)
         message(FATAL_ERROR "Headless mode only supported with CUDA backend.")
     endif()
-
-    # We use EGL for context management, otherwise glfw
-    set(ATCG_CONTEXT_LIBRARY OpenGL::EGL)
 else()
     message("Using glfw backend")
 
     # GLFW
     add_subdirectory(external/glfw)
-    set(ATCG_CONTEXT_LIBRARY glfw)
 endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -56,22 +52,6 @@ target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 add_subdirectory(external/stbimage)
 target_include_directories(stb_image PUBLIC "external/stbimage")
 
-# imguizmo
-add_library(imguizmo STATIC)
-target_sources(imguizmo PRIVATE "external/imguizmo/GraphEditor.cpp"
-                                "external/imguizmo/GraphEditor.h"
-                                "external/imguizmo/ImCurveEdit.cpp"
-                                "external/imguizmo/ImCurveEdit.h"
-                                "external/imguizmo/ImGradient.cpp"
-                                "external/imguizmo/ImGradient.h"
-                                "external/imguizmo/ImGuizmo.cpp"
-                                "external/imguizmo/ImGuizmo.h"
-                                "external/imguizmo/ImSequencer.cpp"
-                                "external/imguizmo/ImSequencer.h"
-                                "external/imguizmo/ImZoomSlider.h")
-target_include_directories(imguizmo PUBLIC "external/imguizmo")
-target_link_libraries(imguizmo PUBLIC imgui)
-
 # charonload
 add_subdirectory(external/charonload)
 
@@ -80,28 +60,46 @@ add_library(glad STATIC)
 target_sources(glad PRIVATE "external/glad/src/glad.c")
 target_include_directories(glad PUBLIC "external/glad/include")
 
-# imgui
-add_library(imgui STATIC)
-target_sources(imgui PRIVATE "external/imgui/imgui.cpp"
-                             "external/imgui/imgui_demo.cpp"
-                             "external/imgui/imgui_draw.cpp"
-                             "external/imgui/imgui_tables.cpp"
-                             "external/imgui/imgui_widgets.cpp"
-                             "external/imgui/backends/imgui_impl_glfw.cpp"
-                             "external/imgui/backends/imgui_impl_opengl3.cpp")
-target_include_directories(imgui PUBLIC "external/imgui")
-target_link_libraries(imgui PRIVATE glfw)
+if(NOT ATCG_HEADLESS)
+    # imgui
+    add_library(imgui STATIC)
+    target_sources(imgui PRIVATE "external/imgui/imgui.cpp"
+                                "external/imgui/imgui_demo.cpp"
+                                "external/imgui/imgui_draw.cpp"
+                                "external/imgui/imgui_tables.cpp"
+                                "external/imgui/imgui_widgets.cpp"
+                                "external/imgui/backends/imgui_impl_glfw.cpp"
+                                "external/imgui/backends/imgui_impl_opengl3.cpp")
+    target_include_directories(imgui PUBLIC "external/imgui")
+    target_link_libraries(imgui PRIVATE glfw)
 
-# implot
-add_library(implot STATIC)
-target_sources(implot PRIVATE "external/implot/implot.cpp"
-                              "external/implot/implot_items.cpp")
-target_include_directories(implot PUBLIC "external/implot")
-target_link_libraries(implot PUBLIC imgui)
+    # implot
+    add_library(implot STATIC)
+    target_sources(implot PRIVATE "external/implot/implot.cpp"
+                                "external/implot/implot_items.cpp")
+    target_include_directories(implot PUBLIC "external/implot")
+    target_link_libraries(implot PUBLIC imgui)
+
+    # imguizmo
+    add_library(imguizmo STATIC)
+    target_sources(imguizmo PRIVATE "external/imguizmo/GraphEditor.cpp"
+                                    "external/imguizmo/GraphEditor.h"
+                                    "external/imguizmo/ImCurveEdit.cpp"
+                                    "external/imguizmo/ImCurveEdit.h"
+                                    "external/imguizmo/ImGradient.cpp"
+                                    "external/imguizmo/ImGradient.h"
+                                    "external/imguizmo/ImGuizmo.cpp"
+                                    "external/imguizmo/ImGuizmo.h"
+                                    "external/imguizmo/ImSequencer.cpp"
+                                    "external/imguizmo/ImSequencer.h"
+                                    "external/imguizmo/ImZoomSlider.h")
+    target_include_directories(imguizmo PUBLIC "external/imguizmo")
+    target_link_libraries(imguizmo PUBLIC imgui)
+endif()
 
 # tinyobjloader
 add_library(tinyobjloader STATIC "external/tinyobjloader/tiny_obj_loader.cc")
-target_include_directories(implot PUBLIC "external/tinyobjloader")
+target_include_directories(tinyobjloader PUBLIC "external/tinyobjloader")
 
 # entt
 add_library(entt INTERFACE)

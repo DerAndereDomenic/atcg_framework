@@ -5,10 +5,7 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <algorithm>
-#include <ImGuizmo.h>
 
 
 class SandboxLayer : public atcg::Layer
@@ -160,6 +157,7 @@ public:
         dt = delta_time;
     }
 
+#ifndef ATCG_HEADLESS
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
@@ -232,6 +230,7 @@ public:
 
         // if(ImGuizmo::IsUsing()) { sphere->setModel(transform); }
     }
+#endif
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event* event) override
@@ -239,9 +238,12 @@ public:
         camera_controller->onEvent(event);
 
         atcg::EventDispatcher dispatcher(event);
+#ifndef ATCG_HEADLESS
         dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(SandboxLayer::onKeyPressed));
+#endif
     }
 
+#ifndef ATCG_HEADLESS
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
         if(event->getKeyCode() == ATCG_KEY_T)
@@ -260,6 +262,7 @@ public:
 
         return true;
     }
+#endif
 
 private:
     atcg::ref_ptr<atcg::Scene> scene;
@@ -280,7 +283,9 @@ private:
     float g            = 0.0f;
     float dt           = 1.0f / 60.0f;
 
+#ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+#endif
 };
 
 class Sandbox : public atcg::Application

@@ -5,10 +5,7 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <algorithm>
-#include <ImGuizmo.h>
 
 #include <random>
 #include <stb_image.h>
@@ -113,6 +110,7 @@ public:
         }
     }
 
+#ifndef ATCG_HEADLESS
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
@@ -160,6 +158,7 @@ public:
 
         atcg::drawGuizmo(hovered_entity, current_operation, camera_controller->getCamera());
     }
+#endif
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event* event) override
@@ -167,9 +166,11 @@ public:
         camera_controller->onEvent(event);
 
         atcg::EventDispatcher dispatcher(event);
+#ifndef ATCG_HEADLESS
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMouseMoved));
         dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMousePressed));
         dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onKeyPressed));
+#endif
         dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onViewportResized));
     }
 
@@ -180,6 +181,7 @@ public:
         return false;
     }
 
+#ifndef ATCG_HEADLESS
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
         if(event->getKeyCode() == ATCG_KEY_T)
@@ -222,6 +224,7 @@ public:
 
         return false;
     }
+#endif
 
 private:
     atcg::ref_ptr<atcg::Scene> scene;
@@ -238,8 +241,10 @@ private:
 
     glm::vec2 mouse_pos;
 
-    bool show_render_settings             = false;
+    bool show_render_settings = false;
+#ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+#endif
 };
 
 class PBR : public atcg::Application
