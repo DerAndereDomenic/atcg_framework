@@ -5,10 +5,7 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <algorithm>
-#include <ImGuizmo.h>
 
 class PointCloudLayer : public atcg::Layer
 {
@@ -85,10 +82,12 @@ public:
             world_pos = glm::inverse(camera_controller->getCamera()->getViewProjection()) * world_pos;
             world_pos /= world_pos.w;
 
+#ifndef ATCG_HEADLESS
             if(atcg::Input::isKeyPressed(GLFW_KEY_P))
             {
                 sphere_pos.push_back(world_pos);
             }
+#endif
         }
 
         // glDepthMask(false);
@@ -100,6 +99,7 @@ public:
         // glDepthMask(true);
     }
 
+#ifndef ATCG_HEADLESS
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
@@ -128,6 +128,7 @@ public:
             ImGui::End();
         }
     }
+#endif
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event* event) override
