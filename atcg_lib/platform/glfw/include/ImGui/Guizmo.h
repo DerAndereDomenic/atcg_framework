@@ -2,6 +2,8 @@
 
 #include <imgui.h>
 #include <ImGuizmo.h>
+
+#include <Core/Memory.h>
 #include <Scene/Entity.h>
 #include <Renderer/PerspectiveCamera.h>
 

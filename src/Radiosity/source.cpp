@@ -5,10 +5,7 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <algorithm>
-#include <ImGuizmo.h>
 
 #include <glm/gtx/transform.hpp>
 
@@ -68,6 +65,7 @@ public:
                              atcg::ShaderManager::getShader("flat"));
     }
 
+#ifndef ATCG_HEADLESS
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
@@ -87,6 +85,7 @@ public:
             ImGui::End();
         }
     }
+#endif
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event* event) override { camera_controller->onEvent(event); }

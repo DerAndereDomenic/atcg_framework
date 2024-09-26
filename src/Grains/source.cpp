@@ -5,10 +5,7 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <algorithm>
-#include <ImGuizmo.h>
 
 #include <random>
 
@@ -523,6 +520,7 @@ public:
         dt = delta_time;
     }
 
+#ifndef ATCG_HEADLESS
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
@@ -623,6 +621,7 @@ public:
 
         ImGui::End();
     }
+#endif
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event* event) override
@@ -630,15 +629,18 @@ public:
         camera_controller->onEvent(event);
 
         atcg::EventDispatcher dispatcher(event);
-        dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(GrainLayer::onKeyPressed));
         dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(GrainLayer::onViewportResized));
+#ifndef ATCG_HEADLESS
+        dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(GrainLayer::onKeyPressed));
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(GrainLayer::onMouseMoved));
         dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(GrainLayer::onMousePressed));
+#endif
     }
 
+#ifndef ATCG_HEADLESS
     bool onMousePressed(atcg::MouseButtonPressedEvent* event)
     {
-        if(in_viewport && event->getMouseButton() == GLFW_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
+        if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
         {
             int id         = atcg::Renderer::getEntityIndex(mouse_pos);
             hovered_entity = id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, scene.get());
@@ -662,23 +664,24 @@ public:
 
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
-        if(event->getKeyCode() == GLFW_KEY_T)
+        if(event->getKeyCode() == ATCG_KEY_T)
         {
             current_operation = ImGuizmo::OPERATION::TRANSLATE;
         }
-        if(event->getKeyCode() == GLFW_KEY_R)
+        if(event->getKeyCode() == ATCG_KEY_R)
         {
             current_operation = ImGuizmo::OPERATION::ROTATE;
         }
-        if(event->getKeyCode() == GLFW_KEY_S)
+        if(event->getKeyCode() == ATCG_KEY_S)
         {
             current_operation = ImGuizmo::OPERATION::SCALE;
         }
-        // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition());
+        // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition());
         // }
 
         return true;
     }
+#endif
 
     bool onViewportResized(atcg::ViewportResizeEvent* event)
     {
@@ -714,7 +717,9 @@ private:
 
     float dt = 1.0f / 60.0f;
 
+#ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+#endif
 };
 
 class Grains : public atcg::Application

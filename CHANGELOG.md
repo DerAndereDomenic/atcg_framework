@@ -10,7 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Possibility to flip decoded jpeg images
+- Custom key codes
 
 ### Changed
 
 - Default behavior of JPEG encoder and decoder: now flip images
+
+### Fixed
+
+- Fixed linking of imgui in headless mode by removing unnecessary libraries in linking stage
