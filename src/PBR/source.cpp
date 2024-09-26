@@ -182,26 +182,26 @@ public:
 
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
-        if(event->getKeyCode() == GLFW_KEY_T)
+        if(event->getKeyCode() == ATCG_KEY_T)
         {
             current_operation = ImGuizmo::OPERATION::TRANSLATE;
         }
-        if(event->getKeyCode() == GLFW_KEY_R)
+        if(event->getKeyCode() == ATCG_KEY_R)
         {
             current_operation = ImGuizmo::OPERATION::ROTATE;
         }
-        if(event->getKeyCode() == GLFW_KEY_S)
+        if(event->getKeyCode() == ATCG_KEY_S)
         {
             current_operation = ImGuizmo::OPERATION::SCALE;
         }
-        // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
+        // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;
     }
 
     bool onMousePressed(atcg::MouseButtonPressedEvent* event)
     {
-        if(in_viewport && event->getMouseButton() == GLFW_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
+        if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
         {
             int id         = atcg::Renderer::getEntityIndex(mouse_pos);
             hovered_entity = id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, scene.get());

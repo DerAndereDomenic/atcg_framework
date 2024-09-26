@@ -85,7 +85,7 @@ public:
             world_pos = glm::inverse(camera_controller->getCamera()->getViewProjection()) * world_pos;
             world_pos /= world_pos.w;
 
-            if(atcg::Input::isKeyPressed(GLFW_KEY_P))
+            if(atcg::Input::isKeyPressed(ATCG_KEY_P))
             {
                 sphere_pos.push_back(world_pos);
             }
