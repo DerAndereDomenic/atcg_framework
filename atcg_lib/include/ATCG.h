@@ -15,6 +15,7 @@
 #include <Core/glm.h>
 #include <Core/UUID.h>
 #include <Core/SystemRegistry.h>
+#include <Core/KeyCodes.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>
