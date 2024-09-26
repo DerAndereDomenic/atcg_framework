@@ -66,7 +66,10 @@
 #include <Network/NetworkUtils.h>
 
 //-------- ImGui -----------
-#include <ImGui/Guizmo.h>
+#ifndef ATCG_HEADLESS
+    #include <imgui.h>
+    #include <ImGui/Guizmo.h>
+#endif
 
 //-------- Scene -----------
 #include <Scene/Components.h>

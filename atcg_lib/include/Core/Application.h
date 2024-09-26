@@ -4,11 +4,14 @@
 #include <Core/LayerStack.h>
 #include <Core/Window.h>
 #include <Events/WindowEvent.h>
-#include <ImGui/ImGuiLayer.h>
 #include <Core/Platform.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
+
+#ifndef ATCG_HEADLESS
+    #include <ImGui/ImGuiLayer.h>
+#endif
 
 namespace atcg
 {
@@ -106,13 +109,14 @@ public:
 #endif
     }
 
+#ifndef ATCG_HEADLESS
     /**
      * @brief Get the imgui layer.
      *
      * @return The imgui layer
      */
     ATCG_INLINE ImGuiLayer* getImGuiLayer() const { return _imgui_layer; }
-
+#endif
     /**
      * @brief Run the application
      */
@@ -127,7 +131,9 @@ private:
 private:
     bool _running = false;
     atcg::scope_ptr<Window> _window;
+#ifndef ATCG_HEADLESS
     ImGuiLayer* _imgui_layer;
+#endif
     LayerStack _layer_stack;
 
     // Systems

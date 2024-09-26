@@ -47,7 +47,7 @@ public:
      *
      * @param entity The entity
      */
-    ATCG_INLINE void selectEntity(Entity entity);
+    void selectEntity(Entity entity);
 
     /**
      * @brief Get the currently selected entity
@@ -78,5 +78,8 @@ private:
 };
 }    // namespace atcg
 
-
-#include "../../src/Scene/SceneHierarchyPanelDetails.h"
+#ifndef ATCG_HEADLESS
+    #include "../../platform/glfw/src/Scene/SceneHierarchyPanelDetails.h"
+#else
+    #include "../../platform/headless/src/Scene/SceneHierarchyPanelDetails.h"
+#endif
