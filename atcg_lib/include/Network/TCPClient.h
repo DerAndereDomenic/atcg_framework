@@ -39,15 +39,12 @@ public:
 
     /**
      * @brief Send a buffer and wait for a response.
-     * @note It is expected that the first 4 bytes of data is the size of the buffer in big endian.
-     * For example, if we want to send 16 bytes to the server, the actual amount of memory allocated in data should be
-     * at least 20 bytes where atcg::NetworkUtils::readInt<uint32_t>(data, 0) == 16
      *
      * @param data The data to send
      *
      * @return The response
      */
-    torch::Tensor sendAndWait(uint8_t* data);
+    std::vector<uint8_t> sendAndWait(const std::vector<uint8_t>& data);
 
 private:
     class Impl;
