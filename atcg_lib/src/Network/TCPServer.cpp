@@ -34,7 +34,7 @@ public:
     std::thread network_thread;
     void networkLoop();
 
-    void pushToQueue(uint8_t* data, const uint32_t data_size, const uint64_t client_id);
+    void pushToQueue(const std::vector<uint8_t>& message, const uint64_t client_id);
 
     // Only log per default
     NetworkConnectionCallbackFn connect_callback = [&](const uint64_t client_id)
@@ -49,25 +49,22 @@ public:
         auto ip      = client->getRemoteAddress().value().toString();
         ATCG_TRACE("Client {0}:{1} disconnected", ip, client->getRemotePort());
     };
-    NetworkCallbackFn receive_callback = [&](uint8_t* data, const uint32_t size, const uint64_t client_id)
+    NetworkCallbackFn receive_callback = [&](std::vector<uint8_t>& message, const uint64_t client_id)
     {
         auto& client = sockets[client_id];
         auto ip      = client->getRemoteAddress().value().toString();
-        ATCG_TRACE("Client {0}:{1} received {2} bytes of data", ip, client->getRemotePort(), size);
+        ATCG_TRACE("Client {0}:{1} received {2} bytes of data", ip, client->getRemotePort(), message.size());
 
         // Echo message
-        pushToQueue(data, size, client_id);
+        pushToQueue(message, client_id);
     };
 
     struct DataPacket
     {
         DataPacket() = default;
 
-        DataPacket(uint8_t* data, const uint32_t size, const uint64_t client_id)
-            : data(std::vector<uint8_t>(size)),
-              client_id(client_id)
+        DataPacket(const std::vector<uint8_t>& message, const uint64_t client_id) : data(message), client_id(client_id)
         {
-            std::memcpy(this->data.data(), data, size);
         }
 
         std::vector<uint8_t> data;
@@ -81,11 +78,11 @@ TCPServer::Impl::Impl() {}
 
 TCPServer::Impl::~Impl() {}
 
-void TCPServer::Impl::pushToQueue(uint8_t* data, const uint32_t size, const uint64_t client_id)
+void TCPServer::Impl::pushToQueue(const std::vector<uint8_t>& message, const uint64_t client_id)
 {
     std::lock_guard lock(queue_mutex);
 
-    data_to_process.push(std::make_unique<DataPacket>(data, size, client_id));
+    data_to_process.push(std::make_unique<DataPacket>(message, client_id));
 }
 
 void TCPServer::Impl::networkLoop()
@@ -151,21 +148,20 @@ void TCPServer::Impl::networkLoop()
 
                         uint32_t read_offset   = 0;
                         uint32_t expected_size = atcg::ntoh(message_size);
-                        torch::Tensor rec_data =
-                            torch::empty({(int)expected_size}, atcg::TensorOptions::uint8HostOptions());
+                        std::vector<uint8_t> rec_data(expected_size);
 
                         // Do not count header as part of the message
                         total_received = 0;
                         while(total_received < expected_size)
                         {
-                            auto status = client->receive((char*)((uint8_t*)rec_data.data_ptr() + total_received),
+                            auto status = client->receive((char*)(rec_data.data() + total_received),
                                                           expected_size - total_received,
                                                           received);
 
                             total_received += received;
                         }
 
-                        receive_callback((uint8_t*)rec_data.contiguous().data_ptr(), rec_data.numel(), it->first);
+                        receive_callback(rec_data, it->first);
                     }
                     ++it;
                 }
@@ -246,8 +242,8 @@ void TCPServer::setOnDisconnectCallback(const NetworkConnectionCallbackFn& callb
     impl->disconnect_callback = callback;
 }
 
-void TCPServer::sendToClient(uint8_t* data, const uint32_t data_size, const uint64_t client_id)
+void TCPServer::sendToClient(const std::vector<uint8_t>& message, const uint64_t client_id)
 {
-    impl->pushToQueue(data, data_size, client_id);
+    impl->pushToQueue(message, client_id);
 }
 }    // namespace atcg

@@ -23,7 +23,7 @@ public:
      * @param data_size The size of the buffer in size
      * @param client_id The id of the client
      */
-    using NetworkCallbackFn = std::function<void(uint8_t*, const uint32_t, const uint64_t)>;
+    using NetworkCallbackFn = std::function<void(std::vector<uint8_t>&, const uint64_t)>;
 
     /**
      * @brief A callback funciton to act on connections
@@ -80,11 +80,10 @@ public:
     /**
      * @brief Send data to a client
      *
-     * @param data The data to send
-     * @param data_size The data size
+     * @param message The data to send
      * @param client_id The id of the client to send to
      */
-    void sendToClient(uint8_t* data, const uint32_t data_size, const uint64_t client_id);
+    void sendToClient(const std::vector<uint8_t>& message, const uint64_t client_id);
 
 private:
     class Impl;

@@ -500,13 +500,13 @@ TEST(NetworkTest, simpleEcho)
     atcg::TCPServer server;
     atcg::TCPClient client;
     server.setOnReceiveCallback(
-        [&](uint8_t* data, uint32_t data_size, uint64_t client_id)
+        [&](std::vector<uint8_t>& data, uint64_t client_id)
         {
             uint32_t read_offset = 0;
-            uint32_t message     = atcg::NetworkUtils::readInt<uint32_t>(data, read_offset);
-            EXPECT_EQ(data_size, sizeof(uint32_t));
+            uint32_t message     = atcg::NetworkUtils::readInt<uint32_t>(data.data(), read_offset);
+            EXPECT_EQ(data.size(), sizeof(uint32_t));
             EXPECT_EQ(message, 42);
-            server.sendToClient(data, data_size, client_id);
+            server.sendToClient(data, client_id);
         });
     server.start("127.0.0.1", 25565);
 
@@ -525,8 +525,8 @@ TEST(NetworkTest, streamEcho)
     uint8_t* send_buffer = new uint8_t[1024];
     atcg::TCPServer server;
     atcg::TCPClient client;
-    server.setOnReceiveCallback([&](uint8_t* data, uint32_t data_size, uint64_t client_id)
-                                { server.sendToClient(data, data_size, client_id); });
+    server.setOnReceiveCallback([&](std::vector<uint8_t>& data, uint64_t client_id)
+                                { server.sendToClient(data, client_id); });
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
@@ -559,8 +559,8 @@ TEST(NetworkTest, echoLargeData)
 
     atcg::TCPServer server;
     atcg::TCPClient client;
-    server.setOnReceiveCallback([&](uint8_t* data, uint32_t data_size, uint64_t client_id)
-                                { server.sendToClient(data, data_size, client_id); });
+    server.setOnReceiveCallback([&](std::vector<uint8_t>& data, uint64_t client_id)
+                                { server.sendToClient(data, client_id); });
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
@@ -590,8 +590,8 @@ TEST(NetworkTest, echoExtraLargeData)
 
     atcg::TCPServer server;
     atcg::TCPClient client;
-    server.setOnReceiveCallback([&](uint8_t* data, uint32_t data_size, uint64_t client_id)
-                                { server.sendToClient(data, data_size, client_id); });
+    server.setOnReceiveCallback([&](std::vector<uint8_t>& data, uint64_t client_id)
+                                { server.sendToClient(data, client_id); });
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
@@ -622,17 +622,17 @@ TEST(NetworkTest, calculateExtraLargeData)
     atcg::TCPServer server;
     atcg::TCPClient client;
     server.setOnReceiveCallback(
-        [&](uint8_t* data, uint32_t data_size, uint64_t client_id)
+        [&](std::vector<uint8_t>& data, uint64_t client_id)
         {
-            float* float_ptr    = (float*)data;
-            uint32_t num_floats = data_size / sizeof(float);
+            float* float_ptr    = (float*)data.data();
+            uint32_t num_floats = data_size;
 
             for(int i = 0; i < num_floats; ++i)
             {
                 float_ptr[i] *= 2.0f;
             }
 
-            server.sendToClient(data, data_size, client_id);
+            server.sendToClient(data, client_id);
         });
     server.start("127.0.0.1", 25565);
 
