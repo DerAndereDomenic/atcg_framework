@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Default behavior of JPEG encoder and decoder: now flip images
 - The caller of TCPClient::sendAndWait had to manually prepend the message size. This is now done automatically.
+- The callback functions of TCPServer now expect std::vector references instead of raw pointers.
 
 ### Fixed
 
