@@ -491,11 +491,10 @@ TEST(NetworkTest, forceDisconnect)
 
 TEST(NetworkTest, simpleEcho)
 {
-    uint8_t* send_buffer = new uint8_t[1024];
+    std::vector<uint8_t> send_buffer(4);
 
     uint32_t write_offset = 0;
-    atcg::NetworkUtils::writeInt<uint32_t>(send_buffer, write_offset, sizeof(uint32_t));
-    atcg::NetworkUtils::writeInt<uint32_t>(send_buffer, write_offset, 42);
+    atcg::NetworkUtils::writeInt<uint32_t>(send_buffer.data(), write_offset, 42);
 
     atcg::TCPServer server;
     atcg::TCPClient client;
@@ -514,7 +513,7 @@ TEST(NetworkTest, simpleEcho)
     auto response = client.sendAndWait(send_buffer);
 
     uint32_t read_offset = 0;
-    EXPECT_EQ(atcg::NetworkUtils::readInt<uint32_t>(response.data_ptr<uint8_t>(), read_offset), 42);
+    EXPECT_EQ(atcg::NetworkUtils::readInt<uint32_t>(response.data(), read_offset), 42);
 
     client.disconnect();
     server.stop();
@@ -522,7 +521,7 @@ TEST(NetworkTest, simpleEcho)
 
 TEST(NetworkTest, streamEcho)
 {
-    uint8_t* send_buffer = new uint8_t[1024];
+    std::vector<uint8_t> send_buffer(1024);
     atcg::TCPServer server;
     atcg::TCPClient client;
     server.setOnReceiveCallback([&](std::vector<uint8_t>& data, uint64_t client_id)
@@ -533,12 +532,11 @@ TEST(NetworkTest, streamEcho)
     for(uint32_t i = 0; i < 1024; ++i)
     {
         uint32_t write_offset = 0;
-        atcg::NetworkUtils::writeInt<uint32_t>(send_buffer, write_offset, sizeof(uint32_t));
-        atcg::NetworkUtils::writeInt<uint32_t>(send_buffer, write_offset, i);
+        atcg::NetworkUtils::writeInt<uint32_t>(send_buffer.data(), write_offset, i);
 
         auto response        = client.sendAndWait(send_buffer);
         uint32_t read_offset = 0;
-        EXPECT_EQ(atcg::NetworkUtils::readInt<uint32_t>(response.data_ptr<uint8_t>(), read_offset), i);
+        EXPECT_EQ(atcg::NetworkUtils::readInt<uint32_t>(response.data(), read_offset), i);
     }
 
     client.disconnect();
@@ -547,15 +545,8 @@ TEST(NetworkTest, streamEcho)
 
 TEST(NetworkTest, echoLargeData)
 {
-    int data_size        = 10000;
-    auto buffer          = torch::randn({data_size}, atcg::TensorOptions::floatHostOptions());
-    uint8_t* send_buffer = new uint8_t[buffer.numel() * buffer.element_size() + sizeof(uint32_t)];
-
-    uint32_t write_offset = 0;
-    atcg::NetworkUtils::writeBuffer(send_buffer,
-                                    write_offset,
-                                    (uint8_t*)buffer.data_ptr(),
-                                    buffer.numel() * buffer.element_size());
+    int data_size = 10000;
+    auto buffer   = torch::randn({data_size}, atcg::TensorOptions::floatHostOptions());
 
     atcg::TCPServer server;
     atcg::TCPClient client;
@@ -564,13 +555,14 @@ TEST(NetworkTest, echoLargeData)
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
-    auto response = client.sendAndWait(send_buffer);
+    auto response = client.sendAndWait(
+        std::vector<uint8_t>((uint8_t*)buffer.data_ptr(), (uint8_t*)(buffer.data_ptr<float>() + buffer.numel())));
 
-    float* float_ptr = reinterpret_cast<float*>(response.data_ptr());
+    float* float_ptr = reinterpret_cast<float*>(response.data());
 
-    response = atcg::createHostTensorFromPointer(float_ptr, {data_size}).clone();
+    auto response_tnsr = atcg::createHostTensorFromPointer(float_ptr, {data_size}).clone();
 
-    EXPECT_EQ(torch::sum(response - buffer).item<float>(), 0);
+    EXPECT_EQ(torch::sum(response_tnsr - buffer).item<float>(), 0);
 
     client.disconnect();
     server.stop();
@@ -578,15 +570,8 @@ TEST(NetworkTest, echoLargeData)
 
 TEST(NetworkTest, echoExtraLargeData)
 {
-    int data_size        = 5000000;
-    auto buffer          = torch::randn({data_size}, atcg::TensorOptions::floatHostOptions());
-    uint8_t* send_buffer = new uint8_t[buffer.numel() * buffer.element_size() + sizeof(uint32_t)];
-
-    uint32_t write_offset = 0;
-    atcg::NetworkUtils::writeBuffer(send_buffer,
-                                    write_offset,
-                                    (uint8_t*)buffer.data_ptr(),
-                                    buffer.numel() * buffer.element_size());
+    int data_size = 5000000;
+    auto buffer   = torch::randn({data_size}, atcg::TensorOptions::floatHostOptions());
 
     atcg::TCPServer server;
     atcg::TCPClient client;
@@ -595,13 +580,14 @@ TEST(NetworkTest, echoExtraLargeData)
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
-    auto response = client.sendAndWait(send_buffer);
+    auto response = client.sendAndWait(
+        std::vector<uint8_t>((uint8_t*)buffer.data_ptr(), (uint8_t*)(buffer.data_ptr<float>() + buffer.numel())));
 
-    float* float_ptr = reinterpret_cast<float*>(response.data_ptr());
+    float* float_ptr = reinterpret_cast<float*>(response.data());
 
-    response = atcg::createHostTensorFromPointer(float_ptr, {data_size}).clone();
+    auto response_tnsr = atcg::createHostTensorFromPointer(float_ptr, {data_size}).clone();
 
-    EXPECT_EQ(torch::sum(response - buffer).item<float>(), 0);
+    EXPECT_EQ(torch::sum(response_tnsr - buffer).item<float>(), 0);
 
     client.disconnect();
     server.stop();
@@ -609,15 +595,8 @@ TEST(NetworkTest, echoExtraLargeData)
 
 TEST(NetworkTest, calculateExtraLargeData)
 {
-    int data_size        = 5000000;
-    auto buffer          = torch::randn({data_size}, atcg::TensorOptions::floatHostOptions());
-    uint8_t* send_buffer = new uint8_t[buffer.numel() * buffer.element_size() + sizeof(uint32_t)];
-
-    uint32_t write_offset = 0;
-    atcg::NetworkUtils::writeBuffer(send_buffer,
-                                    write_offset,
-                                    (uint8_t*)buffer.data_ptr(),
-                                    buffer.numel() * buffer.element_size());
+    int data_size = 5000000;
+    auto buffer   = torch::randn({data_size}, atcg::TensorOptions::floatHostOptions());
 
     atcg::TCPServer server;
     atcg::TCPClient client;
@@ -637,13 +616,14 @@ TEST(NetworkTest, calculateExtraLargeData)
     server.start("127.0.0.1", 25565);
 
     client.connect("127.0.0.1", 25565);
-    auto response = client.sendAndWait(send_buffer);
+    auto response = client.sendAndWait(
+        std::vector<uint8_t>((uint8_t*)buffer.data_ptr(), (uint8_t*)(buffer.data_ptr<float>() + buffer.numel())));
 
-    float* float_ptr = reinterpret_cast<float*>(response.data_ptr());
+    float* float_ptr = reinterpret_cast<float*>(response.data());
 
-    response = atcg::createHostTensorFromPointer(float_ptr, {data_size}).clone();
+    auto response_tnsr = atcg::createHostTensorFromPointer(float_ptr, {data_size}).clone();
 
-    EXPECT_EQ(torch::sum(response - 2.0f * buffer).item<float>(), 0);
+    EXPECT_EQ(torch::sum(response_tnsr - 2.0f * buffer).item<float>(), 0);
 
     client.disconnect();
     server.stop();
