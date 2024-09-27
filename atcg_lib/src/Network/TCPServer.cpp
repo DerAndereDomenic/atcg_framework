@@ -72,6 +72,8 @@ public:
     };
 
     std::queue<std::unique_ptr<DataPacket>> data_to_process;
+
+    std::vector<uint8_t> rec_data;
 };
 
 TCPServer::Impl::Impl() {}
@@ -117,7 +119,6 @@ void TCPServer::Impl::networkLoop()
                     auto& client = it->second;
                     if(selector.isReady(*client))
                     {
-                        // TODO: Random 5.000.000 bytes
                         std::size_t received;
                         std::size_t total_received = 0;
 
@@ -148,7 +149,7 @@ void TCPServer::Impl::networkLoop()
 
                         uint32_t read_offset   = 0;
                         uint32_t expected_size = atcg::ntoh(message_size);
-                        std::vector<uint8_t> rec_data(expected_size);
+                        rec_data.resize(expected_size);
 
                         // Do not count header as part of the message
                         total_received = 0;
