@@ -426,6 +426,8 @@ Network
    :project: ATCGLIB
 .. doxygenfunction:: atcg::NetworkUtils::readString
    :project: ATCGLIB
+.. doxygenfunction:: atcg::NetworkUtils::readStruct
+   :project: ATCGLIB
 .. doxygenfunction:: atcg::NetworkUtils::writeByte
    :project: ATCGLIB
 .. doxygenfunction:: atcg::NetworkUtils::writeInt
@@ -433,6 +435,8 @@ Network
 .. doxygenfunction:: atcg::NetworkUtils::writeBuffer
    :project: ATCGLIB
 .. doxygenfunction:: atcg::NetworkUtils::writeString
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::NetworkUtils::writeStruct
    :project: ATCGLIB
 
 OpenMesh

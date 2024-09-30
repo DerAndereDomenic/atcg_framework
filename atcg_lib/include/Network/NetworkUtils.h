@@ -59,6 +59,22 @@ ATCG_INLINE std::string readString(uint8_t* data, uint32_t& offset)
 }
 
 /**
+ * @brief Read a struct from a buffer
+ *
+ * @tparam T The struct datatype
+ * @param data The buffer to read from
+ * @param offset The read offset into the buffer. This value gets advanced by the number of read bytes
+ * @return The requested data
+ */
+template<typename T>
+ATCG_INLINE T readStruct(uint8_t* data, uint32_t& offset)
+{
+    T obj = *(T*)(data + offset);
+    offset += sizeof(T);
+    return obj;
+}
+
+/**
  * @brief Write a byte into a data buffer.
  *
  * @param data The data buffer to write to
@@ -118,6 +134,21 @@ ATCG_INLINE void writeBuffer(uint8_t* data, uint32_t& offset, uint8_t* toWrite, 
 ATCG_INLINE void writeString(uint8_t* data, uint32_t& offset, const std::string toWrite)
 {
     writeBuffer(data, offset, (uint8_t*)toWrite.c_str(), toWrite.length());
+}
+
+/**
+ * @brief Write a struct to a buffer
+ *
+ * @tparam T The struct datatype
+ * @param data The buffer to read from
+ * @param offset The read offset into the buffer. This value gets advanced by the number of read bytes
+ * @param toWrite The object to write
+ */
+template<typename T>
+ATCG_INLINE void writeStruct(uint8_t* data, uint32_t& offset, const T& toWrite)
+{
+    std::memcpy(data + offset, (const void*)(&toWrite), sizeof(T));
+    offset += sizeof(T);
 }
 }    // namespace NetworkUtils
 }    // namespace atcg

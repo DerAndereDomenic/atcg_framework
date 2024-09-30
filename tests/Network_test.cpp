@@ -167,6 +167,118 @@ TEST(NetworkTest, readWriteBuffer)
     delete[] send_data;
 }
 
+TEST(NetworkTest, writeStruct)
+{
+    struct TestData
+    {
+        uint64_t i;
+        float k;
+    };
+
+    uint8_t* buffer = new uint8_t[1024];
+
+    TestData data;
+    data.i = 42;
+    data.k = 3.1415f;
+
+    uint32_t write_offset = 0;
+    atcg::NetworkUtils::writeStruct<TestData>(buffer, write_offset, data);
+
+    TestData read_data = *(TestData*)buffer;
+
+    EXPECT_EQ(write_offset, sizeof(TestData));
+    EXPECT_EQ(read_data.i, 42);
+    EXPECT_EQ(read_data.k, 3.1415f);
+
+    delete[] buffer;
+}
+
+TEST(NetworkTest, readWriteStruct)
+{
+    struct TestData
+    {
+        uint64_t i;
+        float k;
+    };
+
+    uint8_t* buffer = new uint8_t[1024];
+
+    TestData data;
+    data.i = 42;
+    data.k = 3.1415f;
+
+    uint32_t write_offset = 0;
+    atcg::NetworkUtils::writeStruct<TestData>(buffer, write_offset, data);
+
+    uint32_t read_offset = 0;
+    TestData read_data   = atcg::NetworkUtils::readStruct<TestData>(buffer, read_offset);
+
+    EXPECT_EQ(write_offset, sizeof(TestData));
+    EXPECT_EQ(read_data.i, 42);
+    EXPECT_EQ(read_data.k, 3.1415f);
+    EXPECT_EQ(read_offset, sizeof(TestData));
+
+    delete[] buffer;
+}
+
+TEST(NetworkTest, readWriteMultiStruct)
+{
+    struct TestData
+    {
+        uint64_t i;
+        float k;
+    };
+
+    uint8_t* buffer = new uint8_t[1024];
+
+    uint32_t write_offset = 0;
+    for(int i = 0; i < 10; ++i)
+    {
+        TestData data;
+        data.i = i;
+        data.k = 2.0f * (float)i;
+
+        atcg::NetworkUtils::writeStruct<TestData>(buffer, write_offset, data);
+        EXPECT_EQ(write_offset, (i + 1) * sizeof(TestData));
+    }
+
+    uint32_t read_offset = 0;
+    for(int i = 0; i < 10; ++i)
+    {
+        TestData read_data = atcg::NetworkUtils::readStruct<TestData>(buffer, read_offset);
+
+        EXPECT_EQ(read_data.i, i);
+        EXPECT_EQ(read_data.k, 2.0f * (float)i);
+        EXPECT_EQ(read_offset, (i + 1) * sizeof(TestData));
+    }
+
+    delete[] buffer;
+}
+
+TEST(NetworkTest, readWriteSimpleTypes)
+{
+    uint8_t* buffer = new uint8_t[1024];
+
+    uint32_t write_offset = 0;
+    atcg::NetworkUtils::writeStruct<int>(buffer, write_offset, 42);
+    atcg::NetworkUtils::writeStruct<float>(buffer, write_offset, 42.0f);
+    atcg::NetworkUtils::writeStruct<bool>(buffer, write_offset, true);
+    atcg::NetworkUtils::writeStruct<double>(buffer, write_offset, 3.14159);
+
+    uint32_t read_offset = 0;
+    auto d1              = atcg::NetworkUtils::readStruct<int>(buffer, read_offset);
+    auto d2              = atcg::NetworkUtils::readStruct<float>(buffer, read_offset);
+    auto d3              = atcg::NetworkUtils::readStruct<bool>(buffer, read_offset);
+    auto d4              = atcg::NetworkUtils::readStruct<double>(buffer, read_offset);
+
+    EXPECT_EQ(d1, 42);
+    EXPECT_EQ(d2, 42.0f);
+    EXPECT_EQ(d3, true);
+    EXPECT_EQ(d4, 3.14159);
+
+    delete[] buffer;
+}
+
 // 16 bit
 TEST(NetworkTest, int16toNetwork)
 {
