@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Possibility to flip decoded jpeg images
 - Custom key codes
 - Methods to read and write structs from network buffers
+- atcg::shader_directory() and atcg::resource_directory() to get absolute paths to shader and resources
+- ATCG_TARGET_DIR for each target that is built to get information about it's location
+- A path for atcg::ShaderManagerSystem can now be specified
 
 ### Changed
 
