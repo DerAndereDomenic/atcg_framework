@@ -31,7 +31,9 @@ public:
         trimesh = atcg::make_ref<atcg::TriMesh>();
         trimesh->request_vertex_colors();
         auto options = OpenMesh::IO::Options(OpenMesh::IO::Options::VertexColor);
-        OpenMesh::IO::read_mesh(*trimesh.get(), "res/cornell_box_radiosity.ply", options);
+        OpenMesh::IO::read_mesh(*trimesh.get(),
+                                (atcg::resource_directory() / "cornell_box_radiosity.ply").string(),
+                                options);
 
 
         //   mesh->uploadData();

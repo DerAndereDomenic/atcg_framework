@@ -1,6 +1,7 @@
 #include <Renderer/Renderer.h>
 #include <glad/glad.h>
 
+#include <Core/Path.h>
 #include <Core/SystemRegistry.h>
 
 #include <Renderer/ShaderManager.h>
@@ -8,6 +9,7 @@
 
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
+
 
 #include <queue>
 
@@ -126,9 +128,9 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height)
     }
 
     // Load a sphere
-    sphere_mesh = atcg::IO::read_mesh("res/sphere_low.obj");
+    sphere_mesh = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
 
-    cylinder_mesh = atcg::IO::read_mesh("res/cylinder.obj");
+    cylinder_mesh = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
 
     // Generate CAD grid
     initGrid();
@@ -162,7 +164,7 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height)
     spec_prefiltered_cubemap.sampler.mip_map     = true;
     prefiltered_cubemap                          = atcg::TextureCube::create(spec_prefiltered_cubemap);
 
-    auto img = IO::imread("res/LUT.hdr");
+    auto img = IO::imread((atcg::resource_directory() / "LUT.hdr").string());
     TextureSpecification spec_lut;
     spec_lut.width             = img->width();
     spec_lut.height            = img->height();

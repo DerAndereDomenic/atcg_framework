@@ -107,7 +107,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
-        cube = atcg::IO::read_mesh("res/cube.obj");
+        cube = atcg::IO::read_mesh((atcg::resource_directory() / "cube.obj").string());
 
         atcg::ShaderManager::addShader("volume",
                                        atcg::make_ref<atcg::Shader>("src/Sandbox/volume.vs", "src/Sandbox/volume.fs"));

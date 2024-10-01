@@ -1,6 +1,7 @@
 #include <Renderer/VRSystem.h>
 
 #include <Core/Log.h>
+#include <Core/Path.h>
 #include <glad/glad.h>
 #include <DataStructure/Graph.h>
 #include <Renderer/Renderer.h>
@@ -140,12 +141,18 @@ void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
 
     // Left
     {
-        auto mesh = atcg::IO::read_mesh("res/VRController/Quest/questpro_controllers_left.obj");
+        auto mesh = atcg::IO::read_mesh(
+            (atcg::resource_directory() / "VRController/Quest/questpro_controllers_left.obj").string());
 
-        auto base_color = atcg::IO::imread("res/VRController/Quest/controller_l_lo_BaseColor.png", 2.2f);
-        auto normal     = atcg::IO::imread("res/VRController/Quest/controller_l_lo_Normal.png");
-        auto roughness  = atcg::IO::imread("res/VRController/Quest/controller_l_lo_roughness.png");
-        auto metallic   = atcg::IO::imread("res/VRController/Quest/controller_l_lo_metallic.png");
+        auto base_color =
+            atcg::IO::imread((atcg::resource_directory() / "VRController/Quest/controller_l_lo_BaseColor.png").string(),
+                             2.2f);
+        auto normal =
+            atcg::IO::imread((atcg::resource_directory() / "VRController/Quest/controller_l_lo_Normal.png").string());
+        auto roughness = atcg::IO::imread(
+            (atcg::resource_directory() / "VRController/Quest/controller_l_lo_roughness.png").string());
+        auto metallic =
+            atcg::IO::imread((atcg::resource_directory() / "VRController/Quest/controller_l_lo_metallic.png").string());
 
         impl->left_controller_entity = scene->createEntity("Left "
                                                            "Controll"
@@ -162,12 +169,18 @@ void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
 
     // Right
     {
-        auto mesh = atcg::IO::read_mesh("res/VRController/Quest/questpro_controllers_right.obj");
+        auto mesh = atcg::IO::read_mesh(
+            (atcg::resource_directory() / "VRController/Quest/questpro_controllers_right.obj").string());
 
-        auto base_color = atcg::IO::imread("res/VRController/Quest/controller_r_lo_BaseColor.png", 2.2f);
-        auto normal     = atcg::IO::imread("res/VRController/Quest/controller_r_lo_Normal.png");
-        auto roughness  = atcg::IO::imread("res/VRController/Quest/controller_r_lo_roughness.png");
-        auto metallic   = atcg::IO::imread("res/VRController/Quest/controller_r_lo_metallic.png");
+        auto base_color =
+            atcg::IO::imread((atcg::resource_directory() / "VRController/Quest/controller_r_lo_BaseColor.png").string(),
+                             2.2f);
+        auto normal =
+            atcg::IO::imread((atcg::resource_directory() / "VRController/Quest/controller_r_lo_Normal.png").string());
+        auto roughness = atcg::IO::imread(
+            (atcg::resource_directory() / "VRController/Quest/controller_r_lo_roughness.png").string());
+        auto metallic =
+            atcg::IO::imread((atcg::resource_directory() / "VRController/Quest/controller_r_lo_metallic.png").string());
 
         impl->right_controller_entity = scene->createEntity("Right "
                                                             "Control"
