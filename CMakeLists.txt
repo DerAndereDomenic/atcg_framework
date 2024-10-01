@@ -164,6 +164,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
     
     target_sources(${target_name} PRIVATE ${source})
     target_link_libraries(${target_name} PRIVATE atcg_lib)
+    target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${CMAKE_SOURCE_DIR}/src/${target_name}")
 
 	if(MSVC)
         get_target_property(TORCH_LIBRARY_LOCATION torch LOCATION)
@@ -186,6 +187,7 @@ function(ATCG_add_library target_name_base target_name_var source)
     
     target_sources(${target_name} PRIVATE ${source})
     target_link_libraries(${target_name} PRIVATE atcg_lib)
+    target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${CMAKE_SOURCE_DIR}/src/${target_name}")
 
 	if(MSVC)
 		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
