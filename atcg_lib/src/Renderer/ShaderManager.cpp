@@ -1,8 +1,11 @@
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Shader.h>
+#include <Core/Path.h>
 
 namespace atcg
 {
+
+ShaderManagerSystem::ShaderManagerSystem() : _shader_path(atcg::shader_directory()) {}
 
 void ShaderManagerSystem::addShader(const std::string& name, const atcg::ref_ptr<Shader>& shader)
 {
@@ -31,9 +34,9 @@ void ShaderManagerSystem::addShader(const std::string& name, const atcg::ref_ptr
 
 void ShaderManagerSystem::addShaderFromName(const std::string& name)
 {
-    std::string vertex_path   = "shader/" + name + ".vs";
-    std::string fragment_path = "shader/" + name + ".fs";
-    std::string geometry_path = "shader/" + name + ".gs";
+    std::string vertex_path   = (_shader_path / (name + ".vs")).string();
+    std::string fragment_path = (_shader_path / (name + ".fs")).string();
+    std::string geometry_path = (_shader_path / (name + ".gs")).string();
 
     if(!std::filesystem::exists(vertex_path) || !std::filesystem::exists(fragment_path))
     {
@@ -56,7 +59,7 @@ void ShaderManagerSystem::addShaderFromName(const std::string& name)
 
 void ShaderManagerSystem::addComputeShaderFromName(const std::string& name)
 {
-    std::string compute_path = "shader/" + name + ".glsl";
+    std::string compute_path = (_shader_path / (name + ".glsl")).string();
 
     if(!std::filesystem::exists(compute_path))
     {

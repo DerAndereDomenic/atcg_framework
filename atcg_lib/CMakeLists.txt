@@ -46,7 +46,13 @@ target_sources(atcg_lib PRIVATE ${atcg_lib_files}
                                 ${atcg_renderer_files} 
                                 ${atcg_window_files})
 
-target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES NO_WARN_MBCS_MFC_DEPRECATION _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
+target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES 
+                                            NO_WARN_MBCS_MFC_DEPRECATION 
+                                            _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS 
+                                            _CRT_NONSTDC_NO_WARNINGS
+                                            ATCG_BASE_DIR="${CMAKE_SOURCE_DIR}"
+                                            ATCG_SHADER_DIR="${CMAKE_SOURCE_DIR}/shader"
+                                            ATCG_RESOURCE_DIR="${CMAKE_SOURCE_DIR}/res")
 target_precompile_headers(atcg_lib PRIVATE "${CMAKE_SOURCE_DIR}/atcg_lib/include/atcgpch.h")
 
 target_include_directories(atcg_lib PUBLIC "${CMAKE_SOURCE_DIR}/atcg_lib/include"

@@ -22,13 +22,13 @@ public:
 
         depth_values.resize(search_radius * search_radius);
 
-        sphere = atcg::IO::read_mesh("res/sphere.obj");
+        sphere = atcg::IO::read_mesh((atcg::resource_directory() / "sphere.obj").string());
         // sphere->setScale(glm::vec3(0.01f));
 
         {
             // auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/PointCloudCompression/"
             //                                              "sample.xyz");
-            auto point_cloud = atcg::IO::read_mesh("res/bunny.obj");
+            auto point_cloud = atcg::IO::read_mesh((atcg::resource_directory() / "bunny.obj").string());
             clouds.push_back(std::make_pair(point_cloud, true));
         }
     }

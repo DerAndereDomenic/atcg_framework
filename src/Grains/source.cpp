@@ -285,9 +285,11 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
 
-        atcg::ref_ptr<atcg::Graph> grain    = atcg::IO::read_mesh("../Meshes/spruce_needle.obj");
-        atcg::ref_ptr<atcg::Graph> sphere   = atcg::IO::read_mesh("res/sphere_low.obj");
-        atcg::ref_ptr<atcg::Graph> cylinder = atcg::IO::read_mesh("res/cylinder.obj");
+        atcg::ref_ptr<atcg::Graph> grain = atcg::IO::read_mesh("../Meshes/spruce_needle.obj");
+        atcg::ref_ptr<atcg::Graph> sphere =
+            atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
+        atcg::ref_ptr<atcg::Graph> cylinder =
+            atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
 
         // atcg::ref_ptr<atcg::Graph> bowl      = atcg::IO::read_mesh("../Meshes/bowl.obj");
         // atcg::ref_ptr<atcg::Graph> aggregate = atcg::IO::read_mesh("../Meshes/aggregate_rice_real.obj");
