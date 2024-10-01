@@ -63,6 +63,10 @@ Core
 .. doxygenclass:: atcg::Window
    :members:
    :undoc-members:
+.. doxygenfunction:: atcg::resource_directory
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::shader_directory
+   :project: ATCGLIB
 
 Events
 ======

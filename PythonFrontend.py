@@ -38,17 +38,18 @@ class PythonLayer(atcg.Layer):
         self.scene = atcg.Scene()
 
         self.panel = atcg.SceneHierarchyPanel(self.scene)
-
         entity = self.scene.createEntity("Cylinder")
-        self.graph = atcg.read_mesh("res/cylinder.obj")
+        self.graph = atcg.read_mesh(f"{atcg.resource_directory()}/cylinder.obj")
         entity.addGeometryComponent(self.graph)
         entity.addTransformComponent(atcg.vec3(0), atcg.vec3(1), atcg.vec3(0))
         renderer = entity.addMeshRenderComponent(atcg.ShaderManager.getShader("base"))
 
-        diffuse_img = atcg.imread("res/pbr/diffuse.png", 2.2)
-        normal_img = atcg.imread("res/pbr/normals.png", 1.0)
-        roughness_img = atcg.imread("res/pbr/roughness.png", 1.0)
-        metallic_img = atcg.imread("res/pbr/metallic.png", 1.0)
+        diffuse_img = atcg.imread(f"{atcg.resource_directory()}/pbr/diffuse.png", 2.2)
+        normal_img = atcg.imread(f"{atcg.resource_directory()}/pbr/normals.png", 1.0)
+        roughness_img = atcg.imread(
+            f"{atcg.resource_directory()}/pbr/roughness.png", 1.0
+        )
+        metallic_img = atcg.imread(f"{atcg.resource_directory()}/pbr/metallic.png", 1.0)
 
         diffuse_texture = atcg.Texture2D.create(diffuse_img)
         normal_texture = atcg.Texture2D.create(normal_img)

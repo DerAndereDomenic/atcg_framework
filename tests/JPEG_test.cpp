@@ -4,18 +4,20 @@
     #include <DataStructure/JPEGDecoder.h>
     #include <DataStructure/JPEGENcoder.h>
     #include <DataStructure/Image.h>
+    #include <Core/Path.h>
     #include <fstream>
 
 TEST(JPEGDecoderTest, decodeFlip)
 {
-    std::string path = "res/test_data/test.jpeg";
+    std::string path = (atcg::resource_directory() / "test_data/test.jpeg").string();
     auto target      = atcg::IO::imread(path);
 
     auto target_tensor = target->data().flip(0).to(torch::kFloat32) / 255.0f;
 
     atcg::JPEGDecoder decoder(1, target->width(), target->height(), false);
 
-    std::ifstream input("res/test_data/test.jpeg", std::ios::in | std::ios::binary | std::ios::ate);
+    std::ifstream input(atcg::resource_directory() / "test_data/test.jpeg",
+                        std::ios::in | std::ios::binary | std::ios::ate);
     std::streamsize file_size = input.tellg();
     input.seekg(0, std::ios::beg);
 
@@ -44,7 +46,7 @@ TEST(JPEGDecoderTest, decodeFlip)
 TEST(JPEGDecoderTest, batchDecodeFlip)
 {
     int batch_size   = 15;
-    std::string path = "res/test_data/test.jpeg";
+    std::string path = (atcg::resource_directory() / "test_data/test.jpeg").string();
     auto target      = atcg::IO::imread(path);
 
     auto target_tensor = target->data().flip(0).to(torch::kFloat32) / 255.0f;
@@ -54,7 +56,8 @@ TEST(JPEGDecoderTest, batchDecodeFlip)
     std::vector<std::vector<uint8_t>> file_data(batch_size);
     for(int i = 0; i < batch_size; ++i)
     {
-        std::ifstream input("res/test_data/test.jpeg", std::ios::in | std::ios::binary | std::ios::ate);
+        std::ifstream input(atcg::resource_directory() / "test_data/test.jpeg",
+                            std::ios::in | std::ios::binary | std::ios::ate);
         std::streamsize file_size = input.tellg();
         input.seekg(0, std::ios::beg);
 
@@ -83,14 +86,15 @@ TEST(JPEGDecoderTest, batchDecodeFlip)
 
 TEST(JPEGDecoderTest, decode)
 {
-    std::string path = "res/test_data/test.jpeg";
+    std::string path = (atcg::resource_directory() / "test_data/test.jpeg").string();
     auto target      = atcg::IO::imread(path);
 
     auto target_tensor = target->data().to(torch::kFloat32) / 255.0f;
 
     atcg::JPEGDecoder decoder(1, target->width(), target->height());
 
-    std::ifstream input("res/test_data/test.jpeg", std::ios::in | std::ios::binary | std::ios::ate);
+    std::ifstream input(atcg::resource_directory() / "test_data/test.jpeg",
+                        std::ios::in | std::ios::binary | std::ios::ate);
     std::streamsize file_size = input.tellg();
     input.seekg(0, std::ios::beg);
 
@@ -119,7 +123,7 @@ TEST(JPEGDecoderTest, decode)
 TEST(JPEGDecoderTest, batchDecode)
 {
     int batch_size   = 15;
-    std::string path = "res/test_data/test.jpeg";
+    std::string path = (atcg::resource_directory() / "test_data/test.jpeg").string();
     auto target      = atcg::IO::imread(path);
 
     auto target_tensor = target->data().to(torch::kFloat32) / 255.0f;
@@ -129,7 +133,8 @@ TEST(JPEGDecoderTest, batchDecode)
     std::vector<std::vector<uint8_t>> file_data(batch_size);
     for(int i = 0; i < batch_size; ++i)
     {
-        std::ifstream input("res/test_data/test.jpeg", std::ios::in | std::ios::binary | std::ios::ate);
+        std::ifstream input(atcg::resource_directory() / "test_data/test.jpeg",
+                            std::ios::in | std::ios::binary | std::ios::ate);
         std::streamsize file_size = input.tellg();
         input.seekg(0, std::ios::beg);
 
@@ -158,9 +163,9 @@ TEST(JPEGDecoderTest, batchDecode)
 
 TEST(JPEGDecoderTest, encode)
 {
-    auto original        = atcg::IO::imread("res/test_data/test.png");
+    auto original        = atcg::IO::imread((atcg::resource_directory() / "test_data/test.png").string());
     auto original_tensor = original->data().cuda();
-    auto target          = atcg::IO::imread("res/test_data/test.jpeg");
+    auto target          = atcg::IO::imread((atcg::resource_directory() / "test_data/test.jpeg").string());
     auto target_tensor   = target->data().to(torch::kFloat32) / 255.0f;
 
     atcg::JPEGEncoder encoder;
@@ -185,14 +190,15 @@ TEST(JPEGDecoderTest, encode)
 
 TEST(JPEGDecoderTest, multiDecode)
 {
-    std::string path = "res/test_data/test.jpeg";
+    std::string path = (atcg::resource_directory() / "test_data/test.jpeg").string();
     auto target      = atcg::IO::imread(path);
 
     auto target_tensor = target->data().to(torch::kFloat32) / 255.0f;
 
     atcg::JPEGDecoder decoder(1, target->width(), target->height());
 
-    std::ifstream input("res/test_data/test.jpeg", std::ios::in | std::ios::binary | std::ios::ate);
+    std::ifstream input(atcg::resource_directory() / "test_data/test.jpeg",
+                        std::ios::in | std::ios::binary | std::ios::ate);
     std::streamsize file_size = input.tellg();
     input.seekg(0, std::ios::beg);
 

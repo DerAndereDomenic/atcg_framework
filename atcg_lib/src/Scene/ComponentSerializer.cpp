@@ -4,6 +4,8 @@
 
 #include <DataStructure/TorchUtils.h>
 
+#include <Core/Path.h>
+
 namespace atcg
 {
 
@@ -173,9 +175,8 @@ Material ComponentSerializer::deserialize_material(const nlohmann::json& materia
     else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
     {
         std::string diffuse_path = material_node[DIFFUSE_TEXTURE_KEY];
-        ATCG_TRACE(diffuse_path);
-        auto img             = IO::imread(diffuse_path, 2.2f);
-        auto diffuse_texture = atcg::Texture2D::create(img);
+        auto img                 = IO::imread(diffuse_path, 2.2f);
+        auto diffuse_texture     = atcg::Texture2D::create(img);
         material.setDiffuseTexture(diffuse_texture);
     }
 
@@ -537,10 +538,11 @@ void ComponentSerializer::deserialize_component<MeshRenderComponent>(const std::
         return;
     }
 
-    auto& renderer            = j[MESH_RENDERER_KEY];
-    auto& renderComponent     = entity.addComponent<MeshRenderComponent>();
-    std::string vertex_path   = renderer[SHADER_KEY].value(VERTEX_KEY, "shader/base.vs");
-    std::string fragment_path = renderer[SHADER_KEY].value(FRAGMENT_KEY, "shader/base.fs");
+    auto& renderer          = j[MESH_RENDERER_KEY];
+    auto& renderComponent   = entity.addComponent<MeshRenderComponent>();
+    std::string vertex_path = renderer[SHADER_KEY].value(VERTEX_KEY, (atcg::shader_directory() / "base.vs").string());
+    std::string fragment_path =
+        renderer[SHADER_KEY].value(FRAGMENT_KEY, (atcg::shader_directory() / "base.fs").string());
     std::string geometry_path = renderer[SHADER_KEY].value(GEOMETRY_KEY, "");
 
     std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
@@ -582,9 +584,10 @@ void ComponentSerializer::deserialize_component<PointRenderComponent>(const std:
     std::vector<float> color   = renderer.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
     renderComponent.color      = glm::make_vec3(color.data());
     renderComponent.point_size = renderer.value(POINT_SIZE_KEY, 1.0f);
-    std::string vertex_path    = renderer[SHADER_KEY].value(VERTEX_KEY, "shader/base.vs");
-    std::string fragment_path  = renderer[SHADER_KEY].value(FRAGMENT_KEY, "shader/base.fs");
-    std::string geometry_path  = renderer[SHADER_KEY].value(GEOMETRY_KEY, "");
+    std::string vertex_path = renderer[SHADER_KEY].value(VERTEX_KEY, (atcg::shader_directory() / "base.vs").string());
+    std::string fragment_path =
+        renderer[SHADER_KEY].value(FRAGMENT_KEY, (atcg::shader_directory() / "base.fs").string());
+    std::string geometry_path = renderer[SHADER_KEY].value(GEOMETRY_KEY, "");
 
     std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
     shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
@@ -616,9 +619,10 @@ void ComponentSerializer::deserialize_component<PointSphereRenderComponent>(cons
     auto& renderer             = j[POINT_SPHERE_RENDERER_KEY];
     auto& renderComponent      = entity.addComponent<PointSphereRenderComponent>();
     renderComponent.point_size = renderer.value(POINT_SIZE_KEY, 0.1f);
-    std::string vertex_path    = renderer[SHADER_KEY].value(VERTEX_KEY, "shader/base.vs");
-    std::string fragment_path  = renderer[SHADER_KEY].value(FRAGMENT_KEY, "shader/base.fs");
-    std::string geometry_path  = renderer[SHADER_KEY].value(GEOMETRY_KEY, "");
+    std::string vertex_path = renderer[SHADER_KEY].value(VERTEX_KEY, (atcg::shader_directory() / "base.vs").string());
+    std::string fragment_path =
+        renderer[SHADER_KEY].value(FRAGMENT_KEY, (atcg::shader_directory() / "base.fs").string());
+    std::string geometry_path = renderer[SHADER_KEY].value(GEOMETRY_KEY, "");
 
     std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
     shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));

@@ -65,7 +65,7 @@ public:
 
         grid = atcg::Graph::createGraph(host_points, edges);
 
-        plane = atcg::IO::read_mesh("res/plane_low.obj");
+        plane = atcg::IO::read_mesh((atcg::resource_directory() / "plane_low.obj").string());
 
         checkerboard_shader = atcg::make_ref<atcg::Shader>("src/Cloth/checkerboard.vs", "src/Cloth/checkerboard.fs");
         checkerboard_shader->setFloat("checker_size", 0.1f);
@@ -132,14 +132,14 @@ public:
             if(ImGui::MenuItem("Save"))
             {
                 atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
-                serializer.serialize("res/Cloth/Scene.yaml");
+                serializer.serialize((atcg::resource_directory() / "Cloth/Scene.yaml").string());
             }
 
             if(ImGui::MenuItem("Load"))
             {
                 scene = atcg::make_ref<atcg::Scene>();
                 atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
-                serializer.deserialize("res/Cloth/Scene.yaml");
+                serializer.deserialize((atcg::resource_directory() / "Cloth/Scene.yaml").string());
 
                 auto entities     = scene->getEntitiesByName("EditorCamera");
                 auto& camera      = entities[0].getComponent<atcg::EditorCameraComponent>();

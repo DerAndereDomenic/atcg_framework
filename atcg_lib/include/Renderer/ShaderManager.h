@@ -19,7 +19,7 @@ class Shader;
 class ShaderManagerSystem
 {
 public:
-    ShaderManagerSystem() = default;
+    ShaderManagerSystem();
 
     /**
      * @brief Add a shader
@@ -64,9 +64,25 @@ public:
      */
     void onUpdate();
 
+    /**
+     * @brief Set the "global" shader path. This is the path that "addShaderFromName", etc. use to load shaders.
+     *
+     * @param path The new path
+     */
+    ATCG_INLINE void setShaderPath(const std::filesystem::path& path) { _shader_path = path; }
+
+    /**
+     * @brief Get the shader directory
+     *
+     * @return The path to the shader directory
+     */
+    ATCG_INLINE const std::filesystem::path& getShaderPath() const { return _shader_path; }
+
 private:
     std::unordered_map<std::string, atcg::ref_ptr<Shader>> _shader;
     std::unordered_map<std::string, std::filesystem::file_time_type> _time_stamps;
+
+    std::filesystem::path _shader_path;
 };
 
 /**

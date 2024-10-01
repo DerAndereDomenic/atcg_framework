@@ -199,6 +199,10 @@ inline void defineBindings(py::module_& m)
               std::unique_ptr<PythonApplication> app = std::make_unique<PythonApplication>(props);
               return app;
           });
+
+    m.def("shader_directory", []() { return atcg::shader_directory().string(); });
+    m.def("resource_directory", []() { return atcg::resource_directory().string(); });
+
     m_application.def(py::init<atcg::Layer*>())
         .def(py::init<atcg::Layer*, atcg::WindowProps>())
         .def("run", &atcg::Application::run);
