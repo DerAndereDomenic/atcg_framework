@@ -3,6 +3,8 @@
 #include <pybind11/numpy.h>
 #include <pybind11/cast.h>
 #include <pybind11/stl.h>
+#include <pybind11/complex.h>
+#include <pybind11/functional.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <torch/python.h>
@@ -149,7 +151,10 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_imgui            = m.def_submodule("ImGui");                                                                         \
     auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");                                       \
     auto m_draw_mode        = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                         \
-    auto m_cull_mode        = py::enum_<atcg::CullMode>(m, "CullMode");
+    auto m_cull_mode        = py::enum_<atcg::CullMode>(m, "CullMode");                                                         \
+    auto m_network          = m.def_submodule("Network");                                                                       \
+    auto m_tcp_server       = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                              \
+    auto m_tcp_client       = py::class_<atcg::TCPClient>(m_network, "TCPClient");
 
 inline void defineBindings(py::module_& m)
 {
@@ -1276,6 +1281,139 @@ inline void defineBindings(py::module_& m)
                 "prediction"_a,
                 "channel_reduction"_a = "mean",
                 "delta"_a             = 1e-4f);
+
+    // ------------------- Network ---------------------------------
+    m_tcp_server.def(py::init<>())
+        .def("start", &atcg::TCPServer::start)
+        .def("stop", &atcg::TCPServer::stop)
+        .def("sendToClient", &atcg::TCPServer::sendToClient)
+        .def("setOnConnectCallback", &atcg::TCPServer::setOnConnectCallback)
+        .def("setOnReceiveCallback", &atcg::TCPServer::setOnReceiveCallback)
+        .def("setOnDisconnectCallback", &atcg::TCPServer::setOnDisconnectCallback);
+
+    m_tcp_client.def(py::init<>())
+        .def("connect", &atcg::TCPClient::connect)
+        .def("disconnect", &atcg::TCPClient::disconnect)
+        .def("sendAndWait", &atcg::TCPClient::sendAndWait);
+
+    m_network.def("readByte",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      uint8_t result = atcg::NetworkUtils::readByte(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readInt16",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      int16_t result = atcg::NetworkUtils::readInt<int16_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readUInt16",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      uint16_t result = atcg::NetworkUtils::readInt<uint16_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readInt32",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      int32_t result = atcg::NetworkUtils::readInt<int32_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readUInt32",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      uint32_t result = atcg::NetworkUtils::readInt<uint32_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readInt64",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      int64_t result = atcg::NetworkUtils::readInt<int64_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readUInt64",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      uint64_t result = atcg::NetworkUtils::readInt<uint64_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readString",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      auto result = atcg::NetworkUtils::readString(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("writeByte",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, uint8_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeByte(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeInt16",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, int16_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeUInt16",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, uint16_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeInt32",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, int32_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeUInt32",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, uint32_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeInt64",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, int64_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeUInt64",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, uint64_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeBuffer",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, std::vector<uint8_t>& toWrite)
+                  {
+                      atcg::NetworkUtils::writeBuffer(data.data(), offset, toWrite.data(), toWrite.size());
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeString",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, const std::string& toWrite)
+                  {
+                      atcg::NetworkUtils::writeString(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
 
     // IMGUI BINDINGS
 
