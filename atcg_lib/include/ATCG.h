@@ -16,6 +16,7 @@
 #include <Core/UUID.h>
 #include <Core/SystemRegistry.h>
 #include <Core/KeyCodes.h>
+#include <Core/Path.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>
