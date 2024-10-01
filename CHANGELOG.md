@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Possibility to flip decoded jpeg images
 - Custom key codes
 - Methods to read and write structs from network buffers
+- Add python bindings for network utils
 
 ### Changed
 
