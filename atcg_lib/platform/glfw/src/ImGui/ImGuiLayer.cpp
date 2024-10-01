@@ -8,6 +8,7 @@
 
 #include <GLFW/glfw3.h>
 #include <Core/Application.h>
+#include <Core/Path.h>
 
 #include <Renderer/Renderer.h>
 
@@ -24,9 +25,11 @@ void ImGuiLayer::onAttach()
     ImPlot::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
+    io.IniFilename = NULL;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
 
     ImGui::StyleColorsDark();
 
@@ -42,8 +45,19 @@ void ImGuiLayer::onAttach()
     float xscale;
     glfwGetWindowContentScale(window, &xscale, NULL);
 
+    if(!std::filesystem::exists("imgui.ini"))
+    {
+        ImGui::LoadIniSettingsFromDisk("imgui_default.ini");
+    }
+    else
+    {
+        ImGui::LoadIniSettingsFromDisk("imgui.ini");
+    }
+
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+
+    io.IniFilename = "imgui.ini";
 
     io.FontGlobalScale = xscale;
     style.ScaleAllSizes(xscale);
@@ -90,6 +104,7 @@ void ImGuiLayer::onAttach()
 
 void ImGuiLayer::onDetach()
 {
+    ImGui::SaveIniSettingsToDisk("imgui.ini");
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImPlot::DestroyContext();
