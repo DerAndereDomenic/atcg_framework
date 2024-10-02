@@ -154,7 +154,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_cull_mode        = py::enum_<atcg::CullMode>(m, "CullMode");                                                         \
     auto m_network          = m.def_submodule("Network");                                                                       \
     auto m_tcp_server       = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                              \
-    auto m_tcp_client       = py::class_<atcg::TCPClient>(m_network, "TCPClient");
+    auto m_tcp_client       = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                              \
+    auto m_worker           = py::class_<atcg::Worker>(m, "Worker");
 
 inline void defineBindings(py::module_& m)
 {
@@ -644,6 +645,16 @@ inline void defineBindings(py::module_& m)
     m_serializer.def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
         .def("serialize", &atcg::Serializer<atcg::ComponentSerializer>::serialize<>, "file_path"_a)
         .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
+
+    m_worker.def(py::init<>())
+        .def("pushJob", &atcg::Worker::pushJob)
+        .def("start", &atcg::Worker::start)
+        .def("startSync", &atcg::Worker::startSync)
+        .def("isRunning", &atcg::Worker::isRunning)
+        .def("stop", &atcg::Worker::stop)
+        .def("isDone", &atcg::Worker::isDone)
+        .def("waitDone", &atcg::Worker::waitDone)
+        .def("clearQueue", &atcg::Worker::clearQueue);
 
     // ------------------- RENDERER ---------------------------------
     m_draw_mode.value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
