@@ -4,3 +4,6 @@
 /bin/*
 imgui.ini
 .vscode/*
+__pycache__
+*.egg-info
+typings
