@@ -79,6 +79,12 @@ public:
      */
     void clearQueue();
 
+    /**
+     * @brief Get the number of pending jobs
+     * @return The number of pending jobs
+     */
+    uint32_t pendingJobs() const;
+
 private:
     class Impl;
     std::unique_ptr<Impl> impl;

@@ -125,4 +125,10 @@ void Worker::clearQueue()
     std::queue<Job> empty;
     impl->jobs.swap(empty);
 }
+
+uint32_t Worker::pendingJobs() const
+{
+    std::lock_guard guard(impl->queue_mutex);
+    return impl->jobs.size();
+}
 }    // namespace atcg
