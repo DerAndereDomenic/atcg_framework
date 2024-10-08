@@ -189,6 +189,12 @@ DataStructure
 .. doxygenclass:: atcg::Timer
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::Worker
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::WorkerPool
+   :members:
+   :undoc-members:
 .. doxygenfunction:: atcg::TensorOptions::uint8HostOptions
    :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::int8HostOptions
