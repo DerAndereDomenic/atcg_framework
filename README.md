@@ -42,6 +42,14 @@ cmake . -B build -DATCG_CUDA_BACKEND=ON
 
 This way you can include high performant GPU code into your application. Note that this is only possible if you have the CUDA compiler installed. Furthermore, torch should also be installed with the same CUDA version.
 
+### Build python bindings
+
+The project come with python bindings which can be install via
+```
+pip install -e .
+```
+it requires charonload as additional dependency. Per default, it is built with CUDA backend.
+
 ### Building the documentation (experimental)
 
 There is a (not very complete) documentation that can be build using [doxygen](https://www.doxygen.nl/index.html) and [sphinx](https://www.sphinx-doc.org/en/master/). Install the dependencies using pip
@@ -52,7 +60,7 @@ pip install sphinx, sphinx_rtd_theme, breathe, myst_parser
 
 and set the ATCG_BUILD_DOCS option to true when generating the CMake project.
 
-### Building tests (eperimental)
+### Building tests (experimental)
 
 To build the unit tests, set the ATCG_BUILD_TESTS option to true.
 
