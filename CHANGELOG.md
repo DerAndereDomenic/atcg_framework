@@ -29,3 +29,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Fixed linking of imgui in headless mode by removing unnecessary libraries in linking stage
+- Fixed crash when using the JPEG modules without initializing the torch allocator

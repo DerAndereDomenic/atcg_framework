@@ -116,6 +116,11 @@ JPEGDecoder::Impl::Impl(uint32_t num_images,
     this->img_width       = img_width;
     this->img_height      = img_height;
     this->flip_vertically = flip_vertically;
+
+    // This initializes the cache allocator
+    torch::empty({1}, atcg::TensorOptions::floatDeviceOptions());
+    torch::empty({1}, atcg::TensorOptions::floatHostOptions());
+
     allocateBuffers();
     initializeNVJPEG(backend);
 }

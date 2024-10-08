@@ -95,6 +95,11 @@ public:
 JPEGEncoder::Impl::Impl(bool flip_vertically, JPEGBackend backend)
 {
     this->flip_vertically = flip_vertically;
+
+    // This initializes the cache allocator
+    torch::empty({1}, atcg::TensorOptions::floatDeviceOptions());
+    torch::empty({1}, atcg::TensorOptions::floatHostOptions());
+
     allocateBuffers();
     initializeNVJPEG(backend);
 }
