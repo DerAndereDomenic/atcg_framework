@@ -685,7 +685,9 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const torch::Tensor& img)
     {
         case 1:
         {
-            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RFLOAT : TextureFormat::RINT8);
+            spec.format = (img.dtype() == torch::kFloat32
+                               ? TextureFormat::RFLOAT
+                               : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
         }
         break;
         case 2:
