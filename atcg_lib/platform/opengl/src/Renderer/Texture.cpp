@@ -506,12 +506,12 @@ void Texture::Impl::unmapResourceDevice()
 #endif
 }
 
-atcg::textureArray Texture::getTextureArray(const uint32_t mip_level) const
+atcg::textureArray Texture::getTextureArray(const uint32_t mip_level, const uint32_t array_idx) const
 {
 #ifdef ATCG_CUDA_BACKEND
     impl->mapResourceDevice();
     std::size_t size;
-    CUDA_SAFE_CALL(cudaGraphicsSubResourceGetMappedArray(&impl->dev_ptr, impl->resource, 0, mip_level));
+    CUDA_SAFE_CALL(cudaGraphicsSubResourceGetMappedArray(&impl->dev_ptr, impl->resource, array_idx, mip_level));
 #endif
     return impl->dev_ptr;
 }
@@ -519,12 +519,13 @@ atcg::textureArray Texture::getTextureArray(const uint32_t mip_level) const
 atcg::textureObject Texture::getTextureObject(const uint32_t mip_level,
                                               const glm::vec4& border_color,
                                               const bool normalized_coords,
-                                              const bool normalized_float) const
+                                              const bool normalized_float,
+                                              const uint32_t array_idx) const
 {
 #ifdef ATCG_CUDA_BACKEND
     if(!impl->texture_mapped)
     {
-        atcg::textureArray array = getTextureArray(mip_level);
+        atcg::textureArray array = getTextureArray(mip_level, array_idx);
 
         cudaResourceDesc resDesc = {};
         resDesc.resType          = cudaResourceTypeArray;
@@ -555,12 +556,12 @@ atcg::textureObject Texture::getTextureObject(const uint32_t mip_level,
     return impl->texture_object;
 }
 
-atcg::surfaceObject Texture::getSurfaceObject(const uint32_t mip_level) const
+atcg::surfaceObject Texture::getSurfaceObject(const uint32_t mip_level, const uint32_t array_idx) const
 {
 #ifdef ATCG_CUDA_BACKEND
     if(!impl->surface_mapped)
     {
-        atcg::textureArray array = getTextureArray(mip_level);
+        atcg::textureArray array = getTextureArray(mip_level, array_idx);
 
         cudaResourceDesc resDesc = {};
         resDesc.resType          = cudaResourceTypeArray;
