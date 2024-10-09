@@ -1414,7 +1414,9 @@ atcg::ref_ptr<TextureArray> TextureArray::create(const torch::Tensor& img)
     {
         case 1:
         {
-            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RFLOAT : TextureFormat::RINT8);
+            spec.format = (img.dtype() == torch::kFloat32
+                               ? TextureFormat::RFLOAT
+                               : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
         }
         break;
         case 2:
@@ -1515,8 +1517,7 @@ void TextureArray::setData(const torch::Tensor& data)
 torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
-    bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
-               _spec.format == TextureFormat::RGBFLOAT;
+    bool hdr         = isHDR();
     int channel_size = detail::toChannelSize(_spec.format);
 
     torch::Tensor result;
@@ -1527,10 +1528,10 @@ torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t 
     bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
     if(cuda_copy_possible && device.is_cuda())
     {
-        result = torch::empty({height, width, num_channels},
-                              hdr ? atcg::TensorOptions::floatDeviceOptions()
-                                  : (channel_size == 1 ? atcg::TensorOptions::uint8DeviceOptions()
-                                                       : atcg::TensorOptions::int32DeviceOptions()));
+        auto options = hdr ? atcg::TensorOptions::floatDeviceOptions()
+                           : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32DeviceOptions()
+                                                                        : atcg::TensorOptions::uint8DeviceOptions());
+        result       = torch::empty({depth, height, width, num_channels}, options);
 
         atcg::textureArray array = getTextureArray(mip_level);
 
@@ -1544,8 +1545,8 @@ torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t 
         p.srcArray          = array;
         p.kind              = cudaMemcpyDeviceToDevice;
         p.dstPtr.ptr        = result.contiguous().data_ptr();
-        p.dstPtr.pitch      = ext.width * num_channels;
-        p.dstPtr.xsize      = ext.width;
+        p.dstPtr.pitch      = ext.width * num_channels * result.element_size();
+        p.dstPtr.xsize      = ext.width * result.element_size();
         p.dstPtr.ysize      = ext.height;
         p.extent            = ext;
 
@@ -1563,10 +1564,10 @@ torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t 
 
     unmapPointers();
 
-    result = torch::empty(
-        {depth, height, width, num_channels},
-        hdr ? atcg::TensorOptions::floatHostOptions()
-            : (channel_size == 1 ? atcg::TensorOptions::uint8HostOptions() : atcg::TensorOptions::int32HostOptions()));
+    auto options = hdr ? atcg::TensorOptions::floatHostOptions()
+                       : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32HostOptions()
+                                                                    : atcg::TensorOptions::uint8HostOptions());
+    result       = torch::empty({depth, height, width, num_channels}, options);
 
     use();
     glGetTexImage(GL_TEXTURE_2D_ARRAY,
