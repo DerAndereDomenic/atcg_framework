@@ -1012,8 +1012,8 @@ void Texture3D::setData(const torch::Tensor& data)
             p.dstArray          = array;
             p.kind              = cudaMemcpyDeviceToDevice;
             p.srcPtr.ptr        = pixel_data.contiguous().data_ptr();
-            p.srcPtr.pitch      = ext.width * num_channels;
-            p.srcPtr.xsize      = ext.width;
+            p.srcPtr.pitch      = ext.width * num_channels * data.element_size();
+            p.srcPtr.xsize      = ext.width * data.element_size();
             p.srcPtr.ysize      = ext.height;
             p.extent            = ext;
 
@@ -1069,12 +1069,21 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
 
         CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
 
+        ATCG_TRACE(desc.x);
+        ATCG_TRACE(desc.y);
+        ATCG_TRACE(desc.z);
+        ATCG_TRACE(desc.w);
+        ATCG_TRACE(desc.f);
+        ATCG_TRACE(ext.width);
+        ATCG_TRACE(ext.height);
+        ATCG_TRACE(ext.depth);
+
         cudaMemcpy3DParms p = {0};
         p.srcArray          = array;
         p.kind              = cudaMemcpyDeviceToDevice;
         p.dstPtr.ptr        = result.contiguous().data_ptr();
-        p.dstPtr.pitch      = ext.width * num_channels;
-        p.dstPtr.xsize      = ext.width;
+        p.dstPtr.pitch      = ext.width * num_channels * result.element_size();
+        p.dstPtr.xsize      = ext.width * result.element_size();
         p.dstPtr.ysize      = ext.height;
         p.extent            = ext;
 
