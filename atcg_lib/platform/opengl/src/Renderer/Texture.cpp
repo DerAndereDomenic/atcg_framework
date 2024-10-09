@@ -786,10 +786,10 @@ torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip
     bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
     if(cuda_copy_possible && device.is_cuda())
     {
-        result = torch::empty({height, width, num_channels},
-                              hdr ? atcg::TensorOptions::floatDeviceOptions()
-                                  : (channel_size == 1 ? atcg::TensorOptions::uint8DeviceOptions()
-                                                       : atcg::TensorOptions::int32DeviceOptions()));
+        auto options = hdr ? atcg::TensorOptions::floatDeviceOptions()
+                           : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32DeviceOptions()
+                                                                        : atcg::TensorOptions::uint8DeviceOptions());
+        result       = torch::empty({height, width, num_channels}, options);
 
         atcg::textureArray array = getTextureArray(mip_level);
 
@@ -814,10 +814,10 @@ torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip
 
     unmapPointers();
 
-    result = torch::empty(
-        {height, width, num_channels},
-        hdr ? atcg::TensorOptions::floatHostOptions()
-            : (channel_size == 1 ? atcg::TensorOptions::uint8HostOptions() : atcg::TensorOptions::int32HostOptions()));
+    auto options = hdr ? atcg::TensorOptions::floatHostOptions()
+                       : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32HostOptions()
+                                                                    : atcg::TensorOptions::uint8HostOptions());
+    result       = torch::empty({height, width, num_channels}, options);
 
     use();
     glGetTexImage(GL_TEXTURE_2D,
@@ -1056,10 +1056,10 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
     bool cuda_copy_possible = num_channels == 1 || num_channels == 4;
     if(cuda_copy_possible && device.is_cuda())
     {
-        result = torch::empty({depth, height, width, num_channels},
-                              hdr ? atcg::TensorOptions::floatDeviceOptions()
-                                  : (channel_size == 1 ? atcg::TensorOptions::uint8DeviceOptions()
-                                                       : atcg::TensorOptions::int32DeviceOptions()));
+        auto options = hdr ? atcg::TensorOptions::floatDeviceOptions()
+                           : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32DeviceOptions()
+                                                                        : atcg::TensorOptions::uint8DeviceOptions());
+        result       = torch::empty({depth, height, width, num_channels}, options);
 
         atcg::textureArray array = getTextureArray(mip_level);
 
@@ -1092,10 +1092,10 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
 
     unmapPointers();
 
-    result = torch::empty(
-        {depth, height, width, num_channels},
-        hdr ? atcg::TensorOptions::floatHostOptions()
-            : (channel_size == 1 ? atcg::TensorOptions::uint8HostOptions() : atcg::TensorOptions::int32HostOptions()));
+    auto options = hdr ? atcg::TensorOptions::floatHostOptions()
+                       : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32HostOptions()
+                                                                    : atcg::TensorOptions::uint8HostOptions());
+    result       = torch::empty({depth, height, width, num_channels}, options);
 
     use();
     glGetTexImage(GL_TEXTURE_3D,
@@ -1280,14 +1280,13 @@ void TextureCube::setData(const torch::Tensor& data)
 torch::Tensor TextureCube::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
-    bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
-               _spec.format == TextureFormat::RGBFLOAT;
+    bool hdr         = isHDR();
     int channel_size = detail::toChannelSize(_spec.format);
 
-    auto result = torch::empty(
-        {6, _spec.height, _spec.width, num_channels},
-        hdr ? atcg::TensorOptions::floatHostOptions()
-            : (num_channels == 1 ? atcg::TensorOptions::uint8HostOptions() : atcg::TensorOptions::int32HostOptions()));
+    auto options = hdr ? atcg::TensorOptions::floatHostOptions()
+                       : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32HostOptions()
+                                                                    : atcg::TensorOptions::uint8HostOptions());
+    auto result  = torch::empty({6, _spec.height, _spec.width, num_channels}, options);
 
     unmapPointers();
     glBindTexture(GL_TEXTURE_CUBE_MAP, _ID);
