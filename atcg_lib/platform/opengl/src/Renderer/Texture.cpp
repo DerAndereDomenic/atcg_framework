@@ -186,7 +186,7 @@ uint32_t num_channels(TextureFormat format)
         }
         case TextureFormat::RGFLOAT:
         {
-            return 1;
+            return 2;
         }
         case TextureFormat::RGBFLOAT:
         {
