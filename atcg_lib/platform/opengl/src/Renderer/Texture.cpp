@@ -942,7 +942,9 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const torch::Tensor& img)
     {
         case 1:
         {
-            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RFLOAT : TextureFormat::RINT8);
+            spec.format = (img.dtype() == torch::kFloat32
+                               ? TextureFormat::RFLOAT
+                               : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
         }
         break;
         case 2:
@@ -1043,8 +1045,7 @@ void Texture3D::setData(const torch::Tensor& data)
 torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
-    bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
-               _spec.format == TextureFormat::RGBFLOAT;
+    bool hdr         = isHDR();
     int channel_size = detail::toChannelSize(_spec.format);
 
     torch::Tensor result;
