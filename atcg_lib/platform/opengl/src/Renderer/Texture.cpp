@@ -774,8 +774,7 @@ void Texture2D::setData(const torch::Tensor& data)
 torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
-    bool hdr         = _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
-               _spec.format == TextureFormat::RGBFLOAT;
+    bool hdr         = isHDR();
     int channel_size = detail::toChannelSize(_spec.format);
 
     torch::Tensor result;
