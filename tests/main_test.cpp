@@ -2,6 +2,9 @@
 
 #include <Core/Log.h>
 #include <Core/Memory.h>
+#include <Core/Window.h>
+#include <Renderer/ShaderManager.h>
+#include <Renderer/Renderer.h>
 
 // Define a custom test environment class
 class ATCGTestEnvironment : public ::testing::Environment
@@ -15,13 +18,31 @@ public:
         _logger = atcg::make_ref<atcg::Logger>();
         atcg::SystemRegistry::init();
         atcg::SystemRegistry::instance()->registerSystem(_logger.get());
+
+        _shader_manager = atcg::make_ref<atcg::ShaderManagerSystem>();
+        atcg::SystemRegistry::instance()->registerSystem(_shader_manager.get());
+
+        atcg::WindowProps props;
+        props.hidden = true;
+        _window      = atcg::make_scope<atcg::Window>(props);
+
+        _renderer = atcg::make_ref<atcg::RendererSystem>();
+        _renderer->init(_window->getWidth(), _window->getHeight());
+        atcg::SystemRegistry::instance()->registerSystem(_renderer.get());
     }
 
     // This will be run once after all tests have finished
-    void TearDown() override { std::cout << "ATCGTestEnvironment::TearDown() called\n"; }
+    void TearDown() override
+    {
+        atcg::SystemRegistry::shutdown();
+        std::cout << "ATCGTestEnvironment::TearDown() called\n";
+    }
 
 private:
     atcg::ref_ptr<atcg::Logger> _logger;
+    atcg::ref_ptr<atcg::ShaderManagerSystem> _shader_manager;
+    atcg::ref_ptr<atcg::RendererSystem> _renderer;
+    atcg::ref_ptr<atcg::Window> _window;
 };
 
 int main(int argc, char **argv)

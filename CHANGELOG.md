@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Default imgui layout
 - Add Worker and WorkerPool for parallalized CPU computing
 - The framework can be installed via pip
+- Possiblity to index individual layers of a TextureArray
+- create method for Cubemaps from tensor data
 
 ### Changed
 
@@ -30,3 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed linking of imgui in headless mode by removing unnecessary libraries in linking stage
 - Fixed crash when using the JPEG modules without initializing the torch allocator
+- Channel size of RG texture format
+- isHDR() function for RG textures
+- GPU memcopy of float 3D textures
+- GPU memcopy of Texture arrays
