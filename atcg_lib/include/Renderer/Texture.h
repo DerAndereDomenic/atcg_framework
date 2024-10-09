@@ -518,6 +518,15 @@ public:
     static atcg::ref_ptr<TextureCube> create(const TextureSpecification& spec);
 
     /**
+     * @brief Create a 3D texture from a tensor.
+     *
+     * @param data The image (host data) of shape (6, height, width, channels)
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureCube> create(const torch::Tensor& img);
+
+    /**
      *  @brief Destructor
      */
     virtual ~TextureCube();

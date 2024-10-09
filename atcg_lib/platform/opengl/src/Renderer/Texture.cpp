@@ -1069,15 +1069,6 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
 
         CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
 
-        ATCG_TRACE(desc.x);
-        ATCG_TRACE(desc.y);
-        ATCG_TRACE(desc.z);
-        ATCG_TRACE(desc.w);
-        ATCG_TRACE(desc.f);
-        ATCG_TRACE(ext.width);
-        ATCG_TRACE(ext.height);
-        ATCG_TRACE(ext.depth);
-
         cudaMemcpy3DParms p = {0};
         p.srcArray          = array;
         p.kind              = cudaMemcpyDeviceToDevice;
@@ -1208,6 +1199,44 @@ atcg::ref_ptr<TextureCube> TextureCube::create(const TextureSpecification& spec)
     return result;
 }
 
+atcg::ref_ptr<TextureCube> TextureCube::create(const torch::Tensor& img)
+{
+    TextureSpecification spec;
+    spec.width  = std::max<uint32_t>(1, img.size(2));
+    spec.height = std::max<uint32_t>(1, img.size(1));
+    spec.depth  = std::max<uint32_t>(1, img.size(0));
+    TORCH_CHECK_EQ(spec.depth, 6);
+    TORCH_CHECK_EQ(spec.width, spec.height);
+    switch(img.size(3))
+    {
+        case 1:
+        {
+            spec.format = (img.dtype() == torch::kFloat32
+                               ? TextureFormat::RFLOAT
+                               : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
+        }
+        break;
+        case 2:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGFLOAT : TextureFormat::RG);
+        }
+        break;
+        case 3:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
+        }
+        break;
+        case 4:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        }
+        break;
+    }
+    auto result = create(spec);
+    result->setData(img);
+    return result;
+}
+
 TextureCube::~TextureCube()
 {
     glDeleteTextures(1, &_ID);
@@ -1227,6 +1256,7 @@ void TextureCube::setData(const torch::Tensor& data)
     TORCH_CHECK_EQ(data.size(2), _spec.width);
     int num_channels = detail::num_channels(_spec.format);
     TORCH_CHECK_EQ(data.size(3), num_channels);
+    TORCH_CHECK_EQ(_spec.width, _spec.height);
 
     torch::Tensor pixel_data = data.to(atcg::CPU);
 
