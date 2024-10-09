@@ -1474,24 +1474,19 @@ void TextureArray::setData(const torch::Tensor& data)
         if(cuda_copy_possible)
         {
 #ifdef ATCG_CUDA_BACKEND
-            atcg::textureArray array   = getTextureArray();
-            cudaChannelFormatDesc desc = {};
-            cudaExtent ext             = {};
-            unsigned int array_flags   = 0;
-
-            CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
-
-            cudaMemcpy3DParms p = {0};
-            p.dstArray          = array;
-            p.kind              = cudaMemcpyDeviceToDevice;
-            p.srcPtr.ptr        = pixel_data.contiguous().data_ptr();
-            p.srcPtr.pitch      = ext.width * num_channels;
-            p.srcPtr.xsize      = ext.width;
-            p.srcPtr.ysize      = ext.height;
-            p.extent            = ext;
-
-            CUDA_SAFE_CALL(cudaMemcpy3D(&p));
-            unmapPointers();
+            for(int i = 0; i < _spec.depth; ++i)
+            {
+                atcg::textureArray array = getTextureArray(0, i);
+                CUDA_SAFE_CALL(cudaMemcpy2DToArray(array,
+                                                   0,
+                                                   0,
+                                                   pixel_data[i].data_ptr(),
+                                                   pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
+                                                   pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
+                                                   _spec.height,
+                                                   cudaMemcpyDeviceToDevice));
+                unmapPointers();
+            }
 #endif
             return;
         }
@@ -1534,26 +1529,21 @@ torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t 
                                                                         : atcg::TensorOptions::uint8DeviceOptions());
         result       = torch::empty({depth, height, width, num_channels}, options);
 
-        atcg::textureArray array = getTextureArray(mip_level);
+        for(int i = 0; i < _spec.depth; ++i)
+        {
+            atcg::textureArray array = getTextureArray(mip_level, i);
 
-        cudaChannelFormatDesc desc = {};
-        cudaExtent ext             = {};
-        unsigned int array_flags   = 0;
+            CUDA_SAFE_CALL(cudaMemcpy2DFromArray(result[i].data_ptr(),
+                                                 result.size(2) * result.size(3) * result.element_size(),
+                                                 array,
+                                                 0,
+                                                 0,
+                                                 result.size(2) * result.size(3) * result.element_size(),
+                                                 height,
+                                                 cudaMemcpyDeviceToDevice));
 
-        CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
-
-        cudaMemcpy3DParms p = {0};
-        p.srcArray          = array;
-        p.kind              = cudaMemcpyDeviceToDevice;
-        p.dstPtr.ptr        = result.contiguous().data_ptr();
-        p.dstPtr.pitch      = ext.width * num_channels * result.element_size();
-        p.dstPtr.xsize      = ext.width * result.element_size();
-        p.dstPtr.ysize      = ext.height;
-        p.extent            = ext;
-
-        CUDA_SAFE_CALL(cudaMemcpy3D(&p));
-
-        unmapPointers();
+            unmapPointers();
+        }
 
         return result;
     }
