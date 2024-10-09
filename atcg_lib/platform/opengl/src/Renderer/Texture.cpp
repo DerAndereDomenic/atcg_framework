@@ -619,7 +619,7 @@ uint32_t Texture::channels() const
 bool Texture::isHDR() const
 {
     return _spec.format == TextureFormat::RFLOAT || _spec.format == TextureFormat::RGBAFLOAT ||
-           _spec.format == TextureFormat::RGBFLOAT;
+           _spec.format == TextureFormat::RGBFLOAT || _spec.format == TextureFormat::RGFLOAT;
 }
 
 atcg::ref_ptr<Texture2D> Texture2D::create(const TextureSpecification& spec)
