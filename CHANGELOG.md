@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The callback functions of TCPServer now expect std::vector references instead of raw pointers.
 - Indices are now consistently handles as uint32_t, also for tensors.
 - Each Renderer now has it's own instance of a shader manager.
+- Each Renderer now has control over it's own context.
 
 ### Fixed
 

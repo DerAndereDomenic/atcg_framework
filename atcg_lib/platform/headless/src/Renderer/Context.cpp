@@ -193,4 +193,10 @@ void Context::deactivate()
     ContextData* data = (ContextData*)_context_handle;
     eglMakeCurrent(data->display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
+
+bool Context::isCurrent() const
+{
+    ContextData* data = (ContextData*)_context_handle;
+    return eglGetCurrentContext() == data->context;
+}
 }    // namespace atcg

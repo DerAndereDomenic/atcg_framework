@@ -121,4 +121,9 @@ void Context::deactivate()
 {
     glfwMakeContextCurrent(NULL);
 }
+
+bool Context::isCurrent() const
+{
+    return glfwGetCurrentContext() == ((GLFWwindow*)_context_handle);
+}
 }    // namespace atcg
