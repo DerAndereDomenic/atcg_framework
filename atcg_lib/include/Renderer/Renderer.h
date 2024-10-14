@@ -51,8 +51,9 @@ public:
      *
      * @param width The width
      * @param height The height
+     * @param shader_manager The shader manager associated with this renderer
      */
-    void init(uint32_t width, uint32_t height);
+    void init(uint32_t width, uint32_t height, const atcg::ref_ptr<ShaderManagerSystem>& shader_manager);
 
     /**
      * @brief Finished the currently drawn frame (should not be called by client!)
@@ -390,10 +391,11 @@ namespace Renderer
  *
  * @param width The width
  * @param height The height
+ * @param shader_manager The shader manager associated with this renderer
  */
-ATCG_INLINE void init(uint32_t width, uint32_t height)
+ATCG_INLINE void init(uint32_t width, uint32_t height, const atcg::ref_ptr<ShaderManagerSystem>& shader_manager)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->init(width, height);
+    SystemRegistry::instance()->getSystem<RendererSystem>()->init(width, height, shader_manager);
 }
 
 /**
