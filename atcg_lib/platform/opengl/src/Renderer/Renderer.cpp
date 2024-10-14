@@ -22,6 +22,7 @@ public:
 
     ~Impl() = default;
 
+    atcg::ref_ptr<Context> context;
     atcg::ref_ptr<ShaderManagerSystem> shader_manager;
 
     atcg::ref_ptr<VertexArray> quad_vao;
@@ -314,7 +315,10 @@ void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref
     shader->setInt("use_ibl", has_skybox);
 }
 
-void RendererSystem::init(uint32_t width, uint32_t height, const atcg::ref_ptr<ShaderManagerSystem>& shader_manager)
+void RendererSystem::init(uint32_t width,
+                          uint32_t height,
+                          const atcg::ref_ptr<Context>& context,
+                          const atcg::ref_ptr<ShaderManagerSystem>& shader_manager)
 {
     ATCG_INFO("OpenGL Renderer:");
     ATCG_INFO("    Vendor: {0}", (const char*)glGetString(GL_VENDOR));
@@ -323,6 +327,9 @@ void RendererSystem::init(uint32_t width, uint32_t height, const atcg::ref_ptr<S
     ATCG_INFO("---------------------------------");
 
     impl = atcg::make_scope<Impl>(width, height);
+
+    impl->context = context;
+    impl->context->makeCurrent();
 
     // General settings
     toggleDepthTesting(true);

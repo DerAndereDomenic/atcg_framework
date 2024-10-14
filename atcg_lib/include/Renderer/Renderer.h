@@ -2,6 +2,7 @@
 
 #include <Core/glm.h>
 #include <Core/Memory.h>
+#include <Renderer/Context.h>
 #include <Renderer/Buffer.h>
 #include <Renderer/VertexArray.h>
 #include <Renderer/Shader.h>
@@ -51,9 +52,13 @@ public:
      *
      * @param width The width
      * @param height The height
+     * @param context The opengl context
      * @param shader_manager The shader manager associated with this renderer
      */
-    void init(uint32_t width, uint32_t height, const atcg::ref_ptr<ShaderManagerSystem>& shader_manager);
+    void init(uint32_t width,
+              uint32_t height,
+              const atcg::ref_ptr<Context>& context,
+              const atcg::ref_ptr<ShaderManagerSystem>& shader_manager);
 
     /**
      * @brief Finished the currently drawn frame (should not be called by client!)
@@ -391,11 +396,15 @@ namespace Renderer
  *
  * @param width The width
  * @param height The height
+ * @param context The context
  * @param shader_manager The shader manager associated with this renderer
  */
-ATCG_INLINE void init(uint32_t width, uint32_t height, const atcg::ref_ptr<ShaderManagerSystem>& shader_manager)
+ATCG_INLINE void init(uint32_t width,
+                      uint32_t height,
+                      const atcg::ref_ptr<Context>& context,
+                      const atcg::ref_ptr<ShaderManagerSystem>& shader_manager)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->init(width, height, shader_manager);
+    SystemRegistry::instance()->getSystem<RendererSystem>()->init(width, height, context, shader_manager);
 }
 
 /**

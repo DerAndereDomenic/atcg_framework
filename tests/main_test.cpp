@@ -27,7 +27,7 @@ public:
         _window      = atcg::make_scope<atcg::Window>(props);
 
         _renderer = atcg::make_ref<atcg::RendererSystem>();
-        _renderer->init(_window->getWidth(), _window->getHeight(), _shader_manager);
+        _renderer->init(_window->getWidth(), _window->getHeight(), _window->getContext(), _shader_manager);
         atcg::SystemRegistry::instance()->registerSystem(_renderer.get());
     }
 
