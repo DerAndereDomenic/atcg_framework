@@ -1314,4 +1314,9 @@ void RendererSystem::pushTextureID(const uint32_t id)
 {
     impl->texture_ids.push(id);
 }
+
+void RendererSystem::use()
+{
+    impl->context->makeCurrent();
+}
 }    // namespace atcg

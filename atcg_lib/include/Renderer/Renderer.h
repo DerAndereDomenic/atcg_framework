@@ -61,6 +61,13 @@ public:
               const atcg::ref_ptr<ShaderManagerSystem>& shader_manager);
 
     /**
+     * @brief Use this instance of the renderer.
+     * This only needs to be called if multiple renderer instances are in use or multi thread rendering is desired. This
+     * function will make the underlying context current for the thread.
+     */
+    void use();
+
+    /**
      * @brief Finished the currently drawn frame (should not be called by client!)
      */
     void finishFrame();
@@ -405,6 +412,16 @@ ATCG_INLINE void init(uint32_t width,
                       const atcg::ref_ptr<ShaderManagerSystem>& shader_manager)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->init(width, height, context, shader_manager);
+}
+
+/**
+ * @brief Use this instance of the renderer.
+ * This only needs to be called if multiple renderer instances are in use or multi thread rendering is desired. This
+ * function will make the underlying context current for the thread.
+ */
+ATCG_INLINE void use()
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->use();
 }
 
 /**
