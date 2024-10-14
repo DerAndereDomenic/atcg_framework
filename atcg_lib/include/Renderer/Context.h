@@ -62,6 +62,13 @@ public:
     void deactivate();
 
     /**
+     * @brief Check if the given context is current
+     *
+     * @return True if the context is current
+     */
+    bool isCurrent() const;
+
+    /**
      * @brief The native context handle
      * For glfw backend it's the glfw window
      *
