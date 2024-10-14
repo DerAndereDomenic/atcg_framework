@@ -21,12 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The framework can be installed via pip
 - Possiblity to index individual layers of a TextureArray
 - create method for Cubemaps from tensor data
+- Added support for unsigend data types in torch tensors
 
 ### Changed
 
 - Default behavior of JPEG encoder and decoder: now flip images
 - The caller of TCPClient::sendAndWait had to manually prepend the message size. This is now done automatically.
 - The callback functions of TCPServer now expect std::vector references instead of raw pointers.
+- Indices are now consistently handles as uint32_t, also for tensors.
 
 ### Fixed
 
