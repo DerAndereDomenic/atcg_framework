@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The caller of TCPClient::sendAndWait had to manually prepend the message size. This is now done automatically.
 - The callback functions of TCPServer now expect std::vector references instead of raw pointers.
 - Indices are now consistently handles as uint32_t, also for tensors.
+- Each Renderer now has it's own instance of a shader manager.
 
 ### Fixed
 

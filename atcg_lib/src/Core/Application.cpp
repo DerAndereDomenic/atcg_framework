@@ -35,7 +35,7 @@ void Application::init(const WindowProps& props)
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
     _renderer = atcg::make_ref<RendererSystem>();
-    _renderer->init(_window->getWidth(), _window->getHeight());
+    _renderer->init(_window->getWidth(), _window->getHeight(), _shader_manager);
     SystemRegistry::instance()->registerSystem(_renderer.get());
 
     _vr_system = atcg::make_ref<VRSystem>();

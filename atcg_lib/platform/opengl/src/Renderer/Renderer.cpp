@@ -22,6 +22,8 @@ public:
 
     ~Impl() = default;
 
+    atcg::ref_ptr<ShaderManagerSystem> shader_manager;
+
     atcg::ref_ptr<VertexArray> quad_vao;
     atcg::ref_ptr<VertexBuffer> quad_vbo;
     atcg::ref_ptr<IndexBuffer> quad_ibo;
@@ -312,7 +314,7 @@ void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref
     shader->setInt("use_ibl", has_skybox);
 }
 
-void RendererSystem::init(uint32_t width, uint32_t height)
+void RendererSystem::init(uint32_t width, uint32_t height, const atcg::ref_ptr<ShaderManagerSystem>& shader_manager)
 {
     ATCG_INFO("OpenGL Renderer:");
     ATCG_INFO("    Vendor: {0}", (const char*)glGetString(GL_VENDOR));
@@ -332,18 +334,19 @@ void RendererSystem::init(uint32_t width, uint32_t height)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     setViewport(0, 0, width, height);
 
-    ShaderManager::addShaderFromName("base");
-    ShaderManager::addShaderFromName("flat");
-    ShaderManager::addShaderFromName("instanced");
-    ShaderManager::addShaderFromName("edge");
-    ShaderManager::addShaderFromName("circle");
-    ShaderManager::addShaderFromName("screen");
-    ShaderManager::addShaderFromName("cylinder_edge");
-    ShaderManager::addShaderFromName("equirectangularToCubemap");
-    ShaderManager::addShaderFromName("skybox");
-    ShaderManager::addShaderFromName("cubeMapConvolution");
-    ShaderManager::addShaderFromName("prefilter_cubemap");
-    ShaderManager::addShaderFromName("vrScreen");
+    impl->shader_manager = shader_manager;
+    impl->shader_manager->addShaderFromName("base");
+    impl->shader_manager->addShaderFromName("flat");
+    impl->shader_manager->addShaderFromName("instanced");
+    impl->shader_manager->addShaderFromName("edge");
+    impl->shader_manager->addShaderFromName("circle");
+    impl->shader_manager->addShaderFromName("screen");
+    impl->shader_manager->addShaderFromName("cylinder_edge");
+    impl->shader_manager->addShaderFromName("equirectangularToCubemap");
+    impl->shader_manager->addShaderFromName("skybox");
+    impl->shader_manager->addShaderFromName("cubeMapConvolution");
+    impl->shader_manager->addShaderFromName("prefilter_cubemap");
+    impl->shader_manager->addShaderFromName("vrScreen");
 }
 
 void RendererSystem::finishFrame()
@@ -352,7 +355,7 @@ void RendererSystem::finishFrame()
     Framebuffer::useDefault();
     clear();
     impl->quad_vao->use();
-    auto shader = ShaderManager::getShader("screen");
+    auto shader = impl->shader_manager->getShader("screen");
     shader->setInt("screen_texture", 0);
 
     shader->use();
@@ -431,7 +434,7 @@ void RendererSystem::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
 
     // * Create a cubemap from the equirectangular map
     {
-        atcg::ref_ptr<Shader> equirect_shader = ShaderManager::getShader("equirectangularToCubemap");
+        atcg::ref_ptr<Shader> equirect_shader = impl->shader_manager->getShader("equirectangularToCubemap");
         float width                           = impl->skybox_cubemap->width();
         float height                          = impl->skybox_cubemap->height();
         Framebuffer captureFBO(width, height);
@@ -462,7 +465,7 @@ void RendererSystem::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
 
     // * Convolution of cube map for irradiance map
     {
-        atcg::ref_ptr<Shader> cubeconv_shader = ShaderManager::getShader("cubeMapConvolution");
+        atcg::ref_ptr<Shader> cubeconv_shader = impl->shader_manager->getShader("cubeMapConvolution");
         float width                           = impl->irradiance_cubemap->width();
         float height                          = impl->irradiance_cubemap->height();
         Framebuffer captureFBO(width, height);
@@ -491,7 +494,7 @@ void RendererSystem::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
 
     // * Prefilter environment map
     {
-        atcg::ref_ptr<Shader> prefilter_shader = ShaderManager::getShader("prefilter_cubemap");
+        atcg::ref_ptr<Shader> prefilter_shader = impl->shader_manager->getShader("prefilter_cubemap");
         float width                            = impl->prefiltered_cubemap->width();
         float height                           = impl->prefiltered_cubemap->height();
 
@@ -701,7 +704,7 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
         case ATCG_DRAW_MODE_EDGES:
         {
-            auto edge_shader = ShaderManager::getShader("edge");
+            auto edge_shader = impl->shader_manager->getShader("edge");
             edge_shader->setInt("entityID", -1);
             impl->setMaterial(impl->standard_material, edge_shader);
             atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
@@ -711,7 +714,7 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
         case ATCG_DRAW_MODE_EDGES_CYLINDER:
         {
-            auto edge_shader = ShaderManager::getShader("cylinder_edge");
+            auto edge_shader = impl->shader_manager->getShader("cylinder_edge");
             edge_shader->setInt("entityID", -1);
             impl->setMaterial(impl->standard_material, edge_shader);
             impl->drawGrid(mesh->getVerticesBuffer(), mesh->getEdgesBuffer(), edge_shader, camera, model, color);
@@ -837,14 +840,14 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
-            impl->setMaterial(impl->standard_material, ShaderManager::getShader("edge"));
-            ShaderManager::getShader("edge")->setInt("entityID", entity_id);
+            impl->setMaterial(impl->standard_material, impl->shader_manager->getShader("edge"));
+            impl->shader_manager->getShader("edge")->setInt("entityID", entity_id);
             atcg::ref_ptr<VertexBuffer> points = geometry.graph->getVerticesBuffer();
             points->bindStorage(0);
             impl->drawVAO(geometry.graph->getEdgesArray(),
                           camera,
                           renderer.color,
-                          ShaderManager::getShader("edge"),
+                          impl->shader_manager->getShader("edge"),
                           transform.getModel(),
                           GL_POINTS,
                           geometry.graph->n_edges(),
@@ -858,14 +861,14 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
         if(renderer.visible)
         {
-            auto& shader = ShaderManager::getShader("cylinder_edge");
+            auto& shader = impl->shader_manager->getShader("cylinder_edge");
             impl->setMaterial(renderer.material, shader);
             shader->setInt("entityID", entity_id);
             shader->setFloat("edge_radius", renderer.radius);
             impl->drawGrid(geometry.graph->getVerticesBuffer(),
                            geometry.graph->getEdgesBuffer(),
-                           ShaderManager::getShader("cylinder_"
-                                                    "edge"),
+                           impl->shader_manager->getShader("cylinder_"
+                                                           "edge"),
                            camera,
                            transform.getModel(),
                            glm::vec3(1));
@@ -883,7 +886,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                 geometry.graph->getVerticesArray()->pushInstanceBuffer(renderer.instance_vbo);
             }
 
-            auto instance_shader = ShaderManager::getShader("instanced");
+            auto instance_shader = impl->shader_manager->getShader("instanced");
             instance_shader->setInt("entityID", entity_id);
             impl->setMaterial(renderer.material, instance_shader);
             atcg::ref_ptr<VertexArray> vao_mesh      = geometry.graph->getVerticesArray();
@@ -911,11 +914,12 @@ void RendererSystem::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr
         glDepthFunc(GL_LEQUAL);
         bool culling = impl->culling_enabled;
         toggleCulling(false);
-        ShaderManager::getShader("skybox")->use();
-        ShaderManager::getShader("skybox")->setInt("skybox", RendererSystem::Impl::TextureBindings::SKYBOX_TEXTURE);
+        impl->shader_manager->getShader("skybox")->use();
+        impl->shader_manager->getShader("skybox")->setInt("skybox",
+                                                          RendererSystem::Impl::TextureBindings::SKYBOX_TEXTURE);
         impl->skybox_cubemap->use(RendererSystem::Impl::TextureBindings::SKYBOX_TEXTURE);
 
-        draw(impl->cube, camera, glm::mat4(1), glm::vec3(1), ShaderManager::getShader("skybox"));
+        draw(impl->cube, camera, glm::mat4(1), glm::vec3(1), impl->shader_manager->getShader("skybox"));
 
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
@@ -940,7 +944,7 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
         Entity entity(e, scene.get());
         setLineSize(2.0f);
         uint32_t entity_id = (uint32_t)entity._entity_handle;
-        atcg::ShaderManager::getShader("edge")->setInt("entityID", entity_id);
+        impl->shader_manager->getShader("edge")->setInt("entityID", entity_id);
         atcg::CameraComponent& comp          = entity.getComponent<CameraComponent>();
         atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(comp.camera);
         float aspect_ratio                   = cam->getAspectRatio();
@@ -951,7 +955,7 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
                              camera,
                              model,
                              comp.color,
-                             atcg::ShaderManager::getShader("edge"),
+                             impl->shader_manager->getShader("edge"),
                              atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
     }
 }
@@ -1017,7 +1021,7 @@ void RendererSystem::drawCircle(const glm::vec3& position,
                                 const atcg::ref_ptr<Camera>& camera)
 {
     impl->quad_vao->use();
-    const auto& shader = ShaderManager::getShader("circle");
+    const auto& shader = impl->shader_manager->getShader("circle");
     shader->setVec3("flat_color", color);
     shader->setFloat("radius", radius);
     shader->setFloat("thickness", thickness);
@@ -1065,7 +1069,7 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
 
     setLineSize(1.0f);
 
-    auto& shader = atcg::ShaderManager::getShader("edge");
+    auto& shader = impl->shader_manager->getShader("edge");
     shader->setInt("entityID", -1);
     shader->setFloat("fall_off_edge", distance);
 
@@ -1135,7 +1139,7 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Framebuffer>& img)
 void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img)
 {
     impl->quad_vao->use();
-    auto shader = ShaderManager::getShader("screen");
+    auto shader = impl->shader_manager->getShader("screen");
     shader->setInt("screen_texture", 0);
 
     shader->use();
