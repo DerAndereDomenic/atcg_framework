@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The framework can be installed via pip
 - Possiblity to index individual layers of a TextureArray
 - create method for Cubemaps from tensor data
+- Added support for unsigend data types in torch tensors
 
 ### Changed
 

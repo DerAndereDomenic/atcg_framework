@@ -36,14 +36,29 @@ ATCG_INLINE torch::TensorOptions int16HostOptions()
     return torch::TensorOptions {}.dtype(torch::kInt16).device(atcg::CPU);
 }
 
+ATCG_INLINE torch::TensorOptions uint16HostOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt16).device(atcg::CPU);
+}
+
 ATCG_INLINE torch::TensorOptions int32HostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt32).device(atcg::CPU);
 }
 
+ATCG_INLINE torch::TensorOptions uint32HostOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt32).device(atcg::CPU);
+}
+
 ATCG_INLINE torch::TensorOptions int64HostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt64).device(atcg::CPU);
+}
+
+ATCG_INLINE torch::TensorOptions uint64HostOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt64).device(atcg::CPU);
 }
 
 ATCG_INLINE torch::TensorOptions floatHostOptions()
@@ -71,14 +86,29 @@ ATCG_INLINE torch::TensorOptions int16DeviceOptions()
     return torch::TensorOptions {}.dtype(torch::kInt16).device(atcg::GPU);
 }
 
+ATCG_INLINE torch::TensorOptions uint16DeviceOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt16).device(atcg::GPU);
+}
+
 ATCG_INLINE torch::TensorOptions int32DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt32).device(atcg::GPU);
 }
 
+ATCG_INLINE torch::TensorOptions uint32DeviceOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt32).device(atcg::GPU);
+}
+
 ATCG_INLINE torch::TensorOptions int64DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt64).device(atcg::GPU);
+}
+
+ATCG_INLINE torch::TensorOptions uint64DeviceOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt64).device(atcg::GPU);
 }
 
 ATCG_INLINE torch::TensorOptions floatDeviceOptions()
@@ -109,11 +139,16 @@ ATCG_INLINE torch::TensorOptions HostOptions<uint8_t>()
     return uint8HostOptions();
 }
 
-
 template<>
 ATCG_INLINE torch::TensorOptions HostOptions<int16_t>()
 {
     return int16HostOptions();
+}
+
+template<>
+ATCG_INLINE torch::TensorOptions HostOptions<uint16_t>()
+{
+    return uint16HostOptions();
 }
 
 template<>
@@ -123,9 +158,21 @@ ATCG_INLINE torch::TensorOptions HostOptions<int32_t>()
 }
 
 template<>
+ATCG_INLINE torch::TensorOptions HostOptions<uint32_t>()
+{
+    return uint32HostOptions();
+}
+
+template<>
 ATCG_INLINE torch::TensorOptions HostOptions<int64_t>()
 {
     return int64HostOptions();
+}
+
+template<>
+ATCG_INLINE torch::TensorOptions HostOptions<uint64_t>()
+{
+    return uint64HostOptions();
 }
 
 template<>
@@ -159,9 +206,21 @@ ATCG_INLINE torch::TensorOptions DeviceOptions<int16_t>()
 }
 
 template<>
+ATCG_INLINE torch::TensorOptions DeviceOptions<uint16_t>()
+{
+    return uint16DeviceOptions();
+}
+
+template<>
 ATCG_INLINE torch::TensorOptions DeviceOptions<int32_t>()
 {
     return int32DeviceOptions();
+}
+
+template<>
+ATCG_INLINE torch::TensorOptions DeviceOptions<uint32_t>()
+{
+    return uint32DeviceOptions();
 }
 
 template<>
@@ -169,6 +228,13 @@ ATCG_INLINE torch::TensorOptions DeviceOptions<int64_t>()
 {
     return int64DeviceOptions();
 }
+
+template<>
+ATCG_INLINE torch::TensorOptions DeviceOptions<uint64_t>()
+{
+    return uint64DeviceOptions();
+}
+
 
 template<>
 ATCG_INLINE torch::TensorOptions DeviceOptions<float>()

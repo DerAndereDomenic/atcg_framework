@@ -199,9 +199,15 @@ DataStructure
    :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::int8HostOptions
    :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::uint16HostOptions
+   :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::int16HostOptions
    :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::uint32HostOptions
+   :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::int32HostOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::uint64HostOptions
    :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::int64HostOptions
    :project: ATCGLIB
@@ -213,9 +219,15 @@ DataStructure
    :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::uint8DeviceOptions
    :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::uint16DeviceOptions
+   :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::int16DeviceOptions
    :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::uint32DeviceOptions
+   :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::int32DeviceOptions
+   :project: ATCGLIB
+.. doxygenfunction:: atcg::TensorOptions::uint64DeviceOptions
    :project: ATCGLIB
 .. doxygenfunction:: atcg::TensorOptions::int64DeviceOptions
    :project: ATCGLIB
