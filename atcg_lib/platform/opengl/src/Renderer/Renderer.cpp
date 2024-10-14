@@ -1,6 +1,7 @@
 #include <Renderer/Renderer.h>
 #include <glad/glad.h>
 
+#include <Core/Assert.h>
 #include <Core/Path.h>
 #include <Core/SystemRegistry.h>
 
@@ -10,7 +11,6 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 
-
 #include <queue>
 
 namespace atcg
@@ -18,7 +18,7 @@ namespace atcg
 class RendererSystem::Impl
 {
 public:
-    Impl(uint32_t width, uint32_t height);
+    Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<Context>& context);
 
     ~Impl() = default;
 
@@ -111,8 +111,12 @@ RendererSystem::RendererSystem() {}
 
 RendererSystem::~RendererSystem() {}
 
-RendererSystem::Impl::Impl(uint32_t width, uint32_t height)
+RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<Context>& context)
 {
+    this->context = context;
+
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
     // Generate quad
     {
         quad_vao = atcg::make_ref<VertexArray>();
@@ -197,6 +201,8 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height)
 
 void RendererSystem::Impl::initGrid()
 {
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
     int32_t grid_size = 1001;
 
     std::vector<atcg::Vertex> host_points;
@@ -221,6 +227,8 @@ void RendererSystem::Impl::initGrid()
 
 void RendererSystem::Impl::initCross()
 {
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
     std::vector<atcg::Vertex> points;
     points.push_back(atcg::Vertex(glm::vec3(-10000.0f, 0.0f, 0.0f), glm::vec3(1)));
     points.push_back(atcg::Vertex(glm::vec3(10000.0f, 0.0f, 0.0f), glm::vec3(1)));
@@ -237,6 +245,8 @@ void RendererSystem::Impl::initCross()
 
 void RendererSystem::Impl::initCube()
 {
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
     std::vector<atcg::Vertex> points;
     points.push_back(atcg::Vertex(glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(1)));
     points.push_back(atcg::Vertex(glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1)));
@@ -266,6 +276,8 @@ void RendererSystem::Impl::initCube()
 
 void RendererSystem::Impl::initCameraFrustrum()
 {
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
     glm::vec3 eye = glm::vec3(0);
 
     std::vector<atcg::Vertex> points;
@@ -291,6 +303,8 @@ void RendererSystem::Impl::initCameraFrustrum()
 
 void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader)
 {
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
     material.getDiffuseTexture()->use(RendererSystem::Impl::TextureBindings::DIFFUSE_TEXTURE);
     shader->setInt("texture_diffuse", RendererSystem::Impl::TextureBindings::DIFFUSE_TEXTURE);
 
@@ -320,16 +334,15 @@ void RendererSystem::init(uint32_t width,
                           const atcg::ref_ptr<Context>& context,
                           const atcg::ref_ptr<ShaderManagerSystem>& shader_manager)
 {
+    context->makeCurrent();
+
     ATCG_INFO("OpenGL Renderer:");
     ATCG_INFO("    Vendor: {0}", (const char*)glGetString(GL_VENDOR));
     ATCG_INFO("    Renderer: {0}", (const char*)glGetString(GL_RENDERER));
     ATCG_INFO("    Version: {0}", (const char*)glGetString(GL_VERSION));
     ATCG_INFO("---------------------------------");
 
-    impl = atcg::make_scope<Impl>(width, height);
-
-    impl->context = context;
-    impl->context->makeCurrent();
+    impl = atcg::make_scope<Impl>(width, height, context);
 
     // General settings
     toggleDepthTesting(true);
@@ -358,6 +371,7 @@ void RendererSystem::init(uint32_t width,
 
 void RendererSystem::finishFrame()
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 #ifndef ATCG_HEADLESS
     Framebuffer::useDefault();
     clear();
@@ -376,6 +390,7 @@ void RendererSystem::finishFrame()
 
 void RendererSystem::setClearColor(const glm::vec4& color)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->clear_color = color;
     glClearColor(color.r, color.g, color.b, color.a);
 }
@@ -387,18 +402,21 @@ glm::vec4 RendererSystem::getClearColor() const
 
 void RendererSystem::setPointSize(const float& size)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->point_size = size;
     glPointSize(size);
 }
 
 void RendererSystem::setLineSize(const float& size)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->line_size = size;
     glLineWidth(size);
 }
 
 void RendererSystem::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     glViewport(x, y, width, height);
 }
 
@@ -414,6 +432,8 @@ void RendererSystem::setSkybox(const atcg::ref_ptr<Image>& skybox)
 
 void RendererSystem::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     bool culling     = impl->culling_enabled;
     impl->has_skybox = true;
     toggleCulling(false);
@@ -568,6 +588,8 @@ atcg::ref_ptr<TextureCube> RendererSystem::getSkyboxCubemap() const
 
 void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     setViewport(0, 0, width, height);
     impl->screen_fbo = atcg::make_ref<Framebuffer>(width, height);
     impl->screen_fbo->attachColor();
@@ -582,6 +604,7 @@ void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
 
 void RendererSystem::useScreenBuffer() const
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->screen_fbo->use();
 }
 
@@ -592,6 +615,7 @@ atcg::ref_ptr<Framebuffer> RendererSystem::getFramebuffer() const
 
 void RendererSystem::clear() const
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     glClear(impl->clear_flag);
 
     if(Framebuffer::currentFramebuffer() == impl->screen_fbo->getID())
@@ -603,6 +627,7 @@ void RendererSystem::clear() const
 
 void RendererSystem::toggleDepthTesting(bool enable)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->clear_flag = GL_COLOR_BUFFER_BIT;
     switch(enable)
     {
@@ -622,6 +647,7 @@ void RendererSystem::toggleDepthTesting(bool enable)
 
 void RendererSystem::toggleCulling(bool enable)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->culling_enabled = enable;
     switch(enable)
     {
@@ -640,6 +666,7 @@ void RendererSystem::toggleCulling(bool enable)
 
 void RendererSystem::setCullFace(CullMode mode)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     switch(mode)
     {
         case CullMode::ATCG_BACK_FACE_CULLING:
@@ -672,6 +699,8 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
                           const atcg::ref_ptr<Shader>& shader,
                           DrawMode draw_mode)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     mesh->unmapAllPointers();
     switch(draw_mode)
     {
@@ -745,6 +774,8 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
 // drawEntity
 void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     if(entity.hasComponent<CustomRenderComponent>())
     {
         CustomRenderComponent renderer = entity.getComponent<CustomRenderComponent>();
@@ -914,6 +945,8 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 // drawScene
 void RendererSystem::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     // TODO: Just raw opengl rendering code here
     if(impl->has_skybox)
     {
@@ -944,6 +977,8 @@ void RendererSystem::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr
 
 void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     const auto& view = scene->getAllEntitiesWith<atcg::CameraComponent>();
 
     for(auto e: view)
@@ -974,6 +1009,8 @@ void RendererSystem::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffe
                                                  const atcg::ref_ptr<Shader>& shader,
                                                  uint32_t n_instances)
 {
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
     atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVerticesArray();
     if(vao_sphere->peekVertexBuffer() != vbo)
     {
@@ -998,6 +1035,8 @@ void RendererSystem::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
                                    uint32_t size,
                                    uint32_t instances)
 {
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
     vao->use();
     shader->setVec3("flat_color", color);
     shader->setInt("instanced", static_cast<int>(instances > 1));
@@ -1027,6 +1066,8 @@ void RendererSystem::drawCircle(const glm::vec3& position,
                                 const glm::vec3& color,
                                 const atcg::ref_ptr<Camera>& camera)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     impl->quad_vao->use();
     const auto& shader = impl->shader_manager->getShader("circle");
     shader->setVec3("flat_color", color);
@@ -1054,6 +1095,8 @@ void RendererSystem::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
                                     const glm::mat4& model,
                                     const glm::vec3& color)
 {
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
     atcg::ref_ptr<VertexArray> vao_cylinder = cylinder_mesh->getVerticesArray();
     if(vao_cylinder->peekVertexBuffer() != indices)
     {
@@ -1071,6 +1114,8 @@ void RendererSystem::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
 
 void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency_)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     float distance     = glm::abs(camera->getPosition().y);
     float current_size = impl->line_size;
 
@@ -1145,6 +1190,8 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Framebuffer>& img)
 
 void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     impl->quad_vao->use();
     auto shader = impl->shader_manager->getShader("screen");
     shader->setInt("screen_texture", 0);
@@ -1158,6 +1205,8 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img)
 
 int RendererSystem::getEntityIndex(const glm::vec2& mouse) const
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     useScreenBuffer();
     glReadBuffer(GL_COLOR_ATTACHMENT1);
     int pixelData;
@@ -1170,6 +1219,8 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
                                 const uint32_t width,
                                 const std::string& path)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     auto data = screenshot(scene, camera, width);
 
     Image img(data);
@@ -1183,6 +1234,8 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
                                 const uint32_t height,
                                 const std::string& path)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     atcg::ref_ptr<PerspectiveCamera> cam         = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
     atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
     screenshot_buffer->attachColor();
@@ -1206,6 +1259,8 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
 torch::Tensor
 RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     atcg::ref_ptr<PerspectiveCamera> cam         = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
     float height                                 = (float)width / cam->getAspectRatio();
     atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
@@ -1227,11 +1282,15 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
 torch::Tensor RendererSystem::getFrame(const torch::DeviceType& device) const
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     return impl->screen_fbo->getColorAttachement(0)->getData(device);
 }
 
 torch::Tensor RendererSystem::getZBuffer(const torch::DeviceType& device) const
 {
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     auto frame           = impl->screen_fbo->getDepthAttachement();
     uint32_t width       = frame->width();
     uint32_t height      = frame->height();
