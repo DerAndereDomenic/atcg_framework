@@ -12,6 +12,8 @@ namespace atcg
 class Framebuffer
 {
 public:
+    Framebuffer() = default;
+
     /**
      * @brief Create a framebuffer
      *
