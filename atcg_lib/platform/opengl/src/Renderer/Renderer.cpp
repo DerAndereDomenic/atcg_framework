@@ -947,7 +947,19 @@ void RendererSystem::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    // TODO: Just raw opengl rendering code here
+    drawSkybox(camera);
+
+    const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
+
+    for(auto e: view)
+    {
+        Entity entity(e, scene.get());
+        RendererSystem::draw(entity, camera);
+    }
+}
+
+void RendererSystem::drawSkybox(const atcg::ref_ptr<Camera>& camera)
+{
     if(impl->has_skybox)
     {
         glDepthMask(GL_FALSE);
@@ -964,14 +976,6 @@ void RendererSystem::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
         toggleCulling(culling);
-    }
-
-    const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
-
-    for(auto e: view)
-    {
-        Entity entity(e, scene.get());
-        RendererSystem::draw(entity, camera);
     }
 }
 

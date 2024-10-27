@@ -207,6 +207,13 @@ public:
     void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
 
     /**
+     * @brief Draw a skybox
+     *
+     * @param camera The camera
+     */
+    void drawSkybox(const atcg::ref_ptr<Camera>& camera);
+
+    /**
      * @brief Draw camera frustrums
      *
      * @param scene The scene
@@ -615,6 +622,16 @@ ATCG_INLINE void draw(Entity entity, const atcg::ref_ptr<Camera>& camera = {})
 ATCG_INLINE void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->draw(scene, camera);
+}
+
+/**
+ * @brief Draw a skybox
+ *
+ * @param camera The camera
+ */
+ATCG_INLINE void drawSkybox(const atcg::ref_ptr<Camera>& camera)
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(camera);
 }
 
 /**
