@@ -701,13 +701,26 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
+    draw(mesh, impl->standard_material, camera, model, color, shader, draw_mode);
+}
+
+void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
+                          const Material& material,
+                          const atcg::ref_ptr<Camera>& camera,
+                          const glm::mat4& model,
+                          const glm::vec3& color,
+                          const atcg::ref_ptr<Shader>& shader,
+                          DrawMode draw_mode)
+{
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
     mesh->unmapAllPointers();
     switch(draw_mode)
     {
         case ATCG_DRAW_MODE_TRIANGLE:
         {
             shader->setInt("entityID", -1);
-            impl->setMaterial(impl->standard_material, shader);
+            impl->setMaterial(material, shader);
             impl->drawVAO(mesh->getVerticesArray(),
                           camera,
                           color,
@@ -720,7 +733,7 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
         case ATCG_DRAW_MODE_POINTS:
         {
             shader->setInt("entityID", -1);
-            impl->setMaterial(impl->standard_material, shader);
+            impl->setMaterial(material, shader);
             SystemRegistry::instance()
                 ->getSystem<RendererSystem>()
                 ->impl->drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
@@ -729,7 +742,7 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
             shader->setInt("entityID", -1);
-            impl->setMaterial(impl->standard_material, shader);
+            impl->setMaterial(material, shader);
             impl->drawPointCloudSpheres(mesh->getVerticesArray()->peekVertexBuffer(),
                                         camera,
                                         model,
@@ -742,7 +755,7 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
         {
             auto edge_shader = impl->shader_manager->getShader("edge");
             edge_shader->setInt("entityID", -1);
-            impl->setMaterial(impl->standard_material, edge_shader);
+            impl->setMaterial(material, edge_shader);
             atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
             points->bindStorage(0);
             impl->drawVAO(mesh->getEdgesArray(), camera, color, edge_shader, model, GL_POINTS, mesh->n_edges(), 1);
@@ -752,14 +765,14 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
         {
             auto edge_shader = impl->shader_manager->getShader("cylinder_edge");
             edge_shader->setInt("entityID", -1);
-            impl->setMaterial(impl->standard_material, edge_shader);
+            impl->setMaterial(material, edge_shader);
             impl->drawGrid(mesh->getVerticesBuffer(), mesh->getEdgesBuffer(), edge_shader, camera, model, color);
         }
         break;
         case ATCG_DRAW_MODE_INSTANCED:
         {
             shader->setInt("entityID", -1);
-            impl->setMaterial(impl->standard_material, shader);
+            impl->setMaterial(material, shader);
             atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
             atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
             uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
