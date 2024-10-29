@@ -1,5 +1,7 @@
 #include <Renderer/Framebuffer.h>
 
+#include <Core/Assert.h>
+
 #include <glad/glad.h>
 
 namespace atcg
@@ -90,6 +92,20 @@ void Framebuffer::attachDepth(const atcg::ref_ptr<Texture2D>& depth_map)
     _depth_attachement = depth_map;
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depth_attachement->getID(), 0);
     useDefault();
+}
+
+void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, bool depth)
+{
+    ATCG_ASSERT((source->width() == _width) && (source->height() == _height),
+                "Can only blit Framebuffers of same size");
+
+    GLbitfield flags = 0;
+    if(color) flags |= GL_COLOR_BUFFER_BIT;
+    if(depth) flags |= GL_DEPTH_BUFFER_BIT;
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, source->getID());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _ID);
+    glBlitFramebuffer(0, 0, _width, _height, 0, 0, _width, _height, flags, GL_NEAREST);
 }
 
 void Framebuffer::bindByID(uint32_t fbo_id)

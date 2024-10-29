@@ -64,6 +64,16 @@ public:
     void attachDepth(const atcg::ref_ptr<Texture2D>& depth_map);
 
     /**
+     * @brief Blit two framebuffer together.
+     * Copies the content of source into *this.
+     *
+     * @param source The source framebuffer to copy from
+     * @param color If color information should be copied
+     * @param depth If depth information should be copied
+     */
+    void blit(const atcg::ref_ptr<Framebuffer>& source, bool color = true, bool depth = true);
+
+    /**
      * @brief Get a color attachement
      *
      * @param slot The number of which attachement to use
