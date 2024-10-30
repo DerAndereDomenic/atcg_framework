@@ -4,6 +4,7 @@
 #include <Core/LayerStack.h>
 #include <Core/Window.h>
 #include <Events/WindowEvent.h>
+#include <Events/KeyEvent.h>
 #include <Core/Platform.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Renderer.h>
@@ -126,6 +127,7 @@ private:
     bool onWindowClose(WindowCloseEvent* e);
     bool onWindowResize(WindowResizeEvent* e);
     bool onViewportResize(ViewportResizeEvent* e);
+    bool onKeyPress(KeyPressedEvent* e);
     void init(const WindowProps& props);
 
 private:

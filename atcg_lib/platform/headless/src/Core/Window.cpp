@@ -83,6 +83,8 @@ void Window::resize(const uint32_t& _width, const uint32_t& _height)
 
 void Window::toggleVSync(bool vsync) {}
 
+void Window::toggleFullscreen() {}
+
 glm::vec2 Window::getPosition() const
 {
     return glm::vec2(0);
