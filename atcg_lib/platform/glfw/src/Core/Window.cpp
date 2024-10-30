@@ -34,8 +34,9 @@ Window::Window(const WindowProps& props)
     _context->create();
     _context->initGraphicsAPI();
 
-    _data.width  = props.width;
-    _data.height = props.height;
+    _data.width      = props.width;
+    _data.height     = props.height;
+    _data.fullscreen = false;
 
     void* window = _context->getContextHandle();
     glfwSetWindowTitle((GLFWwindow*)window, props.title.c_str());
@@ -212,6 +213,66 @@ void Window::resize(const uint32_t& _width, const uint32_t& _height)
 void Window::toggleVSync(bool vsync)
 {
     glfwSwapInterval(vsync);
+}
+
+void Window::toggleFullscreen()
+{
+    if(!_data.fullscreen)
+    {
+        // Store for exiting fullscreen
+        _data.fullscreen_width  = _data.width;
+        _data.fullscreen_height = _data.height;
+        _data.fullscreen_x      = getPosition().x;
+        _data.fullscreen_y      = getPosition().y;
+
+        // Find best monitor
+        int monitor_count;
+        GLFWmonitor** monitors    = glfwGetMonitors(&monitor_count);
+        GLFWmonitor* best_monitor = nullptr;
+
+        int maxOverlapArea = 0;
+        for(int i = 0; i < monitor_count; ++i)
+        {
+            int mx, my, mw, mh;
+            glfwGetMonitorWorkarea(monitors[i], &mx, &my, &mw, &mh);
+
+            int overlapWidth  = std::max(0,
+                                        std::min((int)_data.fullscreen_x + (int)_data.fullscreen_width, mx + mw) -
+                                            std::max(_data.fullscreen_x, mx));
+            int overlapHeight = std::max(0,
+                                         std::min((int)_data.fullscreen_y + (int)_data.fullscreen_height, my + mh) -
+                                             std::max(_data.fullscreen_y, my));
+            int overlapArea   = overlapWidth * overlapHeight;
+
+            if(overlapArea > maxOverlapArea)
+            {
+                maxOverlapArea = overlapArea;
+                best_monitor   = monitors[i];
+            }
+        }
+
+        int x, y, width, height;
+        glfwGetMonitorWorkarea(best_monitor, &x, &y, &width, &height);
+        glfwSetWindowMonitor((GLFWwindow*)_context->getContextHandle(),
+                             best_monitor,
+                             x,
+                             y,
+                             width,
+                             height,
+                             GLFW_DONT_CARE);
+        _data.fullscreen = true;
+    }
+    else
+    {
+        glfwSetWindowMonitor((GLFWwindow*)_context->getContextHandle(),
+                             NULL,
+                             _data.fullscreen_x,
+                             _data.fullscreen_y,
+                             _data.fullscreen_width,
+                             _data.fullscreen_height,
+                             GLFW_DONT_CARE);
+        _data.fullscreen = false;
+    }
 }
 
 glm::vec2 Window::getPosition() const

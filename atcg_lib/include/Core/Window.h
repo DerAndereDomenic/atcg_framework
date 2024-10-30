@@ -112,6 +112,12 @@ public:
     void toggleVSync(bool vsync);
 
     /**
+     * @brief Toggle fullscreen mode of the window.
+     * If the window is already in fullscreen, it will go back to window mode.
+     */
+    void toggleFullscreen();
+
+    /**
      * @brief Get the window position
      *
      * @return Vector of (x,y) with the absolute window coordinates
@@ -140,6 +146,13 @@ public:
     ATCG_INLINE uint32_t getHeight() const { return _data.height; }
 
     /**
+     * @brief Check if the window is currently in fullscreen mode
+     *
+     * @return True if in fullscreen
+     */
+    ATCG_INLINE bool isFullScreen() const { return _data.fullscreen; }
+
+    /**
      * @brief Get the context
      *
      * @return The context
@@ -154,6 +167,11 @@ private:
         float current_mouse_x;
         float current_mouse_y;
         EventCallbackFn on_event;
+        bool fullscreen;
+        uint32_t fullscreen_width;
+        uint32_t fullscreen_height;
+        int32_t fullscreen_x;
+        int32_t fullscreen_y;
     };
 
     WindowData _data;
