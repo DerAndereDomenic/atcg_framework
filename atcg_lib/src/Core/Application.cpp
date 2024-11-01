@@ -2,6 +2,7 @@
 
 #include <Core/SystemRegistry.h>
 #include <Core/Assert.h>
+#include <Core/KeyCodes.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/ShaderManager.h>
@@ -74,6 +75,7 @@ void Application::onEvent(Event* e)
     dispatcher.dispatch<WindowCloseEvent>(ATCG_BIND_EVENT_FN(Application::onWindowClose));
     dispatcher.dispatch<WindowResizeEvent>(ATCG_BIND_EVENT_FN(Application::onWindowResize));
     dispatcher.dispatch<ViewportResizeEvent>(ATCG_BIND_EVENT_FN(Application::onViewportResize));
+    dispatcher.dispatch<KeyPressedEvent>(ATCG_BIND_EVENT_FN(Application::onKeyPress));
 
     for(auto it = _layer_stack.rbegin(); it != _layer_stack.rend(); ++it)
     {
@@ -193,6 +195,15 @@ bool Application::onWindowResize(WindowResizeEvent* e)
 bool Application::onViewportResize(ViewportResizeEvent* e)
 {
     Renderer::resize(e->getWidth(), e->getHeight());
+    return false;
+}
+
+bool Application::onKeyPress(KeyPressedEvent* e)
+{
+    if(e->getKeyCode() == ATCG_KEY_F11)
+    {
+        _window->toggleFullscreen();
+    }
     return false;
 }
 }    // namespace atcg
