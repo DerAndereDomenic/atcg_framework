@@ -21,6 +21,11 @@ uniform samplerCube irradiance_map;
 uniform samplerCube prefilter_map;
 uniform sampler2D lut;
 
+// Light data
+uniform vec3 light_position;
+uniform vec3 light_color;
+uniform float light_intensity;
+
 float distributionGGX(float NdotH, float roughness)
 {
 	float a = roughness * roughness;
@@ -71,8 +76,9 @@ void main()
     vec3 frag_pos = texture(position_texture, frag_uv).rgb;
 
     // Define colocated direction light
-    vec3 light_radiance = vec3(2.0);
-    vec3 light_dir = normalize(camera_dir);
+    vec3 light_dir = normalize(light_position - frag_pos);
+    float light_distance = length(light_position - frag_pos);
+    vec3 light_radiance = light_intensity * light_color / (light_distance * light_distance);
     vec3 view_dir = normalize(camera_pos - frag_pos);
 
     // Get parameters

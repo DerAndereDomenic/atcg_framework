@@ -10,6 +10,32 @@
 #include <random>
 #include <stb_image.h>
 
+struct PointLightComponent
+{
+    float intensity;
+    glm::vec3 color;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "PointLight"; }
+};
+
+class MyComponentGUIHandler : public atcg::ComponentGUIHandler
+{
+public:
+    MyComponentGUIHandler(const atcg::ref_ptr<atcg::Scene>& scene) : ComponentGUIHandler(scene) {}
+
+    template<typename T>
+    void draw_component(atcg::Entity entity, T& component)
+    {
+        atcg::ComponentGUIHandler::draw_component<T>(entity, component);
+    }
+
+    template<>
+    void draw_component<PointLightComponent>(atcg::Entity entity, PointLightComponent& component)
+    {
+        ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
+        ImGui::InputFloat("Intensity##PointLight", &component.intensity);
+    }
+};
 struct RenderContext
 {
     atcg::ref_ptr<atcg::Scene> scene;
@@ -161,6 +187,13 @@ public:
 
                 framebuffer->blit(g_buffer, false);
 
+                auto light            = context->scene->getEntitiesByName("Light").front();
+                auto& light_transform = light.getComponent<atcg::TransformComponent>();
+                auto& point_light     = light.getComponent<PointLightComponent>();
+
+                data->light_pass_shader->setVec3("light_position", light_transform.getPosition());
+                data->light_pass_shader->setFloat("light_intensity", point_light.intensity);
+                data->light_pass_shader->setVec3("light_color", point_light.color);
                 data->light_pass_shader->setInt("position_texture", 9);
                 data->light_pass_shader->setInt("normal_texture", 10);
                 data->light_pass_shader->setInt("color_texture", 11);
@@ -203,13 +236,19 @@ public:
         atcg::Application::get()->enableDockSpace(true);
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
-        auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
-        ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
-        atcg::Renderer::setSkybox(skybox);
+        // auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
+        // ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
+        // atcg::Renderer::setSkybox(skybox);
 
         scene = atcg::IO::read_scene((atcg::resource_directory() / "test_scene.obj").string());
 
-        panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
+        auto point_light = scene->createEntity("Light");
+        auto& light      = point_light.addComponent<PointLightComponent>();
+        light.color      = glm::vec3(1);
+        light.intensity  = 10.0f;
+        point_light.addComponent<atcg::TransformComponent>(glm::vec3(0, 5, 0));
+
+        panel = atcg::SceneHierarchyPanel<MyComponentGUIHandler>(scene);
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -275,7 +314,7 @@ public:
             ImGui::End();
         }
 
-        panel.renderPanel();
+        panel.renderPanel<PointLightComponent>();
         hovered_entity = panel.getSelectedEntity();
 
         atcg::drawGuizmo(hovered_entity, current_operation, camera_controller->getCamera());
@@ -361,7 +400,7 @@ private:
 
     atcg::ref_ptr<atcg::Graph> plane;
 
-    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
+    atcg::SceneHierarchyPanel<MyComponentGUIHandler> panel;
 
     float time       = 0.0f;
     bool in_viewport = false;
