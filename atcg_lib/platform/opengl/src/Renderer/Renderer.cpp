@@ -734,9 +734,7 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
         {
             shader->setInt("entityID", -1);
             impl->setMaterial(material, shader);
-            SystemRegistry::instance()
-                ->getSystem<RendererSystem>()
-                ->impl->drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
+            impl->drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
@@ -776,9 +774,7 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
             atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
             atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
             uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
-            SystemRegistry::instance()
-                ->getSystem<RendererSystem>()
-                ->impl->drawVAO(vao_mesh, camera, color, shader, model, GL_TRIANGLES, mesh->n_vertices(), n_instances);
+            impl->drawVAO(vao_mesh, camera, color, shader, model, GL_TRIANGLES, mesh->n_vertices(), n_instances);
         }
         break;
     }
