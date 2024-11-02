@@ -12,6 +12,8 @@
 
 struct PointLightComponent
 {
+    PointLightComponent() : intensity(10.0f), color(glm::vec3(1)) {}
+
     float intensity;
     glm::vec3 color;
 
