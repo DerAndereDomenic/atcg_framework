@@ -187,13 +187,24 @@ public:
 
                 framebuffer->blit(g_buffer, false);
 
-                auto light            = context->scene->getEntitiesByName("Light").front();
-                auto& light_transform = light.getComponent<atcg::TransformComponent>();
-                auto& point_light     = light.getComponent<PointLightComponent>();
 
-                data->light_pass_shader->setVec3("light_position", light_transform.getPosition());
-                data->light_pass_shader->setFloat("light_intensity", point_light.intensity);
-                data->light_pass_shader->setVec3("light_color", point_light.color);
+                auto light_view = context->scene->getAllEntitiesWith<PointLightComponent>();
+                int num_lights  = 0;
+
+                for(auto e: light_view)
+                {
+                    atcg::Entity light(e, context->scene.get());
+                    auto& light_transform = light.getComponent<atcg::TransformComponent>();
+                    auto& point_light     = light.getComponent<PointLightComponent>();
+                    std::stringstream ss;
+                    ss << "[" << std::to_string(num_lights) << "]";
+                    data->light_pass_shader->setVec3("light_positions" + ss.str(), light_transform.getPosition());
+                    data->light_pass_shader->setFloat("light_intensities" + ss.str(), point_light.intensity);
+                    data->light_pass_shader->setVec3("light_colors" + ss.str(), point_light.color);
+                    ++num_lights;
+                }
+                data->light_pass_shader->setInt("num_lights", num_lights);
+
                 data->light_pass_shader->setInt("position_texture", 9);
                 data->light_pass_shader->setInt("normal_texture", 10);
                 data->light_pass_shader->setInt("color_texture", 11);
