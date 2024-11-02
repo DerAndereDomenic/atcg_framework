@@ -6,6 +6,7 @@ layout (location = 0) out vec4 outPosition;
 layout (location = 1) out vec4 outNormal;
 layout (location = 2) out vec4 outBaseColor;
 layout (location = 3) out vec4 outSpecMet;
+layout (location = 4) out int outEntityID;
 
 in vec3 frag_normal;
 in vec3 frag_pos;
@@ -14,7 +15,7 @@ in vec2 frag_uv;
 in mat3 frag_tbn;
 
 uniform vec3 flat_color;
-uniform int entityID;
+uniform int entity_ID;
 
 // Material textures
 uniform sampler2D texture_diffuse;
@@ -38,5 +39,5 @@ void main()
     outNormal = vec4(normal, 1);
     outBaseColor = vec4(color_diffuse, 1);
     outSpecMet = vec4(metallic, roughness, 0, 1);
-    //outEntityID = entityID;
+    outEntityID = entity_ID;
 }

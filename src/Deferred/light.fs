@@ -9,7 +9,6 @@ in vec2 frag_uv;
 
 uniform vec3 camera_pos;
 uniform vec3 camera_dir;
-uniform int entityID;
 uniform int use_ibl;
 
 // Material textures
@@ -17,6 +16,7 @@ uniform sampler2D position_texture;
 uniform sampler2D normal_texture;
 uniform sampler2D color_texture;
 uniform sampler2D spec_met_texture;
+uniform isampler2D entity_texture;
 uniform samplerCube irradiance_map;
 uniform samplerCube prefilter_map;
 uniform sampler2D lut;
@@ -125,5 +125,6 @@ void main()
     vec3 color = (1.0 - float(use_ibl)) * brdf * light_radiance * NdotL + (float(use_ibl)) * ambient;
     
     outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), 1);
-    outEntityID = entityID;
+    ivec2 pixel_coords = ivec2(frag_uv * textureSize(color_texture, 0));
+    outEntityID = texelFetch(entity_texture, pixel_coords, 0).r;
 }

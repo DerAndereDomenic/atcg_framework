@@ -64,11 +64,19 @@ public:
                 spec_float2.format = atcg::TextureFormat::RGFLOAT;
                 auto spec_met_map  = atcg::Texture2D::create(spec_float2);
 
+                atcg::TextureSpecification spec_int;
+                spec_int.width               = width;
+                spec_int.height              = height;
+                spec_int.format              = atcg::TextureFormat::RINT;
+                spec_int.sampler.filter_mode = atcg::TextureFilterMode::NEAREST;
+                auto entity_map              = atcg::Texture2D::create(spec_int);
+
                 framebuffer = atcg::make_ref<atcg::Framebuffer>(width, height);
                 framebuffer->attachTexture(position_map);
                 framebuffer->attachTexture(normal_map);
                 framebuffer->attachTexture(color_map);
                 framebuffer->attachTexture(spec_met_map);
+                framebuffer->attachTexture(entity_map);
                 framebuffer->attachDepth();
                 framebuffer->complete();
 
@@ -88,6 +96,8 @@ public:
                 framebuffer->use();
                 atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
                 atcg::Renderer::clear();
+                int value = -1;
+                framebuffer->getColorAttachement(4)->fill(&value);
 
                 const auto& view = context->scene->getAllEntitiesWith<atcg::TransformComponent,
                                                                       atcg::GeometryComponent,
@@ -101,6 +111,7 @@ public:
                     auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
                     auto& renderer  = entity.getComponent<atcg::MeshRenderComponent>();
 
+                    data->geometry_pass_shader->setInt("entity_ID", (int)e);
                     atcg::Renderer::draw(geometry.graph,
                                          renderer.material,
                                          context->camera,
@@ -154,12 +165,14 @@ public:
                 data->light_pass_shader->setInt("normal_texture", 10);
                 data->light_pass_shader->setInt("color_texture", 11);
                 data->light_pass_shader->setInt("spec_met_texture", 12);
+                data->light_pass_shader->setInt("entity_texture", 13);
                 data->light_pass_shader->setVec3("camera_pos", context->camera->getPosition());
                 data->light_pass_shader->setVec3("camera_dir", context->camera->getDirection());
                 g_buffer->getColorAttachement(0)->use(9);
                 g_buffer->getColorAttachement(1)->use(10);
                 g_buffer->getColorAttachement(2)->use(11);
                 g_buffer->getColorAttachement(3)->use(12);
+                g_buffer->getColorAttachement(4)->use(13);
                 atcg::Renderer::toggleDepthTesting(false);
                 atcg::Renderer::draw(data->screen_quad, {}, glm::mat4(1), glm::vec3(1), data->light_pass_shader);
                 atcg::Renderer::toggleDepthTesting(true);
