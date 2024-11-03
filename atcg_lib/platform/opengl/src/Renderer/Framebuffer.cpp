@@ -41,7 +41,7 @@ bool Framebuffer::complete() const
     bool complete  = error == GL_FRAMEBUFFER_COMPLETE;
     if(!complete)
     {
-        ATCG_ERROR("ERROR: Framebuffer not complete!");
+        ATCG_ERROR("ERROR: Framebuffer not complete! Code: {}", error);
     }
     useDefault();
     return complete;
@@ -86,11 +86,11 @@ void Framebuffer::attachDepth()
     attachDepth(_depth_attachement);
 }
 
-void Framebuffer::attachDepth(const atcg::ref_ptr<Texture2D>& depth_map)
+void Framebuffer::attachDepth(const atcg::ref_ptr<Texture>& depth_map)
 {
     use();
     _depth_attachement = depth_map;
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, _depth_attachement->getID(), 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, _depth_attachement->getID(), 0);
     useDefault();
 }
 

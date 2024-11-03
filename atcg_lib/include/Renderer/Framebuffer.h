@@ -61,7 +61,7 @@ public:
      *
      * @param depth_map The depth map component
      */
-    void attachDepth(const atcg::ref_ptr<Texture2D>& depth_map);
+    void attachDepth(const atcg::ref_ptr<Texture>& depth_map);
 
     /**
      * @brief Blit two framebuffer together.
@@ -89,7 +89,7 @@ public:
      *
      * @return The depth texture
      */
-    ATCG_INLINE atcg::ref_ptr<Texture2D> getDepthAttachement() const { return _depth_attachement; }
+    ATCG_INLINE atcg::ref_ptr<Texture> getDepthAttachement() const { return _depth_attachement; }
 
     /**
      * @brief Get the ID of the framebuffer
@@ -136,6 +136,6 @@ private:
     uint32_t _ID;
     uint32_t _width, _height;
     std::vector<atcg::ref_ptr<Texture2D>> _color_attachements;
-    atcg::ref_ptr<Texture2D> _depth_attachement;
+    atcg::ref_ptr<Texture> _depth_attachement;
 };
 }    // namespace atcg
