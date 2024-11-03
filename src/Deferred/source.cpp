@@ -12,10 +12,24 @@
 
 struct PointLightComponent
 {
-    PointLightComponent() : intensity(10.0f), color(glm::vec3(1)) {}
+    PointLightComponent() : intensity(10.0f), color(glm::vec3(1))
+    {
+        atcg::TextureSpecification spec;
+        spec.width  = 1024;
+        spec.height = 1024;
+        spec.format = atcg::TextureFormat::DEPTH;
+        depth_map   = atcg::TextureCube::create(spec);
+
+        framebuffer = atcg::make_ref<atcg::Framebuffer>(spec.width, spec.height);
+        // framebuffer->attachColor();
+        framebuffer->attachDepth(depth_map);
+        framebuffer->complete();
+    }
 
     float intensity;
     glm::vec3 color;
+    atcg::ref_ptr<atcg::TextureCube> depth_map;
+    atcg::ref_ptr<atcg::Framebuffer> framebuffer;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "PointLight"; }
 };
@@ -53,6 +67,11 @@ struct LightPassData
 {
     atcg::ref_ptr<atcg::Shader> light_pass_shader;
     atcg::ref_ptr<atcg::Graph> screen_quad;
+};
+
+struct ShadowPassData
+{
+    atcg::ref_ptr<atcg::Shader> depth_pass_shader;
 };
 
 class DeferredLayer : public atcg::Layer
@@ -123,6 +142,7 @@ public:
                 // auto framebuffer = std::any_cast<atcg::ref_ptr<atcg::Framebuffer>>(inputs[0]);
                 framebuffer->use();
                 atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
+                atcg::Renderer::setViewport(0, 0, framebuffer->width(), framebuffer->height());
                 atcg::Renderer::clear();
                 int value = -1;
                 framebuffer->getColorAttachement(4)->fill(&value);
@@ -183,6 +203,7 @@ public:
 
                 framebuffer->use();
                 atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
+                atcg::Renderer::setDefaultViewport();
                 atcg::Renderer::clear();
 
                 atcg::Renderer::drawSkybox(context->camera);
@@ -203,6 +224,8 @@ public:
                     data->light_pass_shader->setVec3("light_positions" + ss.str(), light_transform.getPosition());
                     data->light_pass_shader->setFloat("light_intensities" + ss.str(), point_light.intensity);
                     data->light_pass_shader->setVec3("light_colors" + ss.str(), point_light.color);
+                    data->light_pass_shader->setInt("light_shadows" + ss.str(), 14 + num_lights);
+                    point_light.depth_map->use(14 + num_lights);
                     ++num_lights;
                 }
                 data->light_pass_shader->setInt("num_lights", num_lights);
@@ -238,7 +261,95 @@ public:
                 // }
             });
 
+        auto [shadow_handle, shadow_builder] = graph->addRenderPass<ShadowPassData, int>();
+
+        shadow_builder->setSetupFunction(
+            [](const atcg::ref_ptr<RenderContext>& context,
+               const atcg::ref_ptr<ShadowPassData>& data,
+               atcg::ref_ptr<int>&)
+            {
+                std::string vertex_path   = std::string(ATCG_TARGET_DIR) + "/depth.vs";
+                std::string geometry_path = std::string(ATCG_TARGET_DIR) + "/depth.gs";
+                std::string fragment_path = std::string(ATCG_TARGET_DIR) + "/depth.fs";
+                data->depth_pass_shader   = atcg::make_ref<atcg::Shader>(vertex_path, fragment_path, geometry_path);
+            });
+
+        shadow_builder->setRenderFunction(
+            [](const atcg::ref_ptr<RenderContext>& context,
+               const std::vector<std::any>& inputs,
+               const atcg::ref_ptr<ShadowPassData>& data,
+               const atcg::ref_ptr<int>&)
+            {
+                float n              = 1.0f;
+                float f              = 25.0f;
+                glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, n, f);
+
+                data->depth_pass_shader->setFloat("far_plane", f);
+
+                auto light_view = context->scene->getAllEntitiesWith<PointLightComponent>();
+                for(auto e: light_view)
+                {
+                    atcg::Entity entity(e, context->scene.get());
+
+                    auto& point_light = entity.getComponent<PointLightComponent>();
+                    auto& transform   = entity.getComponent<atcg::TransformComponent>();
+                    point_light.framebuffer->use();
+                    atcg::Renderer::setViewport(0,
+                                                0,
+                                                point_light.framebuffer->width(),
+                                                point_light.framebuffer->height());
+                    atcg::Renderer::clear();
+
+                    glm::vec3 lightPos = transform.getPosition();
+                    data->depth_pass_shader->setVec3("lightPos", lightPos);
+                    data->depth_pass_shader->setMat4("shadowMatrices[0]",
+                                                     projection * glm::lookAt(lightPos,
+                                                                              lightPos + glm::vec3(1.0, 0.0, 0.0),
+                                                                              glm::vec3(0.0, -1.0, 0.0)));
+                    data->depth_pass_shader->setMat4("shadowMatrices[1]",
+                                                     projection * glm::lookAt(lightPos,
+                                                                              lightPos + glm::vec3(-1.0, 0.0, 0.0),
+                                                                              glm::vec3(0.0, -1.0, 0.0)));
+                    data->depth_pass_shader->setMat4("shadowMatrices[2]",
+                                                     projection * glm::lookAt(lightPos,
+                                                                              lightPos + glm::vec3(0.0, 1.0, 0.0),
+                                                                              glm::vec3(0.0, 0.0, 1.0)));
+                    data->depth_pass_shader->setMat4("shadowMatrices[3]",
+                                                     projection * glm::lookAt(lightPos,
+                                                                              lightPos + glm::vec3(0.0, -1.0, 0.0),
+                                                                              glm::vec3(0.0, 0.0, -1.0)));
+                    data->depth_pass_shader->setMat4("shadowMatrices[4]",
+                                                     projection * glm::lookAt(lightPos,
+                                                                              lightPos + glm::vec3(0.0, 0.0, 1.0),
+                                                                              glm::vec3(0.0, -1.0, 0.0)));
+                    data->depth_pass_shader->setMat4("shadowMatrices[5]",
+                                                     projection * glm::lookAt(lightPos,
+                                                                              lightPos + glm::vec3(0.0, 0.0, -1.0),
+                                                                              glm::vec3(0.0, -1.0, 0.0)));
+
+                    const auto& view = context->scene->getAllEntitiesWith<atcg::TransformComponent,
+                                                                          atcg::GeometryComponent,
+                                                                          atcg::MeshRenderComponent>();
+
+                    // Draw scene
+                    for(auto e: view)
+                    {
+                        atcg::Entity entity(e, context->scene.get());
+
+                        auto& transform = entity.getComponent<atcg::TransformComponent>();
+                        auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
+
+                        atcg::Renderer::draw(geometry.graph,
+                                             context->camera,
+                                             transform.getModel(),
+                                             glm::vec3(1),
+                                             data->depth_pass_shader);
+                    }
+                }
+            });
+
         graph->addDependency(geometry_handle, light_handle);
+        graph->addDependency(shadow_handle, light_handle);
 
         graph->compile();
     }
