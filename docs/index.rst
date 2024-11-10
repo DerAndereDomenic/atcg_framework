@@ -556,6 +556,22 @@ Renderer
 .. doxygenclass:: atcg::RendererSystem
    :members:
    :undoc-members:
+.. doxygennamespace:: atcg::Renderer
+.. doxygenclass:: atcg::RenderPassBase
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::RenderPass
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::RenderPassBuilderBase
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::RenderPassBuilder
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::RenderGraph
+   :members:
+   :undoc-members:
 .. doxygenclass:: atcg::VRSystem
    :members:
    :undoc-members:

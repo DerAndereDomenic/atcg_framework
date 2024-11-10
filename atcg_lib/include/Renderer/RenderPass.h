@@ -10,13 +10,13 @@ namespace atcg
 
 /**
  * @brief Base class for a Render Pass.
- * A render pass is a node in a DAG with sevaral inputs and one output. This base class is to collect all different
- * render passes. Use atcg::RenderPass to declare different intermediate and output buffers.
+ * A render pass is a node in a DAG with sevaral inputs and one output. This base class is used to collect all different
+ * render passes in a list. Use atcg::RenderPass to declare different intermediate- and output buffers.
  *
  * @tparam RenderContextT Context of the Renderer
  */
 template<typename RenderContextT>
-struct RenderPassBase
+class RenderPassBase
 {
 public:
     /**

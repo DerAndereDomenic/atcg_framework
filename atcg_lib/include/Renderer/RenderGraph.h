@@ -27,7 +27,7 @@ public:
 
     /**
      * @brief Add a render pass to the graph.
-     * This functions returns a handle and a RenderPass builder. The builder is an intermediate class that collects all
+     * This functions returns a handle and a RenderPassBuilder. The builder is an intermediate class that collects all
      * the data associated with the rendering pass and then gets compiled into the final render pass when compile() is
      * called. The handle can be ussed to access different render passes to add dependencies between them (by using
      * addDependency()).
