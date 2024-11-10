@@ -1,6 +1,70 @@
 #include <gtest/gtest.h>
 #include <Renderer/RenderGraph.h>
 
+TEST(RenderGraphTest, emptyGraph)
+{
+    atcg::ref_ptr<int> ctx = atcg::make_ref<int>();
+    atcg::RenderGraph graph(ctx);
+
+    graph.compile();
+    graph.execute();
+}
+
+TEST(RenderGraphTest, singleEmptyNode)
+{
+    atcg::ref_ptr<int> ctx = atcg::make_ref<int>();
+    atcg::RenderGraph graph(ctx);
+
+    auto [handle, builder] = graph.addRenderPass<int, int>();
+
+    graph.compile();
+    graph.execute();
+}
+
+TEST(RenderGraphTest, singleNodeNoSetup)
+{
+    atcg::ref_ptr<int> ctx = atcg::make_ref<int>(5);
+    atcg::RenderGraph graph(ctx);
+
+    auto [handle, builder] = graph.addRenderPass<int, int>();
+
+    builder->setRenderFunction([](const atcg::ref_ptr<int>& context,
+                                  const std::vector<std::any>& inputs,
+                                  const atcg::ref_ptr<int>& data,
+                                  const atcg::ref_ptr<int>& output) { *output = 2 * (*context); });
+
+    graph.compile();
+    graph.execute();
+
+    auto output = std::any_cast<atcg::ref_ptr<int>>(builder->getOutput());
+
+    EXPECT_EQ(*output, 10);
+}
+
+TEST(RenderGraphTest, singleNodeSetup)
+{
+    atcg::ref_ptr<int> ctx = atcg::make_ref<int>();
+    atcg::RenderGraph graph(ctx);
+
+    auto [handle, builder] = graph.addRenderPass<int, int>();
+
+    builder->setSetupFunction(
+        [](const atcg::ref_ptr<int>& context, const atcg::ref_ptr<int>& data, atcg::ref_ptr<int>& output)
+        { *data = 5; });
+
+    builder->setRenderFunction([](const atcg::ref_ptr<int>& context,
+                                  const std::vector<std::any>& inputs,
+                                  const atcg::ref_ptr<int>& data,
+                                  const atcg::ref_ptr<int>& output) { *output = 2 * (*data); });
+
+    graph.compile();
+    graph.execute();
+
+    auto output = std::any_cast<atcg::ref_ptr<int>>(builder->getOutput());
+
+    EXPECT_EQ(*output, 10);
+}
+
 TEST(RenderGraphTest, gaussGraph)
 {
     struct RenderContext
