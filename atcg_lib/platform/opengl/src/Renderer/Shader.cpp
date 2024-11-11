@@ -78,6 +78,7 @@ void Shader::recompile(const std::string& vertex_path, const std::string& fragme
     glDeleteShader(fragment);
 
     _has_geometry  = false;
+    _is_compute    = false;
     _vertex_path   = vertex_path;
     _fragment_path = fragment_path;
 
@@ -126,6 +127,7 @@ void Shader::recompile(const std::string& vertex_path,
     glDeleteShader(geometry);
 
     _has_geometry  = true;
+    _is_compute    = false;
     _vertex_path   = vertex_path;
     _geometry_path = geometry_path;
     _fragment_path = fragment_path;
