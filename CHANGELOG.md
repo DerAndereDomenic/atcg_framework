@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - create method for Cubemaps from tensor data
 - Added support for unsigend data types in torch tensors
 - Applications can now be set to fullscreen via F11 or via window->toggleFullscreen()
+- Add unit tests for shader and shader manager
 
 ### Changed
 
@@ -41,3 +42,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - isHDR() function for RG textures
 - GPU memcopy of float 3D textures
 - GPU memcopy of Texture arrays
+- Mark non-compute shader as such if a compute shader gets recompiled
