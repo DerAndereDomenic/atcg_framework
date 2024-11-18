@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for unsigend data types in torch tensors
 - Applications can now be set to fullscreen via F11 or via window->toggleFullscreen()
 - Add unit tests for shader and shader manager
+- Add function to set window position
+- Add functions to change the decoration states of windows
 
 ### Changed
 

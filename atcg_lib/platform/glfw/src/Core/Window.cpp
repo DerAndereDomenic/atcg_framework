@@ -314,6 +314,23 @@ glm::vec2 Window::getPosition() const
     return glm::vec2(x, y);
 }
 
+void Window::setPosition(const glm::vec2& position)
+{
+    glfwSetWindowPos((GLFWwindow*)_context->getContextHandle(), (int)position.x, (int)position.y);
+}
+
+bool Window::isDecorated() const
+{
+    return glfwGetWindowAttrib((GLFWwindow*)_context->getContextHandle(), GLFW_DECORATED) == GLFW_TRUE;
+}
+
+void Window::toogleDecoration()
+{
+    glfwSetWindowAttrib((GLFWwindow*)_context->getContextHandle(),
+                        GLFW_DECORATED,
+                        isDecorated() ? GLFW_FALSE : GLFW_TRUE);
+}
+
 float Window::getContentScale() const
 {
     float xscale;

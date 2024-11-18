@@ -128,6 +128,25 @@ public:
     glm::vec2 getPosition() const;
 
     /**
+     * @brief Set the window position
+     *
+     * @param position The new position
+     */
+    void setPosition(const glm::vec2& position);
+
+    /**
+     * @brief Check if the window has decoration
+     *
+     * @return True if the window is decoratd
+     */
+    bool isDecorated() const;
+
+    /**
+     * @brief Toggle the decoration of the window
+     */
+    void toogleDecoration();
+
+    /**
      * @brief Get the content scale of the window (4k support)
      *
      * @return The content scaling factor
