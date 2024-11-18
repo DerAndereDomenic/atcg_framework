@@ -90,6 +90,15 @@ glm::vec2 Window::getPosition() const
     return glm::vec2(0);
 }
 
+void Window::setPosition(const glm::vec2& position) {}
+
+bool Window::isDecorated() const
+{
+    return false;
+}
+
+void Window::toogleDecoration() {}
+
 float Window::getContentScale() const
 {
     return 1.0f;
