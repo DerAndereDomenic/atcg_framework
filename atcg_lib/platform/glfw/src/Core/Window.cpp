@@ -314,6 +314,11 @@ glm::vec2 Window::getPosition() const
     return glm::vec2(x, y);
 }
 
+void Window::setPosition(const glm::vec2& position)
+{
+    glfwSetWindowPos((GLFWwindow*)_context->getContextHandle(), (int)position.x, (int)position.y);
+}
+
 float Window::getContentScale() const
 {
     float xscale;

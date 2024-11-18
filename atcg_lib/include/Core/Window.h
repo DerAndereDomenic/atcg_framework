@@ -128,6 +128,13 @@ public:
     glm::vec2 getPosition() const;
 
     /**
+     * @brief Set the window position
+     *
+     * @param position The new position
+     */
+    void setPosition(const glm::vec2& position);
+
+    /**
      * @brief Get the content scale of the window (4k support)
      *
      * @return The content scaling factor
