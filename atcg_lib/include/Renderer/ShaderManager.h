@@ -14,7 +14,8 @@ class Shader;
 /**
  * @brief This class manages all shaders used for the application
  * When using custom shaders, you have to add them via 'addShader' to get hot reloading or
- * use addShaderFromPath to also handle direct shader loading
+ * use addShaderFromPath to also handle direct shader loading. This class can be used if custom shader systems are to be
+ * used (e.g. for multi threaded rendering). The default Shadermanager can be accessed using atcg::ShaderManager.
  */
 class ShaderManagerSystem
 {
