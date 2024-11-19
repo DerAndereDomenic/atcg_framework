@@ -47,5 +47,6 @@ int atcg_main()
 
 int main(int argc, char** argv)
 {
+    atcg::registerCommandLineArguments(argc, argv);
     return atcg::atcg_main();
 }
