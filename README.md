@@ -4,7 +4,7 @@ This repository contains a C++ 3D rendering framework for research applications 
 
 ## Building
 
-This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are [CMake>=3.27](https://cmake.org), [Python3.9](https://www.python.org), and [pytorch2.4.0](https://pytorch.org). Newer versions should also work.
+This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are [CMake>=3.27](https://cmake.org), [Python>=3.9](https://www.python.org), [CUDA>=12.1](https://developer.nvidia.com/cuda-toolkit), and [pytorch2.4.0](https://pytorch.org) with the same CUDA version as your global CUDA installation. Newer versions should also work.
 
 After installing the dependencies, clone the repository recursively (to include submodules)
 
@@ -34,13 +34,12 @@ to compile the project.
 
 ### Building with CUDA Support
 
-You can also build the framework with CUDA support by setting the ATCG_CUDA_BACKEND option
+Per default the project is built with CUDA support enabled. You can disable this behavior by disabling the ATCG_CUDA_BACKEND option
 
 ```
-cmake . -B build -DATCG_CUDA_BACKEND=ON
+cmake . -B build -DATCG_CUDA_BACKEND=OFF
 ```
-
-This way you can include high performant GPU code into your application. Note that this is only possible if you have the CUDA compiler installed. Furthermore, torch should also be installed with the same CUDA version.
+If CUDA is not used, you should also use a pytorch version without CUDA.
 
 ### Build python bindings
 
@@ -48,14 +47,14 @@ The project come with python bindings which can be install via
 ```
 pip install -e .
 ```
-it requires charonload as additional dependency. Per default, it is built with CUDA backend.
+it requires [charonload](https://github.com/vc-bonn/charonload) as additional dependency. Per default, it is built with CUDA backend.
 
 ### Building the documentation (experimental)
 
 There is a (not very complete) documentation that can be build using [doxygen](https://www.doxygen.nl/index.html) and [sphinx](https://www.sphinx-doc.org/en/master/). Install the dependencies using pip
 
 ```
-pip install sphinx, sphinx_rtd_theme, breathe, myst_parser
+pip install sphinx sphinx_book_theme breathe myst_parser
 ```
 
 and set the ATCG_BUILD_DOCS option to true when generating the CMake project.
@@ -77,7 +76,7 @@ The project consists of the following components:
 
 -**atcg_lib**: This library handles the rendering and event handling of the application. It defines an entry point for each application that uses this library. Each executable uses this entry point to build its application.
 
--**src**: Contains the targets for each executable. See _How to use_ for more details on its structure.
+-**src**: Contains the targets for each executable. See _Usage_ for more details on its structure.
 
 -**shader**: Contains the opengl shaders used for rendering. You can add custom shaders by providing a vertex (`<name>.vs`), fragment (`<name>.fs`), and (optionally) a geometry (`<name>.gs`) shader. To use them in a project you have to add it via
 
@@ -295,7 +294,7 @@ There is also a CUDA API for textures. However, because textures work differentl
 - [stbimage](https://github.com/nothings/stb) - For image I/O.
 - [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader) - For loading obj meshes.
 - [json](https://github.com/nlohmann/json) - For serializing JSON files.
-- [charonload](https://github.com/nlohmann/json) - For torch integration.
+- [charonload_cpp](https://github.com/nlohmann/json) - For torch integration. This needs to be installed via pip if you want to use python bindings.
 - [openvr](https://github.com/ValveSoftware/openvr) - For VR support.
 - [googletest](https://github.com/google/googletest) - For testing.
 - [sfml](https://github.com/SFML/SFML) - For networking. (*Note: Might require additional dependencies on Linux, see SFML repositoriy.*) 
