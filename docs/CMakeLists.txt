@@ -5,7 +5,13 @@ file(GLOB_RECURSE ATCG_LIB_PUBLIC_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/../atcg_l
                                           "${CMAKE_CURRENT_SOURCE_DIR}/../atcg_lib/platform/glfw/**.h")
 set(DOXYGEN_INDEX_FILE "${CMAKE_CURRENT_SOURCE_DIR}/html/index.html")
 
-set(DOXYGEN_INPUT_DIR ${PROJECT_SOURCE_DIR}/atcg_lib)
+#set(DOXYGEN_INPUT_DIR "${PROJECT_SOURCE_DIR}/atcg_lib/include")
+set(DOXYGEN_DIRS
+  ${PROJECT_SOURCE_DIR}/atcg_lib/include
+  ${PROJECT_SOURCE_DIR}/atcg_lib/platform/glfw/include
+)
+string(REPLACE ";" " " DOXYGEN_DIRS_STR "${DOXYGEN_DIRS}")  
+set(DOXYGEN_INPUT_DIR ${DOXYGEN_DIRS_STR})
 set(DOXYGEN_OUTPUT_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/docs/doxygen)
 set(DOXYGEN_INDEX_FILE ${DOXYGEN_OUTPUT_DIR}/html/index.html)
 set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
