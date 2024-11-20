@@ -58,7 +58,7 @@ it requires [charonload](https://github.com/vc-bonn/charonload) as additional de
 The documentation can be built using [doxygen](https://www.doxygen.nl/index.html) and [sphinx](https://www.sphinx-doc.org/en/master/). Install the following dependencies using pip
 
 ```
-pip install sphinx sphinx_book_theme breathe myst_parser
+pip install sphinx furo breathe myst_parser
 ```
 
 and set the `ATCG_BUILD_DOCS` option to `ON` when generating the CMake project.
