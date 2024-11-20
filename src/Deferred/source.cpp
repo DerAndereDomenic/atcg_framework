@@ -44,14 +44,14 @@ public:
     {
         atcg::ComponentGUIHandler::draw_component<T>(entity, component);
     }
-
-    template<>
-    void draw_component<PointLightComponent>(atcg::Entity entity, PointLightComponent& component)
-    {
-        ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
-        ImGui::InputFloat("Intensity##PointLight", &component.intensity);
-    }
 };
+
+template<>
+void MyComponentGUIHandler::draw_component<PointLightComponent>(atcg::Entity entity, PointLightComponent& component)
+{
+    ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
+    ImGui::InputFloat("Intensity##PointLight", &component.intensity);
+}
 struct RenderContext
 {
     atcg::ref_ptr<atcg::Scene> scene;
