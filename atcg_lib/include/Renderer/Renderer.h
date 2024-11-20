@@ -11,6 +11,7 @@
 #include <Renderer/Framebuffer.h>
 #include <DataStructure/Graph.h>
 #include <Scene/Entity.h>
+#include <Renderer/Material.h>
 
 namespace atcg
 {
@@ -192,6 +193,30 @@ public:
               DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
     /**
+     * @brief Render a mesh
+     *
+     * The default draw mode is "base". It applys slight shading based on the vertex normals.
+     * An optional color can be given to color the whole mesh with a constant color.
+     * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
+     * This function also takes in a material
+     *
+     * @param mesh The mesh
+     * @param material The material
+     * @param camera The camera
+     * @param model The optional model matrix
+     * @param color An optional color
+     * @param shader The shader
+     * @param draw_mode The draw mode
+     */
+    void draw(const atcg::ref_ptr<Graph>& mesh,
+              const Material& material,
+              const atcg::ref_ptr<Camera>& camera = {},
+              const glm::mat4& model              = glm::mat4(1),
+              const glm::vec3& color              = glm::vec3(1),
+              const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+              DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
+
+    /**
      * @brief Render an entity
      *
      * @param entity The entity to render
@@ -206,6 +231,13 @@ public:
      * @param camera The camera
      */
     void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
+
+    /**
+     * @brief Draw a skybox
+     *
+     * @param camera The camera
+     */
+    void drawSkybox(const atcg::ref_ptr<Camera>& camera);
 
     /**
      * @brief Draw camera frustrums
@@ -597,6 +629,36 @@ ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
 }
 
 /**
+ * @brief Render a mesh
+ *
+ * The default draw mode is "base". It applys slight shading based on the vertex normals.
+ * An optional color can be given to color the whole mesh with a constant color.
+ * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
+ * This function also takes in a material
+ *
+ * @param mesh The mesh
+ * @param material The material
+ * @param camera The camera
+ * @param model The optional model matrix
+ * @param color An optional color
+ * @param shader The shader
+ * @param draw_mode The draw mode
+ */
+ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
+                      const Material& material,
+                      const atcg::ref_ptr<Camera>& camera = {},
+                      const glm::mat4& model              = glm::mat4(1),
+                      const glm::vec3& color              = glm::vec3(1),
+                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
+                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+{
+    SystemRegistry::instance()
+        ->getSystem<RendererSystem>()
+        ->draw(mesh, material, camera, model, color, shader, draw_mode);
+}
+
+
+/**
  * @brief Render an entity
  *
  * @param entity The entity to render
@@ -616,6 +678,16 @@ ATCG_INLINE void draw(Entity entity, const atcg::ref_ptr<Camera>& camera = {})
 ATCG_INLINE void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->draw(scene, camera);
+}
+
+/**
+ * @brief Draw a skybox
+ *
+ * @param camera The camera
+ */
+ATCG_INLINE void drawSkybox(const atcg::ref_ptr<Camera>& camera)
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(camera);
 }
 
 /**

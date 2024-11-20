@@ -39,6 +39,7 @@
 #include <Renderer/Framebuffer.h>
 #include <Renderer/Material.h>
 #include <Renderer/VRSystem.h>
+#include <Renderer/RenderGraph.h>
 
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
