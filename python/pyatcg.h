@@ -3,6 +3,8 @@
 #include <pybind11/numpy.h>
 #include <pybind11/cast.h>
 #include <pybind11/stl.h>
+#include <pybind11/complex.h>
+#include <pybind11/functional.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <torch/python.h>
@@ -45,6 +47,28 @@ public:
     ~PythonApplication() {}
 };
 
+class PythonContext
+{
+public:
+    PythonContext()
+    {
+        _logger = atcg::make_ref<atcg::Logger>();
+        atcg::SystemRegistry::init();
+        atcg::SystemRegistry::instance()->registerSystem(_logger.get());
+    }
+
+    void onExit()
+    {
+        atcg::print_statistics();
+        atcg::SystemRegistry::shutdown();
+    }
+
+    const atcg::ref_ptr<atcg::Logger> getLogger() const { return _logger; }
+
+private:
+    atcg::ref_ptr<atcg::Logger> _logger;
+};
+
 
 //* This function isn't called but is needed for the linker
 atcg::Application* atcg::createApplication()
@@ -52,10 +76,6 @@ atcg::Application* atcg::createApplication()
     return nullptr;
 }
 
-int python_main(atcg::Application* app)
-{
-    return atcg::atcg_main(app);
-}
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
 #define ATCG_DEFINE_MODULES(m)                                                                                                  \
@@ -100,9 +120,13 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");                                 \
     auto m_graph                 = py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph");                             \
     auto m_serializer            = py::class_<atcg::Serializer<atcg::ComponentSerializer>>(m, "Serializer");                    \
-    auto m_renderer              = py::class_<atcg::Renderer>(m, "Renderer");                                                   \
-    auto m_shader                = py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader");                          \
-    auto m_shader_manager        = py::class_<atcg::ShaderManager>(m, "ShaderManager");                                         \
+    auto m_renderer              = m.def_submodule("Renderer");                                                                 \
+    auto m_renderer_system =                                                                                                    \
+        py::class_<atcg::RendererSystem, atcg::ref_ptr<atcg::RendererSystem>>(m, "RendererSystem");                             \
+    auto m_shader         = py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader");                                 \
+    auto m_shader_manager = m.def_submodule("ShaderManager");                                                                   \
+    auto m_shader_manager_system =                                                                                              \
+        py::class_<atcg::ShaderManagerSystem, atcg::ref_ptr<atcg::ShaderManagerSystem>>(m, "ShaderManagerSystem");              \
     auto m_texture_format        = py::enum_<atcg::TextureFormat>(m, "TextureFormat");                                          \
     auto m_texture_wrap_mode     = py::enum_<atcg::TextureWrapMode>(m, "TextureWrapMode");                                      \
     auto m_texture_filter_mode   = py::enum_<atcg::TextureFilterMode>(m, "TextureFilterMode");                                  \
@@ -125,7 +149,12 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_hit_info         = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                 \
     auto m_utils            = m.def_submodule("Utils");                                                                         \
     auto m_imgui            = m.def_submodule("ImGui");                                                                         \
-    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
+    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");                                       \
+    auto m_draw_mode        = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                         \
+    auto m_cull_mode        = py::enum_<atcg::CullMode>(m, "CullMode");                                                         \
+    auto m_network          = m.def_submodule("Network");                                                                       \
+    auto m_tcp_server       = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                              \
+    auto m_tcp_client       = py::class_<atcg::TCPClient>(m_network, "TCPClient");
 
 inline void defineBindings(py::module_& m)
 {
@@ -142,6 +171,15 @@ inline void defineBindings(py::module_& m)
     // ---------------- CORE ---------------------
     ATCG_DEFINE_MODULES(m)
 
+    // On module initialization and destruction
+    py::class_<PythonContext>(m, "PythonContext").def(py::init<>());
+    static PythonContext context;
+
+    py::module atexit = py::module::import("atexit");
+    atexit.attr("register")(py::cpp_function([]() { context.onExit(); }));
+
+    // py::object python_context = py::cast(new PythonContext());
+    // m.attr("_python_context") = python_context;
 
     m_window_props.def(py::init<>([]() { return atcg::WindowProps(); }))
         .def(py::init<const std::string&, uint32_t, uint32_t, int32_t, int32_t, bool>())
@@ -153,7 +191,6 @@ inline void defineBindings(py::module_& m)
         .def_readwrite("vsync", &atcg::WindowProps::vsync)
         .def_readwrite("hidden", &atcg::WindowProps::hidden);
 
-    m.def("start", &python_main, py::arg("application"));
     m.def("init",
           []()
           {
@@ -162,8 +199,13 @@ inline void defineBindings(py::module_& m)
               std::unique_ptr<PythonApplication> app = std::make_unique<PythonApplication>(props);
               return app;
           });
-    m.def("print_statistics", &atcg::print_statistics);
-    m_application.def(py::init<atcg::Layer*>()).def(py::init<atcg::Layer*, atcg::WindowProps>());
+
+    m.def("shader_directory", []() { return atcg::shader_directory().string(); });
+    m.def("resource_directory", []() { return atcg::resource_directory().string(); });
+
+    m_application.def(py::init<atcg::Layer*>())
+        .def(py::init<atcg::Layer*, atcg::WindowProps>())
+        .def("run", &atcg::Application::run);
     m_layer.def(py::init<>())
         .def(py::init<std::string>(), "name"_a)
         .def("onAttach", &atcg::Layer::onAttach)
@@ -502,8 +544,8 @@ inline void defineBindings(py::module_& m)
         .def_readonly_static("COLOR_END", &atcg::VertexSpecification::COLOR_END)
         .def_readonly_static("NORMAL_BEGIN", &atcg::VertexSpecification::NORMAL_BEGIN)
         .def_readonly_static("NORMAL_END", &atcg::VertexSpecification::NORMAL_END)
-        .def_readonly_static("TANGNET_BEGIN", &atcg::VertexSpecification::TANGNET_BEGIN)
-        .def_readonly_static("TANGNET_END", &atcg::VertexSpecification::TANGNET_END)
+        .def_readonly_static("TANGENT_BEGIN", &atcg::VertexSpecification::TANGENT_BEGIN)
+        .def_readonly_static("TANGENT_END", &atcg::VertexSpecification::TANGENT_END)
         .def_readonly_static("UV_BEGIN", &atcg::VertexSpecification::UV_BEGIN)
         .def_readonly_static("UV_END", &atcg::VertexSpecification::UV_END)
         .def_readonly_static("VERTEX_SIZE", &atcg::VertexSpecification::VERTEX_SIZE);
@@ -604,31 +646,95 @@ inline void defineBindings(py::module_& m)
         .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
 
     // ------------------- RENDERER ---------------------------------
-    m_renderer.def_static("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
-        .def_static("clear", &atcg::Renderer::clear)
-        .def_static(
+    m_draw_mode.value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+        .value("ATCG_DRAW_MODE_POINTS", atcg::DrawMode::ATCG_DRAW_MODE_POINTS)
+        .value("ATCG_DRAW_MODE_POINTS_SPHERE", atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE)
+        .value("ATCG_DRAW_MODE_EDGES", atcg::DrawMode::ATCG_DRAW_MODE_EDGES)
+        .value("ATCG_DRAW_MODE_EDGES_CYLINDER", atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER)
+        .value("ATCG_DRAW_MODE_INSTANCED", atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED)
+        .export_values();
+
+    m_cull_mode.value("ATCG_FRONT_FACE_CULLING", atcg::CullMode::ATCG_FRONT_FACE_CULLING)
+        .value("ATCG_BACK_FACE_CULLING", atcg::CullMode::ATCG_BACK_FACE_CULLING)
+        .value("ATCG_BOTH_FACE_CULLING", atcg::CullMode::ATCG_BOTH_FACE_CULLING)
+        .export_values();
+
+    m_renderer.def("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
+        .def("init", &atcg::Renderer::init)
+        .def("finishFrame", &atcg::Renderer::finishFrame)
+        .def("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
+        .def("getClearColor", &atcg::Renderer::getClearColor)
+        .def("setPointSize", &atcg::Renderer::setPointSize, "size"_a)
+        .def("setLineSize", &atcg::Renderer::setLineSize, "size"_a)
+        .def("setViewport", &atcg::Renderer::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
+        .def("setDefaultViewport", &atcg::Renderer::setDefaultViewport)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Image>& skybox) { atcg::Renderer::setSkybox(skybox); },
+            "skybox"_a)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Texture2D>& skybox) { atcg::Renderer::setSkybox(skybox); },
+            "skybox"_a)
+        .def("hasSkybox", &atcg::Renderer::hasSkybox)
+        .def("removeSkybox", &atcg::Renderer::removeSkybox)
+        .def("getSkyboxTexture", &atcg::Renderer::getSkyboxTexture)
+        .def("getSkyboxCubeMap", &atcg::Renderer::getSkyboxCubemap)
+        .def("useScreenBuffer", &atcg::Renderer::useScreenBuffer)
+        .def("clear", &atcg::Renderer::clear)
+        .def(
             "draw",
             [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
             { atcg::Renderer::draw(scene, camera); },
             "scene"_a,
             "camera"_a)
-        .def_static(
+        .def(
+            "draw",
+            [](atcg::Entity entity, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            { atcg::Renderer::draw(entity, camera); },
+            "entity"_a,
+            "camera"_a)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::Graph>& mesh,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+               const glm::mat4& model,
+               const glm::vec3& color,
+               const atcg::ref_ptr<atcg::Shader>& shader,
+               atcg::DrawMode draw_mode) { atcg::Renderer::draw(mesh, camera, model, color, shader, draw_mode); },
+            "graph"_a,
+            "camera"_a,
+            "model"_a,
+            "color"_a,
+            "shader"_a,
+            "draw_mode"_a)
+        .def(
             "drawCADGrid",
             [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::drawCADGrid(camera); },
             "camera"_a)
-        .def_static(
+        .def(
             "drawCameras",
             [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
             { atcg::Renderer::drawCameras(scene, camera); },
             "scene"_a,
             "camera"_a)
-        .def_static("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
-        .def_static("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
-        .def_static("screenshot",
-                    [](const atcg::ref_ptr<atcg::Scene>& scene,
-                       const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-                       const uint32_t width) { return atcg::Renderer::screenshot(scene, cam, width); })
-        .def_static(
+        .def("drawCircle", &atcg::Renderer::drawCircle, "position"_a, "radius"_a, "thickness"_a, "color"_a, "camera"_a)
+        .def(
+            "drawImage",
+            [](const atcg::ref_ptr<atcg::Framebuffer>& img) { atcg::Renderer::drawImage(img); },
+            "img"_a)
+        .def(
+            "drawImage",
+            [](const atcg::ref_ptr<atcg::Texture2D>& img) { atcg::Renderer::drawImage(img); },
+            "img"_a)
+        .def("getFramebuffer", &atcg::Renderer::getFramebuffer)
+        .def("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
+        .def("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
+        .def("screenshot",
+             [](const atcg::ref_ptr<atcg::Scene>& scene,
+                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+                const uint32_t width) { return atcg::Renderer::screenshot(scene, cam, width); })
+        .def(
             "screenshot",
             [](const atcg::ref_ptr<atcg::Scene>& scene,
                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
@@ -638,21 +744,179 @@ inline void defineBindings(py::module_& m)
             "camera"_a,
             "width"_a,
             "path"_a)
-        .def_static("resize", &atcg::Renderer::resize);
+        .def("resize", &atcg::Renderer::resize)
+        .def("getFrame", &atcg::Renderer::getFrame, "device"_a)
+        .def("getZBuffer", &atcg::Renderer::getZBuffer, "device"_a)
+        .def("toggleDepthTesting", &atcg::Renderer::toggleDepthTesting, "enabled"_a)
+        .def("setCullFace", &atcg::Renderer::setCullFace, "mode"_a)
+        .def("getFrameCounter", &atcg::Renderer::getFrameCounter)
+        .def("popTextureID", &atcg::Renderer::popTextureID)
+        .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a);
 
-    m_shader.def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
+    m_renderer_system.def(py::init<>())
+        .def("setClearColor", &atcg::RendererSystem::setClearColor, "color"_a)
+        .def("init", &atcg::RendererSystem::init)
+        .def("finishFrame", &atcg::RendererSystem::finishFrame)
+        .def("setClearColor", &atcg::RendererSystem::setClearColor, "color"_a)
+        .def("getClearColor", &atcg::RendererSystem::getClearColor)
+        .def("setPointSize", &atcg::RendererSystem::setPointSize, "size"_a)
+        .def("setLineSize", &atcg::RendererSystem::setLineSize, "size"_a)
+        .def("setViewport", &atcg::RendererSystem::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
+        .def("setDefaultViewport", &atcg::RendererSystem::setDefaultViewport)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Image>& skybox)
+            { self->setSkybox(skybox); },
+            "skybox"_a)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Texture2D>& skybox)
+            { self->setSkybox(skybox); },
+            "skybox"_a)
+        .def("hasSkybox", &atcg::RendererSystem::hasSkybox)
+        .def("removeSkybox", &atcg::RendererSystem::removeSkybox)
+        .def("getSkyboxTexture", &atcg::RendererSystem::getSkyboxTexture)
+        .def("getSkyboxCubeMap", &atcg::RendererSystem::getSkyboxCubemap)
+        .def("useScreenBuffer", &atcg::RendererSystem::useScreenBuffer)
+        .def("clear", &atcg::RendererSystem::clear)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(scene, camera); },
+            "scene"_a,
+            "camera"_a)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               atcg::Entity entity,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(entity, camera); },
+            "entity"_a,
+            "camera"_a)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Graph>& mesh,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+               const glm::mat4& model,
+               const glm::vec3& color,
+               const atcg::ref_ptr<atcg::Shader>& shader,
+               atcg::DrawMode draw_mode) { self->draw(mesh, camera, model, color, shader, draw_mode); },
+            "graph"_a,
+            "camera"_a,
+            "model"_a,
+            "color"_a,
+            "shader"_a,
+            "draw_mode"_a)
+        .def(
+            "drawCADGrid",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            { self->drawCADGrid(camera); },
+            "camera"_a)
+        .def(
+            "drawCameras",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->drawCameras(scene, camera); },
+            "scene"_a,
+            "camera"_a)
+        .def("drawCircle",
+             &atcg::RendererSystem::drawCircle,
+             "position"_a,
+             "radius"_a,
+             "thickness"_a,
+             "color"_a,
+             "camera"_a)
+        .def(
+            "drawImage",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Framebuffer>& img)
+            { self->drawImage(img); },
+            "img"_a)
+        .def(
+            "drawImage",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Texture2D>& img)
+            { self->drawImage(img); },
+            "img"_a)
+        .def("getFramebuffer", &atcg::RendererSystem::getFramebuffer)
+        .def("getEntityIndex", &atcg::RendererSystem::getEntityIndex, "mouse_pos"_a)
+        .def("toggleCulling", &atcg::RendererSystem::toggleCulling, "enabled"_a)
+        .def("screenshot",
+             [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+                const atcg::ref_ptr<atcg::Scene>& scene,
+                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+                const uint32_t width) { return self->screenshot(scene, cam, width); })
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const std::string& path) { self->screenshot(scene, cam, width, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "path"_a)
+        .def("resize", &atcg::RendererSystem::resize)
+        .def("getFrame", &atcg::RendererSystem::getFrame, "device"_a)
+        .def("getZBuffer", &atcg::RendererSystem::getZBuffer, "device"_a)
+        .def("toggleDepthTesting", &atcg::RendererSystem::toggleDepthTesting, "enabled"_a)
+        .def("setCullFace", &atcg::RendererSystem::setCullFace, "mode"_a)
+        .def("getFrameCounter", &atcg::RendererSystem::getFrameCounter)
+        .def("popTextureID", &atcg::RendererSystem::popTextureID)
+        .def("pushTextureID", &atcg::RendererSystem::pushTextureID, "id"_a);
+
+    m_shader.def(py::init<std::string>(), "compute_path"_a)
+        .def(py::init<std::string, std::string>(), "vertex_path"_a, "fragment_path"_a)
         .def(py::init<std::string, std::string, std::string>(), "vertex_path"_a, "fragment_path"_a, "geometry_path"_a)
+        .def(
+            "recompile",
+            [](const atcg::ref_ptr<atcg::Shader>& self, const std::string& compute_path)
+            { self->recompile(compute_path); },
+            "compute_path"_a)
+        .def(
+            "recompile",
+            [](const atcg::ref_ptr<atcg::Shader>& self,
+               const std::string& vertex_path,
+               const std::string& fragment_path) { self->recompile(vertex_path, fragment_path); },
+            "vertex_path"_a,
+            "fragment_path"_a)
+        .def(
+            "recompile",
+            [](const atcg::ref_ptr<atcg::Shader>& self,
+               const std::string& vertex_path,
+               const std::string& fragment_path,
+               const std::string& geometry_path) { self->recompile(vertex_path, fragment_path, geometry_path); },
+            "vertex_path"_a,
+            "fragment_path"_a,
+            "geometry_path"_a)
         .def("use", &atcg::Shader::use)
         .def("setInt", &atcg::Shader::setInt, "uniform_name"_a, "value"_a)
         .def("setFloat", &atcg::Shader::setFloat, "uniform_name"_a, "value"_a)
         .def("setVec3", &atcg::Shader::setVec3, "uniform_name"_a, "value"_a)
         .def("setVec4", &atcg::Shader::setVec4, "uniform_name"_a, "value"_a)
         .def("setMat4", &atcg::Shader::setMat4, "uniform_name"_a, "value"_a)
-        .def("setMVP", &atcg::Shader::setMVP, "model"_a, "view"_a, "projection"_a);
+        .def("setMVP", &atcg::Shader::setMVP, "model"_a, "view"_a, "projection"_a)
+        .def("dispatch", &atcg::Shader::dispatch, "work_groups"_a)
+        .def("hasGeometryShader", &atcg::Shader::hasGeometryShader)
+        .def("isComputeShader", &atcg::Shader::isComputeShader)
+        .def("getVertexPath", &atcg::Shader::getVertexPath)
+        .def("getGeometryPath", &atcg::Shader::getGeometryPath)
+        .def("getFragmentPath", &atcg::Shader::getFragmentPath)
+        .def("getComputePath", &atcg::Shader::getComputePath);
 
-    m_shader_manager.def_static("getShader", &atcg::ShaderManager::getShader, "name"_a)
-        .def_static("addShader", &atcg::ShaderManager::addShader, "name"_a, "shader"_a)
-        .def_static("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a);
+    m_shader_manager.def("getShader", &atcg::ShaderManager::getShader, "name"_a)
+        .def("addShader", &atcg::ShaderManager::addShader, "name"_a, "shader"_a)
+        .def("addShaderFromName", &atcg::ShaderManager::addShaderFromName, "name"_a)
+        .def("addComputeShaderFromName", &atcg::ShaderManager::addComputeShaderFromName, "name"_a)
+        .def("hasShader", &atcg::ShaderManager::hasShader, "name"_a)
+        .def("onUpdate", &atcg::ShaderManager::onUpdate);
+
+    m_shader_manager_system.def("getShader", &atcg::ShaderManagerSystem::getShader, "name"_a)
+        .def("addShader", &atcg::ShaderManagerSystem::addShader, "name"_a, "shader"_a)
+        .def("addShaderFromName", &atcg::ShaderManagerSystem::addShaderFromName, "name"_a)
+        .def("addComputeShaderFromName", &atcg::ShaderManagerSystem::addComputeShaderFromName, "name"_a)
+        .def("hasShader", &atcg::ShaderManagerSystem::hasShader, "name"_a)
+        .def("onUpdate", &atcg::ShaderManagerSystem::onUpdate);
 
     m_texture_format.value("RG", atcg::TextureFormat::RG)
         .value("RGB", atcg::TextureFormat::RGB)
@@ -753,6 +1017,10 @@ inline void defineBindings(py::module_& m)
         .def_static(
             "create",
             [](const atcg::ref_ptr<atcg::Image>& img) { return atcg::Texture2D::create(img); },
+            "img"_a)
+        .def_static(
+            "create",
+            [](const torch::Tensor& img) { return atcg::Texture2D::create(img); },
             "img"_a)
         .def("getID", &atcg::Texture2D::getID)
         .def("setData", &atcg::Texture2D::setData, "data"_a)
@@ -1013,6 +1281,139 @@ inline void defineBindings(py::module_& m)
                 "prediction"_a,
                 "channel_reduction"_a = "mean",
                 "delta"_a             = 1e-4f);
+
+    // ------------------- Network ---------------------------------
+    m_tcp_server.def(py::init<>())
+        .def("start", &atcg::TCPServer::start)
+        .def("stop", &atcg::TCPServer::stop)
+        .def("sendToClient", &atcg::TCPServer::sendToClient)
+        .def("setOnConnectCallback", &atcg::TCPServer::setOnConnectCallback)
+        .def("setOnReceiveCallback", &atcg::TCPServer::setOnReceiveCallback)
+        .def("setOnDisconnectCallback", &atcg::TCPServer::setOnDisconnectCallback);
+
+    m_tcp_client.def(py::init<>())
+        .def("connect", &atcg::TCPClient::connect)
+        .def("disconnect", &atcg::TCPClient::disconnect)
+        .def("sendAndWait", &atcg::TCPClient::sendAndWait);
+
+    m_network.def("readByte",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      uint8_t result = atcg::NetworkUtils::readByte(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readInt16",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      int16_t result = atcg::NetworkUtils::readInt<int16_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readUInt16",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      uint16_t result = atcg::NetworkUtils::readInt<uint16_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readInt32",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      int32_t result = atcg::NetworkUtils::readInt<int32_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readUInt32",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      uint32_t result = atcg::NetworkUtils::readInt<uint32_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readInt64",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      int64_t result = atcg::NetworkUtils::readInt<int64_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readUInt64",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      uint64_t result = atcg::NetworkUtils::readInt<uint64_t>(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("readString",
+                  [](std::vector<uint8_t>& data, uint32_t& offset)
+                  {
+                      auto result = atcg::NetworkUtils::readString(data.data(), offset);
+                      return std::make_pair(result, offset);
+                  });
+
+    m_network.def("writeByte",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, uint8_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeByte(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeInt16",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, int16_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeUInt16",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, uint16_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeInt32",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, int32_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeUInt32",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, uint32_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeInt64",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, int64_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeUInt64",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, uint64_t toWrite)
+                  {
+                      atcg::NetworkUtils::writeInt(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeBuffer",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, std::vector<uint8_t>& toWrite)
+                  {
+                      atcg::NetworkUtils::writeBuffer(data.data(), offset, toWrite.data(), toWrite.size());
+                      return std::make_pair(data, offset);
+                  });
+
+    m_network.def("writeString",
+                  [](std::vector<uint8_t>& data, uint32_t& offset, const std::string& toWrite)
+                  {
+                      atcg::NetworkUtils::writeString(data.data(), offset, toWrite);
+                      return std::make_pair(data, offset);
+                  });
 
     // IMGUI BINDINGS
 

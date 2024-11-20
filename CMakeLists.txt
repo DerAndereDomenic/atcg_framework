@@ -1,12 +1,29 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.27)
 
-project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 1.0)
+project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 0.1.0)
 
-option(ATCG_CUDA_BACKEND "Compile cuda backend" OFF)
+option(ATCG_CUDA_BACKEND "Compile cuda backend" ON)
 option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
 option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
+option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
+
+if(ATCG_HEADLESS)
+    message("Building in Headless mode")
+    if(NOT UNIX)
+        message(FATAL_ERROR "Headless mode only supported on linux.")
+    endif()
+
+    if(NOT ATCG_CUDA_BACKEND)
+        message(FATAL_ERROR "Headless mode only supported with CUDA backend.")
+    endif()
+else()
+    message("Using glfw backend")
+
+    # GLFW
+    add_subdirectory(external/glfw)
+endif()
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
@@ -15,12 +32,16 @@ list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
+# Check for CUDA
+if(ATCG_CUDA_BACKEND)
+    enable_language(CUDA)
+    set(CMAKE_CUDA_ARCHITECTURES "native")
+    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
+endif()
+
 # OpenGL
 set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
-
-# GLFW
-add_subdirectory(external/glfw)
 
 # OpenMesh
 add_subdirectory(external/openmesh)
@@ -31,22 +52,6 @@ target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 add_subdirectory(external/stbimage)
 target_include_directories(stb_image PUBLIC "external/stbimage")
 
-# imguizmo
-add_library(imguizmo STATIC)
-target_sources(imguizmo PRIVATE "external/imguizmo/GraphEditor.cpp"
-                                "external/imguizmo/GraphEditor.h"
-                                "external/imguizmo/ImCurveEdit.cpp"
-                                "external/imguizmo/ImCurveEdit.h"
-                                "external/imguizmo/ImGradient.cpp"
-                                "external/imguizmo/ImGradient.h"
-                                "external/imguizmo/ImGuizmo.cpp"
-                                "external/imguizmo/ImGuizmo.h"
-                                "external/imguizmo/ImSequencer.cpp"
-                                "external/imguizmo/ImSequencer.h"
-                                "external/imguizmo/ImZoomSlider.h")
-target_include_directories(imguizmo PUBLIC "external/imguizmo")
-target_link_libraries(imguizmo PUBLIC imgui)
-
 # charonload
 add_subdirectory(external/charonload)
 
@@ -55,28 +60,46 @@ add_library(glad STATIC)
 target_sources(glad PRIVATE "external/glad/src/glad.c")
 target_include_directories(glad PUBLIC "external/glad/include")
 
-# imgui
-add_library(imgui STATIC)
-target_sources(imgui PRIVATE "external/imgui/imgui.cpp"
-                             "external/imgui/imgui_demo.cpp"
-                             "external/imgui/imgui_draw.cpp"
-                             "external/imgui/imgui_tables.cpp"
-                             "external/imgui/imgui_widgets.cpp"
-                             "external/imgui/backends/imgui_impl_glfw.cpp"
-                             "external/imgui/backends/imgui_impl_opengl3.cpp")
-target_include_directories(imgui PUBLIC "external/imgui")
-target_link_libraries(imgui PRIVATE glfw)
+if(NOT ATCG_HEADLESS)
+    # imgui
+    add_library(imgui STATIC)
+    target_sources(imgui PRIVATE "external/imgui/imgui.cpp"
+                                "external/imgui/imgui_demo.cpp"
+                                "external/imgui/imgui_draw.cpp"
+                                "external/imgui/imgui_tables.cpp"
+                                "external/imgui/imgui_widgets.cpp"
+                                "external/imgui/backends/imgui_impl_glfw.cpp"
+                                "external/imgui/backends/imgui_impl_opengl3.cpp")
+    target_include_directories(imgui PUBLIC "external/imgui")
+    target_link_libraries(imgui PRIVATE glfw)
 
-# implot
-add_library(implot STATIC)
-target_sources(implot PRIVATE "external/implot/implot.cpp"
-                              "external/implot/implot_items.cpp")
-target_include_directories(implot PUBLIC "external/implot")
-target_link_libraries(implot PUBLIC imgui)
+    # implot
+    add_library(implot STATIC)
+    target_sources(implot PRIVATE "external/implot/implot.cpp"
+                                "external/implot/implot_items.cpp")
+    target_include_directories(implot PUBLIC "external/implot")
+    target_link_libraries(implot PUBLIC imgui)
+
+    # imguizmo
+    add_library(imguizmo STATIC)
+    target_sources(imguizmo PRIVATE "external/imguizmo/GraphEditor.cpp"
+                                    "external/imguizmo/GraphEditor.h"
+                                    "external/imguizmo/ImCurveEdit.cpp"
+                                    "external/imguizmo/ImCurveEdit.h"
+                                    "external/imguizmo/ImGradient.cpp"
+                                    "external/imguizmo/ImGradient.h"
+                                    "external/imguizmo/ImGuizmo.cpp"
+                                    "external/imguizmo/ImGuizmo.h"
+                                    "external/imguizmo/ImSequencer.cpp"
+                                    "external/imguizmo/ImSequencer.h"
+                                    "external/imguizmo/ImZoomSlider.h")
+    target_include_directories(imguizmo PUBLIC "external/imguizmo")
+    target_link_libraries(imguizmo PUBLIC imgui)
+endif()
 
 # tinyobjloader
 add_library(tinyobjloader STATIC "external/tinyobjloader/tiny_obj_loader.cc")
-target_include_directories(implot PUBLIC "external/tinyobjloader")
+target_include_directories(tinyobjloader PUBLIC "external/tinyobjloader")
 
 # entt
 add_library(entt INTERFACE)
@@ -120,65 +143,14 @@ set_target_properties(${ATCG_OPENVR_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY 
 add_library(json INTERFACE)
 target_include_directories(json INTERFACE "external/json")
 
-if(ATCG_CUDA_BACKEND)
-    enable_language(CUDA)
-    set(CMAKE_CUDA_ARCHITECTURES "native")
-    set(ATCG_BACKEND "cuda")
-else()
-    set(ATCG_BACKEND "cpu")
-endif()
+#sfml
+set(SFML_BUILD_WINDOW OFF CACHE BOOL "" FORCE)
+set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
+set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
+add_subdirectory(external/sfml)
 
-file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "atcg_lib/src/**.c*"
-                                                          "atcg_lib/include/**.h")
-
-file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "atcg_lib/platform/${ATCG_BACKEND}/**.c*"
-                                                          "atcg_lib/platform/${ATCG_BACKEND}/**.h")
-
-file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "atcg_lib/platform/opengl/**.c*"
-                                                              "atcg_lib/platform/opengl/**.h")
-
-charonload_add_torch_library(atcg_lib STATIC)
-target_sources(atcg_lib PRIVATE ${atcg_lib_files} ${atcg_backend_files} ${atcg_renderer_files})
-
-target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES NO_WARN_MBCS_MFC_DEPRECATION _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
-target_precompile_headers(atcg_lib PRIVATE "atcg_lib/include/atcgpch.h")
-
-target_include_directories(atcg_lib PUBLIC "atcg_lib/include"
-                                           "atcg_lib/platform/${ATCG_BACKEND}/include"
-                                           "atcg_lib/platform/opengl/include"
-                                           "python"
-)
-
-target_link_libraries(atcg_lib PUBLIC glfw
-                                      imgui
-                                      imguizmo
-                                      implot
-                                      glad
-                                      OpenGL::GL
-                                      OpenMeshCore
-                                      OpenMeshTools
-                                      stb_image
-                                      tinyobjloader
-                                      entt
-                                      nanort
-                                      portable_file_dialogs
-                                      nanoflann
-                                      glm
-                                      spdlog_header_only
-                                      json
-                                      ${ATCG_OPENVR_TARGET}
-)
-
-if(ATCG_CUDA_BACKEND)
-    find_package(CUDAToolkit REQUIRED)
-
-    target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-    target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
-    target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
-    target_link_libraries(atcg_lib PUBLIC CUDA::nvjpeg)
-
-    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
-endif()
+#atcg_lib
+add_subdirectory(atcg_lib)
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set(target_name ${target_name_base})
@@ -192,6 +164,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
     
     target_sources(${target_name} PRIVATE ${source})
     target_link_libraries(${target_name} PRIVATE atcg_lib)
+    target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${CMAKE_SOURCE_DIR}/src/${target_name}")
 
 	if(MSVC)
         get_target_property(TORCH_LIBRARY_LOCATION torch LOCATION)
@@ -214,6 +187,7 @@ function(ATCG_add_library target_name_base target_name_var source)
     
     target_sources(${target_name} PRIVATE ${source})
     target_link_libraries(${target_name} PRIVATE atcg_lib)
+    target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${CMAKE_SOURCE_DIR}/src/${target_name}")
 
 	if(MSVC)
 		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")

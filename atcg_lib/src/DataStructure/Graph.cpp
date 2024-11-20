@@ -435,7 +435,7 @@ void Graph::updateVertices(const torch::Tensor& vertices)
 
 void Graph::updateFaces(const std::vector<glm::u32vec3>& faces)
 {
-    torch::Tensor tindices = atcg::createHostTensorFromPointer((int32_t*)faces.data(), {(int)faces.size(), 3});
+    torch::Tensor tindices = atcg::createHostTensorFromPointer((uint32_t*)faces.data(), {(int)faces.size(), 3});
 
     updateFaces(tindices);
 }
@@ -443,9 +443,9 @@ void Graph::updateFaces(const std::vector<glm::u32vec3>& faces)
 void Graph::updateFaces(const atcg::MemoryBuffer<glm::u32vec3, atcg::device_allocator>& faces)
 {
 #ifdef ATCG_CUDA_BACKEND
-    torch::Tensor tindices = atcg::createDeviceTensorFromPointer((int32_t*)faces.get(), {(int)faces.size(), 3});
+    torch::Tensor tindices = atcg::createDeviceTensorFromPointer((uint32_t*)faces.get(), {(int)faces.size(), 3});
 #else
-    torch::Tensor tindices = atcg::createHostTensorFromPointer((int32_t*)faces.get(), {(int)faces.size(), 3});
+    torch::Tensor tindices = atcg::createHostTensorFromPointer((uint32_t*)faces.get(), {(int)faces.size(), 3});
 #endif
 
     updateFaces(tindices);
@@ -597,13 +597,13 @@ torch::Tensor Graph::getFaces(const torch::Device& device) const
 {
     if(device.is_cpu())
     {
-        int32_t* face_pointer = impl->indices->getHostPointer<int32_t>();
-        return atcg::createHostTensorFromPointer<int32_t>(face_pointer, {n_faces(), 3});
+        uint32_t* face_pointer = impl->indices->getHostPointer<uint32_t>();
+        return atcg::createHostTensorFromPointer<uint32_t>(face_pointer, {n_faces(), 3});
     }
     else
     {
-        int32_t* face_pointer = impl->indices->getDevicePointer<int32_t>();
-        return atcg::createDeviceTensorFromPointer<int32_t>(face_pointer, {n_faces(), 3});
+        uint32_t* face_pointer = impl->indices->getDevicePointer<uint32_t>();
+        return atcg::createDeviceTensorFromPointer<uint32_t>(face_pointer, {n_faces(), 3});
     }
 }
 

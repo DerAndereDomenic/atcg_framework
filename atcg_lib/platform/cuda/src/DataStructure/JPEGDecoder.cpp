@@ -15,11 +15,12 @@ inline void check_nvjpeg(nvjpegStatus_t error, char const* const func, const cha
 {
     if(error != NVJPEG_STATUS_SUCCESS)
     {
-        ATCG_ERROR("NVJPEG error at {0}:{1} code=({3}) \"{4}\" \n", file, line, static_cast<unsigned int>(error), func);
+        std::cout << "NVJPEG error at " << file << ":" << line << "code=(" << static_cast<unsigned int>(error) << ") \""
+                  << func << "\" \n";
     }
 }
 
-int dev_malloc(void** p, size_t s)
+inline static int dev_malloc(void** p, size_t s)
 {
     try
     {
@@ -32,7 +33,7 @@ int dev_malloc(void** p, size_t s)
     }
 }
 
-int dev_free(void* p)
+inline static int dev_free(void* p)
 {
     try
     {
@@ -45,12 +46,12 @@ int dev_free(void* p)
     }
 }
 
-int host_malloc(void** p, size_t s, unsigned int f)
+inline static int host_malloc(void** p, size_t s, unsigned int f)
 {
     return (int)cudaHostAlloc(p, s, f);
 }
 
-int host_free(void* p)
+inline static int host_free(void* p)
 {
     return (int)cudaFreeHost(p);
 }
@@ -65,13 +66,13 @@ int host_free(void* p)
 class JPEGDecoder::Impl
 {
 public:
-    Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height);
+    Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height, bool flip_vertically, JPEGBackend backend);
 
     ~Impl();
 
     void allocateBuffers();
-    void initializeNVJPEG();
-    void loadFiles(const std::vector<std::string>& filenames, const torch::Tensor& valid);
+    void initializeNVJPEG(JPEGBackend backend);
+    void loadFiles(const std::vector<std::vector<uint8_t>>& jpeg_files);
     void decompressImages();
     void copyImagesToOutput(atcg::textureArray texture);
 
@@ -79,6 +80,7 @@ public:
 
     // Rendering buffers
     torch::Tensor output_tensor;
+    torch::Tensor data_tensor;
     torch::Tensor intermediate_tensor;
 
     // File buffers
@@ -100,15 +102,27 @@ public:
     uint32_t img_height;
 
     cudaStream_t decoding_stream;
+
+    bool flip_vertically = true;
 };
 
-JPEGDecoder::Impl::Impl(uint32_t num_images, uint32_t img_width, uint32_t img_height)
+JPEGDecoder::Impl::Impl(uint32_t num_images,
+                        uint32_t img_width,
+                        uint32_t img_height,
+                        bool flip_vertically,
+                        JPEGBackend backend)
 {
-    this->num_images = num_images;
-    this->img_width  = img_width;
-    this->img_height = img_height;
+    this->num_images      = num_images;
+    this->img_width       = img_width;
+    this->img_height      = img_height;
+    this->flip_vertically = flip_vertically;
+
+    // This initializes the cache allocator
+    torch::empty({1}, atcg::TensorOptions::floatDeviceOptions());
+    torch::empty({1}, atcg::TensorOptions::floatHostOptions());
+
     allocateBuffers();
-    initializeNVJPEG();
+    initializeNVJPEG(backend);
 }
 
 JPEGDecoder::Impl::~Impl()
@@ -124,14 +138,17 @@ void JPEGDecoder::Impl::allocateBuffers()
     file_lengths.resize(num_images);
     raw_inputs.resize(num_images);
 
-    output_tensor = torch::zeros({num_images, img_height, img_width, 3}, atcg::TensorOptions::uint8DeviceOptions());
+    data_tensor = torch::zeros({num_images, img_height, img_width, 3}, atcg::TensorOptions::uint8DeviceOptions());
 
     CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&decoding_stream, cudaStreamNonBlocking));
 }
 
-void JPEGDecoder::Impl::initializeNVJPEG()
+void JPEGDecoder::Impl::initializeNVJPEG(JPEGBackend backend)
 {
-    NVJPEG_SAFE_CALL(nvjpegCreateEx(NVJPEG_BACKEND_DEFAULT, &dev_allocator, &pinned_allocator, flags, &nvjpeg_handle));
+    nvjpegBackend_t nvjpeg_backend =
+        backend == JPEGBackend::SOFTWARE ? NVJPEG_BACKEND_DEFAULT : NVJPEG_BACKEND_HARDWARE;
+
+    NVJPEG_SAFE_CALL(nvjpegCreateEx(nvjpeg_backend, &dev_allocator, &pinned_allocator, flags, &nvjpeg_handle));
     NVJPEG_SAFE_CALL(nvjpegJpegStateCreate(nvjpeg_handle, &nvjpeg_state));
     NVJPEG_SAFE_CALL(nvjpegDecodeBatchedInitialize(nvjpeg_handle, nvjpeg_state, num_images, 1, fmt));
 
@@ -144,41 +161,17 @@ void JPEGDecoder::Impl::initializeNVJPEG()
     for(int i = 0; i < num_images; i++)
     {
         output_images[i].pitch[0]   = 3 * img_width;
-        output_images[i].channel[0] = (unsigned char*)output_tensor.index({i, 0, 0, 0}).data_ptr();
+        output_images[i].channel[0] = (unsigned char*)data_tensor.index({i, 0, 0, 0}).data_ptr();
     }
 }
 
-void JPEGDecoder::Impl::loadFiles(const std::vector<std::string>& filenames, const torch::Tensor& valid)
+void JPEGDecoder::Impl::loadFiles(const std::vector<std::vector<uint8_t>>& jpeg_files)
 {
-    torch::Tensor host_valid = valid.to(torch::kCPU);
-    int index                = 0;
-    for(uint32_t i = 0; i < filenames.size(); ++i)
+    for(uint32_t i = 0; i < jpeg_files.size(); ++i)
     {
-        if(host_valid.index({(int)i}).item<int>() == 0)
-        {
-            continue;
-        }
+        file_lengths[i] = jpeg_files[i].size();
 
-        std::ifstream input(filenames[i], std::ios::in | std::ios::binary | std::ios::ate);
-
-        // Get the size
-        std::streamsize file_size = input.tellg();
-        input.seekg(0, std::ios::beg);
-        // resize if buffer is too small
-        if(file_data[index].size() < file_size)
-        {
-            file_data[index].resize(file_size);
-        }
-        if(!input.read(file_data[index].data(), file_size))
-        {
-            ATCG_ERROR("JPEGDecoder: Cannot read from file: {0}", filenames[i]);
-        }
-        file_lengths[index] = file_size;
-
-        raw_inputs[index] = (const unsigned char*)file_data[index].data();
-
-        ++index;
-        if(index >= num_images) break;
+        raw_inputs[i] = (const unsigned char*)jpeg_files[i].data();
     }
 }
 
@@ -191,6 +184,17 @@ void JPEGDecoder::Impl::decompressImages()
                                          output_images.data(),
                                          decoding_stream));
     CUDA_SAFE_CALL(cudaStreamSynchronize(decoding_stream));
+
+    // Unfortunetly, nvjpeg does not support inplace flipping of decoded images.
+    // We therefore create a copy of the data although it is not super efficient...
+    if(flip_vertically)
+    {
+        output_tensor = data_tensor.flip(1);
+    }
+    else
+    {
+        output_tensor = data_tensor.clone();
+    }
 }
 
 void JPEGDecoder::Impl::copyImagesToOutput(atcg::textureArray texture)
@@ -226,21 +230,20 @@ void JPEGDecoder::Impl::deinitializeNVJPEG()
     NVJPEG_SAFE_CALL(nvjpegDestroy(nvjpeg_handle));
 }
 
-JPEGDecoder::JPEGDecoder(uint32_t num_images, uint32_t img_width, uint32_t img_height)
+JPEGDecoder::JPEGDecoder(uint32_t num_images,
+                         uint32_t img_width,
+                         uint32_t img_height,
+                         bool flip_vertically,
+                         JPEGBackend backend)
 {
-    impl = std::make_unique<Impl>(num_images, img_width, img_height);
+    impl = std::make_unique<Impl>(num_images, img_width, img_height, flip_vertically, backend);
 }
 
 JPEGDecoder::~JPEGDecoder() {}
 
-torch::Tensor JPEGDecoder::decompressImages(const std::vector<std::string>& filenames)
+torch::Tensor JPEGDecoder::decompressImages(const std::vector<std::vector<uint8_t>>& jpeg_files)
 {
-    return decompressImages(filenames, torch::ones(impl->num_images, atcg::TensorOptions::int32HostOptions()));
-}
-
-torch::Tensor JPEGDecoder::decompressImages(const std::vector<std::string>& filenames, const torch::Tensor& valid)
-{
-    impl->loadFiles(filenames, valid);
+    impl->loadFiles(jpeg_files);
     impl->decompressImages();
 
     return impl->output_tensor;
@@ -260,4 +263,4 @@ void JPEGDecoder::copyToOutput(atcg::textureArray output_texture)
 {
     impl->copyImagesToOutput(output_texture);
 }
-}
+}    // namespace atcg

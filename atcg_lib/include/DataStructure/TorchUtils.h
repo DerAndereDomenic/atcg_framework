@@ -36,14 +36,29 @@ ATCG_INLINE torch::TensorOptions int16HostOptions()
     return torch::TensorOptions {}.dtype(torch::kInt16).device(atcg::CPU);
 }
 
+ATCG_INLINE torch::TensorOptions uint16HostOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt16).device(atcg::CPU);
+}
+
 ATCG_INLINE torch::TensorOptions int32HostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt32).device(atcg::CPU);
 }
 
+ATCG_INLINE torch::TensorOptions uint32HostOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt32).device(atcg::CPU);
+}
+
 ATCG_INLINE torch::TensorOptions int64HostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt64).device(atcg::CPU);
+}
+
+ATCG_INLINE torch::TensorOptions uint64HostOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt64).device(atcg::CPU);
 }
 
 ATCG_INLINE torch::TensorOptions floatHostOptions()
@@ -71,14 +86,29 @@ ATCG_INLINE torch::TensorOptions int16DeviceOptions()
     return torch::TensorOptions {}.dtype(torch::kInt16).device(atcg::GPU);
 }
 
+ATCG_INLINE torch::TensorOptions uint16DeviceOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt16).device(atcg::GPU);
+}
+
 ATCG_INLINE torch::TensorOptions int32DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt32).device(atcg::GPU);
 }
 
+ATCG_INLINE torch::TensorOptions uint32DeviceOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt32).device(atcg::GPU);
+}
+
 ATCG_INLINE torch::TensorOptions int64DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kInt64).device(atcg::GPU);
+}
+
+ATCG_INLINE torch::TensorOptions uint64DeviceOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kUInt64).device(atcg::GPU);
 }
 
 ATCG_INLINE torch::TensorOptions floatDeviceOptions()
@@ -109,11 +139,16 @@ ATCG_INLINE torch::TensorOptions HostOptions<uint8_t>()
     return uint8HostOptions();
 }
 
-
 template<>
 ATCG_INLINE torch::TensorOptions HostOptions<int16_t>()
 {
     return int16HostOptions();
+}
+
+template<>
+ATCG_INLINE torch::TensorOptions HostOptions<uint16_t>()
+{
+    return uint16HostOptions();
 }
 
 template<>
@@ -123,9 +158,21 @@ ATCG_INLINE torch::TensorOptions HostOptions<int32_t>()
 }
 
 template<>
+ATCG_INLINE torch::TensorOptions HostOptions<uint32_t>()
+{
+    return uint32HostOptions();
+}
+
+template<>
 ATCG_INLINE torch::TensorOptions HostOptions<int64_t>()
 {
     return int64HostOptions();
+}
+
+template<>
+ATCG_INLINE torch::TensorOptions HostOptions<uint64_t>()
+{
+    return uint64HostOptions();
 }
 
 template<>
@@ -159,9 +206,21 @@ ATCG_INLINE torch::TensorOptions DeviceOptions<int16_t>()
 }
 
 template<>
+ATCG_INLINE torch::TensorOptions DeviceOptions<uint16_t>()
+{
+    return uint16DeviceOptions();
+}
+
+template<>
 ATCG_INLINE torch::TensorOptions DeviceOptions<int32_t>()
 {
     return int32DeviceOptions();
+}
+
+template<>
+ATCG_INLINE torch::TensorOptions DeviceOptions<uint32_t>()
+{
+    return uint32DeviceOptions();
 }
 
 template<>
@@ -169,6 +228,13 @@ ATCG_INLINE torch::TensorOptions DeviceOptions<int64_t>()
 {
     return int64DeviceOptions();
 }
+
+template<>
+ATCG_INLINE torch::TensorOptions DeviceOptions<uint64_t>()
+{
+    return uint64DeviceOptions();
+}
+
 
 template<>
 ATCG_INLINE torch::TensorOptions DeviceOptions<float>()
@@ -293,7 +359,7 @@ createDeviceTensorFromPointer(T* pointer, const at::IntArrayRef& size, const at:
  * @brief Create a tensor from a vertex buffer without taking ownership.
  * This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 15) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::VERTEX_SIZE) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -303,14 +369,14 @@ ATCG_INLINE torch::Tensor getVertexBufferAsHostTensor(const atcg::ref_ptr<atcg::
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createHostTensorFromPointer(vertex_buffer, {num_vertices, 15});
+    return createHostTensorFromPointer(vertex_buffer, {num_vertices, atcg::VertexSpecification::VERTEX_SIZE});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership.
  * This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 15) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::VERTEX_SIZE) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -320,14 +386,15 @@ ATCG_INLINE torch::Tensor getVertexBufferAsDeviceTensor(const atcg::ref_ptr<atcg
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createDeviceTensorFromPointer(vertex_buffer, {num_vertices, 15});
+    return createDeviceTensorFromPointer(vertex_buffer, {num_vertices, atcg::VertexSpecification::VERTEX_SIZE});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex positions.
  * This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::POSITION_END -
+ * atcg::VertexSpecification::POSITION_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -337,14 +404,18 @@ ATCG_INLINE torch::Tensor getPositionsAsHostTensor(const atcg::ref_ptr<atcg::Ver
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createHostTensorFromPointer(vertex_buffer, {num_vertices, 3}, {15, 1});
+    return createHostTensorFromPointer(
+        vertex_buffer,
+        {num_vertices, atcg::VertexSpecification::POSITION_END - atcg::VertexSpecification::POSITION_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex positions.
  * This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::POSITION_END -
+ * atcg::VertexSpecification::POSITION_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -354,14 +425,18 @@ ATCG_INLINE torch::Tensor getPositionsAsDeviceTensor(const atcg::ref_ptr<atcg::V
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createDeviceTensorFromPointer(vertex_buffer, {num_vertices, 3}, {15, 1});
+    return createDeviceTensorFromPointer(
+        vertex_buffer,
+        {num_vertices, atcg::VertexSpecification::POSITION_END - atcg::VertexSpecification::POSITION_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex colors.
  * This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::COLOR_END -
+ * atcg::VertexSpecification::COLOR_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -371,14 +446,18 @@ ATCG_INLINE torch::Tensor getColorsAsHostTensor(const atcg::ref_ptr<atcg::Vertex
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createHostTensorFromPointer(vertex_buffer + 3, {num_vertices, 3}, {15, 1});
+    return createHostTensorFromPointer(
+        vertex_buffer + atcg::VertexSpecification::COLOR_BEGIN,
+        {num_vertices, atcg::VertexSpecification::COLOR_END - atcg::VertexSpecification::COLOR_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex colors.
  * This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::COLOR_END -
+ * atcg::VertexSpecification::COLOR_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -388,14 +467,18 @@ ATCG_INLINE torch::Tensor getColorsAsDeviceTensor(const atcg::ref_ptr<atcg::Vert
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createDeviceTensorFromPointer(vertex_buffer + 3, {num_vertices, 3}, {15, 1});
+    return createDeviceTensorFromPointer(
+        vertex_buffer + atcg::VertexSpecification::COLOR_BEGIN,
+        {num_vertices, atcg::VertexSpecification::COLOR_END - atcg::VertexSpecification::COLOR_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex normals.
  * This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::NORMAL_END -
+ * atcg::VertexSpecification::NORMAL_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -405,14 +488,18 @@ ATCG_INLINE torch::Tensor getNormalsAsHostTensor(const atcg::ref_ptr<atcg::Verte
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createHostTensorFromPointer(vertex_buffer + 6, {num_vertices, 3}, {15, 1});
+    return createHostTensorFromPointer(
+        vertex_buffer + atcg::VertexSpecification::NORMAL_BEGIN,
+        {num_vertices, atcg::VertexSpecification::NORMAL_END - atcg::VertexSpecification::NORMAL_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex normals.
  * This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::NORMAL_END -
+ * atcg::VertexSpecification::NORMAL_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -422,14 +509,18 @@ ATCG_INLINE torch::Tensor getNormalsAsDeviceTensor(const atcg::ref_ptr<atcg::Ver
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createDeviceTensorFromPointer(vertex_buffer + 6, {num_vertices, 3}, {15, 1});
+    return createDeviceTensorFromPointer(
+        vertex_buffer + atcg::VertexSpecification::NORMAL_BEGIN,
+        {num_vertices, atcg::VertexSpecification::NORMAL_END - atcg::VertexSpecification::NORMAL_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex tangents.
  * This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::TANGENT_END -
+ * atcg::VertexSpecification::TANGENT_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -439,14 +530,18 @@ ATCG_INLINE torch::Tensor getTangentsAsHostTensor(const atcg::ref_ptr<atcg::Vert
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createHostTensorFromPointer(vertex_buffer + 9, {num_vertices, 3}, {15, 1});
+    return createHostTensorFromPointer(
+        vertex_buffer + atcg::VertexSpecification::TANGENT_BEGIN,
+        {num_vertices, atcg::VertexSpecification::TANGENT_END - atcg::VertexSpecification::TANGENT_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex tangents.
  * This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::TANGENT_END -
+ * atcg::VertexSpecification::TANGENT_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -456,14 +551,18 @@ ATCG_INLINE torch::Tensor getTangentsAsDeviceTensor(const atcg::ref_ptr<atcg::Ve
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createDeviceTensorFromPointer(vertex_buffer + 9, {num_vertices, 3}, {15, 1});
+    return createDeviceTensorFromPointer(
+        vertex_buffer + atcg::VertexSpecification::TANGENT_BEGIN,
+        {num_vertices, atcg::VertexSpecification::TANGENT_END - atcg::VertexSpecification::TANGENT_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex uvs.
  * This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::UV_END -
+ * atcg::VertexSpecification::UV_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -473,14 +572,18 @@ ATCG_INLINE torch::Tensor getUVsAsHostTensor(const atcg::ref_ptr<atcg::VertexBuf
 {
     float* vertex_buffer  = buffer->getHostPointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createHostTensorFromPointer(vertex_buffer + 12, {num_vertices, 3}, {15, 1});
+    return createHostTensorFromPointer(
+        vertex_buffer + atcg::VertexSpecification::UV_BEGIN,
+        {num_vertices, atcg::VertexSpecification::UV_END - atcg::VertexSpecification::UV_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 /**
  * @brief Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex uvs.
  * This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given
  * vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an atcg::Graph
- * object. Therefore, it will have a size of (n_vertices, 3) (see atcg::Vertex).
+ * object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::UV_END -
+ * atcg::VertexSpecification::UV_BEGIN) (see atcg::Vertex).
  *
  * @param buffer The vertex buffer
  *
@@ -490,7 +593,10 @@ ATCG_INLINE torch::Tensor getUVsAsDeviceTensor(const atcg::ref_ptr<atcg::VertexB
 {
     float* vertex_buffer  = buffer->getDevicePointer<float>();
     uint32_t num_vertices = buffer->size() / sizeof(atcg::Vertex);
-    return createDeviceTensorFromPointer(vertex_buffer + 12, {num_vertices, 3}, {15, 1});
+    return createDeviceTensorFromPointer(
+        vertex_buffer + atcg::VertexSpecification::UV_BEGIN,
+        {num_vertices, atcg::VertexSpecification::UV_END - atcg::VertexSpecification::UV_BEGIN},
+        {atcg::VertexSpecification::VERTEX_SIZE, 1});
 }
 
 }    // namespace atcg

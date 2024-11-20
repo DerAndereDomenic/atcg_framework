@@ -1,6 +1,7 @@
 #pragma once
 
 //-------- CORE ---------
+#include <Core/Assert.h>
 #include <Core/Platform.h>
 #include <Core/Layer.h>
 #include <Core/LayerStack.h>
@@ -13,6 +14,10 @@
 #include <Core/CUDA.h>
 #include <Core/glm.h>
 #include <Core/UUID.h>
+#include <Core/SystemRegistry.h>
+#include <Core/KeyCodes.h>
+#include <Core/Path.h>
+#include <Core/CommandLine.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>
@@ -34,6 +39,7 @@
 #include <Renderer/Framebuffer.h>
 #include <Renderer/Material.h>
 #include <Renderer/VRSystem.h>
+#include <Renderer/RenderGraph.h>
 
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
@@ -46,7 +52,12 @@
 #include <DataStructure/Statistics.h>
 #include <DataStructure/BufferView.h>
 #include <DataStructure/Image.h>
-#include <DataStructure/JPEGDecoder.h>
+#include <DataStructure/Worker.h>
+#include <DataStructure/WorkerPool.h>
+#ifdef ATCG_CUDA_BACKEND
+    #include <DataStructure/JPEGDecoder.h>
+    #include <DataStructure/JPEGEncoder.h>
+#endif
 
 //-------- Math -----------
 #include <Math/Constants.h>
@@ -55,8 +66,16 @@
 #include <Math/Tracing.h>
 #include <Math/Color.h>
 
+//-------- Network ------------
+#include <Network/TCPServer.h>
+#include <Network/TCPClient.h>
+#include <Network/NetworkUtils.h>
+
 //-------- ImGui -----------
-#include <ImGui/Guizmo.h>
+#ifndef ATCG_HEADLESS
+    #include <imgui.h>
+    #include <ImGui/Guizmo.h>
+#endif
 
 //-------- Scene -----------
 #include <Scene/Components.h>

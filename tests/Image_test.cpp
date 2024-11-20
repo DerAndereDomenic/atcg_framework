@@ -2,6 +2,7 @@
 #include <Math/Functions.h>
 #include <DataStructure/Image.h>
 #include <DataStructure/TorchUtils.h>
+#include <Core/Path.h>
 
 TEST(ImageTest, rawBytes)
 {
@@ -162,7 +163,7 @@ TEST(ImageTest, tensorFloatsetData)
 TEST(ImageTest, loadLDR)
 {
     atcg::Image img;
-    img.load("res/pbr/diffuse.png");
+    img.load((atcg::resource_directory() / "pbr/diffuse.png").string());
 
     EXPECT_EQ(img.width(), 1024);
     EXPECT_EQ(img.height(), 1024);
@@ -181,7 +182,7 @@ TEST(ImageTest, loadLDR)
 TEST(ImageTest, loadHDR)
 {
     atcg::Image img;
-    img.load("res/pbr/skybox.hdr");
+    img.load((atcg::resource_directory() / "pbr/skybox.hdr").string());
 
     EXPECT_EQ(img.width(), 4096);
     EXPECT_EQ(img.height(), 2048);

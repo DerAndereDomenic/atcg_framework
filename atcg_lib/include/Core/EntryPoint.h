@@ -9,6 +9,8 @@ namespace atcg
 
 void print_statistics()
 {
+    ATCG_ASSERT(atcg::SystemRegistry::instance()->hasSystem<atcg::Logger>(), "No Logger");
+
     atcg::host_allocator alloc_host;
     std::size_t host_bytes_allocated   = alloc_host.bytes_allocated;
     std::size_t host_bytes_deallocated = alloc_host.bytes_deallocated;
@@ -28,15 +30,16 @@ void print_statistics()
               dev_bytes_allocated - dev_bytes_deallocated);
 }
 
-int atcg_main(Application* app)
+int atcg_main()
 {
+    auto logger = atcg::make_ref<atcg::Logger>();
+    atcg::SystemRegistry::init();
+    atcg::SystemRegistry::instance()->registerSystem(logger.get());
+    atcg::Application* app = atcg::createApplication();
     app->run();
-
-    {
-        atcg::ShaderManager::destroy();
-        atcg::VRSystem::destroy();
-        atcg::Renderer::destroy();
-    }
+    delete app;
+    atcg::print_statistics();
+    atcg::SystemRegistry::shutdown();
 
     return 0;
 }
@@ -44,9 +47,6 @@ int atcg_main(Application* app)
 
 int main(int argc, char** argv)
 {
-    atcg::Application* app = atcg::createApplication();
-    int ret                = atcg::atcg_main(app);
-    delete app;
-    atcg::print_statistics();
-    return ret;
+    atcg::registerCommandLineArguments(argc, argv);
+    return atcg::atcg_main();
 }

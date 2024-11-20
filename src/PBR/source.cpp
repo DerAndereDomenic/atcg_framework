@@ -5,10 +5,7 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <algorithm>
-#include <ImGuizmo.h>
 
 #include <random>
 #include <stb_image.h>
@@ -24,19 +21,19 @@ public:
         atcg::Application::get()->enableDockSpace(true);
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
-        auto skybox = atcg::IO::imread("res/pbr/skybox.hdr");
+        auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
         ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
         atcg::Renderer::setSkybox(skybox);
 
-        scene = atcg::IO::read_scene("res/test_scene.obj");
+        scene = atcg::IO::read_scene((atcg::resource_directory() / "test_scene.obj").string());
 
         panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
 
-        if(atcg::VRSystem::isVRAvailable())
+        if(atcg::VR::isVRAvailable())
         {
-            float vr_aspect   = (float)atcg::VRSystem::width() / (float)atcg::VRSystem::height();
+            float vr_aspect   = (float)atcg::VR::width() / (float)atcg::VR::height();
             camera_controller = atcg::make_ref<atcg::VRController>(vr_aspect);
-            atcg::VRSystem::initControllerMeshes(scene);
+            atcg::VR::initControllerMeshes(scene);
         }
         else
         {
@@ -53,21 +50,20 @@ public:
 
         atcg::Renderer::clear();
 
-        if(atcg::VRSystem::isVRAvailable())
+        if(atcg::VR::isVRAvailable())
         {
             atcg::ref_ptr<atcg::VRController> controller =
                 std::dynamic_pointer_cast<atcg::VRController>(camera_controller);
 
             if(controller->inMovement())
             {
-                atcg::VRSystem::setMovementLine(controller->getControllerPosition(),
-                                                controller->getControllerIntersection());
+                atcg::VR::setMovementLine(controller->getControllerPosition(), controller->getControllerIntersection());
             }
 
-            auto [t_left, t_right] = atcg::VRSystem::getRenderTargets();
+            auto [t_left, t_right] = atcg::VR::getRenderTargets();
 
             t_left->use();
-            atcg::Renderer::setViewport(0, 0, atcg::VRSystem::width(), atcg::VRSystem::height());
+            atcg::Renderer::setViewport(0, 0, atcg::VR::width(), atcg::VR::height());
 
             atcg::Renderer::clear();
 
@@ -79,7 +75,7 @@ public:
 
             if(controller->inMovement())
             {
-                atcg::VRSystem::drawMovementLine(controller->getCameraLeft());
+                atcg::VR::drawMovementLine(controller->getCameraLeft());
             }
 
             t_right->use();
@@ -94,13 +90,13 @@ public:
 
             if(controller->inMovement())
             {
-                atcg::VRSystem::drawMovementLine(controller->getCameraRight());
+                atcg::VR::drawMovementLine(controller->getCameraRight());
             }
 
             atcg::Renderer::useScreenBuffer();
             atcg::Renderer::setDefaultViewport();
 
-            atcg::VRSystem::renderToScreen();
+            atcg::VR::renderToScreen();
         }
         else
         {
@@ -114,6 +110,7 @@ public:
         }
     }
 
+#ifndef ATCG_HEADLESS
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
@@ -161,6 +158,7 @@ public:
 
         atcg::drawGuizmo(hovered_entity, current_operation, camera_controller->getCamera());
     }
+#endif
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event* event) override
@@ -168,9 +166,11 @@ public:
         camera_controller->onEvent(event);
 
         atcg::EventDispatcher dispatcher(event);
+#ifndef ATCG_HEADLESS
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMouseMoved));
         dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMousePressed));
         dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onKeyPressed));
+#endif
         dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onViewportResized));
     }
 
@@ -181,28 +181,29 @@ public:
         return false;
     }
 
+#ifndef ATCG_HEADLESS
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
-        if(event->getKeyCode() == GLFW_KEY_T)
+        if(event->getKeyCode() == ATCG_KEY_T)
         {
             current_operation = ImGuizmo::OPERATION::TRANSLATE;
         }
-        if(event->getKeyCode() == GLFW_KEY_R)
+        if(event->getKeyCode() == ATCG_KEY_R)
         {
             current_operation = ImGuizmo::OPERATION::ROTATE;
         }
-        if(event->getKeyCode() == GLFW_KEY_S)
+        if(event->getKeyCode() == ATCG_KEY_S)
         {
             current_operation = ImGuizmo::OPERATION::SCALE;
         }
-        // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
+        // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;
     }
 
     bool onMousePressed(atcg::MouseButtonPressedEvent* event)
     {
-        if(in_viewport && event->getMouseButton() == GLFW_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
+        if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
         {
             int id         = atcg::Renderer::getEntityIndex(mouse_pos);
             hovered_entity = id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, scene.get());
@@ -223,6 +224,7 @@ public:
 
         return false;
     }
+#endif
 
 private:
     atcg::ref_ptr<atcg::Scene> scene;
@@ -239,8 +241,10 @@ private:
 
     glm::vec2 mouse_pos;
 
-    bool show_render_settings             = false;
+    bool show_render_settings = false;
+#ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+#endif
 };
 
 class PBR : public atcg::Application

@@ -229,6 +229,14 @@ public:
     void resize(std::size_t size);
 
     /**
+     * @brief Return a deep copy of the vertex buffer.
+     * This function allocates a new vertex buffer and copies the contents of this buffer into the vertexbuffer.
+     *
+     * @return The copy of the vertex buffer
+     */
+    atcg::ref_ptr<VertexBuffer> clone() const;
+
+    /**
      * @brief Get the underlying data as a device pointer.
      * This only returns a valid device pointer if the CUDA backend is enabled. Otherwise this will return the buffer
      * mapped to host space.

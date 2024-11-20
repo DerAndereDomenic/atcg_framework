@@ -4,15 +4,21 @@
 #include <Core/LayerStack.h>
 #include <Core/Window.h>
 #include <Events/WindowEvent.h>
-#include <ImGui/ImGuiLayer.h>
+#include <Events/KeyEvent.h>
 #include <Core/Platform.h>
+#include <Renderer/ShaderManager.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/VRSystem.h>
+
+#ifndef ATCG_HEADLESS
+    #include <ImGui/ImGuiLayer.h>
+#endif
 
 namespace atcg
 {
 class Application;
-int atcg_main(Application* app);
+int atcg_main();
 }    // namespace atcg
-int python_main(atcg::Application* app);
 
 namespace atcg
 {
@@ -97,30 +103,47 @@ public:
      *
      * @param enable If dockspaces should be enabled
      */
-    ATCG_INLINE void enableDockSpace(bool enable) { _imgui_layer->enableDockSpace(enable); }
+    ATCG_INLINE void enableDockSpace(bool enable)
+    {
+#ifndef ATCG_HEADLESS
+        _imgui_layer->enableDockSpace(enable);
+#endif
+    }
 
+#ifndef ATCG_HEADLESS
     /**
      * @brief Get the imgui layer.
      *
      * @return The imgui layer
      */
     ATCG_INLINE ImGuiLayer* getImGuiLayer() const { return _imgui_layer; }
+#endif
+    /**
+     * @brief Run the application
+     */
+    virtual void run();
 
 private:
-    void run();
     bool onWindowClose(WindowCloseEvent* e);
     bool onWindowResize(WindowResizeEvent* e);
     bool onViewportResize(ViewportResizeEvent* e);
+    bool onKeyPress(KeyPressedEvent* e);
     void init(const WindowProps& props);
 
 private:
     bool _running = false;
     atcg::scope_ptr<Window> _window;
+#ifndef ATCG_HEADLESS
     ImGuiLayer* _imgui_layer;
+#endif
     LayerStack _layer_stack;
 
-    friend int atcg::atcg_main(Application* app);
-    friend int ::python_main(atcg::Application* app);    // Entry point for python bindings
+    // Systems
+    atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
+    atcg::ref_ptr<RendererSystem> _renderer;
+    atcg::ref_ptr<VRSystem> _vr_system;
+
+    friend int atcg::atcg_main();
     static Application* s_instance;
 };
 

@@ -26,6 +26,14 @@ TEST(TensorOptionsTest, int16Host)
     EXPECT_EQ(t.device().type(), atcg::CPU);
 }
 
+TEST(TensorOptionsTest, uint16Host)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::uint16HostOptions());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt16);
+    EXPECT_EQ(t.device().type(), atcg::CPU);
+}
+
 TEST(TensorOptionsTest, int32Host)
 {
     torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::int32HostOptions());
@@ -34,11 +42,27 @@ TEST(TensorOptionsTest, int32Host)
     EXPECT_EQ(t.device().type(), atcg::CPU);
 }
 
+TEST(TensorOptionsTest, uint32Host)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::uint32HostOptions());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt32);
+    EXPECT_EQ(t.device().type(), atcg::CPU);
+}
+
 TEST(TensorOptionsTest, int64Host)
 {
     torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::int64HostOptions());
 
     EXPECT_EQ(t.scalar_type(), torch::kInt64);
+    EXPECT_EQ(t.device().type(), atcg::CPU);
+}
+
+TEST(TensorOptionsTest, uint64Host)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::uint64HostOptions());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt64);
     EXPECT_EQ(t.device().type(), atcg::CPU);
 }
 
@@ -82,6 +106,14 @@ TEST(TensorOptionsTest, int16Device)
     EXPECT_EQ(t.device().type(), atcg::GPU);
 }
 
+TEST(TensorOptionsTest, uint16Device)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::uint16DeviceOptions());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt16);
+    EXPECT_EQ(t.device().type(), atcg::GPU);
+}
+
 TEST(TensorOptionsTest, int32Device)
 {
     torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::int32DeviceOptions());
@@ -90,11 +122,27 @@ TEST(TensorOptionsTest, int32Device)
     EXPECT_EQ(t.device().type(), atcg::GPU);
 }
 
+TEST(TensorOptionsTest, uint32Device)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::uint32DeviceOptions());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt32);
+    EXPECT_EQ(t.device().type(), atcg::GPU);
+}
+
 TEST(TensorOptionsTest, int64Device)
 {
     torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::int64DeviceOptions());
 
     EXPECT_EQ(t.scalar_type(), torch::kInt64);
+    EXPECT_EQ(t.device().type(), atcg::GPU);
+}
+
+TEST(TensorOptionsTest, uint64Device)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::uint64DeviceOptions());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt64);
     EXPECT_EQ(t.device().type(), atcg::GPU);
 }
 
@@ -138,6 +186,14 @@ TEST(TensorOptionsTest, int16HostOptions)
     EXPECT_EQ(t.device().type(), atcg::CPU);
 }
 
+TEST(TensorOptionsTest, uint16HostOptions)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::HostOptions<uint16_t>());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt16);
+    EXPECT_EQ(t.device().type(), atcg::CPU);
+}
+
 TEST(TensorOptionsTest, int32HostOptions)
 {
     torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::HostOptions<int32_t>());
@@ -146,11 +202,27 @@ TEST(TensorOptionsTest, int32HostOptions)
     EXPECT_EQ(t.device().type(), atcg::CPU);
 }
 
+TEST(TensorOptionsTest, uint32HostOptions)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::HostOptions<uint32_t>());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt32);
+    EXPECT_EQ(t.device().type(), atcg::CPU);
+}
+
 TEST(TensorOptionsTest, int64HostOptions)
 {
     torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::HostOptions<int64_t>());
 
     EXPECT_EQ(t.scalar_type(), torch::kInt64);
+    EXPECT_EQ(t.device().type(), atcg::CPU);
+}
+
+TEST(TensorOptionsTest, uint64HostOptions)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::HostOptions<uint64_t>());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt64);
     EXPECT_EQ(t.device().type(), atcg::CPU);
 }
 
@@ -194,6 +266,14 @@ TEST(TensorOptionsTest, int16DeviceOptions)
     EXPECT_EQ(t.device().type(), atcg::GPU);
 }
 
+TEST(TensorOptionsTest, uint16DeviceOptions)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::DeviceOptions<uint16_t>());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt16);
+    EXPECT_EQ(t.device().type(), atcg::GPU);
+}
+
 TEST(TensorOptionsTest, int32DeviceOptions)
 {
     torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::DeviceOptions<int32_t>());
@@ -202,11 +282,27 @@ TEST(TensorOptionsTest, int32DeviceOptions)
     EXPECT_EQ(t.device().type(), atcg::GPU);
 }
 
+TEST(TensorOptionsTest, uint32DeviceOptions)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::DeviceOptions<uint32_t>());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt32);
+    EXPECT_EQ(t.device().type(), atcg::GPU);
+}
+
 TEST(TensorOptionsTest, int64DeviceOptions)
 {
     torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::DeviceOptions<int64_t>());
 
     EXPECT_EQ(t.scalar_type(), torch::kInt64);
+    EXPECT_EQ(t.device().type(), atcg::GPU);
+}
+
+TEST(TensorOptionsTest, uint64DeviceOptions)
+{
+    torch::Tensor t = torch::zeros({1}, atcg::TensorOptions::DeviceOptions<uint64_t>());
+
+    EXPECT_EQ(t.scalar_type(), torch::kUInt64);
     EXPECT_EQ(t.device().type(), atcg::GPU);
 }
 

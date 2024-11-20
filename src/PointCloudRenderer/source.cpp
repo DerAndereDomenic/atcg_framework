@@ -5,10 +5,7 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <algorithm>
-#include <ImGuizmo.h>
 
 class PointCloudLayer : public atcg::Layer
 {
@@ -25,13 +22,13 @@ public:
 
         depth_values.resize(search_radius * search_radius);
 
-        sphere = atcg::IO::read_mesh("res/sphere.obj");
+        sphere = atcg::IO::read_mesh((atcg::resource_directory() / "sphere.obj").string());
         // sphere->setScale(glm::vec3(0.01f));
 
         {
             // auto point_cloud = atcg::IO::read_pointcloud("C:/Users/zingsheim/Documents/PointCloudCompression/"
             //                                              "sample.xyz");
-            auto point_cloud = atcg::IO::read_mesh("res/bunny.obj");
+            auto point_cloud = atcg::IO::read_mesh((atcg::resource_directory() / "bunny.obj").string());
             clouds.push_back(std::make_pair(point_cloud, true));
         }
     }
@@ -85,10 +82,12 @@ public:
             world_pos = glm::inverse(camera_controller->getCamera()->getViewProjection()) * world_pos;
             world_pos /= world_pos.w;
 
-            if(atcg::Input::isKeyPressed(GLFW_KEY_P))
+#ifndef ATCG_HEADLESS
+            if(atcg::Input::isKeyPressed(ATCG_KEY_P))
             {
                 sphere_pos.push_back(world_pos);
             }
+#endif
         }
 
         // glDepthMask(false);
@@ -100,6 +99,7 @@ public:
         // glDepthMask(true);
     }
 
+#ifndef ATCG_HEADLESS
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
@@ -128,6 +128,7 @@ public:
             ImGui::End();
         }
     }
+#endif
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event* event) override

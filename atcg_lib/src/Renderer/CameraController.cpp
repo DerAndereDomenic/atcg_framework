@@ -3,7 +3,7 @@
 #include <Renderer/VRSystem.h>
 #include <openvr.h>
 
-#include <GLFW/glfw3.h>
+#include <Core/KeyCodes.h>
 #include <Core/Application.h>
 
 namespace atcg
@@ -28,7 +28,7 @@ void FocusedController::onUpdate(float delta_time)
     _currentX           = mouse_pos.x;
     _currentY           = mouse_pos.y;
 
-    if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_MIDDLE))
+    if(Input::isMouseButtonPressed(ATCG_MOUSE_BUTTON_MIDDLE))
     {
         float offsetX = _lastX - _currentX;
         float offsetY = _lastY - _currentY;
@@ -49,7 +49,7 @@ void FocusedController::onUpdate(float delta_time)
             _camera->setPosition(_camera->getLookAt() + _distance * forward);
         }
     }
-    else if(Input::isMouseButtonPressed(GLFW_MOUSE_BUTTON_RIGHT))
+    else if(Input::isMouseButtonPressed(ATCG_MOUSE_BUTTON_RIGHT))
     {
         float offsetX = _lastX - _currentX;
         float offsetY = _lastY - _currentY;
@@ -252,12 +252,12 @@ void FirstPersonController::onUpdate(float delta_time)
     _lastX = _currentX;
     _lastY = _currentY;
 
-    if(!Input::isKeyPressed(GLFW_KEY_W)) _pressed_W = false;
-    if(!Input::isKeyPressed(GLFW_KEY_A)) _pressed_A = false;
-    if(!Input::isKeyPressed(GLFW_KEY_S)) _pressed_S = false;
-    if(!Input::isKeyPressed(GLFW_KEY_D)) _pressed_D = false;
-    if(!Input::isKeyPressed(GLFW_KEY_Q)) _pressed_Q = false;
-    if(!Input::isKeyPressed(GLFW_KEY_E)) _pressed_E = false;
+    if(!Input::isKeyPressed(ATCG_KEY_W)) _pressed_W = false;
+    if(!Input::isKeyPressed(ATCG_KEY_A)) _pressed_A = false;
+    if(!Input::isKeyPressed(ATCG_KEY_S)) _pressed_S = false;
+    if(!Input::isKeyPressed(ATCG_KEY_D)) _pressed_D = false;
+    if(!Input::isKeyPressed(ATCG_KEY_Q)) _pressed_Q = false;
+    if(!Input::isKeyPressed(ATCG_KEY_E)) _pressed_E = false;
 }
 
 void FirstPersonController::onEvent(Event* e)
@@ -279,41 +279,41 @@ bool FirstPersonController::onWindowResize(WindowResizeEvent* event)
 
 bool FirstPersonController::onKeyPressed(KeyPressedEvent* event)
 {
-    if(event->getKeyCode() == GLFW_KEY_KP_ADD)    // faster
+    if(event->getKeyCode() == ATCG_KEY_KP_ADD)    // faster
     {
         _speed *= 1.25;
     }
 
-    if(event->getKeyCode() == GLFW_KEY_KP_SUBTRACT)    // slower
+    if(event->getKeyCode() == ATCG_KEY_KP_SUBTRACT)    // slower
     {
         _speed *= 0.8;
     }
 
-    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = true;
-    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = true;
-    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = true;
-    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = true;
-    if(event->getKeyCode() == GLFW_KEY_Q) _pressed_Q = true;
-    if(event->getKeyCode() == GLFW_KEY_E) _pressed_E = true;
+    if(event->getKeyCode() == ATCG_KEY_W) _pressed_W = true;
+    if(event->getKeyCode() == ATCG_KEY_A) _pressed_A = true;
+    if(event->getKeyCode() == ATCG_KEY_S) _pressed_S = true;
+    if(event->getKeyCode() == ATCG_KEY_D) _pressed_D = true;
+    if(event->getKeyCode() == ATCG_KEY_Q) _pressed_Q = true;
+    if(event->getKeyCode() == ATCG_KEY_E) _pressed_E = true;
 
     return true;
 }
 
 bool FirstPersonController::onKeyReleased(KeyReleasedEvent* event)
 {
-    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = false;
-    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = false;
-    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = false;
-    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = false;
-    if(event->getKeyCode() == GLFW_KEY_Q) _pressed_Q = false;
-    if(event->getKeyCode() == GLFW_KEY_E) _pressed_E = false;
+    if(event->getKeyCode() == ATCG_KEY_W) _pressed_W = false;
+    if(event->getKeyCode() == ATCG_KEY_A) _pressed_A = false;
+    if(event->getKeyCode() == ATCG_KEY_S) _pressed_S = false;
+    if(event->getKeyCode() == ATCG_KEY_D) _pressed_D = false;
+    if(event->getKeyCode() == ATCG_KEY_Q) _pressed_Q = false;
+    if(event->getKeyCode() == ATCG_KEY_E) _pressed_E = false;
 
     return true;
 }
 
 bool FirstPersonController::onMouseButtonPressed(MouseButtonPressedEvent* event)
 {
-    if(event->getMouseButton() == GLFW_MOUSE_BUTTON_RIGHT)
+    if(event->getMouseButton() == ATCG_MOUSE_BUTTON_RIGHT)
     {
         const atcg::Application* app = atcg::Application::get();
         glm::ivec2 offset            = app->getViewportPosition();
@@ -331,7 +331,7 @@ bool FirstPersonController::onMouseButtonPressed(MouseButtonPressedEvent* event)
 
 bool FirstPersonController::onMouseButtonReleased(MouseButtonReleasedEvent* event)
 {
-    if(event->getMouseButton() == GLFW_MOUSE_BUTTON_RIGHT) _clicked_right = false;
+    if(event->getMouseButton() == ATCG_MOUSE_BUTTON_RIGHT) _clicked_right = false;
 
     return true;
 }
@@ -345,7 +345,7 @@ VRController::VRController(const float& aspect_ratio, const float& speed)
     _cam_right = atcg::make_ref<PerspectiveCamera>(aspect_ratio);
     _camera    = _cam_left;
 
-    auto [p_left, p_right] = VRSystem::getProjections();
+    auto [p_left, p_right] = VR::getProjections();
     _cam_left->setProjection(p_left);
     _cam_right->setProjection(p_right);
 }
@@ -423,7 +423,7 @@ void VRController::onUpdate(float delta_time)
     _velocity_right   = glm::clamp(_velocity_right, -max_velocity, max_velocity);
 
     // update camera position
-    auto [v_left, v_right] = VRSystem::getInverseViews();
+    auto [v_left, v_right] = VR::getInverseViews();
     _cam_left->setView(glm::inverse(v_left));
     _cam_right->setView(glm::inverse(v_right));
 
@@ -434,14 +434,14 @@ void VRController::onUpdate(float delta_time)
     glm::vec3 rightDirection = glm::normalize(glm::cross(forward_left, upDirection));
 
     glm::vec3 total_velocity = _speed * (forward_left * _velocity_forward + rightDirection * _velocity_right);
-    glm::vec3 current_offset = VRSystem::getOffset();
+    glm::vec3 current_offset = VR::getOffset();
     current_offset += total_velocity * delta_time;
 
 
     // The trigger is currently down
     if(_trigger_pressed)
     {
-        glm::mat4 pose        = VRSystem::getDevicePose(_device_index);
+        glm::mat4 pose        = VR::getDevicePose(_device_index);
         _controller_position  = glm::vec3(pose[3]);
         _controller_direction = -pose[2];
 
@@ -466,18 +466,18 @@ void VRController::onUpdate(float delta_time)
 
         if(std::abs(_controller_direction.y) > 1e-5f && t > 0.0f)
         {
-            auto rl_pos    = atcg::VRSystem::getPosition();
+            auto rl_pos    = atcg::VR::getPosition();
             rl_pos.y       = 0;
             current_offset = _controller_position + t * _controller_direction - rl_pos;
         }
     }
 
-    VRSystem::setOffset(current_offset);
+    VR::setOffset(current_offset);
 
-    if(!Input::isKeyPressed(GLFW_KEY_W)) _pressed_W = false;
-    if(!Input::isKeyPressed(GLFW_KEY_A)) _pressed_A = false;
-    if(!Input::isKeyPressed(GLFW_KEY_S)) _pressed_S = false;
-    if(!Input::isKeyPressed(GLFW_KEY_D)) _pressed_D = false;
+    if(!Input::isKeyPressed(ATCG_KEY_W)) _pressed_W = false;
+    if(!Input::isKeyPressed(ATCG_KEY_A)) _pressed_A = false;
+    if(!Input::isKeyPressed(ATCG_KEY_S)) _pressed_S = false;
+    if(!Input::isKeyPressed(ATCG_KEY_D)) _pressed_D = false;
 }
 
 void VRController::onEvent(Event* e)
@@ -497,37 +497,37 @@ bool VRController::onWindowResize(WindowResizeEvent* event)
 
 bool VRController::onKeyPressed(KeyPressedEvent* event)
 {
-    if(event->getKeyCode() == GLFW_KEY_KP_ADD)    // faster
+    if(event->getKeyCode() == ATCG_KEY_KP_ADD)    // faster
     {
         _speed *= 1.25;
     }
 
-    if(event->getKeyCode() == GLFW_KEY_KP_SUBTRACT)    // slower
+    if(event->getKeyCode() == ATCG_KEY_KP_SUBTRACT)    // slower
     {
         _speed *= 0.8;
     }
 
-    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = true;
-    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = true;
-    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = true;
-    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = true;
+    if(event->getKeyCode() == ATCG_KEY_W) _pressed_W = true;
+    if(event->getKeyCode() == ATCG_KEY_A) _pressed_A = true;
+    if(event->getKeyCode() == ATCG_KEY_S) _pressed_S = true;
+    if(event->getKeyCode() == ATCG_KEY_D) _pressed_D = true;
 
     return true;
 }
 
 bool VRController::onKeyReleased(KeyReleasedEvent* event)
 {
-    if(event->getKeyCode() == GLFW_KEY_W) _pressed_W = false;
-    if(event->getKeyCode() == GLFW_KEY_A) _pressed_A = false;
-    if(event->getKeyCode() == GLFW_KEY_S) _pressed_S = false;
-    if(event->getKeyCode() == GLFW_KEY_D) _pressed_D = false;
+    if(event->getKeyCode() == ATCG_KEY_W) _pressed_W = false;
+    if(event->getKeyCode() == ATCG_KEY_A) _pressed_A = false;
+    if(event->getKeyCode() == ATCG_KEY_S) _pressed_S = false;
+    if(event->getKeyCode() == ATCG_KEY_D) _pressed_D = false;
 
     return true;
 }
 
 bool VRController::onVRButtonPressed(VRButtonPressedEvent* event)
 {
-    auto role = VRSystem::getDeviceRole(event->getDeviceIndex());
+    auto role = VR::getDeviceRole(event->getDeviceIndex());
     if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRSystem::Role::RIGHT_HAND)
     {
         _trigger_pressed = true;
@@ -538,7 +538,7 @@ bool VRController::onVRButtonPressed(VRButtonPressedEvent* event)
 
 bool VRController::onVRButtonReleased(VRButtonReleasedEvent* event)
 {
-    auto role = VRSystem::getDeviceRole(event->getDeviceIndex());
+    auto role = VR::getDeviceRole(event->getDeviceIndex());
     if(event->getVRButton() == vr::EVRButtonId::k_EButton_SteamVR_Trigger && role == VRSystem::Role::RIGHT_HAND)
     {
         _trigger_release = true;

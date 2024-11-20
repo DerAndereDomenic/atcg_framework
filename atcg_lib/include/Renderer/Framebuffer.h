@@ -12,6 +12,8 @@ namespace atcg
 class Framebuffer
 {
 public:
+    Framebuffer() = default;
+
     /**
      * @brief Create a framebuffer
      *
@@ -59,7 +61,17 @@ public:
      *
      * @param depth_map The depth map component
      */
-    void attachDepth(const atcg::ref_ptr<Texture2D>& depth_map);
+    void attachDepth(const atcg::ref_ptr<Texture>& depth_map);
+
+    /**
+     * @brief Blit two framebuffer together.
+     * Copies the content of source into *this.
+     *
+     * @param source The source framebuffer to copy from
+     * @param color If color information should be copied
+     * @param depth If depth information should be copied
+     */
+    void blit(const atcg::ref_ptr<Framebuffer>& source, bool color = true, bool depth = true);
 
     /**
      * @brief Get a color attachement
@@ -77,7 +89,7 @@ public:
      *
      * @return The depth texture
      */
-    ATCG_INLINE atcg::ref_ptr<Texture2D> getDepthAttachement() const { return _depth_attachement; }
+    ATCG_INLINE atcg::ref_ptr<Texture> getDepthAttachement() const { return _depth_attachement; }
 
     /**
      * @brief Get the ID of the framebuffer
@@ -124,6 +136,6 @@ private:
     uint32_t _ID;
     uint32_t _width, _height;
     std::vector<atcg::ref_ptr<Texture2D>> _color_attachements;
-    atcg::ref_ptr<Texture2D> _depth_attachement;
+    atcg::ref_ptr<Texture> _depth_attachement;
 };
 }    // namespace atcg

@@ -192,6 +192,13 @@ public:
     virtual void generateMipmaps() = 0;
 
     /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const = 0;
+
+    /**
      * @brief Get the underlying data as a cudaArray.
      * This only returns a valid cudaArray if the CUDA backend is enabled. Otherwise this will return the buffer
      * mapped to host space.
@@ -204,10 +211,11 @@ public:
      * can be done.
      *
      * @param mip_level The mip level
+     * @param array_idx If *this is a TextureArray, this index is used to access a specific layer
      *
      * @return The pointer
      */
-    atcg::textureArray getTextureArray(const uint32_t mip_level = 0) const;
+    atcg::textureArray getTextureArray(const uint32_t mip_level = 0, const uint32_t array_idx = 0) const;
 
     /**
      * @brief Get the underlying data as a cudaTextureObject_t.
@@ -225,13 +233,15 @@ public:
      * @param border_color The border color
      * @param normalized_coords If the coordinates should be normalized between 0 and 1
      * @param normalized_float If the texture should be read as normalized floats
+     * @param array_idx If *this is a TextureArray, this index is used to access a specific layer
      *
      * @return The pointer
      */
     atcg::textureObject getTextureObject(const uint32_t mip_level      = 0,
                                          const glm::vec4& border_color = glm::vec4(0),
                                          const bool normalized_coords  = true,
-                                         const bool normalized_float   = true) const;
+                                         const bool normalized_float   = true,
+                                         const uint32_t array_idx      = 0) const;
 
     /**
      * @brief Get the underlying data as a cudaSurfaceObject_t.
@@ -246,10 +256,11 @@ public:
      * can be done.
      *
      * @param mip_level The mip level
+     * @param array_idx If *this is a TextureArray, this index is used to access a specific layer
      *
      * @return The pointer
      */
-    atcg::surfaceObject getSurfaceObject(const uint32_t mip_level = 0) const;
+    atcg::surfaceObject getSurfaceObject(const uint32_t mip_level = 0, const uint32_t array_idx = 0) const;
 
     /**
      * @brief Check if the device pointer is mapped (valid).
@@ -266,6 +277,13 @@ public:
      * @brief Unmaps and invalidates all mapped pointers used by the application.
      */
     void unmapPointers() const;
+
+    /**
+     * @brief Fill a texture with a specified value.
+     *
+     * @param value The fill value
+     */
+    void fill(void* value);
 
 protected:
     uint32_t _ID;
@@ -381,6 +399,13 @@ public:
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
 };
 
 /**
@@ -470,6 +495,13 @@ public:
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
 };
 
 /**
@@ -488,6 +520,15 @@ public:
      * @return The resulting texture
      */
     static atcg::ref_ptr<TextureCube> create(const TextureSpecification& spec);
+
+    /**
+     * @brief Create a 3D texture from a tensor.
+     *
+     * @param data The image (host data) of shape (6, height, width, channels)
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureCube> create(const torch::Tensor& img);
 
     /**
      *  @brief Destructor
@@ -528,6 +569,13 @@ public:
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
 };
 
 /**
@@ -617,6 +665,13 @@ public:
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
 };
 
 }    // namespace atcg

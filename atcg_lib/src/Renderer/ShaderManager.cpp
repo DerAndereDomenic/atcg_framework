@@ -1,11 +1,13 @@
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Shader.h>
+#include <Core/Path.h>
 
 namespace atcg
 {
-ShaderManager* ShaderManager::s_instance = new ShaderManager;
 
-void ShaderManager::addShaderImpl(const std::string& name, const atcg::ref_ptr<Shader>& shader)
+ShaderManagerSystem::ShaderManagerSystem() : _shader_path(atcg::shader_directory()) {}
+
+void ShaderManagerSystem::addShader(const std::string& name, const atcg::ref_ptr<Shader>& shader)
 {
     _shader.insert(std::make_pair(name, shader));
 
@@ -30,11 +32,11 @@ void ShaderManager::addShaderImpl(const std::string& name, const atcg::ref_ptr<S
     }
 }
 
-void ShaderManager::addShaderFromNameImpl(const std::string& name)
+void ShaderManagerSystem::addShaderFromName(const std::string& name)
 {
-    std::string vertex_path   = "shader/" + name + ".vs";
-    std::string fragment_path = "shader/" + name + ".fs";
-    std::string geometry_path = "shader/" + name + ".gs";
+    std::string vertex_path   = (_shader_path / (name + ".vs")).string();
+    std::string fragment_path = (_shader_path / (name + ".fs")).string();
+    std::string geometry_path = (_shader_path / (name + ".gs")).string();
 
     if(!std::filesystem::exists(vertex_path) || !std::filesystem::exists(fragment_path))
     {
@@ -52,12 +54,12 @@ void ShaderManager::addShaderFromNameImpl(const std::string& name)
         shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
     }
 
-    addShaderImpl(name, shader);
+    addShader(name, shader);
 }
 
-void ShaderManager::addComputeShaderFromNameImpl(const std::string& name)
+void ShaderManagerSystem::addComputeShaderFromName(const std::string& name)
 {
-    std::string compute_path = "shader/" + name + ".glsl";
+    std::string compute_path = (_shader_path / (name + ".glsl")).string();
 
     if(!std::filesystem::exists(compute_path))
     {
@@ -67,20 +69,20 @@ void ShaderManager::addComputeShaderFromNameImpl(const std::string& name)
 
     atcg::ref_ptr<Shader> shader = atcg::make_ref<Shader>(compute_path);
 
-    addShaderImpl(name, shader);
+    addShader(name, shader);
 }
 
-bool ShaderManager::hasShaderImpl(const std::string& name)
+bool ShaderManagerSystem::hasShader(const std::string& name)
 {
     return _shader.find(name) != _shader.end();
 }
 
-const atcg::ref_ptr<Shader>& ShaderManager::getShaderImpl(const std::string& name)
+const atcg::ref_ptr<Shader>& ShaderManagerSystem::getShader(const std::string& name)
 {
     return _shader[name];
 }
 
-void ShaderManager::onUpdateImpl()
+void ShaderManagerSystem::onUpdate()
 {
     for(auto& shader: _shader)
     {

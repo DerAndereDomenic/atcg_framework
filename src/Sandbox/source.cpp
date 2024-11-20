@@ -5,10 +5,7 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <algorithm>
-#include <ImGuizmo.h>
 
 
 class SandboxLayer : public atcg::Layer
@@ -110,7 +107,7 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
 
-        cube = atcg::IO::read_mesh("res/cube.obj");
+        cube = atcg::IO::read_mesh((atcg::resource_directory() / "cube.obj").string());
 
         atcg::ShaderManager::addShader("volume",
                                        atcg::make_ref<atcg::Shader>("src/Sandbox/volume.vs", "src/Sandbox/volume.fs"));
@@ -160,6 +157,7 @@ public:
         dt = delta_time;
     }
 
+#ifndef ATCG_HEADLESS
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
@@ -232,6 +230,7 @@ public:
 
         // if(ImGuizmo::IsUsing()) { sphere->setModel(transform); }
     }
+#endif
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event* event) override
@@ -239,27 +238,31 @@ public:
         camera_controller->onEvent(event);
 
         atcg::EventDispatcher dispatcher(event);
+#ifndef ATCG_HEADLESS
         dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(SandboxLayer::onKeyPressed));
+#endif
     }
 
+#ifndef ATCG_HEADLESS
     bool onKeyPressed(atcg::KeyPressedEvent* event)
     {
-        if(event->getKeyCode() == GLFW_KEY_T)
+        if(event->getKeyCode() == ATCG_KEY_T)
         {
             current_operation = ImGuizmo::OPERATION::TRANSLATE;
         }
-        if(event->getKeyCode() == GLFW_KEY_R)
+        if(event->getKeyCode() == ATCG_KEY_R)
         {
             current_operation = ImGuizmo::OPERATION::ROTATE;
         }
-        if(event->getKeyCode() == GLFW_KEY_S)
+        if(event->getKeyCode() == ATCG_KEY_S)
         {
             current_operation = ImGuizmo::OPERATION::SCALE;
         }
-        // if(event->getKeyCode() == GLFW_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
+        // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;
     }
+#endif
 
 private:
     atcg::ref_ptr<atcg::Scene> scene;
@@ -280,7 +283,9 @@ private:
     float g            = 0.0f;
     float dt           = 1.0f / 60.0f;
 
+#ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+#endif
 };
 
 class Sandbox : public atcg::Application

@@ -5,10 +5,7 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
-#include <imgui.h>
 #include <algorithm>
-#include <ImGuizmo.h>
 
 #include <glm/gtx/transform.hpp>
 
@@ -34,7 +31,9 @@ public:
         trimesh = atcg::make_ref<atcg::TriMesh>();
         trimesh->request_vertex_colors();
         auto options = OpenMesh::IO::Options(OpenMesh::IO::Options::VertexColor);
-        OpenMesh::IO::read_mesh(*trimesh.get(), "res/cornell_box_radiosity.ply", options);
+        OpenMesh::IO::read_mesh(*trimesh.get(),
+                                (atcg::resource_directory() / "cornell_box_radiosity.ply").string(),
+                                options);
 
 
         //   mesh->uploadData();
@@ -68,6 +67,7 @@ public:
                              atcg::ShaderManager::getShader("flat"));
     }
 
+#ifndef ATCG_HEADLESS
     virtual void onImGuiRender() override
     {
         ImGui::BeginMainMenuBar();
@@ -87,6 +87,7 @@ public:
             ImGui::End();
         }
     }
+#endif
 
     // This function is evaluated if an event (key, mouse, resize events, etc.) are triggered
     virtual void onEvent(atcg::Event* event) override { camera_controller->onEvent(event); }
