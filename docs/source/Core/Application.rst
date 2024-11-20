@@ -1,5 +1,5 @@
 Application
-========
+===========
 
 .. doxygenclass:: atcg::Application
    :members:
