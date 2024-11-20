@@ -1,10 +1,14 @@
-# ATCG FRAMEWORK
+<p align="left">
+<img src="docs/_static/logo.png" width="400">
+</p>
+
+----
 
 This repository contains a C++ 3D rendering framework for research applications and scientific computation/visualization. It combines the OpenGL rendering pipeline with high performance CUDA integration using torch.
 
 ## Building
 
-This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are [CMake>=3.27](https://cmake.org), [Python>=3.9](https://www.python.org), [CUDA>=12.1](https://developer.nvidia.com/cuda-toolkit), and [pytorch2.4.0](https://pytorch.org) with the same CUDA version as your global CUDA installation. Newer versions should also work.
+This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are [CMake>=3.27](https://cmake.org), [Python>=3.9](https://www.python.org), [CUDA>=12.1](https://developer.nvidia.com/cuda-toolkit), and [pytorch2.4.0](https://pytorch.org) with the same CUDA version as your global CUDA installation.
 
 After installing the dependencies, clone the repository recursively (to include submodules)
 
@@ -104,7 +108,7 @@ You can edit shaders while the program is running!
 
 ## Usage
 
-All exercises have the same structure, that is rougly outlined here:
+All exercises have the same structure, that is rougly outlined here. More examples can be found in ```src```.
 
 ```c++
 #include <Core/EntryPoint.h>

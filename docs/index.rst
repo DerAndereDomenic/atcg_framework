@@ -3,9 +3,6 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to ATCG Lib's documentation!
-====================================
-
 .. toctree::
    :maxdepth: 1
    :caption: Contents:
@@ -22,10 +19,10 @@ Welcome to ATCG Lib's documentation!
    source/Network/NetworkIndex
    source/OpenMesh/OpenMesh
 
+.. include:: processed_README.md
+   :parser: myst
+
 Indices and tables
 ==================
 
 * :ref:`genindex`
-
-.. include:: ../README.md
-   :parser: myst
