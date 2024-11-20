@@ -53,19 +53,19 @@ pip install -e .
 ```
 it requires [charonload](https://github.com/vc-bonn/charonload) as additional dependency. Per default, it is built with CUDA backend.
 
-### Building the documentation (experimental)
+### Building the documentation
 
-There is a (not very complete) documentation that can be build using [doxygen](https://www.doxygen.nl/index.html) and [sphinx](https://www.sphinx-doc.org/en/master/). Install the dependencies using pip
+The documentation can be built using [doxygen](https://www.doxygen.nl/index.html) and [sphinx](https://www.sphinx-doc.org/en/master/). Install the following dependencies using pip
 
 ```
 pip install sphinx sphinx_book_theme breathe myst_parser
 ```
 
-and set the ATCG_BUILD_DOCS option to true when generating the CMake project.
+and set the `ATCG_BUILD_DOCS` option to `ON` when generating the CMake project.
 
 ### Building tests (experimental)
 
-To build the unit tests, set the ATCG_BUILD_TESTS option to true.
+To build the unit tests, set the `ATCG_BUILD_TESTS` option to true.
 
 ```
 cmake . -B build -DATCG_BUILD_TESTS=On
@@ -108,7 +108,7 @@ You can edit shaders while the program is running!
 
 ## Usage
 
-All exercises have the same structure, that is rougly outlined here. More examples can be found in ```src```.
+All exercises have the same structure, that is rougly outlined here. More examples can be found in `src`.
 
 ```c++
 #include <Core/EntryPoint.h>
