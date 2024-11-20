@@ -17,6 +17,7 @@
 #include <Core/SystemRegistry.h>
 #include <Core/KeyCodes.h>
 #include <Core/Path.h>
+#include <Core/CommandLine.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>

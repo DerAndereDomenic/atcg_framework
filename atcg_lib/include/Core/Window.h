@@ -22,21 +22,24 @@ struct WindowProps
     int32_t pos_y;
     bool vsync;
     bool hidden;
+    std::string icon_path;
 
-    WindowProps(const std::string& title = "ATCG",
-                uint32_t width           = 1600,
-                uint32_t height          = 900,
-                int32_t pos_x            = std::numeric_limits<int32_t>::max(),
-                int32_t pos_y            = std::numeric_limits<int32_t>::max(),
-                bool vsync               = true,
-                bool hidden              = false)
+    WindowProps(const std::string& title     = "ATCG",
+                uint32_t width               = 1600,
+                uint32_t height              = 900,
+                int32_t pos_x                = std::numeric_limits<int32_t>::max(),
+                int32_t pos_y                = std::numeric_limits<int32_t>::max(),
+                bool vsync                   = true,
+                bool hidden                  = false,
+                const std::string& icon_path = "")
         : title(title),
           width(width),
           height(height),
           pos_x(pos_x),
           pos_y(pos_y),
           vsync(vsync),
-          hidden(hidden)
+          hidden(hidden),
+          icon_path(icon_path)
     {
     }
 };
@@ -123,6 +126,25 @@ public:
      * @return Vector of (x,y) with the absolute window coordinates
      */
     glm::vec2 getPosition() const;
+
+    /**
+     * @brief Set the window position
+     *
+     * @param position The new position
+     */
+    void setPosition(const glm::vec2& position);
+
+    /**
+     * @brief Check if the window has decoration
+     *
+     * @return True if the window is decoratd
+     */
+    bool isDecorated() const;
+
+    /**
+     * @brief Toggle the decoration of the window
+     */
+    void toogleDecoration();
 
     /**
      * @brief Get the content scale of the window (4k support)

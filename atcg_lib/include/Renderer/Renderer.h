@@ -43,7 +43,8 @@ enum CullMode
 };
 
 /**
- * @brief This class models a renderer
+ * @brief This class models a renderer. This should be used if you are trying to create multiple renderer instances
+ * (e.g. for multi threading). Per default, use atcg::Renderer to use the default renderer.
  */
 class RendererSystem
 {

@@ -2,8 +2,11 @@
 #include <Core/Assert.h>
 
 #include <GLFW/glfw3.h>
+#include <Core/Path.h>
 
 #include <Renderer/Context.h>
+
+#include <stb_image.h>
 
 namespace atcg
 {
@@ -171,6 +174,34 @@ Window::Window(const WindowProps& props)
 
     toggleVSync(props.vsync);
 
+    // Load Icon
+    std::string icon_path = props.icon_path;
+    if(props.icon_path == "")
+    {
+        icon_path = "./docs/_static/icon.png";
+    }
+
+    int width, height, channels;
+    unsigned char* pixels = stbi_load(icon_path.c_str(), &width, &height, &channels, 4);    // Load as RGBA
+    if(pixels)
+    {
+        GLFWimage icon;
+        icon.width  = width;
+        icon.height = height;
+        icon.pixels = pixels;
+
+        // Set the icon for the GLFW window
+        glfwSetWindowIcon((GLFWwindow*)window, 1, &icon);
+
+        // Free the loaded image data
+        stbi_image_free(pixels);
+    }
+    else
+    {
+        // Handle error if the icon can't be loaded
+        ATCG_ERROR("Failed to load icon image {}", icon_path);
+    }
+
     if(!props.hidden) show();
 }
 
@@ -281,6 +312,23 @@ glm::vec2 Window::getPosition() const
     int y;
     glfwGetWindowPos((GLFWwindow*)_context->getContextHandle(), &x, &y);
     return glm::vec2(x, y);
+}
+
+void Window::setPosition(const glm::vec2& position)
+{
+    glfwSetWindowPos((GLFWwindow*)_context->getContextHandle(), (int)position.x, (int)position.y);
+}
+
+bool Window::isDecorated() const
+{
+    return glfwGetWindowAttrib((GLFWwindow*)_context->getContextHandle(), GLFW_DECORATED) == GLFW_TRUE;
+}
+
+void Window::toogleDecoration()
+{
+    glfwSetWindowAttrib((GLFWwindow*)_context->getContextHandle(),
+                        GLFW_DECORATED,
+                        isDecorated() ? GLFW_FALSE : GLFW_TRUE);
 }
 
 float Window::getContentScale() const
