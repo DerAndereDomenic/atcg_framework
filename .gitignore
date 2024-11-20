@@ -7,3 +7,5 @@ imgui.ini
 __pycache__
 *.egg-info
 typings
+
+docs/processed_README.md
