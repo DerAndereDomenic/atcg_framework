@@ -106,7 +106,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
     ImVec2 window_size = ImGui::GetWindowSize();
     ImGui::SetCursorPos(ImVec2((window_size.x - width) * 0.5f, ImGui::GetCursorPosY()));
-    ImGui::Image(reinterpret_cast<void*>(textureID),
+    ImGui::Image((ImTextureID)textureID,
                  ImVec2(content_scale * width, content_scale * height),
                  ImVec2 {0, 1},
                  ImVec2 {1, 0});
@@ -338,7 +338,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
                 material.setDiffuseColor(glm::vec4(1));
             }
             else
-                ImGui::Image((void*)(uint64_t)material.getDiffuseTexture()->getID(),
+                ImGui::Image((ImTextureID)material.getDiffuseTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
@@ -387,7 +387,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
                 material.removeNormalMap();
             }
             else
-                ImGui::Image((void*)(uint64_t)material.getNormalTexture()->getID(),
+                ImGui::Image((ImTextureID)material.getNormalTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
@@ -444,7 +444,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
                 material.setRoughness(1.0f);
             }
             else
-                ImGui::Image((void*)(uint64_t)material.getRoughnessTexture()->getID(),
+                ImGui::Image((ImTextureID)material.getRoughnessTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
@@ -502,7 +502,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
                 material.setMetallic(0.0f);
             }
             else
-                ImGui::Image((void*)(uint64_t)material.getMetallicTexture()->getID(),
+                ImGui::Image((ImTextureID)material.getMetallicTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
