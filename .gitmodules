@@ -28,3 +28,7 @@
 [submodule "external/sfml"]
 	path = external/sfml
 	url = https://github.com/SFML/SFML.git
+[submodule "external/imgui"]
+	path = external/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
