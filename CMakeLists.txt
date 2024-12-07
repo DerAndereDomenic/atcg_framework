@@ -115,6 +115,7 @@ target_include_directories(portable_file_dialogs INTERFACE "external/portable-fi
 
 # nanoflann
 set(NANOFLANN_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(MASTER_PROJECT_HAS_TARGET_UNINSTALL ON CACHE BOOL "" FORCE) # Make sure nanoflann does not try to define uninstall target
 set(NANOFLANN_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/nanoflann)
 
