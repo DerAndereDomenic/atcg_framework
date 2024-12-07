@@ -1511,7 +1511,7 @@ inline void defineBindings(py::module_& m)
         "Image",
         [](uint32_t textureID, uint32_t width, uint32_t height)
         {
-            ImGui::Image((void*)(uint64_t)(textureID), ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
+            ImGui::Image((ImTextureID)textureID, ImVec2(width, height), ImVec2 {0, 1}, ImVec2 {1, 0});
             return;
         },
         py::arg("textureID"),
