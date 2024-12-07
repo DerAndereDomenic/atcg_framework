@@ -2,6 +2,7 @@
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_CTOR_INIT
+#define GLM_ENABLE_EXPERIMENTAL
 #include <Core/Platform.h>
 #include <ostream>
 #include <glm/glm.hpp>
