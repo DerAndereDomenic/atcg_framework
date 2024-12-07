@@ -166,7 +166,7 @@ void ImGuiLayer::begin()
         _viewport_size           = glm::ivec2(viewportPanelSize.x, viewportPanelSize.y);
 
         uint64_t textureID = Renderer::getFramebuffer()->getColorAttachement(0)->getID();
-        ImGui::Image(reinterpret_cast<void*>(textureID), viewportPanelSize, ImVec2 {0, 1}, ImVec2 {1, 0});
+        ImGui::Image((ImTextureID)textureID, viewportPanelSize, ImVec2 {0, 1}, ImVec2 {1, 0});
 
         if((ImGui::IsMouseDown(ImGuiMouseButton_Right) && ImGui::IsWindowHovered()) ||
            (ImGui::IsWindowHovered() && !ImGui::IsAnyItemActive()))

@@ -139,7 +139,7 @@ void SceneHierarchyPanel<GUIHandler>::drawSceneProperties()
     {
         if(Renderer::hasSkybox())
         {
-            ImGui::Image((void*)(uint64_t)Renderer::getSkyboxTexture()->getID(),
+            ImGui::Image((ImTextureID)Renderer::getSkyboxTexture()->getID(),
                          ImVec2(content_scale * 128, content_scale * 64),
                          ImVec2 {0, 1},
                          ImVec2 {1, 0});

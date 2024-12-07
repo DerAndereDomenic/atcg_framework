@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.27)
 
-project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 0.1.0)
+project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 0.1.1)
 
 option(ATCG_CUDA_BACKEND "Compile cuda backend" ON)
 option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
@@ -115,6 +115,7 @@ target_include_directories(portable_file_dialogs INTERFACE "external/portable-fi
 
 # nanoflann
 set(NANOFLANN_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(MASTER_PROJECT_HAS_TARGET_UNINSTALL ON CACHE BOOL "" FORCE) # Make sure nanoflann does not try to define uninstall target
 set(NANOFLANN_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/nanoflann)
 

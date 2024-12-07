@@ -28,3 +28,19 @@
 [submodule "external/sfml"]
 	path = external/sfml
 	url = https://github.com/SFML/SFML.git
+[submodule "external/imgui"]
+	path = external/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
+[submodule "external/implot"]
+	path = external/implot
+	url = https://github.com/epezent/implot.git
+[submodule "external/nanort"]
+	path = external/nanort
+	url = https://github.com/lighttransport/nanort.git
+[submodule "external/portable-file-dialogs"]
+	path = external/portable-file-dialogs
+	url = https://github.com/samhocevar/portable-file-dialogs.git
+[submodule "external/tinyobjloader"]
+	path = external/tinyobjloader
+	url = https://github.com/tinyobjloader/tinyobjloader.git
