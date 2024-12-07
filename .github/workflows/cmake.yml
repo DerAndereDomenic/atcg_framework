@@ -2,9 +2,9 @@ name: CMake
 
 on:
   push:
-    branches: [ "main", "exercises", "dev" ]
+    branches: ["main", "dev"]
   pull_request:
-    branches: [ "main", "exercises", "dev" ]
+    branches: ["main", "dev"]
 
 jobs:
   ubuntu-build:
@@ -16,10 +16,10 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
-          cache: 'pip'
+          python-version: "3.9"
+          cache: "pip"
       - run: sudo apt-get -y update
-      - run: sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev xorg-dev
+      - run: sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev xorg-dev libxkbcommon-dev
       - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
       - run: cmake -B ./build -S . -DATCG_CUDA_BACKEND=Off
       - run: cmake --build build
@@ -40,7 +40,7 @@ jobs:
   #     - run: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
   #     - run: cmake -B ./build -S . -DATCG_CUDA_BACKEND=Off -DATCG_HEADLESS=On
   #     - run: cmake --build build
-  
+
   windows-build:
     name: Windows Compile Check
     runs-on: windows-latest
@@ -50,8 +50,8 @@ jobs:
           submodules: recursive
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
-          cache: 'pip'
+          python-version: "3.9"
+          cache: "pip"
       - run: pip install torch torchvision torchaudio
       - run: cmake -B ./build -S . -DATCG_CUDA_BACKEND=Off
       - run: cmake --build build
@@ -77,7 +77,7 @@ jobs:
   #     - run: pip3 install torch torchvision torchaudio
   #     - run: cmake -B ./build -S .
   #     - run: cmake --build build
-  
+
   # windows-cuda-build:
   #   name: Windows Compile Check
   #   runs-on: windows-latest
