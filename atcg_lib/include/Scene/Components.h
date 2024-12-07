@@ -249,4 +249,15 @@ struct CustomRenderComponent : public RenderComponent
     RenderCallbackFn callback;
 };
 
+struct PointLightComponent
+{
+    PointLightComponent() = default;
+    PointLightComponent(const float intensity, const glm::vec3& color) : intensity(intensity), color(color) {}
+
+    float intensity = 1.0f;
+    glm::vec3 color = glm::vec3(1);
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Light"; }
+};
+
 }    // namespace atcg

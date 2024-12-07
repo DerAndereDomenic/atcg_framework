@@ -46,6 +46,8 @@ namespace atcg
 #define LOOKAT_KEY                 "LookAt"
 #define NEAR_KEY                   "Near"
 #define FAR_KEY                    "Far"
+#define POINT_LIGHT_KEY            "PointLight"
+#define INTENSITY_KEY              "Intensity"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -381,6 +383,16 @@ void ComponentSerializer::serialize_component<EdgeCylinderRenderComponent>(const
     serializeMaterial(j[EDGE_CYLINDER_RENDERER_KEY], entity, component.material, file_path);
 }
 
+template<>
+void ComponentSerializer::serialize_component<PointLightComponent>(const std::string& file_path,
+                                                                   Entity entity,
+                                                                   PointLightComponent& component,
+                                                                   nlohmann::json& j)
+{
+    j[POINT_LIGHT_KEY][INTENSITY_KEY] = component.intensity;
+    j[POINT_LIGHT_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
+}
+
 template<typename T>
 void ComponentSerializer::deserialize_component(const std::string& file_path, Entity entity, nlohmann::json& j)
 {
@@ -686,5 +698,22 @@ void ComponentSerializer::deserialize_component<EdgeCylinderRenderComponent>(con
         Material material        = deserialize_material(material_node);
         renderComponent.material = material;
     }
+}
+
+template<>
+void ComponentSerializer::deserialize_component<PointLightComponent>(const std::string& file_path,
+                                                                     Entity entity,
+                                                                     nlohmann::json& j)
+{
+    if(!j.contains(POINT_LIGHT_KEY))
+    {
+        return;
+    }
+
+    auto& point_light         = j[POINT_LIGHT_KEY];
+    auto& renderComponent     = entity.addComponent<PointLightComponent>();
+    renderComponent.intensity = point_light.value(INTENSITY_KEY, 1.0f);
+    auto color                = point_light.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
+    renderComponent.color     = glm::make_vec3(color.data());
 }
 }    // namespace atcg

@@ -276,6 +276,13 @@ void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity,
     displayMaterial("instance", material);
 }
 
+template<>
+void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, PointLightComponent& component)
+{
+    ImGui::DragFloat("Intensity##PointLight", &component.intensity, 0.01f, 0.0f, FLT_MAX);
+    ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
+}
+
 void ComponentGUIHandler::displayMaterial(const std::string& key, Material& material)
 {
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();

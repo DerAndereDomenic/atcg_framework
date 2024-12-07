@@ -285,6 +285,7 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
                                PointSphereRenderComponent,
                                EdgeRenderComponent,
                                EdgeCylinderRenderComponent,
+                               PointLightComponent,
                                CustomComponents...>(_selected_entity);
             }
             ImGui::EndTabItem();
