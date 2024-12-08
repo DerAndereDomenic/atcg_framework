@@ -825,16 +825,40 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         return;
     }
 
+    Scene* scene = entity._scene;
+
+    auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
+
     geometry.graph->unmapAllPointers();
     if(entity.hasComponent<MeshRenderComponent>())
     {
         MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
 
-
         if(renderer.visible)
         {
             impl->setMaterial(renderer.material, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
+
+            uint32_t num_lights = 0;
+            for(auto e: light_view)
+            {
+                std::stringstream light_index;
+                light_index << "[" << num_lights << "]";
+                std::string light_index_str = light_index.str();
+
+                atcg::Entity light_entity(e, scene);
+
+                auto& point_light     = light_entity.getComponent<atcg::PointLightComponent>();
+                auto& light_transform = light_entity.getComponent<atcg::TransformComponent>();
+
+                renderer.shader->setVec3("light_colors" + light_index_str, point_light.color);
+                renderer.shader->setFloat("light_intensities" + light_index_str, point_light.intensity);
+                renderer.shader->setVec3("light_positions" + light_index_str, light_transform.getPosition());
+
+                ++num_lights;
+            }
+            renderer.shader->setInt("num_lights", num_lights);
+
             impl->drawVAO(geometry.graph->getVerticesArray(),
                           camera,
                           glm::vec3(1),
