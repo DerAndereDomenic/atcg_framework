@@ -91,6 +91,7 @@ public:
                   const glm::vec3& color              = glm::vec3(1));
 
     void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
+    void setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader);
 
     enum TextureBindings
     {
@@ -327,6 +328,31 @@ void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref
     shader->setInt("lut", RendererSystem::Impl::TextureBindings::LUT_TEXTURE);
 
     shader->setInt("use_ibl", has_skybox);
+}
+
+void RendererSystem::Impl::setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader)
+{
+    auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
+
+    uint32_t num_lights = 0;
+    for(auto e: light_view)
+    {
+        std::stringstream light_index;
+        light_index << "[" << num_lights << "]";
+        std::string light_index_str = light_index.str();
+
+        atcg::Entity light_entity(e, scene);
+
+        auto& point_light     = light_entity.getComponent<atcg::PointLightComponent>();
+        auto& light_transform = light_entity.getComponent<atcg::TransformComponent>();
+
+        shader->setVec3("light_colors" + light_index_str, point_light.color);
+        shader->setFloat("light_intensities" + light_index_str, point_light.intensity);
+        shader->setVec3("light_positions" + light_index_str, light_transform.getPosition());
+
+        ++num_lights;
+    }
+    shader->setInt("num_lights", num_lights);
 }
 
 void RendererSystem::init(uint32_t width,
@@ -827,8 +853,6 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
 
     Scene* scene = entity._scene;
 
-    auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
-
     geometry.graph->unmapAllPointers();
     if(entity.hasComponent<MeshRenderComponent>())
     {
@@ -837,28 +861,8 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             impl->setMaterial(renderer.material, renderer.shader);
+            impl->setLights(scene, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
-
-            uint32_t num_lights = 0;
-            for(auto e: light_view)
-            {
-                std::stringstream light_index;
-                light_index << "[" << num_lights << "]";
-                std::string light_index_str = light_index.str();
-
-                atcg::Entity light_entity(e, scene);
-
-                auto& point_light     = light_entity.getComponent<atcg::PointLightComponent>();
-                auto& light_transform = light_entity.getComponent<atcg::TransformComponent>();
-
-                renderer.shader->setVec3("light_colors" + light_index_str, point_light.color);
-                renderer.shader->setFloat("light_intensities" + light_index_str, point_light.intensity);
-                renderer.shader->setVec3("light_positions" + light_index_str, light_transform.getPosition());
-
-                ++num_lights;
-            }
-            renderer.shader->setInt("num_lights", num_lights);
-
             impl->drawVAO(geometry.graph->getVerticesArray(),
                           camera,
                           glm::vec3(1),
@@ -875,6 +879,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             impl->setMaterial(impl->standard_material, renderer.shader);
+            impl->setLights(scene, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
             impl->drawVAO(geometry.graph->getVerticesArray(),
@@ -894,6 +899,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             impl->setMaterial(renderer.material, renderer.shader);
+            impl->setLights(scene, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
             impl->drawPointCloudSpheres(geometry.graph->getVerticesArray()->peekVertexBuffer(),
@@ -912,6 +918,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             impl->setMaterial(impl->standard_material, impl->shader_manager->getShader("edge"));
+            impl->setLights(scene, impl->shader_manager->getShader("edge"));
             impl->shader_manager->getShader("edge")->setInt("entityID", entity_id);
             atcg::ref_ptr<VertexBuffer> points = geometry.graph->getVerticesBuffer();
             points->bindStorage(0);
@@ -934,6 +941,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         {
             auto& shader = impl->shader_manager->getShader("cylinder_edge");
             impl->setMaterial(renderer.material, shader);
+            impl->setLights(scene, impl->shader_manager->getShader("cylinder_edge"));
             shader->setInt("entityID", entity_id);
             shader->setFloat("edge_radius", renderer.radius);
             impl->drawGrid(geometry.graph->getVerticesBuffer(),
