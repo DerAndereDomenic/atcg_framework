@@ -24,6 +24,7 @@ public:
 
     atcg::ref_ptr<Context> context;
     atcg::ref_ptr<ShaderManagerSystem> shader_manager;
+    RendererSystem* renderer = nullptr;
 
     atcg::ref_ptr<VertexArray> quad_vao;
     atcg::ref_ptr<VertexBuffer> quad_vbo;
@@ -367,6 +368,8 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("cubeMapConvolution");
     impl->shader_manager->addShaderFromName("prefilter_cubemap");
     impl->shader_manager->addShaderFromName("vrScreen");
+
+    impl->renderer = this;
 }
 
 void RendererSystem::finishFrame()
@@ -1256,11 +1259,11 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
     screenshot_buffer->complete();
 
     screenshot_buffer->use();
-    atcg::RendererSystem::clear();
-    atcg::RendererSystem::setViewport(0, 0, width, height);
-    atcg::RendererSystem::draw(scene, cam);
-    atcg::RendererSystem::getFramebuffer()->use();
-    atcg::RendererSystem::setDefaultViewport();
+    clear();
+    setViewport(0, 0, width, height);
+    draw(scene, cam);
+    getFramebuffer()->use();
+    setDefaultViewport();
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
@@ -1282,11 +1285,11 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     screenshot_buffer->complete();
 
     screenshot_buffer->use();
-    atcg::RendererSystem::clear();
-    atcg::RendererSystem::setViewport(0, 0, width, height);
-    atcg::RendererSystem::draw(scene, cam);
-    atcg::RendererSystem::getFramebuffer()->use();
-    atcg::RendererSystem::setDefaultViewport();
+    clear();
+    setViewport(0, 0, width, height);
+    draw(scene, cam);
+    getFramebuffer()->use();
+    setDefaultViewport();
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
