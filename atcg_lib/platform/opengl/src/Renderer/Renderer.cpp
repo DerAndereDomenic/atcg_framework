@@ -24,6 +24,7 @@ public:
 
     atcg::ref_ptr<Context> context;
     atcg::ref_ptr<ShaderManagerSystem> shader_manager;
+    RendererSystem* renderer = nullptr;
 
     atcg::ref_ptr<VertexArray> quad_vao;
     atcg::ref_ptr<VertexBuffer> quad_vbo;
@@ -92,6 +93,7 @@ public:
 
     void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
     void setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader);
+    void updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera);
 
     enum TextureBindings
     {
@@ -355,6 +357,72 @@ void RendererSystem::Impl::setLights(Scene* scene, const atcg::ref_ptr<Shader>& 
     shader->setInt("num_lights", num_lights);
 }
 
+void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene,
+                                            const atcg::ref_ptr<atcg::Camera>& camera)
+{
+    float n              = 0.1f;
+    float f              = 100.0f;
+    glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, n, f);
+
+    const atcg::ref_ptr<Shader>& depth_pass_shader = shader_manager->getShader("depth_pass");
+    depth_pass_shader->setFloat("far_plane", f);
+
+    uint32_t active_fbo = atcg::Framebuffer::currentFramebuffer();
+
+    GLint old_viewport[4];
+    glGetIntegerv(GL_VIEWPORT, old_viewport);
+
+    auto light_view = scene->getAllEntitiesWith<PointLightComponent, TransformComponent>();
+    for(auto e: light_view)
+    {
+        atcg::Entity entity(e, scene.get());
+
+        auto& point_light = entity.getComponent<PointLightComponent>();
+        auto& transform   = entity.getComponent<TransformComponent>();
+        point_light.framebuffer->use();
+        renderer->setViewport(0, 0, point_light.framebuffer->width(), point_light.framebuffer->height());
+        renderer->clear();
+
+        glm::vec3 lightPos = transform.getPosition();
+        depth_pass_shader->setVec3("lightPos", lightPos);
+        depth_pass_shader->setMat4(
+            "shadowMatrices[0]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[1]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[2]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[3]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[4]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[5]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+
+        const auto& view =
+            scene->getAllEntitiesWith<atcg::TransformComponent, atcg::GeometryComponent, atcg::MeshRenderComponent>();
+
+        // Draw scene
+        for(auto e: view)
+        {
+            atcg::Entity entity(e, scene.get());
+
+            auto& transform = entity.getComponent<atcg::TransformComponent>();
+            auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
+
+            renderer->draw(geometry.graph, camera, transform.getModel(), glm::vec3(1), depth_pass_shader);
+        }
+    }
+
+    renderer->setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
+    atcg::Framebuffer::bindByID(active_fbo);
+}
+
 void RendererSystem::init(uint32_t width,
                           uint32_t height,
                           const atcg::ref_ptr<Context>& context,
@@ -393,6 +461,9 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("cubeMapConvolution");
     impl->shader_manager->addShaderFromName("prefilter_cubemap");
     impl->shader_manager->addShaderFromName("vrScreen");
+    impl->shader_manager->addShaderFromName("depth_pass");
+
+    impl->renderer = this;
 }
 
 void RendererSystem::finishFrame()
@@ -989,6 +1060,8 @@ void RendererSystem::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     drawSkybox(camera);
+
+    impl->updateShadowmaps(scene, camera);
 
     const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
