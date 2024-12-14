@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The Renderer now internally also uses the Texture ID push system
+
 ### Fixed
 
 - Screenshot functionality of Renderer uses correct member method and not global renderer instance.
