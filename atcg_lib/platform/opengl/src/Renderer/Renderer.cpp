@@ -92,6 +92,7 @@ public:
                   const glm::vec3& color              = glm::vec3(1));
 
     void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
+    std::vector<PointLightComponent> dummy_lights;
     void setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader);
     void updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera);
 
@@ -200,6 +201,8 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
     }
 
     ATCG_INFO("RendererSystem supports {0} texture units.", total_units);
+
+    dummy_lights.resize(32);    // TODO
 }
 
 void RendererSystem::Impl::initGrid()
@@ -336,6 +339,19 @@ void RendererSystem::Impl::setLights(Scene* scene, const atcg::ref_ptr<Shader>& 
 {
     auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
 
+    // TODO: These lights are here so that each sampler is actually binded because OpenGL does not allow for dynamic
+    // indexing of sampler arrays. This should be fixed with either bindless textures or Texture arrays of Cube Maps
+    // (which is currently not implemented).
+    for(int i = 0; i < 32; ++i)
+    {
+        std::stringstream light_index;
+        light_index << "[" << i << "]";
+        std::string light_index_str = light_index.str();
+
+        shader->setInt("light_shadows" + light_index_str, 9 + i);
+        dummy_lights[i].depth_map->use(9 + i);
+    }
+
     uint32_t num_lights = 0;
     for(auto e: light_view)
     {
@@ -351,6 +367,9 @@ void RendererSystem::Impl::setLights(Scene* scene, const atcg::ref_ptr<Shader>& 
         shader->setVec3("light_colors" + light_index_str, point_light.color);
         shader->setFloat("light_intensities" + light_index_str, point_light.intensity);
         shader->setVec3("light_positions" + light_index_str, light_transform.getPosition());
+
+        shader->setInt("light_shadows" + light_index_str, 9 + num_lights);
+        point_light.depth_map->use(9 + num_lights);
 
         ++num_lights;
     }
