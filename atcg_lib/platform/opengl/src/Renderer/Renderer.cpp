@@ -96,19 +96,9 @@ public:
     void setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader);
     void updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera);
 
-    enum TextureBindings
-    {
-        DIFFUSE_TEXTURE   = 0,
-        NORMAL_TEXTURE    = 1,
-        ROUGHNESS_TEXTURE = 2,
-        METALLIC_TEXTURE  = 3,
-        IRRADIANCE_MAP    = 4,
-        PREFILTER_MAP     = 5,
-        LUT_TEXTURE       = 6,
-        SKYBOX_TEXTURE    = 7,
-        COUNT
-    };
+    std::vector<uint32_t> used_texture_units;
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
+    void freeTextureUnits();
 };
 
 RendererSystem::RendererSystem() {}
@@ -195,7 +185,7 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
 
     int total_units;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &total_units);
-    for(uint32_t i = TextureBindings::COUNT; i < (uint32_t)total_units; ++i)
+    for(uint32_t i = 0; i < (uint32_t)total_units; ++i)
     {
         texture_ids.push(i);
     }
@@ -311,26 +301,40 @@ void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
-    material.getDiffuseTexture()->use(RendererSystem::Impl::TextureBindings::DIFFUSE_TEXTURE);
-    shader->setInt("texture_diffuse", RendererSystem::Impl::TextureBindings::DIFFUSE_TEXTURE);
+    uint32_t diffuse_id = renderer->popTextureID();
+    material.getDiffuseTexture()->use(diffuse_id);
+    shader->setInt("texture_diffuse", diffuse_id);
+    used_texture_units.push_back(diffuse_id);
 
-    material.getNormalTexture()->use(RendererSystem::Impl::TextureBindings::NORMAL_TEXTURE);
-    shader->setInt("texture_normal", RendererSystem::Impl::TextureBindings::NORMAL_TEXTURE);
+    uint32_t normal_id = renderer->popTextureID();
+    material.getNormalTexture()->use(normal_id);
+    shader->setInt("texture_normal", normal_id);
+    used_texture_units.push_back(normal_id);
 
-    material.getRoughnessTexture()->use(RendererSystem::Impl::TextureBindings::ROUGHNESS_TEXTURE);
-    shader->setInt("texture_roughness", RendererSystem::Impl::TextureBindings::ROUGHNESS_TEXTURE);
+    uint32_t roughness_id = renderer->popTextureID();
+    material.getRoughnessTexture()->use(roughness_id);
+    shader->setInt("texture_roughness", roughness_id);
+    used_texture_units.push_back(roughness_id);
 
-    material.getMetallicTexture()->use(RendererSystem::Impl::TextureBindings::METALLIC_TEXTURE);
-    shader->setInt("texture_metallic", RendererSystem::Impl::TextureBindings::METALLIC_TEXTURE);
+    uint32_t metallic_id = renderer->popTextureID();
+    material.getMetallicTexture()->use(metallic_id);
+    shader->setInt("texture_metallic", metallic_id);
+    used_texture_units.push_back(metallic_id);
 
-    irradiance_cubemap->use(RendererSystem::Impl::TextureBindings::IRRADIANCE_MAP);
-    shader->setInt("irradiance_map", RendererSystem::Impl::TextureBindings::IRRADIANCE_MAP);
+    uint32_t irradiance_id = renderer->popTextureID();
+    irradiance_cubemap->use(irradiance_id);
+    shader->setInt("irradiance_map", irradiance_id);
+    used_texture_units.push_back(irradiance_id);
 
-    prefiltered_cubemap->use(RendererSystem::Impl::TextureBindings::PREFILTER_MAP);
-    shader->setInt("prefilter_map", RendererSystem::Impl::TextureBindings::PREFILTER_MAP);
+    uint32_t prefiltered_id = renderer->popTextureID();
+    prefiltered_cubemap->use(prefiltered_id);
+    shader->setInt("prefilter_map", prefiltered_id);
+    used_texture_units.push_back(prefiltered_id);
 
-    lut->use(RendererSystem::Impl::TextureBindings::LUT_TEXTURE);
-    shader->setInt("lut", RendererSystem::Impl::TextureBindings::LUT_TEXTURE);
+    uint32_t lut_id = renderer->popTextureID();
+    lut->use(lut_id);
+    shader->setInt("lut", lut_id);
+    used_texture_units.push_back(lut_id);
 
     shader->setInt("use_ibl", has_skybox);
 }
@@ -440,6 +444,15 @@ void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& sc
 
     renderer->setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
     atcg::Framebuffer::bindByID(active_fbo);
+}
+
+void RendererSystem::Impl::freeTextureUnits()
+{
+    for(uint32_t texture_id: used_texture_units)
+    {
+        renderer->pushTextureID(texture_id);
+    }
+    used_texture_units.clear();
 }
 
 void RendererSystem::init(uint32_t width,
@@ -894,6 +907,8 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
         }
         break;
     }
+
+    impl->freeTextureUnits();
 }
 
 // drawEntity
@@ -960,6 +975,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                           transform.getModel(),
                           GL_TRIANGLES,
                           geometry.graph->n_vertices());
+            impl->freeTextureUnits();
         }
     }
 
@@ -979,6 +995,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                           transform.getModel(),
                           GL_POINTS,
                           geometry.graph->n_vertices());
+            impl->freeTextureUnits();
         }
     }
 
@@ -998,6 +1015,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                                         glm::vec3(1),
                                         renderer.shader,
                                         geometry.graph->n_vertices());
+            impl->freeTextureUnits();
         }
     }
 
@@ -1020,6 +1038,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                           GL_POINTS,
                           geometry.graph->n_edges(),
                           1);
+            impl->freeTextureUnits();
         }
     }
 
@@ -1041,6 +1060,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                            camera,
                            transform.getModel(),
                            glm::vec3(1));
+            impl->freeTextureUnits();
         }
     }
 
@@ -1069,6 +1089,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
                           GL_TRIANGLES,
                           geometry.graph->n_vertices(),
                           n_instances);
+            impl->freeTextureUnits();
         }
     }
 }
@@ -1095,20 +1116,21 @@ void RendererSystem::drawSkybox(const atcg::ref_ptr<Camera>& camera)
 {
     if(impl->has_skybox)
     {
+        uint32_t skybox_id = popTextureID();
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
         bool culling = impl->culling_enabled;
         toggleCulling(false);
         impl->shader_manager->getShader("skybox")->use();
-        impl->shader_manager->getShader("skybox")->setInt("skybox",
-                                                          RendererSystem::Impl::TextureBindings::SKYBOX_TEXTURE);
-        impl->skybox_cubemap->use(RendererSystem::Impl::TextureBindings::SKYBOX_TEXTURE);
+        impl->shader_manager->getShader("skybox")->setInt("skybox", skybox_id);
+        impl->skybox_cubemap->use(skybox_id);
 
         draw(impl->cube, camera, glm::mat4(1), glm::vec3(1), impl->shader_manager->getShader("skybox"));
 
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
         toggleCulling(culling);
+        pushTextureID(skybox_id);
     }
 }
 
@@ -1380,11 +1402,11 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
     screenshot_buffer->complete();
 
     screenshot_buffer->use();
-    atcg::RendererSystem::clear();
-    atcg::RendererSystem::setViewport(0, 0, width, height);
-    atcg::RendererSystem::draw(scene, cam);
-    atcg::RendererSystem::getFramebuffer()->use();
-    atcg::RendererSystem::setDefaultViewport();
+    clear();
+    setViewport(0, 0, width, height);
+    draw(scene, cam);
+    getFramebuffer()->use();
+    setDefaultViewport();
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
@@ -1406,11 +1428,11 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     screenshot_buffer->complete();
 
     screenshot_buffer->use();
-    atcg::RendererSystem::clear();
-    atcg::RendererSystem::setViewport(0, 0, width, height);
-    atcg::RendererSystem::draw(scene, cam);
-    atcg::RendererSystem::getFramebuffer()->use();
-    atcg::RendererSystem::setDefaultViewport();
+    clear();
+    setViewport(0, 0, width, height);
+    draw(scene, cam);
+    getFramebuffer()->use();
+    setDefaultViewport();
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 

@@ -340,7 +340,7 @@ public:
     /**
      * @brief Create a 2D texture.
      *
-     * @param data The image (host data)
+     * @param data The image
      *
      * @return The resulting texture
      */
@@ -349,7 +349,7 @@ public:
     /**
      * @brief Create a 2D texture.
      *
-     * @param data The image (host data)
+     * @param data The image
      * @param spec The texture specification
      *
      * @return The resulting texture
@@ -436,7 +436,7 @@ public:
     /**
      * @brief Create a 3D texture.
      *
-     * @param data The image (host data)
+     * @param data The image
      *
      * @return The resulting texture
      */
@@ -445,7 +445,7 @@ public:
     /**
      * @brief Create a 3D texture.
      *
-     * @param data The image (host data)
+     * @param data The image
      * @param spec The texture specification
      *
      * @return The resulting texture
@@ -506,14 +506,12 @@ public:
 
 /**
  * @brief A class to model a cube map
- * @note This class has no setData or getData metods. It's also not possible to create cubemaps from existing data. It
- * is for now only filled by converting equicrectangular environment maps.
  */
 class TextureCube : public Texture
 {
 public:
     /**
-     * @brief Create an empty 2D texture.
+     * @brief Create an empty cube map texture.
      *
      * @param spec The texture specification
      *
@@ -522,9 +520,9 @@ public:
     static atcg::ref_ptr<TextureCube> create(const TextureSpecification& spec);
 
     /**
-     * @brief Create a 3D texture from a tensor.
+     * @brief Create a cube map texture from a tensor.
      *
-     * @param data The image (host data) of shape (6, height, width, channels)
+     * @param data The image of shape (6, height, width, channels)
      *
      * @return The resulting texture
      */
@@ -606,7 +604,7 @@ public:
     /**
      * @brief Create a texture array.
      *
-     * @param data The image (host data)
+     * @param data The image
      *
      * @return The resulting texture
      */
@@ -615,7 +613,7 @@ public:
     /**
      * @brief Create a texture array.
      *
-     * @param data The image (host data)
+     * @param data The image
      * @param spec The texture specification
      *
      * @return The resulting texture
@@ -645,6 +643,78 @@ public:
      *
      * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
      * a host-device memcpy is required.
+     *
+     * @param device The device
+     * @param mip_level The mip level
+     *
+     * @return The data
+     */
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
+                                  const uint32_t mip_level    = 0) const override;
+
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Generate mipmap levels
+     */
+    virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     *
+     * @return The copy
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
+};
+
+/**
+ * @brief A class to model an array cube map
+ */
+class TextureCubeArray : public Texture
+{
+public:
+    /**
+     * @brief Create an empty cube map texture.
+     *
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureCubeArray> create(const TextureSpecification& spec);
+
+    /**
+     * @brief Create a cube map texture from a tensor.
+     *
+     * @param data The image of shape (n_layer, 6, height, width, channels)
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<TextureCubeArray> create(const torch::Tensor& img);
+
+    /**
+     *  @brief Destructor
+     */
+    virtual ~TextureCubeArray();
+
+    /**
+     * @brief Set the data of the cube map texture.
+     * The tensor is supposed to be a (n_layer, 6, spec.height, spec.width, channels) tensor for each cubemap side for
+     * each layer. This function will always transfer the data to opengl via a host to device upload. If the tensor is
+     * on the GPU, it will be copied to host first.
+     *
+     * @param data The data
+     */
+    virtual void setData(const torch::Tensor& data) override;
+
+    /**
+     * @brief Get the data in the texture.
+     * This function will always copy data between CPU and GPU via opengl. After construction, the tensor will be copied
+     * onto the specified device.
      *
      * @param device The device
      * @param mip_level The mip level
