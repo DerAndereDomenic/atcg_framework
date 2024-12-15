@@ -1623,4 +1623,197 @@ atcg::ref_ptr<Texture> TextureArray::clone() const
     return result;
 }
 
+atcg::ref_ptr<TextureCubeArray> TextureCubeArray::create(const TextureSpecification& spec)
+{
+    atcg::ref_ptr<TextureCubeArray> result = atcg::make_ref<TextureCubeArray>();
+    result->_spec                          = spec;
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, result->_ID);
+
+    glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY,
+                 0,
+                 detail::to2GLinternalFormat(spec.format),
+                 spec.width,
+                 spec.height,
+                 6 * spec.depth,
+                 0,
+                 detail::toGLformat(spec.format),
+                 detail::toGLtype(spec.format),
+                 nullptr);
+
+    auto filtermode = detail::toGLFilterMode(spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, filtermode);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+
+    if(spec.sampler.mip_map)
+    {
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP_ARRAY);
+    }
+
+    return result;
+}
+
+atcg::ref_ptr<TextureCubeArray> TextureCubeArray::create(const torch::Tensor& img)
+{
+    TextureSpecification spec;
+    spec.width  = std::max<uint32_t>(1, img.size(3));
+    spec.height = std::max<uint32_t>(1, img.size(2));
+    spec.depth  = std::max<uint32_t>(1, img.size(0));
+    TORCH_CHECK_EQ(img.size(1), 6);
+    TORCH_CHECK_EQ(spec.width, spec.height);
+    switch(img.size(4))
+    {
+        case 1:
+        {
+            spec.format = (img.dtype() == torch::kFloat32
+                               ? TextureFormat::RFLOAT
+                               : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
+        }
+        break;
+        case 2:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGFLOAT : TextureFormat::RG);
+        }
+        break;
+        case 3:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
+        }
+        break;
+        case 4:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        }
+        break;
+    }
+    auto result = create(spec);
+    result->setData(img);
+    return result;
+}
+
+TextureCubeArray::~TextureCubeArray()
+{
+    glDeleteTextures(1, &_ID);
+}
+
+void TextureCubeArray::use(const uint32_t& slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, _ID);
+}
+
+void TextureCubeArray::setData(const torch::Tensor& data)
+{
+    TORCH_CHECK_EQ(data.numel() * data.element_size() / 6,
+                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.size(1), 6);
+    TORCH_CHECK_EQ(data.size(2), _spec.height);
+    TORCH_CHECK_EQ(data.size(3), _spec.width);
+    int num_channels = detail::num_channels(_spec.format);
+    TORCH_CHECK_EQ(data.size(4), num_channels);
+    TORCH_CHECK_EQ(_spec.width, _spec.height);
+
+    torch::Tensor pixel_data = data.to(atcg::CPU);
+
+    unmapPointers();
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, _ID);
+
+    for(int layer_idx = 0; layer_idx < _spec.depth; ++layer_idx)
+    {
+        for(int face_idx = 0; face_idx < 6; ++face_idx)
+        {
+            glTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY,
+                            0,
+                            0,
+                            0,
+                            6 * layer_idx + face_idx,
+                            _spec.width,
+                            _spec.height,
+                            1,
+                            detail::toGLformat(_spec.format),
+                            detail::toGLtype(_spec.format),
+                            (void*)pixel_data.index({layer_idx, face_idx, 0, 0}).data_ptr());
+        }
+    }
+}
+
+torch::Tensor TextureCubeArray::getData(const torch::Device& device, const uint32_t mip_level) const
+{
+    int num_channels = detail::num_channels(_spec.format);
+    bool hdr         = isHDR();
+    int channel_size = detail::toChannelSize(_spec.format);
+
+    auto options = hdr ? atcg::TensorOptions::floatHostOptions()
+                       : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32HostOptions()
+                                                                    : atcg::TensorOptions::uint8HostOptions());
+    auto result  = torch::empty({_spec.depth, 6, _spec.height, _spec.width, num_channels}, options);
+
+    unmapPointers();
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, _ID);
+
+
+    glGetTexImage(GL_TEXTURE_CUBE_MAP_ARRAY,
+                  mip_level,
+                  detail::toGLformat(_spec.format),
+                  detail::toGLtype(_spec.format),
+                  (void*)result.data_ptr());
+
+
+    return result.to(device);
+}
+
+void TextureCubeArray::generateMipmaps()
+{
+    use();
+    _spec.sampler.mip_map = true;
+    auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP_ARRAY);
+}
+
+atcg::ref_ptr<Texture> TextureCubeArray::clone() const
+{
+    auto result = atcg::TextureCubeArray::create(_spec);
+
+    use();
+
+    int max_level = _spec.sampler.mip_map
+                        ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
+                        : 1;
+
+    for(int lvl = 0; lvl < max_level + 1; lvl++)
+    {
+        int width, height;
+        glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_ARRAY, lvl, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_ARRAY, lvl, GL_TEXTURE_HEIGHT, &height);
+
+        glCopyImageSubData(_ID,
+                           GL_TEXTURE_CUBE_MAP_ARRAY,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           result->getID(),
+                           GL_TEXTURE_CUBE_MAP_ARRAY,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           width,
+                           height,
+                           _spec.depth * 6);
+    }
+
+
+    return result;
+}
+
 }    // namespace atcg
