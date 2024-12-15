@@ -1205,8 +1205,7 @@ atcg::ref_ptr<TextureCube> TextureCube::create(const torch::Tensor& img)
     TextureSpecification spec;
     spec.width  = std::max<uint32_t>(1, img.size(2));
     spec.height = std::max<uint32_t>(1, img.size(1));
-    spec.depth  = std::max<uint32_t>(1, img.size(0));
-    TORCH_CHECK_EQ(spec.depth, 6);
+    TORCH_CHECK_EQ(img.size(0), 6);
     TORCH_CHECK_EQ(spec.width, spec.height);
     switch(img.size(3))
     {
@@ -1251,7 +1250,7 @@ void TextureCube::use(const uint32_t& slot) const
 
 void TextureCube::setData(const torch::Tensor& data)
 {
-    TORCH_CHECK_EQ(data.numel() * data.element_size() / 6, _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.numel() * data.element_size(), 6 * _spec.width * _spec.height * detail::toSize(_spec.format));
     TORCH_CHECK_EQ(data.size(0), 6);
     TORCH_CHECK_EQ(data.size(1), _spec.height);
     TORCH_CHECK_EQ(data.size(2), _spec.width);
@@ -1353,7 +1352,6 @@ atcg::ref_ptr<Texture> TextureCube::clone() const
 
     return result;
 }
-
 
 atcg::ref_ptr<TextureArray> TextureArray::create(const TextureSpecification& spec)
 {
