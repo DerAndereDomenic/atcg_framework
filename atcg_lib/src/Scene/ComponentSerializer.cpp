@@ -48,6 +48,7 @@ namespace atcg
 #define FAR_KEY                    "Far"
 #define POINT_LIGHT_KEY            "PointLight"
 #define INTENSITY_KEY              "Intensity"
+#define CAST_SHADOWS_KEY           "CastShadow"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -391,6 +392,7 @@ void ComponentSerializer::serialize_component<PointLightComponent>(const std::st
 {
     j[POINT_LIGHT_KEY][INTENSITY_KEY] = component.intensity;
     j[POINT_LIGHT_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
+    j[POINT_LIGHT_KEY][CAST_SHADOWS_KEY] = component.cast_shadow;
 }
 
 template<typename T>
@@ -710,10 +712,11 @@ void ComponentSerializer::deserialize_component<PointLightComponent>(const std::
         return;
     }
 
-    auto& point_light         = j[POINT_LIGHT_KEY];
-    auto& renderComponent     = entity.addComponent<PointLightComponent>();
-    renderComponent.intensity = point_light.value(INTENSITY_KEY, 1.0f);
-    auto color                = point_light.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
-    renderComponent.color     = glm::make_vec3(color.data());
+    auto& point_light           = j[POINT_LIGHT_KEY];
+    auto& renderComponent       = entity.addComponent<PointLightComponent>();
+    renderComponent.intensity   = point_light.value(INTENSITY_KEY, 1.0f);
+    auto color                  = point_light.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
+    renderComponent.color       = glm::make_vec3(color.data());
+    renderComponent.cast_shadow = point_light.value(CAST_SHADOWS_KEY, true);
 }
 }    // namespace atcg

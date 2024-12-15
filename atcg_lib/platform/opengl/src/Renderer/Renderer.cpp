@@ -409,6 +409,12 @@ void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& sc
         auto& point_light = entity.getComponent<PointLightComponent>();
         auto& transform   = entity.getComponent<TransformComponent>();
 
+        if(!point_light.cast_shadow)
+        {
+            ++light_idx;
+            continue;
+        }
+
         glm::vec3 lightPos = transform.getPosition();
         depth_pass_shader->setVec3("lightPos", lightPos);
         depth_pass_shader->setMat4(

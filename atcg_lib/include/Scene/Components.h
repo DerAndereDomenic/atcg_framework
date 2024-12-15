@@ -257,8 +257,9 @@ struct PointLightComponent
     {
     }
 
-    float intensity = 1.0f;
-    glm::vec3 color = glm::vec3(1);
+    float intensity  = 1.0f;
+    glm::vec3 color  = glm::vec3(1);
+    bool cast_shadow = true;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Light"; }
 };

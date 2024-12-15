@@ -281,6 +281,7 @@ void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, Poi
 {
     ImGui::DragFloat("Intensity##PointLight", &component.intensity, 0.01f, 0.0f, FLT_MAX);
     ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
+    ImGui::Checkbox("Cast Shadows##PointLight", &component.cast_shadow);
 }
 
 void ComponentGUIHandler::displayMaterial(const std::string& key, Material& material)
