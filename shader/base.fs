@@ -1,4 +1,4 @@
-#version 330 core
+#version 400 core
 
 #define PI 3.14159
 #define MAX_LIGHTS 32
@@ -31,7 +31,7 @@ uniform sampler2D lut;
 uniform vec3 light_colors[MAX_LIGHTS];
 uniform float light_intensities[MAX_LIGHTS];
 uniform vec3 light_positions[MAX_LIGHTS];
-uniform samplerCube light_shadows[MAX_LIGHTS];
+uniform samplerCubeArray shadow_maps;
 uniform int num_lights = 0;
 
 // Constants over the shader
@@ -93,7 +93,7 @@ float shadowCalculation(int i, vec3 pos)
     // get vector between fragment position and light position
     vec3 fragToLight = pos - light_positions[i];
     // use the light to fragment vector to sample from the depth map    
-    float closestDepth = texture(light_shadows[i], fragToLight).r;
+    float closestDepth = texture(shadow_maps, vec4(fragToLight, float(i))).r;
     // it is currently in linear range between [0,1]. Re-transform back to original value
     float far_plane = 100.0;
     closestDepth *= far_plane;

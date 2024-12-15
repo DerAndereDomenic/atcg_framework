@@ -92,9 +92,10 @@ public:
                   const glm::vec3& color              = glm::vec3(1));
 
     void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
-    std::vector<PointLightComponent> dummy_lights;
     void setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader);
     void updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera);
+    atcg::ref_ptr<atcg::Framebuffer> point_light_framebuffer;
+    atcg::ref_ptr<atcg::TextureCubeArray> point_light_depth_maps;
 
     std::vector<uint32_t> used_texture_units;
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
@@ -190,9 +191,19 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
         texture_ids.push(i);
     }
 
-    ATCG_INFO("RendererSystem supports {0} texture units.", total_units);
+    atcg::TextureSpecification spec_depth;
+    spec_depth.width       = 1024;
+    spec_depth.height      = 1024;
+    spec_depth.depth       = 32;
+    spec_depth.format      = atcg::TextureFormat::DEPTH;
+    point_light_depth_maps = atcg::TextureCubeArray::create(spec_depth);
 
-    dummy_lights.resize(32);    // TODO
+    point_light_framebuffer = atcg::make_ref<atcg::Framebuffer>(1024, 1024);
+    // point_light_framebuffer->attachColor();
+    point_light_framebuffer->attachDepth(point_light_depth_maps);
+    point_light_framebuffer->complete();
+
+    ATCG_INFO("RendererSystem supports {0} texture units.", total_units);
 }
 
 void RendererSystem::Impl::initGrid()
@@ -343,19 +354,6 @@ void RendererSystem::Impl::setLights(Scene* scene, const atcg::ref_ptr<Shader>& 
 {
     auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
 
-    // TODO: These lights are here so that each sampler is actually binded because OpenGL does not allow for dynamic
-    // indexing of sampler arrays. This should be fixed with either bindless textures or Texture arrays of Cube Maps
-    // (which is currently not implemented).
-    for(int i = 0; i < 32; ++i)
-    {
-        std::stringstream light_index;
-        light_index << "[" << i << "]";
-        std::string light_index_str = light_index.str();
-
-        shader->setInt("light_shadows" + light_index_str, 9 + i);
-        dummy_lights[i].depth_map->use(9 + i);
-    }
-
     uint32_t num_lights = 0;
     for(auto e: light_view)
     {
@@ -372,12 +370,15 @@ void RendererSystem::Impl::setLights(Scene* scene, const atcg::ref_ptr<Shader>& 
         shader->setFloat("light_intensities" + light_index_str, point_light.intensity);
         shader->setVec3("light_positions" + light_index_str, light_transform.getPosition());
 
-        shader->setInt("light_shadows" + light_index_str, 9 + num_lights);
-        point_light.depth_map->use(9 + num_lights);
-
         ++num_lights;
     }
+
+    uint32_t shadow_map_id = renderer->popTextureID();
+    shader->setInt("shadow_maps", shadow_map_id);
+    point_light_depth_maps->use(shadow_map_id);
     shader->setInt("num_lights", num_lights);
+
+    used_texture_units.push_back(shadow_map_id);
 }
 
 void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene,
@@ -396,15 +397,17 @@ void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& sc
     glGetIntegerv(GL_VIEWPORT, old_viewport);
 
     auto light_view = scene->getAllEntitiesWith<PointLightComponent, TransformComponent>();
+    point_light_framebuffer->use();
+    renderer->setViewport(0, 0, point_light_framebuffer->width(), point_light_framebuffer->height());
+    renderer->clear();
+
+    uint32_t light_idx = 0;
     for(auto e: light_view)
     {
         atcg::Entity entity(e, scene.get());
 
         auto& point_light = entity.getComponent<PointLightComponent>();
         auto& transform   = entity.getComponent<TransformComponent>();
-        point_light.framebuffer->use();
-        renderer->setViewport(0, 0, point_light.framebuffer->width(), point_light.framebuffer->height());
-        renderer->clear();
 
         glm::vec3 lightPos = transform.getPosition();
         depth_pass_shader->setVec3("lightPos", lightPos);
@@ -426,6 +429,7 @@ void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& sc
         depth_pass_shader->setMat4(
             "shadowMatrices[5]",
             projection * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+        depth_pass_shader->setInt("light_idx", light_idx);
 
         const auto& view =
             scene->getAllEntitiesWith<atcg::TransformComponent, atcg::GeometryComponent, atcg::MeshRenderComponent>();
@@ -440,6 +444,8 @@ void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& sc
 
             renderer->draw(geometry.graph, camera, transform.getModel(), glm::vec3(1), depth_pass_shader);
         }
+
+        ++light_idx;
     }
 
     renderer->setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);

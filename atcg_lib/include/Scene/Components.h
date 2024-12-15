@@ -255,22 +255,10 @@ struct PointLightComponent
         : intensity(intensity),
           color(color)
     {
-        atcg::TextureSpecification spec;
-        spec.width  = 1024;
-        spec.height = 1024;
-        spec.format = atcg::TextureFormat::DEPTH;
-        depth_map   = atcg::TextureCube::create(spec);
-
-        framebuffer = atcg::make_ref<atcg::Framebuffer>(spec.width, spec.height);
-        // framebuffer->attachColor();
-        framebuffer->attachDepth(depth_map);
-        framebuffer->complete();
     }
 
     float intensity = 1.0f;
     glm::vec3 color = glm::vec3(1);
-    atcg::ref_ptr<atcg::Framebuffer> framebuffer;
-    atcg::ref_ptr<atcg::TextureCube> depth_map;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Light"; }
 };
