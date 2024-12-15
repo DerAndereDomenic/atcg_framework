@@ -3159,3 +3159,797 @@ TEST(TextureTest, TextureArraycreateEmptyRINTsetDataDevice)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
 }
+
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+
+TEST(TextureTest, TextureCubeArraycreateEmptyDefault)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRINT8)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRG)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGB)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBA)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRFLOAT)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGFLOAT)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBFLOAT)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBAFLOAT)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRINT)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRINT8)
+{
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 1}, atcg::TensorOptions::uint8HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT8);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRG)
+{
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 2}, atcg::TensorOptions::uint8HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RG);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGB)
+{
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 3}, atcg::TensorOptions::uint8HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGB);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGBA)
+{
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 4}, atcg::TensorOptions::uint8HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBA);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRFLOAT)
+{
+    torch::Tensor data = torch::randn({10, 6, 600, 600, 1}, atcg::TensorOptions::floatHostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RFLOAT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGFLOAT)
+{
+    torch::Tensor data = torch::randn({10, 6, 600, 600, 2}, atcg::TensorOptions::floatHostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGFLOAT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGBFLOAT)
+{
+    torch::Tensor data = torch::randn({10, 6, 600, 600, 3}, atcg::TensorOptions::floatHostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBFLOAT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGBAFLOAT)
+{
+    torch::Tensor data = torch::randn({10, 6, 600, 600, 4}, atcg::TensorOptions::floatHostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBAFLOAT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRINT)
+{
+    torch::Tensor data = torch::randint(0, 1e6, {10, 6, 600, 600, 1}, atcg::TensorOptions::int32HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kInt32);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRINT8getGPU)
+{
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 1}, atcg::TensorOptions::uint8HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT8);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
+    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGgetGPU)
+{
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 2}, atcg::TensorOptions::uint8HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RG);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
+    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGBgetGPU)
+{
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 3}, atcg::TensorOptions::uint8HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10, 6);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGB);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
+    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGBAgetGPU)
+{
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 4}, atcg::TensorOptions::uint8HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBA);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
+    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRFLOATgetGPU)
+{
+    torch::Tensor data = torch::randn({10, 6, 600, 600, 1}, atcg::TensorOptions::floatHostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RFLOAT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
+    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGFLOATgetGPU)
+{
+    torch::Tensor data = torch::randn({10, 6, 600, 600, 2}, atcg::TensorOptions::floatHostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGFLOAT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
+    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGBFLOATgetGPU)
+{
+    torch::Tensor data = torch::randn({10, 6, 600, 600, 3}, atcg::TensorOptions::floatHostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBFLOAT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
+    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRGBAFLOATgetGPU)
+{
+    torch::Tensor data = torch::randn({10, 6, 600, 600, 4}, atcg::TensorOptions::floatHostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBAFLOAT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
+    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateTensorRINTgetGPU)
+{
+    torch::Tensor data = torch::randint(0, 1e6, {10, 6, 600, 600, 1}, atcg::TensorOptions::int32HostOptions());
+    auto texture       = atcg::TextureCubeArray::create(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT);
+    EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kInt32);
+    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRINT8setDataHost)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 1}, atcg::TensorOptions::uint8HostOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGsetDataHost)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 2}, atcg::TensorOptions::uint8HostOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBsetDataHost)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 3}, atcg::TensorOptions::uint8HostOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBAsetDataHost)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 4}, atcg::TensorOptions::uint8HostOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRFLOATsetDataHost)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 1}, atcg::TensorOptions::floatHostOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGFLOATsetDataHost)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 2}, atcg::TensorOptions::floatHostOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBFLOATsetDataHost)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 3}, atcg::TensorOptions::floatHostOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBAFLOATsetDataHost)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 4}, atcg::TensorOptions::floatHostOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRINTsetDataHost)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 1e6, {10, 6, 600, 600, 1}, atcg::TensorOptions::int32HostOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRINT8setDataDevice)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 1}, atcg::TensorOptions::uint8DeviceOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGsetDataDevice)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 2}, atcg::TensorOptions::uint8DeviceOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBsetDataDevice)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 3}, atcg::TensorOptions::uint8DeviceOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBAsetDataDevice)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 4}, atcg::TensorOptions::uint8DeviceOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRFLOATsetDataDevice)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 1}, atcg::TensorOptions::floatDeviceOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGFLOATsetDataDevice)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 2}, atcg::TensorOptions::floatDeviceOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBFLOATsetDataDevice)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 3}, atcg::TensorOptions::floatDeviceOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBAFLOATsetDataDevice)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 4}, atcg::TensorOptions::floatDeviceOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRINTsetDataDevice)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 1e6, {10, 6, 600, 600, 1}, atcg::TensorOptions::int32DeviceOptions());
+    texture->setData(data);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
