@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added Cubemap Array textures
+- Possibility to create textures from device tensors
 
 ### Changed
 
 - The Renderer now internally also uses the Texture ID push system
+- Cube maps are no longer interpreted as depth 6 textures
 
 ### Fixed
 
