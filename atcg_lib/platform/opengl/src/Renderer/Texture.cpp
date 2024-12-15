@@ -707,12 +707,14 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const torch::Tensor& img)
         }
         break;
     }
-    return create(img.data_ptr(), spec);
+    return create(img, spec);
 }
 
 atcg::ref_ptr<Texture2D> Texture2D::create(const torch::Tensor& img, const TextureSpecification& spec)
 {
-    return create(img.data_ptr(), spec);
+    auto result = create(spec);
+    result->setData(img);
+    return result;
 }
 
 Texture2D::~Texture2D()
@@ -964,12 +966,14 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const torch::Tensor& img)
         }
         break;
     }
-    return create(img.data_ptr(), spec);
+    return create(img, spec);
 }
 
 atcg::ref_ptr<Texture3D> Texture3D::create(const torch::Tensor& img, const TextureSpecification& spec)
 {
-    return create(img.data_ptr(), spec);
+    auto result = create(spec);
+    result->setData(img);
+    return result;
 }
 
 Texture3D::~Texture3D()
@@ -1434,12 +1438,14 @@ atcg::ref_ptr<TextureArray> TextureArray::create(const torch::Tensor& img)
         }
         break;
     }
-    return create(img.data_ptr(), spec);
+    return create(img, spec);
 }
 
 atcg::ref_ptr<TextureArray> TextureArray::create(const torch::Tensor& img, const TextureSpecification& spec)
 {
-    return create(img.data_ptr(), spec);
+    auto result = create(spec);
+    result->setData(img);
+    return result;
 }
 
 TextureArray::~TextureArray()

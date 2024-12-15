@@ -340,7 +340,7 @@ public:
     /**
      * @brief Create a 2D texture.
      *
-     * @param data The image (host data)
+     * @param data The image
      *
      * @return The resulting texture
      */
@@ -349,7 +349,7 @@ public:
     /**
      * @brief Create a 2D texture.
      *
-     * @param data The image (host data)
+     * @param data The image
      * @param spec The texture specification
      *
      * @return The resulting texture
@@ -436,7 +436,7 @@ public:
     /**
      * @brief Create a 3D texture.
      *
-     * @param data The image (host data)
+     * @param data The image
      *
      * @return The resulting texture
      */
@@ -445,7 +445,7 @@ public:
     /**
      * @brief Create a 3D texture.
      *
-     * @param data The image (host data)
+     * @param data The image
      * @param spec The texture specification
      *
      * @return The resulting texture
@@ -522,7 +522,7 @@ public:
     /**
      * @brief Create a cube map texture from a tensor.
      *
-     * @param data The image (host data) of shape (6, height, width, channels)
+     * @param data The image of shape (6, height, width, channels)
      *
      * @return The resulting texture
      */
@@ -604,7 +604,7 @@ public:
     /**
      * @brief Create a texture array.
      *
-     * @param data The image (host data)
+     * @param data The image
      *
      * @return The resulting texture
      */
@@ -613,7 +613,7 @@ public:
     /**
      * @brief Create a texture array.
      *
-     * @param data The image (host data)
+     * @param data The image
      * @param spec The texture specification
      *
      * @return The resulting texture
@@ -690,7 +690,7 @@ public:
     /**
      * @brief Create a cube map texture from a tensor.
      *
-     * @param data The image (host data) of shape (n_layer, 6, height, width, channels)
+     * @param data The image of shape (n_layer, 6, height, width, channels)
      *
      * @return The resulting texture
      */
