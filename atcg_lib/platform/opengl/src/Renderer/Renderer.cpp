@@ -979,6 +979,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         {
             impl->setMaterial(renderer.material, renderer.shader);
             impl->setLights(scene, renderer.shader);
+            renderer.shader->setInt("receive_shadow", (int)renderer.receive_shadow);
             renderer.shader->setInt("entityID", entity_id);
             impl->drawVAO(geometry.graph->getVerticesArray(),
                           camera,

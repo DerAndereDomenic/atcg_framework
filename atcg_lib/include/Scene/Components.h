@@ -155,6 +155,7 @@ struct MeshRenderComponent : public RenderComponent
 
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     Material material;
+    bool receive_shadow = true;
 };
 
 struct PointRenderComponent : public RenderComponent

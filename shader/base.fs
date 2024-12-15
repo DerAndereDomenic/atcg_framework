@@ -33,6 +33,7 @@ uniform float light_intensities[MAX_LIGHTS];
 uniform vec3 light_positions[MAX_LIGHTS];
 uniform samplerCubeArray shadow_maps;
 uniform int num_lights = 0;
+uniform int receive_shadow;
 
 // Constants over the shader
 vec3 view_dir = vec3(0);
@@ -103,7 +104,7 @@ float shadowCalculation(int i, vec3 pos)
     float bias = 0.05; 
     float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
 
-    return shadow;
+    return receive_shadow * shadow;
 }
 
 vec3 eval_brdf(vec3 light_dir)

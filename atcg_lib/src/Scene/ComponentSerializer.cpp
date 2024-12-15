@@ -49,6 +49,7 @@ namespace atcg
 #define POINT_LIGHT_KEY            "PointLight"
 #define INTENSITY_KEY              "Intensity"
 #define CAST_SHADOWS_KEY           "CastShadow"
+#define RECEIVE_SHADOWS_KEY        "ReceiveShadow"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -333,6 +334,7 @@ void ComponentSerializer::serialize_component<MeshRenderComponent>(const std::st
     j[MESH_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = component.shader->getVertexPath();
     j[MESH_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = component.shader->getFragmentPath();
     j[MESH_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
+    j[MESH_RENDERER_KEY][RECEIVE_SHADOWS_KEY]      = component.receive_shadow;
 
     serializeMaterial(j[MESH_RENDERER_KEY], entity, component.material, file_path);
 }
@@ -581,6 +583,8 @@ void ComponentSerializer::deserialize_component<MeshRenderComponent>(const std::
         Material material        = deserialize_material(material_node);
         renderComponent.material = material;
     }
+
+    renderComponent.receive_shadow = renderer.value(RECEIVE_SHADOWS_KEY, true);
 }
 
 template<>

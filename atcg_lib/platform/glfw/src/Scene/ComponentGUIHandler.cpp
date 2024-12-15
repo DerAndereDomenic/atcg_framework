@@ -182,6 +182,7 @@ void ComponentGUIHandler::draw_component<MeshRenderComponent>(Entity entity, Mes
     Material& material = component.material;
 
     displayMaterial("mesh", material);
+    ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component.receive_shadow);
 }
 
 template<>
