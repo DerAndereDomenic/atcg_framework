@@ -48,4 +48,11 @@ std::vector<Entity> Scene::getEntitiesByName(const std::string& name)
     return impl->_entites_by_name[name];
 }
 
+void Scene::removeAllEntites()
+{
+    _registry.clear();
+    impl->_entites_by_name.clear();
+    impl->_entities.clear();
+}
+
 }    // namespace atcg

@@ -68,7 +68,7 @@ public:
     /**
      * @brief Remove all entities
      */
-    void removeAllEntites() { _registry.clear(); }
+    void removeAllEntites();
 
 private:
     friend class Entity;
