@@ -35,7 +35,8 @@ public:
     Entity createEntity(const std::string& name = "Entity");
 
     /**
-     * @brief Get an entity by its UUID
+     * @brief Get an entity by its UUID.
+     * If no entity exists with that ID, an invalid entity is returned
      *
      * @param id The UUID of the entity
      * @return The entity
@@ -44,8 +45,6 @@ public:
 
     /**
      * @brief Get entities with a given name.
-     * @note Entity names don't have to be unique, therefore this function returns a vector with all entities with the
-     * same name. Can be empty. The runtime of this function is O(#entities in Scene).
      *
      * @param name The name to search
      *
@@ -69,7 +68,7 @@ public:
     /**
      * @brief Remove all entities
      */
-    void removeAllEntites() { _registry.clear(); }
+    void removeAllEntites();
 
 private:
     friend class Entity;
