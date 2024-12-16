@@ -191,17 +191,7 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
         texture_ids.push(i);
     }
 
-    atcg::TextureSpecification spec_depth;
-    spec_depth.width       = 1024;
-    spec_depth.height      = 1024;
-    spec_depth.depth       = 32;
-    spec_depth.format      = atcg::TextureFormat::DEPTH;
-    point_light_depth_maps = atcg::TextureCubeArray::create(spec_depth);
-
     point_light_framebuffer = atcg::make_ref<atcg::Framebuffer>(1024, 1024);
-    // point_light_framebuffer->attachColor();
-    point_light_framebuffer->attachDepth(point_light_depth_maps);
-    point_light_framebuffer->complete();
 
     ATCG_INFO("RendererSystem supports {0} texture units.", total_units);
 }
@@ -373,12 +363,19 @@ void RendererSystem::Impl::setLights(Scene* scene, const atcg::ref_ptr<Shader>& 
         ++num_lights;
     }
 
-    uint32_t shadow_map_id = renderer->popTextureID();
-    shader->setInt("shadow_maps", shadow_map_id);
-    point_light_depth_maps->use(shadow_map_id);
-    shader->setInt("num_lights", num_lights);
+    if(point_light_depth_maps)
+    {
+        uint32_t shadow_map_id = renderer->popTextureID();
+        shader->setInt("shadow_maps", shadow_map_id);
+        point_light_depth_maps->use(shadow_map_id);
+        shader->setInt("num_lights", num_lights);
 
-    used_texture_units.push_back(shadow_map_id);
+        used_texture_units.push_back(shadow_map_id);
+    }
+    else
+    {
+        ATCG_ASSERT(num_lights == 0, "Shadow map is not initialized but lights are present");
+    }
 }
 
 void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene,
@@ -397,6 +394,32 @@ void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& sc
     glGetIntegerv(GL_VIEWPORT, old_viewport);
 
     auto light_view = scene->getAllEntitiesWith<PointLightComponent, TransformComponent>();
+
+    uint32_t num_lights = 0;
+    for(auto e: light_view)
+    {
+        ++num_lights;
+    }
+
+    if(num_lights == 0)
+    {
+        point_light_depth_maps = nullptr;
+        return;
+    }
+
+    if(!point_light_depth_maps || point_light_depth_maps->depth() != num_lights)
+    {
+        atcg::TextureSpecification spec;
+        spec.depth             = num_lights;
+        spec.width             = 1024;
+        spec.height            = 1024;
+        spec.format            = atcg::TextureFormat::DEPTH;
+        point_light_depth_maps = atcg::TextureCubeArray::create(spec);
+
+        point_light_framebuffer->attachDepth(point_light_depth_maps);
+        point_light_framebuffer->complete();
+    }
+
     point_light_framebuffer->use();
     renderer->setViewport(0, 0, point_light_framebuffer->width(), point_light_framebuffer->height());
     renderer->clear();
