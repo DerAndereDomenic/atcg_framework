@@ -1,11 +1,13 @@
 #version 330 core
 
 layout (location = 0) out vec4 outColor;
+layout (location = 1) out int outEntityID;
 
 in vec3 frag_pos;
 
 uniform vec3 flat_color;
 uniform float thickness;
+uniform int entityID = -1;
 
 void main()
 {
@@ -19,4 +21,5 @@ void main()
         discard;
 
     outColor = vec4(flat_color, circle);
+    outEntityID = entityID;
 }

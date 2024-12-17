@@ -54,5 +54,10 @@ void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity,
 {
 }
 
+template<>
+void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, PointLightComponent& component)
+{
+}
+
 void ComponentGUIHandler::displayMaterial(const std::string& key, Material& material) {}
 }    // namespace atcg

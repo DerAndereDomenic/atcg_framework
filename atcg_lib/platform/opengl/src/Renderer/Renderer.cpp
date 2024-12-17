@@ -91,7 +91,18 @@ public:
                   const glm::mat4& model              = glm::mat4(1),
                   const glm::vec3& color              = glm::vec3(1));
 
+    void drawCircle(const glm::vec3& position,
+                    const float& radius,
+                    const float& thickness,
+                    const glm::vec3& color,
+                    const atcg::ref_ptr<Camera>& camera = {},
+                    uint32_t entity_id                  = -1);
+
     void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
+    void setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader);
+    void updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera);
+    atcg::ref_ptr<atcg::Framebuffer> point_light_framebuffer;
+    atcg::ref_ptr<atcg::TextureCubeArray> point_light_depth_maps;
 
     std::vector<uint32_t> used_texture_units;
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
@@ -186,6 +197,8 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
     {
         texture_ids.push(i);
     }
+
+    point_light_framebuffer = atcg::make_ref<atcg::Framebuffer>(1024, 1024);
 
     ATCG_INFO("RendererSystem supports {0} texture units.", total_units);
 }
@@ -334,6 +347,147 @@ void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref
     shader->setInt("use_ibl", has_skybox);
 }
 
+void RendererSystem::Impl::setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader)
+{
+    auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
+
+    uint32_t num_lights = 0;
+    for(auto e: light_view)
+    {
+        std::stringstream light_index;
+        light_index << "[" << num_lights << "]";
+        std::string light_index_str = light_index.str();
+
+        atcg::Entity light_entity(e, scene);
+
+        auto& point_light     = light_entity.getComponent<atcg::PointLightComponent>();
+        auto& light_transform = light_entity.getComponent<atcg::TransformComponent>();
+
+        shader->setVec3("light_colors" + light_index_str, point_light.color);
+        shader->setFloat("light_intensities" + light_index_str, point_light.intensity);
+        shader->setVec3("light_positions" + light_index_str, light_transform.getPosition());
+
+        ++num_lights;
+    }
+
+    if(point_light_depth_maps)
+    {
+        uint32_t shadow_map_id = renderer->popTextureID();
+        shader->setInt("shadow_maps", shadow_map_id);
+        point_light_depth_maps->use(shadow_map_id);
+        shader->setInt("num_lights", num_lights);
+
+        used_texture_units.push_back(shadow_map_id);
+    }
+    else
+    {
+        ATCG_ASSERT(num_lights == 0, "Shadow map is not initialized but lights are present");
+    }
+}
+
+void RendererSystem::Impl::updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene,
+                                            const atcg::ref_ptr<atcg::Camera>& camera)
+{
+    float n              = 0.1f;
+    float f              = 100.0f;
+    glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, n, f);
+
+    const atcg::ref_ptr<Shader>& depth_pass_shader = shader_manager->getShader("depth_pass");
+    depth_pass_shader->setFloat("far_plane", f);
+
+    uint32_t active_fbo = atcg::Framebuffer::currentFramebuffer();
+
+    GLint old_viewport[4];
+    glGetIntegerv(GL_VIEWPORT, old_viewport);
+
+    auto light_view = scene->getAllEntitiesWith<PointLightComponent, TransformComponent>();
+
+    uint32_t num_lights = 0;
+    for(auto e: light_view)
+    {
+        ++num_lights;
+    }
+
+    if(num_lights == 0)
+    {
+        point_light_depth_maps = nullptr;
+        return;
+    }
+
+    if(!point_light_depth_maps || point_light_depth_maps->depth() != num_lights)
+    {
+        atcg::TextureSpecification spec;
+        spec.depth             = num_lights;
+        spec.width             = 1024;
+        spec.height            = 1024;
+        spec.format            = atcg::TextureFormat::DEPTH;
+        point_light_depth_maps = atcg::TextureCubeArray::create(spec);
+
+        point_light_framebuffer->attachDepth(point_light_depth_maps);
+        point_light_framebuffer->complete();
+    }
+
+    point_light_framebuffer->use();
+    renderer->setViewport(0, 0, point_light_framebuffer->width(), point_light_framebuffer->height());
+    renderer->clear();
+
+    uint32_t light_idx = 0;
+    for(auto e: light_view)
+    {
+        atcg::Entity entity(e, scene.get());
+
+        auto& point_light = entity.getComponent<PointLightComponent>();
+        auto& transform   = entity.getComponent<TransformComponent>();
+
+        if(!point_light.cast_shadow)
+        {
+            ++light_idx;
+            continue;
+        }
+
+        glm::vec3 lightPos = transform.getPosition();
+        depth_pass_shader->setVec3("lightPos", lightPos);
+        depth_pass_shader->setMat4(
+            "shadowMatrices[0]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[1]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[2]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[3]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[4]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0)));
+        depth_pass_shader->setMat4(
+            "shadowMatrices[5]",
+            projection * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0)));
+        depth_pass_shader->setInt("light_idx", light_idx);
+
+        const auto& view =
+            scene->getAllEntitiesWith<atcg::TransformComponent, atcg::GeometryComponent, atcg::MeshRenderComponent>();
+
+        // Draw scene
+        for(auto e: view)
+        {
+            atcg::Entity entity(e, scene.get());
+
+            auto& transform = entity.getComponent<atcg::TransformComponent>();
+            auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
+
+            renderer->draw(geometry.graph, camera, transform.getModel(), glm::vec3(1), depth_pass_shader);
+        }
+
+        ++light_idx;
+    }
+
+    renderer->setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
+    atcg::Framebuffer::bindByID(active_fbo);
+}
+
 void RendererSystem::Impl::freeTextureUnits()
 {
     for(uint32_t texture_id: used_texture_units)
@@ -381,6 +535,7 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("cubeMapConvolution");
     impl->shader_manager->addShaderFromName("prefilter_cubemap");
     impl->shader_manager->addShaderFromName("vrScreen");
+    impl->shader_manager->addShaderFromName("depth_pass");
 
     impl->renderer = this;
 }
@@ -843,15 +998,18 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         return;
     }
 
+    Scene* scene = entity._scene;
+
     geometry.graph->unmapAllPointers();
     if(entity.hasComponent<MeshRenderComponent>())
     {
         MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
 
-
         if(renderer.visible)
         {
             impl->setMaterial(renderer.material, renderer.shader);
+            impl->setLights(scene, renderer.shader);
+            renderer.shader->setInt("receive_shadow", (int)renderer.receive_shadow);
             renderer.shader->setInt("entityID", entity_id);
             impl->drawVAO(geometry.graph->getVerticesArray(),
                           camera,
@@ -870,6 +1028,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             impl->setMaterial(impl->standard_material, renderer.shader);
+            impl->setLights(scene, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
             impl->drawVAO(geometry.graph->getVerticesArray(),
@@ -890,6 +1049,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             impl->setMaterial(renderer.material, renderer.shader);
+            impl->setLights(scene, renderer.shader);
             renderer.shader->setInt("entityID", entity_id);
             setPointSize(renderer.point_size);
             impl->drawPointCloudSpheres(geometry.graph->getVerticesArray()->peekVertexBuffer(),
@@ -909,6 +1069,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         if(renderer.visible)
         {
             impl->setMaterial(impl->standard_material, impl->shader_manager->getShader("edge"));
+            impl->setLights(scene, impl->shader_manager->getShader("edge"));
             impl->shader_manager->getShader("edge")->setInt("entityID", entity_id);
             atcg::ref_ptr<VertexBuffer> points = geometry.graph->getVerticesBuffer();
             points->bindStorage(0);
@@ -932,6 +1093,7 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
         {
             auto& shader = impl->shader_manager->getShader("cylinder_edge");
             impl->setMaterial(renderer.material, shader);
+            impl->setLights(scene, impl->shader_manager->getShader("cylinder_edge"));
             shader->setInt("entityID", entity_id);
             shader->setFloat("edge_radius", renderer.radius);
             impl->drawGrid(geometry.graph->getVerticesBuffer(),
@@ -981,6 +1143,8 @@ void RendererSystem::draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     drawSkybox(camera);
+
+    impl->updateShadowmaps(scene, camera);
 
     const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
@@ -1037,6 +1201,27 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
                              comp.color,
                              impl->shader_manager->getShader("edge"),
                              atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+    }
+}
+
+void RendererSystem::drawLights(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
+{
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
+    const auto& view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
+    for(auto e: view)
+    {
+        Entity entity(e, scene.get());
+
+        auto& transform   = entity.getComponent<atcg::TransformComponent>();
+        auto& point_light = entity.getComponent<atcg::PointLightComponent>();
+
+        impl->drawCircle(transform.getPosition(),
+                         0.1f,
+                         1.0f,
+                         point_light.color,
+                         camera,
+                         (uint32_t)entity._entity_handle);
     }
 }
 
@@ -1104,20 +1289,31 @@ void RendererSystem::drawCircle(const glm::vec3& position,
                                 const glm::vec3& color,
                                 const atcg::ref_ptr<Camera>& camera)
 {
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    impl->drawCircle(position, radius, thickness, color, camera);
+}
 
-    impl->quad_vao->use();
-    const auto& shader = impl->shader_manager->getShader("circle");
+void RendererSystem::Impl::drawCircle(const glm::vec3& position,
+                                      const float& radius,
+                                      const float& thickness,
+                                      const glm::vec3& color,
+                                      const atcg::ref_ptr<Camera>& camera,
+                                      uint32_t entity_id)
+{
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
+    quad_vao->use();
+    const auto& shader = shader_manager->getShader("circle");
     shader->setVec3("flat_color", color);
     shader->setFloat("radius", radius);
     shader->setFloat("thickness", thickness);
     shader->setVec3("position", position);
+    shader->setInt("entityID", entity_id);
     if(camera)
     {
         shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
     }
 
-    const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
+    const atcg::ref_ptr<IndexBuffer> ibo = quad_vao->getIndexBuffer();
 
     shader->use();
     if(ibo)

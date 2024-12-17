@@ -182,6 +182,7 @@ void ComponentGUIHandler::draw_component<MeshRenderComponent>(Entity entity, Mes
     Material& material = component.material;
 
     displayMaterial("mesh", material);
+    ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component.receive_shadow);
 }
 
 template<>
@@ -274,6 +275,14 @@ void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity,
     Material& material = component.material;
 
     displayMaterial("instance", material);
+}
+
+template<>
+void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, PointLightComponent& component)
+{
+    ImGui::DragFloat("Intensity##PointLight", &component.intensity, 0.01f, 0.0f, FLT_MAX);
+    ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
+    ImGui::Checkbox("Cast Shadows##PointLight", &component.cast_shadow);
 }
 
 void ComponentGUIHandler::displayMaterial(const std::string& key, Material& material)

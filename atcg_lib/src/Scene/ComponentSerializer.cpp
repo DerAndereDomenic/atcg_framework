@@ -46,6 +46,10 @@ namespace atcg
 #define LOOKAT_KEY                 "LookAt"
 #define NEAR_KEY                   "Near"
 #define FAR_KEY                    "Far"
+#define POINT_LIGHT_KEY            "PointLight"
+#define INTENSITY_KEY              "Intensity"
+#define CAST_SHADOWS_KEY           "CastShadow"
+#define RECEIVE_SHADOWS_KEY        "ReceiveShadow"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -330,6 +334,7 @@ void ComponentSerializer::serialize_component<MeshRenderComponent>(const std::st
     j[MESH_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = component.shader->getVertexPath();
     j[MESH_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = component.shader->getFragmentPath();
     j[MESH_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
+    j[MESH_RENDERER_KEY][RECEIVE_SHADOWS_KEY]      = component.receive_shadow;
 
     serializeMaterial(j[MESH_RENDERER_KEY], entity, component.material, file_path);
 }
@@ -379,6 +384,17 @@ void ComponentSerializer::serialize_component<EdgeCylinderRenderComponent>(const
     j[EDGE_CYLINDER_RENDERER_KEY][RADIUS_KEY] = component.radius;
 
     serializeMaterial(j[EDGE_CYLINDER_RENDERER_KEY], entity, component.material, file_path);
+}
+
+template<>
+void ComponentSerializer::serialize_component<PointLightComponent>(const std::string& file_path,
+                                                                   Entity entity,
+                                                                   PointLightComponent& component,
+                                                                   nlohmann::json& j)
+{
+    j[POINT_LIGHT_KEY][INTENSITY_KEY] = component.intensity;
+    j[POINT_LIGHT_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
+    j[POINT_LIGHT_KEY][CAST_SHADOWS_KEY] = component.cast_shadow;
 }
 
 template<typename T>
@@ -567,6 +583,8 @@ void ComponentSerializer::deserialize_component<MeshRenderComponent>(const std::
         Material material        = deserialize_material(material_node);
         renderComponent.material = material;
     }
+
+    renderComponent.receive_shadow = renderer.value(RECEIVE_SHADOWS_KEY, true);
 }
 
 template<>
@@ -686,5 +704,23 @@ void ComponentSerializer::deserialize_component<EdgeCylinderRenderComponent>(con
         Material material        = deserialize_material(material_node);
         renderComponent.material = material;
     }
+}
+
+template<>
+void ComponentSerializer::deserialize_component<PointLightComponent>(const std::string& file_path,
+                                                                     Entity entity,
+                                                                     nlohmann::json& j)
+{
+    if(!j.contains(POINT_LIGHT_KEY))
+    {
+        return;
+    }
+
+    auto& point_light           = j[POINT_LIGHT_KEY];
+    auto& renderComponent       = entity.addComponent<PointLightComponent>();
+    renderComponent.intensity   = point_light.value(INTENSITY_KEY, 1.0f);
+    auto color                  = point_light.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
+    renderComponent.color       = glm::make_vec3(color.data());
+    renderComponent.cast_shadow = point_light.value(CAST_SHADOWS_KEY, true);
 }
 }    // namespace atcg

@@ -155,6 +155,7 @@ struct MeshRenderComponent : public RenderComponent
 
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     Material material;
+    bool receive_shadow = true;
 };
 
 struct PointRenderComponent : public RenderComponent
@@ -247,6 +248,21 @@ struct CustomRenderComponent : public RenderComponent
     }
 
     RenderCallbackFn callback;
+};
+
+struct PointLightComponent
+{
+    PointLightComponent(const float intensity = 1.0f, const glm::vec3& color = glm::vec3(1))
+        : intensity(intensity),
+          color(color)
+    {
+    }
+
+    float intensity  = 1.0f;
+    glm::vec3 color  = glm::vec3(1);
+    bool cast_shadow = true;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Light"; }
 };
 
 }    // namespace atcg

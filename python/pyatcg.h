@@ -144,6 +144,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_edge_renderer          = py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent");                            \
     auto m_edge_cylinder_renderer = py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent");            \
     auto m_name                   = py::class_<atcg::NameComponent>(m, "NameComponent");                                        \
+    auto m_point_light            = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                            \
     auto m_scene_hierarchy_panel =                                                                                              \
         py::class_<atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>>(m, "SceneHierarchyPanel");                             \
     auto m_hit_info         = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                 \
@@ -1088,6 +1089,11 @@ inline void defineBindings(py::module_& m)
 
     m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def_readwrite("name", &atcg::NameComponent::name);
 
+    m_point_light.def(py::init<float, glm::vec3>(), "intensity"_a, "color"_a)
+        .def_readwrite("intensity", &atcg::PointLightComponent::intensity)
+        .def_readwrite("color", &atcg::PointLightComponent::color)
+        .def_readwrite("cast_shadow", &atcg::PointLightComponent::cast_shadow);
+
     m_entity.def(py::init<>())
         .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)
         .def(py::init<>([](entt::entity e, const atcg::ref_ptr<atcg::Scene>& scene)
@@ -1171,6 +1177,17 @@ inline void defineBindings(py::module_& m)
             [](atcg::Entity& entity, atcg::EdgeCylinderRenderComponent& component)
             { return entity.replaceComponent<atcg::EdgeCylinderRenderComponent>(component); },
             "component"_a)
+        .def(
+            "addPointLightComponent",
+            [](atcg::Entity& entity, float intensity, const glm::vec3& color)
+            { return entity.addComponent<atcg::PointLightComponent>(intensity, color); },
+            "intensity"_a,
+            "color"_a)
+        .def(
+            "replacePointLightComponent",
+            [](atcg::Entity& entity, atcg::PointLightComponent& component)
+            { return entity.replaceComponent<atcg::PointLightComponent>(component); },
+            "component"_a)
         .def("addNameComponent",
              [](atcg::Entity& entity, const std::string& name)
              { return entity.addComponent<atcg::NameComponent>(name); })
@@ -1184,6 +1201,7 @@ inline void defineBindings(py::module_& m)
         .def("hasPointSphereRenderComponent", &atcg::Entity::hasComponent<atcg::PointSphereRenderComponent>)
         .def("hasEdgeRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeRenderComponent>)
         .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>)
+        .def("hasPointLightComponent", &atcg::Entity::hasComponent<atcg::PointLightComponent>)
         .def("hasNameComponent", &atcg::Entity::hasComponent<atcg::NameComponent>)
         .def("getTransformComponent", &atcg::Entity::getComponent<atcg::TransformComponent>)
         .def("getGeometryComponent", &atcg::Entity::getComponent<atcg::GeometryComponent>)
@@ -1191,6 +1209,7 @@ inline void defineBindings(py::module_& m)
         .def("getPointRenderComponent", &atcg::Entity::getComponent<atcg::PointRenderComponent>)
         .def("getPointSphereRenderComponent", &atcg::Entity::getComponent<atcg::PointSphereRenderComponent>)
         .def("getEdgeRenderComponent", &atcg::Entity::getComponent<atcg::EdgeRenderComponent>)
+        .def("getPointLightComponent", &atcg::Entity::getComponent<atcg::PointLightComponent>)
         .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
         .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>);
 
