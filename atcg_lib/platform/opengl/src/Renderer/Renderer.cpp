@@ -91,6 +91,13 @@ public:
                   const glm::mat4& model              = glm::mat4(1),
                   const glm::vec3& color              = glm::vec3(1));
 
+    void drawCircle(const glm::vec3& position,
+                    const float& radius,
+                    const float& thickness,
+                    const glm::vec3& color,
+                    const atcg::ref_ptr<Camera>& camera = {},
+                    uint32_t entity_id                  = -1);
+
     void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
     void setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader);
     void updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera);
@@ -1197,6 +1204,27 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
     }
 }
 
+void RendererSystem::drawLights(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
+{
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
+    const auto& view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
+    for(auto e: view)
+    {
+        Entity entity(e, scene.get());
+
+        auto& transform   = entity.getComponent<atcg::TransformComponent>();
+        auto& point_light = entity.getComponent<atcg::PointLightComponent>();
+
+        impl->drawCircle(transform.getPosition(),
+                         0.1f,
+                         1.0f,
+                         point_light.color,
+                         camera,
+                         (uint32_t)entity._entity_handle);
+    }
+}
+
 void RendererSystem::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
                                                  const atcg::ref_ptr<Camera>& camera,
                                                  const glm::mat4& model,
@@ -1261,20 +1289,31 @@ void RendererSystem::drawCircle(const glm::vec3& position,
                                 const glm::vec3& color,
                                 const atcg::ref_ptr<Camera>& camera)
 {
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    impl->drawCircle(position, radius, thickness, color, camera);
+}
 
-    impl->quad_vao->use();
-    const auto& shader = impl->shader_manager->getShader("circle");
+void RendererSystem::Impl::drawCircle(const glm::vec3& position,
+                                      const float& radius,
+                                      const float& thickness,
+                                      const glm::vec3& color,
+                                      const atcg::ref_ptr<Camera>& camera,
+                                      uint32_t entity_id)
+{
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
+    quad_vao->use();
+    const auto& shader = shader_manager->getShader("circle");
     shader->setVec3("flat_color", color);
     shader->setFloat("radius", radius);
     shader->setFloat("thickness", thickness);
     shader->setVec3("position", position);
+    shader->setInt("entityID", entity_id);
     if(camera)
     {
         shader->setMVP(glm::mat4(1), camera->getView(), camera->getProjection());
     }
 
-    const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
+    const atcg::ref_ptr<IndexBuffer> ibo = quad_vao->getIndexBuffer();
 
     shader->use();
     if(ibo)

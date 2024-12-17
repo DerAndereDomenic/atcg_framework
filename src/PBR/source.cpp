@@ -70,6 +70,7 @@ public:
             atcg::Renderer::draw(scene, controller->getCameraLeft());
 
             atcg::Renderer::drawCameras(scene, controller->getCameraLeft());
+            atcg::Renderer::drawLights(scene, controller->getCameraLeft());
 
             atcg::Renderer::drawCADGrid(controller->getCameraLeft());
 
@@ -85,6 +86,7 @@ public:
             atcg::Renderer::draw(scene, controller->getCameraRight());
 
             atcg::Renderer::drawCameras(scene, controller->getCameraRight());
+            atcg::Renderer::drawLights(scene, controller->getCameraRight());
 
             atcg::Renderer::drawCADGrid(controller->getCameraRight());
 
@@ -105,6 +107,7 @@ public:
             atcg::Renderer::draw(scene, camera_controller->getCamera());
 
             atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
+            atcg::Renderer::drawLights(scene, camera_controller->getCamera());
 
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
         }

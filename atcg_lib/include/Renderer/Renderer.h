@@ -248,6 +248,14 @@ public:
     void drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
 
     /**
+     * @brief Draw light sources
+     *
+     * @param scene The scene
+     * @param camera The camera
+     */
+    void drawLights(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
+
+    /**
      * @brief Draw Circle
      *
      * @param position The position
@@ -699,6 +707,17 @@ ATCG_INLINE void drawSkybox(const atcg::ref_ptr<Camera>& camera)
 ATCG_INLINE void drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->drawCameras(scene, camera);
+}
+
+/**
+ * @brief Draw light sources
+ *
+ * @param scene The scene
+ * @param camera The camera
+ */
+ATCG_INLINE void drawLights(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawLights(scene, camera);
 }
 
 /**
