@@ -187,3 +187,157 @@ TEST(SceneTest, findEntitiesByComponent)
 
     EXPECT_EQ(num_entities, 10);
 }
+
+TEST(SceneTest, removeEntityByID)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity = scene->createEntity("Entity");
+    auto& id    = entity.getComponent<atcg::IDComponent>();
+
+    scene->removeEntity(id.ID);
+
+    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_name = scene->getEntitiesByName("Entity");
+
+    EXPECT_EQ(search_entity_id, false);
+    EXPECT_EQ(search_entity_name.size(), 0);
+}
+
+TEST(SceneTest, removeEntityByEntity)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity = scene->createEntity("Entity");
+    auto& id    = entity.getComponent<atcg::IDComponent>();
+
+    scene->removeEntity(entity);
+
+    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_name = scene->getEntitiesByName("Entity");
+
+    EXPECT_EQ(search_entity_id, false);
+    EXPECT_EQ(search_entity_name.size(), 0);
+}
+
+TEST(SceneTest, removeEntityByIDMulti)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    for(int i = 0; i < 10; ++i)
+    {
+        auto entity = scene->createEntity("Entity");
+        entity.addComponent<atcg::TransformComponent>();
+    }
+
+    auto entity = scene->createEntity("Entity");
+    auto& id    = entity.getComponent<atcg::IDComponent>();
+
+    scene->removeEntity(id.ID);
+
+    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_name = scene->getEntitiesByName("Entity");
+
+    EXPECT_EQ(search_entity_id, false);
+    EXPECT_EQ(search_entity_name.size(), 10);
+}
+
+TEST(SceneTest, removeEntityByEntityMulti)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    for(int i = 0; i < 10; ++i)
+    {
+        auto entity = scene->createEntity("Entity");
+        entity.addComponent<atcg::TransformComponent>();
+    }
+
+    auto entity = scene->createEntity("Entity");
+    auto& id    = entity.getComponent<atcg::IDComponent>();
+
+    scene->removeEntity(entity);
+
+    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_name = scene->getEntitiesByName("Entity");
+
+    EXPECT_EQ(search_entity_id, false);
+    EXPECT_EQ(search_entity_name.size(), 10);
+}
+
+TEST(SceneTest, removeEntityByIDMultiOtherNames)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    for(int i = 0; i < 10; ++i)
+    {
+        auto entity = scene->createEntity("Entity keep");
+        entity.addComponent<atcg::TransformComponent>();
+    }
+
+    for(int i = 0; i < 10; ++i)
+    {
+        auto entity = scene->createEntity("Entity");
+        entity.addComponent<atcg::TransformComponent>();
+    }
+
+    auto entity = scene->createEntity("Entity");
+    auto& id    = entity.getComponent<atcg::IDComponent>();
+
+    scene->removeEntity(id.ID);
+
+    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_name = scene->getEntitiesByName("Entity");
+
+    EXPECT_EQ(search_entity_id, false);
+    EXPECT_EQ(search_entity_name.size(), 10);
+
+    auto keep_entites = scene->getEntitiesByName("Entity keep");
+    EXPECT_EQ(keep_entites.size(), 10);
+}
+
+TEST(SceneTest, removeEntityByEntityMultiOtherNames)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    for(int i = 0; i < 10; ++i)
+    {
+        auto entity = scene->createEntity("Entity keep");
+        entity.addComponent<atcg::TransformComponent>();
+    }
+
+    for(int i = 0; i < 10; ++i)
+    {
+        auto entity = scene->createEntity("Entity");
+        entity.addComponent<atcg::TransformComponent>();
+    }
+
+    auto entity = scene->createEntity("Entity");
+    auto& id    = entity.getComponent<atcg::IDComponent>();
+
+    scene->removeEntity(entity);
+
+    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_name = scene->getEntitiesByName("Entity");
+
+    EXPECT_EQ(search_entity_id, false);
+    EXPECT_EQ(search_entity_name.size(), 10);
+
+    auto keep_entites = scene->getEntitiesByName("Entity keep");
+    EXPECT_EQ(keep_entites.size(), 10);
+}
+
+TEST(SceneTest, removeNonExistentEntity)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity = scene->createEntity("Entity");
+    auto& id    = entity.getComponent<atcg::IDComponent>();
+
+    scene->removeEntity(0);
+
+    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_name = scene->getEntitiesByName("Entity");
+
+    EXPECT_EQ(search_entity_id, true);
+    EXPECT_EQ(search_entity_name.size(), 1);
+}

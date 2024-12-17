@@ -66,6 +66,20 @@ public:
     }
 
     /**
+     * @brief Removes an entity from the scene
+     *
+     * @param id The id of the entity
+     */
+    void removeEntity(UUID id);
+
+    /**
+     * @brief Removes an entity from the scene
+     *
+     * @param entity The entity to remove
+     */
+    void removeEntity(Entity entity);
+
+    /**
      * @brief Remove all entities
      */
     void removeAllEntites();

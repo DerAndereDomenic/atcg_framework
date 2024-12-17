@@ -1207,7 +1207,28 @@ inline void defineBindings(py::module_& m)
                      entities.push_back(atcg::Entity(e, scene.get()));
                  }
                  return entities;
-             });
+             })
+        .def(
+            "getEntityByID",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, uint64_t id)
+            {
+                atcg::UUID uuid(id);
+                return scene->getEntityByID(uuid);
+            },
+            "uuid"_a)
+        .def(
+            "removeEntity",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, uint64_t id)
+            {
+                atcg::UUID uuid(id);
+                scene->removeEntity(uuid);
+            },
+            "uuid"_a)
+        .def(
+            "removeEntity",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) { scene->removeEntity(entity); },
+            "entity"_a)
+        .def("removeAllEntities", &atcg::Scene::removeAllEntites);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)

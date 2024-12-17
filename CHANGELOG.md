@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added Cubemap Array textures
 - Possibility to create textures from device tensors
+- Added function to remove entities from a scene
+- Added possibility to remove entities via the scene hierarchy panel
+- Added Python bindings for Entity Management in the scene class
 
 ### Changed
 
