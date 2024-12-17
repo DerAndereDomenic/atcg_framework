@@ -103,24 +103,24 @@ void SceneHierarchyPanel<GUIHandler>::drawEntityNode(Entity entity)
         selectEntity(entity);
     }
 
-    // bool entityDeleted = false;
-    // if(ImGui::BeginPopupContextItem())
-    // {
-    //     if(ImGui::MenuItem("Delete Entity")) entityDeleted = true;
+    bool entityDeleted = false;
+    if(ImGui::BeginPopupContextItem())
+    {
+        if(ImGui::MenuItem("Delete Entity")) entityDeleted = true;
 
-    //     ImGui::EndPopup();
-    // }
+        ImGui::EndPopup();
+    }
 
     if(opened)
     {
         ImGui::TreePop();
     }
 
-    // if(entityDeleted)
-    // {
-    //     m_Context->DestroyEntity(entity);
-    //     if(m_SelectionContext == entity) m_SelectionContext = {};
-    // }
+    if(entityDeleted)
+    {
+        if(_selected_entity == entity) selectEntity({});
+        _scene->removeEntity(entity);
+    }
 }
 
 template<typename GUIHandler>
@@ -250,7 +250,7 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
     }
 
 
-    if(ImGui::BeginPopupContextWindow(0, 1))
+    if(ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverExistingPopup))
     {
         if(ImGui::MenuItem("Create Empty Entity"))
         {

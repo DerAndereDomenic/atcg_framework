@@ -11,15 +11,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added Cubemap Array textures
 - Possibility to create textures from device tensors
+- Added function to remove entities from a scene
+- Added possibility to remove entities via the scene hierarchy panel
+- Added Python bindings for Entity Management in the scene class
 
 ### Changed
 
 - The Renderer now internally also uses the Texture ID push system
 - Cube maps are no longer interpreted as depth 6 textures
+- Entity lookup in a scene by name is now approximately O(1) via hashing
+- If an Entity can't be found by ID, an invalid entity is returned
 
 ### Fixed
 
 - Screenshot functionality of Renderer uses correct member method and not global renderer instance.
+- scene->removeAllEntities now clear internal buffers
+- Fixed Texture tests on CPU backend
 
 ## [0.1.1-beta]
 

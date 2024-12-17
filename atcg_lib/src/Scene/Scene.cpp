@@ -13,6 +13,7 @@ public:
     ~Impl() = default;
 
     std::unordered_map<UUID, Entity> _entities;
+    std::unordered_map<std::string, std::vector<Entity>> _entites_by_name;
 };
 
 Scene::Scene()
@@ -29,28 +30,59 @@ Entity Scene::createEntity(const std::string& name)
     entity.addComponent<NameComponent>(name);
 
     impl->_entities.insert(std::make_pair(id.ID, entity));
+
+    auto& entities = impl->_entites_by_name[name];
+    entities.push_back(entity);
+
     return entity;
 }
 
 Entity Scene::getEntityByID(UUID id) const
 {
+    if(impl->_entities.find(id) == impl->_entities.end()) return Entity();
     return impl->_entities.find(id)->second;
 }
 
 std::vector<Entity> Scene::getEntitiesByName(const std::string& name)
 {
-    std::vector<Entity> entities;
-    auto view = _registry.view<NameComponent>();
-    for(auto e: view)
+    return impl->_entites_by_name[name];
+}
+
+void Scene::removeEntity(UUID id)
+{
+    auto it_entity = impl->_entities.find(id);
+    if(it_entity == impl->_entities.end()) return;
+
+    auto entity = it_entity->second;
+    auto& name  = entity.getComponent<atcg::NameComponent>();
+
+    impl->_entities.erase(id);
+    auto& entities_with_name = impl->_entites_by_name[name.name];
+
+    for(auto it = entities_with_name.begin(); it != entities_with_name.end(); ++it)
     {
-        Entity entity(e, this);
-        if(name == entity.getComponent<NameComponent>().name)
+        auto& other_id = it->getComponent<atcg::IDComponent>();
+        if(other_id.ID == id)
         {
-            entities.push_back(entity);
+            entities_with_name.erase(it);
+            break;
         }
     }
 
-    return entities;
+    _registry.destroy(entity._entity_handle);
+}
+
+void Scene::removeEntity(Entity entity)
+{
+    auto& id = entity.getComponent<atcg::IDComponent>();
+    removeEntity(id.ID);
+}
+
+void Scene::removeAllEntites()
+{
+    _registry.clear();
+    impl->_entites_by_name.clear();
+    impl->_entities.clear();
 }
 
 }    // namespace atcg

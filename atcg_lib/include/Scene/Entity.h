@@ -134,6 +134,7 @@ public:
 
 private:
     friend class RendererSystem;
+    friend class Scene;
     Scene* _scene               = nullptr;
     entt::entity _entity_handle = entt::null;
 };
