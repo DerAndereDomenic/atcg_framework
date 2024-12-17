@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Screenshot functionality of Renderer uses correct member method and not global renderer instance.
 - scene->removeAllEntities now clear internal buffers
 - Fixed Texture tests on CPU backend
+- Fix normals of cylinder in test scene
 
 ## [0.1.1-beta]
 
