@@ -448,7 +448,7 @@ TEST(TextureTest, Texture2DcreateTensorRINT8getGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT8);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture2DcreateTensorRGgetGPU)
@@ -463,7 +463,7 @@ TEST(TextureTest, Texture2DcreateTensorRGgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RG);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture2DcreateTensorRGBgetGPU)
@@ -478,7 +478,7 @@ TEST(TextureTest, Texture2DcreateTensorRGBgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGB);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture2DcreateTensorRGBAgetGPU)
@@ -493,7 +493,7 @@ TEST(TextureTest, Texture2DcreateTensorRGBAgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBA);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture2DcreateTensorRFLOATgetGPU)
@@ -508,7 +508,7 @@ TEST(TextureTest, Texture2DcreateTensorRFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture2DcreateTensorRGFLOATgetGPU)
@@ -523,7 +523,7 @@ TEST(TextureTest, Texture2DcreateTensorRGFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture2DcreateTensorRGBFLOATgetGPU)
@@ -538,7 +538,7 @@ TEST(TextureTest, Texture2DcreateTensorRGBFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture2DcreateTensorRGBAFLOATgetGPU)
@@ -553,7 +553,7 @@ TEST(TextureTest, Texture2DcreateTensorRGBAFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBAFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture2DcreateTensorRINTgetGPU)
@@ -568,7 +568,7 @@ TEST(TextureTest, Texture2DcreateTensorRINTgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kInt32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture2DcreateEmptyRINT8setDataHost)
@@ -1359,7 +1359,7 @@ TEST(TextureTest, Texture3DcreateTensorRINT8getGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT8);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture3DcreateTensorRGgetGPU)
@@ -1374,7 +1374,7 @@ TEST(TextureTest, Texture3DcreateTensorRGgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RG);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture3DcreateTensorRGBgetGPU)
@@ -1389,7 +1389,7 @@ TEST(TextureTest, Texture3DcreateTensorRGBgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGB);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture3DcreateTensorRGBAgetGPU)
@@ -1404,7 +1404,7 @@ TEST(TextureTest, Texture3DcreateTensorRGBAgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBA);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture3DcreateTensorRFLOATgetGPU)
@@ -1419,7 +1419,7 @@ TEST(TextureTest, Texture3DcreateTensorRFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture3DcreateTensorRGFLOATgetGPU)
@@ -1434,7 +1434,7 @@ TEST(TextureTest, Texture3DcreateTensorRGFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture3DcreateTensorRGBFLOATgetGPU)
@@ -1449,7 +1449,7 @@ TEST(TextureTest, Texture3DcreateTensorRGBFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture3DcreateTensorRGBAFLOATgetGPU)
@@ -1464,7 +1464,7 @@ TEST(TextureTest, Texture3DcreateTensorRGBAFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBAFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture3DcreateTensorRINTgetGPU)
@@ -1479,7 +1479,7 @@ TEST(TextureTest, Texture3DcreateTensorRINTgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kInt32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, Texture3DcreateEmptyRINT8setDataHost)
@@ -2278,7 +2278,7 @@ TEST(TextureTest, TextureCubecreateTensorRINT8getGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT8);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubecreateTensorRGgetGPU)
@@ -2293,7 +2293,7 @@ TEST(TextureTest, TextureCubecreateTensorRGgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RG);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubecreateTensorRGBgetGPU)
@@ -2308,7 +2308,7 @@ TEST(TextureTest, TextureCubecreateTensorRGBgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGB);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubecreateTensorRGBAgetGPU)
@@ -2323,7 +2323,7 @@ TEST(TextureTest, TextureCubecreateTensorRGBAgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBA);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubecreateTensorRFLOATgetGPU)
@@ -2338,7 +2338,7 @@ TEST(TextureTest, TextureCubecreateTensorRFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubecreateTensorRGFLOATgetGPU)
@@ -2353,7 +2353,7 @@ TEST(TextureTest, TextureCubecreateTensorRGFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubecreateTensorRGBFLOATgetGPU)
@@ -2368,7 +2368,7 @@ TEST(TextureTest, TextureCubecreateTensorRGBFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubecreateTensorRGBAFLOATgetGPU)
@@ -2383,7 +2383,7 @@ TEST(TextureTest, TextureCubecreateTensorRGBAFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBAFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubecreateTensorRINTgetGPU)
@@ -2398,7 +2398,7 @@ TEST(TextureTest, TextureCubecreateTensorRINTgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kInt32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubecreateEmptyRINT8setDataHost)
@@ -3189,7 +3189,7 @@ TEST(TextureTest, TextureArraycreateTensorRINT8getGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT8);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureArraycreateTensorRGgetGPU)
@@ -3204,7 +3204,7 @@ TEST(TextureTest, TextureArraycreateTensorRGgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RG);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureArraycreateTensorRGBgetGPU)
@@ -3219,7 +3219,7 @@ TEST(TextureTest, TextureArraycreateTensorRGBgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGB);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureArraycreateTensorRGBAgetGPU)
@@ -3234,7 +3234,7 @@ TEST(TextureTest, TextureArraycreateTensorRGBAgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBA);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureArraycreateTensorRFLOATgetGPU)
@@ -3249,7 +3249,7 @@ TEST(TextureTest, TextureArraycreateTensorRFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureArraycreateTensorRGFLOATgetGPU)
@@ -3264,7 +3264,7 @@ TEST(TextureTest, TextureArraycreateTensorRGFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureArraycreateTensorRGBFLOATgetGPU)
@@ -3279,7 +3279,7 @@ TEST(TextureTest, TextureArraycreateTensorRGBFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureArraycreateTensorRGBAFLOATgetGPU)
@@ -3294,7 +3294,7 @@ TEST(TextureTest, TextureArraycreateTensorRGBAFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBAFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureArraycreateTensorRINTgetGPU)
@@ -3309,7 +3309,7 @@ TEST(TextureTest, TextureArraycreateTensorRINTgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kInt32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureArraycreateEmptyRINT8setDataHost)
@@ -4118,7 +4118,7 @@ TEST(TextureTest, TextureCubeArraycreateTensorRINT8getGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT8);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubeArraycreateTensorRGgetGPU)
@@ -4133,7 +4133,7 @@ TEST(TextureTest, TextureCubeArraycreateTensorRGgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RG);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubeArraycreateTensorRGBgetGPU)
@@ -4148,7 +4148,7 @@ TEST(TextureTest, TextureCubeArraycreateTensorRGBgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGB);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubeArraycreateTensorRGBAgetGPU)
@@ -4163,7 +4163,7 @@ TEST(TextureTest, TextureCubeArraycreateTensorRGBAgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBA);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kUInt8);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubeArraycreateTensorRFLOATgetGPU)
@@ -4178,7 +4178,7 @@ TEST(TextureTest, TextureCubeArraycreateTensorRFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubeArraycreateTensorRGFLOATgetGPU)
@@ -4193,7 +4193,7 @@ TEST(TextureTest, TextureCubeArraycreateTensorRGFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubeArraycreateTensorRGBFLOATgetGPU)
@@ -4208,7 +4208,7 @@ TEST(TextureTest, TextureCubeArraycreateTensorRGBFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubeArraycreateTensorRGBAFLOATgetGPU)
@@ -4223,7 +4223,7 @@ TEST(TextureTest, TextureCubeArraycreateTensorRGBAFLOATgetGPU)
     EXPECT_EQ(texture->isHDR(), true);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RGBAFLOAT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kFloat32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubeArraycreateTensorRINTgetGPU)
@@ -4238,7 +4238,7 @@ TEST(TextureTest, TextureCubeArraycreateTensorRINTgetGPU)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_EQ(texture->getSpecification().format, atcg::TextureFormat::RINT);
     EXPECT_EQ(texture->getData(atcg::CPU).scalar_type(), torch::kInt32);
-    EXPECT_TRUE(torch::allclose(data.cuda(), texture->getData(atcg::GPU)));
+    EXPECT_TRUE(torch::allclose(data.to(atcg::GPU), texture->getData(atcg::GPU)));
 }
 
 TEST(TextureTest, TextureCubeArraycreateEmptyRINT8setDataHost)
