@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added function to remove entities from a scene
 - Added possibility to remove entities via the scene hierarchy panel
 - Added Python bindings for Entity Management in the scene class
+- Added Point lights
+- Added Shadow mapping for point light on and from meshes (other draw types currently not supported)
 
 ### Changed
 
@@ -21,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Cube maps are no longer interpreted as depth 6 textures
 - Entity lookup in a scene by name is now approximately O(1) via hashing
 - If an Entity can't be found by ID, an invalid entity is returned
+- Circle shader now also writes out entity IDs
 
 ### Fixed
 
@@ -28,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - scene->removeAllEntities now clear internal buffers
 - Fixed Texture tests on CPU backend
 - Fix normals of cylinder in test scene
+- Normals of cylinder in test scene
 
 ## [0.1.1-beta]
 
