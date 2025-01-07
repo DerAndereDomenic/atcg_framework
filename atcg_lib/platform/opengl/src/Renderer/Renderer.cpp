@@ -951,6 +951,20 @@ void RendererSystem::finishFrame()
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
 #endif
     ++impl->frame_counter;
+
+    GLint maxTextureUnits;
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+
+    for(int i = 0; i < maxTextureUnits; ++i)
+    {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_3D, 0);
+        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
+    }
+    glActiveTexture(GL_TEXTURE0);
 }
 
 void RendererSystem::setClearColor(const glm::vec4& color)
