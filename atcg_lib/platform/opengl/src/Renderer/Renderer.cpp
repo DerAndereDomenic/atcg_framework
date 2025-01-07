@@ -105,6 +105,15 @@ public:
                        const TransformComponent& transform,
                        const uint32_t entity_id);
 
+    void draw(const atcg::ref_ptr<Graph>& mesh,
+              const Material& material,
+              uint32_t entity_id,
+              const atcg::ref_ptr<Camera>& camera,
+              const glm::mat4& model,
+              const glm::vec3& color,
+              const atcg::ref_ptr<Shader>& shader,
+              DrawMode draw_mode);
+
     void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
     void setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader);
     void updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera);
@@ -763,6 +772,85 @@ void RendererSystem::Impl::drawComponent<InstanceRenderComponent>(Entity entity,
     }
 }
 
+void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
+                                const Material& material,
+                                uint32_t entity_id,
+                                const atcg::ref_ptr<Camera>& camera,
+                                const glm::mat4& model,
+                                const glm::vec3& color,
+                                const atcg::ref_ptr<Shader>& shader,
+                                DrawMode draw_mode)
+{
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
+    mesh->unmapAllPointers();
+    switch(draw_mode)
+    {
+        case ATCG_DRAW_MODE_TRIANGLE:
+        {
+            shader->setInt("entityID", entity_id);
+            setMaterial(material, shader);
+            drawVAO(mesh->getVerticesArray(),
+                    camera,
+                    color,
+                    shader,
+                    model,
+                    GL_TRIANGLES,
+                    mesh->n_vertices());    // TODO
+        }
+        break;
+        case ATCG_DRAW_MODE_POINTS:
+        {
+            shader->setInt("entityID", entity_id);
+            setMaterial(material, shader);
+            drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
+        }
+        break;
+        case ATCG_DRAW_MODE_POINTS_SPHERE:
+        {
+            shader->setInt("entityID", entity_id);
+            setMaterial(material, shader);
+            drawPointCloudSpheres(mesh->getVerticesArray()->peekVertexBuffer(),
+                                  camera,
+                                  model,
+                                  color,
+                                  shader,
+                                  mesh->n_vertices());
+        }
+        break;
+        case ATCG_DRAW_MODE_EDGES:
+        {
+            auto edge_shader = shader_manager->getShader("edge");
+            edge_shader->setInt("entityID", entity_id);
+            setMaterial(material, edge_shader);
+            atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
+            points->bindStorage(0);
+            drawVAO(mesh->getEdgesArray(), camera, color, edge_shader, model, GL_POINTS, mesh->n_edges(), 1);
+        }
+        break;
+        case ATCG_DRAW_MODE_EDGES_CYLINDER:
+        {
+            auto edge_shader = shader_manager->getShader("cylinder_edge");
+            edge_shader->setInt("entityID", entity_id);
+            setMaterial(material, edge_shader);
+            drawGrid(mesh->getVerticesBuffer(), mesh->getEdgesBuffer(), edge_shader, camera, model, color);
+        }
+        break;
+        case ATCG_DRAW_MODE_INSTANCED:
+        {
+            shader->setInt("entityID", entity_id);
+            setMaterial(material, shader);
+            atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
+            atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
+            uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
+            drawVAO(vao_mesh, camera, color, shader, model, GL_TRIANGLES, mesh->n_vertices(), n_instances);
+        }
+        break;
+    }
+
+    freeTextureUnits();
+}
+
 void RendererSystem::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
                                     const atcg::ref_ptr<VertexBuffer>& indices,
                                     const atcg::ref_ptr<Shader>& shader,
@@ -1188,72 +1276,7 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    mesh->unmapAllPointers();
-    switch(draw_mode)
-    {
-        case ATCG_DRAW_MODE_TRIANGLE:
-        {
-            shader->setInt("entityID", -1);
-            impl->setMaterial(material, shader);
-            impl->drawVAO(mesh->getVerticesArray(),
-                          camera,
-                          color,
-                          shader,
-                          model,
-                          GL_TRIANGLES,
-                          mesh->n_vertices());    // TODO
-        }
-        break;
-        case ATCG_DRAW_MODE_POINTS:
-        {
-            shader->setInt("entityID", -1);
-            impl->setMaterial(material, shader);
-            impl->drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
-        }
-        break;
-        case ATCG_DRAW_MODE_POINTS_SPHERE:
-        {
-            shader->setInt("entityID", -1);
-            impl->setMaterial(material, shader);
-            impl->drawPointCloudSpheres(mesh->getVerticesArray()->peekVertexBuffer(),
-                                        camera,
-                                        model,
-                                        color,
-                                        shader,
-                                        mesh->n_vertices());
-        }
-        break;
-        case ATCG_DRAW_MODE_EDGES:
-        {
-            auto edge_shader = impl->shader_manager->getShader("edge");
-            edge_shader->setInt("entityID", -1);
-            impl->setMaterial(material, edge_shader);
-            atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
-            points->bindStorage(0);
-            impl->drawVAO(mesh->getEdgesArray(), camera, color, edge_shader, model, GL_POINTS, mesh->n_edges(), 1);
-        }
-        break;
-        case ATCG_DRAW_MODE_EDGES_CYLINDER:
-        {
-            auto edge_shader = impl->shader_manager->getShader("cylinder_edge");
-            edge_shader->setInt("entityID", -1);
-            impl->setMaterial(material, edge_shader);
-            impl->drawGrid(mesh->getVerticesBuffer(), mesh->getEdgesBuffer(), edge_shader, camera, model, color);
-        }
-        break;
-        case ATCG_DRAW_MODE_INSTANCED:
-        {
-            shader->setInt("entityID", -1);
-            impl->setMaterial(material, shader);
-            atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
-            atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
-            uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
-            impl->drawVAO(vao_mesh, camera, color, shader, model, GL_TRIANGLES, mesh->n_vertices(), n_instances);
-        }
-        break;
-    }
-
-    impl->freeTextureUnits();
+    impl->draw(mesh, material, -1, camera, model, color, shader, draw_mode);
 }
 
 template<typename T>
