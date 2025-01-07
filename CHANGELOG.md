@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Python bindings for Entity Management in the scene class
 - Added Point lights
 - Added Shadow mapping for point light on and from meshes (other draw types currently not supported)
+- Added function to draw singular components of an entity
+- Added possibility to override the shaders used by an entitie's component
+- Added possibility to override the shaders of RendererSystem::draw on meshes
+- Added entity.entity_handle() method
 
 ### Changed
 
@@ -24,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Entity lookup in a scene by name is now approximately O(1) via hashing
 - If an Entity can't be found by ID, an invalid entity is returned
 - Circle shader now also writes out entity IDs
+- Removed RendererSystem::draw function that takes in a material struct
 
 ### Fixed
 
@@ -32,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed Texture tests on CPU backend
 - Fix normals of cylinder in test scene
 - Normals of cylinder in test scene
+- Improved code of the Renderer and reduced code duplication
 
 ## [0.1.1-beta]
 
