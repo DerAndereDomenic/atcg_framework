@@ -269,6 +269,16 @@ public:
               DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
 
     /**
+     * @brief Draw a specific component of an entity
+     *
+     * @tparam Component The component to draw. Must be ones of the RenderComponents in Components.h
+     * @param entity The entity to draw
+     * @param camera The camera
+     */
+    template<typename Component>
+    void drawComponent(Entity entity, const atcg::ref_ptr<Camera>& camera = {});
+
+    /**
      * @brief Render an entity
      *
      * @param entity The entity to render
@@ -665,6 +675,18 @@ ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
         ->draw(mesh, material, camera, model, color, shader, draw_mode);
 }
 
+/**
+ * @brief Draw a specific component of an entity
+ *
+ * @tparam Component The component to draw. Must be ones of the RenderComponents in Components.h
+ * @param entity The entity to draw
+ * @param camera The camera
+ */
+template<typename Component>
+ATCG_INLINE void drawComponent(Entity entity, const atcg::ref_ptr<Camera>& camera = {})
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawComponent<Component>(entity, camera);
+}
 
 /**
  * @brief Render an entity

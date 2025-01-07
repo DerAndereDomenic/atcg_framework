@@ -97,6 +97,14 @@ public:
                     const atcg::ref_ptr<Camera>& camera = {},
                     uint32_t entity_id                  = -1);
 
+    template<typename T>
+    void drawComponent(Entity entity,
+                       const atcg::ref_ptr<Camera>& camera,
+                       Scene* scene,
+                       const GeometryComponent& geometry,
+                       const TransformComponent& transform,
+                       const uint32_t entity_id);
+
     void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
     void setLights(Scene* scene, const atcg::ref_ptr<Shader>& shader);
     void updateShadowmaps(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera);
@@ -582,6 +590,177 @@ void RendererSystem::Impl::drawCircle(const glm::vec3& position,
         glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
     else
         ATCG_ERROR("Missing IndexBuffer!");
+}
+
+template<>
+void RendererSystem::Impl::drawComponent<MeshRenderComponent>(Entity entity,
+                                                              const atcg::ref_ptr<Camera>& camera,
+                                                              Scene* scene,
+                                                              const GeometryComponent& geometry,
+                                                              const TransformComponent& transform,
+                                                              const uint32_t entity_id)
+{
+    MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
+
+    if(renderer.visible)
+    {
+        setMaterial(renderer.material, renderer.shader);
+        setLights(scene, renderer.shader);
+        renderer.shader->setInt("receive_shadow", (int)renderer.receive_shadow);
+        renderer.shader->setInt("entityID", entity_id);
+        drawVAO(geometry.graph->getVerticesArray(),
+                camera,
+                glm::vec3(1),
+                renderer.shader,
+                transform.getModel(),
+                GL_TRIANGLES,
+                geometry.graph->n_vertices());
+        freeTextureUnits();
+    }
+}
+
+template<>
+void RendererSystem::Impl::drawComponent<PointRenderComponent>(Entity entity,
+                                                               const atcg::ref_ptr<Camera>& camera,
+                                                               Scene* scene,
+                                                               const GeometryComponent& geometry,
+                                                               const TransformComponent& transform,
+                                                               const uint32_t entity_id)
+{
+    PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
+    if(renderer.visible)
+    {
+        setMaterial(standard_material, renderer.shader);
+        setLights(scene, renderer.shader);
+        renderer.shader->setInt("entityID", entity_id);
+        this->renderer->setPointSize(renderer.point_size);
+        drawVAO(geometry.graph->getVerticesArray(),
+                camera,
+                renderer.color,
+                renderer.shader,
+                transform.getModel(),
+                GL_POINTS,
+                geometry.graph->n_vertices());
+        freeTextureUnits();
+    }
+}
+
+template<>
+void RendererSystem::Impl::drawComponent<PointSphereRenderComponent>(Entity entity,
+                                                                     const atcg::ref_ptr<Camera>& camera,
+                                                                     Scene* scene,
+                                                                     const GeometryComponent& geometry,
+                                                                     const TransformComponent& transform,
+                                                                     const uint32_t entity_id)
+{
+    PointSphereRenderComponent renderer = entity.getComponent<PointSphereRenderComponent>();
+
+    if(renderer.visible)
+    {
+        setMaterial(renderer.material, renderer.shader);
+        setLights(scene, renderer.shader);
+        renderer.shader->setInt("entityID", entity_id);
+        this->renderer->setPointSize(renderer.point_size);
+        drawPointCloudSpheres(geometry.graph->getVerticesArray()->peekVertexBuffer(),
+                              camera,
+                              transform.getModel(),
+                              glm::vec3(1),
+                              renderer.shader,
+                              geometry.graph->n_vertices());
+        freeTextureUnits();
+    }
+}
+
+template<>
+void RendererSystem::Impl::drawComponent<EdgeRenderComponent>(Entity entity,
+                                                              const atcg::ref_ptr<Camera>& camera,
+                                                              Scene* scene,
+                                                              const GeometryComponent& geometry,
+                                                              const TransformComponent& transform,
+                                                              const uint32_t entity_id)
+{
+    EdgeRenderComponent renderer = entity.getComponent<EdgeRenderComponent>();
+
+    if(renderer.visible)
+    {
+        setMaterial(standard_material, shader_manager->getShader("edge"));
+        setLights(scene, shader_manager->getShader("edge"));
+        shader_manager->getShader("edge")->setInt("entityID", entity_id);
+        atcg::ref_ptr<VertexBuffer> points = geometry.graph->getVerticesBuffer();
+        points->bindStorage(0);
+        drawVAO(geometry.graph->getEdgesArray(),
+                camera,
+                renderer.color,
+                shader_manager->getShader("edge"),
+                transform.getModel(),
+                GL_POINTS,
+                geometry.graph->n_edges(),
+                1);
+        freeTextureUnits();
+    }
+}
+
+template<>
+void RendererSystem::Impl::drawComponent<EdgeCylinderRenderComponent>(Entity entity,
+                                                                      const atcg::ref_ptr<Camera>& camera,
+                                                                      Scene* scene,
+                                                                      const GeometryComponent& geometry,
+                                                                      const TransformComponent& transform,
+                                                                      const uint32_t entity_id)
+{
+    EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
+
+    if(renderer.visible)
+    {
+        auto& shader = shader_manager->getShader("cylinder_edge");
+        setMaterial(renderer.material, shader);
+        setLights(scene, shader_manager->getShader("cylinder_edge"));
+        shader->setInt("entityID", entity_id);
+        shader->setFloat("edge_radius", renderer.radius);
+        drawGrid(geometry.graph->getVerticesBuffer(),
+                 geometry.graph->getEdgesBuffer(),
+                 shader_manager->getShader("cylinder_"
+                                           "edge"),
+                 camera,
+                 transform.getModel(),
+                 glm::vec3(1));
+        freeTextureUnits();
+    }
+}
+
+template<>
+void RendererSystem::Impl::drawComponent<InstanceRenderComponent>(Entity entity,
+                                                                  const atcg::ref_ptr<Camera>& camera,
+                                                                  Scene* scene,
+                                                                  const GeometryComponent& geometry,
+                                                                  const TransformComponent& transform,
+                                                                  const uint32_t entity_id)
+{
+    InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
+
+    if(renderer.visible)
+    {
+        if(geometry.graph->getVerticesArray()->peekVertexBuffer() != renderer.instance_vbo)
+        {
+            geometry.graph->getVerticesArray()->pushInstanceBuffer(renderer.instance_vbo);
+        }
+
+        auto instance_shader = shader_manager->getShader("instanced");
+        instance_shader->setInt("entityID", entity_id);
+        setMaterial(renderer.material, instance_shader);
+        atcg::ref_ptr<VertexArray> vao_mesh      = geometry.graph->getVerticesArray();
+        atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
+        uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
+        drawVAO(vao_mesh,
+                camera,
+                glm::vec3(1),
+                instance_shader,
+                transform.getModel(),
+                GL_TRIANGLES,
+                geometry.graph->n_vertices(),
+                n_instances);
+        freeTextureUnits();
+    }
 }
 
 void RendererSystem::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
@@ -1077,38 +1256,20 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
     impl->freeTextureUnits();
 }
 
-// drawEntity
-void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
+template<typename T>
+void RendererSystem::drawComponent(Entity entity, const atcg::ref_ptr<atcg::Camera>& camera)
 {
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    if(!entity.hasComponent<T>()) return;
 
-    if(entity.hasComponent<CustomRenderComponent>())
+    if(!entity.hasComponent<TransformComponent>())
     {
-        CustomRenderComponent renderer = entity.getComponent<CustomRenderComponent>();
-        renderer.callback(entity, camera);
+        ATCG_WARN("Entity does not have transform component!");
+        return;
     }
 
-    if(entity.hasAnyComponent<MeshRenderComponent,
-                              PointRenderComponent,
-                              PointSphereRenderComponent,
-                              EdgeRenderComponent,
-                              EdgeCylinderRenderComponent,
-                              InstanceRenderComponent>())
+    if(!entity.hasComponent<GeometryComponent>())
     {
-        if(!entity.hasComponent<TransformComponent>())
-        {
-            ATCG_WARN("Entity does not have transform component!");
-            return;
-        }
-
-        if(!entity.hasComponent<GeometryComponent>())
-        {
-            ATCG_WARN("Entity does not have geometry component!");
-            return;
-        }
-    }
-    else
-    {
+        ATCG_WARN("Entity does not have geometry component!");
         return;
     }
 
@@ -1125,140 +1286,27 @@ void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
     Scene* scene = entity._scene;
 
     geometry.graph->unmapAllPointers();
-    if(entity.hasComponent<MeshRenderComponent>())
-    {
-        MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
 
-        if(renderer.visible)
-        {
-            impl->setMaterial(renderer.material, renderer.shader);
-            impl->setLights(scene, renderer.shader);
-            renderer.shader->setInt("receive_shadow", (int)renderer.receive_shadow);
-            renderer.shader->setInt("entityID", entity_id);
-            impl->drawVAO(geometry.graph->getVerticesArray(),
-                          camera,
-                          glm::vec3(1),
-                          renderer.shader,
-                          transform.getModel(),
-                          GL_TRIANGLES,
-                          geometry.graph->n_vertices());
-            impl->freeTextureUnits();
-        }
+    impl->drawComponent<T>(entity, camera, scene, geometry, transform, entity_id);
+}
+
+// drawEntity
+void RendererSystem::draw(Entity entity, const atcg::ref_ptr<Camera>& camera)
+{
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+
+    if(entity.hasComponent<CustomRenderComponent>())
+    {
+        CustomRenderComponent renderer = entity.getComponent<CustomRenderComponent>();
+        renderer.callback(entity, camera);
     }
 
-    if(entity.hasComponent<PointRenderComponent>())
-    {
-        PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
-        if(renderer.visible)
-        {
-            impl->setMaterial(impl->standard_material, renderer.shader);
-            impl->setLights(scene, renderer.shader);
-            renderer.shader->setInt("entityID", entity_id);
-            setPointSize(renderer.point_size);
-            impl->drawVAO(geometry.graph->getVerticesArray(),
-                          camera,
-                          renderer.color,
-                          renderer.shader,
-                          transform.getModel(),
-                          GL_POINTS,
-                          geometry.graph->n_vertices());
-            impl->freeTextureUnits();
-        }
-    }
-
-    if(entity.hasComponent<PointSphereRenderComponent>())
-    {
-        PointSphereRenderComponent renderer = entity.getComponent<PointSphereRenderComponent>();
-
-        if(renderer.visible)
-        {
-            impl->setMaterial(renderer.material, renderer.shader);
-            impl->setLights(scene, renderer.shader);
-            renderer.shader->setInt("entityID", entity_id);
-            setPointSize(renderer.point_size);
-            impl->drawPointCloudSpheres(geometry.graph->getVerticesArray()->peekVertexBuffer(),
-                                        camera,
-                                        transform.getModel(),
-                                        glm::vec3(1),
-                                        renderer.shader,
-                                        geometry.graph->n_vertices());
-            impl->freeTextureUnits();
-        }
-    }
-
-    if(entity.hasComponent<EdgeRenderComponent>())
-    {
-        EdgeRenderComponent renderer = entity.getComponent<EdgeRenderComponent>();
-
-        if(renderer.visible)
-        {
-            impl->setMaterial(impl->standard_material, impl->shader_manager->getShader("edge"));
-            impl->setLights(scene, impl->shader_manager->getShader("edge"));
-            impl->shader_manager->getShader("edge")->setInt("entityID", entity_id);
-            atcg::ref_ptr<VertexBuffer> points = geometry.graph->getVerticesBuffer();
-            points->bindStorage(0);
-            impl->drawVAO(geometry.graph->getEdgesArray(),
-                          camera,
-                          renderer.color,
-                          impl->shader_manager->getShader("edge"),
-                          transform.getModel(),
-                          GL_POINTS,
-                          geometry.graph->n_edges(),
-                          1);
-            impl->freeTextureUnits();
-        }
-    }
-
-    if(entity.hasComponent<EdgeCylinderRenderComponent>())
-    {
-        EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
-
-        if(renderer.visible)
-        {
-            auto& shader = impl->shader_manager->getShader("cylinder_edge");
-            impl->setMaterial(renderer.material, shader);
-            impl->setLights(scene, impl->shader_manager->getShader("cylinder_edge"));
-            shader->setInt("entityID", entity_id);
-            shader->setFloat("edge_radius", renderer.radius);
-            impl->drawGrid(geometry.graph->getVerticesBuffer(),
-                           geometry.graph->getEdgesBuffer(),
-                           impl->shader_manager->getShader("cylinder_"
-                                                           "edge"),
-                           camera,
-                           transform.getModel(),
-                           glm::vec3(1));
-            impl->freeTextureUnits();
-        }
-    }
-
-    if(entity.hasComponent<InstanceRenderComponent>())
-    {
-        InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
-
-        if(renderer.visible)
-        {
-            if(geometry.graph->getVerticesArray()->peekVertexBuffer() != renderer.instance_vbo)
-            {
-                geometry.graph->getVerticesArray()->pushInstanceBuffer(renderer.instance_vbo);
-            }
-
-            auto instance_shader = impl->shader_manager->getShader("instanced");
-            instance_shader->setInt("entityID", entity_id);
-            impl->setMaterial(renderer.material, instance_shader);
-            atcg::ref_ptr<VertexArray> vao_mesh      = geometry.graph->getVerticesArray();
-            atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
-            uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
-            impl->drawVAO(vao_mesh,
-                          camera,
-                          glm::vec3(1),
-                          instance_shader,
-                          transform.getModel(),
-                          GL_TRIANGLES,
-                          geometry.graph->n_vertices(),
-                          n_instances);
-            impl->freeTextureUnits();
-        }
-    }
+    drawComponent<MeshRenderComponent>(entity, camera);
+    drawComponent<PointRenderComponent>(entity, camera);
+    drawComponent<PointSphereRenderComponent>(entity, camera);
+    drawComponent<EdgeRenderComponent>(entity, camera);
+    drawComponent<EdgeCylinderRenderComponent>(entity, camera);
+    drawComponent<InstanceRenderComponent>(entity, camera);
 }
 
 // drawScene
