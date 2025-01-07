@@ -155,17 +155,9 @@ public:
                 {
                     atcg::Entity entity(e, context->scene.get());
 
-                    auto& transform = entity.getComponent<atcg::TransformComponent>();
-                    auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
-                    auto& renderer  = entity.getComponent<atcg::MeshRenderComponent>();
-
-                    data->geometry_pass_shader->setInt("entity_ID", (int)e);
-                    atcg::Renderer::draw(geometry.graph,
-                                         renderer.material,
-                                         context->camera,
-                                         transform.getModel(),
-                                         glm::vec3(1),
-                                         data->geometry_pass_shader);
+                    atcg::Renderer::drawComponent<atcg::MeshRenderComponent>(entity,
+                                                                             context->camera,
+                                                                             data->geometry_pass_shader);
                 }
             });
 
