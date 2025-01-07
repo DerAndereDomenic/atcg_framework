@@ -1273,7 +1273,7 @@ void RendererSystem::drawComponent(Entity entity, const atcg::ref_ptr<atcg::Came
         return;
     }
 
-    uint32_t entity_id           = (uint32_t)entity._entity_handle;
+    uint32_t entity_id           = entity.entity_handle();
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
 
@@ -1388,7 +1388,7 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
     {
         Entity entity(e, scene.get());
         setLineSize(2.0f);
-        uint32_t entity_id = (uint32_t)entity._entity_handle;
+        uint32_t entity_id = entity.entity_handle();
         impl->shader_manager->getShader("edge")->setInt("entityID", entity_id);
         atcg::CameraComponent& comp          = entity.getComponent<CameraComponent>();
         atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(comp.camera);
@@ -1417,12 +1417,7 @@ void RendererSystem::drawLights(const atcg::ref_ptr<Scene>& scene, const atcg::r
         auto& transform   = entity.getComponent<atcg::TransformComponent>();
         auto& point_light = entity.getComponent<atcg::PointLightComponent>();
 
-        impl->drawCircle(transform.getPosition(),
-                         0.1f,
-                         1.0f,
-                         point_light.color,
-                         camera,
-                         (uint32_t)entity._entity_handle);
+        impl->drawCircle(transform.getPosition(), 0.1f, 1.0f, point_light.color, camera, entity.entity_handle());
     }
 }
 

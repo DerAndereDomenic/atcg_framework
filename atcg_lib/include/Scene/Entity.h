@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Platform.h>
 #include <Scene/Scene.h>
 
 #include <entt.hpp>
@@ -126,6 +127,21 @@ public:
     }
 
     /**
+     * @brief Get the entity handle.
+     * This handle is a unique id for this entity in the scene and is internally used to identify the entity. HOWEVER,
+     * this ID is not prersistent for this entity when serializing a scene for example. This ID is only used by the
+     * renderer for mouse picking. If you want to identify an entity uniquely and persistently, use the IDComponent that
+     * each entity has.
+     *
+     * This ID can also be used for RendererSystem::draw if it is necessary to have complete fine-grained control over
+     * the rendering behavior of an entity. However, in most cases, the RendererSystem::draw for entities or
+     * RendererSystem::drawComponent functions should be sufficient.
+     *
+     * @return The entity handle
+     */
+    ATCG_INLINE uint32_t entity_handle() const { return (uint32_t)_entity_handle; }
+
+    /**
      * @brief Check if this is an empty entity
      *
      * @return Whether this is an empty entity
@@ -133,8 +149,8 @@ public:
     operator bool() const { return _entity_handle != entt::null; }
 
 private:
-    friend class RendererSystem;
     friend class Scene;
+    friend class RendererSystem;
     Scene* _scene               = nullptr;
     entt::entity _entity_handle = entt::null;
 };
