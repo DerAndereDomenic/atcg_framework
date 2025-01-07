@@ -274,9 +274,14 @@ public:
      * @tparam Component The component to draw. Must be ones of the RenderComponents in Components.h
      * @param entity The entity to draw
      * @param camera The camera
+     * @param shader An optional shader. The shader (if not nullptr) overrides what is stored in the component AND what
+     * is internally used. This means if you want to use a custom shader for a PointSphereRenderer component, for
+     * example, you have to make sure that it is compatible with this rendering mode.
      */
     template<typename Component>
-    void drawComponent(Entity entity, const atcg::ref_ptr<Camera>& camera = {});
+    void drawComponent(Entity entity,
+                       const atcg::ref_ptr<Camera>& camera       = {},
+                       const atcg::ref_ptr<atcg::Shader>& shader = nullptr);
 
     /**
      * @brief Render an entity
@@ -681,11 +686,16 @@ ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
  * @tparam Component The component to draw. Must be ones of the RenderComponents in Components.h
  * @param entity The entity to draw
  * @param camera The camera
+ * @param shader An optional shader. The shader (if not nullptr) overrides what is stored in the component AND what
+ * is internally used. This means if you want to use a custom shader for a PointSphereRenderer component, for
+ * example, you have to make sure that it is compatible with this rendering mode.
  */
 template<typename Component>
-ATCG_INLINE void drawComponent(Entity entity, const atcg::ref_ptr<Camera>& camera = {})
+ATCG_INLINE void drawComponent(Entity entity,
+                               const atcg::ref_ptr<Camera>& camera       = {},
+                               const atcg::ref_ptr<atcg::Shader>& shader = nullptr)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawComponent<Component>(entity, camera);
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawComponent<Component>(entity, camera, shader);
 }
 
 /**

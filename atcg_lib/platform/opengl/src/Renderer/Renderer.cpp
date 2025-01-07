@@ -103,7 +103,8 @@ public:
                        Scene* scene,
                        const GeometryComponent& geometry,
                        const TransformComponent& transform,
-                       const uint32_t entity_id);
+                       const uint32_t entity_id,
+                       const atcg::ref_ptr<atcg::Shader>& shader);
 
     void draw(const atcg::ref_ptr<Graph>& mesh,
               const Material& material,
@@ -607,21 +608,24 @@ void RendererSystem::Impl::drawComponent<MeshRenderComponent>(Entity entity,
                                                               Scene* scene,
                                                               const GeometryComponent& geometry,
                                                               const TransformComponent& transform,
-                                                              const uint32_t entity_id)
+                                                              const uint32_t entity_id,
+                                                              const atcg::ref_ptr<atcg::Shader>& override_shader)
 {
     MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
 
+    auto shader = override_shader ? override_shader : renderer.shader;
+
     if(renderer.visible)
     {
-        setLights(scene, renderer.shader);
-        renderer.shader->setInt("receive_shadow", (int)renderer.receive_shadow);
+        setLights(scene, shader);
+        shader->setInt("receive_shadow", (int)renderer.receive_shadow);
         draw(geometry.graph,
              renderer.material,
              entity.entity_handle(),
              camera,
              transform.getModel(),
              glm::vec3(1),
-             renderer.shader,
+             shader,
              atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE);
     }
 }
@@ -632,12 +636,16 @@ void RendererSystem::Impl::drawComponent<PointRenderComponent>(Entity entity,
                                                                Scene* scene,
                                                                const GeometryComponent& geometry,
                                                                const TransformComponent& transform,
-                                                               const uint32_t entity_id)
+                                                               const uint32_t entity_id,
+                                                               const atcg::ref_ptr<atcg::Shader>& override_shader)
 {
     PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
+
+    auto shader = override_shader ? override_shader : renderer.shader;
+
     if(renderer.visible)
     {
-        setLights(scene, renderer.shader);
+        setLights(scene, shader);
         this->renderer->setPointSize(renderer.point_size);
         draw(geometry.graph,
              standard_material,
@@ -645,7 +653,7 @@ void RendererSystem::Impl::drawComponent<PointRenderComponent>(Entity entity,
              camera,
              transform.getModel(),
              renderer.color,
-             renderer.shader,
+             shader,
              atcg::DrawMode::ATCG_DRAW_MODE_POINTS);
     }
 }
@@ -656,13 +664,16 @@ void RendererSystem::Impl::drawComponent<PointSphereRenderComponent>(Entity enti
                                                                      Scene* scene,
                                                                      const GeometryComponent& geometry,
                                                                      const TransformComponent& transform,
-                                                                     const uint32_t entity_id)
+                                                                     const uint32_t entity_id,
+                                                                     const atcg::ref_ptr<atcg::Shader>& override_shader)
 {
     PointSphereRenderComponent renderer = entity.getComponent<PointSphereRenderComponent>();
 
+    auto shader = override_shader ? override_shader : renderer.shader;
+
     if(renderer.visible)
     {
-        setLights(scene, renderer.shader);
+        setLights(scene, shader);
         this->renderer->setPointSize(renderer.point_size);
         draw(geometry.graph,
              renderer.material,
@@ -670,7 +681,7 @@ void RendererSystem::Impl::drawComponent<PointSphereRenderComponent>(Entity enti
              camera,
              transform.getModel(),
              glm::vec3(1),
-             renderer.shader,
+             shader,
              atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE);
     }
 }
@@ -681,45 +692,52 @@ void RendererSystem::Impl::drawComponent<EdgeRenderComponent>(Entity entity,
                                                               Scene* scene,
                                                               const GeometryComponent& geometry,
                                                               const TransformComponent& transform,
-                                                              const uint32_t entity_id)
+                                                              const uint32_t entity_id,
+                                                              const atcg::ref_ptr<atcg::Shader>& override_shader)
 {
     EdgeRenderComponent renderer = entity.getComponent<EdgeRenderComponent>();
 
+    auto shader = override_shader ? override_shader : shader_manager->getShader("edge");
+
     if(renderer.visible)
     {
-        setLights(scene, shader_manager->getShader("edge"));
+        setLights(scene, shader);
         draw(geometry.graph,
              standard_material,
              entity.entity_handle(),
              camera,
              transform.getModel(),
              renderer.color,
-             shader_manager->getShader("edge"),
+             shader,
              atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
     }
 }
 
 template<>
-void RendererSystem::Impl::drawComponent<EdgeCylinderRenderComponent>(Entity entity,
-                                                                      const atcg::ref_ptr<Camera>& camera,
-                                                                      Scene* scene,
-                                                                      const GeometryComponent& geometry,
-                                                                      const TransformComponent& transform,
-                                                                      const uint32_t entity_id)
+void RendererSystem::Impl::drawComponent<EdgeCylinderRenderComponent>(
+    Entity entity,
+    const atcg::ref_ptr<Camera>& camera,
+    Scene* scene,
+    const GeometryComponent& geometry,
+    const TransformComponent& transform,
+    const uint32_t entity_id,
+    const atcg::ref_ptr<atcg::Shader>& override_shader)
 {
     EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
 
+    auto shader = override_shader ? override_shader : shader_manager->getShader("cylinder_edge");
+
     if(renderer.visible)
     {
-        setLights(scene, shader_manager->getShader("cylinder_edge"));
-        shader_manager->getShader("cylinder_edge")->setFloat("edge_radius", renderer.radius);
+        setLights(scene, shader);
+        shader->setFloat("edge_radius", renderer.radius);
         draw(geometry.graph,
              renderer.material,
              entity.entity_handle(),
              camera,
              transform.getModel(),
              glm::vec3(1),
-             shader_manager->getShader("cylinder_edge"),
+             shader,
              atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER);
     }
 }
@@ -730,9 +748,12 @@ void RendererSystem::Impl::drawComponent<InstanceRenderComponent>(Entity entity,
                                                                   Scene* scene,
                                                                   const GeometryComponent& geometry,
                                                                   const TransformComponent& transform,
-                                                                  const uint32_t entity_id)
+                                                                  const uint32_t entity_id,
+                                                                  const atcg::ref_ptr<atcg::Shader>& override_shader)
 {
     InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
+
+    auto shader = override_shader ? override_shader : shader_manager->getShader("instanced");
 
     if(renderer.visible)
     {
@@ -741,16 +762,15 @@ void RendererSystem::Impl::drawComponent<InstanceRenderComponent>(Entity entity,
             geometry.graph->getVerticesArray()->pushInstanceBuffer(renderer.instance_vbo);
         }
 
-        auto instance_shader = shader_manager->getShader("instanced");
-        instance_shader->setInt("entityID", entity_id);
-        setMaterial(renderer.material, instance_shader);
+        shader->setInt("entityID", entity_id);
+        setMaterial(renderer.material, shader);
         atcg::ref_ptr<VertexArray> vao_mesh      = geometry.graph->getVerticesArray();
         atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
         uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
         drawVAO(vao_mesh,
                 camera,
                 glm::vec3(1),
-                instance_shader,
+                shader,
                 transform.getModel(),
                 GL_TRIANGLES,
                 geometry.graph->n_vertices(),
@@ -1267,7 +1287,9 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
 }
 
 template<typename T>
-void RendererSystem::drawComponent(Entity entity, const atcg::ref_ptr<atcg::Camera>& camera)
+void RendererSystem::drawComponent(Entity entity,
+                                   const atcg::ref_ptr<atcg::Camera>& camera,
+                                   const atcg::ref_ptr<atcg::Shader>& shader)
 {
     if(!entity.hasComponent<T>()) return;
 
@@ -1297,7 +1319,7 @@ void RendererSystem::drawComponent(Entity entity, const atcg::ref_ptr<atcg::Came
 
     geometry.graph->unmapAllPointers();
 
-    impl->drawComponent<T>(entity, camera, scene, geometry, transform, entity_id);
+    impl->drawComponent<T>(entity, camera, scene, geometry, transform, entity_id, shader);
 }
 
 // drawEntity
