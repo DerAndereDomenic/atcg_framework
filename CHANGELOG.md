@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - If an Entity can't be found by ID, an invalid entity is returned
 - Circle shader now also writes out entity IDs
 - Removed RendererSystem::draw function that takes in a material struct
+- At the end of each frame, all texture units are unbinded to create a clean state for the next frame
 
 ### Fixed
 
@@ -38,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix normals of cylinder in test scene
 - Normals of cylinder in test scene
 - Improved code of the Renderer and reduced code duplication
+- Fixed hanging texture references when a texture is deleted
 
 ## [0.1.1-beta]
 
