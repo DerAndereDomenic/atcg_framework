@@ -795,6 +795,7 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
     {
         case ATCG_DRAW_MODE_TRIANGLE:
         {
+            ATCG_ASSERT(shader, "Tried rendering a mesh without valid shader");
             shader->setInt("entityID", entity_id);
             setMaterial(material, shader);
             drawVAO(mesh->getVerticesArray(),
@@ -808,6 +809,7 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
         case ATCG_DRAW_MODE_POINTS:
         {
+            ATCG_ASSERT(shader, "Tried rendering a point cloud without valid shader");
             shader->setInt("entityID", entity_id);
             setMaterial(material, shader);
             drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
@@ -815,6 +817,7 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
         {
+            ATCG_ASSERT(shader, "Tried rendering a point cloud without valid shader");
             shader->setInt("entityID", entity_id);
             setMaterial(material, shader);
             drawPointCloudSpheres(mesh->getVerticesArray()->peekVertexBuffer(),
@@ -827,24 +830,25 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
         case ATCG_DRAW_MODE_EDGES:
         {
-            auto edge_shader = shader_manager->getShader("edge");
-            edge_shader->setInt("entityID", entity_id);
-            setMaterial(material, edge_shader);
+            auto override_shader = shader ? shader : shader_manager->getShader("edge");
+            override_shader->setInt("entityID", entity_id);
+            setMaterial(material, override_shader);
             atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
             points->bindStorage(0);
-            drawVAO(mesh->getEdgesArray(), camera, color, edge_shader, model, GL_POINTS, mesh->n_edges(), 1);
+            drawVAO(mesh->getEdgesArray(), camera, color, override_shader, model, GL_POINTS, mesh->n_edges(), 1);
         }
         break;
         case ATCG_DRAW_MODE_EDGES_CYLINDER:
         {
-            auto edge_shader = shader_manager->getShader("cylinder_edge");
-            edge_shader->setInt("entityID", entity_id);
-            setMaterial(material, edge_shader);
-            drawGrid(mesh->getVerticesBuffer(), mesh->getEdgesBuffer(), edge_shader, camera, model, color);
+            auto override_shader = shader ? shader : shader_manager->getShader("cylinder_edge");
+            override_shader->setInt("entityID", entity_id);
+            setMaterial(material, override_shader);
+            drawGrid(mesh->getVerticesBuffer(), mesh->getEdgesBuffer(), override_shader, camera, model, color);
         }
         break;
         case ATCG_DRAW_MODE_INSTANCED:
         {
+            ATCG_ASSERT(shader, "Tried instance rendering without valid shader");
             shader->setInt("entityID", entity_id);
             setMaterial(material, shader);
             atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
