@@ -1274,20 +1274,7 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    draw(mesh, impl->standard_material, camera, model, color, shader, draw_mode);
-}
-
-void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
-                          const Material& material,
-                          const atcg::ref_ptr<Camera>& camera,
-                          const glm::mat4& model,
-                          const glm::vec3& color,
-                          const atcg::ref_ptr<Shader>& shader,
-                          DrawMode draw_mode)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-
-    impl->draw(mesh, material, -1, camera, model, color, shader, draw_mode);
+    impl->draw(mesh, impl->standard_material, -1, camera, model, color, shader, draw_mode);
 }
 
 template<typename T>
