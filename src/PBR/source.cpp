@@ -46,6 +46,7 @@ public:
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
+        performance_panel.registerFrameTime(delta_time);
         camera_controller->onUpdate(delta_time);
 
         atcg::Renderer::clear();
@@ -141,6 +142,12 @@ public:
             ImGui::EndMenu();
         }
 
+        if(ImGui::BeginMenu("Debug"))
+        {
+            ImGui::MenuItem("Show Performance Panel", nullptr, &show_performance);
+            ImGui::EndMenu();
+        }
+
         if(ImGui::BeginMenu("Rendering"))
         {
             ImGui::MenuItem("Show Render Settings", nullptr, &show_render_settings);
@@ -152,10 +159,14 @@ public:
         if(show_render_settings)
         {
             ImGui::Begin("Settings", &show_render_settings);
-
+            if(ImGui::Checkbox("VSync", &vsync))
+            {
+                atcg::Application::get()->getWindow()->toggleVSync(vsync);
+            }
             ImGui::End();
         }
 
+        performance_panel.renderPanel(show_performance);
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
 
@@ -238,6 +249,8 @@ private:
     atcg::ref_ptr<atcg::Graph> plane;
 
     atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
+    atcg::PerformancePanel performance_panel;
+    bool show_performance = false;
 
     float time       = 0.0f;
     bool in_viewport = false;
@@ -245,6 +258,7 @@ private:
     glm::vec2 mouse_pos;
 
     bool show_render_settings = false;
+    bool vsync                = true;
 #ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif

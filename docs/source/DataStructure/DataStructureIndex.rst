@@ -14,3 +14,4 @@ DataStructure
    Statistics
    Grid
    BufferView
+   PerformancePanel

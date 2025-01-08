@@ -147,15 +147,16 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_point_light            = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                            \
     auto m_scene_hierarchy_panel =                                                                                              \
         py::class_<atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>>(m, "SceneHierarchyPanel");                             \
-    auto m_hit_info         = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                 \
-    auto m_utils            = m.def_submodule("Utils");                                                                         \
-    auto m_imgui            = m.def_submodule("ImGui");                                                                         \
-    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");                                       \
-    auto m_draw_mode        = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                         \
-    auto m_cull_mode        = py::enum_<atcg::CullMode>(m, "CullMode");                                                         \
-    auto m_network          = m.def_submodule("Network");                                                                       \
-    auto m_tcp_server       = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                              \
-    auto m_tcp_client       = py::class_<atcg::TCPClient>(m_network, "TCPClient");
+    auto m_hit_info          = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                \
+    auto m_utils             = m.def_submodule("Utils");                                                                        \
+    auto m_imgui             = m.def_submodule("ImGui");                                                                        \
+    auto m_guizmo_operation  = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");                                      \
+    auto m_draw_mode         = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                        \
+    auto m_cull_mode         = py::enum_<atcg::CullMode>(m, "CullMode");                                                        \
+    auto m_network           = m.def_submodule("Network");                                                                      \
+    auto m_tcp_server        = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                             \
+    auto m_tcp_client        = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                             \
+    auto m_performance_panel = py::class_<atcg::PerformancePanel>(m, "PerformancePanel");
 
 inline void defineBindings(py::module_& m)
 {
@@ -645,6 +646,17 @@ inline void defineBindings(py::module_& m)
     m_serializer.def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
         .def("serialize", &atcg::Serializer<atcg::ComponentSerializer>::serialize<>, "file_path"_a)
         .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
+
+    m_performance_panel.def(py::init<>())
+        .def(
+            "renderPanel",
+            [](atcg::PerformancePanel& panel, bool show_window)
+            {
+                panel.renderPanel(show_window);
+                return show_window;
+            },
+            "show_window"_a)
+        .def("registerFrameTime", &atcg::PerformancePanel::registerFrameTime);
 
     // ------------------- RENDERER ---------------------------------
     m_draw_mode.value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
