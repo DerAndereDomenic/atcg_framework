@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added possibility to override the shaders used by an entitie's component
 - Added possibility to override the shaders of RendererSystem::draw on meshes
 - Added entity.entity_handle() method
+- Added Performance Panel to monitor frame time
 
 ### Changed
 
