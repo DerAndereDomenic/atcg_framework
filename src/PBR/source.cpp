@@ -159,7 +159,10 @@ public:
         if(show_render_settings)
         {
             ImGui::Begin("Settings", &show_render_settings);
-
+            if(ImGui::Checkbox("VSync", &vsync))
+            {
+                atcg::Application::get()->getWindow()->toggleVSync(vsync);
+            }
             ImGui::End();
         }
 
@@ -255,6 +258,7 @@ private:
     glm::vec2 mouse_pos;
 
     bool show_render_settings = false;
+    bool vsync                = true;
 #ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif
