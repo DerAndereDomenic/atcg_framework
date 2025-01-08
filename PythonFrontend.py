@@ -38,6 +38,7 @@ class PythonLayer(atcg.Layer):
         self.scene = atcg.Scene()
 
         self.panel = atcg.SceneHierarchyPanel(self.scene)
+        self.performance_panel = atcg.PerformancePanel()
         entity = self.scene.createEntity("Cylinder")
         self.graph = atcg.read_mesh(f"{atcg.resource_directory()}/cylinder.obj")
         entity.addGeometryComponent(self.graph)
@@ -65,6 +66,7 @@ class PythonLayer(atcg.Layer):
         self.current_operation = atcg.ImGui.GuizmoOperation.TRANSLATE
 
     def onUpdate(self, dt):
+        self.performance_panel.registerFrameTime(dt)
         self.camera_controller.onUpdate(dt)
 
         atcg.Renderer.clear()
@@ -79,6 +81,8 @@ class PythonLayer(atcg.Layer):
         self.panel.renderPanel()
 
         selected_entity = self.panel.getSelectedEntity()
+
+        self.performance_panel.renderPanel(True)
 
         atcg.ImGui.drawGuizmo(
             selected_entity, self.current_operation, self.camera_controller.getCamera()
