@@ -347,11 +347,23 @@ public:
     void drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency = 0.6f);
 
     /**
-     * @brief Get the framebuffer object that is used by the renderer
+     * @brief Get the framebuffer objects that is used by the renderer.
+     * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
+     * the current frame data, refer to getFramebufferMSAA()
+     *
+     * @return THe framebuffer of last frame
+     */
+    atcg::ref_ptr<Framebuffer> getFramebuffer() const;
+
+    /**
+     * @brief Get the framebuffer object that is used by the renderer.
+     * This is a multi sample framebuffer that can only be used for drawing operations. If you want to read rendered
+     * data, either use getFinishedFramebuffer() which contains the render of the last frame. If you need the current
+     * state of the framebuffer for this frame, you have to manually blit it.
      *
      * @return The fbo
      */
-    atcg::ref_ptr<Framebuffer> getFramebuffer() const;
+    atcg::ref_ptr<Framebuffer> getFramebufferMSAA() const;
 
     /**
      * @brief Get a buffer representing the color attachement of the screen frame buffer.
@@ -766,13 +778,28 @@ ATCG_INLINE void drawImage(const atcg::ref_ptr<Texture2D>& img)
 }
 
 /**
- * @brief Get the framebuffer object that is used by the renderer
+ * @brief Get the framebuffer objects that is used by the renderer.
+ * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
+ * the current frame data, refer to getFramebufferMSAA()
  *
- * @return The fbo
+ * @return THe framebuffer of last frame
  */
 ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebuffer()
 {
     return SystemRegistry::instance()->getSystem<RendererSystem>()->getFramebuffer();
+}
+
+/**
+ * @brief Get the framebuffer object that is used by the renderer.
+ * This is a multi sample framebuffer that can only be used for drawing operations. If you want to read rendered
+ * data, either use getFramebuffer() which contains the render of the last frame. If you need the current state of
+ * the framebuffer for this frame, you have to manually blit it.
+ *
+ * @return The fbo
+ */
+ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebufferMSAA()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getFramebufferMSAA();
 }
 
 /**

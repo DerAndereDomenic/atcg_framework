@@ -42,7 +42,7 @@ public:
     void initCameraFrustrum();
     atcg::ref_ptr<Graph> camera_frustrum;
 
-    void initFramebuffer(uint32_t width, uint32_t height);
+    void initFramebuffer(uint32_t num_frames, uint32_t width, uint32_t height);
 
     Material standard_material;
 
@@ -54,6 +54,8 @@ public:
     bool has_skybox = false;
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
+    atcg::ref_ptr<Framebuffer> screen_fbo_msaa;
+    uint32_t msaa_num_samples = 8;
 
     atcg::ref_ptr<Graph> sphere_mesh;
     atcg::ref_ptr<Graph> cylinder_mesh;
@@ -200,7 +202,7 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
     spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     lut                        = atcg::Texture2D::create(img, spec_lut);
 
-    initFramebuffer(width, height);
+    initFramebuffer(msaa_num_samples, width, height);
 
     int total_units;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &total_units);
@@ -316,7 +318,7 @@ void RendererSystem::Impl::initCameraFrustrum()
     camera_frustrum = atcg::Graph::createGraph(points, edges);
 }
 
-void RendererSystem::Impl::initFramebuffer(uint32_t width, uint32_t height)
+void RendererSystem::Impl::initFramebuffer(uint32_t num_samples, uint32_t width, uint32_t height)
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
@@ -329,6 +331,12 @@ void RendererSystem::Impl::initFramebuffer(uint32_t width, uint32_t height)
     screen_fbo->attachTexture(Texture2D::create(spec_int));
     screen_fbo->attachDepth();
     screen_fbo->complete();
+
+    screen_fbo_msaa = atcg::make_ref<Framebuffer>(width, height);
+    screen_fbo_msaa->attachColorMultiSample(num_samples);
+    screen_fbo_msaa->attachTexture(Texture2DMultiSample::create(num_samples, spec_int));
+    screen_fbo_msaa->attachDepthMultiSample(num_samples);
+    screen_fbo_msaa->complete();
 }
 
 void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader)
@@ -918,6 +926,7 @@ void RendererSystem::init(uint32_t width,
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glEnable(GL_MULTISAMPLE);
     setViewport(0, 0, width, height);
 
     impl->shader_manager = shader_manager;
@@ -954,6 +963,7 @@ void RendererSystem::finishFrame()
     shader->setInt("screen_texture", 0);
 
     shader->use();
+    impl->screen_fbo->blit(impl->screen_fbo_msaa);
     impl->screen_fbo->getColorAttachement()->use();
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
@@ -1243,13 +1253,13 @@ void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     setViewport(0, 0, width, height);
-    impl->initFramebuffer(width, height);
+    impl->initFramebuffer(impl->msaa_num_samples, width, height);
 }
 
 void RendererSystem::useScreenBuffer() const
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->screen_fbo->use();
+    impl->screen_fbo_msaa->use();
 }
 
 uint32_t RendererSystem::getFrameCounter() const
@@ -1274,10 +1284,12 @@ void RendererSystem::clear() const
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     glClear(impl->clear_flag);
 
-    if(Framebuffer::currentFramebuffer() == impl->screen_fbo->getID())
+    if(Framebuffer::currentFramebuffer() == impl->screen_fbo->getID() ||
+       Framebuffer::currentFramebuffer() == impl->screen_fbo_msaa->getID())
     {
         int value = -1;
         impl->screen_fbo->getColorAttachement(1)->fill(&value);
+        impl->screen_fbo_msaa->getColorAttachement(1)->fill(&value);
     }
 }
 
@@ -1536,6 +1548,11 @@ atcg::ref_ptr<Framebuffer> RendererSystem::getFramebuffer() const
     return impl->screen_fbo;
 }
 
+atcg::ref_ptr<Framebuffer> RendererSystem::getFramebufferMSAA() const
+{
+    return impl->screen_fbo_msaa;
+}
+
 torch::Tensor RendererSystem::getFrame(const torch::DeviceType& device) const
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
@@ -1552,7 +1569,7 @@ torch::Tensor RendererSystem::getZBuffer(const torch::DeviceType& device) const
     uint32_t height      = frame->height();
     torch::Tensor buffer = torch::empty({height, width, 1}, atcg::TensorOptions::floatHostOptions());
 
-    useScreenBuffer();
+    impl->screen_fbo->use();
 
     glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer.data_ptr());
 
@@ -1563,7 +1580,7 @@ int RendererSystem::getEntityIndex(const glm::vec2& mouse) const
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    useScreenBuffer();
+    impl->screen_fbo->use();
     glReadBuffer(GL_COLOR_ATTACHMENT1);
     int pixelData;
     glReadPixels((int)mouse.x, (int)mouse.y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
@@ -1602,7 +1619,7 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
     clear();
     setViewport(0, 0, width, height);
     draw(scene, cam);
-    getFramebuffer()->use();
+    useScreenBuffer();
     setDefaultViewport();
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
@@ -1628,7 +1645,7 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     clear();
     setViewport(0, 0, width, height);
     draw(scene, cam);
-    getFramebuffer()->use();
+    useScreenBuffer();
     setDefaultViewport();
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
