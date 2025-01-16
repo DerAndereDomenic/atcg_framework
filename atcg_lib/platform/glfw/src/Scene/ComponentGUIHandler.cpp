@@ -99,7 +99,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     atcg::Renderer::clear();
     atcg::Renderer::setViewport(0, 0, width, height);
     atcg::Renderer::draw(_scene, camera_component.camera);
-    atcg::Renderer::getFramebuffer()->use();
+    atcg::Renderer::useScreenBuffer();
     atcg::Renderer::setDefaultViewport();
 
     uint64_t textureID = _camera_preview->getColorAttachement(0)->getID();
