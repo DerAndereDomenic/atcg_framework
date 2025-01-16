@@ -119,7 +119,18 @@ void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, boo
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, source->getID());
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _ID);
-    glBlitFramebuffer(0, 0, _width, _height, 0, 0, _width, _height, flags, GL_NEAREST);
+
+    for(int i = 0; i < _color_attachements.size(); ++i)
+    {
+        glReadBuffer(GL_COLOR_ATTACHMENT0 + i);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
+        glBlitFramebuffer(0, 0, _width, _height, 0, 0, _width, _height, flags, GL_NEAREST);
+    }
+
+    glReadBuffer(0);
+    glDrawBuffer(0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
 
 void Framebuffer::bindByID(uint32_t fbo_id)
