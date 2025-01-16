@@ -1820,4 +1820,60 @@ atcg::ref_ptr<Texture> TextureCubeArray::clone() const
     return result;
 }
 
+atcg::ref_ptr<Texture2DMultiSample> Texture2DMultiSample::create(uint32_t num_samples, const TextureSpecification& spec)
+{
+    atcg::ref_ptr<Texture2DMultiSample> result = atcg::make_ref<Texture2DMultiSample>();
+    result->_spec                              = spec;
+    result->_spec.width                        = std::max<uint32_t>(1, result->_spec.width);
+    result->_spec.height                       = std::max<uint32_t>(1, result->_spec.height);
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, result->_ID);
+
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
+                            num_samples,
+                            detail::to2GLinternalFormat(result->_spec.format),
+                            result->_spec.width,
+                            result->_spec.height,
+                            GL_TRUE);
+    ATCG_LOG_ALLOCATION("Allocated Texture of size {} x {}", result->_spec.width, result->_spec.height);
+
+    return result;
+}
+
+Texture2DMultiSample::~Texture2DMultiSample()
+{
+    unmapPointers();
+    glDeleteTextures(1, &_ID);
+}
+
+void Texture2DMultiSample::setData(const torch::Tensor& data)
+{
+    // No Op
+}
+
+torch::Tensor Texture2DMultiSample::getData(const torch::Device& device, const uint32_t mip_level) const
+{
+    // No Op
+    return {};
+}
+
+void Texture2DMultiSample::use(const uint32_t& slot) const
+{
+    unmapPointers();
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, _ID);
+}
+
+void Texture2DMultiSample::generateMipmaps()
+{
+    // No Op
+}
+
+atcg::ref_ptr<Texture> Texture2DMultiSample::clone() const
+{
+    // No Op
+    return nullptr;
+}
+
 }    // namespace atcg

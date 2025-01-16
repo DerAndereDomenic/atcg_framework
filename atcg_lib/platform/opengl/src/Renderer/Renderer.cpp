@@ -963,6 +963,7 @@ void RendererSystem::finishFrame()
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
         glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
         glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
     }
     glActiveTexture(GL_TEXTURE0);
 }
