@@ -4600,3 +4600,992 @@ TEST(TextureTest, TextureCubeArraycreateEmptyRINTsetDataDevice)
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
 }
+
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDefault1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT81Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRG1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGB1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBA1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRFLOAT1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGFLOAT1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBFLOAT1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBAFLOAT1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDepth1Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::DEPTH;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDefault2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT82Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRG2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGB2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBA2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRFLOAT2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGFLOAT2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBFLOAT2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBAFLOAT2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDepth2Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::DEPTH;
+    auto texture = atcg::Texture2DMultiSample::create(2, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDefault4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT84Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRG4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGB4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBA4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRFLOAT4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGFLOAT4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBFLOAT4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBAFLOAT4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDepth4Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::DEPTH;
+    auto texture = atcg::Texture2DMultiSample::create(4, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDefault8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT88Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRG8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGB8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBA8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRFLOAT8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGFLOAT8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBFLOAT8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBAFLOAT8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDepth8Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::DEPTH;
+    auto texture = atcg::Texture2DMultiSample::create(8, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDefault16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT816Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRG16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGB16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBA16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRFLOAT16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGFLOAT16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBFLOAT16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBAFLOAT16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::Texture2DMultiSample::create(1, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDepth16Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::DEPTH;
+    auto texture = atcg::Texture2DMultiSample::create(16, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDefault32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT832Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRG32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGB32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBA32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRFLOAT32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGFLOAT32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBFLOAT32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRGBAFLOAT32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyRINT32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
+
+TEST(TextureTest, Texture2DMultiSamplecreateEmptyDepth32Sample)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::DEPTH;
+    auto texture = atcg::Texture2DMultiSample::create(32, spec);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+}
