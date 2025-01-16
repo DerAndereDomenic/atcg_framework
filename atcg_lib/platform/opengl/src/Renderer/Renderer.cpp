@@ -42,6 +42,8 @@ public:
     void initCameraFrustrum();
     atcg::ref_ptr<Graph> camera_frustrum;
 
+    void initFramebuffer(uint32_t width, uint32_t height);
+
     Material standard_material;
 
     atcg::ref_ptr<Texture2D> skybox_texture;
@@ -198,15 +200,7 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
     spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     lut                        = atcg::Texture2D::create(img, spec_lut);
 
-    screen_fbo = atcg::make_ref<Framebuffer>(width, height);
-    screen_fbo->attachColor();
-    TextureSpecification spec_int;
-    spec_int.width  = width;
-    spec_int.height = height;
-    spec_int.format = TextureFormat::RINT;
-    screen_fbo->attachTexture(Texture2D::create(spec_int));
-    screen_fbo->attachDepth();
-    screen_fbo->complete();
+    initFramebuffer(width, height);
 
     int total_units;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &total_units);
@@ -320,6 +314,21 @@ void RendererSystem::Impl::initCameraFrustrum()
     edges.push_back({glm::vec2(4, 1), glm::vec3(1), 0.01f});
 
     camera_frustrum = atcg::Graph::createGraph(points, edges);
+}
+
+void RendererSystem::Impl::initFramebuffer(uint32_t width, uint32_t height)
+{
+    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
+
+    screen_fbo = atcg::make_ref<Framebuffer>(width, height);
+    screen_fbo->attachColor();
+    TextureSpecification spec_int;
+    spec_int.width  = width;
+    spec_int.height = height;
+    spec_int.format = TextureFormat::RINT;
+    screen_fbo->attachTexture(Texture2D::create(spec_int));
+    screen_fbo->attachDepth();
+    screen_fbo->complete();
 }
 
 void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader)
@@ -1234,15 +1243,7 @@ void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     setViewport(0, 0, width, height);
-    impl->screen_fbo = atcg::make_ref<Framebuffer>(width, height);
-    impl->screen_fbo->attachColor();
-    TextureSpecification spec_int;
-    spec_int.width  = width;
-    spec_int.height = height;
-    spec_int.format = TextureFormat::RINT;
-    impl->screen_fbo->attachTexture(Texture2D::create(spec_int));
-    impl->screen_fbo->attachDepth();
-    impl->screen_fbo->complete();
+    impl->initFramebuffer(width, height);
 }
 
 void RendererSystem::useScreenBuffer() const
