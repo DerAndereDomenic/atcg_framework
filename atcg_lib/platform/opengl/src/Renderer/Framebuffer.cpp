@@ -58,6 +58,17 @@ void Framebuffer::attachColor()
     attachTexture(texture);
 }
 
+void Framebuffer::attachColorMultiSample(uint32_t num_samples)
+{
+    use();
+
+    TextureSpecification spec;
+    spec.width                                  = _width;
+    spec.height                                 = _height;
+    atcg::ref_ptr<Texture2DMultiSample> texture = Texture2DMultiSample::create(num_samples, spec);
+    attachTexture(texture);
+}
+
 void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
 {
     use();
@@ -76,6 +87,16 @@ void Framebuffer::attachDepth()
     spec.height        = _height;
     spec.format        = TextureFormat::DEPTH;
     _depth_attachement = Texture2D::create(spec);
+    attachDepth(_depth_attachement);
+}
+
+void Framebuffer::attachDepthMultiSample(uint32_t num_samples)
+{
+    TextureSpecification spec;
+    spec.width         = _width;
+    spec.height        = _height;
+    spec.format        = TextureFormat::DEPTH;
+    _depth_attachement = Texture2DMultiSample::create(num_samples, spec);
     attachDepth(_depth_attachement);
 }
 

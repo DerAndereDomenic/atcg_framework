@@ -45,6 +45,11 @@ public:
     void attachColor();
 
     /**
+     * @brief Add a multi sampled color attachement
+     */
+    void attachColorMultiSample(uint32_t num_samples);
+
+    /**
      * @brief Attach a texture to the framebuffer
      *
      * @param texture The texture to attach
@@ -55,6 +60,11 @@ public:
      * @brief Add a depth attachement
      */
     void attachDepth();
+
+    /**
+     * @brief Add a multi sampled depth attachement
+     */
+    void attachDepthMultiSample(uint32_t num_samples);
 
     /**
      * @brief Attach a custom depth component
