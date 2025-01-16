@@ -1375,7 +1375,7 @@ void RendererSystem::drawCircle(const glm::vec3& position,
 
 void RendererSystem::drawImage(const atcg::ref_ptr<Framebuffer>& img)
 {
-    drawImage(img->getColorAttachement(0));
+    drawImage(std::static_pointer_cast<atcg::Texture2D>(img->getColorAttachement(0)));
 }
 
 void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img)

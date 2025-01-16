@@ -49,7 +49,7 @@ public:
      *
      * @param texture The texture to attach
      */
-    void attachTexture(const atcg::ref_ptr<Texture2D>& texture);
+    void attachTexture(const atcg::ref_ptr<Texture>& texture);
 
     /**
      * @brief Add a depth attachement
@@ -79,7 +79,7 @@ public:
      * @param slot The number of which attachement to use
      * @return The specified texture
      */
-    ATCG_INLINE atcg::ref_ptr<Texture2D> getColorAttachement(const uint32_t& slot = 0) const
+    ATCG_INLINE atcg::ref_ptr<Texture> getColorAttachement(const uint32_t& slot = 0) const
     {
         return _color_attachements[slot];
     }
@@ -135,7 +135,7 @@ private:
     static uint32_t s_current_fbo;
     uint32_t _ID;
     uint32_t _width, _height;
-    std::vector<atcg::ref_ptr<Texture2D>> _color_attachements;
+    std::vector<atcg::ref_ptr<Texture>> _color_attachements;
     atcg::ref_ptr<Texture> _depth_attachement;
 };
 }    // namespace atcg

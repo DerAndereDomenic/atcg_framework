@@ -55,23 +55,16 @@ void Framebuffer::attachColor()
     spec.width                       = _width;
     spec.height                      = _height;
     atcg::ref_ptr<Texture2D> texture = Texture2D::create(spec);
-    glFramebufferTexture2D(GL_FRAMEBUFFER,
-                           GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
-                           GL_TEXTURE_2D,
-                           texture->getID(),
-                           0);
-    _color_attachements.push_back(texture);
-    useDefault();
+    attachTexture(texture);
 }
 
-void Framebuffer::attachTexture(const atcg::ref_ptr<Texture2D>& texture)
+void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
 {
     use();
-    glFramebufferTexture2D(GL_FRAMEBUFFER,
-                           GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
-                           GL_TEXTURE_2D,
-                           texture->getID(),
-                           0);
+    glFramebufferTexture(GL_FRAMEBUFFER,
+                         GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
+                         texture->getID(),
+                         0);
     _color_attachements.push_back(texture);
     useDefault();
 }
