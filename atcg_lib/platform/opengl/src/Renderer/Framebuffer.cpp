@@ -30,10 +30,10 @@ bool Framebuffer::complete() const
 {
     use();
 
-    std::vector<GLenum> buffers;
+    std::vector<GLenum> buffers(_color_attachements.size());
     for(uint32_t i = 0; i < _color_attachements.size(); ++i)
     {
-        buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+        buffers[i] = (GL_COLOR_ATTACHMENT0 + i);
     }
     glDrawBuffers(buffers.size(), buffers.data());
 
@@ -127,8 +127,14 @@ void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, boo
         glBlitFramebuffer(0, 0, _width, _height, 0, 0, _width, _height, flags, GL_NEAREST);
     }
 
-    glReadBuffer(0);
-    glDrawBuffer(0);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    std::vector<GLenum> buffers(_color_attachements.size());
+    for(uint32_t i = 0; i < _color_attachements.size(); ++i)
+    {
+        buffers[i] = (GL_COLOR_ATTACHMENT0 + i);
+    }
+    glDrawBuffers(buffers.size(), buffers.data());
+
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 }
