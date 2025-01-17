@@ -135,8 +135,9 @@ void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, boo
     }
     glDrawBuffers(buffers.size(), buffers.data());
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    // Restore old binding status
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, s_current_fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, s_current_fbo);
 }
 
 void Framebuffer::bindByID(uint32_t fbo_id)
