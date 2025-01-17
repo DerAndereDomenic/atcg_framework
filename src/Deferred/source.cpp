@@ -350,6 +350,7 @@ public:
     virtual void onAttach() override
     {
         atcg::Application::get()->enableDockSpace(true);
+        atcg::Renderer::toggleMSAA(false);
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
         // auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
