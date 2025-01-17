@@ -117,6 +117,17 @@ public:
     uint32_t getMSAA() const;
 
     /**
+     * @brief Toggle MSAA (on per default).
+     * This can be used to "disable" the internal msaa framebuffer. This can be useful if it is desired to directly draw
+     * into the final framebuffer of the renderer that can be accessed with getFramebuffer(). If MSAA is enabled, this
+     * framebuffer will be overwritten with the result of the msaa buffer by blitting. This will not be done if MSAA is
+     * toggled off.
+     *
+     * @param enable If MSAA should be enabled
+     */
+    void toggleMSAA(const bool enable = true);
+
+    /**
      * @brief Toggle depth testing
      *
      * @param enable If it should be enabled or disabled
@@ -202,7 +213,9 @@ public:
     void resize(const uint32_t& width, const uint32_t& height);
 
     /**
-     * @brief Use the default screen fbo
+     * @brief Use the default screen fbo.
+     * Per default this will be a MSAA framebuffer. If MSAA is disabled using toggleMSAA, this function will bind the
+     * normal framebuffer that is used in the end to render to the screen.
      */
     void useScreenBuffer() const;
 
@@ -363,16 +376,19 @@ public:
     /**
      * @brief Get the framebuffer objects that is used by the renderer.
      * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
-     * the current frame data, refer to getFramebufferMSAA()
+     * the current frame data, refer to getFramebufferMSAA().
+     * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
+     * operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using
+     * toggleMSAA.
      *
-     * @return THe framebuffer of last frame
+     * @return The framebuffer of last frame
      */
     atcg::ref_ptr<Framebuffer> getFramebuffer() const;
 
     /**
      * @brief Get the framebuffer object that is used by the renderer.
      * This is a multi sample framebuffer that can only be used for drawing operations. If you want to read rendered
-     * data, either use getFinishedFramebuffer() which contains the render of the last frame. If you need the current
+     * data, either use getFramebufefr() which contains the render of the last frame. If you need the current
      * state of the framebuffer for this frame, you have to manually blit it.
      *
      * @return The fbo
@@ -557,6 +573,20 @@ ATCG_INLINE uint32_t getMSAA()
 }
 
 /**
+ * @brief Toggle MSAA (on per default).
+ * This can be used to "disable" the internal msaa framebuffer. This can be useful if it is desired to directly draw
+ * into the final framebuffer of the renderer that can be accessed with getFramebuffer(). If MSAA is enabled, this
+ * framebuffer will be overwritten with the result of the msaa buffer by blitting. This will not be done if MSAA is
+ * toggled off.
+ *
+ * @param enable If MSAA should be enabled
+ */
+ATCG_INLINE void toggleMSAA(const bool enable = true)
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->toggleMSAA(enable);
+}
+
+/**
  * @brief Change the viewport of the renderer
  *
  * @param x The viewport x location
@@ -648,7 +678,9 @@ ATCG_INLINE void resize(const uint32_t& width, const uint32_t& height)
 }
 
 /**
- * @brief Use the default screen fbo
+ * @brief Use the default screen fbo.
+ * Per default this will be a MSAA framebuffer. If MSAA is disabled using toggleMSAA, this function will bind the
+ * normal framebuffer that is used in the end to render to the screen.
  */
 ATCG_INLINE void useScreenBuffer()
 {
@@ -814,9 +846,12 @@ ATCG_INLINE void drawImage(const atcg::ref_ptr<Texture2D>& img)
 /**
  * @brief Get the framebuffer objects that is used by the renderer.
  * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
- * the current frame data, refer to getFramebufferMSAA()
+ * the current frame data, refer to getFramebufferMSAA().
+ * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
+ * operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using
+ * toggleMSAA.
  *
- * @return THe framebuffer of last frame
+ * @return The framebuffer of last frame
  */
 ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebuffer()
 {

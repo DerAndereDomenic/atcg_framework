@@ -56,6 +56,7 @@ public:
     atcg::ref_ptr<Framebuffer> screen_fbo;
     atcg::ref_ptr<Framebuffer> screen_fbo_msaa;
     uint32_t msaa_num_samples = 8;
+    bool msaa_enabled         = false;
 
     atcg::ref_ptr<Graph> sphere_mesh;
     atcg::ref_ptr<Graph> cylinder_mesh;
@@ -963,7 +964,7 @@ void RendererSystem::finishFrame()
     shader->setInt("screen_texture", 0);
 
     shader->use();
-    impl->screen_fbo->blit(impl->screen_fbo_msaa);
+    if(impl->msaa_enabled) impl->screen_fbo->blit(impl->screen_fbo_msaa);
     impl->screen_fbo->getColorAttachement()->use();
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
@@ -1022,6 +1023,11 @@ void RendererSystem::setMSAA(uint32_t num_samples)
 uint32_t RendererSystem::getMSAA() const
 {
     return impl->msaa_num_samples;
+}
+
+void RendererSystem::toggleMSAA(const bool enable)
+{
+    impl->msaa_enabled = enable;
 }
 
 void RendererSystem::toggleDepthTesting(bool enable)
@@ -1270,7 +1276,7 @@ void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
 void RendererSystem::useScreenBuffer() const
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->screen_fbo_msaa->use();
+    impl->msaa_enabled ? impl->screen_fbo_msaa->use() : impl->screen_fbo->use();
 }
 
 uint32_t RendererSystem::getFrameCounter() const
@@ -1595,6 +1601,7 @@ int RendererSystem::getEntityIndex(const glm::vec2& mouse) const
     glReadBuffer(GL_COLOR_ATTACHMENT1);
     int pixelData;
     glReadPixels((int)mouse.x, (int)mouse.y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
     return pixelData;
 }
 
