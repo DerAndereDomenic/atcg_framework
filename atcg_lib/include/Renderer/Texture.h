@@ -744,4 +744,69 @@ public:
     virtual atcg::ref_ptr<Texture> clone() const override;
 };
 
+/**
+ * @brief This class is used to model a multi sampled texture used for anti aliasing.
+ * It can only be manipulated by rendering to it. Setting or accessing data directly is not possible.
+ */
+class Texture2DMultiSample : public Texture
+{
+public:
+    /**
+     * @brief Create an empty multisampled 2D texture.
+     *
+     * @param num_samples The number of samples
+     * @param spec The texture specification
+     *
+     * @return The resulting texture
+     */
+    static atcg::ref_ptr<Texture2DMultiSample> create(uint32_t num_samples, const TextureSpecification& spec);
+
+    /**
+     *  @brief Destructor
+     */
+    virtual ~Texture2DMultiSample();
+
+    /**
+     * @brief Set the data of the texture.
+     * @note This function is a NoOp as it is not possible to set data to a multisampled texture
+     *
+     * @param data The data
+     */
+    virtual void setData(const torch::Tensor& data) override;
+
+    /**
+     * @brief Get the data in the texture.
+     * @note This function is a NoOp as it is not possible to access data of a multisampled texture
+     *
+     * @param device The device
+     * @param mip_level The mip level
+     *
+     * @return The data
+     */
+    virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
+                                  const uint32_t mip_level    = 0) const override;
+
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Generate mipmap levels
+     * @note This function is a NoOp as it is not possible to generate mipmaps of a multisampled texture.
+     */
+    virtual void generateMipmaps() override;
+
+    /**
+     * @brief Create a deep copy of the texture
+     * @note This function is a NoOp as it is not possible to directly copy multi sample texture data.
+     * Use framebuffers instead
+     *
+     * @return nullptr
+     */
+    virtual atcg::ref_ptr<Texture> clone() const override;
+};
+
 }    // namespace atcg

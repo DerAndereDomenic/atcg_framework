@@ -163,6 +163,31 @@ public:
             {
                 atcg::Application::get()->getWindow()->toggleVSync(vsync);
             }
+
+            const char* combo_preview_value = msaa_samples_str[current_msaa_selection_index];
+
+            if(ImGui::Checkbox("Enable MSAA", &msaa_enabled))
+            {
+                atcg::Renderer::toggleMSAA(msaa_enabled);
+            }
+
+            if(ImGui::BeginCombo("MSAA Samples", combo_preview_value))
+            {
+                for(int n = 0; n < IM_ARRAYSIZE(msaa_samples); n++)
+                {
+                    const bool is_selected = (current_msaa_selection_index == n);
+                    if(ImGui::Selectable(msaa_samples_str[n], is_selected))
+                    {
+                        current_msaa_selection_index = n;
+                        atcg::Renderer::setMSAA(msaa_samples[current_msaa_selection_index]);
+                    }
+
+                    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                    if(is_selected) ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+
             ImGui::End();
         }
 
@@ -259,6 +284,11 @@ private:
 
     bool show_render_settings = false;
     bool vsync                = true;
+
+    uint32_t msaa_samples[6]              = {1, 2, 4, 8, 16, 32};
+    const char* msaa_samples_str[6]       = {"1", "2", "4", "8", "16", "32"};
+    uint32_t current_msaa_selection_index = 3;
+    bool msaa_enabled                     = true;
 #ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif

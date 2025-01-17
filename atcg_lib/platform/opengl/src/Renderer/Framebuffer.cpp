@@ -30,10 +30,10 @@ bool Framebuffer::complete() const
 {
     use();
 
-    std::vector<GLenum> buffers;
+    std::vector<GLenum> buffers(_color_attachements.size());
     for(uint32_t i = 0; i < _color_attachements.size(); ++i)
     {
-        buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+        buffers[i] = (GL_COLOR_ATTACHMENT0 + i);
     }
     glDrawBuffers(buffers.size(), buffers.data());
 
@@ -55,23 +55,27 @@ void Framebuffer::attachColor()
     spec.width                       = _width;
     spec.height                      = _height;
     atcg::ref_ptr<Texture2D> texture = Texture2D::create(spec);
-    glFramebufferTexture2D(GL_FRAMEBUFFER,
-                           GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
-                           GL_TEXTURE_2D,
-                           texture->getID(),
-                           0);
-    _color_attachements.push_back(texture);
-    useDefault();
+    attachTexture(texture);
 }
 
-void Framebuffer::attachTexture(const atcg::ref_ptr<Texture2D>& texture)
+void Framebuffer::attachColorMultiSample(uint32_t num_samples)
 {
     use();
-    glFramebufferTexture2D(GL_FRAMEBUFFER,
-                           GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
-                           GL_TEXTURE_2D,
-                           texture->getID(),
-                           0);
+
+    TextureSpecification spec;
+    spec.width                                  = _width;
+    spec.height                                 = _height;
+    atcg::ref_ptr<Texture2DMultiSample> texture = Texture2DMultiSample::create(num_samples, spec);
+    attachTexture(texture);
+}
+
+void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
+{
+    use();
+    glFramebufferTexture(GL_FRAMEBUFFER,
+                         GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
+                         texture->getID(),
+                         0);
     _color_attachements.push_back(texture);
     useDefault();
 }
@@ -83,6 +87,16 @@ void Framebuffer::attachDepth()
     spec.height        = _height;
     spec.format        = TextureFormat::DEPTH;
     _depth_attachement = Texture2D::create(spec);
+    attachDepth(_depth_attachement);
+}
+
+void Framebuffer::attachDepthMultiSample(uint32_t num_samples)
+{
+    TextureSpecification spec;
+    spec.width         = _width;
+    spec.height        = _height;
+    spec.format        = TextureFormat::DEPTH;
+    _depth_attachement = Texture2DMultiSample::create(num_samples, spec);
     attachDepth(_depth_attachement);
 }
 
@@ -105,7 +119,25 @@ void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, boo
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, source->getID());
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _ID);
-    glBlitFramebuffer(0, 0, _width, _height, 0, 0, _width, _height, flags, GL_NEAREST);
+
+    for(int i = 0; i < _color_attachements.size(); ++i)
+    {
+        glReadBuffer(GL_COLOR_ATTACHMENT0 + i);
+        glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
+        glBlitFramebuffer(0, 0, _width, _height, 0, 0, _width, _height, flags, GL_NEAREST);
+    }
+
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
+    std::vector<GLenum> buffers(_color_attachements.size());
+    for(uint32_t i = 0; i < _color_attachements.size(); ++i)
+    {
+        buffers[i] = (GL_COLOR_ATTACHMENT0 + i);
+    }
+    glDrawBuffers(buffers.size(), buffers.data());
+
+    // Restore old binding status
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, s_current_fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, s_current_fbo);
 }
 
 void Framebuffer::bindByID(uint32_t fbo_id)

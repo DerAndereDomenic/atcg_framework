@@ -28,3 +28,6 @@ Texture
 .. doxygenclass:: atcg::TextureArray
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::Texture2DMultiSample
+   :members:
+   :undoc-members:

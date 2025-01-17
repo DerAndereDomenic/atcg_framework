@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added possibility to override the shaders of RendererSystem::draw on meshes
 - Added entity.entity_handle() method
 - Added Performance Panel to monitor frame time
+- Added multi sampled textures
+- Added multi sampled framebuffers
+- Added multi sample anti aliasing (MSAA)
 
 ### Changed
 
@@ -31,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Circle shader now also writes out entity IDs
 - Removed RendererSystem::draw function that takes in a material struct
 - At the end of each frame, all texture units are unbinded to create a clean state for the next frame
+- It is now possible to attach arbitrary textures (2D, 3D, Cube, etc.) to framebuffers. This changed the return value of fbo->getColorAttachament() from atcg::ref_ptr<Texture2D> to atcg::ref_ptr<Texture>
+- fbo->blit now explicitely tries to copy all color attachements
+- RendererSystem::useScreenBuffer now uses the MSAA framebuffer if MSAA is enabled (default). If MSAA is turned off, the old framebuffer and behavior is used
+- RendererSystem::getFramebuffer now returns the defacto state of the last frame. Direct render calls to this framebuffer will have no errect if MSAA is enabled because it will get overwritten by the blitting of the framebuffers. Use RendererSystem::getFramebufferMSAA() instead. This behavior is also the case for getFrame and getZBuffer
 
 ### Fixed
 
