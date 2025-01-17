@@ -1013,6 +1013,17 @@ void RendererSystem::setLineSize(const float& size)
     glLineWidth(size);
 }
 
+void RendererSystem::setMSAA(uint32_t num_samples)
+{
+    impl->msaa_num_samples = num_samples;
+    impl->initFramebuffer(impl->msaa_num_samples, getFramebuffer()->width(), getFramebuffer()->height());
+}
+
+uint32_t RendererSystem::getMSAA() const
+{
+    return impl->msaa_num_samples;
+}
+
 void RendererSystem::toggleDepthTesting(bool enable)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");

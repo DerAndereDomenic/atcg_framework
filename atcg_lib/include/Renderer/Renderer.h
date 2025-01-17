@@ -103,6 +103,20 @@ public:
     void setLineSize(const float& size);
 
     /**
+     * @brief Set the number of MSAA samples
+     *
+     * @param num_samples The number of MSAA samples
+     */
+    void setMSAA(uint32_t num_samples);
+
+    /**
+     * @brief Get the current number of MSAA samples
+     *
+     * @return The number of samples
+     */
+    uint32_t getMSAA() const;
+
+    /**
      * @brief Toggle depth testing
      *
      * @param enable If it should be enabled or disabled
@@ -520,6 +534,26 @@ ATCG_INLINE void setPointSize(const float& size)
 ATCG_INLINE void setLineSize(const float& size)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->setLineSize(size);
+}
+
+/**
+ * @brief Set the number of MSAA samples
+ *
+ * @param num_samples The number of MSAA samples
+ */
+ATCG_INLINE void setMSAA(uint32_t num_samples)
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->setMSAA(num_samples);
+}
+
+/**
+ * @brief Get the current number of MSAA samples
+ *
+ * @return The number of samples
+ */
+ATCG_INLINE uint32_t getMSAA()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getMSAA();
 }
 
 /**
