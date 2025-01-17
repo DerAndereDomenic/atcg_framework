@@ -56,7 +56,7 @@ public:
     atcg::ref_ptr<Framebuffer> screen_fbo;
     atcg::ref_ptr<Framebuffer> screen_fbo_msaa;
     uint32_t msaa_num_samples = 8;
-    bool msaa_enabled         = false;
+    bool msaa_enabled         = true;
 
     atcg::ref_ptr<Graph> sphere_mesh;
     atcg::ref_ptr<Graph> cylinder_mesh;
