@@ -764,7 +764,10 @@ inline void defineBindings(py::module_& m)
         .def("setCullFace", &atcg::Renderer::setCullFace, "mode"_a)
         .def("getFrameCounter", &atcg::Renderer::getFrameCounter)
         .def("popTextureID", &atcg::Renderer::popTextureID)
-        .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a);
+        .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a)
+        .def("setMSAA", &atcg::Renderer::setMSAA, "num_samples"_a)
+        .def("getMSAA", &atcg::Renderer::getMSAA)
+        .def("getFramebufferMSAA", &atcg::Renderer::getFramebufferMSAA);
 
     m_renderer_system.def(py::init<>())
         .def("setClearColor", &atcg::RendererSystem::setClearColor, "color"_a)
