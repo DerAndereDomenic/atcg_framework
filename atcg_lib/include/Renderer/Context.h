@@ -5,6 +5,7 @@
 namespace atcg
 {
 class ContextManagerSystem;
+class Framebuffer;
 using ContextHandle = uint64_t;
 
 /**
@@ -42,11 +43,11 @@ public:
     bool isCurrent() const;
 
     /**
-     * @brief Get the handle of the current context
+     * @brief Get the current fbo of this context
      *
-     * @return The current context handle
+     * @return The ID of the fbo
      */
-    static ContextHandle getCurrentContextHandle();
+    ATCG_INLINE uint32_t getCurrentFBO() const { return _fbo; }
 
     /**
      * @brief The native context handle
@@ -54,7 +55,14 @@ public:
      *
      * @return The handle
      */
-    inline ContextHandle getContextHandle() const { return (ContextHandle)_context_handle; }
+    ATCG_INLINE ContextHandle getContextHandle() const { return (ContextHandle)_context_handle; }
+
+    /**
+     * @brief Get the handle of the current context
+     *
+     * @return The current context handle
+     */
+    static ContextHandle getCurrentContextHandle();
 
 private:
     /**
@@ -87,12 +95,21 @@ private:
      */
     void create(const atcg::ref_ptr<Context>& shared);
 
+    /**
+     * @brief Set the currently bound fbo
+     *
+     * @param fbo The ID of the fbo
+     */
+    ATCG_INLINE void setCurrentFBO(const uint32_t fbo) { _fbo = fbo; }
+
     Context(const Context&)            = delete;
     Context& operator=(const Context&) = delete;
 
 private:
     void* _context_handle = nullptr;
+    uint32_t _fbo         = 0;
 
     friend class ContextManagerSystem;
+    friend class Framebuffer;
 };
 }    // namespace atcg
