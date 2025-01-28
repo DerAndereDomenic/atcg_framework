@@ -32,7 +32,7 @@ ContextManagerSystem::~ContextManagerSystem() {}
 
 atcg::ref_ptr<atcg::Context> ContextManagerSystem::createContext(const int device_id)
 {
-    atcg::ref_ptr<atcg::Context> context = atcg::make_ref<atcg::Context>();
+    atcg::ref_ptr<atcg::Context> context = atcg::ref_ptr<atcg::Context>(new atcg::Context());
     context->create(device_id);
 
     std::lock_guard guard(impl->map_mutex);
@@ -43,7 +43,7 @@ atcg::ref_ptr<atcg::Context> ContextManagerSystem::createContext(const int devic
 
 atcg::ref_ptr<atcg::Context> ContextManagerSystem::createContext(const atcg::ref_ptr<atcg::Context>& shared)
 {
-    atcg::ref_ptr<atcg::Context> context = atcg::make_ref<atcg::Context>();
+    atcg::ref_ptr<atcg::Context> context = atcg::ref_ptr<atcg::Context>(new atcg::Context());
     context->create(shared);
 
     std::lock_guard guard(impl->map_mutex);

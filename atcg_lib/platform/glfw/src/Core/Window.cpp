@@ -5,6 +5,7 @@
 #include <Core/Path.h>
 
 #include <Renderer/Context.h>
+#include <Renderer/ContextManager.h>
 
 #include <stb_image.h>
 
@@ -22,8 +23,6 @@ static void GLFWErrorCallback(int error, const char* description)
 
 Window::Window(const WindowProps& props)
 {
-    _context = atcg::make_ref<Context>();
-
     // Initialize glfw
     if(!detail::s_glfw_initialized)
     {
@@ -34,7 +33,7 @@ Window::Window(const WindowProps& props)
         glfwSetErrorCallback(detail::GLFWErrorCallback);
     }
 
-    _context->create();
+    _context = atcg::ContextManager::createContext();
     _context->initGraphicsAPI();
 
     _data.width      = props.width;
@@ -207,7 +206,7 @@ Window::Window(const WindowProps& props)
 
 Window::~Window()
 {
-    _context->destroy();
+    ContextManager::destroyContext(_context);
     if(detail::s_glfw_initialized)
     {
         glfwTerminate();
