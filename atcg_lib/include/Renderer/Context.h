@@ -72,6 +72,13 @@ public:
     bool isCurrent() const;
 
     /**
+     * @brief Get the handle of the current context
+     *
+     * @return The current context handle
+     */
+    static ContextHandle getCurrentContextHandle();
+
+    /**
      * @brief The native context handle
      * For glfw backend it's the glfw window
      *

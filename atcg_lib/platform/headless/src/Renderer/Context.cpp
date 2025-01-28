@@ -199,4 +199,9 @@ bool Context::isCurrent() const
     ContextData* data = (ContextData*)_context_handle;
     return eglGetCurrentContext() == data->context;
 }
+
+ContextHandle Context::getCurrentContextHandle()
+{
+    return (ContextHandle)eglGetCurrentContext();
+}
 }    // namespace atcg

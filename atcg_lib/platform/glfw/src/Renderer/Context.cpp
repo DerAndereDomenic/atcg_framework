@@ -126,4 +126,9 @@ bool Context::isCurrent() const
 {
     return glfwGetCurrentContext() == ((GLFWwindow*)_context_handle);
 }
+
+ContextHandle Context::getCurrentContextHandle()
+{
+    return (ContextHandle)glfwGetCurrentContext();
+}
 }    // namespace atcg
