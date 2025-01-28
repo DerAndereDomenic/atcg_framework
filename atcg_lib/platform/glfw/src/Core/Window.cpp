@@ -41,7 +41,7 @@ Window::Window(const WindowProps& props)
     _data.height     = props.height;
     _data.fullscreen = false;
 
-    void* window = _context->getContextHandle();
+    void* window = (void*)_context->getContextHandle();
     glfwSetWindowTitle((GLFWwindow*)window, props.title.c_str());
     glfwSetWindowSize((GLFWwindow*)window, props.width, props.height);
 
@@ -230,7 +230,7 @@ void Window::setEventCallback(const EventCallbackFn& callback)
 
 void* Window::getNativeWindow() const
 {
-    return _context->getContextHandle();
+    return (void*)_context->getContextHandle();
 }
 
 void Window::resize(const uint32_t& _width, const uint32_t& _height)

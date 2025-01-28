@@ -4,6 +4,9 @@
 
 namespace atcg
 {
+
+using ContextHandle = uint64_t;
+
 /**
  *   @brief A class to model a graphcis context
  */
@@ -74,7 +77,7 @@ public:
      *
      * @return The handle
      */
-    inline void* getContextHandle() const { return _context_handle; }
+    inline ContextHandle getContextHandle() const { return (ContextHandle)_context_handle; }
 
 private:
     void* _context_handle = nullptr;

@@ -52,7 +52,7 @@ void Window::setEventCallback(const EventCallbackFn& callback)
 
 void* Window::getNativeWindow() const
 {
-    return _context->getContextHandle();
+    return (void*)_context->getContextHandle();
 }
 
 void Window::resize(const uint32_t& _width, const uint32_t& _height)
