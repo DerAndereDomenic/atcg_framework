@@ -27,6 +27,8 @@
 #include <Events/VREvent.h>
 
 //-------- Renderer ------
+#include <Renderer/Context.h>
+#include <Renderer/ContextManager.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Shader.h>
 #include <Renderer/ShaderManager.h>
