@@ -142,7 +142,6 @@ public:
     static void useDefault();
 
 private:
-    static uint32_t s_current_fbo;
     uint32_t _ID;
     uint32_t _width, _height;
     std::vector<atcg::ref_ptr<Texture>> _color_attachements;

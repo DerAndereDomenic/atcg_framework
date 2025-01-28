@@ -1,13 +1,12 @@
 #include <Renderer/Framebuffer.h>
 
 #include <Core/Assert.h>
+#include <Renderer/ContextManager.h>
 
 #include <glad/glad.h>
 
 namespace atcg
 {
-
-uint32_t Framebuffer::s_current_fbo = 0;
 
 Framebuffer::Framebuffer(uint32_t width, uint32_t height) : _width(width), _height(height)
 {
@@ -23,7 +22,8 @@ Framebuffer::~Framebuffer()
 void Framebuffer::use() const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, _ID);
-    s_current_fbo = _ID;
+    auto context = ContextManager::getCurrentContext();
+    context->setCurrentFBO(_ID);
 }
 
 bool Framebuffer::complete() const
@@ -136,24 +136,28 @@ void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, boo
     glDrawBuffers(buffers.size(), buffers.data());
 
     // Restore old binding status
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, s_current_fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, s_current_fbo);
+    uint32_t current_fbo = currentFramebuffer();
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, current_fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_fbo);
 }
 
 void Framebuffer::bindByID(uint32_t fbo_id)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-    s_current_fbo = fbo_id;
+    auto context = ContextManager::getCurrentContext();
+    context->setCurrentFBO(fbo_id);
 }
 
 void Framebuffer::useDefault()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    s_current_fbo = 0;
+    auto context = ContextManager::getCurrentContext();
+    context->setCurrentFBO(0);
 }
 
 uint32_t Framebuffer::currentFramebuffer()
 {
-    return s_current_fbo;
+    auto context = ContextManager::getCurrentContext();
+    return context->getCurrentFBO();
 }
 }    // namespace atcg
