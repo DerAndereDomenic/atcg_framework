@@ -9,6 +9,7 @@
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
+#include <Renderer/ContextManager.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
@@ -132,6 +133,7 @@ private:
 
 private:
     bool _running = false;
+    atcg::ref_ptr<ContextManagerSystem> _context_manager;
     atcg::scope_ptr<Window> _window;
 #ifndef ATCG_HEADLESS
     ImGuiLayer* _imgui_layer;

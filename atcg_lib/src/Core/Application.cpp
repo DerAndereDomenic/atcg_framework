@@ -29,6 +29,9 @@ void Application::init(const WindowProps& props)
     ATCG_ASSERT(!s_instance, "There can only be one application instance at a time.");
     ATCG_ASSERT(SystemRegistry::instance(), "SystemRegistry must be initialized before initializing the Application");
 
+    _context_manager = atcg::make_ref<ContextManagerSystem>();
+    SystemRegistry::instance()->registerSystem(_context_manager.get());
+
     _shader_manager = atcg::make_ref<ShaderManagerSystem>();
     SystemRegistry::instance()->registerSystem(_shader_manager.get());
 

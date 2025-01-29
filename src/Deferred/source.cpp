@@ -49,8 +49,10 @@ public:
 template<>
 void MyComponentGUIHandler::draw_component<PointLightComponent>(atcg::Entity entity, PointLightComponent& component)
 {
+#ifndef ATCG_HEADLESS
     ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
     ImGui::InputFloat("Intensity##PointLight", &component.intensity);
+#endif
 }
 struct RenderContext
 {
