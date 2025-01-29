@@ -31,6 +31,7 @@
 #include <Renderer/ContextManager.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Shader.h>
+#include <Renderer/ShaderCompiler.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/PerspectiveCamera.h>
 #include <Renderer/OrthographicCamera.h>
