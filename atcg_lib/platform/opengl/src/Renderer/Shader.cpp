@@ -1,4 +1,5 @@
 #include <Renderer/Shader.h>
+#include <Renderer/ShaderCompiler.h>
 #include <glad/glad.h>
 
 namespace atcg
@@ -25,26 +26,25 @@ Shader::~Shader()
 }
 
 void Shader::recompile(const std::string& compute_path)
-{    // File reading
-    std::string compute_buffer;
+{
+    if(_ID != 0)
+    {
+        glDeleteProgram(_ID);
+        _ID = 0;
+    }
 
-    readShaderCode(compute_path, &compute_buffer);
-    const char* cShaderCode = compute_buffer.c_str();
-
-    // Compiling
-    uint32_t compute;
-
-    compute = compileShader(GL_COMPUTE_SHADER, cShaderCode);
-
-    // Linking
-    uint32_t shaders[] = {compute};
-    linkShader(shaders, 1);
-
-    glDeleteShader(compute);
+    ShaderCompiler compiler;
+    _ID = compiler.compilerShader(compute_path);
 
     _has_geometry = false;
     _is_compute   = true;
     _compute_path = compute_path;
+
+    // Update uniform locations
+    for(auto it = _uniforms.begin(); it != _uniforms.end(); ++it)
+    {
+        it->second.location = glGetUniformLocation(_ID, it->first.c_str());
+    }
 }
 
 void Shader::recompile(const std::string& vertex_path, const std::string& fragment_path)
@@ -55,27 +55,8 @@ void Shader::recompile(const std::string& vertex_path, const std::string& fragme
         _ID = 0;
     }
 
-    // File reading
-    std::string vertex_buffer, fragment_buffer;
-
-    readShaderCode(vertex_path, &vertex_buffer);
-    const char* vShaderCode = vertex_buffer.c_str();
-
-    readShaderCode(fragment_path, &fragment_buffer);
-    const char* fShaderCode = fragment_buffer.c_str();
-
-    // Compiling
-    uint32_t vertex, fragment;
-
-    vertex   = compileShader(GL_VERTEX_SHADER, vShaderCode);
-    fragment = compileShader(GL_FRAGMENT_SHADER, fShaderCode);
-
-    // Linking
-    uint32_t shaders[] = {vertex, fragment};
-    linkShader(shaders, 2);
-
-    glDeleteShader(vertex);
-    glDeleteShader(fragment);
+    ShaderCompiler compiler;
+    _ID = compiler.compilerShader(vertex_path, fragment_path);
 
     _has_geometry  = false;
     _is_compute    = false;
@@ -99,32 +80,8 @@ void Shader::recompile(const std::string& vertex_path,
         _ID = 0;
     }
 
-    // File reading
-    std::string vertex_buffer, fragment_buffer, geometry_buffer;
-
-    readShaderCode(vertex_path, &vertex_buffer);
-    const char* vShaderCode = vertex_buffer.c_str();
-
-    readShaderCode(fragment_path, &fragment_buffer);
-    const char* fShaderCode = fragment_buffer.c_str();
-
-    readShaderCode(geometry_path, &geometry_buffer);
-    const char* gShaderCode = geometry_buffer.c_str();
-
-    // Compiling
-    uint32_t vertex, geometry, fragment;
-
-    vertex   = compileShader(GL_VERTEX_SHADER, vShaderCode);
-    geometry = compileShader(GL_GEOMETRY_SHADER, gShaderCode);
-    fragment = compileShader(GL_FRAGMENT_SHADER, fShaderCode);
-
-    // Linking
-    uint32_t shaders[] = {vertex, geometry, fragment};
-    linkShader(shaders, 3);
-
-    glDeleteShader(vertex);
-    glDeleteShader(fragment);
-    glDeleteShader(geometry);
+    ShaderCompiler compiler;
+    _ID = compiler.compilerShader(vertex_path, geometry_path, fragment_path);
 
     _has_geometry  = true;
     _is_compute    = false;
@@ -136,97 +93,6 @@ void Shader::recompile(const std::string& vertex_path,
     for(auto it = _uniforms.begin(); it != _uniforms.end(); ++it)
     {
         it->second.location = glGetUniformLocation(_ID, it->first.c_str());
-    }
-}
-
-void Shader::readShaderCode(const std::string& path, std::string* code)
-{
-    std::ifstream shaderFile;
-
-    shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-
-    try
-    {
-        shaderFile.open(path);
-        std::stringstream shaderStream;
-
-        shaderStream << shaderFile.rdbuf();
-
-        shaderFile.close();
-
-        *code = shaderStream.str();
-    }
-    catch(std::ifstream::failure e)
-    {
-        ATCG_ERROR("Could not read shader file: {0}", path);
-    }
-}
-
-uint32_t Shader::compileShader(unsigned int shaderType, const std::string& shader_source)
-{
-    uint32_t shader;
-    int32_t success;
-
-    shader                          = glCreateShader(shaderType);
-    const char* shader_source_c_str = shader_source.c_str();
-    glShaderSource(shader, 1, &shader_source_c_str, NULL);
-    glCompileShader(shader);
-
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if(!success)
-    {
-        int32_t length;
-        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &length);
-        char* infoLog = (char*)malloc(sizeof(char) * length);
-        glGetShaderInfoLog(shader, length, &length, infoLog);
-        if(shaderType == GL_VERTEX_SHADER)
-        {
-            ATCG_ERROR("ERROR::SHADER::VERTEX::COMPILATION_FAILED\n{0}", std::string(infoLog));
-        }
-        else if(shaderType == GL_FRAGMENT_SHADER)
-        {
-            ATCG_ERROR("ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n{0}", std::string(infoLog));
-        }
-        else if(shaderType == GL_GEOMETRY_SHADER)
-        {
-            ATCG_ERROR("ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n{0}", std::string(infoLog));
-        }
-        else if(shaderType == GL_COMPUTE_SHADER)
-        {
-            ATCG_ERROR("ERROR::SHADER::COMPUTE::COMPILATION_FAILED\n{0}", std::string(infoLog));
-        }
-        else
-        {
-            ATCG_ERROR("ERROR::SHADER::COMPILATION_FAILED\nUnknown shader type");
-        }
-
-        free(infoLog);
-    }
-
-    return shader;
-}
-
-void Shader::linkShader(const uint32_t* shaders, const uint32_t& num_shaders)
-{
-    int32_t success;
-
-    _ID = glCreateProgram();
-    for(uint32_t i = 0; i < num_shaders; ++i)
-    {
-        glAttachShader(_ID, shaders[i]);
-    }
-    glLinkProgram(_ID);
-
-    glGetProgramiv(_ID, GL_LINK_STATUS, &success);
-    if(!success)
-    {
-        int32_t length;
-        glGetProgramiv(_ID, GL_INFO_LOG_LENGTH, &length);
-        char* infoLog = (char*)malloc(sizeof(char) * length);
-        glGetProgramInfoLog(_ID, length, &length, infoLog);
-        ATCG_ERROR("ERROR::SHADER::PROGRAM::LINKING_FAILED\n{0}", std::string(infoLog));
-        free(infoLog);
     }
 }
 

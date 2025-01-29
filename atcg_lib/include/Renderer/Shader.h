@@ -190,12 +190,6 @@ private:
         std::variant<int, float, glm::vec2, glm::vec3, glm::vec4, glm::mat4> data;
     };
 
-    void readShaderCode(const std::string& path, std::string* code);
-
-    uint32_t compileShader(unsigned int shaderType, const std::string& shader_source);
-
-    void linkShader(const uint32_t* shaders, const uint32_t& num_shaders);
-
     Uniform& getUniform(const std::string& name);
 
     template<typename T>
