@@ -13,6 +13,9 @@ namespace detail
 {
 static bool s_opengl_initialized = false;
 
+// This maps egl handles to our custom context handles
+static std::unordered_map<uint64_t, uint64_t> context_map;
+
 void GLAPIENTRY MessageCallback(GLenum source,
                                 GLenum type,
                                 GLuint id,
@@ -124,6 +127,8 @@ static void create(const atcg::ref_ptr<Context>& shared, const int device_id, vo
     EGLint contextAttribs[] = {EGL_CONTEXT_MAJOR_VERSION, 4, EGL_CONTEXT_MINOR_VERSION, 6, EGL_NONE};
     data->context           = eglCreateContext(data->display, eglConfig, eglShared, contextAttribs);
     ATCG_ASSERT(data->context != EGL_NO_CONTEXT, "Failed to create context");
+
+    detail::context_map.insert(std::make_pair((uint64_t)(data->context), (uint64_t)data));
 }
 }    // namespace detail
 
@@ -132,6 +137,7 @@ void Context::destroy()
     if(_context_handle)
     {
         ContextData* data = (ContextData*)_context_handle;
+        detail::context_map.erase((uint64_t)data->context);
         deactivate();
         eglDestroyContext(data->display, data->context);
         eglDestroySurface(data->display, data->surface);
@@ -202,6 +208,8 @@ bool Context::isCurrent() const
 
 ContextHandle Context::getCurrentContextHandle()
 {
-    return (ContextHandle)eglGetCurrentContext();
+    auto it = detail::context_map.find((uint64_t)eglGetCurrentContext());
+    ATCG_ASSERT(it != detail::context_map.end(), "Context not in context map");
+    return (ContextHandle)it->second;
 }
 }    // namespace atcg
