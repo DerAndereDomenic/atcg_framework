@@ -95,6 +95,7 @@ target_include_directories(atcg_lib PUBLIC "${CMAKE_SOURCE_DIR}/atcg_lib/include
                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_BACKEND}/include"
                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/include"
                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/include"
+                                           "${CMAKE_SOURCE_DIR}/atcg_lib/platform/optix/include"
                                            "python"
 )
 
