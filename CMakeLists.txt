@@ -37,6 +37,15 @@ if(ATCG_CUDA_BACKEND)
     enable_language(CUDA)
     set(CMAKE_CUDA_ARCHITECTURES "native")
     string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
+
+    find_package(OptiX)
+    message("${OptiX_FOUND}")
+    if(OptiX_INCLUDE)
+        message("FOUND OPTIX --- building with OptiX pathtracing")
+        set(ATCG_ENABLE_OPTIX ON)
+    else()
+        message("Could not find OptiX --- building without pathtracing")
+    endif()
 endif()
 
 # OpenGL

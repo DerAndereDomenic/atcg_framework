@@ -8,6 +8,12 @@ if(ATCG_CUDA_BACKEND)
     find_package(CUDAToolkit REQUIRED)
 
     target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+
+    if(ATCG_ENABLE_OPTIX)
+        target_include_directories(atcg_lib PUBLIC ${OptiX_INCLUDE})
+        target_compile_definitions(atcg_lib PUBLIC ATCG_ENABLE_OPTIX)
+    endif()
+
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
     target_link_libraries(atcg_lib PUBLIC CUDA::nvjpeg)
