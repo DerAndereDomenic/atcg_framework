@@ -11,6 +11,15 @@ MeshShape::MeshShape(const atcg::ref_ptr<Graph>& mesh)
     _uvs       = mesh->getDeviceUVs().clone();
     _faces     = mesh->getDeviceFaces().clone();
     mesh->unmapAllPointers();
+
+    MeshShapeData data;
+    data.positions = (glm::vec3*)_positions.data_ptr();
+    data.normals   = (glm::vec3*)_normals.data_ptr();
+    data.uvs       = (glm::vec3*)_uvs.data_ptr();
+    data.faces     = (glm::u32vec3*)_faces.data_ptr();
+
+    _data.upload(&data);
+    _shape_data = _data.get();
 }
 
 MeshShape::~MeshShape() {}

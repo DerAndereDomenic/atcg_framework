@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Shape/Shape.h>
+#include <Shape/MeshShapeData.cuh>
 #include <DataStructure/Graph.h>
 #include <DataStructure/TorchUtils.h>
 
@@ -23,5 +24,7 @@ private:
     torch::Tensor _normals;
     torch::Tensor _uvs;
     torch::Tensor _faces;
+
+    atcg::dref_ptr<MeshShapeData> _data;
 };
 }    // namespace atcg
