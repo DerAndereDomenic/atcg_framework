@@ -14,6 +14,10 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
+    ATCG_INLINE atcg::ref_ptr<Shape> getShape() const { return _shape; }
+
+    ATCG_INLINE const glm::mat4& getTransform() const { return _transform; }
+
 private:
     glm::mat4 _transform;
     atcg::ref_ptr<Shape> _shape;
