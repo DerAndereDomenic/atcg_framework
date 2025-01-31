@@ -2,11 +2,13 @@
 
 #include <Core/Memory.h>
 #include <Core/OptixComponent.h>
+#include <Shape/ShapeData.cuh>
 
 #include <optix.h>
 
 namespace atcg
 {
+class ShapeInstance;
 class Shape : public OptixComponent
 {
 public:
@@ -22,8 +24,11 @@ public:
     ATCG_INLINE OptixProgramGroup getHitGroup() const { return _hit_group; }
 
 protected:
+    friend class ShapeInstance;
     atcg::DeviceBuffer<uint8_t> _ast_buffer;
     OptixTraversableHandle _ast_handle = 0;
     OptixProgramGroup _hit_group;
+
+    ShapeData* _shape_data;
 };
 }    // namespace atcg
