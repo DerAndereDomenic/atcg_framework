@@ -92,3 +92,10 @@
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>
+
+//-------- Optix ------------
+#ifdef ATCG_ENABLE_OPTIX
+    #include <Core/RaytracingPipeline.h>
+    #include <Core/ShaderBindingTable.h>
+    #include <Integrator/PathtracingIntegrator.h>
+#endif
