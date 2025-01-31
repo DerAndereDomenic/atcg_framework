@@ -23,6 +23,8 @@ private:
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
 
+    std::vector<atcg::ref_ptr<ShapeInstance>> _shapes;
+
     atcg::ref_ptr<IAS> _ias;
     atcg::dref_ptr<PathtracingParams> _launch_params;
 };

@@ -20,7 +20,6 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
 {
     // Extract scene information
     auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
-    std::vector<atcg::ref_ptr<ShapeInstance>> shapes;
     for(auto e: view)
     {
         Entity entity(e, _scene.get());
@@ -35,7 +34,7 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         auto shape_instance = atcg::make_ref<ShapeInstance>(shape, transform.getModel());
         shape_instance->initializePipeline(pipeline, sbt);
 
-        shapes.push_back(shape_instance);
+        _shapes.push_back(shape_instance);
     }
 
     const std::string ptx_raygen_filename = "./bin/PathtracingIntegrator_ptx.ptx";
@@ -47,7 +46,7 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
     _surface_miss_index   = sbt->addMissEntry(miss_prog_group);
     _occlusion_miss_index = sbt->addMissEntry(occl_prog_group);
 
-    _ias = atcg::make_ref<IAS>(_context, shapes);
+    _ias = atcg::make_ref<IAS>(_context, _shapes);
 
     _pipeline = pipeline;
     _sbt      = sbt;
