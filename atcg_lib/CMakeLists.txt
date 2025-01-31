@@ -52,9 +52,9 @@ if(ATCG_ENABLE_OPTIX)
     include(FilterPTX)
 
     file (GLOB_RECURSE atcg_optix_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/optix/**.c*"
-                                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/optix/**.h")
+                                                               "${CMAKE_SOURCE_DIR}/atcg_lib/platform/optix/**.h")
 
-    filter_ptx_sources(atcg_optix_files ptx_files)
+    filter_ptx_sources("${atcg_optix_files}" ptx_files)
     list(REMOVE_ITEM atcg_optix_files ${ptx_files})
 
     if(ptx_files)
