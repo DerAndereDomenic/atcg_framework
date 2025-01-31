@@ -20,6 +20,17 @@ PathtracingIntegrator::~PathtracingIntegrator() {}
 void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                                const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
+    std::vector<const EmitterVPtrTable*> tables;
+    if(Renderer::hasSkybox())
+    {
+        auto skybox_texture = Renderer::getSkyboxTexture();
+
+        _environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(skybox_texture);
+        _environment_emitter->initializePipeline(pipeline, sbt);
+        tables.push_back(_environment_emitter->getVPtrTable());
+    }
+    _emitters.upload(tables.data(), tables.size());
+
     // Extract scene information
     auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
     for(auto e: view)
@@ -73,6 +84,10 @@ void PathtracingIntegrator::generateRays(const atcg::ref_ptr<PerspectiveCamera>&
     params.image_height = output.size(0);
     params.image_width  = output.size(1);
     params.handle       = _ias->getTraversableHandle();
+
+    params.num_emitters        = _emitters.size();
+    params.emitters            = _emitters.get();
+    params.environment_emitter = _environment_emitter ? _environment_emitter->getVPtrTable() : nullptr;
 
     params.surface_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
     params.surface_trace_params.SBToffset    = 0;

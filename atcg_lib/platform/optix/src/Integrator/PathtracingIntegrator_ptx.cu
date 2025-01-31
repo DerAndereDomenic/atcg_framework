@@ -4,6 +4,8 @@
 
 #include <Integrator/PathtracingData.cuh>
 
+#include <Core/TraceParameters.h>
+#include <Math/Random.h>
 #include <Core/SurfaceInteraction.h>
 #include <Core/Payload.h>
 
@@ -17,9 +19,12 @@ extern "C" __global__ void __raygen__rg()
     uint3 launch_idx = optixGetLaunchIndex();
 
     uint32_t pixel_index = launch_idx.x + params.image_width * launch_idx.y;
+    uint64_t seed        = atcg::sampleTEA64(pixel_index, params.frame_counter);
+    atcg::PCG32 rng(seed);
 
-    float u = (((float)launch_idx.x) / (float)params.image_width - 0.5f) * 2.0f;
-    float v = (((float)(params.image_height - launch_idx.y)) / (float)params.image_height - 0.5f) * 2.0f;
+    glm::vec2 jitter = rng.next2d();
+    float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
+    float v = (((float)(params.image_height - launch_idx.y) + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
 
     glm::vec3 cam_eye = glm::make_vec3(params.cam_eye);
     glm::vec3 U       = glm::make_vec3(params.U) * (float)params.image_width / (float)params.image_height;
@@ -28,21 +33,133 @@ extern "C" __global__ void __raygen__rg()
 
     glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
     glm::vec3 ray_origin = cam_eye;
+    glm::vec3 radiance(0);
+    glm::vec3 throughput(1);
 
-    atcg::SurfaceInteraction si;
-    atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
-                                                         cam_eye,
-                                                         ray_dir,
-                                                         1e-3f,
-                                                         1e6f,
-                                                         &si,
-                                                         params.surface_trace_params);
+    glm::vec3 next_origin;
+    glm::vec3 next_dir;
 
-    glm::vec3 output(0);
-    if(si.valid) output = si.normal * 0.5f + 0.5f;
+    bool next_ray_valid = true;
 
-    params.output_image[pixel_index] =
-        glm::u8vec4((uint8_t)(output.x * 255.0f), (uint8_t)(output.y * 255.0f), (uint8_t)(output.z * 255.0f), 255);
+    atcg::SurfaceInteraction last_si;
+    float last_bsdf_pdf = 1.0f;
+
+    for(int n = 0; n < 10; ++n)
+    {
+        if(!next_ray_valid) break;
+        next_ray_valid = false;
+
+        atcg::SurfaceInteraction si;
+        atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
+                                                             ray_origin,
+                                                             ray_dir,
+                                                             0.001f,
+                                                             1e16f,
+                                                             &si,
+                                                             params.surface_trace_params);
+
+        if(si.valid)
+        {
+            // Check for light source
+            // if(si.emitter)
+            // {
+            //     bool mis_valid             = last_si.valid;
+            //     float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
+            //     float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+            //     radiance += mis_weight * throughput * si.emitter->evalLight(si);
+            // }
+
+            // PBR Sampling
+            if(si.bsdf)
+            {
+                // Next-event estimation
+                for(uint32_t i = 0; i < params.num_emitters; ++i)
+                {
+                    const atcg::EmitterVPtrTable* emitter = params.emitters[i];
+
+                    // if(si.emitter == emitter) continue;
+
+                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+
+                    if(emitter_sampling.sampling_pdf == 0) continue;
+
+                    bool occluded = traceOcclusion(params.handle,
+                                                   si.position,
+                                                   emitter_sampling.direction_to_light,
+                                                   1e-3f,
+                                                   emitter_sampling.distance_to_light - 1e-3f,
+                                                   params.occlusion_trace_params);
+
+                    if(occluded)
+                    {
+                        continue;
+                    }
+
+                    atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+
+                    float mis_weight = emitter_sampling.sampling_pdf /
+                                       (emitter_sampling.sampling_pdf + bsdf_result.sample_probability);
+
+                    radiance += mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
+                                bsdf_result.bsdf_value *
+                                glm::max(0.0f, glm::dot(si.normal, emitter_sampling.direction_to_light));
+                }
+
+                auto result = si.bsdf->sampleBSDF(si, rng);
+
+                if(result.sample_probability > 0.0f)
+                {
+                    next_origin = si.position;
+                    next_dir    = result.out_dir;
+                    throughput *= result.bsdf_weight;
+                    next_ray_valid = true;
+
+                    last_si       = si;
+                    last_bsdf_pdf = result.sample_probability;
+
+                    if((int)(si.bsdf->flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                    {
+                        last_si.valid = false;
+                    }
+                }
+            }
+        }
+        else
+        {
+            if(params.environment_emitter)
+            {
+                bool mis_valid = last_si.valid;
+                float emitter_sampling_pdf =
+                    mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
+                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                radiance += mis_weight * throughput * params.environment_emitter->evalLight(si);
+            }
+        }
+
+        ray_origin = next_origin;
+        ray_dir    = next_dir;
+    }
+
+    // // if(params.frame_counter > 0)
+    // // {
+    // //     // Mix with previous subframes if present!
+    // //     const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
+    // //     const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
+    // //     radiance                             = glm::lerp(prev_output_radiance, radiance, a);
+    // // }
+
+    // // params.accumulation_buffer[pixel_index] = radiance;
+
+    glm::vec3 tone_mapped = glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.2f));
+
+    tone_mapped.x = glm::min(glm::max(tone_mapped.x, 0.0f), 1.0f);
+    tone_mapped.y = glm::min(glm::max(tone_mapped.y, 0.0f), 1.0f);
+    tone_mapped.z = glm::min(glm::max(tone_mapped.z, 0.0f), 1.0f);
+
+    params.output_image[pixel_index] = glm::u8vec4((uint8_t)(tone_mapped.x * 255.0f),
+                                                   (uint8_t)(tone_mapped.y * 255.0f),
+                                                   (uint8_t)(tone_mapped.z * 255.0f),
+                                                   255);
 }
 
 extern "C" __global__ void __miss__ms()

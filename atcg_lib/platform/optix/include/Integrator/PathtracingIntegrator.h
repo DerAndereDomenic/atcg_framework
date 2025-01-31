@@ -3,6 +3,7 @@
 #include <Integrator/Integrator.h>
 #include <Shape/IAS.h>
 #include <Integrator/PathtracingData.cuh>
+#include <Emitter/EnvironmentEmitter.h>
 
 namespace atcg
 {
@@ -24,6 +25,9 @@ private:
     uint32_t _occlusion_miss_index;
 
     std::vector<atcg::ref_ptr<ShapeInstance>> _shapes;
+
+    atcg::DeviceBuffer<const EmitterVPtrTable*> _emitters;
+    atcg::ref_ptr<EnvironmentEmitter> _environment_emitter = nullptr;
 
     atcg::ref_ptr<IAS> _ias;
     atcg::dref_ptr<PathtracingParams> _launch_params;
