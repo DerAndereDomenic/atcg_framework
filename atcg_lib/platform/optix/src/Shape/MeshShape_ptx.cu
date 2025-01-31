@@ -53,6 +53,6 @@ extern "C" __global__ void __closesthit__mesh()
     si->uv              = (1.0f - si->barys.x - si->barys.y) * UV0 + si->barys.x * UV1 + si->barys.y * UV2;
 
     // TODO
-    // si->bsdf    = sbt_data.bsdf;
+    si->bsdf = _sbt_data.bsdf;
     // si->emitter = sbt_data.emitter;
 }

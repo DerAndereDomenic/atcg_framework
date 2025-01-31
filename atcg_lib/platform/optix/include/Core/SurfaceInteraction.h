@@ -4,6 +4,8 @@
 
 namespace atcg
 {
+
+struct BSDFVPtrTable;
 struct SurfaceInteraction
 {
     bool valid = false;
@@ -14,5 +16,7 @@ struct SurfaceInteraction
     glm::vec3 incoming_direction;
     float incoming_distance;
     uint32_t primitive_idx;
+
+    const BSDFVPtrTable* bsdf;
 };
 }    // namespace atcg

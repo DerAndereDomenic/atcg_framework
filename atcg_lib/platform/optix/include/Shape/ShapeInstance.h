@@ -3,13 +3,14 @@
 #include <Core/OptixComponent.h>
 #include <Core/glm.h>
 #include <Shape/Shape.h>
+#include <BSDF/BSDF.h>
 
 namespace atcg
 {
 class ShapeInstance : public OptixComponent
 {
 public:
-    ShapeInstance(const atcg::ref_ptr<Shape>& shape, const glm::mat4& transform);
+    ShapeInstance(const atcg::ref_ptr<Shape>& shape, const atcg::ref_ptr<BSDF>& bsdf, const glm::mat4& transform);
 
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
@@ -21,5 +22,6 @@ public:
 private:
     glm::mat4 _transform;
     atcg::ref_ptr<Shape> _shape;
+    atcg::ref_ptr<BSDF> _bsdf;
 };
 }    // namespace atcg

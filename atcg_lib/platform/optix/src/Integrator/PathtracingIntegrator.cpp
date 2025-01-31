@@ -7,6 +7,8 @@
 #include <Shape/Shape.h>
 #include <Shape/ShapeInstance.h>
 #include <Shape/MeshShape.h>
+#include <BSDF/PBRBSDF.h>
+
 #include <optix_stubs.h>
 
 namespace atcg
@@ -25,13 +27,17 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         Entity entity(e, _scene.get());
 
         auto& transform = entity.getComponent<TransformComponent>();
+        auto& material  = entity.getComponent<MeshRenderComponent>().material;
 
         auto graph                 = entity.getComponent<GeometryComponent>().graph;
         atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
         shape->initializePipeline(pipeline, sbt);
         shape->prepareAccelerationStructure(_context);
 
-        auto shape_instance = atcg::make_ref<ShapeInstance>(shape, transform.getModel());
+        auto bsdf = atcg::make_ref<PBRBSDF>(material);
+        bsdf->initializePipeline(pipeline, sbt);
+
+        auto shape_instance = atcg::make_ref<ShapeInstance>(shape, bsdf, transform.getModel());
         shape_instance->initializePipeline(pipeline, sbt);
 
         _shapes.push_back(shape_instance);
