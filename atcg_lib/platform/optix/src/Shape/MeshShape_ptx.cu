@@ -1,6 +1,7 @@
 #pragma cuda_source_property_format = PTX
 
 #include <Core/SurfaceInteraction.h>
+#include <Shape/ShapeInstanceData.cuh>
 #include <Shape/MeshShapeData.cuh>
 #include <Core/Payload.h>
 
@@ -9,7 +10,9 @@
 extern "C" __global__ void __closesthit__mesh()
 {
     atcg::SurfaceInteraction* si = getPayloadDataPointer<atcg::SurfaceInteraction>();
-    const MeshShapeData sbt_data = *reinterpret_cast<const MeshShapeData*>(optixGetSbtDataPointer());
+    const atcg::ShapeInstanceData _sbt_data =
+        *reinterpret_cast<const atcg::ShapeInstanceData*>(optixGetSbtDataPointer());
+    const atcg::MeshShapeData sbt_data = *(atcg::MeshShapeData*)(_sbt_data.shape);
 
     float3 optix_world_origin = optixGetWorldRayOrigin();
     float3 optix_world_dir    = optixGetWorldRayDirection();

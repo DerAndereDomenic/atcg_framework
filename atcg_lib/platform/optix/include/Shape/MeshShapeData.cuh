@@ -1,5 +1,7 @@
 #pragma once
 
+namespace atcg
+{
 struct MeshShapeData
 {
     glm::vec3* positions;
@@ -7,3 +9,4 @@ struct MeshShapeData
     glm::vec3* uvs;
     glm::u32vec3* faces;
 };
+}
