@@ -29,7 +29,17 @@ extern "C" __global__ void __raygen__rg()
     glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
     glm::vec3 ray_origin = cam_eye;
 
-    glm::vec3 output(1.0f, 0.0f, 1.0);
+    atcg::SurfaceInteraction si;
+    atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
+                                                         cam_eye,
+                                                         ray_dir,
+                                                         1e-3f,
+                                                         1e6f,
+                                                         &si,
+                                                         params.surface_trace_params);
+
+    glm::vec3 output(0);
+    if(si.valid) output = si.normal * 0.5f + 0.5f;
 
     params.output_image[pixel_index] =
         glm::u8vec4((uint8_t)(output.x * 255.0f), (uint8_t)(output.y * 255.0f), (uint8_t)(output.z * 255.0f), 255);
