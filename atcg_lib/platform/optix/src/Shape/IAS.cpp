@@ -2,6 +2,8 @@
 
 #include <Core/Common.h>
 
+#include <optix_stubs.h>
+
 namespace atcg
 {
 IAS::IAS(OptixDeviceContext context, const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes)

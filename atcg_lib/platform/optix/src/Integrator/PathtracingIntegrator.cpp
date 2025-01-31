@@ -7,6 +7,7 @@
 #include <Shape/Shape.h>
 #include <Shape/ShapeInstance.h>
 #include <Shape/MeshShape.h>
+#include <optix_stubs.h>
 
 namespace atcg
 {
