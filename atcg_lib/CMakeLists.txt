@@ -67,7 +67,7 @@ if(ATCG_ENABLE_OPTIX)
         target_link_libraries(atcg_ptxmodules PRIVATE atcg_lib)
 
         set(ATCG_PTX_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-        add_custom_target(atcg_ptxmodules-copy
+        add_custom_target(atcg_ptxmodules-copy ALL
             DEPENDS atcg_ptxmodules
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
             $<TARGET_OBJECTS:atcg_ptxmodules> ${ATCG_PTX_OUTPUT_DIRECTORY}
