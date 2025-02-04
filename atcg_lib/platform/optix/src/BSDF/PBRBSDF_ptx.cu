@@ -134,39 +134,13 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 fresnel_schlick(const glm::vec3& F0
     return F0 + (glm::vec3(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
 }
 
-/**
- * @brief Schlick geometry term for GGX model
- *
- * @param NdotV Angle between normal and viewing direction
- * @param roughness The surface roughness
- *
- * @return The geometry term
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float geometrySchlickGGX(float NdotV, float roughness)
+template<typename T>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE T V_SmithGGX(T NdotL, T NdotV, T alpha, T eps = 1e-8f)
 {
-    float r = (roughness + 1.0f);
-    float k = (r * r) / 8.0f;
-
-    float nom   = NdotV;
-    float denom = NdotV * (1.0f - k) + k + 1e-5f;
-
-    return nom / denom;
-}
-
-/**
- * @brief Smith geometry term
- *
- * @param NdotV Angle between normal and viewing direction
- * @param roughness The surface roughness
- *
- * @return The geometry term
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float geometrySmith(float NdotL, float NdotV, float roughness)
-{
-    float ggx2 = geometrySchlickGGX(NdotV, roughness);
-    float ggx1 = geometrySchlickGGX(NdotL, roughness);
-
-    return ggx1 * ggx2;
+    T a2      = alpha * alpha;
+    T lambdaV = NdotL * glm::sqrt(NdotV * NdotV * (T(1) - a2) + a2);
+    T lambdaL = NdotV * glm::sqrt(NdotL * NdotL * (T(1) - a2) + a2);
+    return T(0.5) / (lambdaV + lambdaL + eps);
 }
 
 /**
@@ -251,16 +225,14 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         float NDF = D_GGX(NdotH, roughness);
 
         // Visibility
-        float G = geometrySmith(NdotL, NdotV, roughness);
+        float V = V_SmithGGX(NdotL, NdotV, roughness);
 
         // Fresnel
         glm::vec3 F = fresnel_schlick(specular_F0, HdotV);
 
-        kD = (1.0f - F) * (1.0f - metallic);
+        kD = (1.0f - F);
 
-        glm::vec3 numerator = NDF * G * F;
-        float denominator   = 4.0f * NdotV * NdotL + 1e-5f;
-        specular_bsdf       = numerator / denominator;
+        specular_bsdf = NDF * V * F;
 
         float halfway_pdf = NDF * NdotH;
         float halfway_to_outgoing_pdf =
@@ -270,6 +242,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
 
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf + 1e-5f;
     result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / result.sample_probability;
+    result.flags =
+        result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
 
     return result;
 }
@@ -307,16 +281,13 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
     if(NdotL <= 0.0f || NdotV <= 0.0f) return result;
 
     float NDF   = D_GGX(NdotH, roughness);
-    float G     = geometrySmith(NdotL, NdotV, roughness);
+    float V     = V_SmithGGX(NdotL, NdotV, roughness);
     glm::vec3 F = fresnel_schlick(metallic_color, glm::max(glm::dot(H, view_dir), 0.0f));
 
-    glm::vec3 numerator = NDF * G * F;
-    float denominator   = 4.0 * NdotV * NdotL + 1e-5f;
-    glm::vec3 specular  = numerator / denominator;
+    glm::vec3 specular = NDF * V * F;
 
     glm::vec3 kS = F;
     glm::vec3 kD = glm::vec3(1.0) - kS;
-    kD *= (1.0 - metallic);
 
     float diffuse_probability =
         glm::dot(diffuse_color, glm::vec3(1)) /
@@ -329,6 +300,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
 
     result.bsdf_value         = specular + kD * diffuse_color / glm::pi<float>();
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf + 1e-5f;
+    result.flags =
+        result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
 
     return result;
 }
@@ -346,6 +319,7 @@ extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_pbrbsdf
     roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
     glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
+    diffuse_color            = glm::lerp(diffuse_color, glm::vec3(0), metallic);
 
     return detail::samplePBR(si, diffuse_color, metallic_color, metallic, roughness, rng);
 }
@@ -360,7 +334,8 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
     glm::vec3 diffuse_color = glm::vec3(color_u.x, color_u.y, color_u.z);
     float metallic          = tex2D<float>(sbt_data->metallic_texture, si.uv.x, si.uv.y);
     float roughness         = tex2D<float>(sbt_data->roughness_texture, si.uv.x, si.uv.y);
-    roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+    roughness     = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+    diffuse_color = glm::lerp(diffuse_color, glm::vec3(0), metallic);
 
     glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
 
