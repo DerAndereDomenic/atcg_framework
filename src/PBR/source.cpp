@@ -10,9 +10,26 @@
 #include <random>
 #include <stb_image.h>
 
+#include <optix.h>
+#include <optix_function_table_definition.h>
+#include <optix_stubs.h>
+
+#include <Core/Common.h>
+
 class PBRLayer : public atcg::Layer
 {
 public:
+    void createOutputTexture(int width, int height)
+    {
+        output_tensor = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
+
+        atcg::TextureSpecification spec;
+        spec.width     = width;
+        spec.height    = height;
+        spec.format    = atcg::TextureFormat::RGBA;
+        output_texture = atcg::Texture2D::create(spec);
+    }
+
     PBRLayer(const std::string& name) : atcg::Layer(name) {}
 
     // This is run at the start of the program
@@ -41,6 +58,25 @@ public:
             float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
             camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
         }
+
+        OPTIX_CHECK(optixInit());
+
+        OptixDeviceContextOptions options = {};
+        CUcontext cuCtx                   = 0;
+
+        OPTIX_CHECK(optixDeviceContextCreate(cuCtx, &options, &optx_context));
+
+        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
+        sbt      = atcg::make_ref<atcg::ShaderBindingTable>(optx_context);
+
+        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context);
+        integrator->setScene(scene);
+        integrator->initializePipeline(pipeline, sbt);
+
+        pipeline->createPipeline();
+        sbt->createSBT();
+
+        createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
     }
 
     // This gets called each frame
@@ -112,6 +148,9 @@ public:
 
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
         }
+
+        integrator->generateRays(camera_controller->getCamera(), output_tensor);
+        output_texture->setData(output_tensor);
     }
 
 #ifndef ATCG_HEADLESS
@@ -191,6 +230,15 @@ public:
             ImGui::End();
         }
 
+        ImGui::Begin("PT Debug");
+
+        ImGui::Image((ImTextureID)output_texture->getID(),
+                     ImVec2(output_texture->width(), output_texture->height()),
+                     ImVec2 {0, 0},
+                     ImVec2 {1, 1});
+
+        ImGui::End();
+
         performance_panel.renderPanel(show_performance);
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
@@ -217,6 +265,7 @@ public:
     {
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
+        createOutputTexture(event->getWidth(), event->getHeight());
         return false;
     }
 
@@ -234,6 +283,11 @@ public:
         if(event->getKeyCode() == ATCG_KEY_S)
         {
             current_operation = ImGuizmo::OPERATION::SCALE;
+        }
+
+        if(event->getKeyCode() == ATCG_KEY_P)
+        {
+            integrator->reset();
         }
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
@@ -292,6 +346,13 @@ private:
 #ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif
+    OptixDeviceContext optx_context;
+    atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
+    atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
+    atcg::ref_ptr<atcg::PathtracingIntegrator> integrator;
+
+    torch::Tensor output_tensor;
+    atcg::ref_ptr<atcg::Texture2D> output_texture;
 };
 
 class PBR : public atcg::Application
