@@ -19,6 +19,8 @@ public:
 
     virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera, torch::Tensor& output) override;
 
+    virtual void reset() override;
+
 private:
     uint32_t _raygen_index;
     uint32_t _surface_miss_index;
@@ -31,5 +33,8 @@ private:
 
     atcg::ref_ptr<IAS> _ias;
     atcg::dref_ptr<PathtracingParams> _launch_params;
+    uint32_t _frame_counter = 0;
+
+    torch::Tensor _accumulation_buffer;
 };
 }    // namespace atcg

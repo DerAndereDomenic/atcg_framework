@@ -25,6 +25,8 @@ public:
 
     virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera, torch::Tensor& output) = 0;
 
+    virtual void reset() = 0;
+
 protected:
     OptixDeviceContext _context;
     atcg::ref_ptr<Scene> _scene;

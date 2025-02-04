@@ -69,8 +69,20 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
     _sbt      = sbt;
 }
 
+void PathtracingIntegrator::reset()
+{
+    _frame_counter = 0;
+}
+
 void PathtracingIntegrator::generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera, torch::Tensor& output)
 {
+    if(_accumulation_buffer.numel() == 0 || _frame_counter == 0 || _accumulation_buffer.size(0) != output.size(0) ||
+       _accumulation_buffer.size(1) != output.size(1))
+    {
+        _accumulation_buffer =
+            torch::zeros({output.size(0), output.size(1), 3}, atcg::TensorOptions::floatDeviceOptions());
+    }
+
     PathtracingParams params;
 
     glm::mat4 inv_camera_view = glm::inverse(camera->getView());
@@ -84,6 +96,11 @@ void PathtracingIntegrator::generateRays(const atcg::ref_ptr<PerspectiveCamera>&
     params.image_height = output.size(0);
     params.image_width  = output.size(1);
     params.handle       = _ias->getTraversableHandle();
+
+
+    params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
+
+    params.frame_counter = _frame_counter++;
 
     params.num_emitters        = _emitters.size();
     params.emitters            = _emitters.get();

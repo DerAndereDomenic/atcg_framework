@@ -11,6 +11,7 @@ namespace atcg
 struct PathtracingParams
 {
     glm::u8vec4* output_image;
+    glm::vec3* accumulation_buffer;
     uint32_t image_width;
     uint32_t image_height;
 

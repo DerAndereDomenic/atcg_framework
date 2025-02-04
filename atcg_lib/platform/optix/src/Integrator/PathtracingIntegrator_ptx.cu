@@ -44,7 +44,7 @@ extern "C" __global__ void __raygen__rg()
     atcg::SurfaceInteraction last_si;
     float last_bsdf_pdf = 1.0f;
 
-    for(int n = 0; n < 10; ++n)
+    for(int n = 0; n < 8; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;
@@ -117,7 +117,8 @@ extern "C" __global__ void __raygen__rg()
                     last_si       = si;
                     last_bsdf_pdf = result.sample_probability;
 
-                    if((int)(si.bsdf->flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                    if((int)(si.bsdf->flags & atcg::BSDFComponentType::AnyDelta) != 0 ||
+                       (int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
                         last_si.valid = false;
                     }
@@ -140,17 +141,17 @@ extern "C" __global__ void __raygen__rg()
         ray_dir    = next_dir;
     }
 
-    // // if(params.frame_counter > 0)
-    // // {
-    // //     // Mix with previous subframes if present!
-    // //     const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
-    // //     const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
-    // //     radiance                             = glm::lerp(prev_output_radiance, radiance, a);
-    // // }
+    if(params.frame_counter > 0)
+    {
+        // Mix with previous subframes if present!
+        const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
+        const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
+        radiance                             = glm::lerp(prev_output_radiance, radiance, a);
+    }
 
-    // // params.accumulation_buffer[pixel_index] = radiance;
+    params.accumulation_buffer[pixel_index] = radiance;
 
-    glm::vec3 tone_mapped = glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.2f));
+    glm::vec3 tone_mapped = glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.4f));
 
     tone_mapped.x = glm::min(glm::max(tone_mapped.x, 0.0f), 1.0f);
     tone_mapped.y = glm::min(glm::max(tone_mapped.y, 0.0f), 1.0f);
