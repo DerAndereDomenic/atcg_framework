@@ -13,12 +13,14 @@ struct BSDFSamplingResult
     glm::vec3 out_dir;
     glm::vec3 bsdf_weight;
     float sample_probability = 0.0f;
+    BSDFComponentType flags  = BSDFComponentType::Any;
 };
 
 struct BSDFEvalResult
 {
     glm::vec3 bsdf_value     = glm::vec3(0);
     float sample_probability = 0.0f;
+    BSDFComponentType flags  = BSDFComponentType::Any;
 };
 
 struct BSDFVPtrTable
