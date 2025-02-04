@@ -38,7 +38,7 @@ uniform int receive_shadow;
 // Constants over the shader
 vec3 view_dir = vec3(0);
 float NdotV = 0;
-vec3 color_diffuse = vec3(0);
+vec3 base_color = vec3(0);
 float roughness = 0.0;
 float metallic = 0.0;
 vec3 normal = vec3(0.0);
@@ -124,7 +124,7 @@ vec3 eval_brdf(vec3 light_dir)
 
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
-    kD *= (1.0 - metallic);
+    vec3 color_diffuse = mix(base_color, vec3(0), metallic);
 
     vec3 brdf = specular + kD * color_diffuse / PI;
     return brdf;
@@ -135,13 +135,13 @@ void main()
     // Set globals
     view_dir = normalize(camera_pos - frag_pos);
     vec4 diffuse_lookup = texture(texture_diffuse, frag_uv);
-    color_diffuse = frag_color * flat_color * diffuse_lookup.rgb;
+    base_color = frag_color * flat_color * diffuse_lookup.rgb;
     roughness = texture(texture_roughness, frag_uv).r;
     metallic = texture(texture_metallic, frag_uv).r;
     vec3 texture_normal = normalize(texture(texture_normal, frag_uv).rgb * 2.0 - 1.0);
     normal = frag_tbn * texture_normal;
     F0 = vec3(0.04);
-	F0 = mix(F0, color_diffuse, metallic);
+	F0 = mix(F0, base_color, metallic);
     NdotV = max(dot(normal, view_dir), 0.0);
 
     // Define colocated direction light
@@ -175,8 +175,8 @@ void main()
     // IBL
     vec3 kS = fresnelSchlickRoughness(NdotV, F0, roughness);
     vec3 kD = 1.0 - kS;
-    kD *= (1.0 - metallic);
     vec3 irradiance = texture(irradiance_map, normal).rgb;
+    vec3 color_diffuse = mix(base_color, vec3(0), metallic);
     vec3 diffuse = irradiance * color_diffuse;
 
     const float MAX_REFLECTION_LOD = 4.0;
@@ -184,7 +184,7 @@ void main()
     vec3 prefilteredColor = textureLod(prefilter_map, R, roughness * MAX_REFLECTION_LOD).rgb;
     vec2 lutbrdf = texture(lut, vec2(NdotV, roughness)).rg;
     vec3 H = normalize(light_dir + view_dir);
-    vec3 F = fresnel_schlick(F0, max(dot(normal, view_dir), 0.0));
+    vec3 F = kS;
     vec3 specular = prefilteredColor * (F * lutbrdf.x + lutbrdf.y);
     vec3 ambient = (kD * diffuse + specular);
 
