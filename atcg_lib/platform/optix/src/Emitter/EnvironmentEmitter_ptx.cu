@@ -76,16 +76,17 @@ sampleEnvironmentEmitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
 
     random_dir = frame * random_dir;
 
-    glm::vec3 ray_dir = si.incoming_direction;
+    glm::vec3 ray_dir = random_dir;
 
     float theta = std::acos(ray_dir.y) / glm::pi<float>();
     float phi   = (std::atan2(ray_dir.z, ray_dir.x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
 
     glm::vec3 uv(phi, theta, 0);
 
-    result.distance_to_light = std::numeric_limits<float>::infinity();
-    result.sampling_pdf      = pdf;
-    result.uvs               = uv;
+    result.distance_to_light  = std::numeric_limits<float>::infinity();
+    result.sampling_pdf       = pdf;
+    result.uvs                = uv;
+    result.direction_to_light = random_dir;
 
     return result;
 }
