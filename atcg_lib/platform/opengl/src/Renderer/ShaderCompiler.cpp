@@ -168,8 +168,6 @@ uint32_t ShaderCompiler::linkShader(const uint32_t* shaders, const uint32_t& num
     glGetProgramiv(ID, GL_LINK_STATUS, &success);
     if(!success)
     {
-        glDeleteProgram(ID);
-
         int32_t length;
         glGetProgramiv(ID, GL_INFO_LOG_LENGTH, &length);
         char* infoLog = (char*)malloc(sizeof(char) * length);

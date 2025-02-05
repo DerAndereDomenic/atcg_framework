@@ -5,6 +5,7 @@
 #include <Core/Window.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Renderer.h>
+#include <Renderer/ContextManager.h>
 
 // Define a custom test environment class
 class ATCGTestEnvironment : public ::testing::Environment
@@ -18,6 +19,9 @@ public:
         _logger = atcg::make_ref<atcg::Logger>();
         atcg::SystemRegistry::init();
         atcg::SystemRegistry::instance()->registerSystem(_logger.get());
+
+        _context_manager = atcg::make_ref<atcg::ContextManagerSystem>();
+        atcg::SystemRegistry::instance()->registerSystem(_context_manager.get());
 
         _shader_manager = atcg::make_ref<atcg::ShaderManagerSystem>();
         atcg::SystemRegistry::instance()->registerSystem(_shader_manager.get());
@@ -40,6 +44,7 @@ public:
 
 private:
     atcg::ref_ptr<atcg::Logger> _logger;
+    atcg::ref_ptr<atcg::ContextManagerSystem> _context_manager;
     atcg::ref_ptr<atcg::ShaderManagerSystem> _shader_manager;
     atcg::ref_ptr<atcg::RendererSystem> _renderer;
     atcg::ref_ptr<atcg::Window> _window;

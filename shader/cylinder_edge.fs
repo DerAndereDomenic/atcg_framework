@@ -1,4 +1,4 @@
-#version 330 core
+#version 400 core
 
 #define PI 3.14159
 #define MAX_LIGHTS 32
@@ -31,12 +31,14 @@ uniform sampler2D lut;
 uniform vec3 light_colors[MAX_LIGHTS];
 uniform float light_intensities[MAX_LIGHTS];
 uniform vec3 light_positions[MAX_LIGHTS];
+uniform samplerCubeArray shadow_maps;
 uniform int num_lights = 0;
+uniform int receive_shadow;
 
 // Constants over the shader
 vec3 view_dir = vec3(0);
 float NdotV = 0;
-vec3 color_diffuse = vec3(0);
+vec3 base_color = vec3(0);
 float roughness = 0.0;
 float metallic = 0.0;
 vec3 normal = vec3(0.0);
@@ -87,6 +89,24 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * clamped * clamped * clamped * clamped * clamped;
 }
 
+float shadowCalculation(int i, vec3 pos)
+{
+    // get vector between fragment position and light position
+    vec3 fragToLight = pos - light_positions[i];
+    // use the light to fragment vector to sample from the depth map    
+    float closestDepth = texture(shadow_maps, vec4(fragToLight, float(i))).r;
+    // it is currently in linear range between [0,1]. Re-transform back to original value
+    float far_plane = 100.0;
+    closestDepth *= far_plane;
+    // now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+    // now test for shadows
+    float bias = 0.05; 
+    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
+
+    return receive_shadow * shadow;
+}
+
 vec3 eval_brdf(vec3 light_dir)
 {
     vec3 H = normalize(light_dir + view_dir);
@@ -104,7 +124,7 @@ vec3 eval_brdf(vec3 light_dir)
 
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
-    kD *= (1.0 - metallic);
+    vec3 color_diffuse = mix(base_color, vec3(0), metallic);
 
     vec3 brdf = specular + kD * color_diffuse / PI;
     return brdf;
@@ -115,13 +135,13 @@ void main()
     // Set globals
     view_dir = normalize(camera_pos - frag_pos);
     vec4 diffuse_lookup = texture(texture_diffuse, frag_uv);
-    color_diffuse = frag_color * flat_color * diffuse_lookup.rgb;
+    base_color = frag_color * flat_color * diffuse_lookup.rgb;
     roughness = texture(texture_roughness, frag_uv).r;
     metallic = texture(texture_metallic, frag_uv).r;
     vec3 texture_normal = normalize(texture(texture_normal, frag_uv).rgb * 2.0 - 1.0);
     normal = frag_tbn * texture_normal;
     F0 = vec3(0.04);
-	F0 = mix(F0, color_diffuse, metallic);
+	F0 = mix(F0, base_color, metallic);
     NdotV = max(dot(normal, view_dir), 0.0);
 
     // Define colocated direction light
@@ -148,14 +168,15 @@ void main()
         vec3 pl_brdf = eval_brdf(light_dir);
         vec3 light_radiance = light_intensities[i] * light_colors[i] / (r * r);
         float NdotL = max(dot(normal, light_dir), 0.0);
-        point_light_contribution += pl_brdf * NdotL * light_radiance;
+        float shadow = shadowCalculation(i, frag_pos);
+        point_light_contribution += (1.0 - shadow) * pl_brdf * NdotL * light_radiance;
     }
 
     // IBL
     vec3 kS = fresnelSchlickRoughness(NdotV, F0, roughness);
     vec3 kD = 1.0 - kS;
-    kD *= (1.0 - metallic);
     vec3 irradiance = texture(irradiance_map, normal).rgb;
+    vec3 color_diffuse = mix(base_color, vec3(0), metallic);
     vec3 diffuse = irradiance * color_diffuse;
 
     const float MAX_REFLECTION_LOD = 4.0;
@@ -163,7 +184,7 @@ void main()
     vec3 prefilteredColor = textureLod(prefilter_map, R, roughness * MAX_REFLECTION_LOD).rgb;
     vec2 lutbrdf = texture(lut, vec2(NdotV, roughness)).rg;
     vec3 H = normalize(light_dir + view_dir);
-    vec3 F = fresnel_schlick(F0, max(dot(normal, view_dir), 0.0));
+    vec3 F = kS;
     vec3 specular = prefilteredColor * (F * lutbrdf.x + lutbrdf.y);
     vec3 ambient = (kD * diffuse + specular);
 
