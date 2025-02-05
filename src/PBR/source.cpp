@@ -30,6 +30,19 @@ public:
         output_texture = atcg::Texture2D::create(spec);
     }
 
+    void initializePathtracer()
+    {
+        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
+        sbt      = atcg::make_ref<atcg::ShaderBindingTable>(optx_context);
+
+        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context);
+        integrator->setScene(scene);
+        integrator->initializePipeline(pipeline, sbt);
+
+        pipeline->createPipeline();
+        sbt->createSBT();
+    }
+
     PBRLayer(const std::string& name) : atcg::Layer(name) {}
 
     // This is run at the start of the program
@@ -66,15 +79,7 @@ public:
 
         OPTIX_CHECK(optixDeviceContextCreate(cuCtx, &options, &optx_context));
 
-        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
-        sbt      = atcg::make_ref<atcg::ShaderBindingTable>(optx_context);
-
-        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context);
-        integrator->setScene(scene);
-        integrator->initializePipeline(pipeline, sbt);
-
-        pipeline->createPipeline();
-        sbt->createSBT();
+        initializePathtracer();
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
     }
@@ -156,6 +161,19 @@ public:
 
         integrator->generateRays(camera_controller->getCamera(), output_tensor);
         output_texture->setData(output_tensor);
+
+        if(hovered_entity)
+        {
+            if(hovered_entity.hasAnyComponent<atcg::TransformComponent>())
+            {
+                uint64_t current_revision = hovered_entity.getComponent<atcg::TransformComponent>().revision();
+                if(current_revision != last_revision)
+                {
+                    last_revision = current_revision;
+                    initializePathtracer();
+                }
+            }
+        }
     }
 
 #ifndef ATCG_HEADLESS
@@ -248,6 +266,12 @@ public:
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
 
+        if(hovered_entity)
+        {
+            if(hovered_entity.hasAnyComponent<atcg::TransformComponent>())
+                last_revision = hovered_entity.getComponent<atcg::TransformComponent>().revision();
+        }
+
         atcg::drawGuizmo(hovered_entity, current_operation, camera_controller->getCamera());
     }
 #endif
@@ -300,6 +324,11 @@ public:
         {
             int id         = atcg::Renderer::getEntityIndex(mouse_pos);
             hovered_entity = id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, scene.get());
+            if(hovered_entity)
+            {
+                if(hovered_entity.hasAnyComponent<atcg::TransformComponent>())
+                    last_revision = hovered_entity.getComponent<atcg::TransformComponent>().revision();
+            }
             panel.selectEntity(hovered_entity);
         }
         return true;
@@ -353,6 +382,8 @@ private:
 
     torch::Tensor output_tensor;
     atcg::ref_ptr<atcg::Texture2D> output_texture;
+
+    uint64_t last_revision = 0;
 };
 
 class PBR : public atcg::Application
