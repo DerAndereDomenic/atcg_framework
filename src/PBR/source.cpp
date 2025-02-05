@@ -83,7 +83,12 @@ public:
     virtual void onUpdate(float delta_time) override
     {
         performance_panel.registerFrameTime(delta_time);
-        camera_controller->onUpdate(delta_time);
+        bool updated = camera_controller->onUpdate(delta_time);
+
+        if(updated)
+        {
+            integrator->reset();
+        }
 
         atcg::Renderer::clear();
 
@@ -283,11 +288,6 @@ public:
         if(event->getKeyCode() == ATCG_KEY_S)
         {
             current_operation = ImGuizmo::OPERATION::SCALE;
-        }
-
-        if(event->getKeyCode() == ATCG_KEY_P)
-        {
-            integrator->reset();
         }
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
