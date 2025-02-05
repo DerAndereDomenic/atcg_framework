@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added context manager for graphics contexts that enables more robust multi-threaded rendering
 - Added dedicated shader compiler class
 - atcg::CameraController::onUpdate now returns if the camera was updated in the current frame
+- Added revision counter to Transform components
 
 ### Changed
 

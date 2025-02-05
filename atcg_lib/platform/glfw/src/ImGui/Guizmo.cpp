@@ -59,24 +59,27 @@ void drawGuizmo(Entity entity, ImGuizmo::OPERATION operation, const atcg::ref_pt
             model = model * glm::scale(glm::vec3(1.0f / scale_x, 1.0f / scale_y, 1.0f / scale_z));
         }
 
-        ImGuizmo::Manipulate(glm::value_ptr(camera_view),
-                             glm::value_ptr(camera_projection),
-                             operation,
-                             ImGuizmo::LOCAL,
-                             glm::value_ptr(model));
+        bool manipulated = ImGuizmo::Manipulate(glm::value_ptr(camera_view),
+                                                glm::value_ptr(camera_projection),
+                                                operation,
+                                                ImGuizmo::LOCAL,
+                                                glm::value_ptr(model));
 
-        model = model * glm::scale(glm::vec3(scale_x, scale_y, scale_z));
+        if(manipulated)
+        {
+            model = model * glm::scale(glm::vec3(scale_x, scale_y, scale_z));
 
-        if(has_transform)
-        {
-            atcg::TransformComponent& transform = entity.getComponent<atcg::TransformComponent>();
-            transform.setModel(model);
-        }
-        else
-        {
-            atcg::CameraComponent& cam_component = entity.getComponent<atcg::CameraComponent>();
-            auto cam = std::dynamic_pointer_cast<atcg::PerspectiveCamera>(cam_component.camera);
-            cam->setFromTransform(model);
+            if(has_transform)
+            {
+                atcg::TransformComponent& transform = entity.getComponent<atcg::TransformComponent>();
+                transform.setModel(model);
+            }
+            else
+            {
+                atcg::CameraComponent& cam_component = entity.getComponent<atcg::CameraComponent>();
+                auto cam = std::dynamic_pointer_cast<atcg::PerspectiveCamera>(cam_component.camera);
+                cam->setFromTransform(model);
+            }
         }
     }
 
