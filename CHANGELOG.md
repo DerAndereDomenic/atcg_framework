@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added multi sample anti aliasing (MSAA)
 - Added context manager for graphics contexts that enables more robust multi-threaded rendering
 - Added dedicated shader compiler class
+- atcg::CameraController::onUpdate now returns if the camera was updated in the current frame
 
 ### Changed
 
@@ -41,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - RendererSystem::useScreenBuffer now uses the MSAA framebuffer if MSAA is enabled (default). If MSAA is turned off, the old framebuffer and behavior is used
 - RendererSystem::getFramebuffer now returns the defacto state of the last frame. Direct render calls to this framebuffer will have no errect if MSAA is enabled because it will get overwritten by the blitting of the framebuffers. Use RendererSystem::getFramebufferMSAA() instead. This behavior is also the case for getFrame and getZBuffer
 - Graphics Contexts can no longer be created by hand but have to be created via the ContextManager namespace.
+- atcg::CameraController::onUpdate now returns if the camera was updated in the current frame
 
 ### Fixed
 

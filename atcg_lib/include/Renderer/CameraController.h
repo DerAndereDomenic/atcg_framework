@@ -39,8 +39,10 @@ public:
      * @brief Gets called every frame
      *
      * @param delta_time Time since last frame
+     *
+     * @return If the camera was moved
      */
-    virtual void onUpdate(float delta_time) = 0;
+    virtual bool onUpdate(float delta_time) = 0;
 
     /**
      * @brief Handles events
@@ -88,15 +90,17 @@ public:
      * @brief Gets called every frame
      *
      * @param delta_time Time since last frame
+     *
+     * @return If the camera was moved
      */
-    virtual void onUpdate(float delta_time);
+    virtual bool onUpdate(float delta_time) override;
 
     /**
      * @brief Handles events
      *
      * @param e The event
      */
-    virtual void onEvent(Event* e);
+    virtual void onEvent(Event* e) override;
 
 private:
     bool onMouseZoom(MouseScrolledEvent* event);
@@ -133,15 +137,17 @@ public:
      * @brief Gets called every frame
      *
      * @param delta_time Time since last frame
+     *
+     * @return If the camera was moved
      */
-    virtual void onUpdate(float delta_time);
+    virtual bool onUpdate(float delta_time) override;
 
     /**
      * @brief Handles events
      *
      * @param e The event
      */
-    virtual void onEvent(Event* e);
+    virtual void onEvent(Event* e) override;
 
 private:
     bool onWindowResize(WindowResizeEvent* event);
@@ -192,14 +198,14 @@ public:
      *
      * @param delta_time Time since last frame
      */
-    virtual void onUpdate(float delta_time);
+    virtual bool onUpdate(float delta_time) override;
 
     /**
      * @brief Handles events
      *
      * @param e The event
      */
-    virtual void onEvent(Event* e);
+    virtual void onEvent(Event* e) override;
 
     /**
      * @brief Get the camera of the left eye
