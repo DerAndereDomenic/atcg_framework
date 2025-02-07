@@ -189,6 +189,13 @@ public:
         recalculateProjection();
     }
 
+    /**
+     * @brief Create a copy of the camera
+     *
+     * @return The deep copy
+     */
+    virtual atcg::ref_ptr<Camera> copy() const override;
+
 protected:
     virtual void recalculateView() override;
     virtual void recalculateProjection() override;

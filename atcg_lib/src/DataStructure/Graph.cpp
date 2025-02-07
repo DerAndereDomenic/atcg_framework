@@ -149,7 +149,7 @@ torch::Tensor Graph::Impl::edgesFromIndices(const torch::Tensor& indices)
     torch::Tensor e2 = indices.index({Slice(), Slice(1, 3)});
     torch::Tensor e3 = indices.index({Slice(), Slice(0, 3, 2)});
 
-    torch::Tensor edges = torch::vstack({e1, e2, e3});
+    torch::Tensor edges = torch::vstack({e1, e2, e3}).cpu();
     edges               = std::get<0>(torch::sort(edges, 1));
     edges               = std::get<0>(torch::unique_dim(edges, 0, false));
 
@@ -671,6 +671,36 @@ void Graph::unmapAllPointers()
     unmapVertexPointer();
     unmapEdgePointer();
     unmapFacePointer();
+}
+
+atcg::ref_ptr<Graph> Graph::copy() const
+{
+    atcg::ref_ptr<Graph> result;
+
+    switch(impl->type)
+    {
+        case atcg::GraphType::ATCG_GRAPH_TYPE_GRAPH:
+        {
+            result = Graph::createGraph(atcg::getVertexBufferAsDeviceTensor(impl->vertices), getDeviceEdges());
+        }
+        break;
+        case atcg::GraphType::ATCG_GRAPH_TYPE_POINTCLOUD:
+        {
+            result = Graph::createPointCloud(atcg::getVertexBufferAsDeviceTensor(impl->vertices));
+        }
+        break;
+        case atcg::GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH:
+        {
+            result = Graph::createTriangleMesh(atcg::getVertexBufferAsDeviceTensor(impl->vertices), getDeviceFaces());
+        }
+        break;
+    }
+
+    impl->vertices->unmapDevicePointers();
+    impl->edges->unmapDevicePointers();
+    impl->indices->unmapDevicePointers();
+
+    return result;
 }
 
 }    // namespace atcg

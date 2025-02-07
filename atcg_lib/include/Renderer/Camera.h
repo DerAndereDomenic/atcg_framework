@@ -42,6 +42,13 @@ public:
      */
     virtual glm::vec3 getDirection() const = 0;
 
+    /**
+     * @brief Create a copy of the camera
+     *
+     * @return The deep copy
+     */
+    virtual atcg::ref_ptr<Camera> copy() const = 0;
+
 protected:
     virtual void recalculateView()       = 0;
     virtual void recalculateProjection() = 0;
