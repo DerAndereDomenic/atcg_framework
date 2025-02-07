@@ -216,6 +216,11 @@ bool Application::onKeyPress(KeyPressedEvent* e)
         _revision_system->rollback();
     }
 
+    if(e->getKeyCode() == ATCG_KEY_Z && atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
+    {
+        _revision_system->apply();
+    }
+
     return false;
 }
 }    // namespace atcg

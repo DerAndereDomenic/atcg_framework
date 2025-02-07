@@ -5,6 +5,7 @@
 #include <Core/SystemRegistry.h>
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
+
 #include <stack>
 
 namespace atcg
@@ -20,6 +21,8 @@ public:
     }
 
     virtual void rollback() = 0;
+
+    virtual void apply() = 0;
 
     virtual void record_start_state() = 0;
 
@@ -39,23 +42,35 @@ public:
 
     void pushRevision(const atcg::ref_ptr<Revision>& revision)
     {
-        _revisions.push(revision);
-        ATCG_TRACE("New revision added");
+        _rollback_stack.push(revision);
+        _apply_stack = std::stack<atcg::ref_ptr<Revision>>();    // Clear the current stack
+    }
+
+    void apply()
+    {
+        if(_apply_stack.empty()) return;
+
+        auto revision = _apply_stack.top();
+        _apply_stack.pop();
+
+        revision->apply();
+        _rollback_stack.push(revision);
     }
 
     void rollback()
     {
-        if(_revisions.empty()) return;
+        if(_rollback_stack.empty()) return;
 
-        auto revision = _revisions.top();
-        _revisions.pop();
+        auto revision = _rollback_stack.top();
+        _rollback_stack.pop();
+
         revision->rollback();
-
-        ATCG_TRACE("Rollback");
+        _apply_stack.push(revision);
     }
 
 private:
-    std::stack<atcg::ref_ptr<Revision>> _revisions;
+    std::stack<atcg::ref_ptr<Revision>> _rollback_stack;
+    std::stack<atcg::ref_ptr<Revision>> _apply_stack;
 };
 
 template<typename RevisionType>
@@ -116,6 +131,12 @@ class ComponentAddedRevision : public Revision
 public:
     ComponentAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
 
+    virtual void apply() override
+    {
+        atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+        entity.addComponent<Component>(_new_component);
+    }
+
     virtual void rollback() override
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
@@ -140,10 +161,16 @@ class ComponentRemovedRevision : public Revision
 public:
     ComponentRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
 
+    virtual void apply() override
+    {
+        atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+        entity.removeComponent<Component>();
+    }
+
     virtual void rollback() override
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
-        entity.addOrReplaceComponent<Component>(_old_component);
+        entity.replaceComponent<Component>(_old_component);
     }
 
     virtual void record_start_state() override
@@ -163,6 +190,12 @@ class ComponentEditedRevision : public Revision
 {
 public:
     ComponentEditedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+
+    virtual void apply() override
+    {
+        atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+        entity.replaceComponent<Component>(_new_component);
+    }
 
     virtual void rollback() override
     {
@@ -198,6 +231,12 @@ public:
     {
         _revision1 = atcg::make_ref<RevisionType1>(scene, entity);
         _revision2 = atcg::make_ref<RevisionType2>(scene, entity);
+    }
+
+    virtual void apply() override
+    {
+        _revision1->apply();
+        _revision2->apply();
     }
 
     virtual void rollback() override
