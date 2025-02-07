@@ -24,6 +24,7 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     label << "Position##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position), 0.05f))
     {
+        auto recorder = RevisionStack::recordRevision<ComponentEditedRevision<TransformComponent>>(_scene, entity);
         transform.setPosition(position);
     }
     glm::vec3 scale = transform.getScale();
@@ -31,7 +32,8 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     label << "Scale##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale), 0.05f, 1e-5f, FLT_MAX))
     {
-        scale = glm::clamp(scale, 1e-5f, FLT_MAX);
+        auto recorder = RevisionStack::recordRevision<ComponentEditedRevision<TransformComponent>>(_scene, entity);
+        scale         = glm::clamp(scale, 1e-5f, FLT_MAX);
         transform.setScale(scale);
     }
     glm::vec3 rotation = glm::degrees(transform.getRotation());
@@ -39,6 +41,7 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     label << "Rotation##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation), 0.05f))
     {
+        auto recorder = RevisionStack::recordRevision<ComponentEditedRevision<TransformComponent>>(_scene, entity);
         transform.setRotation(glm::radians(rotation));
     }
 
@@ -46,26 +49,42 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     {
         if(ImGui::Button("Apply Transform"))
         {
-            auto graph = entity.getComponent<atcg::GeometryComponent>().graph;
+            auto recorder = RevisionStack::recordRevision<
+                UnionRevision<ComponentEditedRevision<TransformComponent>, ComponentEditedRevision<GeometryComponent>>>(
+                _scene,
+                entity);
+            auto& geometry = entity.getComponent<atcg::GeometryComponent>();
+            auto graph     = geometry.graph->copy();
             applyTransform(graph, transform);
+            geometry.graph = graph;
         }
 
         if(ImGui::Button("Normalize"))
         {
-            auto graph = entity.getComponent<atcg::GeometryComponent>().graph;
+            auto recorder = RevisionStack::recordRevision<
+                UnionRevision<ComponentEditedRevision<TransformComponent>, ComponentEditedRevision<GeometryComponent>>>(
+                _scene,
+                entity);
+            auto& geometry = entity.getComponent<atcg::GeometryComponent>();
+            auto graph     = geometry.graph->copy();
             normalize(graph, transform);
+            geometry.graph = graph;
         }
     }
 }
 
 template<>
-void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraComponent& camera_component)
+void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraComponent& _component)
 {
+    // TODO: Camera is modified in-place
+    CameraComponent component = _component;
+    bool updated              = false;
+
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     std::string id      = std::to_string(entity.getComponent<IDComponent>().ID);
 
     atcg::ref_ptr<atcg::PerspectiveCamera> camera =
-        std::dynamic_pointer_cast<atcg::PerspectiveCamera>(camera_component.camera);
+        std::dynamic_pointer_cast<atcg::PerspectiveCamera>(component.camera->copy());
 
     float aspect_ratio = camera->getAspectRatio();
     float fov          = camera->getFOV();
@@ -75,11 +94,13 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     if(ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f))
     {
         camera->setAspectRatio(aspect_ratio);
+        updated = true;
     }
 
     if(ImGui::DragFloat(("FOV##" + id).c_str(), &fov, 0.5f, 10.0f, 120.0f))
     {
         camera->setFOV(fov);
+        updated = true;
     }
 
     float fbo_aspect_ratio = (float)_camera_preview->width() / (float)_camera_preview->height();
@@ -93,12 +114,13 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
         _camera_preview->attachColor();
         _camera_preview->attachDepth();
         _camera_preview->complete();
+        updated = true;
     }
 
     _camera_preview->use();
     atcg::Renderer::clear();
     atcg::Renderer::setViewport(0, 0, width, height);
-    atcg::Renderer::draw(_scene, camera_component.camera);
+    atcg::Renderer::draw(_scene, component.camera);
     atcg::Renderer::useScreenBuffer();
     atcg::Renderer::setDefaultViewport();
 
@@ -121,40 +143,48 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
         oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
 
-        atcg::Renderer::screenshot(_scene, camera_component.camera, 1920, oss.str());
+        atcg::Renderer::screenshot(_scene, component.camera, 1920, oss.str());
     }
     atcg::Framebuffer::useDefault();
 
-    if(ImGui::Button("Set from View"))
-    {
-        auto view = _scene->getAllEntitiesWith<EditorCameraComponent>();
-        for(auto e: view)
-        {
-            // Should only be one
-            Entity camera_entity(e, _scene.get());
-            atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(
-                camera_entity.getComponent<EditorCameraComponent>().camera);
-            camera->setView(cam->getView());
-            camera->setAspectRatio(cam->getAspectRatio());
-            if(entity.hasComponent<atcg::TransformComponent>())
-            {
-                auto& transform_component = entity.getComponent<atcg::TransformComponent>();
-                transform_component.setModel(glm::inverse(camera->getView()));
-            }
-        }
-    }
+    // if(ImGui::Button("Set from View"))
+    // {
+    //     auto view = _scene->getAllEntitiesWith<EditorCameraComponent>();
+    //     for(auto e: view)
+    //     {
+    //         // Should only be one
+    //         Entity camera_entity(e, _scene.get());
+    //         atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(
+    //             camera_entity.getComponent<EditorCameraComponent>().camera);
+    //         camera->setView(cam->getView());
+    //         camera->setAspectRatio(cam->getAspectRatio());
+    //         if(entity.hasComponent<atcg::TransformComponent>())
+    //         {
+    //             auto& transform_component = entity.getComponent<atcg::TransformComponent>();
+    //             transform_component.setModel(glm::inverse(camera->getView()));
+    //         }
+    //     }
+    // }
 
     label.str(std::string());
     label << "Color##" << id;
-    ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(camera_component.color));
+    updated = updated || ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(component.color));
 
     // Display camera extrinsic/intrinsic as transform
-    atcg::TransformComponent transform(camera->getAsTransform());
-    draw_component(entity, transform);
+    // TODO
+    // atcg::TransformComponent transform(camera->getAsTransform());
+    // draw_component(entity, transform);
 
-    // May be updated
-    // ? Optimize this
-    camera->setFromTransform(transform);
+    // // May be updated
+    // // ? Optimize this
+    // camera->setFromTransform(transform);
+
+    if(updated)
+    {
+        auto recorder = atcg::RevisionStack::recordRevision<ComponentEditedRevision<CameraComponent>>(_scene, entity);
+        _component    = component;
+        _component.camera = camera;
+    }
 }
 
 template<>
@@ -167,6 +197,7 @@ void ComponentGUIHandler::draw_component<GeometryComponent>(Entity entity, Geome
         auto files = f.result();
         if(!files.empty())
         {
+            auto recorder   = RevisionStack::recordRevision<ComponentEditedRevision<GeometryComponent>>(_scene, entity);
             auto mesh       = IO::read_any(files[0]);
             component.graph = mesh;
         }
@@ -176,27 +207,38 @@ void ComponentGUIHandler::draw_component<GeometryComponent>(Entity entity, Geome
 template<>
 void ComponentGUIHandler::draw_component<MeshRenderComponent>(Entity entity, MeshRenderComponent& component)
 {
-    ImGui::Checkbox("Visible##visiblemesh", &component.visible);
+    MeshRenderComponent component_copy = component;
+    bool updated                       = ImGui::Checkbox("Visible##visiblemesh", &component_copy.visible);
 
     // Material
-    Material& material = component.material;
+    Material& material = component_copy.material;
 
-    displayMaterial("mesh", material);
-    ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component.receive_shadow);
+    updated = updated || displayMaterial("mesh", material);
+    updated = updated || ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component_copy.receive_shadow);
+
+    if(updated)
+    {
+        auto recorder =
+            atcg::RevisionStack::recordRevision<ComponentEditedRevision<MeshRenderComponent>>(_scene, entity);
+        component = component_copy;
+    }
 }
 
 template<>
-void ComponentGUIHandler::draw_component<PointRenderComponent>(Entity entity, PointRenderComponent& component)
+void ComponentGUIHandler::draw_component<PointRenderComponent>(Entity entity, PointRenderComponent& _component)
 {
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
 
-    ImGui::Checkbox("Visible##visiblepoints", &component.visible);
+    PointRenderComponent component = _component;
+
+    bool updated    = ImGui::Checkbox("Visible##visiblepoints", &component.visible);
     glm::vec3 color = component.color;
     std::stringstream label;
     label << "Base Color##point" << id;
     if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color)))
     {
         component.color = color;
+        updated         = true;
     }
 
     int point_size = (int)component.point_size;
@@ -205,16 +247,25 @@ void ComponentGUIHandler::draw_component<PointRenderComponent>(Entity entity, Po
     if(ImGui::DragInt(label.str().c_str(), &point_size, 1, 1, INT_MAX))
     {
         component.point_size = (float)point_size;
+        updated              = true;
+    }
+
+    if(updated)
+    {
+        auto recorder =
+            atcg::RevisionStack::recordRevision<ComponentEditedRevision<PointRenderComponent>>(_scene, entity);
+        _component = component;
     }
 }
 
 template<>
 void ComponentGUIHandler::draw_component<PointSphereRenderComponent>(Entity entity,
-                                                                     PointSphereRenderComponent& component)
+                                                                     PointSphereRenderComponent& _component)
 {
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+    PointSphereRenderComponent component = _component;
+    std::string id                       = std::to_string(entity.getComponent<IDComponent>().ID);
 
-    ImGui::Checkbox("Visible##visiblepointsphere", &component.visible);
+    bool updated = ImGui::Checkbox("Visible##visiblepointsphere", &component.visible);
 
     float point_size = component.point_size;
     std::stringstream label;
@@ -222,71 +273,116 @@ void ComponentGUIHandler::draw_component<PointSphereRenderComponent>(Entity enti
     if(ImGui::DragFloat(label.str().c_str(), &point_size, 0.001f, 0.001f, FLT_MAX / INT_MAX))
     {
         component.point_size = point_size;
+        updated              = true;
     }
 
     // Material
     Material& material = component.material;
 
-    displayMaterial("pointsphere", material);
+    updated = updated || displayMaterial("pointsphere", material);
+
+    if(updated)
+    {
+        auto recorder =
+            atcg::RevisionStack::recordRevision<ComponentEditedRevision<PointSphereRenderComponent>>(_scene, entity);
+        _component = component;
+    }
 }
 
 template<>
-void ComponentGUIHandler::draw_component<EdgeRenderComponent>(Entity entity, EdgeRenderComponent& component)
+void ComponentGUIHandler::draw_component<EdgeRenderComponent>(Entity entity, EdgeRenderComponent& _component)
 {
+    EdgeRenderComponent component = _component;
+
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
 
-    ImGui::Checkbox("Visible##visibleedge", &component.visible);
+    bool updated    = ImGui::Checkbox("Visible##visibleedge", &component.visible);
     glm::vec3 color = component.color;
     std::stringstream label;
     label << "Base Color##edge" << id;
     if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color)))
     {
         component.color = color;
+        updated         = true;
+    }
+
+    if(updated)
+    {
+        auto recorder =
+            atcg::RevisionStack::recordRevision<ComponentEditedRevision<EdgeRenderComponent>>(_scene, entity);
+        _component = component;
     }
 }
 
 template<>
 void ComponentGUIHandler::draw_component<EdgeCylinderRenderComponent>(Entity entity,
-                                                                      EdgeCylinderRenderComponent& component)
+                                                                      EdgeCylinderRenderComponent& _component)
 {
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+    EdgeCylinderRenderComponent component = _component;
+    std::string id                        = std::to_string(entity.getComponent<IDComponent>().ID);
 
-    ImGui::Checkbox("Visible##visibleedgecylinder", &component.visible);
+    bool updated = ImGui::Checkbox("Visible##visibleedgecylinder", &component.visible);
     std::stringstream label;
     label << "Radius##edgecylinder" << id;
     float radius = component.radius;
     if(ImGui::DragFloat(label.str().c_str(), &radius, 0.001f, 0.001f, FLT_MAX / INT_MAX))
     {
         component.radius = radius;
+        updated          = true;
     }
 
     // Material
     Material& material = component.material;
 
-    displayMaterial("edgecylinder", material);
+    updated = updated || displayMaterial("edgecylinder", material);
+
+    if(updated)
+    {
+        auto recorder =
+            atcg::RevisionStack::recordRevision<ComponentEditedRevision<EdgeCylinderRenderComponent>>(_scene, entity);
+        _component = component;
+    }
 }
 
 template<>
-void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity, InstanceRenderComponent& component)
+void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity, InstanceRenderComponent& _component)
 {
-    ImGui::Checkbox("Visible##visibleinstance", &component.visible);
+    InstanceRenderComponent component = _component;
+    bool updated                      = ImGui::Checkbox("Visible##visibleinstance", &component.visible);
 
     // Material
     Material& material = component.material;
 
-    displayMaterial("instance", material);
+    updated = updated || displayMaterial("instance", material);
+
+    if(updated)
+    {
+        auto recorder =
+            atcg::RevisionStack::recordRevision<ComponentEditedRevision<InstanceRenderComponent>>(_scene, entity);
+        _component = component;
+    }
 }
 
 template<>
-void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, PointLightComponent& component)
+void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, PointLightComponent& _component)
 {
-    ImGui::DragFloat("Intensity##PointLight", &component.intensity, 0.01f, 0.0f, FLT_MAX);
-    ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
-    ImGui::Checkbox("Cast Shadows##PointLight", &component.cast_shadow);
+    PointLightComponent component = _component;
+    bool updated = ImGui::DragFloat("Intensity##PointLight", &component.intensity, 0.01f, 0.0f, FLT_MAX);
+    updated      = updated || ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
+    updated      = updated || ImGui::Checkbox("Cast Shadows##PointLight", &component.cast_shadow);
+
+    if(updated)
+    {
+        auto recorder =
+            atcg::RevisionStack::recordRevision<ComponentEditedRevision<PointLightComponent>>(_scene, entity);
+        _component = component;
+    }
 }
 
-void ComponentGUIHandler::displayMaterial(const std::string& key, Material& material)
+bool ComponentGUIHandler::displayMaterial(const std::string& key, Material& material)
 {
+    bool updated = false;
+
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     ImGui::Separator();
 
@@ -309,6 +405,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
             {
                 glm::vec4 new_color = glm::make_vec4(color);
                 material.setDiffuseColor(new_color);
+                updated = true;
             }
 
             ImGui::SameLine();
@@ -334,6 +431,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
                     auto img     = IO::imread(files[0], 2.2f);
                     auto texture = atcg::Texture2D::create(img);
                     material.setDiffuseTexture(texture);
+                    updated = true;
                 }
             }
         }
@@ -345,6 +443,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
             if(ImGui::Button(("X##diffuse" + key).c_str()))
             {
                 material.setDiffuseColor(glm::vec4(1));
+                updated = true;
             }
             else
                 ImGui::Image((ImTextureID)material.getDiffuseTexture()->getID(),
@@ -383,6 +482,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
                     auto img     = IO::imread(files[0]);
                     auto texture = atcg::Texture2D::create(img);
                     material.setNormalTexture(texture);
+                    updated = true;
                 }
             }
         }
@@ -394,6 +494,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
             if(ImGui::Button(("X##normal" + key).c_str()))
             {
                 material.removeNormalMap();
+                updated = true;
             }
             else
                 ImGui::Image((ImTextureID)material.getNormalTexture()->getID(),
@@ -415,6 +516,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
             if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
             {
                 material.setRoughness(roughness);
+                updated = true;
             }
 
             ImGui::SameLine();
@@ -440,6 +542,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
                     auto img     = IO::imread(files[0]);
                     auto texture = atcg::Texture2D::create(img);
                     material.setRoughnessTexture(texture);
+                    updated = true;
                 }
             }
         }
@@ -451,6 +554,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
             if(ImGui::Button(("X##roughness" + key).c_str()))
             {
                 material.setRoughness(1.0f);
+                updated = true;
             }
             else
                 ImGui::Image((ImTextureID)material.getRoughnessTexture()->getID(),
@@ -473,6 +577,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
             if(ImGui::DragFloat(("Metallic##" + key).c_str(), &metallic, 0.005f, 0.0f, 1.0f))
             {
                 material.setMetallic(metallic);
+                updated = true;
             }
 
             ImGui::SameLine();
@@ -498,6 +603,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
                     auto img     = IO::imread(files[0]);
                     auto texture = atcg::Texture2D::create(img);
                     material.setMetallicTexture(texture);
+                    updated = true;
                 }
             }
         }
@@ -509,6 +615,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
             if(ImGui::Button(("X##metallic" + key).c_str()))
             {
                 material.setMetallic(0.0f);
+                updated = true;
             }
             else
                 ImGui::Image((ImTextureID)material.getMetallicTexture()->getID(),
@@ -517,5 +624,7 @@ void ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
                              ImVec2 {1, 0});
         }
     }
+
+    return updated;
 }
 }    // namespace atcg
