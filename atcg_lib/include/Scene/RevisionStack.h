@@ -3,6 +3,7 @@
 #include <Core/Platform.h>
 #include <Core/Memory.h>
 #include <Core/SystemRegistry.h>
+#include <Core/Assert.h>
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
 
@@ -68,37 +69,29 @@ public:
         _apply_stack.push(revision);
     }
 
+    template<typename RevisionType>
+    void startRecording(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
+    {
+        ATCG_ASSERT(_current_revision == nullptr, "Can only have one revision at a time");
+
+        _current_revision = atcg::make_ref<RevisionType>(scene, entity);
+        _current_revision->record_start_state();
+    }
+
+    void endRecording()
+    {
+        ATCG_ASSERT(_current_revision != nullptr, "Can only have one revision at a time");
+        _current_revision->record_end_state();
+
+        pushRevision(_current_revision);
+
+        _current_revision = nullptr;
+    }
+
 private:
     std::stack<atcg::ref_ptr<Revision>> _rollback_stack;
     std::stack<atcg::ref_ptr<Revision>> _apply_stack;
-};
-
-template<typename RevisionType>
-class RevisionRecorder
-{
-public:
-    [[nodiscard]] RevisionRecorder(RevisionSystem* revision_system,
-                                   const atcg::ref_ptr<atcg::Scene>& scene,
-                                   atcg::Entity entity)
-        : _revision_system(revision_system),
-          _scene(scene),
-          _entity(entity),
-          _revision(atcg::make_ref<RevisionType>(scene, entity))
-    {
-        _revision->record_start_state();
-    }
-
-    ~RevisionRecorder()
-    {
-        _revision->record_end_state();
-        _revision_system->pushRevision(_revision);
-    }
-
-private:
-    RevisionSystem* _revision_system;
-    atcg::ref_ptr<Scene> _scene;
-    atcg::Entity _entity;
-    atcg::ref_ptr<RevisionType> _revision;
+    atcg::ref_ptr<Revision> _current_revision = nullptr;
 };
 
 // class EntityAddedRevision : public Revision
@@ -170,7 +163,7 @@ public:
     virtual void rollback() override
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
-        entity.replaceComponent<Component>(_old_component);
+        entity.addOrReplaceComponent<Component>(_old_component);
     }
 
     virtual void record_start_state() override
@@ -265,11 +258,16 @@ private:
 namespace RevisionStack
 {
 template<typename RevisionType>
-ATCG_INLINE [[nodiscard]] RevisionRecorder<RevisionType> recordRevision(const atcg::ref_ptr<atcg::Scene>& scene,
-                                                                        atcg::Entity entity)
+ATCG_INLINE void startRecording(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
 {
     RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
-    return RevisionRecorder<RevisionType>(system, scene, entity);
+    system->startRecording<RevisionType>(scene, entity);
+}
+
+ATCG_INLINE void endRecording()
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    system->endRecording();
 }
 
 ATCG_INLINE void rollback()

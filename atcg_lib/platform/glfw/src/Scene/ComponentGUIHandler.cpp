@@ -24,32 +24,35 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     label << "Position##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position), 0.05f))
     {
-        auto recorder = RevisionStack::recordRevision<ComponentEditedRevision<TransformComponent>>(_scene, entity);
+        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(_scene, entity);
         transform.setPosition(position);
+        atcg::RevisionStack::endRecording();
     }
     glm::vec3 scale = transform.getScale();
     label.str(std::string());
     label << "Scale##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale), 0.05f, 1e-5f, FLT_MAX))
     {
-        auto recorder = RevisionStack::recordRevision<ComponentEditedRevision<TransformComponent>>(_scene, entity);
-        scale         = glm::clamp(scale, 1e-5f, FLT_MAX);
+        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(_scene, entity);
+        scale = glm::clamp(scale, 1e-5f, FLT_MAX);
         transform.setScale(scale);
+        atcg::RevisionStack::endRecording();
     }
     glm::vec3 rotation = glm::degrees(transform.getRotation());
     label.str(std::string());
     label << "Rotation##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation), 0.05f))
     {
-        auto recorder = RevisionStack::recordRevision<ComponentEditedRevision<TransformComponent>>(_scene, entity);
+        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(_scene, entity);
         transform.setRotation(glm::radians(rotation));
+        atcg::RevisionStack::endRecording();
     }
 
     if(entity.hasComponent<atcg::GeometryComponent>())
     {
         if(ImGui::Button("Apply Transform"))
         {
-            auto recorder = RevisionStack::recordRevision<
+            RevisionStack::startRecording<
                 UnionRevision<ComponentEditedRevision<TransformComponent>, ComponentEditedRevision<GeometryComponent>>>(
                 _scene,
                 entity);
@@ -57,11 +60,12 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
             auto graph     = geometry.graph->copy();
             applyTransform(graph, transform);
             geometry.graph = graph;
+            atcg::RevisionStack::endRecording();
         }
 
         if(ImGui::Button("Normalize"))
         {
-            auto recorder = RevisionStack::recordRevision<
+            RevisionStack::startRecording<
                 UnionRevision<ComponentEditedRevision<TransformComponent>, ComponentEditedRevision<GeometryComponent>>>(
                 _scene,
                 entity);
@@ -69,6 +73,7 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
             auto graph     = geometry.graph->copy();
             normalize(graph, transform);
             geometry.graph = graph;
+            atcg::RevisionStack::endRecording();
         }
     }
 }
@@ -181,9 +186,10 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
     if(updated)
     {
-        auto recorder = atcg::RevisionStack::recordRevision<ComponentEditedRevision<CameraComponent>>(_scene, entity);
-        _component    = component;
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(_scene, entity);
+        _component        = component;
         _component.camera = camera;
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -197,9 +203,10 @@ void ComponentGUIHandler::draw_component<GeometryComponent>(Entity entity, Geome
         auto files = f.result();
         if(!files.empty())
         {
-            auto recorder   = RevisionStack::recordRevision<ComponentEditedRevision<GeometryComponent>>(_scene, entity);
+            RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(_scene, entity);
             auto mesh       = IO::read_any(files[0]);
             component.graph = mesh;
+            atcg::RevisionStack::endRecording();
         }
     }
 }
@@ -218,9 +225,9 @@ void ComponentGUIHandler::draw_component<MeshRenderComponent>(Entity entity, Mes
 
     if(updated)
     {
-        auto recorder =
-            atcg::RevisionStack::recordRevision<ComponentEditedRevision<MeshRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<MeshRenderComponent>>(_scene, entity);
         component = component_copy;
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -252,9 +259,9 @@ void ComponentGUIHandler::draw_component<PointRenderComponent>(Entity entity, Po
 
     if(updated)
     {
-        auto recorder =
-            atcg::RevisionStack::recordRevision<ComponentEditedRevision<PointRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointRenderComponent>>(_scene, entity);
         _component = component;
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -283,9 +290,9 @@ void ComponentGUIHandler::draw_component<PointSphereRenderComponent>(Entity enti
 
     if(updated)
     {
-        auto recorder =
-            atcg::RevisionStack::recordRevision<ComponentEditedRevision<PointSphereRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointSphereRenderComponent>>(_scene, entity);
         _component = component;
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -308,9 +315,9 @@ void ComponentGUIHandler::draw_component<EdgeRenderComponent>(Entity entity, Edg
 
     if(updated)
     {
-        auto recorder =
-            atcg::RevisionStack::recordRevision<ComponentEditedRevision<EdgeRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<EdgeRenderComponent>>(_scene, entity);
         _component = component;
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -338,9 +345,9 @@ void ComponentGUIHandler::draw_component<EdgeCylinderRenderComponent>(Entity ent
 
     if(updated)
     {
-        auto recorder =
-            atcg::RevisionStack::recordRevision<ComponentEditedRevision<EdgeCylinderRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<EdgeCylinderRenderComponent>>(_scene, entity);
         _component = component;
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -357,9 +364,9 @@ void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity,
 
     if(updated)
     {
-        auto recorder =
-            atcg::RevisionStack::recordRevision<ComponentEditedRevision<InstanceRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<InstanceRenderComponent>>(_scene, entity);
         _component = component;
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -373,9 +380,9 @@ void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, Poi
 
     if(updated)
     {
-        auto recorder =
-            atcg::RevisionStack::recordRevision<ComponentEditedRevision<PointLightComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointLightComponent>>(_scene, entity);
         _component = component;
+        atcg::RevisionStack::endRecording();
     }
 }
 

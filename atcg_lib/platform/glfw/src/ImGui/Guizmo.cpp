@@ -75,18 +75,18 @@ void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
 
             if(has_transform)
             {
-                auto recorder =
-                    atcg::RevisionStack::recordRevision<ComponentEditedRevision<TransformComponent>>(scene, entity);
+                atcg::RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
                 atcg::TransformComponent& transform = entity.getComponent<atcg::TransformComponent>();
                 transform.setModel(model);
+                atcg::RevisionStack::endRecording();
             }
             else
             {
-                auto recorder =
-                    atcg::RevisionStack::recordRevision<ComponentEditedRevision<CameraComponent>>(scene, entity);
+                atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(scene, entity);
                 atcg::CameraComponent& cam_component = entity.getComponent<atcg::CameraComponent>();
                 auto cam = std::dynamic_pointer_cast<atcg::PerspectiveCamera>(cam_component.camera);
                 cam->setFromTransform(model);
+                atcg::RevisionStack::endRecording();
             }
         }
     }

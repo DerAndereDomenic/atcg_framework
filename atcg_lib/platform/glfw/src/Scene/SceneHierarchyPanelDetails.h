@@ -46,8 +46,9 @@ drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity, const atcg::ref_
 
         if(removeComponent)
         {
-            auto recorder = atcg::RevisionStack::recordRevision<ComponentRemovedRevision<T>>(scene, entity);
+            atcg::RevisionStack::startRecording<ComponentRemovedRevision<T>>(scene, entity);
             entity.removeComponent<T>();
+            atcg::RevisionStack::endRecording();
         }
     }
 }
@@ -59,9 +60,10 @@ ATCG_INLINE void displayAddComponentEntry(const atcg::ref_ptr<atcg::Scene>& scen
     {
         if(ImGui::MenuItem(T::toString()))
         {
-            auto recorder = atcg::RevisionStack::recordRevision<ComponentAddedRevision<T>>(scene, entity);
+            atcg::RevisionStack::startRecording<ComponentAddedRevision<T>>(scene, entity);
             entity.addComponent<T>();
             ImGui::CloseCurrentPopup();
+            atcg::RevisionStack::endRecording();
         }
     }
 }
@@ -73,7 +75,7 @@ ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<a
     {
         if(ImGui::MenuItem(CameraComponent::toString()))
         {
-            auto recorder = atcg::RevisionStack::recordRevision<ComponentAddedRevision<CameraComponent>>(scene, entity);
+            atcg::RevisionStack::startRecording<ComponentAddedRevision<CameraComponent>>(scene, entity);
             auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>(1.0f));
             if(entity.hasComponent<TransformComponent>())
             {
@@ -82,6 +84,7 @@ ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<a
                 cam->setView(glm::inverse(entity.getComponent<TransformComponent>().getModel()));
             }
             ImGui::CloseCurrentPopup();
+            atcg::RevisionStack::endRecording();
         }
     }
 }
@@ -210,8 +213,9 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::drawComponents(Entity entity)
     label << "##" << id;
     if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer)))
     {
-        auto recorder = atcg::RevisionStack::recordRevision<ComponentEditedRevision<NameComponent>>(_scene, entity);
-        tag           = std::string(buffer);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<NameComponent>>(_scene, entity);
+        tag = std::string(buffer);
+        atcg::RevisionStack::endRecording();
     }
 
     ImGui::SameLine();
