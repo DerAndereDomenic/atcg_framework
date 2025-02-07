@@ -89,6 +89,7 @@
 #include <Scene/SceneHierarchyPanel.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/RevisionStack.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>
