@@ -85,7 +85,10 @@ class PythonLayer(atcg.Layer):
         self.performance_panel.renderPanel(True)
 
         atcg.ImGui.drawGuizmo(
-            selected_entity, self.current_operation, self.camera_controller.getCamera()
+            self.scene,
+            selected_entity,
+            self.current_operation,
+            self.camera_controller.getCamera(),
         )
 
     def onEvent(self, event):

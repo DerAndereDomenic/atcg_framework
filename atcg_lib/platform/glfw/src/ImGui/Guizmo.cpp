@@ -2,10 +2,14 @@
 
 #include <Core/Application.h>
 #include <Scene/Components.h>
+#include <Scene/RevisionStack.h>
 
 namespace atcg
 {
-void drawGuizmo(Entity entity, ImGuizmo::OPERATION operation, const atcg::ref_ptr<PerspectiveCamera>& camera)
+void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
+                Entity entity,
+                ImGuizmo::OPERATION operation,
+                const atcg::ref_ptr<PerspectiveCamera>& camera)
 {
     bool useViewports        = atcg::Application::get()->getImGuiLayer()->dockspaceEnabled();
     const auto& window       = atcg::Application::get()->getWindow();
@@ -71,11 +75,15 @@ void drawGuizmo(Entity entity, ImGuizmo::OPERATION operation, const atcg::ref_pt
 
             if(has_transform)
             {
+                auto recorder =
+                    atcg::RevisionStack::recordRevision<ComponentEditedRevision<TransformComponent>>(scene, entity);
                 atcg::TransformComponent& transform = entity.getComponent<atcg::TransformComponent>();
                 transform.setModel(model);
             }
             else
             {
+                auto recorder =
+                    atcg::RevisionStack::recordRevision<ComponentEditedRevision<CameraComponent>>(scene, entity);
                 atcg::CameraComponent& cam_component = entity.getComponent<atcg::CameraComponent>();
                 auto cam = std::dynamic_pointer_cast<atcg::PerspectiveCamera>(cam_component.camera);
                 cam->setFromTransform(model);
