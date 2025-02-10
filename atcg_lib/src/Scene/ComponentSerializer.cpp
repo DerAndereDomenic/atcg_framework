@@ -99,7 +99,7 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
     bool use_metallic_texture  = !(metallic_texture->width() == 1 && metallic_texture->height() == 1);
     bool use_roughness_texture = !(roughness_texture->width() == 1 && roughness_texture->height() == 1);
 
-    auto entity_id = entity.getComponent<IDComponent>().ID;
+    auto entity_id = entity.getComponent<IDComponent>().ID();
 
     auto& material_node = j[MATERIAL_KEY];
 
@@ -238,7 +238,7 @@ void ComponentSerializer::serialize_component<IDComponent>(const std::string& fi
                                                            IDComponent& component,
                                                            nlohmann::json& j)
 {
-    j[ID_KEY] = (uint64_t)entity.getComponent<IDComponent>().ID;
+    j[ID_KEY] = (uint64_t)entity.getComponent<IDComponent>().ID();
 }
 
 template<>
@@ -300,7 +300,7 @@ void ComponentSerializer::serialize_component<GeometryComponent>(const std::stri
     if(graph->n_vertices() != 0)
     {
         const char* buffer      = graph->getVerticesBuffer()->getHostPointer<char>();
-        std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".vertices";
+        std::string buffer_name = file_path + "." + std::to_string(id.ID()) + ".vertices";
         serializeBuffer(buffer_name, buffer, graph->getVerticesBuffer()->size());
         j[GEOMETRY_KEY][VERTICES_KEY] = buffer_name;
         graph->getVerticesBuffer()->unmapHostPointers();
@@ -309,7 +309,7 @@ void ComponentSerializer::serialize_component<GeometryComponent>(const std::stri
     if(graph->n_faces() != 0)
     {
         const char* buffer      = graph->getFaceIndexBuffer()->getHostPointer<char>();
-        std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".faces";
+        std::string buffer_name = file_path + "." + std::to_string(id.ID()) + ".faces";
         serializeBuffer(buffer_name, buffer, graph->getFaceIndexBuffer()->size());
         j[GEOMETRY_KEY][FACES_KEY] = buffer_name;
         graph->getFaceIndexBuffer()->unmapHostPointers();
@@ -318,7 +318,7 @@ void ComponentSerializer::serialize_component<GeometryComponent>(const std::stri
     if(graph->n_edges() != 0)
     {
         const char* buffer      = graph->getEdgesBuffer()->getHostPointer<char>();
-        std::string buffer_name = file_path + "." + std::to_string(id.ID) + ".edges";
+        std::string buffer_name = file_path + "." + std::to_string(id.ID()) + ".edges";
         serializeBuffer(buffer_name, buffer, graph->getEdgesBuffer()->size());
         j[GEOMETRY_KEY][EDGES_KEY] = buffer_name;
         graph->getEdgesBuffer()->unmapHostPointers();
@@ -412,8 +412,7 @@ void ComponentSerializer::deserialize_component<IDComponent>(const std::string& 
         return;
     }
 
-    auto& component = entity.getComponent<IDComponent>();
-    component.ID    = (uint64_t)j[ID_KEY];
+    entity.addOrReplaceComponent<IDComponent>((uint64_t)j[ID_KEY]);
 }
 
 template<>

@@ -20,12 +20,12 @@ TEST(SceneTest, findEntityByID)
     auto entity = scene->createEntity("Test Entity");
 
     auto& id         = entity.getComponent<atcg::IDComponent>();
-    auto entity_copy = scene->getEntityByID(id.ID);
+    auto entity_copy = scene->getEntityByID(id.ID());
 
     auto& other_id   = entity_copy.getComponent<atcg::IDComponent>();
     auto& other_name = entity_copy.getComponent<atcg::NameComponent>();
 
-    EXPECT_EQ(other_id.ID, id.ID);
+    EXPECT_EQ(other_id.ID(), id.ID());
     EXPECT_EQ(other_name.name, "Test Entity");
 }
 
@@ -39,12 +39,12 @@ TEST(SceneTest, findEntityByIDMultipleEntities)
     auto entity = scene->createEntity("Test Entity");
 
     auto& id         = entity.getComponent<atcg::IDComponent>();
-    auto entity_copy = scene->getEntityByID(id.ID);
+    auto entity_copy = scene->getEntityByID(id.ID());
 
     auto& other_id   = entity_copy.getComponent<atcg::IDComponent>();
     auto& other_name = entity_copy.getComponent<atcg::NameComponent>();
 
-    EXPECT_EQ(other_id.ID, id.ID);
+    EXPECT_EQ(other_id.ID(), id.ID());
     EXPECT_EQ(other_name.name, "Test Entity");
 }
 
@@ -58,12 +58,12 @@ TEST(SceneTest, findEntityByIDMultipleEntitiesSameName)
     auto entity = scene->createEntity("Test Entity");
 
     auto& id         = entity.getComponent<atcg::IDComponent>();
-    auto entity_copy = scene->getEntityByID(id.ID);
+    auto entity_copy = scene->getEntityByID(id.ID());
 
     auto& other_id   = entity_copy.getComponent<atcg::IDComponent>();
     auto& other_name = entity_copy.getComponent<atcg::NameComponent>();
 
-    EXPECT_EQ(other_id.ID, id.ID);
+    EXPECT_EQ(other_id.ID(), id.ID());
     EXPECT_EQ(other_name.name, "Test Entity");
 }
 
@@ -89,7 +89,7 @@ TEST(SceneTest, findEntitiesByName)
     auto& other_id   = entities.front().getComponent<atcg::IDComponent>();
     auto& other_name = entities.front().getComponent<atcg::NameComponent>();
 
-    EXPECT_EQ(other_id.ID, id.ID);
+    EXPECT_EQ(other_id.ID(), id.ID());
     EXPECT_EQ(other_name.name, "Test Entity");
     EXPECT_EQ(entities.size(), 1);
 }
@@ -109,7 +109,7 @@ TEST(SceneTest, findEntitiesByNameMultipleEntities)
     auto& other_id   = entities.front().getComponent<atcg::IDComponent>();
     auto& other_name = entities.front().getComponent<atcg::NameComponent>();
 
-    EXPECT_EQ(other_id.ID, id.ID);
+    EXPECT_EQ(other_id.ID(), id.ID());
     EXPECT_EQ(other_name.name, "Test Entity");
     EXPECT_EQ(entities.size(), 1);
 }
@@ -195,9 +195,9 @@ TEST(SceneTest, removeEntityByID)
     auto entity = scene->createEntity("Entity");
     auto& id    = entity.getComponent<atcg::IDComponent>();
 
-    scene->removeEntity(id.ID);
+    scene->removeEntity(id.ID());
 
-    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_id   = scene->getEntityByID(id.ID());
     auto search_entity_name = scene->getEntitiesByName("Entity");
 
     EXPECT_EQ(search_entity_id, false);
@@ -213,7 +213,7 @@ TEST(SceneTest, removeEntityByEntity)
 
     scene->removeEntity(entity);
 
-    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_id   = scene->getEntityByID(id.ID());
     auto search_entity_name = scene->getEntitiesByName("Entity");
 
     EXPECT_EQ(search_entity_id, false);
@@ -233,9 +233,9 @@ TEST(SceneTest, removeEntityByIDMulti)
     auto entity = scene->createEntity("Entity");
     auto& id    = entity.getComponent<atcg::IDComponent>();
 
-    scene->removeEntity(id.ID);
+    scene->removeEntity(id.ID());
 
-    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_id   = scene->getEntityByID(id.ID());
     auto search_entity_name = scene->getEntitiesByName("Entity");
 
     EXPECT_EQ(search_entity_id, false);
@@ -257,7 +257,7 @@ TEST(SceneTest, removeEntityByEntityMulti)
 
     scene->removeEntity(entity);
 
-    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_id   = scene->getEntityByID(id.ID());
     auto search_entity_name = scene->getEntitiesByName("Entity");
 
     EXPECT_EQ(search_entity_id, false);
@@ -283,9 +283,9 @@ TEST(SceneTest, removeEntityByIDMultiOtherNames)
     auto entity = scene->createEntity("Entity");
     auto& id    = entity.getComponent<atcg::IDComponent>();
 
-    scene->removeEntity(id.ID);
+    scene->removeEntity(id.ID());
 
-    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_id   = scene->getEntityByID(id.ID());
     auto search_entity_name = scene->getEntitiesByName("Entity");
 
     EXPECT_EQ(search_entity_id, false);
@@ -316,7 +316,7 @@ TEST(SceneTest, removeEntityByEntityMultiOtherNames)
 
     scene->removeEntity(entity);
 
-    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_id   = scene->getEntityByID(id.ID());
     auto search_entity_name = scene->getEntitiesByName("Entity");
 
     EXPECT_EQ(search_entity_id, false);
@@ -335,7 +335,7 @@ TEST(SceneTest, removeNonExistentEntity)
 
     scene->removeEntity(0);
 
-    auto search_entity_id   = scene->getEntityByID(id.ID);
+    auto search_entity_id   = scene->getEntityByID(id.ID());
     auto search_entity_name = scene->getEntitiesByName("Entity");
 
     EXPECT_EQ(search_entity_id, true);

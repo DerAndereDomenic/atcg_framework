@@ -35,7 +35,7 @@ Entity Scene::createEntity(const entt::entity handle, UUID uuid, const std::stri
     IDComponent id = entity.addComponent<IDComponent>(uuid);
     entity.addComponent<NameComponent>(name);
 
-    impl->_entities.insert(std::make_pair(id.ID, entity));
+    impl->_entities.insert(std::make_pair(id.ID(), entity));
 
     auto& entities = impl->_entites_by_name[name];
     entities.push_back(entity);
@@ -68,7 +68,7 @@ void Scene::removeEntity(UUID id)
     for(auto it = entities_with_name.begin(); it != entities_with_name.end(); ++it)
     {
         auto& other_id = it->getComponent<atcg::IDComponent>();
-        if(other_id.ID == id)
+        if(other_id.ID() == id)
         {
             entities_with_name.erase(it);
             break;
@@ -81,7 +81,7 @@ void Scene::removeEntity(UUID id)
 void Scene::removeEntity(Entity entity)
 {
     auto& id = entity.getComponent<atcg::IDComponent>();
-    removeEntity(id.ID);
+    removeEntity(id.ID());
 }
 
 void Scene::removeAllEntites()

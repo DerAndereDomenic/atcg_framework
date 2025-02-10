@@ -227,7 +227,7 @@ public:
     virtual void record_start_state() override
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
-        _uuid = entity.getComponent<IDComponent>().ID;
+        _uuid = entity.getComponent<IDComponent>().ID();
         _name = entity.getComponent<NameComponent>().name;
     }
 
@@ -292,7 +292,7 @@ public:
     virtual void record_start_state() override
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
-        _uuid = entity.getComponent<IDComponent>().ID;
+        _uuid = entity.getComponent<IDComponent>().ID();
         _name = entity.getComponent<NameComponent>().name;
 
         storeComponents<TransformComponent,

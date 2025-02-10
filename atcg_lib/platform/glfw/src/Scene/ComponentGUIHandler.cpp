@@ -17,7 +17,7 @@ void ComponentGUIHandler::draw_component(Entity entity, T& component)
 template<>
 void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, TransformComponent& transform)
 {
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+    std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
 
     glm::vec3 position = transform.getPosition();
     std::stringstream label;
@@ -86,7 +86,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     bool updated              = false;
 
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
-    std::string id      = std::to_string(entity.getComponent<IDComponent>().ID);
+    std::string id      = std::to_string(entity.getComponent<IDComponent>().ID());
 
     atcg::ref_ptr<atcg::PerspectiveCamera> camera =
         std::dynamic_pointer_cast<atcg::PerspectiveCamera>(component.camera->copy());
@@ -234,7 +234,7 @@ void ComponentGUIHandler::draw_component<MeshRenderComponent>(Entity entity, Mes
 template<>
 void ComponentGUIHandler::draw_component<PointRenderComponent>(Entity entity, PointRenderComponent& _component)
 {
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+    std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
 
     PointRenderComponent component = _component;
 
@@ -270,7 +270,7 @@ void ComponentGUIHandler::draw_component<PointSphereRenderComponent>(Entity enti
                                                                      PointSphereRenderComponent& _component)
 {
     PointSphereRenderComponent component = _component;
-    std::string id                       = std::to_string(entity.getComponent<IDComponent>().ID);
+    std::string id                       = std::to_string(entity.getComponent<IDComponent>().ID());
 
     bool updated = ImGui::Checkbox("Visible##visiblepointsphere", &component.visible);
 
@@ -301,7 +301,7 @@ void ComponentGUIHandler::draw_component<EdgeRenderComponent>(Entity entity, Edg
 {
     EdgeRenderComponent component = _component;
 
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+    std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
 
     bool updated    = ImGui::Checkbox("Visible##visibleedge", &component.visible);
     glm::vec3 color = component.color;
@@ -326,7 +326,7 @@ void ComponentGUIHandler::draw_component<EdgeCylinderRenderComponent>(Entity ent
                                                                       EdgeCylinderRenderComponent& _component)
 {
     EdgeCylinderRenderComponent component = _component;
-    std::string id                        = std::to_string(entity.getComponent<IDComponent>().ID);
+    std::string id                        = std::to_string(entity.getComponent<IDComponent>().ID());
 
     bool updated = ImGui::Checkbox("Visible##visibleedgecylinder", &component.visible);
     std::stringstream label;
