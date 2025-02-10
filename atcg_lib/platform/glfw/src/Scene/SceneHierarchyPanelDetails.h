@@ -130,8 +130,10 @@ void SceneHierarchyPanel<GUIHandler>::drawEntityNode(Entity entity)
 
     if(entityDeleted)
     {
+        atcg::RevisionStack::startRecording<EntityRemovedRevision>(_scene, entity);
         if(_selected_entity == entity) selectEntity({});
         _scene->removeEntity(entity);
+        atcg::RevisionStack::endRecording();
     }
 }
 

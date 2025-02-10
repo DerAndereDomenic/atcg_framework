@@ -136,17 +136,96 @@ private:
     std::string _name;
 };
 
-// class EntityRemovedRevision : public Revision
-// {
-// public:
-//     EntityRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+class EntityRemovedRevision : public Revision
+{
+public:
+    EntityRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
 
-//     virtual void rollback() override;
+    virtual void apply() override
+    {
+        atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+        _scene->removeEntity(entity);
+    }
 
-//     virtual void record_start_state() override;
+    virtual void rollback() override
+    {
+        auto entity = _scene->createEntity((entt::entity)_entity_handle, _uuid, _name);
+        restoreComponents<TransformComponent,
+                          CameraComponent,
+                          GeometryComponent,
+                          AccelerationStructureComponent,
+                          MeshRenderComponent,
+                          PointRenderComponent,
+                          PointSphereRenderComponent,
+                          EdgeRenderComponent,
+                          EdgeCylinderRenderComponent,
+                          InstanceRenderComponent,
+                          CustomRenderComponent,
+                          PointLightComponent>(entity);
+    }
 
-//     virtual void record_end_state() override;
-// };
+    virtual void record_start_state() override
+    {
+        atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+        _uuid = entity.getComponent<IDComponent>().ID;
+        _name = entity.getComponent<NameComponent>().name;
+
+        storeComponents<TransformComponent,
+                        CameraComponent,
+                        GeometryComponent,
+                        AccelerationStructureComponent,
+                        MeshRenderComponent,
+                        PointRenderComponent,
+                        PointSphereRenderComponent,
+                        EdgeRenderComponent,
+                        EdgeCylinderRenderComponent,
+                        InstanceRenderComponent,
+                        CustomRenderComponent,
+                        PointLightComponent>(entity);
+    }
+
+    virtual void record_end_state() override {}
+
+private:
+    template<typename... Components>
+    void storeComponents(atcg::Entity entity)
+    {
+        // Capture all components
+        (
+            [&]
+            {
+                if(entity.hasAnyComponent<Components>())
+                {
+                    _components[entt::type_hash<Components>::value()] =
+                        std::make_shared<Components>(entity.getComponent<Components>());
+                }
+            }(),
+            ...);
+    }
+
+    template<typename... Components>
+    void restoreComponents(atcg::Entity entity)
+    {
+        // Restore components
+        for(auto& [id, component]: _components)
+        {
+            (
+                [&]
+                {
+                    if(id == entt::type_hash<Components>::value())
+                    {
+                        entity.addOrReplaceComponent<Components>(*std::static_pointer_cast<Components>(component));
+                    }
+                }(),
+                ...);
+        }
+    }
+
+private:
+    UUID _uuid;
+    std::string _name;
+    std::unordered_map<entt::id_type, std::shared_ptr<void>> _components;
+};
 
 template<typename Component>
 class ComponentAddedRevision : public Revision
