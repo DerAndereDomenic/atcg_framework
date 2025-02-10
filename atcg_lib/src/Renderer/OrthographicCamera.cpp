@@ -17,4 +17,9 @@ void OrthographicCamera::recalculateProjection()
 {
     _projection = glm::ortho(_left, _right, _bottom, _top);
 }
+
+atcg::ref_ptr<Camera> OrthographicCamera::copy() const
+{
+    return atcg::make_ref<OrthographicCamera>(_left, _right, _bottom, _top);
+}
 }    // namespace atcg

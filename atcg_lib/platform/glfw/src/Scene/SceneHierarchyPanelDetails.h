@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Scene/RevisionStack.h>
+
 #include <imgui.h>
 #include <portable-file-dialogs.h>
 
@@ -9,7 +11,8 @@ namespace atcg
 namespace detail
 {
 template<typename GUIHandler, typename T>
-ATCG_INLINE void drawComponent(Entity entity, const atcg::ref_ptr<GUIHandler>& gui_handler)
+ATCG_INLINE void
+drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity, const atcg::ref_ptr<GUIHandler>& gui_handler)
 {
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
                                              ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
@@ -41,30 +44,38 @@ ATCG_INLINE void drawComponent(Entity entity, const atcg::ref_ptr<GUIHandler>& g
             ImGui::TreePop();
         }
 
-        if(removeComponent) entity.removeComponent<T>();
+        if(removeComponent)
+        {
+            atcg::RevisionStack::startRecording<ComponentRemovedRevision<T>>(scene, entity);
+            entity.removeComponent<T>();
+            atcg::RevisionStack::endRecording();
+        }
     }
 }
 
 template<typename T>
-ATCG_INLINE void displayAddComponentEntry(Entity entity)
+ATCG_INLINE void displayAddComponentEntry(const atcg::ref_ptr<atcg::Scene>& scene, Entity entity)
 {
     if(!entity.hasComponent<T>())
     {
         if(ImGui::MenuItem(T::toString()))
         {
+            atcg::RevisionStack::startRecording<ComponentAddedRevision<T>>(scene, entity);
             entity.addComponent<T>();
             ImGui::CloseCurrentPopup();
+            atcg::RevisionStack::endRecording();
         }
     }
 }
 
 template<>
-ATCG_INLINE void displayAddComponentEntry<CameraComponent>(Entity entity)
+ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<atcg::Scene>& scene, Entity entity)
 {
     if(!entity.hasComponent<CameraComponent>())
     {
         if(ImGui::MenuItem(CameraComponent::toString()))
         {
+            atcg::RevisionStack::startRecording<ComponentAddedRevision<CameraComponent>>(scene, entity);
             auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>(1.0f));
             if(entity.hasComponent<TransformComponent>())
             {
@@ -73,6 +84,7 @@ ATCG_INLINE void displayAddComponentEntry<CameraComponent>(Entity entity)
                 cam->setView(glm::inverse(entity.getComponent<TransformComponent>().getModel()));
             }
             ImGui::CloseCurrentPopup();
+            atcg::RevisionStack::endRecording();
         }
     }
 }
@@ -118,8 +130,10 @@ void SceneHierarchyPanel<GUIHandler>::drawEntityNode(Entity entity)
 
     if(entityDeleted)
     {
+        atcg::RevisionStack::startRecording<EntityRemovedRevision>(_scene, entity);
         if(_selected_entity == entity) selectEntity({});
         _scene->removeEntity(entity);
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -201,7 +215,9 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::drawComponents(Entity entity)
     label << "##" << id;
     if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer)))
     {
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<NameComponent>>(_scene, entity);
         tag = std::string(buffer);
+        atcg::RevisionStack::endRecording();
     }
 
     ImGui::SameLine();
@@ -214,14 +230,14 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::drawComponents(Entity entity)
 
     if(ImGui::BeginPopup("AddComponent"))
     {
-        (detail::displayAddComponentEntry<Components>(entity), ...);
+        (detail::displayAddComponentEntry<Components>(_scene, entity), ...);
 
         ImGui::EndPopup();
     }
 
     ImGui::PopItemWidth();
 
-    (detail::drawComponent<GUIHandler, Components>(entity, _gui_handler), ...);
+    (detail::drawComponent<GUIHandler, Components>(_scene, entity, _gui_handler), ...);
 }
 
 template<typename GUIHandler>
@@ -255,6 +271,8 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
         if(ImGui::MenuItem("Create Empty Entity"))
         {
             Entity entity = _scene->createEntity("Empty Entity");
+            atcg::RevisionStack::startRecording<EntityAddedRevision>(_scene, entity);
+            atcg::RevisionStack::endRecording();
             selectEntity(entity);
         }
         ImGui::EndPopup();

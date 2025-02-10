@@ -146,7 +146,7 @@ public:
      *
      * @return Whether this is an empty entity
      */
-    operator bool() const { return _entity_handle != entt::null; }
+    operator bool() const { return (_entity_handle != entt::null && _scene->_registry.valid(_entity_handle)); }
 
 private:
     friend class Scene;

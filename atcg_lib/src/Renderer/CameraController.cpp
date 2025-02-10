@@ -265,6 +265,9 @@ bool FirstPersonController::onUpdate(float delta_time)
 
     glm::vec3 total_velocity =
         _speed * (forwardDirection * _velocity_forward + rightDirection * _velocity_right + upDirection * _velocity_up);
+
+    if(glm::length2(total_velocity) > 1e-5f) update = true;
+
     _camera->setPosition(_camera->getPosition() + total_velocity * delta_time);
     _camera->setLookAt(_camera->getLookAt() + total_velocity * delta_time);
 
@@ -468,6 +471,7 @@ bool VRController::onUpdate(float delta_time)
     glm::vec3 current_offset = VR::getOffset();
     current_offset += total_velocity * delta_time;
 
+    if(glm::length2(total_velocity) > 1e-5f) update = true;
 
     // The trigger is currently down
     if(_trigger_pressed)

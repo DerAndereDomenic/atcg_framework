@@ -35,6 +35,18 @@ public:
     Entity createEntity(const std::string& name = "Entity");
 
     /**
+     * @brief Create a new entity that is part of this scene using a handle.
+     * The handle is a hint that is used if no other entity with this handle already exists
+     *
+     * @param handle The entity handle
+     * @param uuid The uuid
+     * @param name The name of the entity
+     *
+     * @return The entity
+     */
+    Entity createEntity(const entt::entity handle, UUID uuid, const std::string& name);
+
+    /**
      * @brief Get an entity by its UUID.
      * If no entity exists with that ID, an invalid entity is returned
      *

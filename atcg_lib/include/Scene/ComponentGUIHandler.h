@@ -66,7 +66,7 @@ public:
     void draw_component(Entity entity, T& component);
 
 protected:
-    void displayMaterial(const std::string& key, Material& material);
+    bool displayMaterial(const std::string& key, Material& material);
 
     atcg::ref_ptr<Scene> _scene;
     atcg::ref_ptr<Framebuffer> _camera_preview;

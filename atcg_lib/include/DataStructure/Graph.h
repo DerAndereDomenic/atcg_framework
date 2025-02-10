@@ -682,6 +682,13 @@ public:
      */
     void unmapAllPointers();
 
+    /**
+     * @brief Creates a copy of the graph
+     *
+     * @return The deep copy
+     */
+    atcg::ref_ptr<atcg::Graph> copy() const;
+
 private:
     class Impl;
     atcg::scope_ptr<Impl> impl;
