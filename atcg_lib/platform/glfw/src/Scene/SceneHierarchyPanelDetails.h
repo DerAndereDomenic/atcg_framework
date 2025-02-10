@@ -269,6 +269,8 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
         if(ImGui::MenuItem("Create Empty Entity"))
         {
             Entity entity = _scene->createEntity("Empty Entity");
+            atcg::RevisionStack::startRecording<EntityAddedRevision>(_scene, entity);
+            atcg::RevisionStack::endRecording();
             selectEntity(entity);
         }
         ImGui::EndPopup();

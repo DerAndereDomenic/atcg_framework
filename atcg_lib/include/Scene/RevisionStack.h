@@ -4,6 +4,7 @@
 #include <Core/Memory.h>
 #include <Core/SystemRegistry.h>
 #include <Core/Assert.h>
+#include <Scene/Scene.h>
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
 
@@ -112,17 +113,28 @@ private:
     uint32_t _total_revisions                 = 0;
 };
 
-// class EntityAddedRevision : public Revision
-// {
-// public:
-//     EntityAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+class EntityAddedRevision : public Revision
+{
+public:
+    EntityAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
 
-//     virtual void rollback() override;
+    virtual void apply() override { auto entity = _scene->createEntity((entt::entity)_entity_handle, _uuid, _name); }
 
-//     virtual void record_start_state() override;
+    virtual void rollback() override { _scene->removeEntity(atcg::Entity((entt::entity)_entity_handle, _scene.get())); }
 
-//     virtual void record_end_state() override;
-// };
+    virtual void record_start_state() override
+    {
+        atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
+        _uuid = entity.getComponent<IDComponent>().ID;
+        _name = entity.getComponent<NameComponent>().name;
+    }
+
+    virtual void record_end_state() override {}
+
+private:
+    UUID _uuid;
+    std::string _name;
+};
 
 // class EntityRemovedRevision : public Revision
 // {
