@@ -1,5 +1,6 @@
 #include <Scene/Scene.h>
 
+#include <Core/Assert.h>
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
 
@@ -25,8 +26,13 @@ Scene::~Scene() {}
 
 Entity Scene::createEntity(const std::string& name)
 {
-    Entity entity(_registry.create(), this);
-    IDComponent id = entity.addComponent<IDComponent>();
+    return createEntity((entt::entity)0, UUID(), name);
+}
+
+Entity Scene::createEntity(const entt::entity handle, UUID uuid, const std::string& name)
+{
+    Entity entity(_registry.create(handle), this);
+    IDComponent id = entity.addComponent<IDComponent>(uuid);
     entity.addComponent<NameComponent>(name);
 
     impl->_entities.insert(std::make_pair(id.ID, entity));
