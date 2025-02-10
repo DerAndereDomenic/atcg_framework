@@ -41,13 +41,14 @@ public:
 
     ~RevisionSystem() = default;
 
-    void pushRevision(const atcg::ref_ptr<Revision>& revision)
+    ATCG_INLINE void pushRevision(const atcg::ref_ptr<Revision>& revision)
     {
         _rollback_stack.push(revision);
         _apply_stack = std::stack<atcg::ref_ptr<Revision>>();    // Clear the current stack
+        ++_total_revisions;
     }
 
-    void apply()
+    ATCG_INLINE void apply()
     {
         if(_apply_stack.empty()) return;
 
@@ -55,10 +56,10 @@ public:
         _apply_stack.pop();
 
         revision->apply();
-        _rollback_stack.push(revision);
+        _rollback_stack.push(std::move(revision));
     }
 
-    void rollback()
+    ATCG_INLINE void rollback()
     {
         if(_rollback_stack.empty()) return;
 
@@ -66,11 +67,11 @@ public:
         _rollback_stack.pop();
 
         revision->rollback();
-        _apply_stack.push(revision);
+        _apply_stack.push(std::move(revision));
     }
 
     template<typename RevisionType>
-    void startRecording(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
+    ATCG_INLINE void startRecording(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
     {
         ATCG_ASSERT(_current_revision == nullptr, "Can only have one revision at a time");
 
@@ -78,7 +79,7 @@ public:
         _current_revision->record_start_state();
     }
 
-    void endRecording()
+    ATCG_INLINE void endRecording()
     {
         ATCG_ASSERT(_current_revision != nullptr, "Can only have one revision at a time");
         _current_revision->record_end_state();
@@ -88,10 +89,27 @@ public:
         _current_revision = nullptr;
     }
 
+    ATCG_INLINE uint32_t numUndos() const { return _rollback_stack.size(); }
+
+    ATCG_INLINE uint32_t numRedos() const { return _apply_stack.size(); }
+
+    ATCG_INLINE bool isRecording() const { return _current_revision != nullptr; }
+
+    ATCG_INLINE uint32_t totalRevisions() const { return _total_revisions; }
+
+    ATCG_INLINE void clearChache()
+    {
+        ATCG_ASSERT(_current_revision != nullptr, "Can't clear cache while recording");
+
+        _rollback_stack = std::stack<atcg::ref_ptr<Revision>>();
+        _apply_stack    = std::stack<atcg::ref_ptr<Revision>>();
+    }
+
 private:
     std::stack<atcg::ref_ptr<Revision>> _rollback_stack;
     std::stack<atcg::ref_ptr<Revision>> _apply_stack;
     atcg::ref_ptr<Revision> _current_revision = nullptr;
+    uint32_t _total_revisions                 = 0;
 };
 
 // class EntityAddedRevision : public Revision
@@ -274,6 +292,36 @@ ATCG_INLINE void rollback()
 {
     RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
     system->rollback();
+}
+
+ATCG_INLINE uint32_t numUndos()
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    return system->numUndos();
+}
+
+ATCG_INLINE uint32_t numRedos()
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    return system->numRedos();
+}
+
+ATCG_INLINE bool isRecording()
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    return system->isRecording();
+}
+
+ATCG_INLINE uint32_t totalRevisions()
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    return system->totalRevisions();
+}
+
+ATCG_INLINE void clearChache()
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    system->clearChache();
 }
 }    // namespace RevisionStack
 
