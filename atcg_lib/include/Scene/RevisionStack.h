@@ -183,7 +183,7 @@ public:
      */
     ATCG_INLINE void clearChache()
     {
-        ATCG_ASSERT(_current_revision != nullptr, "Can't clear cache while recording");
+        ATCG_ASSERT(_current_revision == nullptr, "Can't clear cache while recording");
 
         _rollback_stack = std::stack<atcg::ref_ptr<Revision>>();
         _apply_stack    = std::stack<atcg::ref_ptr<Revision>>();

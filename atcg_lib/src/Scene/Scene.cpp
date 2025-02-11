@@ -1,6 +1,7 @@
 #include <Scene/Scene.h>
 
 #include <Core/Assert.h>
+#include <Scene/RevisionStack.h>
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
 
@@ -98,6 +99,8 @@ void Scene::removeAllEntites()
     _registry.clear();
     impl->_entites_by_name.clear();
     impl->_entities.clear();
+
+    atcg::RevisionStack::clearChache();
 }
 
 void Scene::_updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id)
