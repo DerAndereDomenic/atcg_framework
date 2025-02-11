@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - atcg::CameraController::onUpdate now returns if the camera was updated in the current frame
 - drawGuizmo now takes in the scene as an additional parameter
 - operator bool() of an entity now also checks if the entity handle is still part of the scene
+- IDComponent::id is no longer read-write but read only
+- NameComponent::name is no longer read-write but read only
 
 ### Fixed
 
