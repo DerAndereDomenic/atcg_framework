@@ -97,6 +97,9 @@ public:
     void removeAllEntites();
 
 private:
+    void _updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id);
+
+private:
     friend class Entity;
     entt::registry _registry;
 

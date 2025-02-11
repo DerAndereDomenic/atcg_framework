@@ -91,4 +91,10 @@ void Scene::removeAllEntites()
     impl->_entities.clear();
 }
 
+void Scene::_updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id)
+{
+    impl->_entities.erase(old_id);
+    impl->_entities.insert(std::make_pair(new_id, entity));
+}
+
 }    // namespace atcg

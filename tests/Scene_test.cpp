@@ -341,3 +341,67 @@ TEST(SceneTest, removeNonExistentEntity)
     EXPECT_EQ(search_entity_id, true);
     EXPECT_EQ(search_entity_name.size(), 1);
 }
+
+TEST(SceneTest, replaceID)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity = scene->createEntity("Entity");
+    auto id     = entity.getComponent<atcg::IDComponent>();
+
+    auto new_id = entity.replaceComponent<atcg::IDComponent>(atcg::IDComponent());
+
+    auto search_entity_old_id = scene->getEntityByID(id.ID());
+    auto search_entity_new_id = scene->getEntityByID(new_id.ID());
+
+    EXPECT_EQ(search_entity_old_id, false);
+    EXPECT_EQ(search_entity_new_id, true);
+}
+
+TEST(SceneTest, replaceOrAddID)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity = scene->createEntity("Entity");
+    auto id     = entity.getComponent<atcg::IDComponent>();
+
+    auto new_id = entity.addOrReplaceComponent<atcg::IDComponent>(atcg::IDComponent());
+
+    auto search_entity_old_id = scene->getEntityByID(id.ID());
+    auto search_entity_new_id = scene->getEntityByID(new_id.ID());
+
+    EXPECT_EQ(search_entity_old_id, false);
+    EXPECT_EQ(search_entity_new_id, true);
+}
+
+TEST(SceneTest, replaceOrAddIDDefaultConstructor)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity = scene->createEntity("Entity");
+    auto id     = entity.getComponent<atcg::IDComponent>();
+
+    auto new_id = entity.addOrReplaceComponent<atcg::IDComponent>();
+
+    auto search_entity_old_id = scene->getEntityByID(id.ID());
+    auto search_entity_new_id = scene->getEntityByID(new_id.ID());
+
+    EXPECT_EQ(search_entity_old_id, false);
+    EXPECT_EQ(search_entity_new_id, true);
+}
+
+TEST(SceneTest, replaceOrAddIDExplicitConstructor)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity = scene->createEntity("Entity");
+    auto id     = entity.getComponent<atcg::IDComponent>();
+
+    auto new_id = entity.addOrReplaceComponent<atcg::IDComponent>(atcg::UUID());
+
+    auto search_entity_old_id = scene->getEntityByID(id.ID());
+    auto search_entity_new_id = scene->getEntityByID(new_id.ID());
+
+    EXPECT_EQ(search_entity_old_id, false);
+    EXPECT_EQ(search_entity_new_id, true);
+}

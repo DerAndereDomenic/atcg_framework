@@ -9,7 +9,6 @@ namespace atcg
 {
 /**
  * @brief A lightweight class to model an entity
-
  */
 class Entity
 {
@@ -55,6 +54,14 @@ public:
     template<typename T>
     T& replaceComponent(T& component)
     {
+        if constexpr(std::is_same_v<T, IDComponent>)
+        {
+            // Update ID in scene
+            UUID old_id = getComponent<IDComponent>().ID();
+            UUID new_id = component.ID();
+            _scene->_updateEntityID(*this, old_id, new_id);
+        }
+
         T& comp = _scene->_registry.replace<T>(_entity_handle, component);
         return comp;
     }
@@ -72,6 +79,18 @@ public:
     template<typename T, typename... Args>
     T& addOrReplaceComponent(Args&&... args)
     {
+        if constexpr(std::is_same_v<T, IDComponent>)
+        {
+            // Update ID in scene
+            if(hasComponent<IDComponent>())
+            {
+                UUID old_id = getComponent<IDComponent>().ID();
+                T& comp     = _scene->_registry.emplace_or_replace<T>(_entity_handle, std::forward<Args>(args)...);
+                _scene->_updateEntityID(*this, old_id, comp.ID());
+                return comp;
+            }
+        }
+
         T& comp = _scene->_registry.emplace_or_replace<T>(_entity_handle, std::forward<Args>(args)...);
         return comp;
     }
