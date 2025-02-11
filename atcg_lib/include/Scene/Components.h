@@ -147,9 +147,12 @@ private:
 struct NameComponent
 {
     NameComponent() = default;
-    NameComponent(const std::string& name) : name(name) {}
+    NameComponent(const std::string& name) : _name(name) {}
 
-    std::string name;
+    ATCG_INLINE const std::string& name() const { return _name; }
+
+private:
+    std::string _name;
 };
 
 struct GeometryComponent

@@ -98,6 +98,7 @@ public:
 
 private:
     void _updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id);
+    void _updateEntityName(atcg::Entity entity, const std::string& old_name, const std::string& new_name);
 
 private:
     friend class Entity;

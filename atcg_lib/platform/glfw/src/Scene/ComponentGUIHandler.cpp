@@ -144,7 +144,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
         auto tm = *std::localtime(&t);
         std::ostringstream oss;
 
-        std::string tag = entity.getComponent<NameComponent>().name;
+        std::string_view tag = entity.getComponent<NameComponent>().name();
 
         oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
 

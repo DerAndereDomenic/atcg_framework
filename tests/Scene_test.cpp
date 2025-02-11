@@ -26,7 +26,7 @@ TEST(SceneTest, findEntityByID)
     auto& other_name = entity_copy.getComponent<atcg::NameComponent>();
 
     EXPECT_EQ(other_id.ID(), id.ID());
-    EXPECT_EQ(other_name.name, "Test Entity");
+    EXPECT_EQ(other_name.name(), "Test Entity");
 }
 
 TEST(SceneTest, findEntityByIDMultipleEntities)
@@ -45,7 +45,7 @@ TEST(SceneTest, findEntityByIDMultipleEntities)
     auto& other_name = entity_copy.getComponent<atcg::NameComponent>();
 
     EXPECT_EQ(other_id.ID(), id.ID());
-    EXPECT_EQ(other_name.name, "Test Entity");
+    EXPECT_EQ(other_name.name(), "Test Entity");
 }
 
 TEST(SceneTest, findEntityByIDMultipleEntitiesSameName)
@@ -64,7 +64,7 @@ TEST(SceneTest, findEntityByIDMultipleEntitiesSameName)
     auto& other_name = entity_copy.getComponent<atcg::NameComponent>();
 
     EXPECT_EQ(other_id.ID(), id.ID());
-    EXPECT_EQ(other_name.name, "Test Entity");
+    EXPECT_EQ(other_name.name(), "Test Entity");
 }
 
 TEST(SceneTest, findEntityByIDNotValid)
@@ -90,7 +90,7 @@ TEST(SceneTest, findEntitiesByName)
     auto& other_name = entities.front().getComponent<atcg::NameComponent>();
 
     EXPECT_EQ(other_id.ID(), id.ID());
-    EXPECT_EQ(other_name.name, "Test Entity");
+    EXPECT_EQ(other_name.name(), "Test Entity");
     EXPECT_EQ(entities.size(), 1);
 }
 
@@ -110,7 +110,7 @@ TEST(SceneTest, findEntitiesByNameMultipleEntities)
     auto& other_name = entities.front().getComponent<atcg::NameComponent>();
 
     EXPECT_EQ(other_id.ID(), id.ID());
-    EXPECT_EQ(other_name.name, "Test Entity");
+    EXPECT_EQ(other_name.name(), "Test Entity");
     EXPECT_EQ(entities.size(), 1);
 }
 
@@ -128,7 +128,7 @@ TEST(SceneTest, findEntitiesByNameMultipleEntitiesSameName)
     for(int i = 0; i < entities.size(); ++i)
     {
         auto& other_name = entities[i].getComponent<atcg::NameComponent>();
-        EXPECT_EQ(other_name.name, "Test Entity");
+        EXPECT_EQ(other_name.name(), "Test Entity");
     }
 
     EXPECT_EQ(entities.size(), 4);
@@ -179,7 +179,7 @@ TEST(SceneTest, findEntitiesByComponent)
         atcg::Entity entity(e, scene.get());
 
         auto& name = entity.getComponent<atcg::NameComponent>();
-        EXPECT_EQ(name.name, "Transform");
+        EXPECT_EQ(name.name(), "Transform");
         EXPECT_TRUE(entity.hasComponent<atcg::TransformComponent>());
 
         ++num_entities;
@@ -404,4 +404,52 @@ TEST(SceneTest, replaceOrAddIDExplicitConstructor)
 
     EXPECT_EQ(search_entity_old_id, false);
     EXPECT_EQ(search_entity_new_id, true);
+}
+
+TEST(SceneTest, replaceName)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity         = scene->createEntity("Entity");
+    auto name_component = entity.getComponent<atcg::NameComponent>();
+
+    auto name_new = entity.replaceComponent<atcg::NameComponent>(atcg::NameComponent("New Name"));
+
+    auto search_entity_old_name = scene->getEntitiesByName("Entity");
+    auto search_entity_new_name = scene->getEntitiesByName("New Name");
+
+    EXPECT_EQ(search_entity_old_name.size(), 0);
+    EXPECT_EQ(search_entity_new_name.size(), 1);
+}
+
+TEST(SceneTest, replaceOrAddName)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity         = scene->createEntity("Entity");
+    auto name_component = entity.getComponent<atcg::NameComponent>();
+
+    auto name_new = entity.addOrReplaceComponent<atcg::NameComponent>(atcg::NameComponent("New Name"));
+
+    auto search_entity_old_name = scene->getEntitiesByName("Entity");
+    auto search_entity_new_name = scene->getEntitiesByName("New Name");
+
+    EXPECT_EQ(search_entity_old_name.size(), 0);
+    EXPECT_EQ(search_entity_new_name.size(), 1);
+}
+
+TEST(SceneTest, replaceOrAddNameExplicitConstructor)
+{
+    auto scene = atcg::make_ref<atcg::Scene>();
+
+    auto entity         = scene->createEntity("Entity");
+    auto name_component = entity.getComponent<atcg::NameComponent>();
+
+    auto name_new = entity.addOrReplaceComponent<atcg::NameComponent>("New Name");
+
+    auto search_entity_old_name = scene->getEntitiesByName("Entity");
+    auto search_entity_new_name = scene->getEntitiesByName("New Name");
+
+    EXPECT_EQ(search_entity_old_name.size(), 0);
+    EXPECT_EQ(search_entity_new_name.size(), 1);
 }

@@ -71,7 +71,7 @@ void Scene::removeEntity(UUID id)
     auto& name = entity.getComponent<atcg::NameComponent>();
 
     impl->_entities.erase(id);
-    auto& entities_with_name = impl->_entites_by_name[name.name];
+    auto& entities_with_name = impl->_entites_by_name[name.name()];
 
     for(auto it = entities_with_name.begin(); it != entities_with_name.end(); ++it)
     {
@@ -104,6 +104,22 @@ void Scene::_updateEntityID(atcg::Entity entity, const UUID old_id, const UUID n
 {
     impl->_entities.erase(old_id);
     impl->_entities.insert(std::make_pair(new_id, (entt::entity)entity.entity_handle()));
+}
+
+void Scene::_updateEntityName(atcg::Entity entity, const std::string& old_name, const std::string& new_name)
+{
+    auto& old_list = impl->_entites_by_name[old_name];
+    for(auto it = old_list.begin(); it != old_list.end(); ++it)
+    {
+        if(*it == (entt::entity)entity.entity_handle())
+        {
+            old_list.erase(it);
+            break;
+        }
+    }
+
+    auto& entities = impl->_entites_by_name[new_name];
+    entities.push_back((entt::entity)entity.entity_handle());
 }
 
 }    // namespace atcg

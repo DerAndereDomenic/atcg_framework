@@ -62,6 +62,14 @@ public:
             _scene->_updateEntityID(*this, old_id, new_id);
         }
 
+        if constexpr(std::is_same_v<T, NameComponent>)
+        {
+            // Update ID in scene
+            const std::string& old_name = getComponent<NameComponent>().name();
+            const std::string& new_name = component.name();
+            _scene->_updateEntityName(*this, old_name, new_name);
+        }
+
         T& comp = _scene->_registry.replace<T>(_entity_handle, component);
         return comp;
     }
@@ -87,6 +95,18 @@ public:
                 UUID old_id = getComponent<IDComponent>().ID();
                 T& comp     = _scene->_registry.emplace_or_replace<T>(_entity_handle, std::forward<Args>(args)...);
                 _scene->_updateEntityID(*this, old_id, comp.ID());
+                return comp;
+            }
+        }
+
+        if constexpr(std::is_same_v<T, NameComponent>)
+        {
+            // Update ID in scene
+            if(hasComponent<NameComponent>())
+            {
+                std::string old_name = getComponent<NameComponent>().name();
+                T& comp = _scene->_registry.emplace_or_replace<T>(_entity_handle, std::forward<Args>(args)...);
+                _scene->_updateEntityName(*this, old_name, comp.name());
                 return comp;
             }
         }

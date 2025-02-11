@@ -247,7 +247,7 @@ void ComponentSerializer::serialize_component<NameComponent>(const std::string& 
                                                              NameComponent& component,
                                                              nlohmann::json& j)
 {
-    j[NAME_KEY] = entity.getComponent<NameComponent>().name;
+    j[NAME_KEY] = entity.getComponent<NameComponent>().name();
 }
 
 template<>
@@ -425,8 +425,7 @@ void ComponentSerializer::deserialize_component<NameComponent>(const std::string
         return;
     }
 
-    auto& component = entity.getComponent<NameComponent>();
-    component.name  = j[NAME_KEY];
+    entity.addOrReplaceComponent<NameComponent>(j[NAME_KEY]);
 }
 
 template<>

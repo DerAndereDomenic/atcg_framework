@@ -228,7 +228,7 @@ public:
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
         _uuid = entity.getComponent<IDComponent>().ID();
-        _name = entity.getComponent<NameComponent>().name;
+        _name = entity.getComponent<NameComponent>().name();
     }
 
     /**
@@ -293,7 +293,7 @@ public:
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
         _uuid = entity.getComponent<IDComponent>().ID();
-        _name = entity.getComponent<NameComponent>().name;
+        _name = entity.getComponent<NameComponent>().name();
 
         storeComponents<TransformComponent,
                         CameraComponent,
