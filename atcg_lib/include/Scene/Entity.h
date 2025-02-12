@@ -7,6 +7,9 @@
 
 namespace atcg
 {
+struct IDComponent;
+struct NameComponent;
+
 /**
  * @brief A lightweight class to model an entity
  */
