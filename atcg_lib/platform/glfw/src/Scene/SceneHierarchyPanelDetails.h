@@ -101,15 +101,15 @@ SceneHierarchyPanel<GUIHandler>::SceneHierarchyPanel(const atcg::ref_ptr<Scene>&
 template<typename GUIHandler>
 void SceneHierarchyPanel<GUIHandler>::drawEntityNode(Entity entity)
 {
-    auto& tag = entity.getComponent<NameComponent>().name;
+    auto& tag = entity.getComponent<NameComponent>().name();
 
-    ImGuiTreeNodeFlags flags =
-        ((_selected_entity && _selected_entity.getComponent<IDComponent>().ID == entity.getComponent<IDComponent>().ID)
-             ? ImGuiTreeNodeFlags_Selected
-             : 0) |
-        ImGuiTreeNodeFlags_Bullet;
+    ImGuiTreeNodeFlags flags = ((_selected_entity && _selected_entity.getComponent<IDComponent>().ID() ==
+                                                         entity.getComponent<IDComponent>().ID())
+                                    ? ImGuiTreeNodeFlags_Selected
+                                    : 0) |
+                               ImGuiTreeNodeFlags_Bullet;
     flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
-    bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity.getComponent<IDComponent>().ID, flags, tag.c_str());
+    bool opened = ImGui::TreeNodeEx((void*)(uint64_t)entity.getComponent<IDComponent>().ID(), flags, tag.c_str());
     if(ImGui::IsItemClicked())
     {
         selectEntity(entity);
@@ -201,13 +201,13 @@ template<typename GUIHandler>
 template<typename... Components>
 ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::drawComponents(Entity entity)
 {
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID);
+    std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
     std::stringstream label;
 
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
 
     NameComponent& component = entity.getComponent<NameComponent>();
-    std::string& tag         = component.name;
+    const std::string& tag   = component.name();
     char buffer[256];
     memset(buffer, 0, sizeof(buffer));
     // ? strncpy_s not available in gcc. Is this unsafe?
@@ -216,7 +216,7 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::drawComponents(Entity entity)
     if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer)))
     {
         atcg::RevisionStack::startRecording<ComponentEditedRevision<NameComponent>>(_scene, entity);
-        tag = std::string(buffer);
+        entity.addOrReplaceComponent<NameComponent>(std::string(buffer));
         atcg::RevisionStack::endRecording();
     }
 
@@ -261,7 +261,7 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
     for(auto e: _scene->getAllEntitiesWith<NameComponent>())
     {
         Entity entity(e, _scene.get());
-        if(entity.getComponent<NameComponent>().name == "EditorCamera") continue;
+        if(entity.getComponent<NameComponent>().name() == "EditorCamera") continue;
         drawEntityNode(entity);
     }
 

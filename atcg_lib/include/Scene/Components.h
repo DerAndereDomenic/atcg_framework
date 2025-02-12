@@ -135,18 +135,24 @@ private:
 
 struct IDComponent
 {
-    IDComponent() : ID(UUID()) {}
-    IDComponent(uint64_t id) : ID(UUID(id)) {}
+    IDComponent() : _ID(UUID()) {}
+    IDComponent(uint64_t id) : _ID(UUID(id)) {}
 
-    UUID ID;
+    ATCG_INLINE UUID ID() const { return _ID; }
+
+private:
+    UUID _ID;
 };
 
 struct NameComponent
 {
     NameComponent() = default;
-    NameComponent(const std::string& name) : name(name) {}
+    NameComponent(const std::string& name) : _name(name) {}
 
-    std::string name;
+    ATCG_INLINE const std::string& name() const { return _name; }
+
+private:
+    std::string _name;
 };
 
 struct GeometryComponent

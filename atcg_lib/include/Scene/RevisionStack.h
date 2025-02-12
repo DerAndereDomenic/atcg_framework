@@ -183,7 +183,7 @@ public:
      */
     ATCG_INLINE void clearChache()
     {
-        ATCG_ASSERT(_current_revision != nullptr, "Can't clear cache while recording");
+        ATCG_ASSERT(_current_revision == nullptr, "Can't clear cache while recording");
 
         _rollback_stack = std::stack<atcg::ref_ptr<Revision>>();
         _apply_stack    = std::stack<atcg::ref_ptr<Revision>>();
@@ -227,8 +227,8 @@ public:
     virtual void record_start_state() override
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
-        _uuid = entity.getComponent<IDComponent>().ID;
-        _name = entity.getComponent<NameComponent>().name;
+        _uuid = entity.getComponent<IDComponent>().ID();
+        _name = entity.getComponent<NameComponent>().name();
     }
 
     /**
@@ -292,8 +292,8 @@ public:
     virtual void record_start_state() override
     {
         atcg::Entity entity((entt::entity)_entity_handle, _scene.get());
-        _uuid = entity.getComponent<IDComponent>().ID;
-        _name = entity.getComponent<NameComponent>().name;
+        _uuid = entity.getComponent<IDComponent>().ID();
+        _name = entity.getComponent<NameComponent>().name();
 
         storeComponents<TransformComponent,
                         CameraComponent,

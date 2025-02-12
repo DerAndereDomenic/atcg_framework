@@ -1102,7 +1102,7 @@ inline void defineBindings(py::module_& m)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
         .def_readwrite("material", &atcg::EdgeCylinderRenderComponent::material);
 
-    m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def_readwrite("name", &atcg::NameComponent::name);
+    m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def("name", &atcg::NameComponent::name);
 
     m_point_light.def(py::init<float, glm::vec3>(), "intensity"_a, "color"_a)
         .def_readwrite("intensity", &atcg::PointLightComponent::intensity)
@@ -1229,7 +1229,10 @@ inline void defineBindings(py::module_& m)
         .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>);
 
     m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
-        .def("createEntity", &atcg::Scene::createEntity, "name"_a = "Entity")
+        .def(
+            "createEntity",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const std::string& name) { return scene->createEntity(name); },
+            "name"_a = "Entity")
         .def("getEntityByName", &atcg::Scene::getEntitiesByName, "name"_a)
         .def("getEntities",
              [](const atcg::ref_ptr<atcg::Scene>& scene)
