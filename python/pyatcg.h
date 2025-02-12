@@ -274,16 +274,9 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::vec2& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       1,
-                                       {2},
-                                       {sizeof(float)});
-            })
+        .def("numpy",
+             [](glm::vec2& v) -> py::array_t<float>
+             { return py::array_t<float>({2}, {sizeof(float)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::vec2::x)
         .def_readwrite("y", &glm::vec2::y);
 
@@ -300,16 +293,8 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::ivec2& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(int),
-                                       py::format_descriptor<int>::format(),
-                                       1,
-                                       {2},
-                                       {sizeof(int)});
-            })
+        .def("numpy",
+             [](glm::ivec2& v) -> py::array_t<int> { return py::array_t<int>({2}, {sizeof(int)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::ivec2::x)
         .def_readwrite("y", &glm::ivec2::y);
 
@@ -326,16 +311,9 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::vec3& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       1,
-                                       {3},
-                                       {sizeof(float)});
-            })
+        .def("numpy",
+             [](glm::vec3& v) -> py::array_t<float>
+             { return py::array_t<float>({3}, {sizeof(float)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::vec3::x)
         .def_readwrite("y", &glm::vec3::y)
         .def_readwrite("z", &glm::vec3::z);
@@ -353,16 +331,9 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::ivec3& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(int),
-                                       py::format_descriptor<int>::format(),
-                                       1,
-                                       {3},
-                                       {sizeof(int)});
-            })
+        .def("numpy",
+             [](glm::ivec3& v) -> py::array_t<float>
+             { return py::array_t<int>({3}, {sizeof(int)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::ivec3::x)
         .def_readwrite("y", &glm::ivec3::y)
         .def_readwrite("z", &glm::ivec3::z);
@@ -380,16 +351,9 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::u32vec3& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(int),
-                                       py::format_descriptor<uint32_t>::format(),
-                                       1,
-                                       {3},
-                                       {sizeof(int)});
-            })
+        .def("numpy",
+             [](glm::u32vec3& v) -> py::array_t<uint32_t>
+             { return py::array_t<uint32_t>({3}, {sizeof(uint32_t)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::u32vec3::x)
         .def_readwrite("y", &glm::u32vec3::y)
         .def_readwrite("z", &glm::u32vec3::z);
@@ -408,16 +372,9 @@ inline void defineBindings(py::module_& m)
              "array"_a)
         .def(py::init<float, float, float, float>(), "x"_a, "y"_a, "z"_a, "w"_a)
         .def(py::init<float>(), "value"_a)
-        .def_buffer(
-            [](glm::vec4& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       1,
-                                       {4},
-                                       {sizeof(float)});
-            })
+        .def("numpy",
+             [](glm::vec4& v) -> py::array_t<float>
+             { return py::array_t<float>({4}, {sizeof(float)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::vec4::x)
         .def_readwrite("y", &glm::vec4::y)
         .def_readwrite("z", &glm::vec4::z)
@@ -436,16 +393,8 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::ivec4& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(int),
-                                       py::format_descriptor<int>::format(),
-                                       1,
-                                       {4},
-                                       {sizeof(int)});
-            })
+        .def("numpy",
+             [](glm::ivec4& v) -> py::array_t<int> { return py::array_t<int>({4}, {sizeof(int)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::ivec4::x)
         .def_readwrite("y", &glm::ivec4::y)
         .def_readwrite("z", &glm::ivec4::z)
@@ -471,26 +420,21 @@ inline void defineBindings(py::module_& m)
                      return M;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::mat3& M) -> py::buffer_info
-            {
-                float data[3][3];
+        .def("numpy",
+             [](glm::mat3& M) -> py::array_t<float>
+             {
+                 float data[3][3];
 
-                for(int i = 0; i < 3; ++i)
-                {
-                    for(int j = 0; j < 3; ++j)
-                    {
-                        data[i][j] = M[j][i];
-                    }
-                }
+                 for(int i = 0; i < 3; ++i)
+                 {
+                     for(int j = 0; j < 3; ++j)
+                     {
+                         data[i][j] = M[j][i];
+                     }
+                 }
 
-                return py::buffer_info(data,
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       2,
-                                       {3, 3},
-                                       {sizeof(float) * 3, sizeof(float)});
-            });
+                 return py::array_t<float>({3, 3}, {sizeof(float) * 3, sizeof(float)}, (const float*)data);
+             });
 
     m_mat4
         .def(py::init(
@@ -512,26 +456,21 @@ inline void defineBindings(py::module_& m)
                      return M;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::mat4& M) -> py::buffer_info
-            {
-                float data[4][4];
+        .def("numpy",
+             [](glm::mat4& M) -> py::array_t<float>
+             {
+                 float data[4][4];
 
-                for(int i = 0; i < 4; ++i)
-                {
-                    for(int j = 0; j < 4; ++j)
-                    {
-                        data[i][j] = M[j][i];
-                    }
-                }
+                 for(int i = 0; i < 4; ++i)
+                 {
+                     for(int j = 0; j < 4; ++j)
+                     {
+                         data[i][j] = M[j][i];
+                     }
+                 }
 
-                return py::buffer_info(data,
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       2,
-                                       {4, 4},
-                                       {sizeof(float) * 4, sizeof(float)});
-            });
+                 return py::array_t<float>({4, 4}, {sizeof(float) * 4, sizeof(float)}, (const float*)data);
+             });
 
     // ------------------- Datastructure ---------------------------------
 

@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - operator bool() of an entity now also checks if the entity handle is still part of the scene
 - IDComponent::id is no longer read-write but read only
 - NameComponent::name is no longer read-write but read only
+- glm objects can no longer be directly casted to numpy arrays but have to be converted explicitely using .numpy()
 
 ### Fixed
 
@@ -62,6 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed hanging texture references when a texture is deleted
 - Fixed managing of framebuffer state in multi threaded applications
 - Fixed crash when setting faces of a graph with a device tensor (because torch can't sort GPU uint32). Current workaround copies the data to CPU first
+- Fixed bindings for glm objects in python
 
 ## [0.1.1-beta]
 
