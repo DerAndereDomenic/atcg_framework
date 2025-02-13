@@ -215,7 +215,7 @@ OptixModule RayTracingPipeline::Impl::createNewModule(const std::string& ptx_fil
                                   log,
                                   &sizeof_log,
                                   &ptx_module));
-    ATCG_TRACE(log);
+    if(sizeof_log > 1) ATCG_TRACE(log);
 
 #if OPTIX_VERSION < 70700
     #undef optixModuleCreate
@@ -247,7 +247,7 @@ OptixProgramGroup RayTracingPipeline::Impl::createNewProgramGroup(const OptixPro
                                         log,
                                         &sizeof_log,
                                         &prog_group));
-    ATCG_TRACE(log);
+    if(sizeof_log > 1) ATCG_TRACE(log);
     return prog_group;
 }
 
@@ -360,7 +360,7 @@ void RayTracingPipeline::createPipeline()
                                     log,
                                     &sizeof_log,
                                     &impl->pipeline));
-    ATCG_TRACE(log);
+    if(sizeof_log > 1) ATCG_TRACE(log);
 
     impl->pipeline_created = true;
 }
