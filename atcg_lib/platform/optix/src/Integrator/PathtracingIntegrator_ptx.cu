@@ -97,8 +97,10 @@ extern "C" __global__ void __raygen__rg()
 
                     atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
 
-                    float mis_weight = emitter_sampling.sampling_pdf /
-                                       (emitter_sampling.sampling_pdf + bsdf_result.sample_probability);
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                                           ? 0.0f
+                                           : bsdf_result.sample_probability;
+                    float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
                     radiance += mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
                                 bsdf_result.bsdf_value *

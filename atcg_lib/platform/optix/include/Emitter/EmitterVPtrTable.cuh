@@ -3,6 +3,7 @@
 #include <Core/glm.h>
 #include <Core/SurfaceInteraction.h>
 #include <Math/Random.h>
+#include <Emitter/EmitterFlags.h>
 
 #include <optix.h>
 
@@ -30,6 +31,8 @@ struct PhotonSamplingResult
 
 struct EmitterVPtrTable
 {
+    EmitterFlags flags;
+
     uint32_t evalCallIndex;
     uint32_t sampleCallIndex;
     uint32_t evalPdfCallIndex;

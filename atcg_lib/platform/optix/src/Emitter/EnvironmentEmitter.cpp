@@ -72,6 +72,7 @@ ATCG_INLINE static void convertToTextureObject(const torch::Tensor& texture_data
 
 EnvironmentEmitter::EnvironmentEmitter(const atcg::ref_ptr<atcg::Texture2D>& texture)
 {
+    _flags                   = EmitterFlags::DistantEmitter;
     auto environment_texture = texture->getData(atcg::GPU);
 
     EnvironmentEmitterData data;
@@ -107,6 +108,7 @@ void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeli
     uint32_t evalpdf_idx = sbt->addCallableEntry(evalpdf_prog_group, _environment_emitter_data.get());
 
     EmitterVPtrTable table;
+    table.flags            = _flags;
     table.sampleCallIndex  = sample_idx;
     table.evalCallIndex    = eval_idx;
     table.evalPdfCallIndex = evalpdf_idx;

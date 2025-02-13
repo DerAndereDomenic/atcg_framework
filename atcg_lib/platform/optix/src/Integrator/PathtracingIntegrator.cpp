@@ -29,6 +29,21 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         _environment_emitter->initializePipeline(pipeline, sbt);
         tables.push_back(_environment_emitter->getVPtrTable());
     }
+
+    auto light_view = _scene->getAllEntitiesWith<atcg::TransformComponent, atcg::PointLightComponent>();
+    for(auto e: light_view)
+    {
+        Entity entity(e, _scene.get());
+
+        auto& point_light_component = entity.getComponent<PointLightComponent>();
+        auto& transform             = entity.getComponent<TransformComponent>();
+
+        auto point_light = atcg::make_ref<atcg::PointEmitter>(transform.getPosition(), point_light_component);
+        point_light->initializePipeline(pipeline, sbt);
+        _emitter.push_back(point_light);
+        tables.push_back(point_light->getVPtrTable());
+    }
+
     _emitters.upload(tables.data(), tables.size());
 
     // Extract scene information

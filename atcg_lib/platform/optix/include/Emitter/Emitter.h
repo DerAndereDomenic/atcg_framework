@@ -18,5 +18,6 @@ public:
 
 protected:
     atcg::dref_ptr<EmitterVPtrTable> _vptr_table;
+    EmitterFlags _flags;
 };
 }    // namespace atcg
