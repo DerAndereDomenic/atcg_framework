@@ -272,7 +272,7 @@ public:
                 last_revision = hovered_entity.getComponent<atcg::TransformComponent>().revision();
         }
 
-        atcg::drawGuizmo(hovered_entity, current_operation, camera_controller->getCamera());
+        atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());
     }
 #endif
 

@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added dedicated shader compiler class
 - atcg::CameraController::onUpdate now returns if the camera was updated in the current frame
 - Added revision counter to Transform components
+- Added copy methods to Graph and Camera
+- Added RevisionStack which allows for Ctrl+Z and Ctrl+Y
 
 ### Changed
 
@@ -44,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - RendererSystem::getFramebuffer now returns the defacto state of the last frame. Direct render calls to this framebuffer will have no errect if MSAA is enabled because it will get overwritten by the blitting of the framebuffers. Use RendererSystem::getFramebufferMSAA() instead. This behavior is also the case for getFrame and getZBuffer
 - Graphics Contexts can no longer be created by hand but have to be created via the ContextManager namespace.
 - atcg::CameraController::onUpdate now returns if the camera was updated in the current frame
+- drawGuizmo now takes in the scene as an additional parameter
+- operator bool() of an entity now also checks if the entity handle is still part of the scene
+- IDComponent::id is no longer read-write but read only
+- NameComponent::name is no longer read-write but read only
+- glm objects can no longer be directly casted to numpy arrays but have to be converted explicitely using .numpy()
 
 ### Fixed
 
@@ -55,6 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved code of the Renderer and reduced code duplication
 - Fixed hanging texture references when a texture is deleted
 - Fixed managing of framebuffer state in multi threaded applications
+- Fixed crash when setting faces of a graph with a device tensor (because torch can't sort GPU uint32). Current workaround copies the data to CPU first
+- Fixed bindings for glm objects in python
 
 ## [0.1.1-beta]
 

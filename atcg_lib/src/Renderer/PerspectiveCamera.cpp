@@ -65,11 +65,21 @@ void PerspectiveCamera::setFromTransform(const glm::mat4& transform)
     _fovy = glm::degrees(2.0f * glm::atan(scale_z));
 
     recalculateProjection();
+    recalculateView();
 }
 
 glm::mat4 PerspectiveCamera::getAsTransform() const
 {
     return glm::inverse(_view) * glm::scale(glm::vec3(_aspect_ratio, 1.0f, glm::tan(glm::radians(_fovy) / 2.0f)));
+}
+
+atcg::ref_ptr<Camera> PerspectiveCamera::copy() const
+{
+    atcg::ref_ptr<PerspectiveCamera> camera = atcg::make_ref<PerspectiveCamera>(1.0f);
+    camera->setView(_view);
+    camera->setProjection(_projection);
+
+    return camera;
 }
 
 }    // namespace atcg

@@ -46,6 +46,9 @@ void Application::init(const WindowProps& props)
     _vr_system->init(ATCG_BIND_EVENT_FN(Application::onEvent));
     SystemRegistry::instance()->registerSystem(_vr_system.get());
 
+    _revision_system = atcg::make_ref<RevisionSystem>();
+    SystemRegistry::instance()->registerSystem(_revision_system.get());
+
     Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 
     s_instance = this;
@@ -207,6 +210,17 @@ bool Application::onKeyPress(KeyPressedEvent* e)
     {
         _window->toggleFullscreen();
     }
+
+    if(e->getKeyCode() == ATCG_KEY_Y && atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
+    {
+        _revision_system->rollback();
+    }
+
+    if(e->getKeyCode() == ATCG_KEY_Z && atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
+    {
+        _revision_system->apply();
+    }
+
     return false;
 }
 }    // namespace atcg
