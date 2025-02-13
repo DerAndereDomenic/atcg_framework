@@ -162,17 +162,12 @@ public:
         integrator->generateRays(camera_controller->getCamera(), output_tensor);
         output_texture->setData(output_tensor);
 
-        if(hovered_entity)
+
+        uint32_t current_revision = atcg::RevisionStack::numUndos();
+        if(current_revision != last_revision)
         {
-            if(hovered_entity.hasAnyComponent<atcg::TransformComponent>())
-            {
-                uint64_t current_revision = hovered_entity.getComponent<atcg::TransformComponent>().revision();
-                if(current_revision != last_revision)
-                {
-                    last_revision = current_revision;
-                    initializePathtracer();
-                }
-            }
+            last_revision = current_revision;
+            initializePathtracer();
         }
     }
 
@@ -266,12 +261,6 @@ public:
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
 
-        if(hovered_entity)
-        {
-            if(hovered_entity.hasAnyComponent<atcg::TransformComponent>())
-                last_revision = hovered_entity.getComponent<atcg::TransformComponent>().revision();
-        }
-
         atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());
     }
 #endif
@@ -324,11 +313,6 @@ public:
         {
             int id         = atcg::Renderer::getEntityIndex(mouse_pos);
             hovered_entity = id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, scene.get());
-            if(hovered_entity)
-            {
-                if(hovered_entity.hasAnyComponent<atcg::TransformComponent>())
-                    last_revision = hovered_entity.getComponent<atcg::TransformComponent>().revision();
-            }
             panel.selectEntity(hovered_entity);
         }
         return true;
@@ -383,7 +367,7 @@ private:
     torch::Tensor output_tensor;
     atcg::ref_ptr<atcg::Texture2D> output_texture;
 
-    uint64_t last_revision = 0;
+    uint32_t last_revision = 0;
 };
 
 class PBR : public atcg::Application
