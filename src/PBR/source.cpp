@@ -160,7 +160,10 @@ public:
         }
 
         integrator->generateRays(camera_controller->getCamera(), output_tensor);
-        output_texture->setData(output_tensor);
+        atcg::Framebuffer::useDefault();
+        atcg::Renderer::getFramebuffer()->getColorAttachement(0)->setData(output_tensor);
+        atcg::Renderer::useScreenBuffer();
+        // output_texture->setData(output_tensor);
 
 
         uint32_t current_revision = atcg::RevisionStack::numUndos();
