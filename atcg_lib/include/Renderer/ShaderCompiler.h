@@ -29,7 +29,7 @@ public:
      *
      * @return The shader ID
      */
-    uint32_t compilerShader(const std::string& compute_path);
+    uint32_t compileShader(const std::string& compute_path);
 
     /**
      * @brief Compile a standard shader
@@ -39,7 +39,7 @@ public:
      *
      * @return The shader ID
      */
-    uint32_t compilerShader(const std::string& vertex_path, const std::string& fragment_path);
+    uint32_t compileShader(const std::string& vertex_path, const std::string& fragment_path);
 
     /**
      * @brief Compile a shader with a geometry shader
@@ -51,7 +51,7 @@ public:
      * @return The shader ID
      */
     uint32_t
-    compilerShader(const std::string& vertex_path, const std::string& geometry_path, const std::string& fragment_path);
+    compileShader(const std::string& vertex_path, const std::string& geometry_path, const std::string& fragment_path);
 
 private:
     std::string readShaderCode(const std::string& path);

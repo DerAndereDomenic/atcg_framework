@@ -8,7 +8,7 @@ ShaderCompiler::ShaderCompiler() {}
 
 ShaderCompiler::~ShaderCompiler() {}
 
-uint32_t ShaderCompiler::compilerShader(const std::string& compute_path)
+uint32_t ShaderCompiler::compileShader(const std::string& compute_path)
 {
     std::string compute_buffer = readShaderCode(compute_path);
     const char* cShaderCode    = compute_buffer.c_str();
@@ -27,7 +27,7 @@ uint32_t ShaderCompiler::compilerShader(const std::string& compute_path)
     return ID;
 }
 
-uint32_t ShaderCompiler::compilerShader(const std::string& vertex_path, const std::string& fragment_path)
+uint32_t ShaderCompiler::compileShader(const std::string& vertex_path, const std::string& fragment_path)
 {
     // File reading
     std::string vertex_buffer = readShaderCode(vertex_path);
@@ -52,9 +52,9 @@ uint32_t ShaderCompiler::compilerShader(const std::string& vertex_path, const st
     return ID;
 }
 
-uint32_t ShaderCompiler::compilerShader(const std::string& vertex_path,
-                                        const std::string& geometry_path,
-                                        const std::string& fragment_path)
+uint32_t ShaderCompiler::compileShader(const std::string& vertex_path,
+                                       const std::string& geometry_path,
+                                       const std::string& fragment_path)
 {
     // File reading
     std::string vertex_buffer = readShaderCode(vertex_path);

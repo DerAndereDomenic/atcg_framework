@@ -34,7 +34,7 @@ void Shader::recompile(const std::string& compute_path)
     }
 
     ShaderCompiler compiler;
-    _ID = compiler.compilerShader(compute_path);
+    _ID = compiler.compileShader(compute_path);
 
     _has_geometry = false;
     _is_compute   = true;
@@ -56,7 +56,7 @@ void Shader::recompile(const std::string& vertex_path, const std::string& fragme
     }
 
     ShaderCompiler compiler;
-    _ID = compiler.compilerShader(vertex_path, fragment_path);
+    _ID = compiler.compileShader(vertex_path, fragment_path);
 
     _has_geometry  = false;
     _is_compute    = false;
@@ -81,7 +81,7 @@ void Shader::recompile(const std::string& vertex_path,
     }
 
     ShaderCompiler compiler;
-    _ID = compiler.compilerShader(vertex_path, geometry_path, fragment_path);
+    _ID = compiler.compileShader(vertex_path, geometry_path, fragment_path);
 
     _has_geometry  = true;
     _is_compute    = false;
