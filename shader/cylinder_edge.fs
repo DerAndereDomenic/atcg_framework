@@ -35,15 +35,6 @@ uniform samplerCubeArray shadow_maps;
 uniform int num_lights = 0;
 uniform int receive_shadow;
 
-// Constants over the shader
-vec3 view_dir = vec3(0);
-float NdotV = 0;
-vec3 base_color = vec3(0);
-float roughness = 0.0;
-float metallic = 0.0;
-vec3 normal = vec3(0.0);
-vec3 F0 = vec3(0.0);
-
 float distributionGGX(float NdotH, float roughness)
 {
 	float a = roughness * roughness;
@@ -67,7 +58,6 @@ float geometrySchlickGGX(float NdotV, float roughness)
 
 	return nom/denom;
 }
-
 
 float geometrySmith(float NdotL, float NdotV, float roughness)
 {
@@ -107,12 +97,16 @@ float shadowCalculation(int i, vec3 pos)
     return receive_shadow * shadow;
 }
 
-vec3 eval_brdf(vec3 light_dir)
+vec3 eval_brdf(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 light_dir, vec3 view_dir)
 {
     vec3 H = normalize(light_dir + view_dir);
 
     float NdotH = max(dot(normal, H), 0.0);
     float NdotL = max(dot(normal, light_dir), 0.0);
+    float NdotV = max(dot(normal, view_dir), 0.0);
+
+    vec3 F0 = vec3(0.04);
+	F0 = mix(F0, base_color, metallic);
 
     float NDF = distributionGGX(NdotH, roughness);
     float G = geometrySmith(NdotL, NdotV, roughness);
@@ -130,19 +124,37 @@ vec3 eval_brdf(vec3 light_dir)
     return brdf;
 }
 
+vec3 image_based_lighting(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 view_dir)
+{
+    vec3 F0 = vec3(0.04);
+	F0 = mix(F0, base_color, metallic);
+    float NdotV = max(dot(normal, view_dir), 0.0);
+    vec3 kS = fresnelSchlickRoughness(NdotV, F0, roughness);
+    vec3 kD = 1.0 - kS;
+    vec3 irradiance = texture(irradiance_map, normal).rgb;
+    vec3 color_diffuse = mix(base_color, vec3(0), metallic);
+    vec3 diffuse = irradiance * color_diffuse;
+
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 R = reflect(-view_dir, normal);
+    vec3 prefilteredColor = textureLod(prefilter_map, R, roughness * MAX_REFLECTION_LOD).rgb;
+    vec2 lutbrdf = texture(lut, vec2(NdotV, roughness)).rg;
+    vec3 specular = prefilteredColor * (kS * lutbrdf.x + lutbrdf.y);
+    vec3 ambient = (kD * diffuse + specular);
+
+    return ambient;
+}
+
 void main()
 {
     // Set globals
-    view_dir = normalize(camera_pos - frag_pos);
+    vec3 view_dir = normalize(camera_pos - frag_pos);
     vec4 diffuse_lookup = texture(texture_diffuse, frag_uv);
-    base_color = frag_color * flat_color * diffuse_lookup.rgb;
-    roughness = texture(texture_roughness, frag_uv).r;
-    metallic = texture(texture_metallic, frag_uv).r;
+    vec3 base_color = frag_color * flat_color * diffuse_lookup.rgb;
+    float roughness = texture(texture_roughness, frag_uv).r;
+    float metallic = texture(texture_metallic, frag_uv).r;
     vec3 texture_normal = normalize(texture(texture_normal, frag_uv).rgb * 2.0 - 1.0);
-    normal = frag_tbn * texture_normal;
-    F0 = vec3(0.04);
-	F0 = mix(F0, base_color, metallic);
-    NdotV = max(dot(normal, view_dir), 0.0);
+    vec3 normal = frag_tbn * texture_normal;
 
     // Define colocated direction light
     vec3 light_radiance = vec3(2.0);
@@ -152,7 +164,7 @@ void main()
     vec3 view_light = vec3(0);
     if(num_lights <= 0)
     {
-        vec3 brdf = eval_brdf(light_dir);
+        vec3 brdf = eval_brdf(base_color, metallic, roughness, normal, light_dir, view_dir);
         float NdotL = max(dot(normal, light_dir), 0.0);
         view_light = brdf * light_radiance * NdotL;
     }
@@ -165,7 +177,7 @@ void main()
         float r = length(light_dir);
         light_dir = light_dir / r;
 
-        vec3 pl_brdf = eval_brdf(light_dir);
+        vec3 pl_brdf = eval_brdf(base_color, metallic, roughness, normal, light_dir, view_dir);
         vec3 light_radiance = light_intensities[i] * light_colors[i] / (r * r);
         float NdotL = max(dot(normal, light_dir), 0.0);
         float shadow = shadowCalculation(i, frag_pos);
@@ -173,20 +185,7 @@ void main()
     }
 
     // IBL
-    vec3 kS = fresnelSchlickRoughness(NdotV, F0, roughness);
-    vec3 kD = 1.0 - kS;
-    vec3 irradiance = texture(irradiance_map, normal).rgb;
-    vec3 color_diffuse = mix(base_color, vec3(0), metallic);
-    vec3 diffuse = irradiance * color_diffuse;
-
-    const float MAX_REFLECTION_LOD = 4.0;
-    vec3 R = reflect(-view_dir, normal);
-    vec3 prefilteredColor = textureLod(prefilter_map, R, roughness * MAX_REFLECTION_LOD).rgb;
-    vec2 lutbrdf = texture(lut, vec2(NdotV, roughness)).rg;
-    vec3 H = normalize(light_dir + view_dir);
-    vec3 F = kS;
-    vec3 specular = prefilteredColor * (F * lutbrdf.x + lutbrdf.y);
-    vec3 ambient = (kD * diffuse + specular);
+    vec3 ambient = image_based_lighting(base_color, metallic, roughness, normal, view_dir);
 
     vec3 color = (1.0 - float(use_ibl)) * view_light + (float(use_ibl)) * ambient + point_light_contribution;
     
