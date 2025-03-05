@@ -17,6 +17,6 @@ void main()
 	}
 	else
 	{
-		FragColor = texture(texture_right, vec2(u-1,v));
+		FragColor = texture(texture_right, vec2(u - 1, v));
 	}
 }

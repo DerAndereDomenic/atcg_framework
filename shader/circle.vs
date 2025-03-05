@@ -1,8 +1,8 @@
 #version 330 core
 
-layout (location = 0) in vec3 aPosition;
+layout(location = 0) in vec3 aPosition;
 
-uniform mat4 V,P;
+uniform mat4 V, P;
 uniform vec3 position;
 uniform float radius;
 

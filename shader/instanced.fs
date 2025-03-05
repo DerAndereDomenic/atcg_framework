@@ -2,8 +2,8 @@
 
 #define PI 3.14159
 
-layout (location = 0) out vec4 outColor;
-layout (location = 1) out int outEntityID;
+layout(location = 0) out vec4 outColor;
+layout(location = 1) out int outEntityID;
 
 in vec3 frag_normal;
 in vec3 frag_pos;
@@ -28,50 +28,49 @@ uniform sampler2D lut;
 
 float distributionGGX(vec3 N, vec3 H, float roughness)
 {
-	float a = roughness * roughness;
-	float a2 = a * a;
-	float NdotH = max(dot(N,H), 0.0);
-	float NdotH2 = NdotH * NdotH;
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
 
-	float nom = a2;
-	float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-	denom = PI * denom * denom;
+    float nom = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
 
-	return nom/denom;
+    return nom / denom;
 }
 
 float geometrySchlickGGX(float NdotV, float roughness)
 {
-	float r = (roughness + 1.0);
-	float k = (r*r)/8.0;
+    float r = (roughness + 1.0);
+    float k = (r * r) / 8.0;
 
-	float nom = NdotV;
-	float denom = NdotV * (1.0 - k) + k;
+    float nom = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
 
-	return nom/denom;
+    return nom / denom;
 }
-
 
 float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness)
 {
-	float NdotV = max(dot(N,V), 0.0);
-	float NdotL = max(dot(N,L), 0.0);
-	float ggx2 = geometrySchlickGGX(NdotV, roughness);
-	float ggx1 = geometrySchlickGGX(NdotL, roughness);
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = geometrySchlickGGX(NdotV, roughness);
+    float ggx1 = geometrySchlickGGX(NdotL, roughness);
 
-	return ggx1 * ggx2;
+    return ggx1 * ggx2;
 }
 
 vec3 fresnel_schlick(const vec3 F0, const float VdotH)
 {
-    float p = clamp(1.0-VdotH, 0.0, 1.0);
-	return F0 + (1 - F0) * p * p * p * p * p;
+    float p = clamp(1.0 - VdotH, 0.0, 1.0);
+    return F0 + (1 - F0) * p * p * p * p * p;
 }
 
 vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
 {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(clamp(1.0 - cosTheta, 0.0, 1.0), 5.0);
-} 
+}
 
 void main()
 {
@@ -89,7 +88,7 @@ void main()
     // PBR material shader
     vec3 normal = frag_tbn * texture_normal;
     vec3 F0 = vec3(0.04);
-	F0 = mix(F0, color_diffuse, metallic);
+    F0 = mix(F0, color_diffuse, metallic);
 
     vec3 H = normalize(light_dir + view_dir);
     float NDF = distributionGGX(normal, H, roughness);
@@ -98,7 +97,7 @@ void main()
 
     vec3 numerator = NDF * G * F;
     float denominator = 4.0 * max(dot(normal, view_dir), 0.0) * max(dot(normal, light_dir), 0.0) + 0.0001;
-    vec3 specular = numerator/denominator;
+    vec3 specular = numerator / denominator;
 
     vec3 kS = F;
     vec3 kD = vec3(1.0) - kS;
@@ -120,9 +119,9 @@ void main()
     specular = prefilteredColor * (F * lutbrdf.x + lutbrdf.y);
     vec3 ambient = (kD * diffuse + specular);
 
-    vec3 color = (1.0 - float(use_ibl)) * brdf * light_radiance * max(0.0f, dot(normal, light_dir)) + (float(use_ibl)) * ambient;
-    
+    vec3 color = (1.0 - float(use_ibl)) * brdf * light_radiance * max(0.0, dot(normal, light_dir)) + (float(use_ibl)) * ambient;
+
     float frag_dist = length(camera_pos - frag_pos);
-    outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0/2.4)), 1.0 - pow(1.01, frag_dist - 1000));
+    outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0 / 2.4)), 1.0 - pow(1.01, frag_dist - 1000));
     outEntityID = entityID;
 }
