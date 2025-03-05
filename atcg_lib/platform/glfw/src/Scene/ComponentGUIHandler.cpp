@@ -173,7 +173,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
     label.str(std::string());
     label << "Color##" << id;
-    updated = updated || ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(component.color));
+    updated = ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(component.color)) || updated;
 
     // Display camera extrinsic/intrinsic as transform
     // TODO
@@ -220,8 +220,8 @@ void ComponentGUIHandler::draw_component<MeshRenderComponent>(Entity entity, Mes
     // Material
     Material& material = component_copy.material;
 
-    updated = updated || displayMaterial("mesh", material);
-    updated = updated || ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component_copy.receive_shadow);
+    updated = displayMaterial("mesh", material) || updated;
+    updated = ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component_copy.receive_shadow) || updated;
 
     if(updated)
     {
@@ -286,7 +286,7 @@ void ComponentGUIHandler::draw_component<PointSphereRenderComponent>(Entity enti
     // Material
     Material& material = component.material;
 
-    updated = updated || displayMaterial("pointsphere", material);
+    updated = displayMaterial("pointsphere", material) || updated;
 
     if(updated)
     {
@@ -341,7 +341,7 @@ void ComponentGUIHandler::draw_component<EdgeCylinderRenderComponent>(Entity ent
     // Material
     Material& material = component.material;
 
-    updated = updated || displayMaterial("edgecylinder", material);
+    updated = displayMaterial("edgecylinder", material) || updated;
 
     if(updated)
     {
@@ -360,7 +360,7 @@ void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity,
     // Material
     Material& material = component.material;
 
-    updated = updated || displayMaterial("instance", material);
+    updated = displayMaterial("instance", material) || updated;
 
     if(updated)
     {
@@ -375,8 +375,8 @@ void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, Poi
 {
     PointLightComponent component = _component;
     bool updated = ImGui::DragFloat("Intensity##PointLight", &component.intensity, 0.01f, 0.0f, FLT_MAX);
-    updated      = updated || ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
-    updated      = updated || ImGui::Checkbox("Cast Shadows##PointLight", &component.cast_shadow);
+    updated      = ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color)) || updated;
+    updated      = ImGui::Checkbox("Cast Shadows##PointLight", &component.cast_shadow) || updated;
 
     if(updated)
     {
