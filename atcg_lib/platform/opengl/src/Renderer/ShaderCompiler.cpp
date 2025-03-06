@@ -1,5 +1,7 @@
 #include <Renderer/ShaderCompiler.h>
 
+#include <regex>
+
 #include <glad/glad.h>
 
 namespace atcg
@@ -84,29 +86,68 @@ uint32_t ShaderCompiler::compileShader(const std::string& vertex_path,
     return ID;
 }
 
+std::pair<bool, std::string> ShaderCompiler::parseIncludeLine(const std::string& line)
+{
+    std::string trimmed = line;
+    trimmed.erase(0, trimmed.find_first_not_of(" \t"));
+
+    if(trimmed.empty() || trimmed[0] != '#')
+    {
+        return std::make_pair(false, "");
+    }
+
+    std::regex includePattern(R"(^\s*#\s*include\s+\"([^\"]+)\")");
+    std::smatch match;
+
+    if(std::regex_search(trimmed, match, includePattern))
+    {
+        return std::make_pair(true, match[1].str());
+    }
+    return std::make_pair(false, "");
+}
+
 std::string ShaderCompiler::readShaderCode(const std::string& path)
 {
     std::ifstream shaderFile;
 
     shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
+    std::stringstream shaderStream;
     try
     {
         shaderFile.open(path);
-        std::stringstream shaderStream;
 
         shaderStream << shaderFile.rdbuf();
 
         shaderFile.close();
-
-        return shaderStream.str();
     }
     catch(std::ifstream::failure e)
     {
         ATCG_ERROR("Could not read shader file: {0}", path);
     }
 
-    return "";
+    std::stringstream parsed_source;
+
+    std::string line;
+    while(std::getline(shaderStream, line))
+    {
+        auto [is_include, include_path] = parseIncludeLine(line);
+
+        if(is_include)
+        {
+            std::filesystem::path file_path = path;
+            std::string full_include_path   = (file_path.parent_path() / include_path).generic_string();
+            std::string included_source     = readShaderCode(full_include_path);
+
+            parsed_source << included_source;
+        }
+        else
+        {
+            parsed_source << line << "\n";
+        }
+    }
+
+    return parsed_source.str();
 }
 
 uint32_t ShaderCompiler::compileShader(unsigned int shaderType, const std::string& shader_source)

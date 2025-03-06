@@ -54,6 +54,8 @@ public:
     compileShader(const std::string& vertex_path, const std::string& geometry_path, const std::string& fragment_path);
 
 private:
+    std::pair<bool, std::string> parseIncludeLine(const std::string& line);
+
     std::string readShaderCode(const std::string& path);
 
     uint32_t compileShader(unsigned int shaderType, const std::string& shader_source);
