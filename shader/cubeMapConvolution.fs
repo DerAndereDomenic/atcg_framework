@@ -1,12 +1,12 @@
 #version 330 core
 
+#include "common/defines.glsl"
+
 out vec4 FragColor;
 
 in vec3 localPos;
 
 uniform samplerCube skybox;
-
-const float PI = 3.14159265359;
 
 void main()
 {

@@ -1,10 +1,11 @@
 #version 430 core
 
+#include "common/defines.glsl"
+#include "common/bsdf.glsl"
+
 out vec4 FragColor;
 
 in vec3 localPos;
-
-const float PI = 3.14159265359;
 
 uniform samplerCube skybox;
 uniform float roughness;
@@ -46,20 +47,6 @@ vec3 importance_sample_GGX(vec2 xi, vec3 N, float roughness)
     return normalize(sampleVec);
 }
 
-float distributionGGX(vec3 N, vec3 H, float roughness)
-{
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH * NdotH;
-
-    float nom = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-
-    return nom / denom;
-}
-
 void main()
 {
     vec3 N = normalize(localPos);
@@ -82,7 +69,7 @@ void main()
         {
             float NdotH = max(dot(N, H), 0.0);
             float HdotV = max(dot(V, H), 0.0);
-            float D = distributionGGX(N, H, roughness);
+            float D = distributionGGX(NdotH, roughness);
             float pdf = (D * NdotH / (4.0 * HdotV)) + 0.0001;
 
             float resolution = 1024.0; // resolution of cubemap face
