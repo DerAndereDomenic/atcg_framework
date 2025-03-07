@@ -12,7 +12,7 @@ ShaderCompiler::~ShaderCompiler() {}
 
 uint32_t ShaderCompiler::compileShader(const std::string& compute_path)
 {
-    std::string compute_buffer = readShaderCode(compute_path);
+    std::string compute_buffer = readShaderCode(compute_path, ShaderType::COMPUTE);
     const char* cShaderCode    = compute_buffer.c_str();
 
     // Compiling
@@ -32,10 +32,10 @@ uint32_t ShaderCompiler::compileShader(const std::string& compute_path)
 uint32_t ShaderCompiler::compileShader(const std::string& vertex_path, const std::string& fragment_path)
 {
     // File reading
-    std::string vertex_buffer = readShaderCode(vertex_path);
+    std::string vertex_buffer = readShaderCode(vertex_path, ShaderType::VERTEX);
     const char* vShaderCode   = vertex_buffer.c_str();
 
-    std::string fragment_buffer = readShaderCode(fragment_path);
+    std::string fragment_buffer = readShaderCode(fragment_path, ShaderType::FRAGMENT);
     const char* fShaderCode     = fragment_buffer.c_str();
 
     // Compiling
@@ -59,13 +59,13 @@ uint32_t ShaderCompiler::compileShader(const std::string& vertex_path,
                                        const std::string& fragment_path)
 {
     // File reading
-    std::string vertex_buffer = readShaderCode(vertex_path);
+    std::string vertex_buffer = readShaderCode(vertex_path, ShaderType::VERTEX);
     const char* vShaderCode   = vertex_buffer.c_str();
 
-    std::string fragment_buffer = readShaderCode(fragment_path);
+    std::string fragment_buffer = readShaderCode(fragment_path, ShaderType::FRAGMENT);
     const char* fShaderCode     = fragment_buffer.c_str();
 
-    std::string geometry_buffer = readShaderCode(geometry_path);
+    std::string geometry_buffer = readShaderCode(geometry_path, ShaderType::GEOMETRY);
     const char* gShaderCode     = geometry_buffer.c_str();
 
     // Compiling
@@ -106,7 +106,19 @@ std::pair<bool, std::string> ShaderCompiler::parseIncludeLine(const std::string&
     return std::make_pair(false, "");
 }
 
-std::string ShaderCompiler::readShaderCode(const std::string& path)
+std::tuple<bool, std::string, std::string> ShaderCompiler::parseSubroutineUniform(const std::string& line)
+{
+    std::regex pattern(R"(subroutine\s+uniform\s+(\w+)\s+(\w+);)");
+    std::smatch match;
+
+    if(std::regex_search(line, match, pattern))
+    {
+        return std::make_tuple(true, match[1], match[2]);
+    }
+    return std::make_tuple(false, "", "");
+}
+
+std::string ShaderCompiler::readShaderCode(const std::string& path, const ShaderType type)
 {
     std::ifstream shaderFile;
 
@@ -131,19 +143,53 @@ std::string ShaderCompiler::readShaderCode(const std::string& path)
     std::string line;
     while(std::getline(shaderStream, line))
     {
-        auto [is_include, include_path] = parseIncludeLine(line);
+        auto [is_include, include_path]                     = parseIncludeLine(line);
+        auto [is_subr_uniform, function_name, uniform_name] = parseSubroutineUniform(line);
 
         if(is_include)
         {
             std::filesystem::path file_path = path;
             std::string full_include_path   = (file_path.parent_path() / include_path).generic_string();
-            std::string included_source     = readShaderCode(full_include_path);
+            std::string included_source     = readShaderCode(full_include_path, type);
 
             parsed_source << included_source;
         }
         else
         {
             parsed_source << line << "\n";
+        }
+
+        if(is_subr_uniform)
+        {
+            std::unordered_map<std::string, std::string>* subroutines = nullptr;
+            switch(type)
+            {
+                case ShaderType::VERTEX:
+                {
+                    subroutines = &_vertex_subroutines;
+                }
+                break;
+                case ShaderType::FRAGMENT:
+                {
+                    subroutines = &_fragment_subroutines;
+                }
+                break;
+                case ShaderType::GEOMETRY:
+                {
+                    subroutines = &_geometry_subroutines;
+                }
+                break;
+                default:
+                {
+                    ATCG_ERROR("Shader: Tried to register the subroutine `{0}` with invalid shader type",
+                               function_name);
+                    continue;
+                }
+                break;
+            }
+
+
+            (*subroutines)[function_name] = uniform_name;
         }
     }
 

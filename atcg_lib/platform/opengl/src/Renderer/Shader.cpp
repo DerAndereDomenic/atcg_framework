@@ -100,6 +100,25 @@ void Shader::recompile(const std::string& vertex_path, const std::string& fragme
     {
         it->second.location = glGetUniformLocation(_ID, it->first.c_str());
     }
+
+    _vertex_subroutines_locations.clear();
+    _fragment_subroutines_locations.clear();
+    _vertex_subroutines.clear();
+    _fragment_subroutines.clear();
+    for(auto it = compiler._vertex_subroutines.begin(); it != compiler._vertex_subroutines.end(); ++it)
+    {
+        _vertex_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_VERTEX_SHADER, it->second.c_str());
+    }
+
+    for(auto it = compiler._fragment_subroutines.begin(); it != compiler._fragment_subroutines.end(); ++it)
+    {
+        _fragment_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_FRAGMENT_SHADER, it->second.c_str());
+    }
+
+    _vertex_subroutines.resize(_vertex_subroutines_locations.size());
+    _fragment_subroutines.resize(_fragment_subroutines_locations.size());
 }
 
 void Shader::recompile(const std::string& vertex_path,
@@ -126,6 +145,34 @@ void Shader::recompile(const std::string& vertex_path,
     {
         it->second.location = glGetUniformLocation(_ID, it->first.c_str());
     }
+
+    _vertex_subroutines_locations.clear();
+    _fragment_subroutines_locations.clear();
+    _geometry_subroutines_locations.clear();
+    _vertex_subroutines.clear();
+    _fragment_subroutines.clear();
+    _geometry_subroutines.clear();
+    for(auto it = compiler._vertex_subroutines.begin(); it != compiler._vertex_subroutines.end(); ++it)
+    {
+        _vertex_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_VERTEX_SHADER, it->second.c_str());
+    }
+
+    for(auto it = compiler._fragment_subroutines.begin(); it != compiler._fragment_subroutines.end(); ++it)
+    {
+        _fragment_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_FRAGMENT_SHADER, it->second.c_str());
+    }
+
+    for(auto it = compiler._geometry_subroutines.begin(); it != compiler._geometry_subroutines.end(); ++it)
+    {
+        _geometry_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_GEOMETRY_SHADER, it->second.c_str());
+    }
+
+    _vertex_subroutines.resize(_vertex_subroutines_locations.size());
+    _fragment_subroutines.resize(_fragment_subroutines_locations.size());
+    _geometry_subroutines.resize(_geometry_subroutines_locations.size());
 }
 
 Shader::Uniform& Shader::getUniform(const std::string& name)
@@ -225,83 +272,31 @@ void Shader::setMat4(const std::string& name, const glm::mat4& value)
     uniform.data     = value;
 }
 
-void Shader::registerSubroutine(const std::string& subroutine_type, const ShaderType type)
-{
-    SubroutineInfo& subroutine = _subroutines[subroutine_type];
-    subroutine.type            = type;
-    switch(type)
-    {
-        case ShaderType::VERTEX:
-        {
-            subroutine.subroutine_index = _vertex_subroutines.size();
-            _vertex_subroutines.resize(subroutine.subroutine_index + 1);
-        }
-        break;
-        case ShaderType::FRAGMENT:
-        {
-            subroutine.subroutine_index = _fragment_subroutines.size();
-            _fragment_subroutines.resize(subroutine.subroutine_index + 1);
-        }
-        break;
-        case ShaderType::GEOMETRY:
-        {
-            subroutine.subroutine_index = _geometry_subroutines.size();
-            _geometry_subroutines.resize(subroutine.subroutine_index + 1);
-        }
-        break;
-        default:
-        {
-            ATCG_ERROR("Shader: Tried to register a subroutine `{0}` to invalid shader type: `{1}`",
-                       subroutine_type,
-                       (int)type);
-        }
-        break;
-    }
-}
-
 void Shader::selectSubroutine(const std::string& subroutine_type, const std::string& subroutine_name)
 {
-    auto it = _subroutines.find(subroutine_type);
-    if(it == _subroutines.end())
     {
-        ATCG_WARN("SHADER: Tried to select subroutine `{0}` of non-registered type `{1}`. Call "
-                  "Shader::registerSubroutine "
-                  "first.",
-                  subroutine_name,
-                  subroutine_type);
-        return;
+        auto it = _vertex_subroutines_locations.find(subroutine_type);
+        if(it != _vertex_subroutines_locations.end())
+        {
+            _vertex_subroutines[it->second] = glGetSubroutineIndex(_ID, GL_VERTEX_SHADER, subroutine_name.c_str());
+        }
     }
 
-    std::vector<uint32_t>* indices = nullptr;
-    switch(it->second.type)
     {
-        case ShaderType::VERTEX:
+        auto it = _fragment_subroutines_locations.find(subroutine_type);
+        if(it != _fragment_subroutines_locations.end())
         {
-            indices = &_vertex_subroutines;
+            _fragment_subroutines[it->second] = glGetSubroutineIndex(_ID, GL_FRAGMENT_SHADER, subroutine_name.c_str());
         }
-        break;
-        case ShaderType::FRAGMENT:
-        {
-            indices = &_fragment_subroutines;
-        }
-        break;
-        case ShaderType::GEOMETRY:
-        {
-            indices = &_geometry_subroutines;
-        }
-        break;
-        default:
-        {
-            ATCG_ERROR("Shader: Tried to select the subroutine `{0}` of type `{1}` with invalid shader type",
-                       subroutine_name,
-                       subroutine_type);
-            return;
-        }
-        break;
     }
 
-    (*indices)[it->second.subroutine_index] =
-        glGetSubroutineIndex(_ID, detail::shaderToGL(it->second.type), subroutine_name.c_str());
+    {
+        auto it = _geometry_subroutines_locations.find(subroutine_type);
+        if(it != _geometry_subroutines_locations.end())
+        {
+            _geometry_subroutines[it->second] = glGetSubroutineIndex(_ID, GL_GEOMETRY_SHADER, subroutine_name.c_str());
+        }
+    }
 }
 
 void Shader::setMVP(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P)
