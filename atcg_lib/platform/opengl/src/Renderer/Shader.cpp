@@ -4,6 +4,38 @@
 
 namespace atcg
 {
+
+namespace detail
+{
+static GLenum shaderToGL(const ShaderType type)
+{
+    switch(type)
+    {
+        case ShaderType::VERTEX:
+        {
+            return GL_VERTEX_SHADER;
+        }
+        break;
+        case ShaderType::FRAGMENT:
+        {
+            return GL_FRAGMENT_SHADER;
+        }
+        break;
+        case ShaderType::COMPUTE:
+        {
+            return GL_COMPUTE_SHADER;
+        }
+        break;
+        case ShaderType::GEOMETRY:
+        {
+            return GL_GEOMETRY_SHADER;
+        }
+        break;
+    }
+    return 0;
+}
+}    // namespace detail
+
 Shader::Shader(const std::string& compute_path)
 {
     recompile(compute_path);
@@ -193,6 +225,85 @@ void Shader::setMat4(const std::string& name, const glm::mat4& value)
     uniform.data     = value;
 }
 
+void Shader::registerSubroutine(const std::string& subroutine_type, const ShaderType type)
+{
+    SubroutineInfo& subroutine = _subroutines[subroutine_type];
+    subroutine.type            = type;
+    switch(type)
+    {
+        case ShaderType::VERTEX:
+        {
+            subroutine.subroutine_index = _vertex_subroutines.size();
+            _vertex_subroutines.resize(subroutine.subroutine_index + 1);
+        }
+        break;
+        case ShaderType::FRAGMENT:
+        {
+            subroutine.subroutine_index = _fragment_subroutines.size();
+            _fragment_subroutines.resize(subroutine.subroutine_index + 1);
+        }
+        break;
+        case ShaderType::GEOMETRY:
+        {
+            subroutine.subroutine_index = _geometry_subroutines.size();
+            _geometry_subroutines.resize(subroutine.subroutine_index + 1);
+        }
+        break;
+        default:
+        {
+            ATCG_ERROR("Shader: Tried to register a subroutine `{0}` to invalid shader type: `{1}`",
+                       subroutine_type,
+                       (int)type);
+        }
+        break;
+    }
+}
+
+void Shader::selectSubroutine(const std::string& subroutine_type, const std::string& subroutine_name)
+{
+    auto it = _subroutines.find(subroutine_type);
+    if(it == _subroutines.end())
+    {
+        ATCG_WARN("SHADER: Tried to select subroutine `{0}` of non-registered type `{1}`. Call "
+                  "Shader::registerSubroutine "
+                  "first.",
+                  subroutine_name,
+                  subroutine_type);
+        return;
+    }
+
+    std::vector<uint32_t>* indices = nullptr;
+    switch(it->second.type)
+    {
+        case ShaderType::VERTEX:
+        {
+            indices = &_vertex_subroutines;
+        }
+        break;
+        case ShaderType::FRAGMENT:
+        {
+            indices = &_fragment_subroutines;
+        }
+        break;
+        case ShaderType::GEOMETRY:
+        {
+            indices = &_geometry_subroutines;
+        }
+        break;
+        default:
+        {
+            ATCG_ERROR("Shader: Tried to select the subroutine `{0}` of type `{1}` with invalid shader type",
+                       subroutine_name,
+                       subroutine_type);
+            return;
+        }
+        break;
+    }
+
+    (*indices)[it->second.subroutine_index] =
+        glGetSubroutineIndex(_ID, detail::shaderToGL(it->second.type), subroutine_name.c_str());
+}
+
 void Shader::setMVP(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P)
 {
     setMat4("M", M);
@@ -241,6 +352,14 @@ void Shader::use() const
             break;
         }
     }
+
+    // Subroutines
+    if(!_vertex_subroutines.empty())
+        glUniformSubroutinesuiv(GL_VERTEX_SHADER, _vertex_subroutines.size(), _vertex_subroutines.data());
+    if(!_fragment_subroutines.empty())
+        glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, _fragment_subroutines.size(), _fragment_subroutines.data());
+    if(!_geometry_subroutines.empty())
+        glUniformSubroutinesuiv(GL_GEOMETRY_SHADER, _geometry_subroutines.size(), _geometry_subroutines.data());
 }
 
 void Shader::dispatch(const glm::ivec3& work_groups) const

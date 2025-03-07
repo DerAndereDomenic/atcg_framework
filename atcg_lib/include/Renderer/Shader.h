@@ -9,6 +9,16 @@
 
 namespace atcg
 {
+
+enum class ShaderType
+{
+    None = 0,
+    VERTEX,
+    FRAGMENT,
+    GEOMETRY,
+    COMPUTE
+};
+
 /**
  * @brief This class models a shader
  */
@@ -154,6 +164,22 @@ public:
     void setMat4(const std::string& name, const glm::mat4& value);
 
     /**
+     * @brief Register a subroutine
+     *
+     * @param subroutine_type The name of the subroutine definition
+     * @param type The shader type where the subroutine is defined
+     */
+    void registerSubroutine(const std::string& subroutine_type, const ShaderType type);
+
+    /**
+     * @brief Choose a subroutine
+     *
+     * @param subroutine_type The name of the subroutine
+     * @param subroutine_name The shader type where the subroutine is located
+     */
+    void selectSubroutine(const std::string& subroutine_type, const std::string& subroutine_name);
+
+    /**
      * @brief Set the model, view, and projection matrix.
      *
      * @param M The model matrix
@@ -190,6 +216,12 @@ private:
         std::variant<int, float, glm::vec2, glm::vec3, glm::vec4, glm::mat4> data;
     };
 
+    struct SubroutineInfo
+    {
+        ShaderType type;
+        uint32_t subroutine_index;
+    };
+
     Uniform& getUniform(const std::string& name);
 
     template<typename T>
@@ -204,5 +236,9 @@ private:
     bool _has_geometry         = false;
     bool _is_compute           = false;
     std::unordered_map<std::string, Uniform> _uniforms;
+    std::unordered_map<std::string, SubroutineInfo> _subroutines;
+    std::vector<uint32_t> _vertex_subroutines;
+    std::vector<uint32_t> _fragment_subroutines;
+    std::vector<uint32_t> _geometry_subroutines;
 };
 }    // namespace atcg
