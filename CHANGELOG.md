@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added revision counter to Transform components
 - Added copy methods to Graph and Camera
 - Added RevisionStack which allows for Ctrl+Z and Ctrl+Y
+- Added simple include functionality for shaders
+- Added shader subroutines
 
 ### Changed
 

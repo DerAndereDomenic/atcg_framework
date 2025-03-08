@@ -405,12 +405,12 @@ void RendererSystem::Impl::setLights(Scene* scene, const atcg::ref_ptr<Shader>& 
         ++num_lights;
     }
 
+    shader->setInt("num_lights", num_lights);
     if(point_light_depth_maps)
     {
         uint32_t shadow_map_id = renderer->popTextureID();
         shader->setInt("shadow_maps", shadow_map_id);
         point_light_depth_maps->use(shadow_map_id);
-        shader->setInt("num_lights", num_lights);
 
         used_texture_units.push_back(shadow_map_id);
     }

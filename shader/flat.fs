@@ -1,7 +1,7 @@
 #version 330 core
 
-layout (location = 0) out vec4 fragColor;
-layout (location = 1) out int outEntityID;
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out int outEntityID;
 
 in vec3 frag_color;
 in vec3 frag_pos;
