@@ -3,8 +3,13 @@
 #include <string>
 #include <cstdint>
 
+#include <Renderer/ShaderType.h>
+
 namespace atcg
 {
+
+class Shader;
+
 /**
  * @brief A class to model a shader compiler.
  * This class is used internally to create shader. Calling this class manually is not advised.
@@ -29,7 +34,7 @@ public:
      *
      * @return The shader ID
      */
-    uint32_t compilerShader(const std::string& compute_path);
+    uint32_t compileShader(const std::string& compute_path);
 
     /**
      * @brief Compile a standard shader
@@ -39,7 +44,7 @@ public:
      *
      * @return The shader ID
      */
-    uint32_t compilerShader(const std::string& vertex_path, const std::string& fragment_path);
+    uint32_t compileShader(const std::string& vertex_path, const std::string& fragment_path);
 
     /**
      * @brief Compile a shader with a geometry shader
@@ -51,13 +56,24 @@ public:
      * @return The shader ID
      */
     uint32_t
-    compilerShader(const std::string& vertex_path, const std::string& geometry_path, const std::string& fragment_path);
+    compileShader(const std::string& vertex_path, const std::string& geometry_path, const std::string& fragment_path);
 
 private:
-    std::string readShaderCode(const std::string& path);
+    friend class Shader;
+
+    std::pair<bool, std::string> parseIncludeLine(const std::string& line);
+
+    std::tuple<bool, std::string, std::string> parseSubroutineUniform(const std::string& line);
+
+    std::string readShaderCode(const std::string& path, const ShaderType type);
 
     uint32_t compileShader(unsigned int shaderType, const std::string& shader_source);
 
     uint32_t linkShader(const uint32_t* shaders, const uint32_t& num_shaders);
+
+private:
+    std::unordered_map<std::string, std::string> _vertex_subroutines;
+    std::unordered_map<std::string, std::string> _fragment_subroutines;
+    std::unordered_map<std::string, std::string> _geometry_subroutines;
 };
 }    // namespace atcg
