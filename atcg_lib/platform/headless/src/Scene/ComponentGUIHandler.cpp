@@ -59,5 +59,5 @@ void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, Poi
 {
 }
 
-void ComponentGUIHandler::displayMaterial(const std::string& key, Material& material) {}
+bool ComponentGUIHandler::displayMaterial(const std::string& key, Material& material) {}
 }    // namespace atcg
