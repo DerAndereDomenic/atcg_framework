@@ -9,7 +9,7 @@ namespace atcg
 
 void print_statistics()
 {
-    ATCG_ASSERT(atcg::SystemRegistry::instance()->hasSystem<atcg::Logger>(), "No Logger");
+    ATCG_ASSERT(atcg::SystemRegistry::instance()->hasSystem<spdlog::logger>(), "No Logger");
 
     atcg::host_allocator alloc_host;
     std::size_t host_bytes_allocated   = alloc_host.bytes_allocated;
@@ -32,7 +32,10 @@ void print_statistics()
 
 int atcg_main()
 {
-    auto logger = atcg::make_ref<atcg::Logger>();
+    auto logger = spdlog::stdout_color_mt("ATCG");
+    logger->set_pattern("%^[%H:%M:%S] %n(%l): %$%v");
+    logger->set_level(spdlog::level::trace);
+
     atcg::SystemRegistry::init();
     atcg::SystemRegistry::instance()->registerSystem(logger.get());
     atcg::Application* app = atcg::createApplication();

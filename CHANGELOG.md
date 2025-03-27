@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added RevisionStack which allows for Ctrl+Z and Ctrl+Y
 - Added simple include functionality for shaders
 - Added shader subroutines
+- Added ATCG_DEBUG for debug messages
 
 ### Changed
 
@@ -53,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IDComponent::id is no longer read-write but read only
 - NameComponent::name is no longer read-write but read only
 - glm objects can no longer be directly casted to numpy arrays but have to be converted explicitely using .numpy()
+- Removed unnecessary wrapper class around logger, now everything directly works on an spdlog object
 
 ### Fixed
 
