@@ -52,7 +52,9 @@ class PythonContext
 public:
     PythonContext()
     {
-        _logger = atcg::make_ref<atcg::Logger>();
+        _logger = spdlog::stdout_color_mt("ATCG");
+        _logger->set_pattern("%^[%T] %n: %v%$");
+        _logger->set_level(spdlog::level::trace);
         atcg::SystemRegistry::init();
         atcg::SystemRegistry::instance()->registerSystem(_logger.get());
     }
@@ -63,10 +65,8 @@ public:
         atcg::SystemRegistry::shutdown();
     }
 
-    const atcg::ref_ptr<atcg::Logger> getLogger() const { return _logger; }
-
 private:
-    atcg::ref_ptr<atcg::Logger> _logger;
+    atcg::ref_ptr<spdlog::logger> _logger;
 };
 
 

@@ -124,7 +124,7 @@ void Application::run()
                 "There must be a registered ShaderManager before starting the app");
     ATCG_ASSERT(SystemRegistry::instance()->hasSystem<VRSystem>(),
                 "There must be a registered VRSystem before starting the app");
-    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<Logger>(),
+    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<spdlog::logger>(),
                 "There must be a registered Logger before starting the app");
 
     _running          = true;

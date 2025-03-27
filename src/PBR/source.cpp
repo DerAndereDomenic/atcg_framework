@@ -22,7 +22,7 @@ public:
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
         auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
-        ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
+        ATCG_DEBUG("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
         atcg::Renderer::setSkybox(skybox);
 
         scene = atcg::IO::read_scene((atcg::resource_directory() / "test_scene.obj").string());
