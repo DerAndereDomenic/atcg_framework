@@ -218,34 +218,6 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     }
     atcg::Framebuffer::useDefault();
 
-    // if(ImGui::Button("Set from View"))
-    // {
-    //     auto view = _scene->getAllEntitiesWith<EditorCameraComponent>();
-    //     for(auto e: view)
-    //     {
-    //         // Should only be one
-    //         Entity camera_entity(e, _scene.get());
-    //         atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(
-    //             camera_entity.getComponent<EditorCameraComponent>().camera);
-    //         camera->setView(cam->getView());
-    //         camera->setAspectRatio(cam->getAspectRatio());
-    //         if(entity.hasComponent<atcg::TransformComponent>())
-    //         {
-    //             auto& transform_component = entity.getComponent<atcg::TransformComponent>();
-    //             transform_component.setModel(glm::inverse(camera->getView()));
-    //         }
-    //     }
-    // }
-
-    // Display camera extrinsic/intrinsic as transform
-    // TODO
-    // atcg::TransformComponent transform(camera->getAsTransform());
-    // draw_component(entity, transform);
-
-    // // May be updated
-    // // ? Optimize this
-    // camera->setFromTransform(transform);
-
     if(updated)
     {
         atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(_scene, entity);
@@ -253,6 +225,20 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
         camera->setIntrinsics(intrinsics);
         _component.camera = camera;
         atcg::RevisionStack::endRecording();
+    }
+
+    if(entity.hasComponent<atcg::TransformComponent>())
+    {
+        glm::mat4 model = entity.getComponent<atcg::TransformComponent>().getModel();
+
+        float scale_x = glm::length(glm::vec3(model[0]));
+        float scale_y = glm::length(glm::vec3(model[1]));
+        float scale_z = glm::length(glm::vec3(model[2]));
+
+        model = model * glm::scale(glm::vec3(1.0f / scale_x, 1.0f / scale_y, 1.0f / scale_z));
+
+        camera->setView(glm::inverse(model));
+        _component.camera = camera;
     }
 }
 
