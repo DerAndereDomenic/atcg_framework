@@ -113,4 +113,59 @@ void CameraIntrinsics::recalculateProjection()
     _projection[2][0] = _optical_center.x;
     _projection[2][1] = _optical_center.y;
 }
+
+glm::mat3 CameraUtils::convert_to_opencv(const glm::mat4& projection, uint32_t width, const uint32_t height)
+{
+    float fx = projection[0][0] * (float)width / 2.0f;
+    float fy = projection[1][1] * (float)height / 2.0f;
+    float cx = (1.0f - projection[2][0]) / 2.0f * (float)width;
+    float cy = (1.0f + projection[2][1]) / 2.0f * (float)height;
+
+    glm::mat3 K(1);
+
+    K[0][0] = fx;
+    K[1][1] = fy;
+    K[0][2] = cx;
+    K[1][2] = cy;
+
+    return K;
+}
+
+glm::mat3
+CameraUtils::convert_to_opencv(const CameraIntrinsics& intrinsics, const uint32_t width, const uint32_t height)
+{
+    return convert_to_opencv(intrinsics.projection(), width, height);
+}
+
+CameraIntrinsics CameraUtils::convert_from_opencv(const float fx,
+                                                  const float fy,
+                                                  const float cx,
+                                                  const float cy,
+                                                  float n,
+                                                  float f,
+                                                  const uint32_t width,
+                                                  const uint32_t height)
+{
+    glm::mat4 intrinsic_matrix(0);
+    intrinsic_matrix[0][0] = 2.0f * fx / (float)width;
+    intrinsic_matrix[1][1] = 2.0f * fy / (float)height;
+    intrinsic_matrix[2][0] = ((float)width - 2.0f * cx) / ((float)width);
+    intrinsic_matrix[2][1] = (-(float)height + 2.0f * cy) / ((float)height);
+    intrinsic_matrix[2][2] = -(f + n) / (f - n);
+    intrinsic_matrix[3][2] = -(2.0f * f * n) / (f - n);
+    intrinsic_matrix[2][3] = -1.0f;
+
+    return CameraIntrinsics(intrinsic_matrix);
+}
+
+CameraIntrinsics
+CameraUtils::convert_from_opencv(const glm::mat3& K, float n, float f, const uint32_t width, const uint32_t height)
+{
+    float fx = K[0][0];
+    float fy = K[1][1];
+    float cx = K[0][2];
+    float cy = K[1][2];
+
+    return convert_from_opencv(fx, fy, cx, cy, n, f, width, height);
+}
 }    // namespace atcg

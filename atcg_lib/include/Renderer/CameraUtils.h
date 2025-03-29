@@ -117,6 +117,8 @@ public:
 
     /**
      * @brief Set the aspect ratio
+     * In most of the cases, this aspect ratio should be equal to the target image aspect ratio. However, in general
+     * this models the pixels aspect ratio (which might not be one if we work with inperfect cameras).
      *
      * @param aspect_ratio
      */
@@ -159,6 +161,8 @@ public:
 
     /**
      * @brief Get the aspect ratio
+     * In most of the cases, this aspect ratio should be equal to the target image aspect ratio. However, in general
+     * this models the pixels aspect ratio (which might not be one if we work with inperfect cameras).
      *
      * @return The aspect ratio
      */
@@ -211,4 +215,64 @@ private:
 
     glm::mat4 _projection = glm::perspective(glm::radians(_fov_y), _aspect_ratio, _near, _far);
 };
+
+namespace CameraUtils
+{
+/**
+ * @brief Convert an opengl clip space matrix to an opencv intrinsics matrix
+ *
+ * @param projection The clip space projection matrix
+ * @param width The image width
+ * @param height The image height
+ *
+ * @return The opencv projection matrix K
+ */
+glm::mat3 convert_to_opencv(const glm::mat4& projection, const uint32_t width, const uint32_t height);
+
+/**
+ * @brief Convert an opengl clip space matrix to an opencv intrinsics matrix
+ *
+ * @param intrinsics The camera intrinsics
+ * @param width The image width
+ * @param height The image height
+ *
+ * @return The opencv projection matrix K
+ */
+glm::mat3 convert_to_opencv(const CameraIntrinsics& intrinsics, const uint32_t width, const uint32_t height);
+
+/**
+ * @brief Convert an opencv projection matrix to an opengl clipspace matrix
+ *
+ * @param fx The focal length in x
+ * @param fy The focal length in y
+ * @param cx The principal point in x
+ * @param cy The principal point in y
+ * @param n The near plane
+ * @param f The far plane
+ * @param width The image width
+ * @param height The image height
+ *
+ * @return Converted camera intrinsics
+ */
+CameraIntrinsics convert_from_opencv(const float fx,
+                                     const float fy,
+                                     const float cx,
+                                     const float cy,
+                                     const float n,
+                                     const float f,
+                                     const uint32_t width,
+                                     const uint32_t height);
+
+/**
+ * @brief Convert an opencv projection matrix to an opengl clipspace matrix
+ *
+ * @param K The opencv camera intrinsics matrix
+ * @param n The near plane
+ * @param f The far plane
+ *
+ * @return Converted camera intrinsics
+ */
+CameraIntrinsics
+convert_from_opencv(const glm::mat3& K, const float n, const float f, const uint32_t width, const uint32_t height);
+}    // namespace CameraUtils
 }    // namespace atcg
