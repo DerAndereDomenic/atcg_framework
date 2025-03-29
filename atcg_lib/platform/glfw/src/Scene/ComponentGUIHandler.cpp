@@ -81,7 +81,6 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
 template<>
 void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraComponent& _component)
 {
-    // TODO: Camera is modified in-place
     CameraComponent component = _component;
     bool updated              = false;
 
@@ -91,31 +90,98 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     atcg::ref_ptr<atcg::PerspectiveCamera> camera =
         std::dynamic_pointer_cast<atcg::PerspectiveCamera>(component.camera->copy());
 
-    float aspect_ratio = camera->getAspectRatio();
-    float fov          = camera->getFOV();
+    atcg::CameraIntrinsics intrinsics = camera->getIntrinsics();
+    glm::mat3 K = atcg::CameraUtils::convert_to_opencv(intrinsics, component.width, component.height);
+
+    float fx = K[0][0];
+    float fy = K[1][1];
+    float cx = K[0][2];
+    float cy = K[1][2];
+
+    float f[2]      = {fx, fy};
+    float c[2]      = {cx, cy};
+    uint32_t res[2] = {component.width, component.height};
+    float offset[2] = {intrinsics.opticalCenter().x, intrinsics.opticalCenter().y};
+
+    float aspect_ratio = intrinsics.aspectRatio();
+    float fov          = intrinsics.FOV();
 
     std::stringstream label;
     label << "Aspect Ratio##" << id;
     if(ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f))
     {
-        camera->setAspectRatio(aspect_ratio);
+        intrinsics.setAspectRatio(aspect_ratio);
         updated = true;
     }
 
-    if(ImGui::DragFloat(("FOV##" + id).c_str(), &fov, 0.5f, 10.0f, 120.0f))
+    label.str(std::string());
+    label << "FOV##" << id;
+    if(ImGui::DragFloat(label.str().c_str(), &fov, 0.5f, 10.0f, 120.0f))
     {
-        camera->setFOV(fov);
+        intrinsics.setFOV(fov);
         updated = true;
     }
 
-    float fbo_aspect_ratio = (float)_camera_preview->width() / (float)_camera_preview->height();
-    uint32_t height        = 128;
-    uint32_t width         = (uint32_t)(aspect_ratio * 128.0f);
-
-    if(glm::abs(fbo_aspect_ratio - aspect_ratio) > 1e-5f)
+    label.str(std::string());
+    label << "Resolution##" << id;
+    if(ImGui::DragInt2(label.str().c_str(), (int*)res, 1, 1, 4096))
     {
-        camera->setAspectRatio((float)width / (float)height);
-        _camera_preview = atcg::make_ref<atcg::Framebuffer>(width, height);
+        component.width  = res[0];
+        component.height = res[1];
+        updated          = true;
+    }
+
+    label.str(std::string());
+    label << "Optical Center##" << id;
+    if(ImGui::DragFloat2(label.str().c_str(), offset, 0.01f, -1.0f, 1.0f))
+    {
+        intrinsics.setOpticalCenter(glm::make_vec2(offset));
+        updated = true;
+    }
+
+    ImGui::Separator();
+
+    label.str(std::string());
+    label << "Focal Length##" << id;
+    if(ImGui::DragFloat2(label.str().c_str(), f, 0.5f, 1.0f, 4096.0f))
+    {
+        intrinsics = atcg::CameraUtils::convert_from_opencv(f[0],
+                                                            f[1],
+                                                            c[0],
+                                                            c[1],
+                                                            intrinsics.zNear(),
+                                                            intrinsics.zFar(),
+                                                            component.width,
+                                                            component.height);
+        updated    = true;
+    }
+
+    label.str(std::string());
+    label << "Principal Point##" << id;
+    if(ImGui::DragFloat2(label.str().c_str(), c, 0.5f, 1.0f, 4096.0f))
+    {
+        intrinsics = atcg::CameraUtils::convert_from_opencv(f[0],
+                                                            f[1],
+                                                            c[0],
+                                                            c[1],
+                                                            intrinsics.zNear(),
+                                                            intrinsics.zFar(),
+                                                            component.width,
+                                                            component.height);
+        updated    = true;
+    }
+
+    label.str(std::string());
+    label << "Color##" << id;
+    updated = ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(component.color)) || updated;
+
+    uint32_t preview_height = 128;
+    uint32_t preview_width =
+        glm::clamp((uint32_t)(float(component.width) / float(component.height) * 128.0f), uint32_t(1), uint32_t(4096));
+
+    if(_camera_preview->width() != preview_width || _camera_preview->height() != preview_height)
+    {
+        _camera_preview = atcg::make_ref<atcg::Framebuffer>(preview_width, preview_height);
         _camera_preview->attachColor();
         _camera_preview->attachDepth();
         _camera_preview->complete();
@@ -124,7 +190,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
     _camera_preview->use();
     atcg::Renderer::clear();
-    atcg::Renderer::setViewport(0, 0, width, height);
+    atcg::Renderer::setViewport(0, 0, preview_width, preview_height);
     atcg::Renderer::draw(_scene, component.camera);
     atcg::Renderer::useScreenBuffer();
     atcg::Renderer::setDefaultViewport();
@@ -132,9 +198,9 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     uint64_t textureID = _camera_preview->getColorAttachement(0)->getID();
 
     ImVec2 window_size = ImGui::GetWindowSize();
-    ImGui::SetCursorPos(ImVec2((window_size.x - width) * 0.5f, ImGui::GetCursorPosY()));
+    ImGui::SetCursorPos(ImVec2((window_size.x - preview_width) * 0.5f, ImGui::GetCursorPosY()));
     ImGui::Image((ImTextureID)textureID,
-                 ImVec2(content_scale * width, content_scale * height),
+                 ImVec2(content_scale * preview_width, content_scale * preview_height),
                  ImVec2 {0, 1},
                  ImVec2 {1, 0});
 
@@ -148,7 +214,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
         oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
 
-        atcg::Renderer::screenshot(_scene, component.camera, 1920, oss.str());
+        atcg::Renderer::screenshot(_scene, component.camera, component.width, component.height, oss.str());
     }
     atcg::Framebuffer::useDefault();
 
@@ -171,10 +237,6 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     //     }
     // }
 
-    label.str(std::string());
-    label << "Color##" << id;
-    updated = ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(component.color)) || updated;
-
     // Display camera extrinsic/intrinsic as transform
     // TODO
     // atcg::TransformComponent transform(camera->getAsTransform());
@@ -187,7 +249,8 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     if(updated)
     {
         atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(_scene, entity);
-        _component        = component;
+        _component = component;
+        camera->setIntrinsics(intrinsics);
         _component.camera = camera;
         atcg::RevisionStack::endRecording();
     }
