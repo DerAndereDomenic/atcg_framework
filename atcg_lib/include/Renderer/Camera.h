@@ -55,8 +55,12 @@ public:
 
     ATCG_INLINE const CameraIntrinsics& getIntrinsics() const { return _intrinsics; }
 
+    ATCG_INLINE void setIntrinsics(const CameraIntrinsics& intrinsics) { _intrinsics = intrinsics; }
+
+    ATCG_INLINE void setExtrinsics(const CameraExtrinsics& extrinsics) { _extrinsics = extrinsics; }
+
 protected:
-    virtual void recalculateView()       {};
+    virtual void recalculateView() {};
     virtual void recalculateProjection() {};
 
     CameraExtrinsics _extrinsics;
