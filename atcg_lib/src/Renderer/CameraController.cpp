@@ -8,14 +8,7 @@
 
 namespace atcg
 {
-CameraController::CameraController(const float& aspect_ratio, const glm::vec3& position, const glm::vec3& look_at)
-{
-    _camera = atcg::make_ref<PerspectiveCamera>(aspect_ratio, position, look_at);
-}
-
 CameraController::CameraController(const atcg::ref_ptr<PerspectiveCamera>& camera) : _camera(camera) {}
-
-FocusedController::FocusedController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
 
 FocusedController::FocusedController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera)
 {
@@ -104,16 +97,6 @@ bool FocusedController::onWindowResize(WindowResizeEvent* event)
     float aspect_ratio = (float)event->getWidth() / (float)event->getHeight();
     _camera->setAspectRatio(aspect_ratio);
     return false;
-}
-
-
-FirstPersonController::FirstPersonController(const float& aspect_ratio,
-                                             const glm::vec3& position,
-                                             const glm::vec3& view_direction,
-                                             const float& speed)
-    : CameraController(aspect_ratio, position, position + view_direction),
-      _speed(speed)
-{
 }
 
 FirstPersonController::FirstPersonController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera)
@@ -361,21 +344,13 @@ bool FirstPersonController::onMouseButtonReleased(MouseButtonReleasedEvent* even
     return true;
 }
 
-
-VRController::VRController(const float& aspect_ratio, const float& speed)
-    : CameraController(aspect_ratio, glm::vec3(0), glm::vec3(0, 0, 1)),
-      _speed(speed)
+VRController::VRController(const atcg::ref_ptr<PerspectiveCamera>& camera_left,
+                           const atcg::ref_ptr<PerspectiveCamera>& camera_right)
+    : CameraController(camera_left)
 {
-    _cam_left  = atcg::make_ref<PerspectiveCamera>(aspect_ratio);
-    _cam_right = atcg::make_ref<PerspectiveCamera>(aspect_ratio);
-    _camera    = _cam_left;
-
-    auto [p_left, p_right] = VR::getProjections();
-    _cam_left->setProjection(p_left);
-    _cam_right->setProjection(p_right);
+    _cam_left  = camera_left;
+    _cam_right = camera_right;
 }
-
-VRController::VRController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera) {}
 
 bool VRController::onUpdate(float delta_time)
 {
