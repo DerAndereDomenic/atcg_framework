@@ -117,8 +117,8 @@ public:
 
     /**
      * @brief Set the aspect ratio
-     * In most of the cases, this aspect ratio should be equal to the target image aspect ratio. However, in general
-     * this models the pixels aspect ratio (which might not be one if we work with inperfect cameras).
+     * This aspect ratio is given by a = w / h * fy / fx where fx and fy are the typical OpenCV camera parameters. If we
+     * have a perfect camera, then fy / fx = 1 and therefore a = w / h, i.e., the aspect ratio of the image
      *
      * @param aspect_ratio
      */
@@ -161,8 +161,8 @@ public:
 
     /**
      * @brief Get the aspect ratio
-     * In most of the cases, this aspect ratio should be equal to the target image aspect ratio. However, in general
-     * this models the pixels aspect ratio (which might not be one if we work with inperfect cameras).
+     * This aspect ratio is given by a = w / h * fy / fx where fx and fy are the typical OpenCV camera parameters. If we
+     * have a perfect camera, then fy / fx = 1 and therefore a = w / h, i.e., the aspect ratio of the image
      *
      * @return The aspect ratio
      */
