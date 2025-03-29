@@ -17,7 +17,9 @@ public:
     {
         std::cout << "ATCGTestEnvironment::SetUp() called\n";
 
-        _logger = atcg::make_ref<atcg::Logger>();
+        _logger = spdlog::stdout_color_mt("ATCG");
+        _logger->set_pattern("%^[%H:%M:%S] %n(%l): %$%v");
+        _logger->set_level(spdlog::level::trace);
         atcg::SystemRegistry::init();
         atcg::SystemRegistry::instance()->registerSystem(_logger.get());
 
@@ -47,7 +49,7 @@ public:
     }
 
 private:
-    atcg::ref_ptr<atcg::Logger> _logger;
+    atcg::ref_ptr<spdlog::logger> _logger;
     atcg::ref_ptr<atcg::ContextManagerSystem> _context_manager;
     atcg::ref_ptr<atcg::ShaderManagerSystem> _shader_manager;
     atcg::ref_ptr<atcg::RendererSystem> _renderer;
