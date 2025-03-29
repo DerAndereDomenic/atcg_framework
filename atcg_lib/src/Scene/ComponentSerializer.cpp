@@ -464,9 +464,10 @@ void ComponentSerializer::deserialize_component<CameraComponent>(const std::stri
     std::vector<float> position = j[PERSPECTIVE_CAMERA_KEY].value(POSITION_KEY, std::vector<float> {0.0f, 0.0f, -1.0f});
     std::vector<float> lookat   = j[PERSPECTIVE_CAMERA_KEY].value(LOOKAT_KEY, std::vector<float> {0.0f, 0.0f, 0.0f});
 
-    auto cam = atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio,
-                                                       glm::make_vec3(position.data()),
-                                                       glm::make_vec3(lookat.data()));
+    CameraExtrinsics extrinsics(glm::make_vec3(position.data()), glm::make_vec3(lookat.data()));
+    CameraIntrinsics intrinsics(aspect_ratio, fov, n, f);
+
+    auto cam = atcg::make_ref<atcg::PerspectiveCamera>(extrinsics, intrinsics);
 
     entity.addComponent<CameraComponent>(cam);
 }

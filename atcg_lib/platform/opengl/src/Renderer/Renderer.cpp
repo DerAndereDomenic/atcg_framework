@@ -1116,7 +1116,7 @@ void RendererSystem::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
     bool culling     = impl->culling_enabled;
     impl->has_skybox = true;
     toggleCulling(false);
-    atcg::ref_ptr<PerspectiveCamera> capture_cam = atcg::make_ref<atcg::PerspectiveCamera>(1.0f);
+    atcg::ref_ptr<PerspectiveCamera> capture_cam = atcg::make_ref<atcg::PerspectiveCamera>();
     glm::mat4 captureProjection                  = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 captureViews[]                     = {
         glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, -1.0f, 0.0f)),

@@ -22,7 +22,10 @@ public:
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
+        atcg::CameraIntrinsics intrinsics;
+        intrinsics.setAspectRatio(aspect_ratio);
+        camera_controller = atcg::make_ref<atcg::FirstPersonController>(
+            atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
 
         auto face_0                         = atcg::IO::imread("../Cubemap/image_2.hdr");
         auto face_1                         = atcg::IO::imread("../Cubemap/image_0.hdr");

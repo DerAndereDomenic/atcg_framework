@@ -76,7 +76,7 @@ ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<a
         if(ImGui::MenuItem(CameraComponent::toString()))
         {
             atcg::RevisionStack::startRecording<ComponentAddedRevision<CameraComponent>>(scene, entity);
-            auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>(1.0f));
+            auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>());
             if(entity.hasComponent<TransformComponent>())
             {
                 atcg::ref_ptr<PerspectiveCamera> cam =
