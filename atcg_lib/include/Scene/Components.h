@@ -178,7 +178,10 @@ struct AccelerationStructureComponent
 struct CameraComponent
 {
     CameraComponent() = default;
-    CameraComponent(const atcg::ref_ptr<Camera>& camera) : camera(camera)
+    CameraComponent(const atcg::ref_ptr<Camera>& camera, const uint32_t width = 1024, const uint32_t height = 1024)
+        : camera(camera),
+          width(width),
+          height(height)
     {
         if(dynamic_cast<PerspectiveCamera*>(camera.get()))
         {
@@ -191,6 +194,8 @@ struct CameraComponent
     atcg::ref_ptr<Camera> camera;
     glm::vec3 color  = glm::vec3(1);
     bool perspective = false;
+    uint32_t width   = 1024;
+    uint32_t height  = 1024;
 };
 
 struct EditorCameraComponent : public CameraComponent
