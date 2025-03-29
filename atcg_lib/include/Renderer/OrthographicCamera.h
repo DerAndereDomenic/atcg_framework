@@ -92,5 +92,7 @@ protected:
 
 private:
     float _left, _right, _bottom, _top;
+
+    glm::mat4 _projection;
 };
 }    // namespace atcg
