@@ -196,6 +196,9 @@ struct CameraComponent
     bool perspective = false;
     uint32_t width   = 1024;
     uint32_t height  = 1024;
+
+    atcg::ref_ptr<atcg::Framebuffer> preview;
+    bool render_preview = false;
 };
 
 struct EditorCameraComponent : public CameraComponent
