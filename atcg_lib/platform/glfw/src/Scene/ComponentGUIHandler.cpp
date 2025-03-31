@@ -179,23 +179,26 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     uint32_t preview_width =
         glm::clamp((uint32_t)(float(component.width) / float(component.height) * 128.0f), uint32_t(1), uint32_t(4096));
 
-    if(_camera_preview->width() != preview_width || _camera_preview->height() != preview_height)
+    if(!component.preview || component.preview->width() != preview_width ||
+       component.preview->height() != preview_height)
     {
-        _camera_preview = atcg::make_ref<atcg::Framebuffer>(preview_width, preview_height);
-        _camera_preview->attachColor();
-        _camera_preview->attachDepth();
-        _camera_preview->complete();
+        component.preview = atcg::make_ref<atcg::Framebuffer>(preview_width, preview_height);
+        component.preview->attachColor();
+        component.preview->attachDepth();
+        component.preview->complete();
         updated = true;
     }
 
-    _camera_preview->use();
+    component.preview->use();
     atcg::Renderer::clear();
     atcg::Renderer::setViewport(0, 0, preview_width, preview_height);
     atcg::Renderer::draw(_scene, component.camera);
     atcg::Renderer::useScreenBuffer();
     atcg::Renderer::setDefaultViewport();
 
-    uint64_t textureID = _camera_preview->getColorAttachement(0)->getID();
+    updated = ImGui::Checkbox("Show Preview##cam", &component.render_preview) || updated;
+
+    uint64_t textureID = component.preview->getColorAttachement(0)->getID();
 
     ImVec2 window_size = ImGui::GetWindowSize();
     ImGui::SetCursorPos(ImVec2((window_size.x - preview_width) * 0.5f, ImGui::GetCursorPosY()));
