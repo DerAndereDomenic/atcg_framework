@@ -85,6 +85,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_event       = py::class_<atcg::Event>(m, "Event");                                                                   \
     auto m_camera =                                                                                                             \
         py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");                    \
+    auto m_extrinsics          = py::class_<atcg::CameraExtrinsics>(m, "CameraExtrinsics");                                     \
+    auto m_intrinsics          = py::class_<atcg::CameraIntrinsics>(m, "CameraIntrinsics");                                     \
     auto m_controller          = py::class_<atcg::FirstPersonController, atcg::ref_ptr<atcg::FirstPersonController>>(m,         \
                                                                                                             "FirstPer" \
                                                                                                                      "sonContr" \
@@ -552,10 +554,35 @@ inline void defineBindings(py::module_& m)
 
     m.def("read_scene", [](const std::string& path) { return atcg::IO::read_scene(path); }, "path"_a);
 
+    m_intrinsics.def(py::init<>())
+        .def(py::init<const float, const float, const float, const float, const glm::vec2&>())
+        .def(py::init<const glm::mat4&>())
+        .def("setAspectRatio", &atcg::CameraIntrinsics::setAspectRatio, "aspect_ratio"_a)
+        .def("setFOV", &atcg::CameraIntrinsics::setFOV, "fov"_a)
+        .def("setNear", &atcg::CameraIntrinsics::setNear, "near"_a)
+        .def("setFar", &atcg::CameraIntrinsics::setFar, "far"_a)
+        .def("setOpticalCenter", &atcg::CameraIntrinsics::setOpticalCenter, "optical_center"_a)
+        .def("setProjection", &atcg::CameraIntrinsics::setProjection, "projection"_a)
+        .def("aspectRatio", &atcg::CameraIntrinsics::aspectRatio)
+        .def("FOV", &atcg::CameraIntrinsics::FOV)
+        .def("zNear", &atcg::CameraIntrinsics::zNear)
+        .def("zFar", &atcg::CameraIntrinsics::zFar)
+        .def("opticalCenter", &atcg::CameraIntrinsics::opticalCenter)
+        .def("projection", &atcg::CameraIntrinsics::projection);
+
+    m_extrinsics.def(py::init<>())
+        .def(py::init<const glm::vec3&, const glm::vec3&>())
+        .def(py::init<const glm::mat4&>())
+        .def("setPosition", &atcg::CameraExtrinsics::setPosition, "position"_a)
+        .def("setTarget", &atcg::CameraExtrinsics::setTarget, "target"_a)
+        .def("setExtrinsicMatrix", &atcg::CameraExtrinsics::setExtrinsicMatrix, "view"_a)
+        .def("position", &atcg::CameraExtrinsics::position)
+        .def("target", &atcg::CameraExtrinsics::target)
+        .def("extrinsicMatrix", &atcg::CameraExtrinsics::extrinsicMatrix);
+
 
     m_camera
-        .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio); }),
-             "aspect_ratio"_a)
+        .def(py::init<atcg::CameraExtrinsics, atcg::CameraIntrinsics>(), "camera_extrinsics"_a, "camera_intrinsics"_a)
         .def("getPosition", &atcg::PerspectiveCamera::getPosition)
         .def("setPosition", &atcg::PerspectiveCamera::setPosition)
         .def("getView", &atcg::PerspectiveCamera::getView)
@@ -576,8 +603,7 @@ inline void defineBindings(py::module_& m)
         .def("getFar", &atcg::PerspectiveCamera::getFar)
         .def("setFar", &atcg::PerspectiveCamera::setFar);
 
-    m_controller
-        .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::FirstPersonController>(aspect_ratio); }))
+    m_controller.def(py::init<const atcg::ref_ptr<atcg::PerspectiveCamera>&>(), "camera"_a)
         .def("onUpdate", &atcg::FirstPersonController::onUpdate, "delta_time"_a)
         .def("onEvent", &atcg::FirstPersonController::onEvent, "event"_a)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
@@ -1204,7 +1230,10 @@ inline void defineBindings(py::module_& m)
             "removeEntity",
             [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) { scene->removeEntity(entity); },
             "entity"_a)
-        .def("removeAllEntities", &atcg::Scene::removeAllEntites);
+        .def("removeAllEntities", &atcg::Scene::removeAllEntites)
+        .def("setCamera", &atcg::Scene::setCamera)
+        .def("getCamera", &atcg::Scene::getCamera)
+        .def("removeCamera", &atcg::Scene::removeCamera);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)

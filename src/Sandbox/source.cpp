@@ -105,7 +105,10 @@ public:
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
+        atcg::CameraIntrinsics intrinsics;
+        intrinsics.setAspectRatio(aspect_ratio);
+        camera_controller = atcg::make_ref<atcg::FocusedController>(
+            atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
 
         cube = atcg::IO::read_mesh((atcg::resource_directory() / "cube.obj").string());
 

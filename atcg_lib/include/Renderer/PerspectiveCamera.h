@@ -15,179 +15,149 @@ public:
     /**
      * @brief Construct a new Camera object
      *
-     * @param aspect_ratio The aspect ratio
-     * @param position The camera position
-     * @param look_at The camera's look at target
+     * @param extrinsics The camera extrinsics
+     * @param intrinsics The camera intrinsics
      */
-    PerspectiveCamera(const float& aspect_ratio,
-                      const glm::vec3& position = glm::vec3(0, 0, -1),
-                      const glm::vec3& look_at  = glm::vec3(0));
+    PerspectiveCamera(const CameraExtrinsics& extrinsics = {}, const CameraIntrinsics& intrinsics = {});
 
     /**
      * @brief Get the Position
      *
      * @return glm::vec3 The position
      */
-    ATCG_INLINE virtual glm::vec3 getPosition() const override { return _position; }
+    ATCG_INLINE virtual glm::vec3 getPosition() const override { return _extrinsics.position(); }
 
     /**
      * @brief Get the Direction
      *
      * @return glm::vec3 The view direction
      */
-    ATCG_INLINE virtual glm::vec3 getDirection() const override { return glm::normalize(_position - _look_at); }
+    ATCG_INLINE virtual glm::vec3 getDirection() const override
+    {
+        return glm::normalize(_extrinsics.position() - _extrinsics.target());
+    }
 
     /**
      * @brief Get the Look At target
      *
      * @return glm::vec3 The look at target
      */
-    ATCG_INLINE glm::vec3 getLookAt() const { return _look_at; }
+    ATCG_INLINE glm::vec3 getLookAt() const { return _extrinsics.target(); }
 
     /**
      * @brief Get the Up direction
      *
      * @return glm::vec3 The up direction
      */
-    ATCG_INLINE glm::vec3 getUp() const { return _up; }
+    ATCG_INLINE glm::vec3 getUp() const { return glm::vec3(0, 1, 0); }
 
     /**
      * @brief Get the Projection matrix
      *
      * @return glm::mat4 The projection matrix
      */
-    ATCG_INLINE virtual glm::mat4 getProjection() const override { return _projection; }
+    ATCG_INLINE virtual glm::mat4 getProjection() const override { return _intrinsics.projection(); }
 
     /**
      *  @brief Set the projection matrix
      *
      *  @param projection The new projection matrix
      */
-    void setProjection(const glm::mat4& projection);
+    ATCG_INLINE void setProjection(const glm::mat4& projection) { _intrinsics.setProjection(projection); }
 
     /**
      * @brief Get the View Projection matrix
      *
      * @return glm::mat4 The view-projection matrix
      */
-    ATCG_INLINE virtual glm::mat4 getViewProjection() const override { return _projection * _view; }
+    ATCG_INLINE virtual glm::mat4 getViewProjection() const override
+    {
+        return _intrinsics.projection() * _extrinsics.extrinsicMatrix();
+    }
 
     /**
      * @brief Get the Aspect Ratio
      *
      * @return float The aspect ratio
      */
-    ATCG_INLINE float getAspectRatio() const { return _aspect_ratio; }
+    ATCG_INLINE float getAspectRatio() const { return _intrinsics.aspectRatio(); }
 
     /**
      * @brief Get the View matrix
      *
      * @return glm::mat4 The view matrix
      */
-    ATCG_INLINE virtual glm::mat4 getView() const override { return _view; }
+    ATCG_INLINE virtual glm::mat4 getView() const override { return _extrinsics.extrinsicMatrix(); }
 
     /**
      *  @brief Set the view matrix
      *
      *  @param view The new orthonormal view matrix
      */
-    void setView(const glm::mat4& view);
-
-    /**
-     * @brief Set view and projection from transform
-     *
-     * @param model The model matrix
-     */
-    void setFromTransform(const glm::mat4& transform);
-
-    /**
-     * @brief Convert the camera representation into a transform (object to world transform)
-     *
-     * @return The transform
-     */
-    glm::mat4 getAsTransform() const;
+    ATCG_INLINE void setView(const glm::mat4& view) { _extrinsics.setExtrinsicMatrix(view); }
 
     /**
      * @brief Set the Position
      *
      * @param position The new position
      */
-    ATCG_INLINE void setPosition(const glm::vec3& position)
-    {
-        _position = position;
-        recalculateView();
-    }
+    ATCG_INLINE void setPosition(const glm::vec3& position) { _extrinsics.setPosition(position); }
 
     /**
      * @brief Set the Look At Target
      *
      * @param look_at The new target
      */
-    ATCG_INLINE void setLookAt(const glm::vec3& look_at)
-    {
-        _look_at = look_at;
-        recalculateView();
-    }
+    ATCG_INLINE void setLookAt(const glm::vec3& look_at) { _extrinsics.setTarget(look_at); }
 
     /**
      * @brief Set the Aspect Ratio
      *
      * @param aspect_ratio The new aspect ratio
      */
-    ATCG_INLINE void setAspectRatio(const float& aspect_ratio)
-    {
-        _aspect_ratio = aspect_ratio;
-        recalculateProjection();
-    }
+    ATCG_INLINE void setAspectRatio(const float& aspect_ratio) { _intrinsics.setAspectRatio(aspect_ratio); }
 
-    ATCG_INLINE void setFOV(const float& fov)
-    {
-        _fovy = fov;
-        recalculateProjection();
-    }
+    /**
+     * @brief Set the fov in y direction
+     *
+     * @param fov The fov in degrees
+     */
+    ATCG_INLINE void setFOV(const float& fov) { _intrinsics.setFOV(fov); }
 
     /**
      * @brief Get the near plane
      *
      * @return The near plane
      */
-    ATCG_INLINE float getNear() const { return _near; }
+    ATCG_INLINE float getNear() const { return _intrinsics.zNear(); }
 
     /**
      * @brief Get the far plane
      *
      * @return The far plane
      */
-    ATCG_INLINE float getFar() const { return _far; }
+    ATCG_INLINE float getFar() const { return _intrinsics.zFar(); }
 
     /**
      * @brief Get the camera fov in y direction
      *
      * @return The fov (in degree)
      */
-    ATCG_INLINE float getFOV() const { return _fovy; }
+    ATCG_INLINE float getFOV() const { return _intrinsics.FOV(); }
 
     /**
      * @brief Set the near plane
      *
      * @param near_plane The near plane
      */
-    ATCG_INLINE void setNear(float near_plane)
-    {
-        _near = near_plane;
-        recalculateProjection();
-    }
+    ATCG_INLINE void setNear(float near_plane) { _intrinsics.setNear(near_plane); }
 
     /**
      * @brief Set the far plane
      *
      * @param far_plane The far plane
      */
-    ATCG_INLINE void setFar(float far_plane)
-    {
-        _far = far_plane;
-        recalculateProjection();
-    }
+    ATCG_INLINE void setFar(float far_plane) { _intrinsics.setFar(far_plane); }
 
     /**
      * @brief Create a copy of the camera
@@ -195,22 +165,5 @@ public:
      * @return The deep copy
      */
     virtual atcg::ref_ptr<Camera> copy() const override;
-
-protected:
-    virtual void recalculateView() override;
-    virtual void recalculateProjection() override;
-
-private:
-    // View parameters
-    glm::vec3 _position;
-    glm::vec3 _up;
-    glm::vec3 _look_at;
-
-    // Projection parameters
-    glm::vec2 _optical_center;
-    float _aspect_ratio;
-    float _fovy;
-    float _near;
-    float _far;
 };
 }    // namespace atcg

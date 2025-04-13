@@ -33,7 +33,11 @@ class PythonLayer(atcg.Layer):
         atcg.Renderer.setClearColor(atcg.vec4(0, 0, 0, 1))
         aspect_ratio = atcg.width() / atcg.height()
 
-        self.camera_controller = atcg.FirstPersonController(aspect_ratio)
+        extrinsics = atcg.CameraExtrinsics()
+        intrinsics = atcg.CameraIntrinsics()
+        intrinsics.setAspectRatio(aspect_ratio)
+        camera = atcg.PerspectiveCamera(extrinsics, intrinsics)
+        self.camera_controller = atcg.FirstPersonController(camera)
 
         self.scene = atcg.Scene()
 
@@ -101,8 +105,8 @@ class PythonLayer(atcg.Layer):
 
 def main():
     props = atcg.WindowProps()
-    props.width = 2560
-    props.height = 1440
+    props.width = 1600
+    props.height = 900
 
     layer = PythonLayer()
     app = atcg.PythonApplication(layer, props)

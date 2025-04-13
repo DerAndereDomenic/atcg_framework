@@ -31,16 +31,30 @@ public:
 
         if(atcg::VR::isVRAvailable())
         {
-            float vr_aspect   = (float)atcg::VR::width() / (float)atcg::VR::height();
-            camera_controller = atcg::make_ref<atcg::VRController>(vr_aspect);
+            float vr_aspect = (float)atcg::VR::width() / (float)atcg::VR::height();
+
+            atcg::CameraIntrinsics instrinsics_left(atcg::VR::getProjection(atcg::VRSystem::Eye::LEFT));
+            atcg::CameraIntrinsics instrinsics_right(atcg::VR::getProjection(atcg::VRSystem::Eye::RIGHT));
+
+            atcg::CameraExtrinsics extrinsics_left(glm::inverse(atcg::VR::getInverseView(atcg::VRSystem::Eye::LEFT)));
+            atcg::CameraExtrinsics extrinsics_right(glm::inverse(atcg::VR::getInverseView(atcg::VRSystem::Eye::RIGHT)));
+
+            camera_controller = atcg::make_ref<atcg::VRController>(
+                atcg::make_ref<atcg::PerspectiveCamera>(extrinsics_left, instrinsics_left),
+                atcg::make_ref<atcg::PerspectiveCamera>(extrinsics_right, instrinsics_right));
             atcg::VR::initControllerMeshes(scene);
         }
         else
         {
             const auto& window = atcg::Application::get()->getWindow();
             float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-            camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
+            atcg::CameraIntrinsics intrinsics;
+            intrinsics.setAspectRatio(aspect_ratio);
+            camera_controller = atcg::make_ref<atcg::FirstPersonController>(
+                atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
         }
+
+        scene->setCamera(camera_controller->getCamera());
     }
 
     // This gets called each frame

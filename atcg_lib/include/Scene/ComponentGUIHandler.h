@@ -45,14 +45,7 @@ public:
      *
      * @param scene The scene
      */
-    ComponentGUIHandler(const atcg::ref_ptr<Scene>& scene)
-        : _scene(scene),
-          _camera_preview(atcg::make_ref<atcg::Framebuffer>(128, 128))
-    {
-        _camera_preview->attachColor();
-        _camera_preview->attachDepth();
-        _camera_preview->complete();
-    }
+    ComponentGUIHandler(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
 
     /**
      * @brief Draw a component
@@ -69,6 +62,5 @@ protected:
     bool displayMaterial(const std::string& key, Material& material);
 
     atcg::ref_ptr<Scene> _scene;
-    atcg::ref_ptr<Framebuffer> _camera_preview;
 };
 }    // namespace atcg
