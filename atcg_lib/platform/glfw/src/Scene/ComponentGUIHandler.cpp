@@ -274,6 +274,31 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
         }
     }
 
+    ImGui::Separator();
+
+    auto scene_camera = _scene->getCamera();
+
+    if(scene_camera)
+    {
+        if(ImGui::Button("Fly to"))
+        {
+            scene_camera->setExtrinsics(component.camera->getExtrinsics());
+        }
+
+        if(ImGui::Button("Set from View"))
+        {
+            camera->setExtrinsics(scene_camera->getExtrinsics());
+            intrinsics = scene_camera->getIntrinsics();
+
+            if(entity.hasComponent<atcg::TransformComponent>())
+            {
+                entity.getComponent<atcg::TransformComponent>().setModel(glm::inverse(scene_camera->getView()));
+            }
+
+            updated = true;
+        }
+    }
+
     if(updated)
     {
         atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(_scene, entity);
