@@ -263,8 +263,12 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
         }
         else
         {
+            float aspect             = float(component.image->width()) / float(component.image->height());
+            uint32_t preview_height_ = 128;
+            uint32_t preview_width_  = glm::clamp((uint32_t)(aspect * 128.0f), uint32_t(1), uint32_t(4096));
+            ImGui::SetCursorPos(ImVec2((window_size.x - preview_width_) * 0.5f, ImGui::GetCursorPosY()));
             ImGui::Image((ImTextureID)component.image->getID(),
-                         ImVec2(content_scale * preview_width, content_scale * preview_height),
+                         ImVec2(content_scale * preview_width_, content_scale * preview_height_),
                          ImVec2 {0, 1},
                          ImVec2 {1, 0});
         }
