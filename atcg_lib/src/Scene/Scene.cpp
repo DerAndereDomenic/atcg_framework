@@ -110,7 +110,7 @@ void Scene::setCamera(const atcg::ref_ptr<atcg::Camera>& camera)
     impl->_camera = camera;
 }
 
-atcg::ref_ptr<atcg::Camera> Scene::getCameras() const
+atcg::ref_ptr<atcg::Camera> Scene::getCamera() const
 {
     return impl->_camera;
 }

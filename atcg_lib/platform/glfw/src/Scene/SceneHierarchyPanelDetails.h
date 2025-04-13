@@ -195,6 +195,103 @@ void SceneHierarchyPanel<GUIHandler>::drawSceneProperties()
         }
         ImGui::TreePop();
     }
+
+    auto scene_camera = _scene->getCamera();
+    if(scene_camera)
+    {
+        open = ImGui::TreeNodeEx((void*)typeid(atcg::Camera).hash_code(), treeNodeFlags, "Camera");
+
+        contentRegionAvailable = ImGui::GetContentRegionAvail();
+
+        if(open)
+        {
+            uint32_t width                    = atcg::Renderer::getFramebuffer()->width();
+            uint32_t height                   = atcg::Renderer::getFramebuffer()->height();
+            atcg::CameraIntrinsics intrinsics = scene_camera->getIntrinsics();
+            glm::mat3 K                       = atcg::CameraUtils::convert_to_opencv(intrinsics, width, height);
+            uint32_t id                       = (uint32_t)typeid(atcg::Camera).hash_code();
+            bool updated                      = false;
+
+            float fx = K[0][0];
+            float fy = K[1][1];
+            float cx = K[0][2];
+            float cy = K[1][2];
+
+            float f[2]      = {fx, fy};
+            float c[2]      = {cx, cy};
+            float offset[2] = {intrinsics.opticalCenter().x, intrinsics.opticalCenter().y};
+
+            float aspect_ratio = intrinsics.aspectRatio();
+            float fov          = intrinsics.FOV();
+
+            std::stringstream label;
+            label << "Aspect##" << id;
+            if(ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f))
+            {
+                intrinsics.setAspectRatio(aspect_ratio);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+            if(ImGui::Button("Reset"))
+            {
+                intrinsics.setAspectRatio(float(width) / float(height));
+                updated = true;
+            }
+
+            label.str(std::string());
+            label << "FOV##" << id;
+            if(ImGui::DragFloat(label.str().c_str(), &fov, 0.5f, 10.0f, 120.0f))
+            {
+                intrinsics.setFOV(fov);
+                updated = true;
+            }
+
+            label.str(std::string());
+            label << "Optical Center##" << id;
+            if(ImGui::DragFloat2(label.str().c_str(), offset, 0.01f, -1.0f, 1.0f))
+            {
+                intrinsics.setOpticalCenter(glm::make_vec2(offset));
+                updated = true;
+            }
+
+            ImGui::Separator();
+
+            label.str(std::string());
+            label << "Focal Length##" << id;
+            if(ImGui::DragFloat2(label.str().c_str(), f, 0.5f, 1.0f, 4096.0f))
+            {
+                intrinsics = atcg::CameraUtils::convert_from_opencv(f[0],
+                                                                    f[1],
+                                                                    c[0],
+                                                                    c[1],
+                                                                    intrinsics.zNear(),
+                                                                    intrinsics.zFar(),
+                                                                    width,
+                                                                    height);
+                updated    = true;
+            }
+
+            label.str(std::string());
+            label << "Principal Point##" << id;
+            if(ImGui::DragFloat2(label.str().c_str(), c, 0.5f, 1.0f, 4096.0f))
+            {
+                intrinsics = atcg::CameraUtils::convert_from_opencv(f[0],
+                                                                    f[1],
+                                                                    c[0],
+                                                                    c[1],
+                                                                    intrinsics.zNear(),
+                                                                    intrinsics.zFar(),
+                                                                    width,
+                                                                    height);
+                updated    = true;
+            }
+
+            if(updated) scene_camera->setIntrinsics(intrinsics);
+
+            ImGui::TreePop();
+        }
+    }
 }
 
 template<typename GUIHandler>

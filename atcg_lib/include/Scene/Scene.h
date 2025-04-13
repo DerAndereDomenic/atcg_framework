@@ -111,7 +111,7 @@ public:
      *
      * @return The registered camera. This is nullptr if no camera was set before
      */
-    atcg::ref_ptr<atcg::Camera> getCameras() const;
+    atcg::ref_ptr<atcg::Camera> getCamera() const;
 
     /**
      * @brief Remove the registered main camera
