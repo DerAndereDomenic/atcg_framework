@@ -1474,13 +1474,34 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
              impl->shader_manager->getShader("edge"),
              atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
 
-        if(comp.render_preview && comp.preview)
+
+        if(comp.image)
         {
             uint32_t id          = popTextureID();
             bool culling_enabled = impl->culling_enabled;
             toggleCulling(false);
             model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
             impl->shader_manager->getShader("image_display")->setInt("screen_texture", id);
+            impl->shader_manager->getShader("image_display")->setInt("entityID", entity_id);
+            comp.image->use(id);
+            impl->drawVAO(impl->quad_vao,
+                          camera,
+                          comp.color,
+                          impl->shader_manager->getShader("image_display"),
+                          model,
+                          GL_TRIANGLES,
+                          impl->quad_vao->getIndexBuffer()->getCount());
+            toggleCulling(culling_enabled);
+            pushTextureID(id);
+        }
+        else if(comp.render_preview && comp.preview)
+        {
+            uint32_t id          = popTextureID();
+            bool culling_enabled = impl->culling_enabled;
+            toggleCulling(false);
+            model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
+            impl->shader_manager->getShader("image_display")->setInt("screen_texture", id);
+            impl->shader_manager->getShader("image_display")->setInt("entityID", entity_id);
             comp.preview->getColorAttachement(0)->use(id);
             impl->drawVAO(impl->quad_vao,
                           camera,

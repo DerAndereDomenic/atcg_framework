@@ -198,6 +198,7 @@ struct CameraComponent
     uint32_t height  = 1024;
 
     atcg::ref_ptr<atcg::Framebuffer> preview;
+    atcg::ref_ptr<atcg::Texture2D> image;
     bool render_preview = false;
 };
 

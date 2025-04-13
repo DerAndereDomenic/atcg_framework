@@ -41,6 +41,7 @@ namespace atcg
 #define POINT_SIZE_KEY             "PointSize"
 #define RADIUS_KEY                 "Radius"
 #define PERSPECTIVE_CAMERA_KEY     "PerspectiveCamera"
+#define CAMERA_IMAGE_KEY           "Image"
 #define ASPECT_RATIO_KEY           "AspectRatio"
 #define FOVY_KEY                   "FoVy"
 #define LOOKAT_KEY                 "LookAt"
@@ -292,6 +293,16 @@ void ComponentSerializer::serialize_component<CameraComponent>(const std::string
     j[PERSPECTIVE_CAMERA_KEY][HEIGHT_KEY]         = component.height;
     j[PERSPECTIVE_CAMERA_KEY][PREVIEW_KEY]        = component.render_preview;
     j[PERSPECTIVE_CAMERA_KEY][OPTICAL_CENTER_KEY] = nlohmann::json::array({offset.x, offset.y});
+
+    if(component.image)
+    {
+        auto entity_id       = entity.getComponent<IDComponent>().ID();
+        std::string img_path = file_path + "_" + std::to_string(entity_id) + "_cam_image";
+
+        serializeTexture(component.image, img_path, 1.0f);
+
+        j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY] = img_path;
+    }
 }
 
 template<>
@@ -484,6 +495,14 @@ void ComponentSerializer::deserialize_component<CameraComponent>(const std::stri
     component.width          = j[PERSPECTIVE_CAMERA_KEY].value(WIDTH_KEY, 1024);
     component.height         = j[PERSPECTIVE_CAMERA_KEY].value(HEIGHT_KEY, 1024);
     component.render_preview = j[PERSPECTIVE_CAMERA_KEY].value(PREVIEW_KEY, false);
+
+
+    if(j[PERSPECTIVE_CAMERA_KEY].contains(CAMERA_IMAGE_KEY))
+    {
+        std::string diffuse_path = j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY];
+        auto img                 = IO::imread(diffuse_path);
+        component.image          = atcg::Texture2D::create(img);
+    }
 }
 
 

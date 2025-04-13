@@ -221,6 +221,55 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     }
     atcg::Framebuffer::useDefault();
 
+    ImGui::Separator();
+
+    if(!component.image)
+    {
+        ImGui::Text("Image");
+        ImGui::SameLine();
+        if(ImGui::Button("...##imageload"))
+        {
+            auto f     = pfd::open_file("Choose files to read",
+                                    pfd::path::home(),
+                                        {"All Files",
+                                         "*",
+                                         "PNG Files (.png)",
+                                         "*.png",
+                                         "JPG Files (.jpg, .jpeg)",
+                                         "*jpg, *jpeg",
+                                         "BMP Files (.bmp)",
+                                         "*.bmp",
+                                         "HDR Files (.hdr)",
+                                         "*.hdr"},
+                                    pfd::opt::none);
+            auto files = f.result();
+            if(!files.empty())
+            {
+                auto img        = IO::imread(files[0]);
+                component.image = atcg::Texture2D::create(img);
+                updated         = true;
+            }
+        }
+    }
+    else
+    {
+        ImGui::Text("Image");
+        ImGui::SameLine();
+
+        if(ImGui::Button("X##imagedelete"))
+        {
+            component.image = nullptr;
+            updated         = true;
+        }
+        else
+        {
+            ImGui::Image((ImTextureID)component.image->getID(),
+                         ImVec2(content_scale * preview_width, content_scale * preview_height),
+                         ImVec2 {0, 1},
+                         ImVec2 {1, 0});
+        }
+    }
+
     if(updated)
     {
         atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(_scene, entity);
