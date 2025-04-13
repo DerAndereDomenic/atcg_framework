@@ -1230,7 +1230,10 @@ inline void defineBindings(py::module_& m)
             "removeEntity",
             [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) { scene->removeEntity(entity); },
             "entity"_a)
-        .def("removeAllEntities", &atcg::Scene::removeAllEntites);
+        .def("removeAllEntities", &atcg::Scene::removeAllEntites)
+        .def("setCamera", &atcg::Scene::setCamera)
+        .def("getCamera", &atcg::Scene::getCamera)
+        .def("removeCamera", &atcg::Scene::removeCamera);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
