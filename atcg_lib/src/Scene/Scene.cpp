@@ -16,6 +16,8 @@ public:
 
     std::unordered_map<UUID, entt::entity> _entities;
     std::unordered_map<std::string, std::vector<entt::entity>> _entites_by_name;
+
+    atcg::ref_ptr<atcg::Camera> _camera = nullptr;
 };
 
 Scene::Scene()
@@ -103,6 +105,21 @@ void Scene::removeAllEntites()
     atcg::RevisionStack::clearChache();
 }
 
+void Scene::setCamera(const atcg::ref_ptr<atcg::Camera>& camera)
+{
+    impl->_camera = camera;
+}
+
+atcg::ref_ptr<atcg::Camera> Scene::getCameras() const
+{
+    return impl->_camera;
+}
+
+void Scene::removeCamera()
+{
+    setCamera(nullptr);
+}
+
 void Scene::_updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id)
 {
     impl->_entities.erase(old_id);
@@ -124,5 +141,6 @@ void Scene::_updateEntityName(atcg::Entity entity, const std::string& old_name, 
     auto& entities = impl->_entites_by_name[new_name];
     entities.push_back((entt::entity)entity.entity_handle());
 }
+
 
 }    // namespace atcg

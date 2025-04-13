@@ -2,6 +2,9 @@
 
 
 #include <Core/UUID.h>
+#include <Core/Memory.h>
+
+#include <Renderer/Camera.h>
 
 #include <memory>
 #include <entt.hpp>
@@ -95,6 +98,25 @@ public:
      * @brief Remove all entities
      */
     void removeAllEntites();
+
+    /**
+     * @brief Register the main camera of the scene
+     *
+     * @param camera The camera to register
+     */
+    void setCamera(const atcg::ref_ptr<atcg::Camera>& camera);
+
+    /**
+     * @brief Get the main camera of the scene
+     *
+     * @return The registered camera. This is nullptr if no camera was set before
+     */
+    atcg::ref_ptr<atcg::Camera> getCameras() const;
+
+    /**
+     * @brief Remove the registered main camera
+     */
+    void removeCamera();
 
 private:
     void _updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id);

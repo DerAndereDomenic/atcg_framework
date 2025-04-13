@@ -53,6 +53,8 @@ public:
             camera_controller = atcg::make_ref<atcg::FirstPersonController>(
                 atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
         }
+
+        scene->setCamera(camera_controller->getCamera());
     }
 
     // This gets called each frame
