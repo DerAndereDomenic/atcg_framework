@@ -290,6 +290,9 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
             camera->setExtrinsics(scene_camera->getExtrinsics());
             intrinsics = scene_camera->getIntrinsics();
 
+            component.width  = atcg::Renderer::getFramebuffer()->width();
+            component.height = atcg::Renderer::getFramebuffer()->height();
+
             if(entity.hasComponent<atcg::TransformComponent>())
             {
                 entity.getComponent<atcg::TransformComponent>().setModel(glm::inverse(scene_camera->getView()));
