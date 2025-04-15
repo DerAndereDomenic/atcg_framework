@@ -69,4 +69,57 @@ void PythonScript::reload()
     impl->script.reload();
 }
 
+void Scripting::handleScriptReloads(const atcg::ref_ptr<atcg::Scene>& scene)
+{
+    auto view = scene->getAllEntitiesWith<atcg::ScriptComponent>();
+
+    for(auto e: view)
+    {
+        atcg::Entity entity(e, scene.get());
+
+        auto& script = entity.getComponent<atcg::ScriptComponent>();
+
+        if(script.script != nullptr)
+        {
+            script.script->onDetach();
+            script.script->reload();
+            script.script->onAttach();
+        }
+    }
+}
+
+void Scripting::handleScriptEvents(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Event* event)
+{
+    auto view = scene->getAllEntitiesWith<atcg::ScriptComponent>();
+
+    for(auto e: view)
+    {
+        atcg::Entity entity(e, scene.get());
+
+        auto& script = entity.getComponent<atcg::ScriptComponent>();
+
+        if(script.script != nullptr)
+        {
+            script.script->onEvent(event);
+        }
+    }
+}
+
+void Scripting::handleScriptUpdates(const atcg::ref_ptr<atcg::Scene>& scene, const float dt)
+{
+    auto view = scene->getAllEntitiesWith<atcg::ScriptComponent>();
+
+    for(auto e: view)
+    {
+        atcg::Entity entity(e, scene.get());
+
+        auto& script = entity.getComponent<atcg::ScriptComponent>();
+
+        if(script.script != nullptr)
+        {
+            script.script->onUpdate(dt);
+        }
+    }
+}
+
 }    // namespace atcg

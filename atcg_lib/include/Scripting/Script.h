@@ -57,4 +57,14 @@ private:
     class Impl;
     std::unique_ptr<Impl> impl;
 };
+
+namespace Scripting
+{
+    void handleScriptReloads(const atcg::ref_ptr<atcg::Scene>& scene);
+
+    void handleScriptEvents(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Event* event);
+
+    void handleScriptUpdates(const atcg::ref_ptr<atcg::Scene>& scene, const float dt);
+}
+
 }    // namespace atcg
