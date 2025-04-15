@@ -9,6 +9,7 @@
 #include <Renderer/Material.h>
 #include <DataStructure/Graph.h>
 #include <nanort.h>
+#include <Scripting/Script.h>
 
 #include <vector>
 namespace atcg
@@ -336,6 +337,17 @@ struct PointLightComponent
     bool cast_shadow = true;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Light"; }
+};
+
+struct ScriptComponent
+{
+    ScriptComponent();
+
+    ScriptComponent(const atcg::ref_ptr<Script>& script) :script(script){}
+
+    atcg::ref_ptr<Script> script = nullptr;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script component"; }
 };
 
 }    // namespace atcg
