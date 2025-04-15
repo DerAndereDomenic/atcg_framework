@@ -1,7 +1,5 @@
 #include <Scripting/ScriptEngine.h>
 
-#include <unordered_map>
-
 #include <pyatcg.h>
 
 #include <pybind11/embed.h>
@@ -20,7 +18,6 @@ public:
 
     ~Impl();
 
-    std::unordered_map<atcg::UUID, atcg::ref_ptr<Script>> _scripts;
     py::module_ pyatcg;
 
     bool initialized = false;
@@ -62,33 +59,6 @@ void PythonScriptEngine::init()
         }
 
         impl->initialized = true;
-    }
-}
-
-UUID PythonScriptEngine::registerScript(const atcg::ref_ptr<atcg::Script>& script)
-{
-    UUID uuid;
-
-    impl->_scripts.insert(std::make_pair(uuid, script));
-
-    return uuid;
-}
-
-void PythonScriptEngine::unregisterScript(const UUID id)
-{
-    impl->_scripts.erase(id);
-}
-
-atcg::ref_ptr<Script> PythonScriptEngine::getScript(const UUID id)
-{
-    return impl->_scripts[id];
-}
-
-void PythonScriptEngine::reloadScripts()
-{
-    for(auto& script: impl->_scripts)
-    {
-        script.second->reload();
     }
 }
 

@@ -14,7 +14,6 @@ public:
     ~Impl();
 
     py::module_ script;
-    std::filesystem::path file_path;
 
     atcg::ref_ptr<atcg::Scene> scene;
     atcg::Entity entity;
@@ -24,18 +23,17 @@ PythonScript::Impl::Impl() {}
 
 PythonScript::Impl::~Impl() {}
 
-PythonScript::PythonScript(const std::filesystem::path& file_path)
+PythonScript::PythonScript(const std::filesystem::path& file_path) : Script(file_path)
 {
-    impl            = std::make_unique<Impl>();
-    impl->file_path = file_path;
+    impl = std::make_unique<Impl>();
 }
 
 PythonScript::~PythonScript() {}
 
 void PythonScript::init(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::Entity& entity)
 {
-    std::filesystem::path script_dir = impl->file_path.parent_path();
-    std::string module_name          = impl->file_path.stem().string();
+    std::filesystem::path script_dir = _file_path.parent_path();
+    std::string module_name          = _file_path.stem().string();
 
     py::module_ sys = py::module_::import("sys");
     sys.attr("path").attr("insert")(0, script_dir.string());

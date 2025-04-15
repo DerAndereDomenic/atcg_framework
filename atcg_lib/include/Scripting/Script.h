@@ -12,7 +12,7 @@ namespace atcg
 class Script
 {
 public:
-    Script() = default;
+    Script(const std::filesystem::path& file_path) : _file_path(file_path) {};
 
     virtual ~Script() {};
 
@@ -24,7 +24,10 @@ public:
 
     virtual void reload() = 0;
 
-private:
+    ATCG_INLINE const std::filesystem::path& getFilePath() const { return _file_path; }
+
+protected:
+    std::filesystem::path _file_path;
 };
 
 class PythonScript : public Script

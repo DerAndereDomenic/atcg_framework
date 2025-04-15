@@ -540,6 +540,7 @@ void ComponentGUIHandler::draw_component<ScriptComponent>(Entity entity, ScriptC
             {
                 component.script = atcg::make_ref<atcg::PythonScript>(files[0]);
                 component.script->init(_scene, entity);
+                component.script->onAttach();
             }
         }
     }
