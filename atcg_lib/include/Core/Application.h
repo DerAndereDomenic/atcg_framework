@@ -11,6 +11,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/ContextManager.h>
+#include <Scripting/ScriptEngine.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
@@ -146,6 +147,7 @@ private:
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
     atcg::ref_ptr<RevisionSystem> _revision_system;
+    atcg::ref_ptr<ScriptEngine> _script_engine;
 
     friend int atcg::atcg_main();
     static Application* s_instance;
