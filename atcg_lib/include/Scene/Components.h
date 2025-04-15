@@ -341,13 +341,13 @@ struct PointLightComponent
 
 struct ScriptComponent
 {
-    ScriptComponent();
+    ScriptComponent() = default;
 
-    ScriptComponent(const atcg::ref_ptr<Script>& script) :script(script){}
+    ScriptComponent(const atcg::ref_ptr<Script>& script) : script(script) {}
 
     atcg::ref_ptr<Script> script = nullptr;
 
-    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script component"; }
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script"; }
 };
 
 }    // namespace atcg

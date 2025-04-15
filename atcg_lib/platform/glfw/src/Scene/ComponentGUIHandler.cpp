@@ -519,6 +519,47 @@ void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, Poi
     }
 }
 
+template<>
+void ComponentGUIHandler::draw_component<ScriptComponent>(Entity entity, ScriptComponent& _component)
+{
+    ScriptComponent component = _component;
+    bool updated              = false;
+
+    if(component.script == nullptr)
+    {
+        if(ImGui::Button("Load Script"))
+        {
+            updated = true;
+
+            auto f     = pfd::open_file("Choose files to read",
+                                    pfd::path::home(),
+                                        {"Python Files (.py)", "*.py"},
+                                    pfd::opt::none);
+            auto files = f.result();
+            if(!files.empty())
+            {
+                component.script = atcg::make_ref<atcg::PythonScript>(files[0]);
+                component.script->init(_scene, entity);
+            }
+        }
+    }
+    else
+    {
+        if(ImGui::Button("X"))
+        {
+            component.script = nullptr;
+            updated          = true;
+        }
+    }
+
+    if(updated)
+    {
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointLightComponent>>(_scene, entity);
+        _component = component;
+        atcg::RevisionStack::endRecording();
+    }
+}
+
 bool ComponentGUIHandler::displayMaterial(const std::string& key, Material& material)
 {
     bool updated = false;
