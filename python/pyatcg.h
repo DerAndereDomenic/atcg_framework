@@ -8,7 +8,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <torch/python.h>
-#include <Core/EntryPoint.h>
+#ifdef ATCG_PYTHON_MODULE
+    #include <Core/EntryPoint.h>
+#endif
 #include <ATCG.h>
 
 class PythonLayer : public atcg::Layer
@@ -61,7 +63,9 @@ public:
 
     void onExit()
     {
+#ifdef ATCG_PYTHON_MODULE
         atcg::print_statistics();
+#endif
         atcg::SystemRegistry::shutdown();
     }
 
@@ -71,10 +75,12 @@ private:
 
 
 //* This function isn't called but is needed for the linker
+#ifdef ATCG_PYTHON_MODULE
 atcg::Application* atcg::createApplication()
 {
     return nullptr;
 }
+#endif
 
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
@@ -175,12 +181,14 @@ inline void defineBindings(py::module_& m)
     // ---------------- CORE ---------------------
     ATCG_DEFINE_MODULES(m)
 
-    // On module initialization and destruction
+// On module initialization and destruction
+#ifdef ATCG_PYTHON_MODULE
     py::class_<PythonContext>(m, "PythonContext").def(py::init<>());
     static PythonContext context;
 
     py::module atexit = py::module::import("atexit");
     atexit.attr("register")(py::cpp_function([]() { context.onExit(); }));
+#endif
 
     // py::object python_context = py::cast(new PythonContext());
     // m.attr("_python_context") = python_context;

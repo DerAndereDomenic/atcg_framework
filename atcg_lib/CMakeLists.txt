@@ -1,5 +1,6 @@
 # Define the target
 charonload_add_torch_library(atcg_lib STATIC)
+target_compile_definitions(atcg_lib PUBLIC TORCH_EXTENSION_NAME=pyatcg)
 
 # Link against cuda if requested
 if(ATCG_CUDA_BACKEND)
@@ -29,7 +30,9 @@ endif()
 
 # Find backend files
 file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/src/**.c*"
-                                                          "${CMAKE_SOURCE_DIR}/atcg_lib/include/**.h")
+                                                          "${CMAKE_SOURCE_DIR}/atcg_lib/include/**.h"
+                                                          "${CMAKE_SOURCE_DIR}/python/**.h"
+                                                          "${CMAKE_SOURCE_DIR}/python/**.c*")
 
 file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_BACKEND}/**.c*"
                                                           "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_BACKEND}/**.h")
@@ -77,5 +80,7 @@ target_link_libraries(atcg_lib PUBLIC glad
                                       json
                                       SFML::System
                                       SFML::Network
+                                      Python::Python
+                                      torch_python_interface
                                       ${ATCG_OPENVR_TARGET}
 )

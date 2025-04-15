@@ -54,6 +54,8 @@ target_include_directories(stb_image PUBLIC "external/stbimage")
 
 # charonload
 add_subdirectory(external/charonload)
+add_library(torch_python_interface INTERFACE)
+target_link_libraries(torch_python_interface INTERFACE charonload::torch_python)
 
 # glad
 add_library(glad STATIC)
@@ -168,14 +170,15 @@ function(ATCG_add_executable target_name_base target_name_var source)
     target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${CMAKE_SOURCE_DIR}/src/${target_name}")
 
 	if(MSVC)
-        get_target_property(TORCH_LIBRARY_LOCATION torch LOCATION)
-        get_filename_component(TORCH_LIB_SEARCH_PATH ${TORCH_LIBRARY_LOCATION} DIRECTORY)
-        file(GLOB TORCH_DLLS "${TORCH_LIB_SEARCH_PATH}/*.dll")
-        add_custom_command(TARGET ${target_name}
-                 POST_BUILD
-                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                 ${TORCH_DLLS}
-                 $<TARGET_FILE_DIR:${target_name}>)
+        # TODO: Currently the environment variables need to point to these dlls
+        # get_target_property(TORCH_LIBRARY_LOCATION torch LOCATION)
+        # get_filename_component(TORCH_LIB_SEARCH_PATH ${TORCH_LIBRARY_LOCATION} DIRECTORY)
+        # file(GLOB TORCH_DLLS "${TORCH_LIB_SEARCH_PATH}/*.dll")
+        # add_custom_command(TARGET ${target_name}
+        #          POST_BUILD
+        #          COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        #          ${TORCH_DLLS}
+        #          $<TARGET_FILE_DIR:${target_name}>)
 		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 	endif()
 endfunction()
@@ -216,6 +219,7 @@ if(ATCG_PYTHON_MODULE)
         charonload_add_torch_library(${TORCH_EXTENSION_NAME} MODULE)
         target_sources(${TORCH_EXTENSION_NAME} PRIVATE python/pyatcg.cpp)
         target_link_libraries(${TORCH_EXTENSION_NAME} PRIVATE atcg_lib)
+        target_compile_definitions(${TORCH_EXTENSION_NAME} PUBLIC ATCG_PYTHON_MODULE)
     endif()
 endif()
 
