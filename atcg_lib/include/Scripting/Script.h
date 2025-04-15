@@ -22,6 +22,10 @@ public:
 
     virtual void onUpdate(const float delta_time) = 0;
 
+    virtual void onEvent(atcg::Event* event) = 0;
+
+    virtual void onDetach() = 0;
+
     virtual void reload() = 0;
 
     ATCG_INLINE const std::filesystem::path& getFilePath() const { return _file_path; }
@@ -42,6 +46,10 @@ public:
     virtual void onAttach() override;
 
     virtual void onUpdate(const float delta_time) override;
+
+    virtual void onEvent(atcg::Event* event) override;
+
+    virtual void onDetach() override;
 
     virtual void reload() override;
 

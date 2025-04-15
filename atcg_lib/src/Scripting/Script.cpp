@@ -54,6 +54,16 @@ void PythonScript::onUpdate(const float delta_time)
     impl->script.attr("onUpdate")(delta_time, py::cast(impl->scene), py::cast(impl->entity));
 }
 
+void PythonScript::onEvent(atcg::Event* event)
+{
+    impl->script.attr("onEvent")(py::cast(event), py::cast(impl->scene), py::cast(impl->entity));
+}
+
+void PythonScript::onDetach()
+{
+    impl->script.attr("onDetach")(py::cast(impl->scene), py::cast(impl->entity));
+}
+
 void PythonScript::reload()
 {
     impl->script.reload();
