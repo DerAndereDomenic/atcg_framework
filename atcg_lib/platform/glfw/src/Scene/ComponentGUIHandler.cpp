@@ -548,11 +548,15 @@ void ComponentGUIHandler::draw_component<ScriptComponent>(Entity entity, ScriptC
     {
         if(ImGui::Button("X"))
         {
+            component.script->onDetach();
             component.script = nullptr;
             updated          = true;
         }
-        ImGui::SameLine();
-        ImGui::Text(component.script->getFilePath().string().c_str());
+        else
+        {
+            ImGui::SameLine();
+            ImGui::Text(component.script->getFilePath().string().c_str());
+        }
     }
 
     if(updated)
