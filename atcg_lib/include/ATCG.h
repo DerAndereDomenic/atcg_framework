@@ -93,3 +93,7 @@
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>
+
+//-------- Scripting ------------
+#include <Scripting/ScriptEngine.h>
+#include <Scripting/Script.h>
