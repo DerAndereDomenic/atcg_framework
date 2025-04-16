@@ -12,6 +12,26 @@
 #include <Scripting/Script.h>
 
 #include <vector>
+
+/**
+ * GUIDE ON HOW TO ADD NEW COMPONENTS
+ *
+ * 1. Add the definition of the component here.
+ *    If you don't want to render the component in the scene hierarchy panel or serialize it, you are done.
+ *    For custom components that are defined in an application, use the template arguments of the Serializer and
+ *    SceneHierarchyPanel to add the corresponding behavior. If the component should be part of the engine itself:
+ * 2. Add a function static ATCG_CONSTEXPR ATCG_INLINE const char* toString() that represents the name of your
+ *    component.
+ * 3. If your Component should be affected by the revision system, add it to
+ *    RevisionStack.h::EntityRemovedRevision::{rollback, record_start_state}.
+ * 4. If your Component should be serializable, add it to SerializerDetail.h::Serializer::{serialize, deserialize}.
+ *    Implement the serialization code into ComponentSerializer.cpp
+ * 5. If your Component should be visible in the SceneHierarchyPanel, add it to
+ *    SceneHierarchyPanel.h(glfw)::SceneHierarchyPanel::renderPanel.
+ *    Implement the rendering code into ComponentGUIHandler.cpp::draw_component. Note that you have to implement this
+ *    for all backends (currently glfw and headless).
+ */
+
 namespace atcg
 {
 struct TransformComponent
