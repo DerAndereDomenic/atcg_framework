@@ -54,6 +54,7 @@ void PythonScript::init(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::Ent
 
     impl->scene  = scene;
     impl->entity = entity;
+    ATCG_INFO("Initialized Script {}", module_name);
 }
 
 void PythonScript::onAttach()
@@ -153,6 +154,8 @@ void Scripting::handleScriptReloads(const atcg::ref_ptr<atcg::Scene>& scene)
             script.script->onAttach();
         }
     }
+
+    ATCG_INFO("Reloaded Scripts");
 }
 
 void Scripting::handleScriptEvents(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Event* event)

@@ -59,6 +59,8 @@ void PythonScriptEngine::init()
         }
 
         impl->initialized = true;
+
+        ATCG_INFO("Initialized Scripting engine");
     }
 }
 
@@ -66,6 +68,7 @@ void PythonScriptEngine::destroy()
 {
     if(impl->initialized)
     {
+        ATCG_INFO("Shutting down Scripting engine...");
         impl->pyatcg.release();
         Py_Finalize();
         impl->initialized = false;
