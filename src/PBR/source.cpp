@@ -27,6 +27,14 @@ public:
 
         scene = atcg::IO::read_scene((atcg::resource_directory() / "test_scene.obj").string());
 
+        {
+            auto sphere  = scene->getEntitiesByName("Icosphere").front();
+            auto& script = sphere.addComponent<atcg::ScriptComponent>(atcg::make_ref<atcg::PythonScript>("./src/PBR/"
+                                                                                                         "bounce.py"));
+            script.script->init(scene, sphere);
+            script.script->onAttach();
+        }
+
         panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
 
         if(atcg::VR::isVRAvailable())
@@ -62,6 +70,8 @@ public:
     {
         performance_panel.registerFrameTime(delta_time);
         camera_controller->onUpdate(delta_time);
+
+        atcg::Scripting::handleScriptUpdates(scene, delta_time);
 
         atcg::Renderer::clear();
 
@@ -218,6 +228,8 @@ public:
     {
         camera_controller->onEvent(event);
 
+        atcg::Scripting::handleScriptEvents(scene, event);
+
         atcg::EventDispatcher dispatcher(event);
 #ifndef ATCG_HEADLESS
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMouseMoved));
@@ -243,7 +255,14 @@ public:
         }
         if(event->getKeyCode() == ATCG_KEY_R)
         {
-            current_operation = ImGuizmo::OPERATION::ROTATE;
+            if(atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
+            {
+                atcg::Scripting::handleScriptReloads(scene);
+            }
+            else
+            {
+                current_operation = ImGuizmo::OPERATION::ROTATE;
+            }
         }
         if(event->getKeyCode() == ATCG_KEY_S)
         {
