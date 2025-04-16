@@ -55,6 +55,7 @@ namespace atcg
 #define INTENSITY_KEY              "Intensity"
 #define CAST_SHADOWS_KEY           "CastShadow"
 #define RECEIVE_SHADOWS_KEY        "ReceiveShadow"
+#define SCRIPT_KEY                 "Script"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -417,6 +418,21 @@ void ComponentSerializer::serialize_component<PointLightComponent>(const std::st
     j[POINT_LIGHT_KEY][CAST_SHADOWS_KEY] = component.cast_shadow;
 }
 
+template<>
+void ComponentSerializer::serialize_component<ScriptComponent>(const std::string& file_path,
+                                                               Entity entity,
+                                                               ScriptComponent& component,
+                                                               nlohmann::json& j)
+{
+    std::string path = "";
+    if(component.script)
+    {
+        path = component.script->getFilePath().string();
+    }
+
+    j[SCRIPT_KEY] = path;
+}
+
 template<typename T>
 void ComponentSerializer::deserialize_component(const std::string& file_path, Entity entity, nlohmann::json& j)
 {
@@ -754,5 +770,26 @@ void ComponentSerializer::deserialize_component<PointLightComponent>(const std::
     auto color                  = point_light.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
     renderComponent.color       = glm::make_vec3(color.data());
     renderComponent.cast_shadow = point_light.value(CAST_SHADOWS_KEY, true);
+}
+
+template<>
+void ComponentSerializer::deserialize_component<ScriptComponent>(const std::string& file_path,
+                                                                 Entity entity,
+                                                                 nlohmann::json& j)
+{
+    if(!j.contains(SCRIPT_KEY))
+    {
+        return;
+    }
+
+    auto& script = entity.addComponent<ScriptComponent>();
+
+    std::string path = j[SCRIPT_KEY];
+    if(path != "")
+    {
+        script.script = atcg::make_ref<PythonScript>(path);
+        script.script->init(_scene, entity);
+        script.script->onAttach();
+    }
 }
 }    // namespace atcg

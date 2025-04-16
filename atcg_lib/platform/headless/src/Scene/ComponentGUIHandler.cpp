@@ -59,5 +59,10 @@ void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, Poi
 {
 }
 
+template<>
+void ComponentGUIHandler::draw_component<ScriptComponent>(Entity entity, ScriptComponent& _component)
+{
+}
+
 bool ComponentGUIHandler::displayMaterial(const std::string& key, Material& material) {}
 }    // namespace atcg
