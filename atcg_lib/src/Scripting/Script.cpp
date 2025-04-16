@@ -38,7 +38,19 @@ void PythonScript::init(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::Ent
     py::module_ sys = py::module_::import("sys");
     sys.attr("path").attr("insert")(0, script_dir.string());
 
-    impl->script = py::module_::import(module_name.c_str());
+
+    try
+    {
+        impl->script = py::module_::import(module_name.c_str());
+    }
+    catch(const py::error_already_set& e)
+    {
+        ATCG_ERROR(e.what());
+    }
+    catch(const std::exception& e)
+    {
+        ATCG_ERROR(e.what());
+    }
 
     impl->scene  = scene;
     impl->entity = entity;
@@ -46,27 +58,82 @@ void PythonScript::init(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::Ent
 
 void PythonScript::onAttach()
 {
-    impl->script.attr("onAttach")(py::cast(impl->scene), py::cast(impl->entity));
+    try
+    {
+        impl->script.attr("onAttach")(py::cast(impl->scene), py::cast(impl->entity));
+    }
+    catch(const py::error_already_set& e)
+    {
+        ATCG_ERROR(e.what());
+    }
+    catch(const std::exception& e)
+    {
+        ATCG_ERROR(e.what());
+    }
 }
 
 void PythonScript::onUpdate(const float delta_time)
 {
-    impl->script.attr("onUpdate")(delta_time, py::cast(impl->scene), py::cast(impl->entity));
+    try
+    {
+        impl->script.attr("onUpdate")(delta_time, py::cast(impl->scene), py::cast(impl->entity));
+    }
+    catch(const py::error_already_set& e)
+    {
+        ATCG_ERROR(e.what());
+    }
+    catch(const std::exception& e)
+    {
+        ATCG_ERROR(e.what());
+    }
 }
 
 void PythonScript::onEvent(atcg::Event* event)
 {
-    impl->script.attr("onEvent")(py::cast(event), py::cast(impl->scene), py::cast(impl->entity));
+    try
+    {
+        impl->script.attr("onEvent")(py::cast(event), py::cast(impl->scene), py::cast(impl->entity));
+    }
+    catch(const py::error_already_set& e)
+    {
+        ATCG_ERROR(e.what());
+    }
+    catch(const std::exception& e)
+    {
+        ATCG_ERROR(e.what());
+    }
 }
 
 void PythonScript::onDetach()
 {
-    impl->script.attr("onDetach")(py::cast(impl->scene), py::cast(impl->entity));
+    try
+    {
+        impl->script.attr("onDetach")(py::cast(impl->scene), py::cast(impl->entity));
+    }
+    catch(const py::error_already_set& e)
+    {
+        ATCG_ERROR(e.what());
+    }
+    catch(const std::exception& e)
+    {
+        ATCG_ERROR(e.what());
+    }
 }
 
 void PythonScript::reload()
 {
-    impl->script.reload();
+    try
+    {
+        impl->script.reload();
+    }
+    catch(const py::error_already_set& e)
+    {
+        ATCG_ERROR(e.what());
+    }
+    catch(const std::exception& e)
+    {
+        ATCG_ERROR(e.what());
+    }
 }
 
 void Scripting::handleScriptReloads(const atcg::ref_ptr<atcg::Scene>& scene)
