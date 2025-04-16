@@ -282,7 +282,8 @@ public:
                           EdgeCylinderRenderComponent,
                           InstanceRenderComponent,
                           CustomRenderComponent,
-                          PointLightComponent>(entity);
+                          PointLightComponent,
+                          ScriptComponent>(entity);
     }
 
     /**
@@ -306,7 +307,8 @@ public:
                         EdgeCylinderRenderComponent,
                         InstanceRenderComponent,
                         CustomRenderComponent,
-                        PointLightComponent>(entity);
+                        PointLightComponent,
+                        ScriptComponent>(entity);
     }
 
     /**

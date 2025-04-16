@@ -146,8 +146,8 @@ private:
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
-    atcg::ref_ptr<RevisionSystem> _revision_system;
     atcg::ref_ptr<ScriptEngine> _script_engine;
+    atcg::ref_ptr<RevisionSystem> _revision_system;
 
     friend int atcg::atcg_main();
     static Application* s_instance;

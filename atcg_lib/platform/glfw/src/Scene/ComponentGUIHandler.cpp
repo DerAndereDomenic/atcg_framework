@@ -561,7 +561,7 @@ void ComponentGUIHandler::draw_component<ScriptComponent>(Entity entity, ScriptC
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointLightComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<ScriptComponent>>(_scene, entity);
         _component = component;
         atcg::RevisionStack::endRecording();
     }
