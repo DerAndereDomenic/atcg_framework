@@ -220,6 +220,7 @@ if(ATCG_PYTHON_MODULE)
         target_sources(${TORCH_EXTENSION_NAME} PRIVATE python/pyatcg.cpp)
         target_link_libraries(${TORCH_EXTENSION_NAME} PRIVATE atcg_lib)
         target_compile_definitions(${TORCH_EXTENSION_NAME} PUBLIC ATCG_PYTHON_MODULE)
+        target_compile_definitions(atcg_lib PUBLIC TORCH_EXTENSION_NAME=${TORCH_EXTENSION_NAME})
     endif()
 endif()
 

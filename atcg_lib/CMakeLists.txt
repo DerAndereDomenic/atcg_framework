@@ -1,6 +1,5 @@
 # Define the target
 charonload_add_torch_library(atcg_lib STATIC)
-target_compile_definitions(atcg_lib PUBLIC TORCH_EXTENSION_NAME=pyatcg)
 
 # Link against cuda if requested
 if(ATCG_CUDA_BACKEND)
@@ -30,9 +29,7 @@ endif()
 
 # Find backend files
 file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/src/**.c*"
-                                                          "${CMAKE_SOURCE_DIR}/atcg_lib/include/**.h"
-                                                          "${CMAKE_SOURCE_DIR}/python/**.h"
-                                                          "${CMAKE_SOURCE_DIR}/python/**.c*")
+                                                          "${CMAKE_SOURCE_DIR}/atcg_lib/include/**.h")
 
 file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_BACKEND}/**.c*"
                                                           "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_BACKEND}/**.h")
@@ -48,6 +45,14 @@ target_sources(atcg_lib PRIVATE ${atcg_lib_files}
                                 ${atcg_backend_files} 
                                 ${atcg_renderer_files} 
                                 ${atcg_window_files})
+
+if (NOT DEFINED ATCG_PYTHON_MODULE OR ATCG_PYTHON_MODULE STREQUAL "OFF")
+    file (GLOB_RECURSE atcg_lib_python_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/python/**.h"
+                                                             "${CMAKE_SOURCE_DIR}/python/**.c*")
+    target_sources(atcg_lib PRIVATE ${atcg_lib_python_files})
+    target_compile_definitions(atcg_lib PUBLIC TORCH_EXTENSION_NAME=pyatcg)
+    target_compile_definitions(atcg_lib PUBLIC ATCG_INIT_PYTHON)
+endif()
 
 target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES 
                                             NO_WARN_MBCS_MFC_DEPRECATION 
