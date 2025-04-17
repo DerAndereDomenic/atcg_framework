@@ -2,22 +2,24 @@ import torch
 import charonload
 import pathlib
 
-VSCODE_STUBS_DIRECTORY = pathlib.Path(__file__).parent / "build_python/typings"
+# VSCODE_STUBS_DIRECTORY = pathlib.Path(__file__).parent / "build_python/typings"
 
-charonload.module_config["pyatcg"] = charonload.Config(
-    # All paths must be absolute
-    project_directory=pathlib.Path(__file__).parent,
-    build_directory=pathlib.Path(__file__).parent / "build_python",
-    cmake_options={
-        "ATCG_CUDA_BACKEND": "On",
-        "ATCG_PYTHON_BINDINGS": "On",
-        "ATCG_PYTHON_MODULE": "On",
-    },
-    stubs_directory=VSCODE_STUBS_DIRECTORY,
-    build_type="RelWithDebInfo",
-    verbose=True,
-    stubs_invalid_ok=True,
-)
+# charonload.module_config["pyatcg"] = charonload.Config(
+#     # All paths must be absolute
+#     project_directory=pathlib.Path(__file__).parent,
+#     build_directory=pathlib.Path(__file__).parent / "build_python",
+#     cmake_options={
+#         "ATCG_CUDA_BACKEND": "On",
+#         "ATCG_PYTHON_BINDINGS": "On",
+#         "ATCG_PYTHON_MODULE": "On",
+#     },
+#     stubs_directory=VSCODE_STUBS_DIRECTORY,
+#     build_type="RelWithDebInfo",
+#     verbose=True,
+#     stubs_invalid_ok=True,
+# )
+
+# RUN: pip install -e . before running this file
 
 import pyatcg as atcg
 import numpy as np
