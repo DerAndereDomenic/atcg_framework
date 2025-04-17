@@ -4,6 +4,38 @@
 
 namespace atcg
 {
+
+namespace detail
+{
+static GLenum shaderToGL(const ShaderType type)
+{
+    switch(type)
+    {
+        case ShaderType::VERTEX:
+        {
+            return GL_VERTEX_SHADER;
+        }
+        break;
+        case ShaderType::FRAGMENT:
+        {
+            return GL_FRAGMENT_SHADER;
+        }
+        break;
+        case ShaderType::COMPUTE:
+        {
+            return GL_COMPUTE_SHADER;
+        }
+        break;
+        case ShaderType::GEOMETRY:
+        {
+            return GL_GEOMETRY_SHADER;
+        }
+        break;
+    }
+    return 0;
+}
+}    // namespace detail
+
 Shader::Shader(const std::string& compute_path)
 {
     recompile(compute_path);
@@ -34,7 +66,7 @@ void Shader::recompile(const std::string& compute_path)
     }
 
     ShaderCompiler compiler;
-    _ID = compiler.compilerShader(compute_path);
+    _ID = compiler.compileShader(compute_path);
 
     _has_geometry = false;
     _is_compute   = true;
@@ -56,7 +88,7 @@ void Shader::recompile(const std::string& vertex_path, const std::string& fragme
     }
 
     ShaderCompiler compiler;
-    _ID = compiler.compilerShader(vertex_path, fragment_path);
+    _ID = compiler.compileShader(vertex_path, fragment_path);
 
     _has_geometry  = false;
     _is_compute    = false;
@@ -68,6 +100,25 @@ void Shader::recompile(const std::string& vertex_path, const std::string& fragme
     {
         it->second.location = glGetUniformLocation(_ID, it->first.c_str());
     }
+
+    _vertex_subroutines_locations.clear();
+    _fragment_subroutines_locations.clear();
+    _vertex_subroutines.clear();
+    _fragment_subroutines.clear();
+    for(auto it = compiler._vertex_subroutines.begin(); it != compiler._vertex_subroutines.end(); ++it)
+    {
+        _vertex_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_VERTEX_SHADER, it->second.c_str());
+    }
+
+    for(auto it = compiler._fragment_subroutines.begin(); it != compiler._fragment_subroutines.end(); ++it)
+    {
+        _fragment_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_FRAGMENT_SHADER, it->second.c_str());
+    }
+
+    _vertex_subroutines.resize(_vertex_subroutines_locations.size());
+    _fragment_subroutines.resize(_fragment_subroutines_locations.size());
 }
 
 void Shader::recompile(const std::string& vertex_path,
@@ -81,7 +132,7 @@ void Shader::recompile(const std::string& vertex_path,
     }
 
     ShaderCompiler compiler;
-    _ID = compiler.compilerShader(vertex_path, geometry_path, fragment_path);
+    _ID = compiler.compileShader(vertex_path, geometry_path, fragment_path);
 
     _has_geometry  = true;
     _is_compute    = false;
@@ -94,6 +145,34 @@ void Shader::recompile(const std::string& vertex_path,
     {
         it->second.location = glGetUniformLocation(_ID, it->first.c_str());
     }
+
+    _vertex_subroutines_locations.clear();
+    _fragment_subroutines_locations.clear();
+    _geometry_subroutines_locations.clear();
+    _vertex_subroutines.clear();
+    _fragment_subroutines.clear();
+    _geometry_subroutines.clear();
+    for(auto it = compiler._vertex_subroutines.begin(); it != compiler._vertex_subroutines.end(); ++it)
+    {
+        _vertex_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_VERTEX_SHADER, it->second.c_str());
+    }
+
+    for(auto it = compiler._fragment_subroutines.begin(); it != compiler._fragment_subroutines.end(); ++it)
+    {
+        _fragment_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_FRAGMENT_SHADER, it->second.c_str());
+    }
+
+    for(auto it = compiler._geometry_subroutines.begin(); it != compiler._geometry_subroutines.end(); ++it)
+    {
+        _geometry_subroutines_locations[it->first] =
+            glGetSubroutineUniformLocation(_ID, GL_GEOMETRY_SHADER, it->second.c_str());
+    }
+
+    _vertex_subroutines.resize(_vertex_subroutines_locations.size());
+    _fragment_subroutines.resize(_fragment_subroutines_locations.size());
+    _geometry_subroutines.resize(_geometry_subroutines_locations.size());
 }
 
 Shader::Uniform& Shader::getUniform(const std::string& name)
@@ -193,6 +272,33 @@ void Shader::setMat4(const std::string& name, const glm::mat4& value)
     uniform.data     = value;
 }
 
+void Shader::selectSubroutine(const std::string& subroutine_type, const std::string& subroutine_name)
+{
+    {
+        auto it = _vertex_subroutines_locations.find(subroutine_type);
+        if(it != _vertex_subroutines_locations.end())
+        {
+            _vertex_subroutines[it->second] = glGetSubroutineIndex(_ID, GL_VERTEX_SHADER, subroutine_name.c_str());
+        }
+    }
+
+    {
+        auto it = _fragment_subroutines_locations.find(subroutine_type);
+        if(it != _fragment_subroutines_locations.end())
+        {
+            _fragment_subroutines[it->second] = glGetSubroutineIndex(_ID, GL_FRAGMENT_SHADER, subroutine_name.c_str());
+        }
+    }
+
+    {
+        auto it = _geometry_subroutines_locations.find(subroutine_type);
+        if(it != _geometry_subroutines_locations.end())
+        {
+            _geometry_subroutines[it->second] = glGetSubroutineIndex(_ID, GL_GEOMETRY_SHADER, subroutine_name.c_str());
+        }
+    }
+}
+
 void Shader::setMVP(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P)
 {
     setMat4("M", M);
@@ -241,6 +347,14 @@ void Shader::use() const
             break;
         }
     }
+
+    // Subroutines
+    if(!_vertex_subroutines.empty())
+        glUniformSubroutinesuiv(GL_VERTEX_SHADER, _vertex_subroutines.size(), _vertex_subroutines.data());
+    if(!_fragment_subroutines.empty())
+        glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, _fragment_subroutines.size(), _fragment_subroutines.data());
+    if(!_geometry_subroutines.empty())
+        glUniformSubroutinesuiv(GL_GEOMETRY_SHADER, _geometry_subroutines.size(), _geometry_subroutines.data());
 }
 
 void Shader::dispatch(const glm::ivec3& work_groups) const

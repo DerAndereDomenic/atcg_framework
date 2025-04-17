@@ -30,6 +30,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added revision counter to Transform components
 - Added copy methods to Graph and Camera
 - Added RevisionStack which allows for Ctrl+Z and Ctrl+Y
+- Added simple include functionality for shaders
+- Added shader subroutines
+- Added ATCG_DEBUG for debug messages
+- Added explicit models for Camera extrinsics and intrinsics
+- Added functions to convert between opengl and opencv intrinsics
+- Added width and height to camera component
+- Added camera preview in frustum rendering
+- Added possibility to load camera images to be rendered
+- Added main scene camera
+- Added fly-to and set from view camera buttons
+- Added scripting engine and python scripting to entities with a Script Component
 
 ### Changed
 
@@ -51,6 +62,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - IDComponent::id is no longer read-write but read only
 - NameComponent::name is no longer read-write but read only
 - glm objects can no longer be directly casted to numpy arrays but have to be converted explicitely using .numpy()
+- Removed unnecessary wrapper class around logger, now everything directly works on an spdlog object
+- Constructor of PerspectiveCamera now uses CameraIntrinsics and CameraExtrinsics
+- Camera Controllers can no longer be initiated with an implict camera, but it has to be created and passed manually
+- Torch DLLs are NO LONGER COPIED to the output directory on Windows. The user has to make sure the `PATH` variables point to the correct DLLs.
+- The `PythonFrontend.py` no longer compiles the project. It now requires that the package is installed via pip.
 
 ### Fixed
 
@@ -64,6 +80,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed managing of framebuffer state in multi threaded applications
 - Fixed crash when setting faces of a graph with a device tensor (because torch can't sort GPU uint32). Current workaround copies the data to CPU first
 - Fixed bindings for glm objects in python
+- Fixed GUI for camera extrinsics in SceneHierarchyPanel
 
 ## [0.1.1-beta]
 

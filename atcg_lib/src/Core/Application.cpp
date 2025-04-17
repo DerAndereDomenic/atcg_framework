@@ -22,7 +22,10 @@ Application::Application(const WindowProps& props)
     init(props);
 }
 
-Application::~Application() {}
+Application::~Application()
+{
+    if(_script_engine) _script_engine->destroy();
+}
 
 void Application::init(const WindowProps& props)
 {
@@ -48,6 +51,10 @@ void Application::init(const WindowProps& props)
 
     _revision_system = atcg::make_ref<RevisionSystem>();
     SystemRegistry::instance()->registerSystem(_revision_system.get());
+
+    _script_engine = atcg::make_ref<PythonScriptEngine>();
+    _script_engine->init();
+    SystemRegistry::instance()->registerSystem(_script_engine.get());
 
     Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 
@@ -124,7 +131,7 @@ void Application::run()
                 "There must be a registered ShaderManager before starting the app");
     ATCG_ASSERT(SystemRegistry::instance()->hasSystem<VRSystem>(),
                 "There must be a registered VRSystem before starting the app");
-    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<Logger>(),
+    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<spdlog::logger>(),
                 "There must be a registered Logger before starting the app");
 
     _running          = true;

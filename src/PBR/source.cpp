@@ -52,24 +52,44 @@ public:
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
         auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
-        ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
+        ATCG_DEBUG("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
         atcg::Renderer::setSkybox(skybox);
 
         scene = atcg::IO::read_scene((atcg::resource_directory() / "test_scene.obj").string());
+
+        {
+            auto sphere  = scene->getEntitiesByName("Icosphere").front();
+            auto& script = sphere.addComponent<atcg::ScriptComponent>(atcg::make_ref<atcg::PythonScript>("./src/PBR/"
+                                                                                                         "bounce.py"));
+            script.script->init(scene, sphere);
+            script.script->onAttach();
+        }
 
         panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
 
         if(atcg::VR::isVRAvailable())
         {
-            float vr_aspect   = (float)atcg::VR::width() / (float)atcg::VR::height();
-            camera_controller = atcg::make_ref<atcg::VRController>(vr_aspect);
+            float vr_aspect = (float)atcg::VR::width() / (float)atcg::VR::height();
+
+            atcg::CameraIntrinsics instrinsics_left(atcg::VR::getProjection(atcg::VRSystem::Eye::LEFT));
+            atcg::CameraIntrinsics instrinsics_right(atcg::VR::getProjection(atcg::VRSystem::Eye::RIGHT));
+
+            atcg::CameraExtrinsics extrinsics_left(glm::inverse(atcg::VR::getInverseView(atcg::VRSystem::Eye::LEFT)));
+            atcg::CameraExtrinsics extrinsics_right(glm::inverse(atcg::VR::getInverseView(atcg::VRSystem::Eye::RIGHT)));
+
+            camera_controller = atcg::make_ref<atcg::VRController>(
+                atcg::make_ref<atcg::PerspectiveCamera>(extrinsics_left, instrinsics_left),
+                atcg::make_ref<atcg::PerspectiveCamera>(extrinsics_right, instrinsics_right));
             atcg::VR::initControllerMeshes(scene);
         }
         else
         {
             const auto& window = atcg::Application::get()->getWindow();
             float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-            camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
+            atcg::CameraIntrinsics intrinsics;
+            intrinsics.setAspectRatio(aspect_ratio);
+            camera_controller = atcg::make_ref<atcg::FirstPersonController>(
+                atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
         }
 
         OPTIX_CHECK(optixInit());
@@ -82,6 +102,8 @@ public:
         initializePathtracer();
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
+
+        scene->setCamera(camera_controller->getCamera());
     }
 
     // This gets called each frame
@@ -94,6 +116,8 @@ public:
         {
             integrator->reset();
         }
+
+        atcg::Scripting::handleScriptUpdates(scene, delta_time);
 
         atcg::Renderer::clear();
 
@@ -273,6 +297,8 @@ public:
     {
         camera_controller->onEvent(event);
 
+        atcg::Scripting::handleScriptEvents(scene, event);
+
         atcg::EventDispatcher dispatcher(event);
 #ifndef ATCG_HEADLESS
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMouseMoved));
@@ -299,7 +325,14 @@ public:
         }
         if(event->getKeyCode() == ATCG_KEY_R)
         {
-            current_operation = ImGuizmo::OPERATION::ROTATE;
+            if(atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
+            {
+                atcg::Scripting::handleScriptReloads(scene);
+            }
+            else
+            {
+                current_operation = ImGuizmo::OPERATION::ROTATE;
+            }
         }
         if(event->getKeyCode() == ATCG_KEY_S)
         {

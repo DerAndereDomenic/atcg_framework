@@ -2,6 +2,7 @@
 
 #include <Core/glm.h>
 #include <Renderer/Buffer.h>
+#include <Renderer/ShaderType.h>
 
 #include <string>
 #include <variant>
@@ -154,6 +155,14 @@ public:
     void setMat4(const std::string& name, const glm::mat4& value);
 
     /**
+     * @brief Choose a subroutine
+     *
+     * @param subroutine_type The name of the subroutine
+     * @param subroutine_name The shader type where the subroutine is located
+     */
+    void selectSubroutine(const std::string& subroutine_type, const std::string& subroutine_name);
+
+    /**
      * @brief Set the model, view, and projection matrix.
      *
      * @param M The model matrix
@@ -204,5 +213,11 @@ private:
     bool _has_geometry         = false;
     bool _is_compute           = false;
     std::unordered_map<std::string, Uniform> _uniforms;
+    std::unordered_map<std::string, uint32_t> _vertex_subroutines_locations;
+    std::unordered_map<std::string, uint32_t> _fragment_subroutines_locations;
+    std::unordered_map<std::string, uint32_t> _geometry_subroutines_locations;
+    std::vector<unsigned int> _vertex_subroutines;
+    std::vector<unsigned int> _fragment_subroutines;
+    std::vector<unsigned int> _geometry_subroutines;
 };
 }    // namespace atcg

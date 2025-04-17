@@ -82,6 +82,14 @@ target_sources(atcg_lib PRIVATE ${atcg_lib_files}
                                 ${atcg_window_files}
                                 ${atcg_optix_files})
 
+if (NOT ATCG_PYTHON_MODULE)
+    file (GLOB_RECURSE atcg_lib_python_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/python/**.h"
+                                                             "${CMAKE_SOURCE_DIR}/python/**.c*")
+    target_sources(atcg_lib PRIVATE ${atcg_lib_python_files})
+    target_compile_definitions(atcg_lib PUBLIC TORCH_EXTENSION_NAME=pyatcg)
+    target_compile_definitions(atcg_lib PUBLIC ATCG_INIT_PYTHON)
+endif()
+
 target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES 
                                             NO_WARN_MBCS_MFC_DEPRECATION 
                                             _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS 
@@ -96,7 +104,7 @@ target_include_directories(atcg_lib PUBLIC "${CMAKE_SOURCE_DIR}/atcg_lib/include
                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/include"
                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/include"
                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/optix/include"
-                                           "python"
+                                           "${CMAKE_SOURCE_DIR}/python"
 )
 
 target_link_libraries(atcg_lib PUBLIC glad
@@ -114,5 +122,7 @@ target_link_libraries(atcg_lib PUBLIC glad
                                       json
                                       SFML::System
                                       SFML::Network
+                                      Python::Python
+                                      torch_python_interface
                                       ${ATCG_OPENVR_TARGET}
 )

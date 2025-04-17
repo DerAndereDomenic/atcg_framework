@@ -9,8 +9,29 @@
 #include <Renderer/Material.h>
 #include <DataStructure/Graph.h>
 #include <nanort.h>
+#include <Scripting/Script.h>
 
 #include <vector>
+
+/**
+ * GUIDE ON HOW TO ADD NEW COMPONENTS
+ *
+ * 1. Add the definition of the component here.
+ *    If you don't want to render the component in the scene hierarchy panel or serialize it, you are done.
+ *    For custom components that are defined in an application, use the template arguments of the Serializer and
+ *    SceneHierarchyPanel to add the corresponding behavior. If the component should be part of the engine itself:
+ * 2. Add a function static ATCG_CONSTEXPR ATCG_INLINE const char* toString() that represents the name of your
+ *    component.
+ * 3. If your Component should be affected by the revision system, add it to
+ *    RevisionStack.h::EntityRemovedRevision::{rollback, record_start_state}.
+ * 4. If your Component should be serializable, add it to SerializerDetail.h::Serializer::{serialize, deserialize}.
+ *    Implement the serialization code into ComponentSerializer.cpp
+ * 5. If your Component should be visible in the SceneHierarchyPanel, add it to
+ *    SceneHierarchyPanel.h(glfw)::SceneHierarchyPanel::renderPanel.
+ *    Implement the rendering code into ComponentGUIHandler.cpp::draw_component. Note that you have to implement this
+ *    for all backends (currently glfw and headless).
+ */
+
 namespace atcg
 {
 struct TransformComponent
@@ -178,7 +199,10 @@ struct AccelerationStructureComponent
 struct CameraComponent
 {
     CameraComponent() = default;
-    CameraComponent(const atcg::ref_ptr<Camera>& camera) : camera(camera)
+    CameraComponent(const atcg::ref_ptr<Camera>& camera, const uint32_t width = 1024, const uint32_t height = 1024)
+        : camera(camera),
+          width(width),
+          height(height)
     {
         if(dynamic_cast<PerspectiveCamera*>(camera.get()))
         {
@@ -191,6 +215,12 @@ struct CameraComponent
     atcg::ref_ptr<Camera> camera;
     glm::vec3 color  = glm::vec3(1);
     bool perspective = false;
+    uint32_t width   = 1024;
+    uint32_t height  = 1024;
+
+    atcg::ref_ptr<atcg::Framebuffer> preview;
+    atcg::ref_ptr<atcg::Texture2D> image;
+    bool render_preview = false;
 };
 
 struct EditorCameraComponent : public CameraComponent
@@ -327,6 +357,17 @@ struct PointLightComponent
     bool cast_shadow = true;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Light"; }
+};
+
+struct ScriptComponent
+{
+    ScriptComponent() = default;
+
+    ScriptComponent(const atcg::ref_ptr<Script>& script) : script(script) {}
+
+    atcg::ref_ptr<Script> script = nullptr;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script"; }
 };
 
 }    // namespace atcg

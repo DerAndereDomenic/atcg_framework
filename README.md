@@ -34,7 +34,12 @@ From the main folder of this project (aka the folder where this file is located)
 cmake --build build --parallel --config <Debug|Release>
 ```
 
-to compile the project.
+to compile the project. The project uses your pytorch installation to link against libtorch. On Windows, you have to 
+include
+```
+<PATH_TO_PYTHON>/Lib/site-packages/torch/lib
+```
+into your `PATH` variables because otherwise it will not find the necessary dlls.
 
 ### Building with CUDA Support
 
@@ -47,11 +52,15 @@ If CUDA is not used, you should also use a pytorch version without CUDA.
 
 ### Build python bindings
 
-The project come with python bindings which can be install via
+The project comes with python bindings which can be install via
 ```
 pip install -e .
 ```
 it requires [charonload](https://github.com/vc-bonn/charonload) as additional dependency. Per default, it is built with CUDA backend.
+
+### Python Scripting
+
+When you compile the project as a standard C++ project, you can use Python as a scripting API. For this, we refer to an example in `src/PBR`.
 
 ### Building the documentation
 

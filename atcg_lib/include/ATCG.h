@@ -100,3 +100,7 @@
     #include <Core/ShaderBindingTable.h>
     #include <Integrator/PathtracingIntegrator.h>
 #endif
+
+//-------- Scripting ------------
+#include <Scripting/ScriptEngine.h>
+#include <Scripting/Script.h>

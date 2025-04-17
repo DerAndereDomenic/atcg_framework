@@ -2,6 +2,8 @@
 
 #include <Core/glm.h>
 
+#include <Renderer/CameraUtils.h>
+
 namespace atcg
 {
 class Camera
@@ -49,12 +51,20 @@ public:
      */
     virtual atcg::ref_ptr<Camera> copy() const = 0;
 
-protected:
-    virtual void recalculateView()       = 0;
-    virtual void recalculateProjection() = 0;
+    ATCG_INLINE const CameraExtrinsics& getExtrinsics() const { return _extrinsics; }
 
-    glm::mat4 _view;
-    glm::mat4 _projection;
+    ATCG_INLINE const CameraIntrinsics& getIntrinsics() const { return _intrinsics; }
+
+    ATCG_INLINE void setIntrinsics(const CameraIntrinsics& intrinsics) { _intrinsics = intrinsics; }
+
+    ATCG_INLINE void setExtrinsics(const CameraExtrinsics& extrinsics) { _extrinsics = extrinsics; }
+
+protected:
+    virtual void recalculateView() {};
+    virtual void recalculateProjection() {};
+
+    CameraExtrinsics _extrinsics;
+    CameraIntrinsics _intrinsics;
 
 private:
 };

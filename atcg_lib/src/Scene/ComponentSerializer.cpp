@@ -41,15 +41,21 @@ namespace atcg
 #define POINT_SIZE_KEY             "PointSize"
 #define RADIUS_KEY                 "Radius"
 #define PERSPECTIVE_CAMERA_KEY     "PerspectiveCamera"
+#define CAMERA_IMAGE_KEY           "Image"
 #define ASPECT_RATIO_KEY           "AspectRatio"
 #define FOVY_KEY                   "FoVy"
 #define LOOKAT_KEY                 "LookAt"
 #define NEAR_KEY                   "Near"
 #define FAR_KEY                    "Far"
+#define WIDTH_KEY                  "width"
+#define HEIGHT_KEY                 "height"
+#define PREVIEW_KEY                "preview"
+#define OPTICAL_CENTER_KEY         "OpticalCenter"
 #define POINT_LIGHT_KEY            "PointLight"
 #define INTENSITY_KEY              "Intensity"
 #define CAST_SHADOWS_KEY           "CastShadow"
 #define RECEIVE_SHADOWS_KEY        "ReceiveShadow"
+#define SCRIPT_KEY                 "Script"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -274,15 +280,30 @@ void ComponentSerializer::serialize_component<CameraComponent>(const std::string
 
     glm::vec3 position = cam->getPosition();
     glm::vec3 look_at  = cam->getLookAt();
+    glm::vec2 offset   = cam->getIntrinsics().opticalCenter();
     float n            = cam->getNear();
     float f            = cam->getFar();
 
-    j[PERSPECTIVE_CAMERA_KEY][ASPECT_RATIO_KEY] = cam->getAspectRatio();
-    j[PERSPECTIVE_CAMERA_KEY][FOVY_KEY]         = cam->getFOV();
-    j[PERSPECTIVE_CAMERA_KEY][POSITION_KEY]     = nlohmann::json::array({position.x, position.y, position.z});
-    j[PERSPECTIVE_CAMERA_KEY][LOOKAT_KEY]       = nlohmann::json::array({look_at.x, look_at.y, look_at.z});
-    j[PERSPECTIVE_CAMERA_KEY][NEAR_KEY]         = n;
-    j[PERSPECTIVE_CAMERA_KEY][FAR_KEY]          = f;
+    j[PERSPECTIVE_CAMERA_KEY][ASPECT_RATIO_KEY]   = cam->getAspectRatio();
+    j[PERSPECTIVE_CAMERA_KEY][FOVY_KEY]           = cam->getFOV();
+    j[PERSPECTIVE_CAMERA_KEY][POSITION_KEY]       = nlohmann::json::array({position.x, position.y, position.z});
+    j[PERSPECTIVE_CAMERA_KEY][LOOKAT_KEY]         = nlohmann::json::array({look_at.x, look_at.y, look_at.z});
+    j[PERSPECTIVE_CAMERA_KEY][NEAR_KEY]           = n;
+    j[PERSPECTIVE_CAMERA_KEY][FAR_KEY]            = f;
+    j[PERSPECTIVE_CAMERA_KEY][WIDTH_KEY]          = component.width;
+    j[PERSPECTIVE_CAMERA_KEY][HEIGHT_KEY]         = component.height;
+    j[PERSPECTIVE_CAMERA_KEY][PREVIEW_KEY]        = component.render_preview;
+    j[PERSPECTIVE_CAMERA_KEY][OPTICAL_CENTER_KEY] = nlohmann::json::array({offset.x, offset.y});
+
+    if(component.image)
+    {
+        auto entity_id       = entity.getComponent<IDComponent>().ID();
+        std::string img_path = file_path + "_" + std::to_string(entity_id) + "_cam_image";
+
+        serializeTexture(component.image, img_path, 1.0f);
+
+        j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY] = img_path;
+    }
 }
 
 template<>
@@ -397,6 +418,21 @@ void ComponentSerializer::serialize_component<PointLightComponent>(const std::st
     j[POINT_LIGHT_KEY][CAST_SHADOWS_KEY] = component.cast_shadow;
 }
 
+template<>
+void ComponentSerializer::serialize_component<ScriptComponent>(const std::string& file_path,
+                                                               Entity entity,
+                                                               ScriptComponent& component,
+                                                               nlohmann::json& j)
+{
+    std::string path = "";
+    if(component.script)
+    {
+        path = component.script->getFilePath().string();
+    }
+
+    j[SCRIPT_KEY] = path;
+}
+
 template<typename T>
 void ComponentSerializer::deserialize_component(const std::string& file_path, Entity entity, nlohmann::json& j)
 {
@@ -463,12 +499,26 @@ void ComponentSerializer::deserialize_component<CameraComponent>(const std::stri
     float f                     = j[PERSPECTIVE_CAMERA_KEY].value(FAR_KEY, 1000.0f);
     std::vector<float> position = j[PERSPECTIVE_CAMERA_KEY].value(POSITION_KEY, std::vector<float> {0.0f, 0.0f, -1.0f});
     std::vector<float> lookat   = j[PERSPECTIVE_CAMERA_KEY].value(LOOKAT_KEY, std::vector<float> {0.0f, 0.0f, 0.0f});
+    std::vector<float> offset   = j[PERSPECTIVE_CAMERA_KEY].value(OPTICAL_CENTER_KEY, std::vector<float> {0.0f, 0.0f});
 
-    auto cam = atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio,
-                                                       glm::make_vec3(position.data()),
-                                                       glm::make_vec3(lookat.data()));
+    CameraExtrinsics extrinsics(glm::make_vec3(position.data()), glm::make_vec3(lookat.data()));
+    CameraIntrinsics intrinsics(aspect_ratio, fov, n, f);
+    intrinsics.setOpticalCenter(glm::make_vec2(offset.data()));
 
-    entity.addComponent<CameraComponent>(cam);
+    auto cam = atcg::make_ref<atcg::PerspectiveCamera>(extrinsics, intrinsics);
+
+    auto& component          = entity.addComponent<CameraComponent>(cam);
+    component.width          = j[PERSPECTIVE_CAMERA_KEY].value(WIDTH_KEY, 1024);
+    component.height         = j[PERSPECTIVE_CAMERA_KEY].value(HEIGHT_KEY, 1024);
+    component.render_preview = j[PERSPECTIVE_CAMERA_KEY].value(PREVIEW_KEY, false);
+
+
+    if(j[PERSPECTIVE_CAMERA_KEY].contains(CAMERA_IMAGE_KEY))
+    {
+        std::string diffuse_path = j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY];
+        auto img                 = IO::imread(diffuse_path);
+        component.image          = atcg::Texture2D::create(img);
+    }
 }
 
 
@@ -720,5 +770,26 @@ void ComponentSerializer::deserialize_component<PointLightComponent>(const std::
     auto color                  = point_light.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
     renderComponent.color       = glm::make_vec3(color.data());
     renderComponent.cast_shadow = point_light.value(CAST_SHADOWS_KEY, true);
+}
+
+template<>
+void ComponentSerializer::deserialize_component<ScriptComponent>(const std::string& file_path,
+                                                                 Entity entity,
+                                                                 nlohmann::json& j)
+{
+    if(!j.contains(SCRIPT_KEY))
+    {
+        return;
+    }
+
+    auto& script = entity.addComponent<ScriptComponent>();
+
+    std::string path = j[SCRIPT_KEY];
+    if(path != "")
+    {
+        script.script = atcg::make_ref<PythonScript>(path);
+        script.script->init(_scene, entity);
+        script.script->onAttach();
+    }
 }
 }    // namespace atcg
