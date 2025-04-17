@@ -158,8 +158,6 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
         py::class_<atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>>(m, "SceneHierarchyPanel");                             \
     auto m_hit_info          = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                \
     auto m_utils             = m.def_submodule("Utils");                                                                        \
-    auto m_imgui             = m.def_submodule("ImGui");                                                                        \
-    auto m_guizmo_operation  = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");                                      \
     auto m_draw_mode         = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                        \
     auto m_cull_mode         = py::enum_<atcg::CullMode>(m, "CullMode");                                                        \
     auto m_network           = m.def_submodule("Network");                                                                      \
@@ -184,6 +182,10 @@ inline void defineBindings(py::module_& m)
 
     // ---------------- CORE ---------------------
     ATCG_DEFINE_MODULES(m)
+#ifndef ATCG_HEADLESS
+    auto m_imgui            = m.def_submodule("ImGui");
+    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
+#endif
 
 // On module initialization and destruction
 #ifdef ATCG_PYTHON_MODULE
@@ -1484,6 +1486,7 @@ inline void defineBindings(py::module_& m)
 
     // IMGUI BINDINGS
 
+#ifndef ATCG_HEADLESS
     m_imgui.def("BeginMainMenuBar", &ImGui::BeginMainMenuBar);
     m_imgui.def("EndMainMenuBar", &ImGui::EndMainMenuBar);
     m_imgui.def("BeginMenu", &ImGui::BeginMenu, py::arg("label"), py::arg("enabled") = true);
@@ -1593,6 +1596,7 @@ inline void defineBindings(py::module_& m)
         .value("SCALE", ImGuizmo::OPERATION::SCALE)
         .export_values();
     m_imgui.def("drawGuizmo", atcg::drawGuizmo);
+#endif
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

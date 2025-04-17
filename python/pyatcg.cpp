@@ -8,7 +8,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <torch/python.h>
 
-#include <imgui.h>
+// #include <imgui.h>
 
 #include "pyatcg.h"
 
