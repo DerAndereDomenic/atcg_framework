@@ -8,7 +8,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <torch/python.h>
-#include <Core/EntryPoint.h>
+#ifdef ATCG_PYTHON_MODULE
+    #include <Core/EntryPoint.h>
+#endif
 #include <ATCG.h>
 
 class PythonLayer : public atcg::Layer
@@ -61,7 +63,9 @@ public:
 
     void onExit()
     {
+#ifdef ATCG_PYTHON_MODULE
         atcg::print_statistics();
+#endif
         atcg::SystemRegistry::shutdown();
     }
 
@@ -71,10 +75,12 @@ private:
 
 
 //* This function isn't called but is needed for the linker
+#ifdef ATCG_PYTHON_MODULE
 atcg::Application* atcg::createApplication()
 {
     return nullptr;
 }
+#endif
 
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
@@ -147,18 +153,20 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_edge_cylinder_renderer = py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent");            \
     auto m_name                   = py::class_<atcg::NameComponent>(m, "NameComponent");                                        \
     auto m_point_light            = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                            \
+    auto m_script_component       = py::class_<atcg::ScriptComponent>(m, "ScriptComponent");                                    \
     auto m_scene_hierarchy_panel =                                                                                              \
         py::class_<atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>>(m, "SceneHierarchyPanel");                             \
     auto m_hit_info          = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                \
     auto m_utils             = m.def_submodule("Utils");                                                                        \
-    auto m_imgui             = m.def_submodule("ImGui");                                                                        \
-    auto m_guizmo_operation  = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");                                      \
     auto m_draw_mode         = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                        \
     auto m_cull_mode         = py::enum_<atcg::CullMode>(m, "CullMode");                                                        \
     auto m_network           = m.def_submodule("Network");                                                                      \
     auto m_tcp_server        = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                             \
     auto m_tcp_client        = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                             \
-    auto m_performance_panel = py::class_<atcg::PerformancePanel>(m, "PerformancePanel");
+    auto m_performance_panel = py::class_<atcg::PerformancePanel>(m, "PerformancePanel");                                       \
+    auto m_scriptengine =                                                                                                       \
+        py::class_<atcg::PythonScriptEngine, atcg::ref_ptr<atcg::PythonScriptEngine>>(m, "ScriptEngine");                       \
+    auto m_script = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");
 
 inline void defineBindings(py::module_& m)
 {
@@ -174,13 +182,19 @@ inline void defineBindings(py::module_& m)
 
     // ---------------- CORE ---------------------
     ATCG_DEFINE_MODULES(m)
+#ifndef ATCG_HEADLESS
+    auto m_imgui            = m.def_submodule("ImGui");
+    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
+#endif
 
-    // On module initialization and destruction
+// On module initialization and destruction
+#ifdef ATCG_PYTHON_MODULE
     py::class_<PythonContext>(m, "PythonContext").def(py::init<>());
     static PythonContext context;
 
     py::module atexit = py::module::import("atexit");
     atexit.attr("register")(py::cpp_function([]() { context.onExit(); }));
+#endif
 
     // py::object python_context = py::cast(new PythonContext());
     // m.attr("_python_context") = python_context;
@@ -1074,6 +1088,10 @@ inline void defineBindings(py::module_& m)
         .def_readwrite("color", &atcg::PointLightComponent::color)
         .def_readwrite("cast_shadow", &atcg::PointLightComponent::cast_shadow);
 
+    m_script_component.def(py::init<>())
+        .def(py::init<const atcg::ref_ptr<atcg::PythonScript>&>())
+        .def_readwrite("script", &atcg::ScriptComponent::script);
+
     m_entity.def(py::init<>())
         .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)
         .def(py::init<>([](entt::entity e, const atcg::ref_ptr<atcg::Scene>& scene)
@@ -1174,6 +1192,12 @@ inline void defineBindings(py::module_& m)
         .def("replaceNameComponent",
              [](atcg::Entity& entity, atcg::NameComponent& component)
              { return entity.replaceComponent<atcg::NameComponent>(component); })
+        .def("addScriptComponent",
+             [](atcg::Entity& entity, const atcg::ref_ptr<atcg::PythonScript>& script)
+             { return entity.addComponent<atcg::ScriptComponent>(script); })
+        .def("replaceScriptComponent",
+             [](atcg::Entity& entity, atcg::ScriptComponent component)
+             { return entity.replaceComponent<atcg::ScriptComponent>(component); })
         .def("hasTransformComponent", &atcg::Entity::hasComponent<atcg::TransformComponent>)
         .def("hasGeometryComponent", &atcg::Entity::hasComponent<atcg::GeometryComponent>)
         .def("hasMeshRenderComponent", &atcg::Entity::hasComponent<atcg::MeshRenderComponent>)
@@ -1183,6 +1207,7 @@ inline void defineBindings(py::module_& m)
         .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>)
         .def("hasPointLightComponent", &atcg::Entity::hasComponent<atcg::PointLightComponent>)
         .def("hasNameComponent", &atcg::Entity::hasComponent<atcg::NameComponent>)
+        .def("hasScriptComponent", &atcg::Entity::hasComponent<atcg::ScriptComponent>)
         .def("getTransformComponent", &atcg::Entity::getComponent<atcg::TransformComponent>)
         .def("getGeometryComponent", &atcg::Entity::getComponent<atcg::GeometryComponent>)
         .def("getMeshRenderComponent", &atcg::Entity::getComponent<atcg::MeshRenderComponent>)
@@ -1191,6 +1216,7 @@ inline void defineBindings(py::module_& m)
         .def("getEdgeRenderComponent", &atcg::Entity::getComponent<atcg::EdgeRenderComponent>)
         .def("getPointLightComponent", &atcg::Entity::getComponent<atcg::PointLightComponent>)
         .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
+        .def("getScriptComponent", &atcg::Entity::getComponent<atcg::ScriptComponent>)
         .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>);
 
     m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
@@ -1441,8 +1467,26 @@ inline void defineBindings(py::module_& m)
                       return std::make_pair(data, offset);
                   });
 
+    // ------------------- Scripting ---------------------------------
+    m_scriptengine.def(py::init<>())
+        .def("init", &atcg::PythonScriptEngine::init)
+        .def("destroy", &atcg::PythonScriptEngine::destroy);
+
+    m_script.def(py::init<const std::filesystem::path&>())
+        .def("init", &atcg::PythonScript::init)
+        .def("onAttach", &atcg::PythonScript::onAttach)
+        .def("onUpdate", &atcg::PythonScript::onUpdate)
+        .def("onEvent", &atcg::PythonScript::onEvent)
+        .def("onDetach", &atcg::PythonScript::onDetach)
+        .def("reload", &atcg::PythonScript::reload);
+
+    m.def("handleScriptReloads", &atcg::Scripting::handleScriptReloads);
+    m.def("handleScriptEvents", &atcg::Scripting::handleScriptEvents);
+    m.def("handleScriptUpdates", &atcg::Scripting::handleScriptUpdates);
+
     // IMGUI BINDINGS
 
+#ifndef ATCG_HEADLESS
     m_imgui.def("BeginMainMenuBar", &ImGui::BeginMainMenuBar);
     m_imgui.def("EndMainMenuBar", &ImGui::EndMainMenuBar);
     m_imgui.def("BeginMenu", &ImGui::BeginMenu, py::arg("label"), py::arg("enabled") = true);
@@ -1552,6 +1596,7 @@ inline void defineBindings(py::module_& m)
         .value("SCALE", ImGuizmo::OPERATION::SCALE)
         .export_values();
     m_imgui.def("drawGuizmo", atcg::drawGuizmo);
+#endif
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

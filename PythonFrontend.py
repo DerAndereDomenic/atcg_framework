@@ -2,22 +2,24 @@ import torch
 import charonload
 import pathlib
 
-VSCODE_STUBS_DIRECTORY = pathlib.Path(__file__).parent / "build_python/typings"
+# VSCODE_STUBS_DIRECTORY = pathlib.Path(__file__).parent / "build_python/typings"
 
-charonload.module_config["pyatcg"] = charonload.Config(
-    # All paths must be absolute
-    project_directory=pathlib.Path(__file__).parent,
-    build_directory=pathlib.Path(__file__).parent / "build_python",
-    cmake_options={
-        "ATCG_CUDA_BACKEND": "On",
-        "ATCG_PYTHON_BINDINGS": "On",
-        "ATCG_PYTHON_MODULE": "On",
-    },
-    stubs_directory=VSCODE_STUBS_DIRECTORY,
-    build_type="RelWithDebInfo",
-    verbose=True,
-    stubs_invalid_ok=True,
-)
+# charonload.module_config["pyatcg"] = charonload.Config(
+#     # All paths must be absolute
+#     project_directory=pathlib.Path(__file__).parent,
+#     build_directory=pathlib.Path(__file__).parent / "build_python",
+#     cmake_options={
+#         "ATCG_CUDA_BACKEND": "On",
+#         "ATCG_PYTHON_BINDINGS": "On",
+#         "ATCG_PYTHON_MODULE": "On",
+#     },
+#     stubs_directory=VSCODE_STUBS_DIRECTORY,
+#     build_type="RelWithDebInfo",
+#     verbose=True,
+#     stubs_invalid_ok=True,
+# )
+
+# RUN: pip install -e . before running this file
 
 import pyatcg as atcg
 import numpy as np
@@ -73,6 +75,8 @@ class PythonLayer(atcg.Layer):
         self.performance_panel.registerFrameTime(dt)
         self.camera_controller.onUpdate(dt)
 
+        atcg.handleScriptUpdates(self.scene, dt)
+
         atcg.Renderer.clear()
 
         atcg.Renderer.draw(self.scene, self.camera_controller.getCamera())
@@ -97,6 +101,8 @@ class PythonLayer(atcg.Layer):
 
     def onEvent(self, event):
         self.camera_controller.onEvent(event)
+
+        atcg.handleScriptEvents(self.scene, event)
 
         if event.getName() == "ViewportResize":
             resize_event = atcg.WindowResizeEvent(event.getWidth(), event.getHeight())

@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added possibility to load camera images to be rendered
 - Added main scene camera
 - Added fly-to and set from view camera buttons
+- Added scripting engine and python scripting to entities with a Script Component
 
 ### Changed
 
@@ -64,6 +65,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed unnecessary wrapper class around logger, now everything directly works on an spdlog object
 - Constructor of PerspectiveCamera now uses CameraIntrinsics and CameraExtrinsics
 - Camera Controllers can no longer be initiated with an implict camera, but it has to be created and passed manually
+- Torch DLLs are NO LONGER COPIED to the output directory on Windows. The user has to make sure the `PATH` variables point to the correct DLLs.
+- The `PythonFrontend.py` no longer compiles the project. It now requires that the package is installed via pip.
 
 ### Fixed
 
