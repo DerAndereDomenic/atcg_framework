@@ -6,7 +6,10 @@
 
 namespace py = pybind11;
 
-extern "C" PyObject* PyInit_pyatcg();
+#define _ATCG_CONCAT(x, y) x##y
+#define ATCG_CONCAT(x, y)  _ATCG_CONCAT(x, y)
+
+extern "C" PyObject* ATCG_CONCAT(PyInit_, TORCH_EXTENSION_NAME)();
 
 namespace atcg
 {
@@ -38,12 +41,14 @@ void PythonScriptEngine::init()
 {
     if(!impl->initialized)
     {
-        if(PyImport_AppendInittab("pyatcg", &PyInit_pyatcg) == -1)
+        if(PyImport_AppendInittab("pyatcg", &ATCG_CONCAT(PyInit_, TORCH_EXTENSION_NAME)) == -1)
         {
             ATCG_ERROR("Failed to add engine module to interpreter.\n");
             return;
         }
+#ifdef ATCG_INIT_PYTHON
         Py_Initialize();
+#endif
 
         try
         {
@@ -70,7 +75,9 @@ void PythonScriptEngine::destroy()
     {
         ATCG_INFO("Shutting down Scripting engine...");
         impl->pyatcg.release();
+#ifdef ATCG_INIT_PYTHON
         Py_Finalize();
+#endif
         impl->initialized = false;
     }
 }
