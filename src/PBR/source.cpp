@@ -275,15 +275,6 @@ public:
             ImGui::End();
         }
 
-        ImGui::Begin("PT Debug");
-
-        ImGui::Image((ImTextureID)output_texture->getID(),
-                     ImVec2(output_texture->width(), output_texture->height()),
-                     ImVec2 {0, 0},
-                     ImVec2 {1, 1});
-
-        ImGui::End();
-
         performance_panel.renderPanel(show_performance);
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
