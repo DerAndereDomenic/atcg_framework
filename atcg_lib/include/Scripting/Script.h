@@ -2,6 +2,7 @@
 
 #include <Core/Memory.h>
 #include <Core/Platform.h>
+#include <Events/Event.h>
 
 #include <filesystem>
 
