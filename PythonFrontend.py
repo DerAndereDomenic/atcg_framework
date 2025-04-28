@@ -10,7 +10,6 @@ import pathlib
 #     build_directory=pathlib.Path(__file__).parent / "build_python",
 #     cmake_options={
 #         "ATCG_CUDA_BACKEND": "On",
-#         "ATCG_PYTHON_BINDINGS": "On",
 #         "ATCG_PYTHON_MODULE": "On",
 #     },
 #     stubs_directory=VSCODE_STUBS_DIRECTORY,
