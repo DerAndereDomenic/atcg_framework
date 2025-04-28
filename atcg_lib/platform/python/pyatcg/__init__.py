@@ -12,7 +12,7 @@ del sys
 import pathlib
 import charonload
 
-PROJECT_ROOT_DIRECTORY = pathlib.Path(__file__).parents[2]
+PROJECT_ROOT_DIRECTORY = pathlib.Path(__file__).parents[4]
 
 VSCODE_STUBS_DIRECTORY = PROJECT_ROOT_DIRECTORY / "typings"
 

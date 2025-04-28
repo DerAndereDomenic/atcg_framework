@@ -24,7 +24,7 @@ option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
 option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
-option(ATCG_BUILD_EXAMPLES, "Build examples" ON)
+option(ATCG_BUILD_EXAMPLES "Build atcg examples" ON)
 
 # OpenMesh and OpenVR use Cmake < 3.10
 set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
@@ -189,7 +189,7 @@ if(ATCG_PYTHON_MODULE)
 
     if(charonload_FOUND)
         charonload_add_torch_library(${TORCH_EXTENSION_NAME} MODULE)
-        target_sources(${TORCH_EXTENSION_NAME} PRIVATE python/pyatcg.cpp)
+        target_sources(${TORCH_EXTENSION_NAME} PRIVATE atcg_lib/platform/python/pyatcg.cpp)
         target_link_libraries(${TORCH_EXTENSION_NAME} PRIVATE atcg_lib)
         target_compile_definitions(${TORCH_EXTENSION_NAME} PUBLIC ATCG_PYTHON_MODULE)
         target_compile_definitions(atcg_lib PUBLIC TORCH_EXTENSION_NAME=${TORCH_EXTENSION_NAME})

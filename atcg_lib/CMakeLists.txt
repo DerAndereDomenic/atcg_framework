@@ -47,8 +47,8 @@ target_sources(atcg_lib PRIVATE ${atcg_lib_files}
                                 ${atcg_window_files})
 
 if (NOT ATCG_PYTHON_MODULE)
-    file (GLOB_RECURSE atcg_lib_python_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/python/**.h"
-                                                             "${ATCG_PROJECT_ROOT_DIR}/python/**.c*")
+    file (GLOB_RECURSE atcg_lib_python_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python/**.h"
+                                                             "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python/**.c*")
     target_sources(atcg_lib PRIVATE ${atcg_lib_python_files})
     target_compile_definitions(atcg_lib PUBLIC TORCH_EXTENSION_NAME=pyatcg)
     target_compile_definitions(atcg_lib PUBLIC ATCG_INIT_PYTHON)
@@ -67,7 +67,7 @@ target_include_directories(atcg_lib PUBLIC "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/in
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_BACKEND}/include"
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/include"
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/opengl/include"
-                                           "${ATCG_PROJECT_ROOT_DIR}/python"
+                                           "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python"
 )
 
 target_link_libraries(atcg_lib PUBLIC glad
