@@ -24,6 +24,7 @@ option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
 option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
+option(ATCG_BUILD_EXAMPLES, "Build examples" ON)
 
 # OpenMesh and OpenVR use Cmake < 3.10
 set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
@@ -175,7 +176,9 @@ add_subdirectory(atcg_lib)
 # EXECUTABLES
 #
 
-add_subdirectory(src)
+if(ATCG_BUILD_EXAMPLES)
+    add_subdirectory(src)
+endif()
 
 #
 # PYTHON BINDINGS
