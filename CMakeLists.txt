@@ -6,10 +6,12 @@ project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 0.1.1)
 # SETUP
 #
 
+set(ATCG_PROJECT_ROOT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+
 # Configure C++
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${ATCG_PROJECT_ROOT_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${ATCG_PROJECT_ROOT_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ATCG_PROJECT_ROOT_DIR}/bin)
 list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
@@ -180,10 +182,10 @@ function(ATCG_add_executable target_name_base target_name_var source)
     
     target_sources(${target_name} PRIVATE ${source})
     target_link_libraries(${target_name} PRIVATE atcg_lib)
-    target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${CMAKE_SOURCE_DIR}/src/${target_name}")
+    target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${ATCG_PROJECT_ROOT_DIR}/src/${target_name}")
 
 	if(MSVC)
-		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${ATCG_PROJECT_ROOT_DIR}")
 	endif()
 endfunction()
 
@@ -195,10 +197,10 @@ function(ATCG_add_library target_name_base target_name_var source)
     
     target_sources(${target_name} PRIVATE ${source})
     target_link_libraries(${target_name} PRIVATE atcg_lib)
-    target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${CMAKE_SOURCE_DIR}/src/${target_name}")
+    target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${ATCG_PROJECT_ROOT_DIR}/src/${target_name}")
 
 	if(MSVC)
-		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${ATCG_PROJECT_ROOT_DIR}")
 	endif()
 endfunction()
 
