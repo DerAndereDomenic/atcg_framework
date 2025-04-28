@@ -21,6 +21,9 @@ option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
 option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
 
+# OpenMesh and OpenVR use Cmake < 3.10
+set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
+
 if(ATCG_HEADLESS)
     if(NOT UNIX)
         message(FATAL_ERROR "Headless mode only supported on linux.")
