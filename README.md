@@ -117,7 +117,7 @@ You can edit shaders while the program is running!
 
 ## Usage
 
-All exercises have the same structure, that is rougly outlined here. More examples can be found in `src`.
+All examples have the same structure, that is roughly outlined here. More examples can be found in `src`.
 
 ```c++
 #include <Core/EntryPoint.h>
@@ -241,6 +241,22 @@ atcg::Application* atcg::createApplication()
 {
     return new MyApplication;
 }
+```
+
+To add your own executables, either create a folder in `src` similar to the other projects or add the framework into your CMake project like this:
+```cmake
+cmake_minimum_required(VERSION 3.27)
+
+project(MyProject LANGUAGES C CXX VERSION 1.0)
+
+# Set output dir to bin because atcg_framework will copy its dlls automatically here. Otherwise, do so manually
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+
+set(ATCG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(atcg_framework)
+
+# target_name is the output variable
+ATCG_add_executable(MyApp target_name source.cpp)
 ```
 
 ### Custom shared pointers
