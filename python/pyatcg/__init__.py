@@ -22,7 +22,6 @@ charonload.module_config["_c_pyatcg"] = charonload.Config(
     project_directory=PROJECT_ROOT_DIRECTORY,
     cmake_options={
         "ATCG_CUDA_BACKEND": "On",
-        "ATCG_PYTHON_BINDINGS": "On",
         "ATCG_PYTHON_MODULE": "On",
     },
     stubs_directory=VSCODE_STUBS_DIRECTORY,

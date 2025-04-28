@@ -2,15 +2,26 @@ cmake_minimum_required(VERSION 3.27)
 
 project(ATCG_FRAMEWORK LANGUAGES CXX C VERSION 0.1.1)
 
+#
+# SETUP
+#
+
+# Configure C++
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 17)
+
+# Manage options
 option(ATCG_CUDA_BACKEND "Compile cuda backend" ON)
-option(ATCG_PYTHON_BINDINGS "Compile python bindings" OFF)
 option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
 option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
 
 if(ATCG_HEADLESS)
-    message("Building in Headless mode")
     if(NOT UNIX)
         message(FATAL_ERROR "Headless mode only supported on linux.")
     endif()
@@ -19,18 +30,9 @@ if(ATCG_HEADLESS)
         message(FATAL_ERROR "Headless mode only supported with CUDA backend.")
     endif()
 else()
-    message("Using glfw backend")
-
     # GLFW
     add_subdirectory(external/glfw)
 endif()
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-list(PREPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_CXX_STANDARD 17)
 
 # Check for CUDA
 if(ATCG_CUDA_BACKEND)
@@ -38,6 +40,10 @@ if(ATCG_CUDA_BACKEND)
     set(CMAKE_CUDA_ARCHITECTURES "native")
     string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
 endif()
+
+#
+# THIRD PARTY LIBRATIES
+#
 
 # OpenGL
 set(OpenGL_GL_PREFERENCE GLVND)
@@ -152,16 +158,20 @@ set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
 add_subdirectory(external/sfml)
 
+#
+# ATCG_LIB
+#
+
 #atcg_lib
 add_subdirectory(atcg_lib)
+
+#
+# EXECUTABLES
+#
 
 function(ATCG_add_executable target_name_base target_name_var source)
     set(target_name ${target_name_base})
     set(${target_name_var} ${target_name} PARENT_SCOPE)
-
-    if(ATCG_PYTHON_BINDINGS)
-        return()
-    endif()
 
     add_executable(${target_name})
     
@@ -170,15 +180,6 @@ function(ATCG_add_executable target_name_base target_name_var source)
     target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${CMAKE_SOURCE_DIR}/src/${target_name}")
 
 	if(MSVC)
-        # TODO: Currently the environment variables need to point to these dlls
-        # get_target_property(TORCH_LIBRARY_LOCATION torch LOCATION)
-        # get_filename_component(TORCH_LIB_SEARCH_PATH ${TORCH_LIBRARY_LOCATION} DIRECTORY)
-        # file(GLOB TORCH_DLLS "${TORCH_LIB_SEARCH_PATH}/*.dll")
-        # add_custom_command(TARGET ${target_name}
-        #          POST_BUILD
-        #          COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        #          ${TORCH_DLLS}
-        #          $<TARGET_FILE_DIR:${target_name}>)
 		set_target_properties(${target_name} PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 	endif()
 endfunction()
@@ -210,7 +211,9 @@ endfunction()
 
 add_subdirectory(src)
 
+#
 # PYTHON BINDINGS
+#
 
 if(ATCG_PYTHON_MODULE)
     find_package(charonload)
@@ -224,11 +227,17 @@ if(ATCG_PYTHON_MODULE)
     endif()
 endif()
 
+#
 # DOCS
+#
 
 if(ATCG_BUILD_DOCS)
     add_subdirectory(docs)
 endif()
+
+#
+# TESTS
+#
 
 if(ATCG_BUILD_TESTS)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
