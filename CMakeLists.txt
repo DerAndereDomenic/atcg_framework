@@ -199,16 +199,6 @@ function(ATCG_add_library target_name_base target_name_var source)
 	endif()
 endfunction()
 
-function(ATCG_add_pythonmodule source)
-    find_package(charonload)
-
-    if(charonload_FOUND)
-        charonload_add_torch_library(${TORCH_EXTENSION_NAME} MODULE)
-        target_sources(${TORCH_EXTENSION_NAME} PRIVATE ${source})
-        target_link_libraries(${TORCH_EXTENSION_NAME} PRIVATE atcg_lib)
-    endif()
-endfunction()
-
 add_subdirectory(src)
 
 #
