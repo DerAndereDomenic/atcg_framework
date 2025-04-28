@@ -23,6 +23,7 @@ charonload.module_config["_c_pyatcg"] = charonload.Config(
     cmake_options={
         "ATCG_CUDA_BACKEND": "On",
         "ATCG_PYTHON_MODULE": "On",
+        "ATCG_BUILD_EXAMPLES": "Off",
     },
     stubs_directory=VSCODE_STUBS_DIRECTORY,
     build_type="RelWithDebInfo",
@@ -30,5 +31,4 @@ charonload.module_config["_c_pyatcg"] = charonload.Config(
     stubs_invalid_ok=True,
 )
 
-# import _c_torchhull  # noqa: F401
-from _c_pyatcg import *
+from _c_pyatcg import *  # type: ignore
