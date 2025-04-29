@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added main scene camera
 - Added fly-to and set from view camera buttons
 - Added scripting engine and python scripting to entities with a Script Component
+- Added slider to control the size of rendered camera frustums
 
 ### Changed
 

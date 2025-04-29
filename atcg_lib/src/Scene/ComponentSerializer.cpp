@@ -56,6 +56,7 @@ namespace atcg
 #define CAST_SHADOWS_KEY           "CastShadow"
 #define RECEIVE_SHADOWS_KEY        "ReceiveShadow"
 #define SCRIPT_KEY                 "Script"
+#define RENDER_SCALE_KEY           "Scale"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -294,6 +295,7 @@ void ComponentSerializer::serialize_component<CameraComponent>(const std::string
     j[PERSPECTIVE_CAMERA_KEY][HEIGHT_KEY]         = component.height;
     j[PERSPECTIVE_CAMERA_KEY][PREVIEW_KEY]        = component.render_preview;
     j[PERSPECTIVE_CAMERA_KEY][OPTICAL_CENTER_KEY] = nlohmann::json::array({offset.x, offset.y});
+    j[PERSPECTIVE_CAMERA_KEY][RENDER_SCALE_KEY]   = component.render_scale;
 
     if(component.image)
     {
@@ -511,6 +513,7 @@ void ComponentSerializer::deserialize_component<CameraComponent>(const std::stri
     component.width          = j[PERSPECTIVE_CAMERA_KEY].value(WIDTH_KEY, 1024);
     component.height         = j[PERSPECTIVE_CAMERA_KEY].value(HEIGHT_KEY, 1024);
     component.render_preview = j[PERSPECTIVE_CAMERA_KEY].value(PREVIEW_KEY, false);
+    component.render_scale   = j[PERSPECTIVE_CAMERA_KEY].value(RENDER_SCALE_KEY, 1.0f);
 
 
     if(j[PERSPECTIVE_CAMERA_KEY].contains(CAMERA_IMAGE_KEY))
