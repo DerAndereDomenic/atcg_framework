@@ -43,10 +43,8 @@ else()
 endif()
 
 # Check for CUDA
-if(ATCG_CUDA_BACKEND)
+if(ATCG_CUDA_BACKEND AND NOT "CUDA" IN_LIST CMAKE_ENABLED_LANGUAGES)
     enable_language(CUDA)
-    set(CMAKE_CUDA_ARCHITECTURES "native")
-    string(APPEND CMAKE_CUDA_FLAGS " -use_fast_math")
 endif()
 
 #

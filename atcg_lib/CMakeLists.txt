@@ -5,7 +5,16 @@ charonload_add_torch_library(atcg_lib STATIC)
 if(ATCG_CUDA_BACKEND)
     set(ATCG_BACKEND "cuda")
 
-    find_package(CUDAToolkit REQUIRED)
+    if(NOT CUDAToolkit_FOUND)
+        find_package(CUDAToolkit REQUIRED)
+    endif()
+
+    set_target_properties(atcg_lib PROPERTIES
+        CUDA_ARCHITECTURES native
+    )
+    target_compile_options(atcg_lib PUBLIC 
+        $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
+    )
 
     target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
