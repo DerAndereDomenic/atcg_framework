@@ -1464,8 +1464,8 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
         atcg::CameraComponent& comp          = entity.getComponent<CameraComponent>();
         atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(comp.camera);
         float aspect_ratio                   = cam->getAspectRatio();
-        glm::mat4 scale =
-            glm::scale(glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)));
+        glm::mat4 scale                      = glm::scale(
+            glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)) * comp.render_scale);
         glm::mat4 model = glm::inverse(cam->getView()) * scale;
         draw(impl->camera_frustrum,
              camera,

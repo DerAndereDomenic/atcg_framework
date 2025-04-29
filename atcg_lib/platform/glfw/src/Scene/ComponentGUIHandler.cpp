@@ -175,6 +175,10 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     label << "Color##" << id;
     updated = ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(component.color)) || updated;
 
+    label.str(std::string());
+    label << "Scale##" << id;
+    updated = ImGui::DragFloat(label.str().c_str(), &component.render_scale, 0.01f, 0.01f, FLT_MAX) || updated;
+
     uint32_t preview_height = 128;
     uint32_t preview_width =
         glm::clamp((uint32_t)(float(component.width) / float(component.height) * 128.0f), uint32_t(1), uint32_t(4096));

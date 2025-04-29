@@ -213,10 +213,11 @@ struct CameraComponent
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Camera"; }
 
     atcg::ref_ptr<Camera> camera;
-    glm::vec3 color  = glm::vec3(1);
-    bool perspective = false;
-    uint32_t width   = 1024;
-    uint32_t height  = 1024;
+    glm::vec3 color    = glm::vec3(1);
+    bool perspective   = false;
+    uint32_t width     = 1024;
+    uint32_t height    = 1024;
+    float render_scale = 1.0f;
 
     atcg::ref_ptr<atcg::Framebuffer> preview;
     atcg::ref_ptr<atcg::Texture2D> image;
