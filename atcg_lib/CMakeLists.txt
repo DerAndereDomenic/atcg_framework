@@ -70,7 +70,8 @@ if(ATCG_ENABLE_OPTIX)
         add_library(atcg_ptxmodules OBJECT ${ptx_files})
         set_target_properties(atcg_ptxmodules PROPERTIES
             CUDA_PTX_COMPILATION ON
-            CUDA_SEPARABLE_COMPILATION ON)
+            CUDA_SEPARABLE_COMPILATION ON
+            CUDA_ARCHITECTURES native)
         target_compile_definitions(atcg_ptxmodules PUBLIC ATCG_CUDA_BACKEND _USE_MATH_DEFINES)
         target_compile_options(atcg_ptxmodules PRIVATE -ptx)
         target_link_libraries(atcg_ptxmodules PRIVATE atcg_lib)
