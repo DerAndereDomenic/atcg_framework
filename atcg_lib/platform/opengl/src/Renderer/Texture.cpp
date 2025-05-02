@@ -776,6 +776,32 @@ void Texture2D::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
+void Texture2D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    TORCH_CHECK_EQ(data->size(),
+                   _spec.width * _spec.height * detail::toChannelSize(_spec.format) *
+                       detail::num_channels(_spec.format));
+
+    data->use();
+    use(0);
+
+    if(_spec.format != TextureFormat::DEPTH)
+        impl->deinitResource();    // Somehow no registered resource is allowed when doing pbo transfers
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)nullptr);
+
+    if(_spec.format != TextureFormat::DEPTH)
+        impl->initResource(_ID, GL_TEXTURE_2D);    // Somehow no registered resource is allowed when doing pbo transfers
+    data->unbind();
+}
+
 torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
@@ -1047,6 +1073,33 @@ void Texture3D::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
+void Texture3D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    TORCH_CHECK_EQ(data->size(),
+                   _spec.width * _spec.height * _spec.depth * detail::toChannelSize(_spec.format) *
+                       detail::num_channels(_spec.format));
+
+    data->use();
+    use(0);
+
+    if(_spec.format != TextureFormat::DEPTH) impl->deinitResource();
+
+    glTexImage3D(GL_TEXTURE_3D,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 _spec.depth,
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)nullptr);
+
+    if(_spec.format != TextureFormat::DEPTH) impl->initResource(_ID, GL_TEXTURE_3D);
+
+    data->unbind();
+}
+
 torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
@@ -1279,6 +1332,35 @@ void TextureCube::setData(const torch::Tensor& data)
                         detail::toGLtype(_spec.format),
                         (void*)pixel_data.index({i, 0, 0, 0}).data_ptr());
     }
+}
+
+void TextureCube::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    size_t faceSize =
+        _spec.width * _spec.height * detail::toChannelSize(_spec.format) * detail::num_channels(_spec.format);
+
+    TORCH_CHECK_EQ(data->size(), faceSize * 6);
+
+    data->use();
+    use(0);
+
+    for(int i = 0; i < 6; ++i)
+    {
+        // Offset pointer into PBO for this face
+        void* offset = reinterpret_cast<void*>(faceSize * i);
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                     0,
+                     detail::to2GLinternalFormat(_spec.format),
+                     _spec.width,
+                     _spec.height,
+                     0,
+                     detail::toGLformat(_spec.format),
+                     detail::toGLtype(_spec.format),
+                     offset);    // NULL + offset into bound PBO
+    }
+
+    data->unbind();
 }
 
 torch::Tensor TextureCube::getData(const torch::Device& device, const uint32_t mip_level) const
@@ -1514,6 +1596,33 @@ void TextureArray::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
+void TextureArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    TORCH_CHECK_EQ(data->size(),
+                   _spec.width * _spec.height * _spec.depth * detail::toChannelSize(_spec.format) *
+                       detail::num_channels(_spec.format));
+
+    data->use();
+    use(0);
+
+    if(_spec.format != TextureFormat::DEPTH) impl->deinitResource();
+
+    glTexImage3D(GL_TEXTURE_2D_ARRAY,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 _spec.depth,    // Number of layers
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)nullptr);
+
+    if(_spec.format != TextureFormat::DEPTH) impl->initResource(_ID, GL_TEXTURE_2D_ARRAY);
+
+    data->unbind();
+}
+
 torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
@@ -1747,6 +1856,29 @@ void TextureCubeArray::setData(const torch::Tensor& data)
     }
 }
 
+void TextureCubeArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    TORCH_CHECK_EQ(data->size(),
+                   _spec.width * _spec.height * _spec.depth * 6 * detail::toChannelSize(_spec.format) *
+                       detail::num_channels(_spec.format));
+
+    data->use();
+    use(0);
+
+    glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 _spec.depth * 6,    // Each cube has 6 faces
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)nullptr);
+
+    data->unbind();
+}
+
 torch::Tensor TextureCubeArray::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
@@ -1848,6 +1980,11 @@ Texture2DMultiSample::~Texture2DMultiSample()
 }
 
 void Texture2DMultiSample::setData(const torch::Tensor& data)
+{
+    // No Op
+}
+
+void Texture2DMultiSample::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 {
     // No Op
 }

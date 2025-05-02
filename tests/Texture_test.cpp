@@ -913,6 +913,195 @@ TEST(TextureTest, Texture2DcreateEmptyRINTsetDataDevice)
     EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
 }
 
+TEST(TextureTest, Texture2DcreateEmptyRINT8setDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::Texture2D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {600, 800, 1}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture2DcreateEmptyRGsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::Texture2D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {600, 800, 2}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture2DcreateEmptyRGBsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::Texture2D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {600, 800, 3}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture2DcreateEmptyRGBAsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::Texture2D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {600, 800, 4}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture2DcreateEmptyRFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::Texture2D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {600, 800, 1}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture2DcreateEmptyRGFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::Texture2D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {600, 800, 2}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture2DcreateEmptyRGBFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::Texture2D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {600, 800, 3}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture2DcreateEmptyRGBAFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::Texture2D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {600, 800, 4}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture2DcreateEmptyRINTsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::Texture2D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 1e6, {600, 800, 1}, atcg::TensorOptions::int32HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
@@ -1842,6 +2031,204 @@ TEST(TextureTest, Texture3DcreateEmptyRINTsetDataDevice)
     EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
 }
 
+TEST(TextureTest, Texture3DcreateEmptyRINT8setDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.depth   = 5;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::Texture3D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {5, 600, 800, 1}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 5);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture3DcreateEmptyRGsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.depth   = 5;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::Texture3D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {5, 600, 800, 2}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 5);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture3DcreateEmptyRGBsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.depth   = 5;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::Texture3D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {5, 600, 800, 3}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 5);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture3DcreateEmptyRGBAsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.depth   = 5;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::Texture3D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {5, 600, 800, 4}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 5);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture3DcreateEmptyRFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.depth   = 5;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::Texture3D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {5, 600, 800, 1}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 5);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture3DcreateEmptyRGFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.depth   = 5;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::Texture3D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {5, 600, 800, 2}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 5);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture3DcreateEmptyRGBFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.depth   = 5;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::Texture3D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {5, 600, 800, 3}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 5);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture3DcreateEmptyRGBAFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.depth   = 5;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::Texture3D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {5, 600, 800, 4}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 5);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, Texture3DcreateEmptyRINTsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 800;
+    spec.height  = 600;
+    spec.depth   = 5;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::Texture3D::create(spec);
+
+    torch::Tensor data = torch::randint(0, 1e6, {5, 600, 800, 1}, atcg::TensorOptions::int32HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 800);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 5);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
@@ -2741,6 +3128,195 @@ TEST(TextureTest, TextureCubecreateEmptyRINTsetDataDevice)
     EXPECT_EQ(texture->depth(), 0);
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubecreateEmptyRINT8setDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::TextureCube::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {6, 600, 600, 1}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubecreateEmptyRGsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::TextureCube::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {6, 600, 600, 2}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubecreateEmptyRGBsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::TextureCube::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {6, 600, 600, 3}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubecreateEmptyRGBAsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::TextureCube::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {6, 600, 600, 4}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubecreateEmptyRFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::TextureCube::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {6, 600, 600, 1}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubecreateEmptyRGFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::TextureCube::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {6, 600, 600, 2}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubecreateEmptyRGBFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::TextureCube::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {6, 600, 600, 3}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubecreateEmptyRGBAFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::TextureCube::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {6, 600, 600, 4}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubecreateEmptyRINTsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::TextureCube::create(spec);
+
+    torch::Tensor data = torch::randint(0, 1e6, {6, 600, 600, 1}, atcg::TensorOptions::int32HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 0);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
 }
 
 //--------------------------------------------------------------------------------------------
@@ -3672,6 +4248,204 @@ TEST(TextureTest, TextureArraycreateEmptyRINTsetDataDevice)
     EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
 }
 
+TEST(TextureTest, TextureArraycreateEmptyRINT8setDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::TextureArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 600, 600, 1}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureArraycreateEmptyRGsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::TextureArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 600, 600, 2}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureArraycreateEmptyRGBsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::TextureArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 600, 600, 3}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureArraycreateEmptyRGBAsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::TextureArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 600, 600, 4}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureArraycreateEmptyRFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::TextureArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 600, 600, 1}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureArraycreateEmptyRGFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::TextureArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 600, 600, 2}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureArraycreateEmptyRGBFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::TextureArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 600, 600, 3}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureArraycreateEmptyRGBAFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::TextureArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 600, 600, 4}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureArraycreateEmptyRINTsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::TextureArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 1e6, {10, 600, 600, 1}, atcg::TensorOptions::int32HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------
@@ -4599,6 +5373,204 @@ TEST(TextureTest, TextureCubeArraycreateEmptyRINTsetDataDevice)
     EXPECT_EQ(texture->depth(), 10);
     EXPECT_EQ(texture->isHDR(), false);
     EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::GPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRINT8setDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT8;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 1}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RG;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 2}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGB;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 3}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBAsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBA;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 4}, atcg::TensorOptions::uint8HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 1}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 2}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 2);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 3}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 3);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRGBAFLOATsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RGBAFLOAT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 255, {10, 6, 600, 600, 4}, atcg::TensorOptions::floatHostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 4);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), true);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
+}
+
+TEST(TextureTest, TextureCubeArraycreateEmptyRINTsetDataPBO)
+{
+    atcg::TextureSpecification spec;
+    spec.width   = 600;
+    spec.height  = 600;
+    spec.depth   = 10;
+    spec.format  = atcg::TextureFormat::RINT;
+    auto texture = atcg::TextureCubeArray::create(spec);
+
+    torch::Tensor data = torch::randint(0, 1e6, {10, 6, 600, 600, 1}, atcg::TensorOptions::int32HostOptions());
+    auto pbo           = atcg::make_ref<atcg::PixelUnpackBuffer>(data.data_ptr(), data.numel() * data.element_size());
+
+    texture->setData(pbo);
+
+    EXPECT_EQ(texture->channels(), 1);
+    EXPECT_EQ(texture->width(), 600);
+    EXPECT_EQ(texture->height(), 600);
+    EXPECT_EQ(texture->depth(), 10);
+    EXPECT_EQ(texture->isHDR(), false);
+    EXPECT_TRUE(torch::allclose(data, texture->getData(atcg::CPU)));
 }
 
 //--------------------------------------------------------------------------------------------

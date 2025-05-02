@@ -110,6 +110,13 @@ public:
     virtual void setData(const torch::Tensor& data) = 0;
 
     /**
+     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     *
+     * @param data The data
+     */
+    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) = 0;
+
+    /**
      * @brief Get the data in the texture.
      *
      * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
@@ -375,6 +382,13 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
+     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     *
+     * @param data The data
+     */
+    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+
+    /**
      * @brief Get the data in the texture.
      *
      * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
@@ -471,6 +485,13 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
+     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     *
+     * @param data The data
+     */
+    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+
+    /**
      * @brief Get the data in the texture.
      *
      * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
@@ -542,6 +563,13 @@ public:
      * @param data The data
      */
     virtual void setData(const torch::Tensor& data) override;
+
+    /**
+     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     *
+     * @param data The data
+     */
+    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -639,6 +667,13 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
+     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     *
+     * @param data The data
+     */
+    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+
+    /**
      * @brief Get the data in the texture.
      *
      * @note A device-device memcpy can only be performed if the image has 1 or 4 channels. For three channel textures,
@@ -712,6 +747,13 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
+     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     *
+     * @param data The data
+     */
+    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+
+    /**
      * @brief Get the data in the texture.
      * This function will always copy data between CPU and GPU via opengl. After construction, the tensor will be copied
      * onto the specified device.
@@ -773,6 +815,14 @@ public:
      * @param data The data
      */
     virtual void setData(const torch::Tensor& data) override;
+
+    /**
+     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @note This function is a NoOp as it is not possible to set data to a multisampled texture
+     *
+     * @param data The data
+     */
+    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
