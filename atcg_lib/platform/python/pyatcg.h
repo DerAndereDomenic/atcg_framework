@@ -1018,7 +1018,12 @@ inline void defineBindings(py::module_& m)
             [](const torch::Tensor& img) { return atcg::Texture2D::create(img); },
             "img"_a)
         .def("getID", &atcg::Texture2D::getID)
-        .def("setData", &atcg::Texture2D::setData, "data"_a)
+        .def(
+            "setData",
+            [](const atcg::ref_ptr<atcg::Texture2D>& texture, const torch::Tensor& data) { texture->setData(data); },
+            "data"_a)
+        //.def("setData", [](const atcg::ref_ptr<atcg::Texture2D>& texture, const
+        // atcg::ref_ptr<atcg::PixelUnpackBuffer>& data) {texture->setData(data);}, "data"_a)
         .def("getData", &atcg::Texture2D::getData);
 
     // ------------------- Scene ---------------------------------

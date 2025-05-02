@@ -41,6 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added main scene camera
 - Added fly-to and set from view camera buttons
 - Added scripting engine and python scripting to entities with a Script Component
+- Added slider to control the size of rendered camera frustums
+- Added PixelUnpackBuffers
+- Added possibility to set texture data from PixelUnpackBuffers
 
 ### Changed
 
@@ -67,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Camera Controllers can no longer be initiated with an implict camera, but it has to be created and passed manually
 - Torch DLLs are NO LONGER COPIED to the output directory on Windows. The user has to make sure the `PATH` variables point to the correct DLLs.
 - The `PythonFrontend.py` no longer compiles the project. It now requires that the package is installed via pip.
+- The python folder was moved into atcg_lib
 
 ### Fixed
 

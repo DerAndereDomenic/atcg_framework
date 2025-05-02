@@ -12,7 +12,7 @@ del sys
 import pathlib
 import charonload
 
-PROJECT_ROOT_DIRECTORY = pathlib.Path(__file__).parents[2]
+PROJECT_ROOT_DIRECTORY = pathlib.Path(__file__).parents[4]
 
 VSCODE_STUBS_DIRECTORY = PROJECT_ROOT_DIRECTORY / "typings"
 
@@ -22,8 +22,8 @@ charonload.module_config["_c_pyatcg"] = charonload.Config(
     project_directory=PROJECT_ROOT_DIRECTORY,
     cmake_options={
         "ATCG_CUDA_BACKEND": "On",
-        "ATCG_PYTHON_BINDINGS": "On",
         "ATCG_PYTHON_MODULE": "On",
+        "ATCG_BUILD_EXAMPLES": "Off",
     },
     stubs_directory=VSCODE_STUBS_DIRECTORY,
     build_type="RelWithDebInfo",
@@ -31,5 +31,4 @@ charonload.module_config["_c_pyatcg"] = charonload.Config(
     stubs_invalid_ok=True,
 )
 
-# import _c_torchhull  # noqa: F401
-from _c_pyatcg import *
+from _c_pyatcg import *  # type: ignore

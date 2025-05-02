@@ -177,7 +177,7 @@ Window::Window(const WindowProps& props)
     std::string icon_path = props.icon_path;
     if(props.icon_path == "")
     {
-        icon_path = "./docs/_static/icon.png";
+        icon_path = (atcg::resource_directory() / "../docs/_static/icon.png").string();
     }
 
     int width, height, channels;
