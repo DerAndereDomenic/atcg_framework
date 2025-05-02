@@ -13,3 +13,6 @@ Buffer
 .. doxygenclass:: atcg::IndexBuffer
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::PixelUnpackBuffer
+   :members:
+   :undoc-members:
