@@ -2,6 +2,7 @@
 
 #include <Core/Memory.h>
 #include <Core/OptixComponent.h>
+#include <Core/RaytracingContext.h>
 #include <Shape/ShapeData.cuh>
 
 #include <optix.h>
@@ -17,7 +18,7 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
 
-    virtual void prepareAccelerationStructure(OptixDeviceContext context) = 0;
+    virtual void prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context) = 0;
 
     ATCG_INLINE OptixTraversableHandle getAST() { return _ast_handle; }
 

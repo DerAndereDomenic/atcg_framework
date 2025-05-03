@@ -1,7 +1,6 @@
 #pragma once
 
 #include <optix.h>
-
 namespace atcg
 {
 class ShaderBindingTable
@@ -9,10 +8,8 @@ class ShaderBindingTable
 public:
     /**
      * @brief Create a shader binding table
-     *
-     * @param context The Optix context
      */
-    ShaderBindingTable(OptixDeviceContext context);
+    ShaderBindingTable();
 
     /**
      * @brief Destructor

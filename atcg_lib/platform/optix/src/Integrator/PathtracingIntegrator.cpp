@@ -13,7 +13,7 @@
 
 namespace atcg
 {
-PathtracingIntegrator::PathtracingIntegrator(OptixDeviceContext context) : Integrator(context) {}
+PathtracingIntegrator::PathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context) : Integrator(context) {}
 
 PathtracingIntegrator::~PathtracingIntegrator() {}
 

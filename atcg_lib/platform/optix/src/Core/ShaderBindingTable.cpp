@@ -15,13 +15,9 @@ inline T ceil_to_multiple(T value, T mod)
 class ShaderBindingTable::Impl
 {
 public:
-    Impl() = default;
-
-    Impl(OptixDeviceContext context);
+    Impl();
 
     ~Impl();
-
-    OptixDeviceContext context;
 
     size_t max_raygen_data_size   = 0;
     size_t max_miss_data_size     = 0;
@@ -40,16 +36,13 @@ public:
     std::vector<OptixShaderBindingTable> sbt;
 };
 
-ShaderBindingTable::Impl::Impl(OptixDeviceContext context)
-{
-    this->context = context;
-}
+ShaderBindingTable::Impl::Impl() {}
 
 ShaderBindingTable::Impl::~Impl() {}
 
-ShaderBindingTable::ShaderBindingTable(OptixDeviceContext context)
+ShaderBindingTable::ShaderBindingTable()
 {
-    impl = std::make_unique<Impl>(context);
+    impl = std::make_unique<Impl>();
 }
 
 ShaderBindingTable::~ShaderBindingTable() {}

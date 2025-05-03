@@ -6,7 +6,7 @@
 
 namespace atcg
 {
-IAS::IAS(OptixDeviceContext context, const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes)
+IAS::IAS(const atcg::ref_ptr<RaytracingContext>& context, const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes)
 {
     std::vector<OptixInstance> optix_instances;
     int num_instances = 0;
@@ -43,7 +43,7 @@ IAS::IAS(OptixDeviceContext context, const std::vector<atcg::ref_ptr<ShapeInstan
     accel_options.operation              = OPTIX_BUILD_OPERATION_BUILD;
 
     OptixAccelBufferSizes ias_buffer_sizes;
-    OPTIX_CHECK(optixAccelComputeMemoryUsage(context,
+    OPTIX_CHECK(optixAccelComputeMemoryUsage(context->getContextHandle(),
                                              &accel_options,
                                              &instance_input,
                                              1,    // num build inputs
@@ -52,7 +52,7 @@ IAS::IAS(OptixDeviceContext context, const std::vector<atcg::ref_ptr<ShapeInstan
     atcg::DeviceBuffer<uint8_t> d_temp_buffer(ias_buffer_sizes.tempSizeInBytes);
     _ast_buffer = atcg::DeviceBuffer<uint8_t>(ias_buffer_sizes.outputSizeInBytes);
 
-    OPTIX_CHECK(optixAccelBuild(context,
+    OPTIX_CHECK(optixAccelBuild(context->getContextHandle(),
                                 nullptr,    // CUDA stream
                                 &accel_options,
                                 &instance_input,

@@ -6,6 +6,7 @@
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
 #include <Core/OptixComponent.h>
+#include <Core/RaytracingContext.h>
 #include <Scene/Scene.h>
 #include <Renderer/PerspectiveCamera.h>
 
@@ -14,7 +15,7 @@ namespace atcg
 class Integrator : public OptixComponent
 {
 public:
-    Integrator(OptixDeviceContext context) : _context(context) {}
+    Integrator(const atcg::ref_ptr<RaytracingContext>& context) : _context(context) {}
 
     virtual ~Integrator() {}
 
@@ -29,7 +30,7 @@ public:
     virtual void reset() = 0;
 
 protected:
-    OptixDeviceContext _context;
+    atcg::ref_ptr<RaytracingContext> _context;
     atcg::ref_ptr<Scene> _scene;
 
     atcg::ref_ptr<RayTracingPipeline> _pipeline;

@@ -17,7 +17,7 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
-    virtual void prepareAccelerationStructure(OptixDeviceContext context) override;
+    virtual void prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context) override;
 
 private:
     torch::Tensor _positions;

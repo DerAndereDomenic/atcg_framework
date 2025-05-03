@@ -11,7 +11,6 @@
 #include <stb_image.h>
 
 #include <optix.h>
-// #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
 
 #include <Core/Common.h>
@@ -26,10 +25,10 @@ public:
 
     void initializePathtracer()
     {
-        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context->getContextHandle());
-        sbt      = atcg::make_ref<atcg::ShaderBindingTable>(optx_context->getContextHandle());
+        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
+        sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
 
-        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context->getContextHandle());
+        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context);
         integrator->setScene(scene);
         integrator->initializePipeline(pipeline, sbt);
 

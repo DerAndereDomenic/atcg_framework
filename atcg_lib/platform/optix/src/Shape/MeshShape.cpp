@@ -31,7 +31,7 @@ void MeshShape::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipe
     _hit_group = pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__mesh"}, {});
 }
 
-void MeshShape::prepareAccelerationStructure(OptixDeviceContext context)
+void MeshShape::prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context)
 {
     OptixAccelBuildOptions accel_options = {};
     accel_options.buildFlags             = OPTIX_BUILD_FLAG_NONE;
@@ -52,12 +52,16 @@ void MeshShape::prepareAccelerationStructure(OptixDeviceContext context)
     triangle_input.triangleArray.indexBuffer      = (CUdeviceptr)_faces.data_ptr();
 
     OptixAccelBufferSizes gas_buffer_sizes;
-    OPTIX_CHECK(optixAccelComputeMemoryUsage(context, &accel_options, &triangle_input, 1, &gas_buffer_sizes));
+    OPTIX_CHECK(optixAccelComputeMemoryUsage(context->getContextHandle(),
+                                             &accel_options,
+                                             &triangle_input,
+                                             1,
+                                             &gas_buffer_sizes));
 
     atcg::DeviceBuffer<uint8_t> d_temp_buffer_gas(gas_buffer_sizes.tempSizeInBytes);
     _ast_buffer = atcg::DeviceBuffer<uint8_t>(gas_buffer_sizes.outputSizeInBytes);
 
-    OPTIX_CHECK(optixAccelBuild(context,
+    OPTIX_CHECK(optixAccelBuild(context->getContextHandle(),
                                 0,    // CUDA stream
                                 &accel_options,
                                 &triangle_input,

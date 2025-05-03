@@ -112,11 +112,11 @@ class RayTracingPipeline::Impl
 public:
     Impl() = default;
 
-    Impl(OptixDeviceContext context);
+    Impl(const atcg::ref_ptr<RaytracingContext>& context);
 
     ~Impl();
 
-    OptixDeviceContext context;
+    atcg::ref_ptr<RaytracingContext> context;
     OptixModuleCompileOptions module_compile_options     = {};
     OptixPipelineCompileOptions pipeline_compile_options = {};
     OptixPipelineLinkOptions pipeline_link_options       = {};
@@ -135,7 +135,7 @@ public:
     bool pipeline_created = false;
 };
 
-RayTracingPipeline::Impl::Impl(OptixDeviceContext context)
+RayTracingPipeline::Impl::Impl(const atcg::ref_ptr<RaytracingContext>& context)
 {
     this->context = context;
 
@@ -207,7 +207,7 @@ OptixModule RayTracingPipeline::Impl::createNewModule(const std::string& ptx_fil
 #endif
 
     std::vector<char> ptxSource = readFile(ptx_filename.c_str());
-    OPTIX_CHECK(optixModuleCreate(context,
+    OPTIX_CHECK(optixModuleCreate(context->getContextHandle(),
                                   &module_compile_options,
                                   &pipeline_compile_options,
                                   ptxSource.data(),
@@ -240,7 +240,7 @@ OptixProgramGroup RayTracingPipeline::Impl::createNewProgramGroup(const OptixPro
     size_t sizeof_log = sizeof(log);
 
     OptixProgramGroup prog_group;
-    OPTIX_CHECK(optixProgramGroupCreate(context,
+    OPTIX_CHECK(optixProgramGroupCreate(context->getContextHandle(),
                                         &prog_group_desc,
                                         1,    // num program groups
                                         &program_group_options,
@@ -261,7 +261,7 @@ OptixProgramGroup RayTracingPipeline::Impl::getCachedProgramGroup(const OptixPro
     return prog_group;
 }
 
-RayTracingPipeline::RayTracingPipeline(OptixDeviceContext context)
+RayTracingPipeline::RayTracingPipeline(const atcg::ref_ptr<RaytracingContext>& context)
 {
     impl = std::make_unique<Impl>(context);
 }
@@ -352,7 +352,7 @@ void RayTracingPipeline::createPipeline()
                    std::back_inserter(program_groups),
                    [](const auto& entry) { return entry.second; });
 
-    OPTIX_CHECK(optixPipelineCreate(impl->context,
+    OPTIX_CHECK(optixPipelineCreate(impl->context->getContextHandle(),
                                     &impl->pipeline_compile_options,
                                     &impl->pipeline_link_options,
                                     program_groups.data(),

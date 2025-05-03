@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/RaytracingContext.h>
 #include <Shape/ShapeInstance.h>
 
 namespace atcg
@@ -7,7 +8,7 @@ namespace atcg
 class IAS
 {
 public:
-    IAS(OptixDeviceContext context, const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes);
+    IAS(const atcg::ref_ptr<RaytracingContext>& context, const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes);
 
     ATCG_INLINE OptixTraversableHandle getTraversableHandle() const { return _handle; }
 

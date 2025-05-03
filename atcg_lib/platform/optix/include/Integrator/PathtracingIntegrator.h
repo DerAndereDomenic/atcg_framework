@@ -11,14 +11,15 @@ namespace atcg
 class PathtracingIntegrator : public Integrator
 {
 public:
-    PathtracingIntegrator(OptixDeviceContext context);
+    PathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context);
 
     ~PathtracingIntegrator();
 
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
-    virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera, const std::vector<torch::Tensor>& output) override;
+    virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera,
+                              const std::vector<torch::Tensor>& output) override;
 
     virtual void reset() override;
 

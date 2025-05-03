@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/RaytracingContext.h>
 #include <optix.h>
 
 namespace atcg
@@ -19,7 +20,7 @@ public:
      *
      * @param context The optix context
      */
-    RayTracingPipeline(OptixDeviceContext context);
+    RayTracingPipeline(const atcg::ref_ptr<RaytracingContext>& context);
 
     /**
      * @brief Destructor
