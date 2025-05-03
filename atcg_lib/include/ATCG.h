@@ -99,6 +99,7 @@
     #include <Core/RaytracingPipeline.h>
     #include <Core/ShaderBindingTable.h>
     #include <Integrator/PathtracingIntegrator.h>
+    #include <Core/RaytracingContextManager.h>
 #endif
 
 //-------- Scripting ------------

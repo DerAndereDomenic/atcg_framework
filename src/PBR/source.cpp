@@ -11,7 +11,7 @@
 #include <stb_image.h>
 
 #include <optix.h>
-#include <optix_function_table_definition.h>
+// #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
 
 #include <Core/Common.h>
@@ -26,10 +26,10 @@ public:
 
     void initializePathtracer()
     {
-        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
-        sbt      = atcg::make_ref<atcg::ShaderBindingTable>(optx_context);
+        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context->getContextHandle());
+        sbt      = atcg::make_ref<atcg::ShaderBindingTable>(optx_context->getContextHandle());
 
-        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context);
+        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context->getContextHandle());
         integrator->setScene(scene);
         integrator->initializePipeline(pipeline, sbt);
 
@@ -86,12 +86,7 @@ public:
                 atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
         }
 
-        OPTIX_CHECK(optixInit());
-
-        OptixDeviceContextOptions options = {};
-        CUcontext cuCtx                   = 0;
-
-        OPTIX_CHECK(optixDeviceContextCreate(cuCtx, &options, &optx_context));
+        optx_context = atcg::RaytracingContextManager::createContext();
 
         initializePathtracer();
 
@@ -380,7 +375,7 @@ private:
 #ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif
-    OptixDeviceContext optx_context;
+    atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
     atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
     atcg::ref_ptr<atcg::PathtracingIntegrator> integrator;
