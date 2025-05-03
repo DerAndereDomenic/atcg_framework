@@ -22,12 +22,6 @@ public:
     void createOutputTexture(int width, int height)
     {
         output_tensor = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
-
-        atcg::TextureSpecification spec;
-        spec.width     = width;
-        spec.height    = height;
-        spec.format    = atcg::TextureFormat::RGBA;
-        output_texture = atcg::Texture2D::create(spec);
     }
 
     void initializePathtracer()
@@ -183,7 +177,7 @@ public:
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
         }
 
-        integrator->generateRays(camera_controller->getCamera(), output_tensor);
+        integrator->generateRays(camera_controller->getCamera(), {output_tensor});
         atcg::Framebuffer::useDefault();
         atcg::Renderer::getFramebuffer()->getColorAttachement(0)->setData(output_tensor);
         atcg::Renderer::useScreenBuffer();

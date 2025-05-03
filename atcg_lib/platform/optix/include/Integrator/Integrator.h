@@ -23,7 +23,8 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
 
-    virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera, torch::Tensor& output) = 0;
+    virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera,
+                              const std::vector<torch::Tensor>& output) = 0;
 
     virtual void reset() = 0;
 

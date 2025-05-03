@@ -18,7 +18,7 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
-    virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera, torch::Tensor& output) override;
+    virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera, const std::vector<torch::Tensor>& output) override;
 
     virtual void reset() override;
 
