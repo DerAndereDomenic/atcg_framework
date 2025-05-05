@@ -31,9 +31,9 @@ if(ATCG_HEADLESS)
 else()
     set(ATCG_CONTEXT "glfw")
     target_link_libraries(atcg_lib PUBLIC glfw
-                                          imgui
-                                          imguizmo
-                                          implot)
+                                          atcg::imgui
+                                          atcg::imguizmo
+                                          atcg::implot)
 endif()
 
 # Find backend files
@@ -79,22 +79,22 @@ target_include_directories(atcg_lib PUBLIC "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/in
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python"
 )
 
-target_link_libraries(atcg_lib PUBLIC glad
+target_link_libraries(atcg_lib PUBLIC atcg::glad
                                       OpenGL::GL
                                       OpenMeshCore
                                       OpenMeshTools
                                       stb_image
-                                      tinyobjloader
-                                      entt
-                                      nanort
-                                      portable_file_dialogs
+                                      atcg::tinyobjloader
+                                      atcg::entt
+                                      atcg::nanort
+                                      atcg::portable_file_dialogs
                                       nanoflann
                                       glm
                                       spdlog_header_only
-                                      json
+                                      atcg::json
                                       SFML::System
                                       SFML::Network
                                       Python::Python
                                       torch_python_interface
-                                      ${ATCG_OPENVR_TARGET}
+                                      atcg::openvr
 )

@@ -39,7 +39,9 @@ if(ATCG_HEADLESS)
     endif()
 else()
     # GLFW
-    add_subdirectory(external/glfw)
+    if(NOT TARGET glfw)
+        add_subdirectory(external/glfw)
+    endif()
 endif()
 
 # Check for CUDA
@@ -56,12 +58,16 @@ set(OpenGL_GL_PREFERENCE GLVND)
 find_package(OpenGL REQUIRED)
 
 # OpenMesh
-add_subdirectory(external/openmesh)
+if(NOT TARGET OpenMeshCore AND NOT TARGET OpenMeshTools)
+    add_subdirectory(external/openmesh)
+endif()
 target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
 target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 
 # stbimage
-add_subdirectory(external/stbimage)
+if(NOT TARGET stb_image)
+    add_subdirectory(external/stbimage)
+endif()
 target_include_directories(stb_image PUBLIC "external/stbimage")
 
 # charonload
@@ -70,33 +76,36 @@ add_library(torch_python_interface INTERFACE)
 target_link_libraries(torch_python_interface INTERFACE charonload::torch_python)
 
 # glad
-add_library(glad STATIC)
-target_sources(glad PRIVATE "external/glad/src/glad.c")
-target_include_directories(glad PUBLIC "external/glad/include")
+add_library(atcg_glad STATIC)
+target_sources(atcg_glad PRIVATE "external/glad/src/glad.c")
+target_include_directories(atcg_glad PUBLIC "external/glad/include")
+add_library(atcg::glad ALIAS atcg_glad)
 
 if(NOT ATCG_HEADLESS)
     # imgui
-    add_library(imgui STATIC)
-    target_sources(imgui PRIVATE "external/imgui/imgui.cpp"
+    add_library(atcg_imgui STATIC)
+    target_sources(atcg_imgui PRIVATE "external/imgui/imgui.cpp"
                                 "external/imgui/imgui_demo.cpp"
                                 "external/imgui/imgui_draw.cpp"
                                 "external/imgui/imgui_tables.cpp"
                                 "external/imgui/imgui_widgets.cpp"
                                 "external/imgui/backends/imgui_impl_glfw.cpp"
                                 "external/imgui/backends/imgui_impl_opengl3.cpp")
-    target_include_directories(imgui PUBLIC "external/imgui")
-    target_link_libraries(imgui PRIVATE glfw)
+    target_include_directories(atcg_imgui PUBLIC "external/imgui")
+    target_link_libraries(atcg_imgui PRIVATE glfw)
+    add_library(atcg::imgui ALIAS atcg_imgui)
 
     # implot
-    add_library(implot STATIC)
-    target_sources(implot PRIVATE "external/implot/implot.cpp"
+    add_library(atcg_implot STATIC)
+    target_sources(atcg_implot PRIVATE "external/implot/implot.cpp"
                                 "external/implot/implot_items.cpp")
-    target_include_directories(implot PUBLIC "external/implot")
-    target_link_libraries(implot PUBLIC imgui)
+    target_include_directories(atcg_implot PUBLIC "external/implot")
+    target_link_libraries(atcg_implot PUBLIC atcg::imgui)
+    add_library(atcg::implot ALIAS atcg_implot)
 
     # imguizmo
-    add_library(imguizmo STATIC)
-    target_sources(imguizmo PRIVATE "external/imguizmo/GraphEditor.cpp"
+    add_library(atcg_imguizmo STATIC)
+    target_sources(atcg_imguizmo PRIVATE "external/imguizmo/GraphEditor.cpp"
                                     "external/imguizmo/GraphEditor.h"
                                     "external/imguizmo/ImCurveEdit.cpp"
                                     "external/imguizmo/ImCurveEdit.h"
@@ -107,62 +116,87 @@ if(NOT ATCG_HEADLESS)
                                     "external/imguizmo/ImSequencer.cpp"
                                     "external/imguizmo/ImSequencer.h"
                                     "external/imguizmo/ImZoomSlider.h")
-    target_include_directories(imguizmo PUBLIC "external/imguizmo")
-    target_link_libraries(imguizmo PUBLIC imgui)
+    target_include_directories(atcg_imguizmo PUBLIC "external/imguizmo")
+    target_link_libraries(atcg_imguizmo PUBLIC atcg::imgui)
+    add_library(atcg::imguizmo ALIAS atcg_imguizmo)
 endif()
 
 # tinyobjloader
-add_library(tinyobjloader STATIC "external/tinyobjloader/tiny_obj_loader.cc")
-target_include_directories(tinyobjloader PUBLIC "external/tinyobjloader")
+add_library(atcg_tinyobjloader STATIC "external/tinyobjloader/tiny_obj_loader.cc")
+target_include_directories(atcg_tinyobjloader PUBLIC "external/tinyobjloader")
+add_library(atcg::tinyobjloader ALIAS atcg_tinyobjloader)
 
 # entt
-add_library(entt INTERFACE)
-target_include_directories(entt INTERFACE "external/entt/include")
+add_library(atcg_entt INTERFACE)
+target_include_directories(atcg_entt INTERFACE "external/entt/include")
+add_library(atcg::entt ALIAS atcg_entt)
 
 # nanort
-add_library(nanort INTERFACE)
-target_include_directories(nanort INTERFACE "external/nanort")
+add_library(atcg_nanort INTERFACE)
+target_include_directories(atcg_nanort INTERFACE "external/nanort")
+add_library(atcg::nanort ALIAS atcg_nanort)
 
 # portable-file-dialogs
-add_library(portable_file_dialogs INTERFACE)
-target_include_directories(portable_file_dialogs INTERFACE "external/portable-file-dialogs")
+add_library(atcg_portable_file_dialogs INTERFACE)
+target_include_directories(atcg_portable_file_dialogs INTERFACE "external/portable-file-dialogs")
+add_library(atcg::portable_file_dialogs ALIAS atcg_portable_file_dialogs)
 
 # nanoflann
 set(NANOFLANN_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(MASTER_PROJECT_HAS_TARGET_UNINSTALL ON CACHE BOOL "" FORCE) # Make sure nanoflann does not try to define uninstall target
 set(NANOFLANN_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-add_subdirectory(external/nanoflann)
+if(NOT TARGET nanoflann)
+    add_subdirectory(external/nanoflann)
+endif()
 
 # glm
-add_subdirectory(external/glm)
+if(NOT TARGET glm)
+    add_subdirectory(external/glm)
+endif()
 
 # spdlog
-add_subdirectory(external/spdlog)
+if(NOT TARGET spdlog_header_only)
+    add_subdirectory(external/spdlog)
+endif()
 if(NOT MSVC)
     target_compile_definitions(spdlog_header_only INTERFACE FMT_USE_CONSTEXPR)
 endif()
 
 # openvr
 set(BUILD_SHARED ON CACHE BOOL "Builds the library as shared library" FORCE)
-add_subdirectory(external/openvr)
-if(TARGET openvr_api)
-    set(ATCG_OPENVR_TARGET openvr_api)
-elseif(TARGET openvr_api64)
-    set(ATCG_OPENVR_TARGET openvr_api64)
+if(NOT TARGET openvr_api OR NOT TARGET openvr_api64)
+    add_subdirectory(external/openvr)
 endif()
-set_target_properties(${ATCG_OPENVR_TARGET} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-                                                       RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
-                                                       ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+if(TARGET openvr_api)
+    # Set properties on the real target before alias creation
+    set_target_properties(openvr_api PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    )
+    add_library(atcg::openvr ALIAS openvr_api)
+elseif(TARGET openvr_api64)
+    # Set properties on the real target before alias creation
+    set_target_properties(openvr_api64 PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+    )
+    add_library(atcg::openvr ALIAS openvr_api64)
+endif()
 
 # json
-add_library(json INTERFACE)
-target_include_directories(json INTERFACE "external/json")
+add_library(atcg_json INTERFACE)
+target_include_directories(atcg_json INTERFACE "external/json")
+add_library(atcg::json ALIAS atcg_json)
 
 #sfml
 set(SFML_BUILD_WINDOW OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
-add_subdirectory(external/sfml)
+if(NOT TARGET sfml)
+    add_subdirectory(external/sfml)
+endif()
 
 #
 # ATCG_LIB
