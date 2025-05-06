@@ -134,6 +134,7 @@ torch::Tensor JPEGEncoder::Impl::compressImage(const torch::Tensor& img)
 {
     uint32_t num_channels          = img.size(-1);
     torch::Tensor intermediate_img = img;
+
     if(num_channels == 4)
     {
         intermediate_img =
@@ -146,6 +147,13 @@ torch::Tensor JPEGEncoder::Impl::compressImage(const torch::Tensor& img)
     }
 
     intermediate_img = intermediate_img.contiguous();
+
+    // Stream sync to ensure PyTorch has finished preparing data
+    cudaStream_t torch_stream = c10::cuda::getCurrentCUDAStream();
+    cudaEvent_t torch_ready_event;
+    CUDA_SAFE_CALL(cudaEventCreateWithFlags(&torch_ready_event, cudaEventDisableTiming));
+    CUDA_SAFE_CALL(cudaEventRecord(torch_ready_event, torch_stream));
+    CUDA_SAFE_CALL(cudaStreamWaitEvent(encoding_stream, torch_ready_event, 0));
 
     nvjpegImage_t source = {};
     source.pitch[0]      = 3 * intermediate_img.size(1);
@@ -171,6 +179,9 @@ torch::Tensor JPEGEncoder::Impl::compressImage(const torch::Tensor& img)
                                                    &length,
                                                    encoding_stream));
     CUDA_SAFE_CALL(cudaStreamSynchronize(encoding_stream));
+
+    CUDA_SAFE_CALL(cudaEventDestroy(torch_ready_event));
+
     return output;
 }
 

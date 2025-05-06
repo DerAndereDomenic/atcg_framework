@@ -177,6 +177,12 @@ void JPEGDecoder::Impl::loadFiles(const std::vector<std::vector<uint8_t>>& jpeg_
 
 void JPEGDecoder::Impl::decompressImages()
 {
+    cudaStream_t torch_stream = c10::cuda::getCurrentCUDAStream();
+    cudaEvent_t torch_ready_event;
+    CUDA_SAFE_CALL(cudaEventCreateWithFlags(&torch_ready_event, cudaEventDisableTiming));
+    CUDA_SAFE_CALL(cudaEventRecord(torch_ready_event, torch_stream));
+    CUDA_SAFE_CALL(cudaStreamWaitEvent(decoding_stream, torch_ready_event, 0));
+
     NVJPEG_SAFE_CALL(nvjpegDecodeBatched(nvjpeg_handle,
                                          nvjpeg_state,
                                          raw_inputs.data(),
@@ -195,6 +201,8 @@ void JPEGDecoder::Impl::decompressImages()
     {
         output_tensor = data_tensor.clone();
     }
+
+    CUDA_SAFE_CALL(cudaEventDestroy(torch_ready_event));
 }
 
 void JPEGDecoder::Impl::copyImagesToOutput(atcg::textureArray texture)
@@ -215,7 +223,7 @@ void JPEGDecoder::Impl::copyImagesToOutput(atcg::textureArray texture)
     cudaMemcpy3DParms p = {0};
     p.dstArray          = texture;
     p.kind              = cudaMemcpyDeviceToDevice;
-    p.srcPtr.ptr        = intermediate_tensor.contiguous().data_ptr();
+    p.srcPtr.ptr        = intermediate_tensor.data_ptr();
     p.srcPtr.pitch      = ext.width * 4;
     p.srcPtr.xsize      = ext.width;
     p.srcPtr.ysize      = ext.height;
