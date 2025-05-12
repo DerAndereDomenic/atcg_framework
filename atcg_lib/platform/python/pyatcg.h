@@ -142,6 +142,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_texture_specification = py::class_<atcg::TextureSpecification>(m, "TextureSpecification");                           \
     auto m_image          = py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image", py::buffer_protocol());             \
     auto m_texture2d      = py::class_<atcg::Texture2D, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D");                        \
+    auto m_texture_cube   = py::class_<atcg::TextureCube, atcg::ref_ptr<atcg::TextureCube>>(m, "TextureCube");                  \
+    auto m_framebuffer    = py::class_<atcg::Framebuffer, atcg::ref_ptr<atcg::Framebuffer>>(m, "Framebuffer");                  \
     auto m_entity_handle  = py::class_<entt::entity>(m, "EntityHandle");                                                        \
     auto m_material       = py::class_<atcg::Material>(m, "Material");                                                          \
     auto m_transform      = py::class_<atcg::TransformComponent>(m, "TransformComponent");                                      \
@@ -222,6 +224,7 @@ inline void defineBindings(py::module_& m)
     m.def("resource_directory", []() { return atcg::resource_directory().string(); });
 
     m_application.def(py::init<atcg::Layer*>())
+        .def(py::init<atcg::WindowProps>())
         .def(py::init<atcg::Layer*, atcg::WindowProps>())
         .def("run", &atcg::Application::run);
     m_layer.def(py::init<>())
@@ -722,6 +725,7 @@ inline void defineBindings(py::module_& m)
         .def("getFramebuffer", &atcg::Renderer::getFramebuffer)
         .def("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
         .def("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
+        .def("toggleMSAA", &atcg::Renderer::toggleMSAA, "enabled"_a)
         .def("screenshot",
              [](const atcg::ref_ptr<atcg::Scene>& scene,
                 const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
@@ -1018,6 +1022,7 @@ inline void defineBindings(py::module_& m)
             [](const torch::Tensor& img) { return atcg::Texture2D::create(img); },
             "img"_a)
         .def("getID", &atcg::Texture2D::getID)
+        .def("use", &atcg::Texture2D::use)
         .def(
             "setData",
             [](const atcg::ref_ptr<atcg::Texture2D>& texture, const torch::Tensor& data) { texture->setData(data); },
@@ -1025,6 +1030,44 @@ inline void defineBindings(py::module_& m)
         //.def("setData", [](const atcg::ref_ptr<atcg::Texture2D>& texture, const
         // atcg::ref_ptr<atcg::PixelUnpackBuffer>& data) {texture->setData(data);}, "data"_a)
         .def("getData", &atcg::Texture2D::getData);
+
+    m_texture_cube
+        .def_static(
+            "create",
+            [](atcg::TextureSpecification spec) { return atcg::TextureCube::create(spec); },
+            "specification"_a)
+        .def_static(
+            "create",
+            [](const torch::Tensor& img) { return atcg::TextureCube::create(img); },
+            "img"_a)
+        .def("getID", &atcg::TextureCube::getID)
+        .def("use", &atcg::TextureCube::use)
+        .def(
+            "setData",
+            [](const atcg::ref_ptr<atcg::TextureCube>& texture, const torch::Tensor& data) { texture->setData(data); },
+            "data"_a)
+        //.def("setData", [](const atcg::ref_ptr<atcg::TextureCube>& texture, const
+        // atcg::ref_ptr<atcg::PixelUnpackBuffer>& data) {texture->setData(data);}, "data"_a)
+        .def("getData", &atcg::TextureCube::getData);
+
+    m_framebuffer.def(py::init<>())
+        .def(py::init<uint32_t, uint32_t>())
+        .def("use", &atcg::Framebuffer::use)
+        .def("attachColor", &atcg::Framebuffer::attachColor)
+        .def("attachColorMultiSample", &atcg::Framebuffer::attachColorMultiSample)
+        .def("attachTexture", &atcg::Framebuffer::attachTexture)
+        .def("attachDepth", [](const atcg::ref_ptr<atcg::Framebuffer>& fbo) { fbo->attachDepth(); })
+        .def("attachDepthMultiSample", &atcg::Framebuffer::attachDepthMultiSample)
+        .def("blit", &atcg::Framebuffer::blit)
+        .def("getColorAttachement", &atcg::Framebuffer::getColorAttachement)
+        .def("getDepthAttachement", &atcg::Framebuffer::getDepthAttachement)
+        .def("getID", &atcg::Framebuffer::getID)
+        .def("width", &atcg::Framebuffer::width)
+        .def("height", &atcg::Framebuffer::height)
+        .def("currentFramebuffer", &atcg::Framebuffer::currentFramebuffer)
+        .def("bindByID", &atcg::Framebuffer::bindByID)
+        .def("useDefault", &atcg::Framebuffer::useDefault)
+        .def("complete", &atcg::Framebuffer::complete);
 
     // ------------------- Scene ---------------------------------
     m_entity_handle.def(py::init<uint32_t>(), "handle"_a);
