@@ -41,12 +41,12 @@ void PythonScriptEngine::init()
 {
     if(!impl->initialized)
     {
+#ifdef ATCG_INIT_PYTHON
         if(PyImport_AppendInittab("pyatcg", &ATCG_CONCAT(PyInit_, TORCH_EXTENSION_NAME)) == -1)
         {
             ATCG_ERROR("Failed to add engine module to interpreter.\n");
             return;
         }
-#ifdef ATCG_INIT_PYTHON
         Py_Initialize();
 #endif
 

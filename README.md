@@ -56,7 +56,37 @@ The project comes with python bindings which can be install via
 ```
 pip install -e .
 ```
-it requires [charonload](https://github.com/vc-bonn/charonload) as additional dependency. Per default, it is built with CUDA backend.
+it requires [charonload](https://github.com/vc-bonn/charonload) as additional dependency. The python build can be configured using environment variables:
+
+```python
+os.environ["ATCG_CUDA_BACKEND"] = "Off"
+import pyatcg
+```
+turns off CUDA support (default = "On").
+
+```python
+os.environ["ATCG_HEADLESS"] = "On"
+import pyatcg
+```
+builds in headless mode (default = "Off", only with CUDA enabled and on Linux systems).
+
+```python
+os.environ["ATCG_BUILD_TYPE"] = "Release"
+import pyatcg
+```
+configures the build type (default = "RelWithDebInfo").
+
+```python
+os.environ["ATCG_STUBS_DIR"] = "typings"
+import pyatcg
+```
+set the sub directory (default = Root directory of this file).
+
+```python
+os.environ["ATCG_VERBOSE"] = True
+import pyatcg
+```
+builds in verbose mode (default = False).
 
 ### Python Scripting
 
