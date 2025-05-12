@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added slider to control the size of rendered camera frustums
 - Added PixelUnpackBuffers
 - Added possibility to set texture data from PixelUnpackBuffers
+- Added options to configure the python side build
 
 ### Changed
 
