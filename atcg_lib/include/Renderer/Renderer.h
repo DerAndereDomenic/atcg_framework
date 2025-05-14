@@ -75,6 +75,11 @@ public:
     void finishFrame();
 
     /**
+     * @brief Stalls the CPU until all rendering requests are finished
+     */
+    void finish() const;
+
+    /**
      * @brief Set the clear color
      *
      * @param color The clear color
@@ -510,6 +515,14 @@ ATCG_INLINE void use()
 ATCG_INLINE void finishFrame()
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->finishFrame();
+}
+
+/**
+ * @brief Stalls the CPU until all rendering requests are finished
+ */
+ATCG_INLINE void finish()
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->finish();
 }
 
 /**

@@ -990,6 +990,11 @@ void RendererSystem::finishFrame()
     glActiveTexture(GL_TEXTURE0);
 }
 
+void RendererSystem::finish() const
+{
+    glFinish();
+}
+
 void RendererSystem::setClearColor(const glm::vec4& color)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
