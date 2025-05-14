@@ -5,6 +5,7 @@
 
 #ifdef ATCG_CUDA_BACKEND
     #include <cuda_gl_interop.h>
+    #include <c10/cuda/CUDAStream.h>
 #endif
 
 namespace atcg
@@ -746,14 +747,17 @@ void Texture2D::setData(const torch::Tensor& data)
         {
 #ifdef ATCG_CUDA_BACKEND
             atcg::textureArray array = getTextureArray();
-            CUDA_SAFE_CALL(cudaMemcpy2DToArray(array,
-                                               0,
-                                               0,
-                                               pixel_data.data_ptr(),
-                                               pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
-                                               pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
-                                               _spec.height,
-                                               cudaMemcpyDeviceToDevice));
+            auto torch_stream        = torch::cuda::getCurrentCUDAStream();
+            CUDA_SAFE_CALL(cudaMemcpy2DToArrayAsync(array,
+                                                    0,
+                                                    0,
+                                                    pixel_data.data_ptr(),
+                                                    pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
+                                                    pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
+                                                    _spec.height,
+                                                    cudaMemcpyDeviceToDevice,
+                                                    torch_stream));
+            torch_stream.synchronize();
             unmapPointers();
 #endif
             return;
@@ -822,15 +826,17 @@ torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip
 
         atcg::textureArray array = getTextureArray(mip_level);
 
-        CUDA_SAFE_CALL(cudaMemcpy2DFromArray(result.data_ptr(),
-                                             result.size(1) * result.size(2) * result.element_size(),
-                                             array,
-                                             0,
-                                             0,
-                                             result.size(1) * result.size(2) * result.element_size(),
-                                             height,
-                                             cudaMemcpyDeviceToDevice));
-
+        auto torch_stream = torch::cuda::getCurrentCUDAStream();
+        CUDA_SAFE_CALL(cudaMemcpy2DFromArrayAsync(result.data_ptr(),
+                                                  result.size(1) * result.size(2) * result.element_size(),
+                                                  array,
+                                                  0,
+                                                  0,
+                                                  result.size(1) * result.size(2) * result.element_size(),
+                                                  height,
+                                                  cudaMemcpyDeviceToDevice,
+                                                  torch_stream));
+        torch_stream.synchronize();
         unmapPointers();
 
         return result;
@@ -1039,6 +1045,7 @@ void Texture3D::setData(const torch::Tensor& data)
 
             CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
 
+            auto torch_stream   = torch::cuda::getCurrentCUDAStream();
             cudaMemcpy3DParms p = {0};
             p.dstArray          = array;
             p.kind              = cudaMemcpyDeviceToDevice;
@@ -1048,7 +1055,8 @@ void Texture3D::setData(const torch::Tensor& data)
             p.srcPtr.ysize      = ext.height;
             p.extent            = ext;
 
-            CUDA_SAFE_CALL(cudaMemcpy3D(&p));
+            CUDA_SAFE_CALL(cudaMemcpy3DAsync(&p, torch_stream));
+            torch_stream.synchronize();
             unmapPointers();
 #endif
             return;
@@ -1127,6 +1135,7 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
 
         CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
 
+        auto torch_stream   = torch::cuda::getCurrentCUDAStream();
         cudaMemcpy3DParms p = {0};
         p.srcArray          = array;
         p.kind              = cudaMemcpyDeviceToDevice;
@@ -1136,7 +1145,8 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
         p.dstPtr.ysize      = ext.height;
         p.extent            = ext;
 
-        CUDA_SAFE_CALL(cudaMemcpy3D(&p));
+        CUDA_SAFE_CALL(cudaMemcpy3DAsync(&p, torch_stream));
+        torch_stream.synchronize();
 
         unmapPointers();
 
@@ -1563,14 +1573,18 @@ void TextureArray::setData(const torch::Tensor& data)
             for(int i = 0; i < _spec.depth; ++i)
             {
                 atcg::textureArray array = getTextureArray(0, i);
-                CUDA_SAFE_CALL(cudaMemcpy2DToArray(array,
-                                                   0,
-                                                   0,
-                                                   pixel_data[i].data_ptr(),
-                                                   pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
-                                                   pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
-                                                   _spec.height,
-                                                   cudaMemcpyDeviceToDevice));
+                auto torch_stream        = torch::cuda::getCurrentCUDAStream();
+                CUDA_SAFE_CALL(
+                    cudaMemcpy2DToArrayAsync(array,
+                                             0,
+                                             0,
+                                             pixel_data[i].data_ptr(),
+                                             pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
+                                             pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
+                                             _spec.height,
+                                             cudaMemcpyDeviceToDevice,
+                                             torch_stream));
+                torch_stream.synchronize();
                 unmapPointers();
             }
 #endif
@@ -1642,21 +1656,23 @@ torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t 
                                                                         : atcg::TensorOptions::uint8DeviceOptions());
         result       = torch::empty({depth, height, width, num_channels}, options);
 
+        auto torch_stream = torch::cuda::getCurrentCUDAStream();
         for(int i = 0; i < _spec.depth; ++i)
         {
             atcg::textureArray array = getTextureArray(mip_level, i);
 
-            CUDA_SAFE_CALL(cudaMemcpy2DFromArray(result[i].data_ptr(),
-                                                 result.size(2) * result.size(3) * result.element_size(),
-                                                 array,
-                                                 0,
-                                                 0,
-                                                 result.size(2) * result.size(3) * result.element_size(),
-                                                 height,
-                                                 cudaMemcpyDeviceToDevice));
-
-            unmapPointers();
+            CUDA_SAFE_CALL(cudaMemcpy2DFromArrayAsync(result[i].data_ptr(),
+                                                      result.size(2) * result.size(3) * result.element_size(),
+                                                      array,
+                                                      0,
+                                                      0,
+                                                      result.size(2) * result.size(3) * result.element_size(),
+                                                      height,
+                                                      cudaMemcpyDeviceToDevice,
+                                                      torch_stream));
         }
+        torch_stream.synchronize();
+        unmapPointers();
 
         return result;
     }

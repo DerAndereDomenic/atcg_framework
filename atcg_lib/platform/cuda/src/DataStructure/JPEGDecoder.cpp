@@ -24,7 +24,8 @@ inline static int dev_malloc(void** p, size_t s)
 {
     try
     {
-        *p = c10::cuda::CUDACachingAllocator::raw_alloc(s);
+        auto stream = torch::cuda::getCurrentCUDAStream();
+        *p          = c10::cuda::CUDACachingAllocator::raw_alloc_with_stream(s, stream);
         return EXIT_SUCCESS;
     }
     catch(const std::exception& e)
@@ -101,8 +102,6 @@ public:
     uint32_t img_width;
     uint32_t img_height;
 
-    cudaStream_t decoding_stream;
-
     bool flip_vertically = true;
 };
 
@@ -128,7 +127,6 @@ JPEGDecoder::Impl::Impl(uint32_t num_images,
 JPEGDecoder::Impl::~Impl()
 {
     deinitializeNVJPEG();
-    CUDA_SAFE_CALL(cudaStreamDestroy(decoding_stream));
 }
 
 void JPEGDecoder::Impl::allocateBuffers()
@@ -139,8 +137,6 @@ void JPEGDecoder::Impl::allocateBuffers()
     raw_inputs.resize(num_images);
 
     data_tensor = torch::zeros({num_images, img_height, img_width, 3}, atcg::TensorOptions::uint8DeviceOptions());
-
-    CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&decoding_stream, cudaStreamNonBlocking));
 }
 
 void JPEGDecoder::Impl::initializeNVJPEG(JPEGBackend backend)
@@ -178,18 +174,13 @@ void JPEGDecoder::Impl::loadFiles(const std::vector<std::vector<uint8_t>>& jpeg_
 void JPEGDecoder::Impl::decompressImages()
 {
     cudaStream_t torch_stream = c10::cuda::getCurrentCUDAStream();
-    cudaEvent_t torch_ready_event;
-    CUDA_SAFE_CALL(cudaEventCreateWithFlags(&torch_ready_event, cudaEventDisableTiming));
-    CUDA_SAFE_CALL(cudaEventRecord(torch_ready_event, torch_stream));
-    CUDA_SAFE_CALL(cudaStreamWaitEvent(decoding_stream, torch_ready_event, 0));
 
     NVJPEG_SAFE_CALL(nvjpegDecodeBatched(nvjpeg_handle,
                                          nvjpeg_state,
                                          raw_inputs.data(),
                                          file_lengths.data(),
                                          output_images.data(),
-                                         decoding_stream));
-    CUDA_SAFE_CALL(cudaStreamSynchronize(decoding_stream));
+                                         torch_stream));
 
     // Unfortunetly, nvjpeg does not support inplace flipping of decoded images.
     // We therefore create a copy of the data although it is not super efficient...
@@ -201,12 +192,12 @@ void JPEGDecoder::Impl::decompressImages()
     {
         output_tensor = data_tensor.clone();
     }
-
-    CUDA_SAFE_CALL(cudaEventDestroy(torch_ready_event));
 }
 
 void JPEGDecoder::Impl::copyImagesToOutput(atcg::textureArray texture)
 {
+    auto torch_stream = c10::cuda::getCurrentCUDAStream();
+
     intermediate_tensor =
         torch::cat(
             {output_tensor,
@@ -229,7 +220,7 @@ void JPEGDecoder::Impl::copyImagesToOutput(atcg::textureArray texture)
     p.srcPtr.ysize      = ext.height;
     p.extent            = ext;
 
-    CUDA_SAFE_CALL(cudaMemcpy3D(&p));
+    CUDA_SAFE_CALL(cudaMemcpy3DAsync(&p, torch_stream));
 }
 
 void JPEGDecoder::Impl::deinitializeNVJPEG()
