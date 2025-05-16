@@ -27,3 +27,27 @@ function(filter_ptx_sources source_files output_var)
     # Return the list via the output variable
     set(${output_var} ${ptx_files} PARENT_SCOPE)
 endfunction()
+
+function(add_ptx_module target_prefix ptx_files)
+    if(ptx_files)
+        set(ptx_target "${target_prefix}_ptxmodules")
+
+        add_library(${ptx_target} OBJECT ${ptx_files})
+        set_target_properties(${ptx_target} PROPERTIES
+            CUDA_PTX_COMPILATION ON
+            CUDA_SEPARABLE_COMPILATION ON
+            CUDA_ARCHITECTURES native
+        )
+        target_compile_definitions(${ptx_target} PUBLIC ATCG_CUDA_BACKEND _USE_MATH_DEFINES)
+        target_compile_options(${ptx_target} PRIVATE -ptx)
+        target_link_libraries(${ptx_target} PRIVATE ${target_prefix}_lib)
+
+        set(ptx_output_dir ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+        add_custom_target(${ptx_target}-copy ALL
+            DEPENDS ${ptx_target}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                $<TARGET_OBJECTS:${ptx_target}> ${ptx_output_dir}
+            COMMAND_EXPAND_LISTS
+        )
+    endif()
+endfunction()
