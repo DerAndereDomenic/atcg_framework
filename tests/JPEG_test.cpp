@@ -2,7 +2,7 @@
 
 #ifdef ATCG_CUDA_BACKEND
     #include <DataStructure/JPEGDecoder.h>
-    #include <DataStructure/JPEGENcoder.h>
+    #include <DataStructure/JPEGEncoder.h>
     #include <DataStructure/Image.h>
     #include <Core/Path.h>
     #include <fstream>

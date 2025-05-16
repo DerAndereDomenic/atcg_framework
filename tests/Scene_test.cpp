@@ -349,7 +349,8 @@ TEST(SceneTest, replaceID)
     auto entity = scene->createEntity("Entity");
     auto id     = entity.getComponent<atcg::IDComponent>();
 
-    auto new_id = entity.replaceComponent<atcg::IDComponent>(atcg::IDComponent());
+    auto comp   = atcg::IDComponent();
+    auto new_id = entity.replaceComponent<atcg::IDComponent>(comp);
 
     auto search_entity_old_id = scene->getEntityByID(id.ID());
     auto search_entity_new_id = scene->getEntityByID(new_id.ID());
@@ -413,7 +414,8 @@ TEST(SceneTest, replaceName)
     auto entity         = scene->createEntity("Entity");
     auto name_component = entity.getComponent<atcg::NameComponent>();
 
-    auto name_new = entity.replaceComponent<atcg::NameComponent>(atcg::NameComponent("New Name"));
+    auto comp     = atcg::NameComponent("New Name");
+    auto name_new = entity.replaceComponent<atcg::NameComponent>(comp);
 
     auto search_entity_old_name = scene->getEntitiesByName("Entity");
     auto search_entity_new_name = scene->getEntitiesByName("New Name");

@@ -25,7 +25,8 @@ inline static int dev_malloc(void** p, size_t s)
 {
     try
     {
-        *p = c10::cuda::CUDACachingAllocator::raw_alloc(s);
+        auto stream = torch::cuda::getCurrentCUDAStream();
+        *p          = c10::cuda::CUDACachingAllocator::raw_alloc_with_stream(s, stream);
         return EXIT_SUCCESS;
     }
     catch(const std::exception& e)
@@ -87,8 +88,6 @@ public:
     nvjpegEncoderParams_t encode_params;
     nvjpegInputFormat_t fmt = NVJPEG_INPUT_RGBI;
 
-    cudaStream_t encoding_stream;
-
     bool flip_vertically = true;
 };
 
@@ -107,33 +106,33 @@ JPEGEncoder::Impl::Impl(bool flip_vertically, JPEGBackend backend)
 JPEGEncoder::Impl::~Impl()
 {
     deinitializeNVJPEG();
-    CUDA_SAFE_CALL(cudaStreamDestroy(encoding_stream));
 }
 
-void JPEGEncoder::Impl::allocateBuffers()
-{
-    CUDA_SAFE_CALL(cudaStreamCreateWithFlags(&encoding_stream, cudaStreamNonBlocking));
-}
+void JPEGEncoder::Impl::allocateBuffers() {}
 
 void JPEGEncoder::Impl::initializeNVJPEG(JPEGBackend backend)
 {
+    cudaStream_t torch_stream = c10::cuda::getCurrentCUDAStream();
+
     nvjpegBackend_t nvjpeg_backend =
         backend == JPEGBackend::SOFTWARE ? NVJPEG_BACKEND_DEFAULT : NVJPEG_BACKEND_HARDWARE;
 
     NVJPEG_SAFE_CALL(nvjpegCreateEx(nvjpeg_backend, &dev_allocator, &pinned_allocator, flags, &nvjpeg_handle));
     NVJPEG_SAFE_CALL(nvjpegJpegStateCreate(nvjpeg_handle, &nvjpeg_state));
-    NVJPEG_SAFE_CALL(nvjpegEncoderStateCreate(nvjpeg_handle, &encoder_state, encoding_stream));
-    NVJPEG_SAFE_CALL(nvjpegEncoderParamsCreate(nvjpeg_handle, &encode_params, encoding_stream));
+    NVJPEG_SAFE_CALL(nvjpegEncoderStateCreate(nvjpeg_handle, &encoder_state, torch_stream));
+    NVJPEG_SAFE_CALL(nvjpegEncoderParamsCreate(nvjpeg_handle, &encode_params, torch_stream));
 
-    NVJPEG_SAFE_CALL(nvjpegEncoderParamsSetQuality(encode_params, 90, encoding_stream));
-    NVJPEG_SAFE_CALL(nvjpegEncoderParamsSetSamplingFactors(encode_params, NVJPEG_CSS_444, encoding_stream));
+    NVJPEG_SAFE_CALL(nvjpegEncoderParamsSetQuality(encode_params, 90, torch_stream));
+    NVJPEG_SAFE_CALL(nvjpegEncoderParamsSetSamplingFactors(encode_params, NVJPEG_CSS_444, torch_stream));
     // NVJPEG_SAFE_CALL(nvjpegEncoderParamsSetOptimizedHuffman(encode_params, 0, NULL));
 }
 
 torch::Tensor JPEGEncoder::Impl::compressImage(const torch::Tensor& img)
 {
+    cudaStream_t torch_stream      = c10::cuda::getCurrentCUDAStream();
     uint32_t num_channels          = img.size(-1);
     torch::Tensor intermediate_img = img;
+
     if(num_channels == 4)
     {
         intermediate_img =
@@ -147,6 +146,8 @@ torch::Tensor JPEGEncoder::Impl::compressImage(const torch::Tensor& img)
 
     intermediate_img = intermediate_img.contiguous();
 
+    // Stream sync to ensure PyTorch has finished preparing data
+
     nvjpegImage_t source = {};
     source.pitch[0]      = 3 * intermediate_img.size(1);
     source.channel[0]    = intermediate_img.data_ptr<unsigned char>();
@@ -157,20 +158,18 @@ torch::Tensor JPEGEncoder::Impl::compressImage(const torch::Tensor& img)
                                        fmt,
                                        intermediate_img.size(1),
                                        intermediate_img.size(0),
-                                       encoding_stream));
-    CUDA_SAFE_CALL(cudaStreamSynchronize(encoding_stream));
+                                       torch_stream));
 
     size_t length;
-    NVJPEG_SAFE_CALL(nvjpegEncodeRetrieveBitstream(nvjpeg_handle, encoder_state, NULL, &length, encoding_stream));
-    CUDA_SAFE_CALL(cudaStreamSynchronize(encoding_stream));
+    NVJPEG_SAFE_CALL(nvjpegEncodeRetrieveBitstream(nvjpeg_handle, encoder_state, NULL, &length, torch_stream));
 
     torch::Tensor output = torch::empty({(int)length}, atcg::TensorOptions::uint8HostOptions());
     NVJPEG_SAFE_CALL(nvjpegEncodeRetrieveBitstream(nvjpeg_handle,
                                                    encoder_state,
                                                    output.data_ptr<unsigned char>(),
                                                    &length,
-                                                   encoding_stream));
-    CUDA_SAFE_CALL(cudaStreamSynchronize(encoding_stream));
+                                                   torch_stream));
+
     return output;
 }
 
