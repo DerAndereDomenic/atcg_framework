@@ -9,6 +9,9 @@
 #include <Core/RaytracingContext.h>
 #include <Scene/Scene.h>
 #include <Renderer/PerspectiveCamera.h>
+#include <DataStructure/TorchUtils.h>
+
+#include <vector>
 
 namespace atcg
 {
