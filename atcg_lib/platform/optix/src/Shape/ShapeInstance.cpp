@@ -19,7 +19,7 @@ void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
 
     ShapeInstanceData data;
     data.shape = _shape->_shape_data;
-    data.bsdf  = _bsdf->getVPtrTable();
+    if(_bsdf) data.bsdf = _bsdf->getVPtrTable();
     sbt->addHitEntry(_shape->getHitGroup(), data);
 }
 }    // namespace atcg
