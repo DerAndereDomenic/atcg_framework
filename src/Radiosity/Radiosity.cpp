@@ -2,12 +2,90 @@
 
 #include <glm/ext/scalar_constants.hpp>
 
+#include "RadiosityRayGenerator.h"
+
 #include <nanort.h>
 
 using namespace atcg;
 using namespace torch::indexing;
 
-atcg::ref_ptr<TriMesh> solve_radiosity(const atcg::ref_ptr<TriMesh>& mesh, const torch::Tensor& emission)
+atcg::ref_ptr<atcg::TriMesh> solve_radiosity(const atcg::ref_ptr<atcg::TriMesh>& mesh, const torch::Tensor& emission)
+{
+    return solve_radiosity_gpu(mesh, emission);
+}
+
+atcg::ref_ptr<atcg::TriMesh> solve_radiosity_gpu(const atcg::ref_ptr<atcg::TriMesh>& mesh,
+                                                 const torch::Tensor& emission)
+{
+    auto optx_context = atcg::RaytracingContextManager::createContext();
+    auto pipeline     = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
+    auto sbt          = atcg::make_ref<atcg::ShaderBindingTable>();
+
+    RadiosityRayGenerator generator(optx_context);
+    generator.setMesh(mesh);
+    generator.initializePipeline(pipeline, sbt);
+
+    pipeline->createPipeline();
+    sbt->createSBT();
+
+    torch::Tensor form_factors =
+        torch::zeros({(int)mesh->n_faces(), (int)mesh->n_faces()}, atcg::TensorOptions::floatDeviceOptions());
+    generator.generateRays(nullptr, {form_factors});
+
+    ATCG_TRACE("Solving");
+
+    torch::Tensor albedos = torch::zeros({(int)mesh->n_faces(), 3});
+    for(auto ft: mesh->faces())
+    {
+        glm::vec3 color = glm::vec3(0);
+        for(auto vt: ft.vertices())
+        {
+            color += mesh->color(vt) / 255.0f;
+        }
+        color /= 3.0f;
+        albedos.index_put_({ft.idx(), Slice()}, torch::tensor({color.x, color.y, color.z}));
+    }
+    albedos = albedos.to(atcg::GPU);
+
+    torch::Tensor solution = torch::zeros({(int)mesh->n_faces(), 3}, atcg::TensorOptions::floatDeviceOptions());
+    torch::Tensor E        = emission.to(atcg::GPU);
+
+    for(int iter = 0; iter < 50; ++iter)
+    {
+        ATCG_TRACE("{0}", iter);
+
+        auto FE = torch::matmul(form_factors, solution);
+
+        FE                   = albedos * FE;
+        torch::Tensor update = (E - solution + FE);
+
+        if(torch::norm(update).item<float>() < 1e-4f) break;
+
+        solution += update;
+    }
+    solution = solution.to(atcg::CPU);
+    printf("Done\n");
+
+    // Copy mesh in a super convuluted way because the documentation doesn't state how to do it right
+    atcg::ref_ptr<TriMesh> result = atcg::make_ref<TriMesh>();
+    result->operator=(*mesh);
+    result->request_face_colors();
+
+    for(auto ft = result->faces_begin(); ft != result->faces_end(); ++ft)
+    {
+        torch::Tensor radiostiy = solution.index({ft->idx(), Slice()});
+        glm::vec3 color         = glm::vec3(radiostiy.index({0}).item<float>(),
+                                    radiostiy.index({1}).item<float>(),
+                                    radiostiy.index({2}).item<float>());
+        color                   = glm::pow(1.0f - glm::exp(-color), glm::vec3(1.0f / 2.4f));
+        for(auto vt = ft->vertices().begin(); vt != ft->vertices().end(); ++vt)
+            result->set_color(*vt, 255.0f * color);
+    }
+
+    return result;
+}
+
+atcg::ref_ptr<TriMesh> solve_radiosity_cpu(const atcg::ref_ptr<TriMesh>& mesh, const torch::Tensor& emission)
 {
     const glm::vec3* vertices = mesh->points();
     std::vector<uint32_t> faces;
