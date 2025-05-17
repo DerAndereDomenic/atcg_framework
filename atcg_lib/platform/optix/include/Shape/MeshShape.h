@@ -19,6 +19,8 @@ public:
 
     virtual void prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context) override;
 
+    ATCG_INLINE atcg::dref_ptr<MeshShapeData> getMeshShapeData() const { return _data; }
+
 private:
     torch::Tensor _positions;
     torch::Tensor _normals;
