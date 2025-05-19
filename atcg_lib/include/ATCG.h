@@ -90,6 +90,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/RevisionStack.h>
+#include <Scene/SceneRenderer.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>
