@@ -170,6 +170,13 @@ public:
     void setDefaultViewport();
 
     /**
+     * @brief Get the current viewport dimensions
+     *
+     * @return A vec4 containing the viewport (x,y,width,height)
+     */
+    glm::vec4 getViewport() const;
+
+    /**
      * @brief Set a skybox
      *
      * @param skybox An equirectangular representation of the skybox
@@ -274,44 +281,17 @@ public:
      * @param color An optional color
      * @param shader The shader
      * @param draw_mode The draw mode
+     * @param material The material
+     * @param entity_id The entity id
      */
     void draw(const atcg::ref_ptr<Graph>& mesh,
-              const atcg::ref_ptr<Camera>& camera = {},
-              const glm::mat4& model              = glm::mat4(1),
-              const glm::vec3& color              = glm::vec3(1),
-              const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-              DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
-
-    /**
-     * @brief Draw a specific component of an entity
-     *
-     * @tparam Component The component to draw. Must be ones of the RenderComponents in Components.h
-     * @param entity The entity to draw
-     * @param camera The camera
-     * @param shader An optional shader. The shader (if not nullptr) overrides what is stored in the component AND what
-     * is internally used. This means if you want to use a custom shader for a PointSphereRenderer component, for
-     * example, you have to make sure that it is compatible with this rendering mode.
-     */
-    template<typename Component>
-    void drawComponent(Entity entity,
-                       const atcg::ref_ptr<Camera>& camera       = {},
-                       const atcg::ref_ptr<atcg::Shader>& shader = nullptr);
-
-    /**
-     * @brief Render an entity
-     *
-     * @param entity The entity to render
-     * @param camera The camera
-     */
-    void draw(Entity entity, const atcg::ref_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Render a scene
-     *
-     * @param scene The scene to render
-     * @param camera The camera
-     */
-    void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
+              const atcg::ref_ptr<Camera>& camera     = {},
+              const glm::mat4& model                  = glm::mat4(1),
+              const glm::vec3& color                  = glm::vec3(1),
+              const atcg::ref_ptr<Shader>& shader     = atcg::ShaderManager::getShader("base"),
+              DrawMode draw_mode                      = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+              const std::optional<Material>& material = {},
+              const uint32_t entity_id                = -1);
 
     /**
      * @brief Draw Circle
@@ -622,6 +602,16 @@ ATCG_INLINE void setDefaultViewport()
 }
 
 /**
+ * @brief Get the current viewport dimensions
+ *
+ * @return A vec4 containing the viewport (x,y,width,height)
+ */
+ATCG_INLINE glm::vec4 getViewport()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getViewport();
+}
+
+/**
  * @brief Set a skybox
  *
  * @param skybox An equirectangular representation of the skybox
@@ -719,55 +709,21 @@ ATCG_INLINE void useScreenBuffer()
  * @param color An optional color
  * @param shader The shader
  * @param draw_mode The draw mode
+ * @param material The material
+ * @param entity_id The entity id
  */
 ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
-                      const atcg::ref_ptr<Camera>& camera = {},
-                      const glm::mat4& model              = glm::mat4(1),
-                      const glm::vec3& color              = glm::vec3(1),
-                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+                      const atcg::ref_ptr<Camera>& camera     = {},
+                      const glm::mat4& model                  = glm::mat4(1),
+                      const glm::vec3& color                  = glm::vec3(1),
+                      const atcg::ref_ptr<Shader>& shader     = atcg::ShaderManager::getShader("base"),
+                      DrawMode draw_mode                      = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+                      const std::optional<Material>& material = {},
+                      const uint32_t entity_id                = -1)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->draw(mesh, camera, model, color, shader, draw_mode);
-}
-
-/**
- * @brief Draw a specific component of an entity
- *
- * @tparam Component The component to draw. Must be ones of the RenderComponents in Components.h
- * @param entity The entity to draw
- * @param camera The camera
- * @param shader An optional shader. The shader (if not nullptr) overrides what is stored in the component AND what
- * is internally used. This means if you want to use a custom shader for a PointSphereRenderer component, for
- * example, you have to make sure that it is compatible with this rendering mode.
- */
-template<typename Component>
-ATCG_INLINE void drawComponent(Entity entity,
-                               const atcg::ref_ptr<Camera>& camera       = {},
-                               const atcg::ref_ptr<atcg::Shader>& shader = nullptr)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawComponent<Component>(entity, camera, shader);
-}
-
-/**
- * @brief Render an entity
- *
- * @param entity The entity to render
- * @param camera The camera
- */
-ATCG_INLINE void draw(Entity entity, const atcg::ref_ptr<Camera>& camera = {})
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->draw(entity, camera);
-}
-
-/**
- * @brief Render a scene
- *
- * @param scene The scene to render
- * @param camera The camera
- */
-ATCG_INLINE void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->draw(scene, camera);
+    SystemRegistry::instance()
+        ->getSystem<RendererSystem>()
+        ->draw(mesh, camera, model, color, shader, draw_mode, material, entity_id);
 }
 
 /**
