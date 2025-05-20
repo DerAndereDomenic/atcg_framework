@@ -20,10 +20,9 @@ void freeTextureUnits(std::vector<uint32_t>& used_texture_units)
     used_texture_units.clear();
 }
 
-void setLights(const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-               std::vector<uint32_t>& used_texture_units,
-               const atcg::ref_ptr<Shader>& shader)
+uint32_t setLights(const atcg::ref_ptr<atcg::Scene>& scene,
+                   const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
+                   const atcg::ref_ptr<Shader>& shader)
 {
     auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
 
@@ -53,18 +52,19 @@ void setLights(const atcg::ref_ptr<atcg::Scene>& scene,
         shader->setInt("shadow_maps", shadow_map_id);
         point_light_depth_maps->use(shadow_map_id);
 
-        used_texture_units.push_back(shadow_map_id);
+        return shadow_map_id;
     }
     else
     {
         ATCG_ASSERT(num_lights == 0, "Shadow map is not initialized but lights are present");
     }
+
+    return -1;
 }
 
 template<typename T>
 void _renderComponent(const atcg::ref_ptr<atcg::Scene>& scene,
                       const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                      std::vector<uint32_t>& used_texture_units,
                       Entity entity,
                       const atcg::ref_ptr<Camera>& camera,
                       const GeometryComponent& geometry,
@@ -77,7 +77,6 @@ void _renderComponent(const atcg::ref_ptr<atcg::Scene>& scene,
 template<>
 void _renderComponent<MeshRenderComponent>(const atcg::ref_ptr<atcg::Scene>& scene,
                                            const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                                           std::vector<uint32_t>& used_texture_units,
                                            Entity entity,
                                            const atcg::ref_ptr<Camera>& camera,
                                            const GeometryComponent& geometry,
@@ -91,7 +90,7 @@ void _renderComponent<MeshRenderComponent>(const atcg::ref_ptr<atcg::Scene>& sce
 
     if(renderer.visible)
     {
-        setLights(scene, point_light_depth_maps, used_texture_units, shader);
+        uint32_t id = setLights(scene, point_light_depth_maps, shader);
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
         atcg::Renderer::draw(geometry.graph,
                              camera,
@@ -101,14 +100,16 @@ void _renderComponent<MeshRenderComponent>(const atcg::ref_ptr<atcg::Scene>& sce
                              atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE,
                              renderer.material,
                              entity.entity_handle());
-        freeTextureUnits(used_texture_units);
+        if(id != -1)
+        {
+            atcg::Renderer::pushTextureID(id);
+        }
     }
 }
 
 template<>
 void _renderComponent<PointRenderComponent>(const atcg::ref_ptr<atcg::Scene>& scene,
                                             const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                                            std::vector<uint32_t>& used_texture_units,
                                             Entity entity,
                                             const atcg::ref_ptr<Camera>& camera,
                                             const GeometryComponent& geometry,
@@ -122,7 +123,7 @@ void _renderComponent<PointRenderComponent>(const atcg::ref_ptr<atcg::Scene>& sc
 
     if(renderer.visible)
     {
-        setLights(scene, point_light_depth_maps, used_texture_units, shader);
+        uint32_t id = setLights(scene, point_light_depth_maps, shader);
         atcg::Renderer::setPointSize(renderer.point_size);
         atcg::Renderer::draw(geometry.graph,
                              camera,
@@ -132,14 +133,16 @@ void _renderComponent<PointRenderComponent>(const atcg::ref_ptr<atcg::Scene>& sc
                              atcg::DrawMode::ATCG_DRAW_MODE_POINTS,
                              {},
                              entity.entity_handle());
-        freeTextureUnits(used_texture_units);
+        if(id != -1)
+        {
+            atcg::Renderer::pushTextureID(id);
+        }
     }
 }
 
 template<>
 void _renderComponent<PointSphereRenderComponent>(const atcg::ref_ptr<atcg::Scene>& scene,
                                                   const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                                                  std::vector<uint32_t>& used_texture_units,
                                                   Entity entity,
                                                   const atcg::ref_ptr<Camera>& camera,
                                                   const GeometryComponent& geometry,
@@ -153,7 +156,7 @@ void _renderComponent<PointSphereRenderComponent>(const atcg::ref_ptr<atcg::Scen
 
     if(renderer.visible)
     {
-        setLights(scene, point_light_depth_maps, used_texture_units, shader);
+        uint32_t id = setLights(scene, point_light_depth_maps, shader);
         atcg::Renderer::setPointSize(renderer.point_size);
         atcg::Renderer::draw(geometry.graph,
                              camera,
@@ -163,14 +166,16 @@ void _renderComponent<PointSphereRenderComponent>(const atcg::ref_ptr<atcg::Scen
                              atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE,
                              renderer.material,
                              entity.entity_handle());
-        freeTextureUnits(used_texture_units);
+        if(id != -1)
+        {
+            atcg::Renderer::pushTextureID(id);
+        }
     }
 }
 
 template<>
 void _renderComponent<EdgeRenderComponent>(const atcg::ref_ptr<atcg::Scene>& scene,
                                            const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                                           std::vector<uint32_t>& used_texture_units,
                                            Entity entity,
                                            const atcg::ref_ptr<Camera>& camera,
                                            const GeometryComponent& geometry,
@@ -184,7 +189,7 @@ void _renderComponent<EdgeRenderComponent>(const atcg::ref_ptr<atcg::Scene>& sce
 
     if(renderer.visible)
     {
-        setLights(scene, point_light_depth_maps, used_texture_units, shader);
+        uint32_t id = setLights(scene, point_light_depth_maps, shader);
         atcg::Renderer::draw(geometry.graph,
                              camera,
                              transform.getModel(),
@@ -193,14 +198,16 @@ void _renderComponent<EdgeRenderComponent>(const atcg::ref_ptr<atcg::Scene>& sce
                              atcg::DrawMode::ATCG_DRAW_MODE_EDGES,
                              {},
                              entity.entity_handle());
-        freeTextureUnits(used_texture_units);
+        if(id != -1)
+        {
+            atcg::Renderer::pushTextureID(id);
+        }
     }
 }
 
 template<>
 void _renderComponent<EdgeCylinderRenderComponent>(const atcg::ref_ptr<atcg::Scene>& scene,
                                                    const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                                                   std::vector<uint32_t>& used_texture_units,
                                                    Entity entity,
                                                    const atcg::ref_ptr<Camera>& camera,
                                                    const GeometryComponent& geometry,
@@ -214,7 +221,7 @@ void _renderComponent<EdgeCylinderRenderComponent>(const atcg::ref_ptr<atcg::Sce
 
     if(renderer.visible)
     {
-        setLights(scene, point_light_depth_maps, used_texture_units, shader);
+        uint32_t id = setLights(scene, point_light_depth_maps, shader);
         shader->setFloat("edge_radius", renderer.radius);
         atcg::Renderer::draw(geometry.graph,
                              camera,
@@ -224,14 +231,16 @@ void _renderComponent<EdgeCylinderRenderComponent>(const atcg::ref_ptr<atcg::Sce
                              atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER,
                              renderer.material,
                              entity.entity_handle());
-        freeTextureUnits(used_texture_units);
+        if(id != -1)
+        {
+            atcg::Renderer::pushTextureID(id);
+        }
     }
 }
 
 template<>
 void _renderComponent<InstanceRenderComponent>(const atcg::ref_ptr<atcg::Scene>& scene,
                                                const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                                               std::vector<uint32_t>& used_texture_units,
                                                Entity entity,
                                                const atcg::ref_ptr<Camera>& camera,
                                                const GeometryComponent& geometry,
@@ -271,7 +280,6 @@ void _renderComponent<InstanceRenderComponent>(const atcg::ref_ptr<atcg::Scene>&
 template<typename Component>
 void renderComponent(const atcg::ref_ptr<atcg::Scene>& scene,
                      const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                     std::vector<uint32_t>& used_texture_units,
                      Entity entity,
                      const atcg::ref_ptr<Camera>& camera,
                      const atcg::ref_ptr<atcg::Shader>& shader = nullptr)
@@ -302,20 +310,11 @@ void renderComponent(const atcg::ref_ptr<atcg::Scene>& scene,
 
     geometry.graph->unmapAllPointers();
 
-    _renderComponent<Component>(scene,
-                                point_light_depth_maps,
-                                used_texture_units,
-                                entity,
-                                camera,
-                                geometry,
-                                transform,
-                                entity_id,
-                                shader);
+    _renderComponent<Component>(scene, point_light_depth_maps, entity, camera, geometry, transform, entity_id, shader);
 }
 
 void render(const atcg::ref_ptr<atcg::Scene>& scene,
             const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-            std::vector<uint32_t>& used_texture_units,
             Entity entity,
             const atcg::ref_ptr<Camera>& camera)
 {
@@ -325,12 +324,12 @@ void render(const atcg::ref_ptr<atcg::Scene>& scene,
         renderer.callback(entity, camera);
     }
 
-    renderComponent<MeshRenderComponent>(scene, point_light_depth_maps, used_texture_units, entity, camera);
-    renderComponent<PointRenderComponent>(scene, point_light_depth_maps, used_texture_units, entity, camera);
-    renderComponent<PointSphereRenderComponent>(scene, point_light_depth_maps, used_texture_units, entity, camera);
-    renderComponent<EdgeRenderComponent>(scene, point_light_depth_maps, used_texture_units, entity, camera);
-    renderComponent<EdgeCylinderRenderComponent>(scene, point_light_depth_maps, used_texture_units, entity, camera);
-    renderComponent<InstanceRenderComponent>(scene, point_light_depth_maps, used_texture_units, entity, camera);
+    renderComponent<MeshRenderComponent>(scene, point_light_depth_maps, entity, camera);
+    renderComponent<PointRenderComponent>(scene, point_light_depth_maps, entity, camera);
+    renderComponent<PointSphereRenderComponent>(scene, point_light_depth_maps, entity, camera);
+    renderComponent<EdgeRenderComponent>(scene, point_light_depth_maps, entity, camera);
+    renderComponent<EdgeCylinderRenderComponent>(scene, point_light_depth_maps, entity, camera);
+    renderComponent<InstanceRenderComponent>(scene, point_light_depth_maps, entity, camera);
 }
 }    // namespace detail
 
@@ -510,16 +509,11 @@ SceneRenderer::Impl::Impl()
             const auto& view = context->scene->getAllEntitiesWith<atcg::TransformComponent>();
 
             auto shadow_maps = std::any_cast<atcg::ref_ptr<ShadowMappingData>>(inputs[1]);
-            std::vector<uint32_t> used_texture_units;    // TODO
             for(auto e: view)
             {
                 Entity entity(e, context->scene.get());
                 // TODO
-                detail::render(context->scene,
-                               shadow_maps->point_light_depth_maps,
-                               used_texture_units,
-                               entity,
-                               context->camera);
+                detail::render(context->scene, shadow_maps->point_light_depth_maps, entity, context->camera);
             }
         });
 
