@@ -32,6 +32,20 @@ public:
     }
 
     /**
+     * @brief Retrieve a value of a given type for a key as amy object
+     *
+     * @param key The key to look up.
+     * @return The value associated with the key.
+     */
+    ATCG_INLINE std::any getValueRaw(std::string_view key) const
+    {
+        auto it = _values.find(std::string(key));
+        if(it == _values.end()) throw std::out_of_range("Key not found");
+
+        return it->second;
+    }
+
+    /**
      * @brief Retrieve a value of a given type for a key.
      * Throws std::out_of_range if the key is not found.
      * Throws std::bad_any_cast if the stored value type doesn't match T.
