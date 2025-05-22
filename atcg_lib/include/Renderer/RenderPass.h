@@ -53,21 +53,19 @@ public:
 /**
  * @brief A class to model a render pass
  *
- * @tparam RenderPassDataT A buffer that is local to each render pass
  * @tparam RenderPassOutputT The output type of the RenderPass
  */
-template<typename RenderPassDataT, typename RenderPassOutputT>
+template<typename RenderPassOutputT>
 class RenderPass : public RenderPassBase
 {
 public:
     using RenderFunction = std::function<void(const atcg::ref_ptr<Dictionary>&,
                                               const std::vector<std::any>&,
-                                              const atcg::ref_ptr<RenderPassDataT>&,
+                                              const atcg::ref_ptr<Dictionary>&,
                                               const atcg::ref_ptr<RenderPassOutputT>&)>;
 
-    using SetupFunction = std::function<void(const atcg::ref_ptr<Dictionary>&,
-                                             const atcg::ref_ptr<RenderPassDataT>&,
-                                             atcg::ref_ptr<RenderPassOutputT>&)>;
+    using SetupFunction = std::function<
+        void(const atcg::ref_ptr<Dictionary>&, const atcg::ref_ptr<Dictionary>&, atcg::ref_ptr<RenderPassOutputT>&)>;
 
     /**
      * @brief Default constructor
@@ -75,16 +73,16 @@ public:
     RenderPass()
     {
         _output = atcg::make_ref<RenderPassOutputT>();
-        _data   = atcg::make_ref<RenderPassDataT>();
+        _data   = atcg::make_ref<Dictionary>();
 
         _render_f = [](const atcg::ref_ptr<Dictionary>&,
                        const std::vector<std::any>&,
-                       const atcg::ref_ptr<RenderPassDataT>&,
+                       const atcg::ref_ptr<Dictionary>&,
                        const atcg::ref_ptr<RenderPassOutputT>&) {
         };
 
         _setup_f = [](const atcg::ref_ptr<Dictionary>&,
-                      const atcg::ref_ptr<RenderPassDataT>&,
+                      const atcg::ref_ptr<Dictionary>&,
                       atcg::ref_ptr<RenderPassOutputT>&) {
         };
     }
@@ -146,7 +144,7 @@ private:
     RenderFunction _render_f;
     SetupFunction _setup_f;
     std::vector<std::any> _inputs;
-    atcg::ref_ptr<RenderPassDataT> _data;
+    atcg::ref_ptr<Dictionary> _data;
     atcg::ref_ptr<RenderPassOutputT> _output;
 };
 
@@ -189,17 +187,16 @@ public:
  * @brief A class to build a render pass.
  * This class collects all the data for a render pass and then executes the setup code when calling build().
  *
- * @tparam RenderPassDataT A buffer that is local to each render pass
  * @tparam RenderPassOutputT The output type of the RenderPass
  */
-template<typename RenderPassDataT, typename RenderPassOutputT>
+template<typename RenderPassOutputT>
 class RenderPassBuilder : public RenderPassBuilderBase
 {
 public:
     /**
      * @brief Default constructor
      */
-    RenderPassBuilder() { _pass = atcg::make_ref<RenderPass<RenderPassDataT, RenderPassOutputT>>(); }
+    RenderPassBuilder() { _pass = atcg::make_ref<RenderPass<RenderPassOutputT>>(); }
 
     /**
      * @brief Set the render function.
@@ -209,7 +206,7 @@ public:
      */
     ATCG_INLINE void setRenderFunction(std::function<void(const atcg::ref_ptr<Dictionary>&,
                                                           const std::vector<std::any>&,
-                                                          const atcg::ref_ptr<RenderPassDataT>&,
+                                                          const atcg::ref_ptr<Dictionary>&,
                                                           const atcg::ref_ptr<RenderPassOutputT>&)> f)
     {
         _pass->setRenderFunction(f);
@@ -222,7 +219,7 @@ public:
      * @param f The setup function
      */
     ATCG_INLINE void setSetupFunction(std::function<void(const atcg::ref_ptr<Dictionary>&,
-                                                         const atcg::ref_ptr<RenderPassDataT>&,
+                                                         const atcg::ref_ptr<Dictionary>&,
                                                          atcg::ref_ptr<RenderPassOutputT>&)> f)
     {
         _pass->setSetupFunction(f);
@@ -258,7 +255,7 @@ public:
     }
 
 private:
-    atcg::ref_ptr<RenderPass<RenderPassDataT, RenderPassOutputT>> _pass;
+    atcg::ref_ptr<RenderPass<RenderPassOutputT>> _pass;
 };
 
 }    // namespace atcg

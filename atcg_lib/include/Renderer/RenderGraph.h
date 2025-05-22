@@ -32,15 +32,14 @@ public:
      * called. The handle can be used to access different render passes to add dependencies between them (by using
      * addDependency()).
      *
-     * @tparam RenderPassDataT The datatype of intermediate buffers used during the render pass
      * @tparam RenderPassOutputT The output type of the RenderPass
      *
      * @return A tuple with a RenderPassHandle and a RenderPassBuilder
      */
-    template<typename RenderPassDataT, typename RenderPassOutputT>
-    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder<RenderPassDataT, RenderPassOutputT>>> addRenderPass()
+    template<typename RenderPassOutputT>
+    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder<RenderPassOutputT>>> addRenderPass()
     {
-        auto builder            = atcg::make_ref<RenderPassBuilder<RenderPassDataT, RenderPassOutputT>>();
+        auto builder            = atcg::make_ref<RenderPassBuilder<RenderPassOutputT>>();
         RenderPassHandle handle = (RenderPassHandle)_builder.size();
         _builder.push_back(builder);
         return std::make_pair(handle, builder);
