@@ -26,7 +26,7 @@ public:
     /**
      * @brief Default constructor
      */
-    RenderPass()
+    RenderPass(std::string_view name = "RenderPass") : _name(name)
     {
         _render_f = [](Dictionary&, const Dictionary&, Dictionary&, Dictionary&) {
         };
@@ -85,12 +85,20 @@ public:
      */
     ATCG_INLINE virtual const Dictionary& getOutputs() const { return _output; }
 
+    /**
+     * @brief Get the name of this render pass
+     *
+     * @return The name
+     */
+    ATCG_INLINE const std::string& name() const { return _name; }
+
 private:
     RenderFunction _render_f;
     SetupFunction _setup_f;
     Dictionary _inputs;
     Dictionary _data;
     Dictionary _output;
+    std::string _name;
 };
 
 /**
@@ -103,7 +111,7 @@ public:
     /**
      * @brief Default constructor
      */
-    RenderPassBuilder() { _pass = atcg::make_ref<RenderPass>(); }
+    RenderPassBuilder(std::string_view name = "") { _pass = atcg::make_ref<RenderPass>(name); }
 
     /**
      * @brief Set the render function.

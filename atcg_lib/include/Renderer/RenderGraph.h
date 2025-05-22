@@ -32,9 +32,9 @@ public:
      *
      * @return A tuple with a RenderPassHandle and a RenderPassBuilder
      */
-    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder>> addRenderPass()
+    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder>> addRenderPass(std::string_view name = "")
     {
-        auto builder            = atcg::make_ref<RenderPassBuilder>();
+        auto builder            = atcg::make_ref<RenderPassBuilder>(name);
         RenderPassHandle handle = (RenderPassHandle)_builder.size();
         _builder.push_back(builder);
         return std::make_pair(handle, builder);

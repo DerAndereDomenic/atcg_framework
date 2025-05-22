@@ -349,9 +349,9 @@ SceneRenderer::Impl::Impl()
 {
     graph = atcg::make_ref<atcg::RenderGraph>();
 
-    auto [skybox_handle, skybox_builder] = graph->addRenderPass();    // Outputs into the current render target
-    auto [shadow_handle, shadow_builder] = graph->addRenderPass();
-    auto [output_handle, output_builder] = graph->addRenderPass();
+    auto [skybox_handle, skybox_builder] = graph->addRenderPass("Skybox");    // Outputs into the current render target
+    auto [shadow_handle, shadow_builder] = graph->addRenderPass("ShadoMaps");
+    auto [output_handle, output_builder] = graph->addRenderPass("Forward");
 
     // SKYBOX PASS
     skybox_builder
