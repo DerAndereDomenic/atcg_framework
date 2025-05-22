@@ -124,7 +124,7 @@ public:
             throw std::runtime_error("Graph has a cycle. Topological sorting is not possible.");
         }
 
-        _builder.clear();
+        //_builder.clear();
     }
 
     /**
@@ -136,6 +136,26 @@ public:
         {
             pass->execute(ctx);
         }
+    }
+
+    void exportToDOT(const std::string& path) const
+    {
+        std::ofstream out(path);
+        out << "digraph RenderGraph {\n";
+        out << "    rankdir=LR;\n";    // optional: makes the graph left-to-right instead of top-down
+
+        for(RenderPassHandle i = 0; i < _builder.size(); ++i)
+        {
+            out << "    " << i << " [label=\"" << _builder[i]->name() << "\"];\n";
+        }
+
+        for(const auto& edge: _edges)
+        {
+            out << "    " << edge.from << " -> " << edge.to << " [label=\"" << edge.from_port << " → " << edge.to_port
+                << "\"];\n";
+        }
+
+        out << "}\n";
     }
 
 

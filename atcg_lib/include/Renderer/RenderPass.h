@@ -156,7 +156,7 @@ public:
      * @return An atcg::ref_ptr with type specified by the instance of atcg::RenderPass, i.e.,
      * atcg::ref_ptr<RenderPassOutputT>
      */
-    ATCG_INLINE virtual std::any getOutputs() const { return _pass->getOutputs(); }
+    ATCG_INLINE virtual const Dictionary& getOutputs() const { return _pass->getOutputs(); }
 
     /**
      * @brief Build the Render Pass
@@ -169,6 +169,8 @@ public:
         _pass->setup(context);
         return _pass;
     }
+
+    ATCG_INLINE const std::string& name() const {return _pass->name();}
 
 private:
     atcg::ref_ptr<RenderPass> _pass;
