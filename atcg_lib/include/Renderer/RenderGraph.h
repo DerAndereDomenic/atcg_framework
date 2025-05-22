@@ -20,10 +20,8 @@ public:
 
     /**
      * @brief Create a Rendergraph
-     *
-     * @param ctx The Render context
      */
-    RenderGraph(const atcg::ref_ptr<Dictionary>& ctx) : _context(ctx) {}
+    RenderGraph() = default;
 
     /**
      * @brief Add a render pass to the graph.
@@ -61,7 +59,7 @@ public:
      * @brief Compile the graph.
      * This has to be called before executing the graph.
      */
-    void compile()
+    void compile(Dictionary& ctx)
     {
         size_t node_size = _builder.size();
         std::vector<int> inDegree(node_size, 0);
@@ -70,7 +68,7 @@ public:
         std::vector<atcg::ref_ptr<RenderPassBase>> passes;
         for(auto builder: _builder)
         {
-            auto pass = builder->build(_context);
+            auto pass = builder->build(ctx);
             passes.push_back(pass);
         }
 
@@ -117,11 +115,11 @@ public:
     /**
      * @brief Execute the graph.
      */
-    void execute()
+    void execute(Dictionary& ctx)
     {
         for(auto pass: _compiled_passes)
         {
-            pass->execute(_context);
+            pass->execute(ctx);
         }
     }
 
@@ -129,6 +127,5 @@ private:
     std::vector<atcg::ref_ptr<RenderPassBuilderBase>> _builder;
     std::vector<atcg::ref_ptr<RenderPassBase>> _compiled_passes;
     std::vector<std::tuple<RenderPassHandle, RenderPassHandle>> _edges;
-    atcg::ref_ptr<Dictionary> _context;
 };
 }    // namespace atcg

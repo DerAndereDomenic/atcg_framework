@@ -23,14 +23,14 @@ public:
      *
      * @param context The render context
      */
-    virtual void setup(const atcg::ref_ptr<Dictionary>& context) = 0;
+    virtual void setup(Dictionary& context) = 0;
 
     /**
      * @brief Execute a reder pass
      *
      * @param context The render context
      */
-    virtual void execute(const atcg::ref_ptr<Dictionary>& context) = 0;
+    virtual void execute(Dictionary& context) = 0;
 
     /**
      * @brief Add an input to the Render pass.
@@ -59,13 +59,10 @@ template<typename RenderPassOutputT>
 class RenderPass : public RenderPassBase
 {
 public:
-    using RenderFunction = std::function<void(const atcg::ref_ptr<Dictionary>&,
-                                              const std::vector<std::any>&,
-                                              const atcg::ref_ptr<Dictionary>&,
-                                              const atcg::ref_ptr<RenderPassOutputT>&)>;
+    using RenderFunction = std::function<
+        void(Dictionary&, const std::vector<std::any>&, Dictionary&, const atcg::ref_ptr<RenderPassOutputT>&)>;
 
-    using SetupFunction = std::function<
-        void(const atcg::ref_ptr<Dictionary>&, const atcg::ref_ptr<Dictionary>&, atcg::ref_ptr<RenderPassOutputT>&)>;
+    using SetupFunction = std::function<void(Dictionary&, Dictionary&, atcg::ref_ptr<RenderPassOutputT>&)>;
 
     /**
      * @brief Default constructor
@@ -73,16 +70,15 @@ public:
     RenderPass()
     {
         _output = atcg::make_ref<RenderPassOutputT>();
-        _data   = atcg::make_ref<Dictionary>();
 
-        _render_f = [](const atcg::ref_ptr<Dictionary>&,
+        _render_f = [](Dictionary&,
                        const std::vector<std::any>&,
-                       const atcg::ref_ptr<Dictionary>&,
+                       Dictionary&,
                        const atcg::ref_ptr<RenderPassOutputT>&) {
         };
 
-        _setup_f = [](const atcg::ref_ptr<Dictionary>&,
-                      const atcg::ref_ptr<Dictionary>&,
+        _setup_f = [](Dictionary&,
+                      Dictionary&,
                       atcg::ref_ptr<RenderPassOutputT>&) {
         };
     }
@@ -108,20 +104,14 @@ public:
      *
      * @param context The render context
      */
-    ATCG_INLINE virtual void setup(const atcg::ref_ptr<Dictionary>& context) override
-    {
-        _setup_f(context, _data, _output);
-    }
+    ATCG_INLINE virtual void setup(Dictionary& context) override { _setup_f(context, _data, _output); }
 
     /**
      * @brief Execute a reder pass
      *
      * @param context The render context
      */
-    ATCG_INLINE virtual void execute(const atcg::ref_ptr<Dictionary>& context) override
-    {
-        _render_f(context, _inputs, _data, _output);
-    }
+    ATCG_INLINE virtual void execute(Dictionary& context) override { _render_f(context, _inputs, _data, _output); }
 
     /**
      * @brief Add an input to the Render pass.
@@ -144,7 +134,7 @@ private:
     RenderFunction _render_f;
     SetupFunction _setup_f;
     std::vector<std::any> _inputs;
-    atcg::ref_ptr<Dictionary> _data;
+    Dictionary _data;
     atcg::ref_ptr<RenderPassOutputT> _output;
 };
 
@@ -163,7 +153,7 @@ public:
      * @param context The Render context data
      * @return The compiled render pass
      */
-    virtual atcg::ref_ptr<RenderPassBase> build(const atcg::ref_ptr<Dictionary>& context) = 0;
+    virtual atcg::ref_ptr<RenderPassBase> build(Dictionary& context) = 0;
 
     /**
      * @brief Add an input to the Render pass.
@@ -204,10 +194,9 @@ public:
      *
      * @param f The render function
      */
-    ATCG_INLINE void setRenderFunction(std::function<void(const atcg::ref_ptr<Dictionary>&,
-                                                          const std::vector<std::any>&,
-                                                          const atcg::ref_ptr<Dictionary>&,
-                                                          const atcg::ref_ptr<RenderPassOutputT>&)> f)
+    ATCG_INLINE void setRenderFunction(
+        std::function<
+            void(Dictionary&, const std::vector<std::any>&, Dictionary&, const atcg::ref_ptr<RenderPassOutputT>&)> f)
     {
         _pass->setRenderFunction(f);
     }
@@ -218,9 +207,8 @@ public:
      *
      * @param f The setup function
      */
-    ATCG_INLINE void setSetupFunction(std::function<void(const atcg::ref_ptr<Dictionary>&,
-                                                         const atcg::ref_ptr<Dictionary>&,
-                                                         atcg::ref_ptr<RenderPassOutputT>&)> f)
+    ATCG_INLINE void
+    setSetupFunction(std::function<void(Dictionary&, Dictionary&, atcg::ref_ptr<RenderPassOutputT>&)> f)
     {
         _pass->setSetupFunction(f);
     }
@@ -248,7 +236,7 @@ public:
      * @param context The Render context data
      * @return The compiled render pass
      */
-    ATCG_INLINE virtual atcg::ref_ptr<RenderPassBase> build(const atcg::ref_ptr<Dictionary>& context) override
+    ATCG_INLINE virtual atcg::ref_ptr<RenderPassBase> build(Dictionary& context) override
     {
         _pass->setup(context);
         return _pass;

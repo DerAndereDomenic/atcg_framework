@@ -345,16 +345,14 @@ public:
         atcg::ref_ptr<atcg::TextureCubeArray> point_light_depth_maps;
     };
 
-    atcg::ref_ptr<Dictionary> context;
+    Dictionary context;
 
     atcg::ref_ptr<atcg::RenderGraph> graph;
 };
 
 SceneRenderer::Impl::Impl()
 {
-    context = atcg::make_ref<Dictionary>();
-
-    graph = atcg::make_ref<atcg::RenderGraph>(context);
+    graph = atcg::make_ref<atcg::RenderGraph>();
 
     auto [skybox_handle, skybox_builder] = graph->addRenderPass<int>();    // Outputs into the current render target
     auto [shadow_handle, shadow_builder] = graph->addRenderPass<ShadowMappingData>();
@@ -362,26 +360,21 @@ SceneRenderer::Impl::Impl()
 
     // SKYBOX PASS
     skybox_builder->setRenderFunction(
-        [](const atcg::ref_ptr<Dictionary>& context,
-           const std::vector<std::any>&,
-           const atcg::ref_ptr<Dictionary>&,
-           const atcg::ref_ptr<int>&)
-        { atcg::Renderer::drawSkybox(context->getValue<atcg::ref_ptr<Camera>>("camera")); });
+        [](Dictionary& context, const std::vector<std::any>&, Dictionary&, const atcg::ref_ptr<int>&)
+        { atcg::Renderer::drawSkybox(context.getValue<atcg::ref_ptr<Camera>>("camera")); });
 
     // SHADOW PASS
     shadow_builder->setSetupFunction(
-        [](const atcg::ref_ptr<Dictionary>&,
-           const atcg::ref_ptr<Dictionary>& data,
-           atcg::ref_ptr<ShadowMappingData>& output_data)
-        { data->setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024)); });
+        [](Dictionary&, Dictionary& data, atcg::ref_ptr<ShadowMappingData>& output_data)
+        { data.setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024)); });
 
     shadow_builder->setRenderFunction(
-        [](const atcg::ref_ptr<Dictionary>& context,
+        [](Dictionary& context,
            const std::vector<std::any>&,
-           const atcg::ref_ptr<Dictionary>& data,
+           Dictionary& data,
            const atcg::ref_ptr<ShadowMappingData>& output_data)
         {
-            auto scene = context->getValue<atcg::ref_ptr<Scene>>("scene");
+            auto scene = context.getValue<atcg::ref_ptr<Scene>>("scene");
 
             float n              = 0.1f;
             float f              = 100.0f;
@@ -408,7 +401,7 @@ SceneRenderer::Impl::Impl()
                 return;
             }
 
-            auto point_light_framebuffer = data->getValue<atcg::ref_ptr<atcg::Framebuffer>>("point_light_framebuffer");
+            auto point_light_framebuffer = data.getValue<atcg::ref_ptr<atcg::Framebuffer>>("point_light_framebuffer");
             if(!output_data->point_light_depth_maps || output_data->point_light_depth_maps->depth() != num_lights)
             {
                 atcg::TextureSpecification spec;
@@ -478,7 +471,7 @@ SceneRenderer::Impl::Impl()
                     auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
 
                     atcg::Renderer::draw(geometry.graph,
-                                         context->getValue<atcg::ref_ptr<Camera>>("camera"),
+                                         context.getValue<atcg::ref_ptr<Camera>>("camera"),
                                          transform.getModel(),
                                          glm::vec3(1),
                                          depth_pass_shader);
@@ -491,17 +484,13 @@ SceneRenderer::Impl::Impl()
             atcg::Framebuffer::bindByID(active_fbo);
         });
 
-    output_builder->setSetupFunction(
-        [](const atcg::ref_ptr<Dictionary>&, const atcg::ref_ptr<Dictionary>&, atcg::ref_ptr<int>&) {});
+    output_builder->setSetupFunction([](Dictionary&, Dictionary&, atcg::ref_ptr<int>&) {});
 
     output_builder->setRenderFunction(
-        [](const atcg::ref_ptr<Dictionary>& context,
-           const std::vector<std::any>& inputs,
-           const atcg::ref_ptr<Dictionary>&,
-           const atcg::ref_ptr<int>&)
+        [](Dictionary& context, const std::vector<std::any>& inputs, Dictionary&, const atcg::ref_ptr<int>&)
         {
-            auto scene       = context->getValue<atcg::ref_ptr<Scene>>("scene");
-            auto camera      = context->getValue<atcg::ref_ptr<Camera>>("camera");
+            auto scene       = context.getValue<atcg::ref_ptr<Scene>>("scene");
+            auto camera      = context.getValue<atcg::ref_ptr<Camera>>("camera");
             const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
             auto shadow_maps = std::any_cast<atcg::ref_ptr<ShadowMappingData>>(inputs[1]);
@@ -517,7 +506,7 @@ SceneRenderer::Impl::Impl()
     graph->addDependency(skybox_handle, output_handle);
     graph->addDependency(shadow_handle, output_handle);
 
-    graph->compile();
+    graph->compile(context);
 }
 
 SceneRenderer::Impl::~Impl() {}
@@ -537,12 +526,12 @@ SceneRenderer::~SceneRenderer() {}
 
 void SceneRenderer::setScene(const atcg::ref_ptr<atcg::Scene>& scene)
 {
-    impl->context->setValue("scene", scene);
+    impl->context.setValue("scene", scene);
 }
 
 void SceneRenderer::render(const atcg::ref_ptr<Camera>& camera)
 {
-    impl->context->setValue("camera", camera);
-    impl->graph->execute();
+    impl->context.setValue("camera", camera);
+    impl->graph->execute(impl->context);
 }
 }    // namespace atcg
