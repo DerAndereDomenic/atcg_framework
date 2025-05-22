@@ -342,7 +342,6 @@ public:
 
     struct ShadowMappingData
     {
-        atcg::ref_ptr<atcg::Framebuffer> point_light_framebuffer;
         atcg::ref_ptr<atcg::TextureCubeArray> point_light_depth_maps;
     };
 
@@ -372,14 +371,14 @@ SceneRenderer::Impl::Impl()
     // SHADOW PASS
     shadow_builder->setSetupFunction(
         [](const atcg::ref_ptr<Dictionary>&,
-           const atcg::ref_ptr<Dictionary>&,
+           const atcg::ref_ptr<Dictionary>& data,
            atcg::ref_ptr<ShadowMappingData>& output_data)
-        { output_data->point_light_framebuffer = atcg::make_ref<atcg::Framebuffer>(1024, 1024); });
+        { data->setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024)); });
 
     shadow_builder->setRenderFunction(
         [](const atcg::ref_ptr<Dictionary>& context,
            const std::vector<std::any>&,
-           const atcg::ref_ptr<Dictionary>&,
+           const atcg::ref_ptr<Dictionary>& data,
            const atcg::ref_ptr<ShadowMappingData>& output_data)
         {
             auto scene = context->getValue<atcg::ref_ptr<Scene>>("scene");
@@ -409,6 +408,7 @@ SceneRenderer::Impl::Impl()
                 return;
             }
 
+            auto point_light_framebuffer = data->getValue<atcg::ref_ptr<atcg::Framebuffer>>("point_light_framebuffer");
             if(!output_data->point_light_depth_maps || output_data->point_light_depth_maps->depth() != num_lights)
             {
                 atcg::TextureSpecification spec;
@@ -418,15 +418,12 @@ SceneRenderer::Impl::Impl()
                 spec.format                         = atcg::TextureFormat::DEPTH;
                 output_data->point_light_depth_maps = atcg::TextureCubeArray::create(spec);
 
-                output_data->point_light_framebuffer->attachDepth(output_data->point_light_depth_maps);
-                output_data->point_light_framebuffer->complete();
+                point_light_framebuffer->attachDepth(output_data->point_light_depth_maps);
+                point_light_framebuffer->complete();
             }
 
-            output_data->point_light_framebuffer->use();
-            atcg::Renderer::setViewport(0,
-                                        0,
-                                        output_data->point_light_framebuffer->width(),
-                                        output_data->point_light_framebuffer->height());
+            point_light_framebuffer->use();
+            atcg::Renderer::setViewport(0, 0, point_light_framebuffer->width(), point_light_framebuffer->height());
             atcg::Renderer::clear();
 
             uint32_t light_idx = 0;
