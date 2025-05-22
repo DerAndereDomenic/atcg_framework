@@ -2,6 +2,7 @@
 
 #include <Core/Platform.h>
 #include <Core/Memory.h>
+#include <DataStructure/Dictionary.h>
 
 #include <any>
 
@@ -13,9 +14,7 @@ namespace atcg
  * A render pass is a node in a DAG with sevaral inputs and one output. This base class is used to collect all different
  * render passes in a list. Use atcg::RenderPass to declare different intermediate- and output buffers.
  *
- * @tparam RenderContextT Context of the Renderer
  */
-template<typename RenderContextT>
 class RenderPassBase
 {
 public:
@@ -24,14 +23,14 @@ public:
      *
      * @param context The render context
      */
-    virtual void setup(const atcg::ref_ptr<RenderContextT>& context) = 0;
+    virtual void setup(const atcg::ref_ptr<Dictionary>& context) = 0;
 
     /**
      * @brief Execute a reder pass
      *
      * @param context The render context
      */
-    virtual void execute(const atcg::ref_ptr<RenderContextT>& context) = 0;
+    virtual void execute(const atcg::ref_ptr<Dictionary>& context) = 0;
 
     /**
      * @brief Add an input to the Render pass.
@@ -54,20 +53,19 @@ public:
 /**
  * @brief A class to model a render pass
  *
- * @tparam RenderContextT Context that holds Renderer data
  * @tparam RenderPassDataT A buffer that is local to each render pass
  * @tparam RenderPassOutputT The output type of the RenderPass
  */
-template<typename RenderContextT, typename RenderPassDataT, typename RenderPassOutputT>
-class RenderPass : public RenderPassBase<RenderContextT>
+template<typename RenderPassDataT, typename RenderPassOutputT>
+class RenderPass : public RenderPassBase
 {
 public:
-    using RenderFunction = std::function<void(const atcg::ref_ptr<RenderContextT>&,
+    using RenderFunction = std::function<void(const atcg::ref_ptr<Dictionary>&,
                                               const std::vector<std::any>&,
                                               const atcg::ref_ptr<RenderPassDataT>&,
                                               const atcg::ref_ptr<RenderPassOutputT>&)>;
 
-    using SetupFunction = std::function<void(const atcg::ref_ptr<RenderContextT>&,
+    using SetupFunction = std::function<void(const atcg::ref_ptr<Dictionary>&,
                                              const atcg::ref_ptr<RenderPassDataT>&,
                                              atcg::ref_ptr<RenderPassOutputT>&)>;
 
@@ -79,13 +77,13 @@ public:
         _output = atcg::make_ref<RenderPassOutputT>();
         _data   = atcg::make_ref<RenderPassDataT>();
 
-        _render_f = [](const atcg::ref_ptr<RenderContextT>&,
+        _render_f = [](const atcg::ref_ptr<Dictionary>&,
                        const std::vector<std::any>&,
                        const atcg::ref_ptr<RenderPassDataT>&,
                        const atcg::ref_ptr<RenderPassOutputT>&) {
         };
 
-        _setup_f = [](const atcg::ref_ptr<RenderContextT>&,
+        _setup_f = [](const atcg::ref_ptr<Dictionary>&,
                       const atcg::ref_ptr<RenderPassDataT>&,
                       atcg::ref_ptr<RenderPassOutputT>&) {
         };
@@ -112,7 +110,7 @@ public:
      *
      * @param context The render context
      */
-    ATCG_INLINE virtual void setup(const atcg::ref_ptr<RenderContextT>& context) override
+    ATCG_INLINE virtual void setup(const atcg::ref_ptr<Dictionary>& context) override
     {
         _setup_f(context, _data, _output);
     }
@@ -122,7 +120,7 @@ public:
      *
      * @param context The render context
      */
-    ATCG_INLINE virtual void execute(const atcg::ref_ptr<RenderContextT>& context) override
+    ATCG_INLINE virtual void execute(const atcg::ref_ptr<Dictionary>& context) override
     {
         _render_f(context, _inputs, _data, _output);
     }
@@ -157,9 +155,7 @@ private:
  * This class collects all the data for a render pass and then executes the setup code when calling build().
  * The type of the data is specified in the instance of atcg::RenderPassBuilder.
  *
- * @tparam RenderContextT The Render context data
  */
-template<typename RenderContextT>
 class RenderPassBuilderBase
 {
 public:
@@ -169,7 +165,7 @@ public:
      * @param context The Render context data
      * @return The compiled render pass
      */
-    virtual atcg::ref_ptr<RenderPassBase<RenderContextT>> build(const atcg::ref_ptr<RenderContextT>& context) = 0;
+    virtual atcg::ref_ptr<RenderPassBase> build(const atcg::ref_ptr<Dictionary>& context) = 0;
 
     /**
      * @brief Add an input to the Render pass.
@@ -193,18 +189,17 @@ public:
  * @brief A class to build a render pass.
  * This class collects all the data for a render pass and then executes the setup code when calling build().
  *
- * @tparam RenderContextT The Render context data
  * @tparam RenderPassDataT A buffer that is local to each render pass
  * @tparam RenderPassOutputT The output type of the RenderPass
  */
-template<typename RenderContextT, typename RenderPassDataT, typename RenderPassOutputT>
-class RenderPassBuilder : public RenderPassBuilderBase<RenderContextT>
+template<typename RenderPassDataT, typename RenderPassOutputT>
+class RenderPassBuilder : public RenderPassBuilderBase
 {
 public:
     /**
      * @brief Default constructor
      */
-    RenderPassBuilder() { _pass = atcg::make_ref<RenderPass<RenderContextT, RenderPassDataT, RenderPassOutputT>>(); }
+    RenderPassBuilder() { _pass = atcg::make_ref<RenderPass<RenderPassDataT, RenderPassOutputT>>(); }
 
     /**
      * @brief Set the render function.
@@ -212,7 +207,7 @@ public:
      *
      * @param f The render function
      */
-    ATCG_INLINE void setRenderFunction(std::function<void(const atcg::ref_ptr<RenderContextT>&,
+    ATCG_INLINE void setRenderFunction(std::function<void(const atcg::ref_ptr<Dictionary>&,
                                                           const std::vector<std::any>&,
                                                           const atcg::ref_ptr<RenderPassDataT>&,
                                                           const atcg::ref_ptr<RenderPassOutputT>&)> f)
@@ -226,7 +221,7 @@ public:
      *
      * @param f The setup function
      */
-    ATCG_INLINE void setSetupFunction(std::function<void(const atcg::ref_ptr<RenderContextT>&,
+    ATCG_INLINE void setSetupFunction(std::function<void(const atcg::ref_ptr<Dictionary>&,
                                                          const atcg::ref_ptr<RenderPassDataT>&,
                                                          atcg::ref_ptr<RenderPassOutputT>&)> f)
     {
@@ -256,15 +251,14 @@ public:
      * @param context The Render context data
      * @return The compiled render pass
      */
-    ATCG_INLINE virtual atcg::ref_ptr<RenderPassBase<RenderContextT>>
-    build(const atcg::ref_ptr<RenderContextT>& context) override
+    ATCG_INLINE virtual atcg::ref_ptr<RenderPassBase> build(const atcg::ref_ptr<Dictionary>& context) override
     {
         _pass->setup(context);
         return _pass;
     }
 
 private:
-    atcg::ref_ptr<RenderPass<RenderContextT, RenderPassDataT, RenderPassOutputT>> _pass;
+    atcg::ref_ptr<RenderPass<RenderPassDataT, RenderPassOutputT>> _pass;
 };
 
 }    // namespace atcg

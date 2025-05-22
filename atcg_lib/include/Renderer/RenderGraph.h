@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Renderer/RenderPass.h>
+#include <DataStructure/Dictionary.h>
 
 #include <queue>
 
@@ -12,7 +13,6 @@ namespace atcg
  *
  * @tparam RenderContextT The Render context data
  */
-template<typename RenderContextT>
 class RenderGraph
 {
 public:
@@ -23,7 +23,7 @@ public:
      *
      * @param ctx The Render context
      */
-    RenderGraph(const atcg::ref_ptr<RenderContextT>& ctx) : _context(ctx) {}
+    RenderGraph(const atcg::ref_ptr<Dictionary>& ctx) : _context(ctx) {}
 
     /**
      * @brief Add a render pass to the graph.
@@ -38,10 +38,9 @@ public:
      * @return A tuple with a RenderPassHandle and a RenderPassBuilder
      */
     template<typename RenderPassDataT, typename RenderPassOutputT>
-    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder<RenderContextT, RenderPassDataT, RenderPassOutputT>>>
-    addRenderPass()
+    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder<RenderPassDataT, RenderPassOutputT>>> addRenderPass()
     {
-        auto builder = atcg::make_ref<RenderPassBuilder<RenderContextT, RenderPassDataT, RenderPassOutputT>>();
+        auto builder            = atcg::make_ref<RenderPassBuilder<RenderPassDataT, RenderPassOutputT>>();
         RenderPassHandle handle = (RenderPassHandle)_builder.size();
         _builder.push_back(builder);
         return std::make_pair(handle, builder);
@@ -69,7 +68,7 @@ public:
         std::vector<int> inDegree(node_size, 0);
         std::vector<std::vector<RenderPassHandle>> adj(node_size);
 
-        std::vector<atcg::ref_ptr<RenderPassBase<RenderContextT>>> passes;
+        std::vector<atcg::ref_ptr<RenderPassBase>> passes;
         for(auto builder: _builder)
         {
             auto pass = builder->build(_context);
@@ -128,9 +127,9 @@ public:
     }
 
 private:
-    std::vector<atcg::ref_ptr<RenderPassBuilderBase<RenderContextT>>> _builder;
-    std::vector<atcg::ref_ptr<RenderPassBase<RenderContextT>>> _compiled_passes;
+    std::vector<atcg::ref_ptr<RenderPassBuilderBase>> _builder;
+    std::vector<atcg::ref_ptr<RenderPassBase>> _compiled_passes;
     std::vector<std::tuple<RenderPassHandle, RenderPassHandle>> _edges;
-    atcg::ref_ptr<RenderContextT> _context;
+    atcg::ref_ptr<Dictionary> _context;
 };
 }    // namespace atcg
