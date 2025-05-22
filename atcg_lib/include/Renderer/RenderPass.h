@@ -10,76 +10,28 @@ namespace atcg
 {
 
 /**
- * @brief Base class for a Render Pass.
- * A render pass is a node in a DAG with sevaral inputs and one output. This base class is used to collect all different
- * render passes in a list. Use atcg::RenderPass to declare different intermediate- and output buffers.
- *
- */
-class RenderPassBase
-{
-public:
-    /**
-     * @brief Setup the render pass
-     *
-     * @param context The render context
-     */
-    virtual void setup(Dictionary& context) = 0;
-
-    /**
-     * @brief Execute a reder pass
-     *
-     * @param context The render context
-     */
-    virtual void execute(Dictionary& context) = 0;
-
-    /**
-     * @brief Add an input to the Render pass.
-     * This can be any type but if this node is not a root node, it will be an instance of atcg::ref_ptr
-     *
-     * @param input The input
-     */
-    virtual void addInput(std::any input) = 0;
-
-    /**
-     * @brief Get the output.
-     * When creating a render pass, an atcg::ref_ptr will be allocated that holds the output
-     *
-     * @return An atcg::ref_ptr with type specified by the instance of atcg::RenderPass, i.e.,
-     * atcg::ref_ptr<RenderPassOutputT>
-     */
-    virtual std::any getOutput() const = 0;
-};
-
-/**
  * @brief A class to model a render pass
  *
- * @tparam RenderPassOutputT The output type of the RenderPass
+ * The output type of the RenderPass
  */
-template<typename RenderPassOutputT>
-class RenderPass : public RenderPassBase
+class RenderPass
 {
 public:
-    using RenderFunction = std::function<
-        void(Dictionary&, const std::vector<std::any>&, Dictionary&, const atcg::ref_ptr<RenderPassOutputT>&)>;
+    // void render(Dictionary& context, const Dictionary& inputs, Dictionary& pass_data, Dictionary& output);
+    using RenderFunction = std::function<void(Dictionary&, const Dictionary&, Dictionary&, Dictionary&)>;
 
-    using SetupFunction = std::function<void(Dictionary&, Dictionary&, atcg::ref_ptr<RenderPassOutputT>&)>;
+    // void setup(Dictionary& context, Dictionary& pass_data, Dictionary& output);
+    using SetupFunction = std::function<void(Dictionary&, Dictionary&, Dictionary&)>;
 
     /**
      * @brief Default constructor
      */
     RenderPass()
     {
-        _output = atcg::make_ref<RenderPassOutputT>();
-
-        _render_f = [](Dictionary&,
-                       const std::vector<std::any>&,
-                       Dictionary&,
-                       const atcg::ref_ptr<RenderPassOutputT>&) {
+        _render_f = [](Dictionary&, const Dictionary&, Dictionary&, Dictionary&) {
         };
 
-        _setup_f = [](Dictionary&,
-                      Dictionary&,
-                      atcg::ref_ptr<RenderPassOutputT>&) {
+        _setup_f = [](Dictionary&, Dictionary&, Dictionary&) {
         };
     }
 
@@ -104,14 +56,14 @@ public:
      *
      * @param context The render context
      */
-    ATCG_INLINE virtual void setup(Dictionary& context) override { _setup_f(context, _data, _output); }
+    ATCG_INLINE virtual void setup(Dictionary& context) { _setup_f(context, _data, _output); }
 
     /**
      * @brief Execute a reder pass
      *
      * @param context The render context
      */
-    ATCG_INLINE virtual void execute(Dictionary& context) override { _render_f(context, _inputs, _data, _output); }
+    ATCG_INLINE virtual void execute(Dictionary& context) { _render_f(context, _inputs, _data, _output); }
 
     /**
      * @brief Add an input to the Render pass.
@@ -119,7 +71,10 @@ public:
      *
      * @param input The input
      */
-    ATCG_INLINE virtual void addInput(std::any input) override { _inputs.push_back(input); }
+    ATCG_INLINE virtual void addInput(std::string_view port_name, std::any input)
+    {
+        _inputs.setValue(port_name, input);
+    }
 
     /**
      * @brief Get the output.
@@ -128,65 +83,27 @@ public:
      * @return An atcg::ref_ptr with type specified by the instance of atcg::RenderPass, i.e.,
      * atcg::ref_ptr<RenderPassOutputT>
      */
-    ATCG_INLINE virtual std::any getOutput() const { return _output; }
+    ATCG_INLINE virtual const Dictionary& getOutputs() const { return _output; }
 
 private:
     RenderFunction _render_f;
     SetupFunction _setup_f;
-    std::vector<std::any> _inputs;
+    Dictionary _inputs;
     Dictionary _data;
-    atcg::ref_ptr<RenderPassOutputT> _output;
-};
-
-/**
- * @brief A base class to build a render pass.
- * This class collects all the data for a render pass and then executes the setup code when calling build().
- * The type of the data is specified in the instance of atcg::RenderPassBuilder.
- *
- */
-class RenderPassBuilderBase
-{
-public:
-    /**
-     * @brief Build the Render Pass
-     *
-     * @param context The Render context data
-     * @return The compiled render pass
-     */
-    virtual atcg::ref_ptr<RenderPassBase> build(Dictionary& context) = 0;
-
-    /**
-     * @brief Add an input to the Render pass.
-     * This can be any type but if this node is not a root node, it will be an instance of atcg::ref_ptr
-     *
-     * @param input The input
-     */
-    virtual void addInput(std::any input) = 0;
-
-    /**
-     * @brief Get the output.
-     * When creating a render pass, an atcg::ref_ptr will be allocated that holds the output
-     *
-     * @return An atcg::ref_ptr with type specified by the instance of atcg::RenderPass, i.e.,
-     * atcg::ref_ptr<RenderPassOutputT>
-     */
-    virtual std::any getOutput() const = 0;
+    Dictionary _output;
 };
 
 /**
  * @brief A class to build a render pass.
  * This class collects all the data for a render pass and then executes the setup code when calling build().
- *
- * @tparam RenderPassOutputT The output type of the RenderPass
  */
-template<typename RenderPassOutputT>
-class RenderPassBuilder : public RenderPassBuilderBase
+class RenderPassBuilder
 {
 public:
     /**
      * @brief Default constructor
      */
-    RenderPassBuilder() { _pass = atcg::make_ref<RenderPass<RenderPassOutputT>>(); }
+    RenderPassBuilder() { _pass = atcg::make_ref<RenderPass>(); }
 
     /**
      * @brief Set the render function.
@@ -194,12 +111,7 @@ public:
      *
      * @param f The render function
      */
-    ATCG_INLINE void setRenderFunction(
-        std::function<
-            void(Dictionary&, const std::vector<std::any>&, Dictionary&, const atcg::ref_ptr<RenderPassOutputT>&)> f)
-    {
-        _pass->setRenderFunction(f);
-    }
+    ATCG_INLINE void setRenderFunction(RenderPass::RenderFunction f) { _pass->setRenderFunction(f); }
 
     /**
      * @brief Set the setup function.
@@ -207,11 +119,7 @@ public:
      *
      * @param f The setup function
      */
-    ATCG_INLINE void
-    setSetupFunction(std::function<void(Dictionary&, Dictionary&, atcg::ref_ptr<RenderPassOutputT>&)> f)
-    {
-        _pass->setSetupFunction(f);
-    }
+    ATCG_INLINE void setSetupFunction(RenderPass::SetupFunction f) { _pass->setSetupFunction(f); }
 
     /**
      * @brief Add an input to the Render pass.
@@ -219,7 +127,10 @@ public:
      *
      * @param input The input
      */
-    ATCG_INLINE virtual void addInput(std::any input) override { _pass->addInput(input); }
+    ATCG_INLINE virtual void addInputs(std::string_view port_name, std::any input)
+    {
+        _pass->addInput(port_name, input);
+    }
 
     /**
      * @brief Get the output.
@@ -228,7 +139,7 @@ public:
      * @return An atcg::ref_ptr with type specified by the instance of atcg::RenderPass, i.e.,
      * atcg::ref_ptr<RenderPassOutputT>
      */
-    ATCG_INLINE virtual std::any getOutput() const override { return _pass->getOutput(); }
+    ATCG_INLINE virtual std::any getOutputs() const { return _pass->getOutputs(); }
 
     /**
      * @brief Build the Render Pass
@@ -236,14 +147,14 @@ public:
      * @param context The Render context data
      * @return The compiled render pass
      */
-    ATCG_INLINE virtual atcg::ref_ptr<RenderPassBase> build(Dictionary& context) override
+    ATCG_INLINE virtual atcg::ref_ptr<RenderPass> build(Dictionary& context)
     {
         _pass->setup(context);
         return _pass;
     }
 
 private:
-    atcg::ref_ptr<RenderPass<RenderPassOutputT>> _pass;
+    atcg::ref_ptr<RenderPass> _pass;
 };
 
 }    // namespace atcg

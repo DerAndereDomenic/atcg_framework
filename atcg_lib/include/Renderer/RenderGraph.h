@@ -30,14 +30,11 @@ public:
      * called. The handle can be used to access different render passes to add dependencies between them (by using
      * addDependency()).
      *
-     * @tparam RenderPassOutputT The output type of the RenderPass
-     *
      * @return A tuple with a RenderPassHandle and a RenderPassBuilder
      */
-    template<typename RenderPassOutputT>
-    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder<RenderPassOutputT>>> addRenderPass()
+    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder>> addRenderPass()
     {
-        auto builder            = atcg::make_ref<RenderPassBuilder<RenderPassOutputT>>();
+        auto builder            = atcg::make_ref<RenderPassBuilder>();
         RenderPassHandle handle = (RenderPassHandle)_builder.size();
         _builder.push_back(builder);
         return std::make_pair(handle, builder);
@@ -50,9 +47,12 @@ public:
      * @param source The source handle
      * @param target The target handle
      */
-    void addDependency(const RenderPassHandle& source, const RenderPassHandle& target)
+    void addDependency(const RenderPassHandle& source,
+                       std::string_view source_name,
+                       const RenderPassHandle& target,
+                       std::string_view target_name)
     {
-        _edges.push_back(std::make_pair(source, target));
+        _edges.push_back(PortEdge {source, target, std::string(source_name), std::string(target_name)});
     }
 
     /**
@@ -65,18 +65,33 @@ public:
         std::vector<int> inDegree(node_size, 0);
         std::vector<std::vector<RenderPassHandle>> adj(node_size);
 
-        std::vector<atcg::ref_ptr<RenderPassBase>> passes;
+        std::vector<atcg::ref_ptr<RenderPass>> passes;
         for(auto builder: _builder)
         {
             auto pass = builder->build(ctx);
             passes.push_back(pass);
         }
 
-        for(const auto& [from, to]: _edges)
+        std::set<std::pair<RenderPassHandle, RenderPassHandle>> uniqueEdges;
+        for(const auto& edge: _edges)
         {
-            adj[from].push_back(to);
-            ++inDegree[to];
-            passes[to]->addInput(passes[from]->getOutput());
+            RenderPassHandle from = edge.from;
+            RenderPassHandle to   = edge.to;
+
+            if(uniqueEdges.insert({from, to}).second)
+            {
+                adj[from].push_back(to);
+                ++inDegree[to];
+            }
+
+            const auto& outputs = passes[from]->getOutputs();
+            if(!outputs.contains(edge.from_port))
+            {
+                ATCG_ERROR("Error while compiling Render Graph: {} does not exist as an output", edge.from_port);
+                continue;
+            }
+
+            passes[to]->addInput(edge.to_port, outputs.getValueRaw(edge.from_port));
         }
 
         std::queue<RenderPassHandle> zeroInDegree;
@@ -123,9 +138,19 @@ public:
         }
     }
 
+
 private:
-    std::vector<atcg::ref_ptr<RenderPassBuilderBase>> _builder;
-    std::vector<atcg::ref_ptr<RenderPassBase>> _compiled_passes;
-    std::vector<std::tuple<RenderPassHandle, RenderPassHandle>> _edges;
+    struct PortEdge
+    {
+        RenderPassHandle from;
+        RenderPassHandle to;
+        std::string from_port;
+        std::string to_port;
+    };
+
+private:
+    std::vector<atcg::ref_ptr<RenderPassBuilder>> _builder;
+    std::vector<atcg::ref_ptr<RenderPass>> _compiled_passes;
+    std::vector<PortEdge> _edges;
 };
 }    // namespace atcg

@@ -340,11 +340,6 @@ public:
 
     ~Impl();
 
-    struct ShadowMappingData
-    {
-        atcg::ref_ptr<atcg::TextureCubeArray> point_light_depth_maps;
-    };
-
     Dictionary context;
 
     atcg::ref_ptr<atcg::RenderGraph> graph;
@@ -354,25 +349,29 @@ SceneRenderer::Impl::Impl()
 {
     graph = atcg::make_ref<atcg::RenderGraph>();
 
-    auto [skybox_handle, skybox_builder] = graph->addRenderPass<int>();    // Outputs into the current render target
-    auto [shadow_handle, shadow_builder] = graph->addRenderPass<ShadowMappingData>();
-    auto [output_handle, output_builder] = graph->addRenderPass<int>();
+    auto [skybox_handle, skybox_builder] = graph->addRenderPass();    // Outputs into the current render target
+    auto [shadow_handle, shadow_builder] = graph->addRenderPass();
+    auto [output_handle, output_builder] = graph->addRenderPass();
 
     // SKYBOX PASS
+    skybox_builder->setSetupFunction([](Dictionary&, Dictionary& data, Dictionary& output_data)
+                                     { output_data.setValue("framebuffer", nullptr); });
+
     skybox_builder->setRenderFunction(
-        [](Dictionary& context, const std::vector<std::any>&, Dictionary&, const atcg::ref_ptr<int>&)
+        [](Dictionary& context, const Dictionary&, Dictionary&, Dictionary&)
         { atcg::Renderer::drawSkybox(context.getValue<atcg::ref_ptr<Camera>>("camera")); });
 
     // SHADOW PASS
     shadow_builder->setSetupFunction(
-        [](Dictionary&, Dictionary& data, atcg::ref_ptr<ShadowMappingData>& output_data)
-        { data.setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024)); });
+        [](Dictionary&, Dictionary& data, Dictionary& output_data)
+        {
+            data.setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024));
+            output_data.setValue("point_light_depth_maps",
+                                 atcg::make_ref<atcg::ref_ptr<atcg::TextureCubeArray>>(nullptr));
+        });
 
     shadow_builder->setRenderFunction(
-        [](Dictionary& context,
-           const std::vector<std::any>&,
-           Dictionary& data,
-           const atcg::ref_ptr<ShadowMappingData>& output_data)
+        [](Dictionary& context, const Dictionary&, Dictionary& data, Dictionary& output_data)
         {
             auto scene = context.getValue<atcg::ref_ptr<Scene>>("scene");
 
@@ -395,23 +394,26 @@ SceneRenderer::Impl::Impl()
                 ++num_lights;
             }
 
+            auto point_light_depth_maps =
+                output_data.getValue<atcg::ref_ptr<atcg::ref_ptr<atcg::TextureCubeArray>>>("point_light_"
+                                                                                           "depth_maps");
             if(num_lights == 0)
             {
-                output_data->point_light_depth_maps = nullptr;
+                *point_light_depth_maps = nullptr;
                 return;
             }
 
             auto point_light_framebuffer = data.getValue<atcg::ref_ptr<atcg::Framebuffer>>("point_light_framebuffer");
-            if(!output_data->point_light_depth_maps || output_data->point_light_depth_maps->depth() != num_lights)
+            if(!(*point_light_depth_maps) || (*point_light_depth_maps)->depth() != num_lights)
             {
                 atcg::TextureSpecification spec;
-                spec.depth                          = num_lights;
-                spec.width                          = 1024;
-                spec.height                         = 1024;
-                spec.format                         = atcg::TextureFormat::DEPTH;
-                output_data->point_light_depth_maps = atcg::TextureCubeArray::create(spec);
+                spec.depth              = num_lights;
+                spec.width              = 1024;
+                spec.height             = 1024;
+                spec.format             = atcg::TextureFormat::DEPTH;
+                *point_light_depth_maps = atcg::TextureCubeArray::create(spec);
 
-                point_light_framebuffer->attachDepth(output_data->point_light_depth_maps);
+                point_light_framebuffer->attachDepth(*point_light_depth_maps);
                 point_light_framebuffer->complete();
             }
 
@@ -484,27 +486,28 @@ SceneRenderer::Impl::Impl()
             atcg::Framebuffer::bindByID(active_fbo);
         });
 
-    output_builder->setSetupFunction([](Dictionary&, Dictionary&, atcg::ref_ptr<int>&) {});
-
     output_builder->setRenderFunction(
-        [](Dictionary& context, const std::vector<std::any>& inputs, Dictionary&, const atcg::ref_ptr<int>&)
+        [](Dictionary& context, const Dictionary& inputs, Dictionary&, Dictionary&)
         {
             auto scene       = context.getValue<atcg::ref_ptr<Scene>>("scene");
             auto camera      = context.getValue<atcg::ref_ptr<Camera>>("camera");
             const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
-            auto shadow_maps = std::any_cast<atcg::ref_ptr<ShadowMappingData>>(inputs[1]);
+            auto point_light_depth_maps = inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<atcg::TextureCubeArray>>>("point_"
+                                                                                                                "light_"
+                                                                                                                "depth_"
+                                                                                                                "maps");
             for(auto e: view)
             {
                 Entity entity(e, scene.get());
                 // TODO
-                detail::render(scene, shadow_maps->point_light_depth_maps, entity, camera);
+                detail::render(scene, *point_light_depth_maps, entity, camera);
             }
         });
 
 
-    graph->addDependency(skybox_handle, output_handle);
-    graph->addDependency(shadow_handle, output_handle);
+    graph->addDependency(skybox_handle, "framebuffer", output_handle, "framebuffer");
+    graph->addDependency(shadow_handle, "point_light_depth_maps", output_handle, "point_light_depth_maps");
 
     graph->compile(context);
 }
