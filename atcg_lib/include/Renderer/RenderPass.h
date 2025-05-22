@@ -111,7 +111,11 @@ public:
      *
      * @param f The render function
      */
-    ATCG_INLINE void setRenderFunction(RenderPass::RenderFunction f) { _pass->setRenderFunction(f); }
+    ATCG_INLINE RenderPassBuilder* setRenderFunction(RenderPass::RenderFunction f)
+    {
+        _pass->setRenderFunction(f);
+        return this;
+    }
 
     /**
      * @brief Set the setup function.
@@ -119,7 +123,11 @@ public:
      *
      * @param f The setup function
      */
-    ATCG_INLINE void setSetupFunction(RenderPass::SetupFunction f) { _pass->setSetupFunction(f); }
+    ATCG_INLINE RenderPassBuilder* setSetupFunction(RenderPass::SetupFunction f)
+    {
+        _pass->setSetupFunction(f);
+        return this;
+    }
 
     /**
      * @brief Add an input to the Render pass.
@@ -127,9 +135,10 @@ public:
      *
      * @param input The input
      */
-    ATCG_INLINE virtual void addInputs(std::string_view port_name, std::any input)
+    ATCG_INLINE virtual RenderPassBuilder* addInput(std::string_view port_name, std::any input)
     {
         _pass->addInput(port_name, input);
+        return this;
     }
 
     /**
