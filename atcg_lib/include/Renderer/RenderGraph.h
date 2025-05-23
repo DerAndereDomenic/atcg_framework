@@ -25,18 +25,18 @@ public:
 
     /**
      * @brief Add a render pass to the graph.
-     * This functions returns a handle and a RenderPassBuilder. The builder is an intermediate class that collects all
+     * This functions returns a handle and a RenderPass. The builder is an intermediate class that collects all
      * the data associated with the rendering pass and then gets compiled into the final render pass when compile() is
      * called. The handle can be used to access different render passes to add dependencies between them (by using
      * addDependency()).
      *
-     * @return A tuple with a RenderPassHandle and a RenderPassBuilder
+     * @return A tuple with a RenderPassHandle and a RenderPass
      */
-    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder>> addRenderPass(std::string_view name = "")
+    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPass>> addRenderPass(std::string_view name = "")
     {
-        auto builder            = atcg::make_ref<RenderPassBuilder>(name);
-        RenderPassHandle handle = (RenderPassHandle)_builder.size();
-        _builder.push_back(builder);
+        auto builder            = atcg::make_ref<RenderPass>(name);
+        RenderPassHandle handle = (RenderPassHandle)_passes.size();
+        _passes.push_back(builder);
         return std::make_pair(handle, builder);
     }
 
@@ -61,15 +61,13 @@ public:
      */
     void compile(Dictionary& ctx)
     {
-        size_t node_size = _builder.size();
+        size_t node_size = _passes.size();
         std::vector<int> inDegree(node_size, 0);
         std::vector<std::vector<RenderPassHandle>> adj(node_size);
 
-        std::vector<atcg::ref_ptr<RenderPass>> passes;
-        for(auto builder: _builder)
+        for(auto pass: _passes)
         {
-            auto pass = builder->build(ctx);
-            passes.push_back(pass);
+            pass->setup(ctx);
         }
 
         std::set<std::pair<RenderPassHandle, RenderPassHandle>> uniqueEdges;
@@ -84,14 +82,14 @@ public:
                 ++inDegree[to];
             }
 
-            const auto& outputs = passes[from]->getOutputs();
+            const auto& outputs = _passes[from]->getOutputs();
             if(!outputs.contains(edge.from_port))
             {
                 ATCG_ERROR("Error while compiling Render Graph: {} does not exist as an output", edge.from_port);
                 continue;
             }
 
-            passes[to]->addInput(edge.to_port, outputs.getValueRaw(edge.from_port));
+            _passes[to]->addInput(edge.to_port, outputs.getValueRaw(edge.from_port));
         }
 
         std::queue<RenderPassHandle> zeroInDegree;
@@ -108,7 +106,7 @@ public:
             RenderPassHandle handle = zeroInDegree.front();
             zeroInDegree.pop();
 
-            _compiled_passes.push_back(passes[handle]);
+            _compiled_passes.push_back(_passes[handle]);
 
             for(int neighbor: adj[handle])
             {
@@ -144,9 +142,9 @@ public:
         out << "digraph RenderGraph {\n";
         out << "    rankdir=LR;\n";    // optional: makes the graph left-to-right instead of top-down
 
-        for(RenderPassHandle i = 0; i < _builder.size(); ++i)
+        for(RenderPassHandle i = 0; i < _passes.size(); ++i)
         {
-            out << "    " << i << " [label=\"" << _builder[i]->name() << "\"];\n";
+            out << "    " << i << " [label=\"" << _passes[i]->name() << "\"];\n";
         }
 
         for(const auto& edge: _edges)
@@ -169,8 +167,8 @@ private:
     };
 
 private:
-    std::vector<atcg::ref_ptr<RenderPassBuilder>> _builder;
-    std::vector<atcg::ref_ptr<RenderPass>> _compiled_passes;
+    std::vector<atcg::ref_ptr<RenderPass>> _passes;
+    std::vector<atcg::ref_ptr<RenderPass>> _compiled_passes;    // Same data as _passes but topologically sorted
     std::vector<PortEdge> _edges;
 };
 }    // namespace atcg
