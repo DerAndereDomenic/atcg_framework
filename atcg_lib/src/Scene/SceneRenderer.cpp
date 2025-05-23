@@ -166,13 +166,18 @@ SceneRenderer::Impl::Impl()
             auto camera      = context.getValue<atcg::ref_ptr<Camera>>("camera");
             const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
-            auto point_light_depth_maps = inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<atcg::TextureCubeArray>>>("point_"
+            atcg::ref_ptr<atcg::TextureCubeArray> point_light_depth_maps = nullptr;
+
+            if(inputs.contains("point_light_depth_maps"))
+            {
+                point_light_depth_maps = *inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<atcg::TextureCubeArray>>>("point_"
                                                                                                                 "light_"
                                                                                                                 "depth_"
                                                                                                                 "maps");
+            }
 
             Dictionary auxiliary;
-            auxiliary.setValue("point_light_depth_maps", *point_light_depth_maps);
+            auxiliary.setValue("point_light_depth_maps", point_light_depth_maps);
 
             ComponentRenderer component_renderer;
             for(auto e: view)

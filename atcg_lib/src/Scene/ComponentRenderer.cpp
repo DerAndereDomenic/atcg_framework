@@ -35,13 +35,15 @@ uint32_t ComponentRenderer::_setLights(Scene* scene,
     {
         uint32_t shadow_map_id = atcg::Renderer::popTextureID();
         shader->setInt("shadow_maps", shadow_map_id);
+        shader->setInt("shadow_pass", 1);
         point_light_depth_maps->use(shadow_map_id);
 
         return shadow_map_id;
     }
     else
     {
-        ATCG_ASSERT(num_lights == 0, "Shadow map is not initialized but lights are present");
+        shader->setInt("shadow_pass", 0);
+        //     ATCG_ASSERT(num_lights == 0, "Shadow map is not initialized but lights are present");
     }
 
     return -1;
