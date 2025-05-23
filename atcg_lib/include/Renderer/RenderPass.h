@@ -77,6 +77,17 @@ public:
     }
 
     /**
+     * @brief Register an output variable
+     *
+     * @param port_name The output name
+     * @param output The output variable
+     */
+    ATCG_INLINE virtual void registerOutput(std::string_view port_name, std::any output)
+    {
+        _output.setValue(port_name, output);
+    }
+
+    /**
      * @brief Get the output.
      * When creating a render pass, an atcg::ref_ptr will be allocated that holds the output
      *
@@ -150,6 +161,18 @@ public:
     }
 
     /**
+     * @brief Register an output variable
+     *
+     * @param port_name The output name
+     * @param output The output variable
+     */
+    ATCG_INLINE virtual RenderPassBuilder* registerOutput(std::string_view port_name, std::any output)
+    {
+        _pass->registerOutput(port_name, output);
+        return this;
+    }
+
+    /**
      * @brief Get the output.
      * When creating a render pass, an atcg::ref_ptr will be allocated that holds the output
      *
@@ -170,7 +193,7 @@ public:
         return _pass;
     }
 
-    ATCG_INLINE const std::string& name() const {return _pass->name();}
+    ATCG_INLINE const std::string& name() const { return _pass->name(); }
 
 private:
     atcg::ref_ptr<RenderPass> _pass;

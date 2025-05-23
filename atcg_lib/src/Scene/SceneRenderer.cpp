@@ -30,21 +30,15 @@ SceneRenderer::Impl::Impl()
     auto [output_handle, output_builder] = graph->addRenderPass("Forward");
 
     // SKYBOX PASS
-    skybox_builder
-        ->setSetupFunction([](Dictionary&, Dictionary& data, Dictionary& output_data)
-                           { output_data.setValue("framebuffer", nullptr); })
+    skybox_builder->registerOutput("framebuffer", nullptr)
         ->setRenderFunction([](Dictionary& context, const Dictionary&, Dictionary&, Dictionary&)
                             { atcg::Renderer::drawSkybox(context.getValue<atcg::ref_ptr<Camera>>("camera")); });
 
     // SHADOW PASS
     shadow_builder
-        ->setSetupFunction(
-            [](Dictionary&, Dictionary& data, Dictionary& output_data)
-            {
-                data.setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024));
-                output_data.setValue("point_light_depth_maps",
-                                     atcg::make_ref<atcg::ref_ptr<atcg::TextureCubeArray>>(nullptr));
-            })
+        ->registerOutput("point_light_depth_maps", atcg::make_ref<atcg::ref_ptr<atcg::TextureCubeArray>>(nullptr))
+        ->setSetupFunction([](Dictionary&, Dictionary& data, Dictionary& output_data)
+                           { data.setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024)); })
         ->setRenderFunction(
             [](Dictionary& context, const Dictionary&, Dictionary& data, Dictionary& output_data)
             {
