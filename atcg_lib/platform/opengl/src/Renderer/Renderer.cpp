@@ -1216,6 +1216,11 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
 
 atcg::ref_ptr<Framebuffer> RendererSystem::getFramebuffer() const
 {
+    return impl->msaa_enabled ? impl->screen_fbo_msaa : impl->screen_fbo;
+}
+
+atcg::ref_ptr<Framebuffer> RendererSystem::getResolvedFramebuffer() const
+{
     return impl->screen_fbo;
 }
 

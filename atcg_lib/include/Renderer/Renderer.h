@@ -360,6 +360,15 @@ public:
 
     /**
      * @brief Get the framebuffer objects that is used by the renderer.
+     * Depending on if MSAA is enabled or not, this may be a MSAA framebuffer that can only be used for additional
+     * rendering tasks. Data reads can not be performed in this case.
+     *
+     * @return The framebuffer of last frame
+     */
+    atcg::ref_ptr<Framebuffer> getFramebuffer() const;
+
+    /**
+     * @brief Get the framebuffer objects that is used by the renderer.
      * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
      * the current frame data, refer to getFramebufferMSAA().
      * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
@@ -368,7 +377,7 @@ public:
      *
      * @return The framebuffer of last frame
      */
-    atcg::ref_ptr<Framebuffer> getFramebuffer() const;
+    atcg::ref_ptr<Framebuffer> getResolvedFramebuffer() const;
 
     /**
      * @brief Get the framebuffer object that is used by the renderer.
@@ -825,6 +834,21 @@ ATCG_INLINE void drawImage(const atcg::ref_ptr<Texture2D>& img)
 ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebuffer()
 {
     return SystemRegistry::instance()->getSystem<RendererSystem>()->getFramebuffer();
+}
+
+/**
+ * @brief Get the framebuffer objects that is used by the renderer.
+ * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
+ * the current frame data, refer to getFramebufferMSAA().
+ * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
+ * operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using
+ * toggleMSAA.
+ *
+ * @return The framebuffer of last frame
+ */
+ATCG_INLINE atcg::ref_ptr<Framebuffer> getResolvedFramebuffer()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getResolvedFramebuffer();
 }
 
 /**
