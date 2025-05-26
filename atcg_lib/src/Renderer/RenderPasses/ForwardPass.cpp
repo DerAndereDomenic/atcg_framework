@@ -11,7 +11,7 @@ ForwardPass::ForwardPass() : RenderPass("ForwardPass")
     setRenderFunction(
         [](Dictionary& context, const Dictionary& inputs, Dictionary&, Dictionary&)
         {
-            auto scene       = context.getValue<atcg::ref_ptr<Scene>>("scene");
+            auto scene       = context.getValue<Scene*>("scene");
             auto camera      = context.getValue<atcg::ref_ptr<Camera>>("camera");
             const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
@@ -31,7 +31,7 @@ ForwardPass::ForwardPass() : RenderPass("ForwardPass")
             ComponentRenderer component_renderer;
             for(auto e: view)
             {
-                Entity entity(e, scene.get());
+                Entity entity(e, scene);
                 if(entity.hasComponent<CustomRenderComponent>())
                 {
                     CustomRenderComponent renderer = entity.getComponent<CustomRenderComponent>();

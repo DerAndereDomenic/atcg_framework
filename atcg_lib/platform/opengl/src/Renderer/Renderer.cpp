@@ -10,7 +10,6 @@
 
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
-#include <Scene/SceneRenderer.h>
 
 #include <queue>
 
@@ -1295,8 +1294,9 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
     screenshot_buffer->use();
     clear();
     setViewport(0, 0, width, height);
-    atcg::SceneRenderer scene_renderer(scene);
-    scene_renderer.render(cam);
+    atcg::Dictionary context;
+    context.setValue("camera", cam);
+    scene->draw(context);
     useScreenBuffer();
     setDefaultViewport();
 
@@ -1322,8 +1322,9 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     screenshot_buffer->use();
     clear();
     setViewport(0, 0, width, height);
-    atcg::SceneRenderer scene_renderer(scene);
-    scene_renderer.render(cam);
+    atcg::Dictionary context;
+    context.setValue("camera", cam);
+    scene->draw(context);
     useScreenBuffer();
     setDefaultViewport();
 

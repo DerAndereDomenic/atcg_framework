@@ -5,20 +5,42 @@
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
 
+#include <Renderer/RenderGraph.h>
+#include <Renderer/RenderPasses/ForwardPass.h>
+#include <Renderer/RenderPasses/SkyboxPass.h>
+#include <Renderer/RenderPasses/ShadowPass.h>
+
 namespace atcg
 {
 
 class Scene::Impl
 {
 public:
-    Impl()  = default;
+    Impl();
     ~Impl() = default;
 
     std::unordered_map<UUID, entt::entity> _entities;
     std::unordered_map<std::string, std::vector<entt::entity>> _entites_by_name;
 
     atcg::ref_ptr<atcg::Camera> _camera = nullptr;
+
+    atcg::ref_ptr<atcg::RenderGraph> _render_graph;
 };
+
+Scene::Impl::Impl()
+{
+    _render_graph = atcg::make_ref<atcg::RenderGraph>();
+
+    auto skybox_handle = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>());
+    auto shadow_handle = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
+    auto output_handle = _render_graph->addRenderPass(atcg::make_ref<ForwardPass>());
+
+    _render_graph->addDependency(skybox_handle, "framebuffer", output_handle, "framebuffer");
+    _render_graph->addDependency(shadow_handle, "point_light_depth_maps", output_handle, "point_light_depth_maps");
+
+    atcg::Dictionary context;    // TODO
+    _render_graph->compile(context);
+}
 
 Scene::Scene()
 {
@@ -120,6 +142,24 @@ void Scene::removeCamera()
     setCamera(nullptr);
 }
 
+void Scene::draw(Dictionary& context)
+{
+    if(!context.contains("camera") && impl->_camera)
+    {
+        context.setValue("camera", impl->_camera);
+    }
+
+    if(!context.contains("camera"))
+    {
+        ATCG_WARN("Scene render was issued without valid camera");
+        return;
+    }
+
+    context.setValue("scene", this);
+
+    impl->_render_graph->execute(context);
+}
+
 void Scene::_updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id)
 {
     impl->_entities.erase(old_id);
@@ -141,6 +181,5 @@ void Scene::_updateEntityName(atcg::Entity entity, const std::string& old_name, 
     auto& entities = impl->_entites_by_name[new_name];
     entities.push_back((entt::entity)entity.entity_handle());
 }
-
 
 }    // namespace atcg

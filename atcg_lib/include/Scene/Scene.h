@@ -5,6 +5,7 @@
 #include <Core/Memory.h>
 
 #include <Renderer/Camera.h>
+#include <DataStructure/Dictionary.h>
 
 #include <memory>
 #include <entt.hpp>
@@ -117,6 +118,11 @@ public:
      * @brief Remove the registered main camera
      */
     void removeCamera();
+
+    /**
+     * @brief Render the scene
+     */
+    void draw(Dictionary& context);
 
 private:
     void _updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id);

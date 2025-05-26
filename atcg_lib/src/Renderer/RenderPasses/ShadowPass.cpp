@@ -13,7 +13,7 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
     setRenderFunction(
         [](Dictionary& context, const Dictionary&, Dictionary& data, Dictionary& output_data)
         {
-            auto scene = context.getValue<atcg::ref_ptr<Scene>>("scene");
+            auto scene = context.getValue<Scene*>("scene");
 
             float n              = 0.1f;
             float f              = 100.0f;
@@ -65,7 +65,7 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
             uint32_t light_idx = 0;
             for(auto e: light_view)
             {
-                atcg::Entity entity(e, scene.get());
+                atcg::Entity entity(e, scene);
 
                 auto& point_light = entity.getComponent<PointLightComponent>();
                 auto& transform   = entity.getComponent<TransformComponent>();
@@ -108,7 +108,7 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
                 // Draw scene
                 for(auto e: view)
                 {
-                    atcg::Entity entity(e, scene.get());
+                    atcg::Entity entity(e, scene);
 
                     auto& transform = entity.getComponent<atcg::TransformComponent>();
                     auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
