@@ -14,8 +14,10 @@ namespace atcg
 class Dictionary
 {
 public:
-    Dictionary()  = default;
-    ~Dictionary() = default;
+    Dictionary()                                 = default;
+    ~Dictionary()                                = default;
+    Dictionary(Dictionary&&) noexcept            = default;
+    Dictionary& operator=(Dictionary&&) noexcept = default;
 
     /**
      * @brief Set a value for a given key.
