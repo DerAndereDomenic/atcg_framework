@@ -41,6 +41,22 @@ public:
     }
 
     /**
+     * @brief Add a render pass to the graph.
+     * This functions returns a handle and a RenderPass. The builder is an intermediate class that collects all
+     * the data associated with the rendering pass and then gets compiled into the final render pass when compile() is
+     * called. The handle can be used to access different render passes to add dependencies between them (by using
+     * addDependency()).
+     *
+     * @return A tuple with a RenderPassHandle and a RenderPass
+     */
+    RenderPassHandle addRenderPass(std::string_view name = "", const atcg::ref_ptr<RenderPass>& pass)
+    {
+        RenderPassHandle handle = (RenderPassHandle)_passes.size();
+        _passes.push_back(pass);
+        return handle;
+    }
+
+    /**
      * @brief Create a dependency between two Renderpasses.
      * Creates the directed edge (source, target) into the Graph. The handles are obtained by calling addRenderPass().
      *
