@@ -11,14 +11,24 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
     {
         _skybox = atcg::make_ref<Skybox>();
     }
-    _data.setValue("skybox", _skybox);
 
-    _component_renderer = atcg::make_ref<atcg::ComponentRenderer>();
-    _data.setValue("component_renderer", _component_renderer);
+
+    setSetupFunction(
+        [this](Dictionary& context, Dictionary& data, Dictionary& output)
+        {
+            auto renderer =
+                context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
+            data.setValue("skybox", _skybox);
+            auto component_renderer = atcg::make_ref<atcg::ComponentRenderer>(renderer);
+            data.setValue("component_renderer", std::move(component_renderer));
+        });
+
 
     setRenderFunction(
         [](Dictionary& context, const Dictionary& inputs, Dictionary& data, Dictionary&)
         {
+            auto renderer =
+                context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
             auto scene       = context.getValue<Scene*>("scene");
             auto camera      = context.getValue<atcg::ref_ptr<Camera>>("camera");
             const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();

@@ -14,6 +14,5 @@ public:
 
 private:
     atcg::ref_ptr<atcg::Skybox> _skybox;
-    atcg::ref_ptr<ComponentRenderer> _component_renderer;
 };
 }    // namespace atcg

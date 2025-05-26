@@ -13,6 +13,8 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
     setRenderFunction(
         [](Dictionary& context, const Dictionary&, Dictionary& data, Dictionary& output_data)
         {
+            auto renderer =
+                context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
             auto scene = context.getValue<Scene*>("scene");
 
             float n              = 0.1f;
@@ -24,7 +26,7 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
 
             uint32_t active_fbo = atcg::Framebuffer::currentFramebuffer();
 
-            glm::vec4 old_viewport = atcg::Renderer::getViewport();
+            glm::vec4 old_viewport = renderer->getViewport();
 
             auto light_view = scene->getAllEntitiesWith<PointLightComponent, TransformComponent>();
 
@@ -59,8 +61,8 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
             }
 
             point_light_framebuffer->use();
-            atcg::Renderer::setViewport(0, 0, point_light_framebuffer->width(), point_light_framebuffer->height());
-            atcg::Renderer::clear();
+            renderer->setViewport(0, 0, point_light_framebuffer->width(), point_light_framebuffer->height());
+            renderer->clear();
 
             uint32_t light_idx = 0;
             for(auto e: light_view)
@@ -113,17 +115,17 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
                     auto& transform = entity.getComponent<atcg::TransformComponent>();
                     auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
 
-                    atcg::Renderer::draw(geometry.graph,
-                                         context.getValue<atcg::ref_ptr<Camera>>("camera"),
-                                         transform.getModel(),
-                                         glm::vec3(1),
-                                         depth_pass_shader);
+                    renderer->draw(geometry.graph,
+                                   context.getValue<atcg::ref_ptr<Camera>>("camera"),
+                                   transform.getModel(),
+                                   glm::vec3(1),
+                                   depth_pass_shader);
                 }
 
                 ++light_idx;
             }
 
-            atcg::Renderer::setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
+            renderer->setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
             atcg::Framebuffer::bindByID(active_fbo);
         });
 }

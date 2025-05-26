@@ -33,7 +33,7 @@ uint32_t ComponentRenderer::_setLights(Scene* scene,
     shader->setInt("num_lights", num_lights);
     if(point_light_depth_maps)
     {
-        uint32_t shadow_map_id = atcg::Renderer::popTextureID();
+        uint32_t shadow_map_id = _renderer->popTextureID();
         shader->setInt("shadow_maps", shadow_map_id);
         shader->setInt("shadow_pass", 1);
         point_light_depth_maps->use(shadow_map_id);
@@ -52,11 +52,11 @@ uint32_t ComponentRenderer::_setLights(Scene* scene,
 std::pair<uint32_t, uint32_t> ComponentRenderer::_setSkyLight(const atcg::ref_ptr<Shader>& shader,
                                                               const atcg::ref_ptr<Skybox>& skybox)
 {
-    uint32_t irradiance_id = Renderer::popTextureID();
+    uint32_t irradiance_id = _renderer->popTextureID();
     skybox->getIrradianceMap()->use(irradiance_id);
     shader->setInt("irradiance_map", irradiance_id);
 
-    uint32_t prefiltered_id = Renderer::popTextureID();
+    uint32_t prefiltered_id = _renderer->popTextureID();
     skybox->getPrefilteredMap()->use(prefiltered_id);
     shader->setInt("prefilter_map", prefiltered_id);
 
@@ -121,25 +121,25 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
-        atcg::Renderer::draw(geometry.graph,
-                             camera,
-                             transform.getModel(),
-                             glm::vec3(1),
-                             shader,
-                             atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE,
-                             renderer.material,
-                             entity.entity_handle());
+        _renderer->draw(geometry.graph,
+                        camera,
+                        transform.getModel(),
+                        glm::vec3(1),
+                        shader,
+                        atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+                        renderer.material,
+                        entity.entity_handle());
         if(id != -1)
         {
-            atcg::Renderer::pushTextureID(id);
+            _renderer->pushTextureID(id);
         }
         if(ir_id != -1)
         {
-            atcg::Renderer::pushTextureID(ir_id);
+            _renderer->pushTextureID(ir_id);
         }
         if(pre_id != -1)
         {
-            atcg::Renderer::pushTextureID(pre_id);
+            _renderer->pushTextureID(pre_id);
         }
     }
 }
@@ -196,26 +196,26 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
-        atcg::Renderer::setPointSize(renderer.point_size);
-        atcg::Renderer::draw(geometry.graph,
-                             camera,
-                             transform.getModel(),
-                             renderer.color,
-                             shader,
-                             atcg::DrawMode::ATCG_DRAW_MODE_POINTS,
-                             {},
-                             entity.entity_handle());
+        _renderer->setPointSize(renderer.point_size);
+        _renderer->draw(geometry.graph,
+                        camera,
+                        transform.getModel(),
+                        renderer.color,
+                        shader,
+                        atcg::DrawMode::ATCG_DRAW_MODE_POINTS,
+                        {},
+                        entity.entity_handle());
         if(id != -1)
         {
-            atcg::Renderer::pushTextureID(id);
+            _renderer->pushTextureID(id);
         }
         if(ir_id != -1)
         {
-            atcg::Renderer::pushTextureID(ir_id);
+            _renderer->pushTextureID(ir_id);
         }
         if(pre_id != -1)
         {
-            atcg::Renderer::pushTextureID(pre_id);
+            _renderer->pushTextureID(pre_id);
         }
     }
 }
@@ -272,26 +272,26 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
-        atcg::Renderer::setPointSize(renderer.point_size);
-        atcg::Renderer::draw(geometry.graph,
-                             camera,
-                             transform.getModel(),
-                             glm::vec3(1),
-                             shader,
-                             atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE,
-                             renderer.material,
-                             entity.entity_handle());
+        _renderer->setPointSize(renderer.point_size);
+        _renderer->draw(geometry.graph,
+                        camera,
+                        transform.getModel(),
+                        glm::vec3(1),
+                        shader,
+                        atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE,
+                        renderer.material,
+                        entity.entity_handle());
         if(id != -1)
         {
-            atcg::Renderer::pushTextureID(id);
+            _renderer->pushTextureID(id);
         }
         if(ir_id != -1)
         {
-            atcg::Renderer::pushTextureID(ir_id);
+            _renderer->pushTextureID(ir_id);
         }
         if(pre_id != -1)
         {
-            atcg::Renderer::pushTextureID(pre_id);
+            _renderer->pushTextureID(pre_id);
         }
     }
 }
@@ -348,25 +348,25 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
-        atcg::Renderer::draw(geometry.graph,
-                             camera,
-                             transform.getModel(),
-                             renderer.color,
-                             shader,
-                             atcg::DrawMode::ATCG_DRAW_MODE_EDGES,
-                             {},
-                             entity.entity_handle());
+        _renderer->draw(geometry.graph,
+                        camera,
+                        transform.getModel(),
+                        renderer.color,
+                        shader,
+                        atcg::DrawMode::ATCG_DRAW_MODE_EDGES,
+                        {},
+                        entity.entity_handle());
         if(id != -1)
         {
-            atcg::Renderer::pushTextureID(id);
+            _renderer->pushTextureID(id);
         }
         if(ir_id != -1)
         {
-            atcg::Renderer::pushTextureID(ir_id);
+            _renderer->pushTextureID(ir_id);
         }
         if(pre_id != -1)
         {
-            atcg::Renderer::pushTextureID(pre_id);
+            _renderer->pushTextureID(pre_id);
         }
     }
 }
@@ -424,25 +424,25 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setFloat("edge_radius", renderer.radius);
-        atcg::Renderer::draw(geometry.graph,
-                             camera,
-                             transform.getModel(),
-                             glm::vec3(1),
-                             shader,
-                             atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER,
-                             renderer.material,
-                             entity.entity_handle());
+        _renderer->draw(geometry.graph,
+                        camera,
+                        transform.getModel(),
+                        glm::vec3(1),
+                        shader,
+                        atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER,
+                        renderer.material,
+                        entity.entity_handle());
         if(id != -1)
         {
-            atcg::Renderer::pushTextureID(id);
+            _renderer->pushTextureID(id);
         }
         if(ir_id != -1)
         {
-            atcg::Renderer::pushTextureID(ir_id);
+            _renderer->pushTextureID(ir_id);
         }
         if(pre_id != -1)
         {
-            atcg::Renderer::pushTextureID(pre_id);
+            _renderer->pushTextureID(pre_id);
         }
     }
 }
