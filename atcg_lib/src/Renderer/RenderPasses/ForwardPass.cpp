@@ -2,7 +2,6 @@
 
 #include <Renderer/Renderer.h>
 #include <Scene/Components.h>
-#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
@@ -13,6 +12,9 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
         _skybox = atcg::make_ref<Skybox>();
     }
     _data.setValue("skybox", _skybox);
+
+    _component_renderer = atcg::make_ref<atcg::ComponentRenderer>();
+    _data.setValue("component_renderer", _component_renderer);
 
     setRenderFunction(
         [](Dictionary& context, const Dictionary& inputs, Dictionary& data, Dictionary&)
@@ -31,12 +33,14 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
                                                                                                                 "maps");
             }
 
+            auto component_renderer = data.getValue<atcg::ref_ptr<ComponentRenderer>>("component_renderer");
+
             Dictionary auxiliary;
             auxiliary.setValue("point_light_depth_maps", point_light_depth_maps);
             auxiliary.setValue("skybox", data.getValue<atcg::ref_ptr<Skybox>>("skybox"));
             auxiliary.setValue("has_skybox", context.getValueOr<bool>("has_skybox", false));
 
-            ComponentRenderer component_renderer;
+
             for(auto e: view)
             {
                 Entity entity(e, scene);
@@ -46,12 +50,12 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
                     renderer.callback(entity, camera);
                 }
 
-                component_renderer.renderComponent<MeshRenderComponent>(entity, camera, auxiliary);
-                component_renderer.renderComponent<PointRenderComponent>(entity, camera, auxiliary);
-                component_renderer.renderComponent<PointSphereRenderComponent>(entity, camera, auxiliary);
-                component_renderer.renderComponent<EdgeRenderComponent>(entity, camera, auxiliary);
-                component_renderer.renderComponent<EdgeCylinderRenderComponent>(entity, camera, auxiliary);
-                component_renderer.renderComponent<InstanceRenderComponent>(entity, camera, auxiliary);
+                component_renderer->renderComponent<MeshRenderComponent>(entity, camera, auxiliary);
+                component_renderer->renderComponent<PointRenderComponent>(entity, camera, auxiliary);
+                component_renderer->renderComponent<PointSphereRenderComponent>(entity, camera, auxiliary);
+                component_renderer->renderComponent<EdgeRenderComponent>(entity, camera, auxiliary);
+                component_renderer->renderComponent<EdgeCylinderRenderComponent>(entity, camera, auxiliary);
+                component_renderer->renderComponent<InstanceRenderComponent>(entity, camera, auxiliary);
             }
         });
 }

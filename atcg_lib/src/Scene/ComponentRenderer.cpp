@@ -110,20 +110,15 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
-    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", nullptr);
-    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && skybox;
+    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
 
     auto shader = override_shader ? override_shader : renderer.shader;
 
     if(renderer.visible)
     {
-        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
-        uint32_t ir_id  = -1;
-        uint32_t pre_id = -1;
-        if(skybox)
-        {
-            std::tie(ir_id, pre_id) = _setSkyLight(shader, skybox);
-        }
+        uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
         atcg::Renderer::draw(geometry.graph,
@@ -191,20 +186,15 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
-    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", nullptr);
-    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && skybox;
+    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
 
     auto shader = override_shader ? override_shader : renderer.shader;
 
     if(renderer.visible)
     {
-        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
-        uint32_t ir_id  = -1;
-        uint32_t pre_id = -1;
-        if(skybox)
-        {
-            std::tie(ir_id, pre_id) = _setSkyLight(shader, skybox);
-        }
+        uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         atcg::Renderer::setPointSize(renderer.point_size);
         atcg::Renderer::draw(geometry.graph,
@@ -272,20 +262,15 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
-    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", nullptr);
-    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && skybox;
+    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
 
     auto shader = override_shader ? override_shader : renderer.shader;
 
     if(renderer.visible)
     {
-        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
-        uint32_t ir_id  = -1;
-        uint32_t pre_id = -1;
-        if(skybox)
-        {
-            std::tie(ir_id, pre_id) = _setSkyLight(shader, skybox);
-        }
+        uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         atcg::Renderer::setPointSize(renderer.point_size);
         atcg::Renderer::draw(geometry.graph,
@@ -353,20 +338,15 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
-    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", nullptr);
-    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && skybox;
+    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
 
     auto shader = override_shader ? override_shader : atcg::ShaderManager::getShader("edge");
 
     if(renderer.visible)
     {
-        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
-        uint32_t ir_id  = -1;
-        uint32_t pre_id = -1;
-        if(skybox)
-        {
-            std::tie(ir_id, pre_id) = _setSkyLight(shader, skybox);
-        }
+        uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         atcg::Renderer::draw(geometry.graph,
                              camera,
@@ -433,20 +413,15 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
-    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", nullptr);
-    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && skybox;
+    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
 
     auto shader = override_shader ? override_shader : atcg::ShaderManager::getShader("cylinder_edge");
 
     if(renderer.visible)
     {
-        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
-        uint32_t ir_id  = -1;
-        uint32_t pre_id = -1;
-        if(skybox)
-        {
-            std::tie(ir_id, pre_id) = _setSkyLight(shader, skybox);
-        }
+        uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setFloat("edge_radius", renderer.radius);
         atcg::Renderer::draw(geometry.graph,

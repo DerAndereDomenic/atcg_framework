@@ -3,6 +3,7 @@
 #include <Renderer/RenderPass.h>
 #include <Renderer/Texture.h>
 #include <DataStructure/Skybox.h>
+#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
@@ -13,5 +14,6 @@ public:
 
 private:
     atcg::ref_ptr<atcg::Skybox> _skybox;
+    atcg::ref_ptr<ComponentRenderer> _component_renderer;
 };
 }    // namespace atcg
