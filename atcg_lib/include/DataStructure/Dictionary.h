@@ -30,7 +30,8 @@ public:
     template<typename T>
     ATCG_INLINE void setValue(std::string_view key, T&& value)
     {
-        _values[std::string(key)] = std::forward<T>(value);
+        using U                   = std::decay_t<T>;    // strip references and cv-qualifiers
+        _values[std::string(key)] = std::any(U(std::forward<T>(value)));
     }
 
     /**
