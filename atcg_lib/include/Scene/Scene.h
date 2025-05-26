@@ -5,7 +5,9 @@
 #include <Core/Memory.h>
 
 #include <Renderer/Camera.h>
+#include <Renderer/Texture.h>
 #include <DataStructure/Dictionary.h>
+#include <DataStructure/Image.h>
 
 #include <memory>
 #include <entt.hpp>
@@ -123,6 +125,46 @@ public:
      * @brief Render the scene
      */
     void draw(Dictionary& context);
+
+    /**
+     * @brief Set a skybox
+     *
+     * @param skybox An equirectangular representation of the skybox
+     */
+    void setSkybox(const atcg::ref_ptr<Image>& skybox);
+
+    /**
+     * @brief Set a skybox
+     *
+     * @param skybox An equirectangular representation of the skybox
+     */
+    void setSkybox(const atcg::ref_ptr<Texture2D>& skybox);
+
+    /**
+     * @brief If a skybox is set.
+     *
+     * @return True if there is a skybox set.
+     */
+    bool hasSkybox() const;
+
+    /**
+     * @brief Remove the skybox
+     */
+    void removeSkybox();
+
+    /**
+     * @brief Return the equirectangular skybox texture
+     *
+     * @return A pointer to the texture (only is valid if hasSkybox() == true)
+     */
+    atcg::ref_ptr<Texture2D> getSkyboxTexture() const;
+
+    /**
+     * @brief Get the cube map of the skybox
+     *
+     * @return The skybox cubemap
+     */
+    atcg::ref_ptr<TextureCube> getSkyboxCubemap() const;
 
 private:
     void _updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id);

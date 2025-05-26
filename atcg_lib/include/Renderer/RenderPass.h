@@ -115,7 +115,7 @@ public:
      */
     ATCG_INLINE const std::string& name() const { return _name; }
 
-private:
+protected:
     RenderFunction _render_f;
     SetupFunction _setup_f;
     Dictionary _inputs;

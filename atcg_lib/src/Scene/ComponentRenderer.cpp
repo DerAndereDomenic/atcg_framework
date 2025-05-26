@@ -49,6 +49,23 @@ uint32_t ComponentRenderer::_setLights(Scene* scene,
     return -1;
 }
 
+std::pair<uint32_t, uint32_t> ComponentRenderer::_setSkyLight(const atcg::ref_ptr<Shader>& shader,
+                                                              const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
+                                                              const atcg::ref_ptr<TextureCube>& prefiltered_cubemap)
+{
+    uint32_t irradiance_id = Renderer::popTextureID();
+    irradiance_cubemap->use(irradiance_id);
+    shader->setInt("irradiance_map", irradiance_id);
+
+    uint32_t prefiltered_id = Renderer::popTextureID();
+    prefiltered_cubemap->use(prefiltered_id);
+    shader->setInt("prefilter_map", prefiltered_id);
+
+    shader->setInt("use_ibl", 1);
+
+    return std::make_pair(irradiance_id, prefiltered_id);
+}
+
 template<typename T>
 void ComponentRenderer::renderComponent(Entity entity, const atcg::ref_ptr<Camera>& camera, atcg::Dictionary& auxiliary)
 {
@@ -96,11 +113,25 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
+    auto irradiance_cubemap  = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("irradiance_cubemap", nullptr);
+    auto prefiltered_cubemap = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("prefiltered_cubemap", nullptr);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && irradiance_cubemap && prefiltered_cubemap;
+
     auto shader = override_shader ? override_shader : renderer.shader;
 
     if(renderer.visible)
     {
-        uint32_t id = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t ir_id  = -1;
+        uint32_t pre_id = -1;
+        if(has_skybox)
+        {
+            std::tie(ir_id, pre_id) = _setSkyLight(shader, irradiance_cubemap, prefiltered_cubemap);
+        }
+        else
+        {
+            shader->setInt("use_ibl", 0);
+        }
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
         atcg::Renderer::draw(geometry.graph,
                              camera,
@@ -113,6 +144,14 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
         if(id != -1)
         {
             atcg::Renderer::pushTextureID(id);
+        }
+        if(ir_id != -1)
+        {
+            atcg::Renderer::pushTextureID(ir_id);
+        }
+        if(pre_id != -1)
+        {
+            atcg::Renderer::pushTextureID(pre_id);
         }
     }
 }
@@ -159,11 +198,25 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
+    auto irradiance_cubemap  = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("irradiance_cubemap", nullptr);
+    auto prefiltered_cubemap = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("prefiltered_cubemap", nullptr);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && irradiance_cubemap && prefiltered_cubemap;
+
     auto shader = override_shader ? override_shader : renderer.shader;
 
     if(renderer.visible)
     {
-        uint32_t id = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t ir_id  = -1;
+        uint32_t pre_id = -1;
+        if(has_skybox)
+        {
+            std::tie(ir_id, pre_id) = _setSkyLight(shader, irradiance_cubemap, prefiltered_cubemap);
+        }
+        else
+        {
+            shader->setInt("use_ibl", 0);
+        }
         atcg::Renderer::setPointSize(renderer.point_size);
         atcg::Renderer::draw(geometry.graph,
                              camera,
@@ -176,6 +229,14 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
         if(id != -1)
         {
             atcg::Renderer::pushTextureID(id);
+        }
+        if(ir_id != -1)
+        {
+            atcg::Renderer::pushTextureID(ir_id);
+        }
+        if(pre_id != -1)
+        {
+            atcg::Renderer::pushTextureID(pre_id);
         }
     }
 }
@@ -222,11 +283,25 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
+    auto irradiance_cubemap  = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("irradiance_cubemap", nullptr);
+    auto prefiltered_cubemap = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("prefiltered_cubemap", nullptr);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && irradiance_cubemap && prefiltered_cubemap;
+
     auto shader = override_shader ? override_shader : renderer.shader;
 
     if(renderer.visible)
     {
-        uint32_t id = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t ir_id  = -1;
+        uint32_t pre_id = -1;
+        if(has_skybox)
+        {
+            std::tie(ir_id, pre_id) = _setSkyLight(shader, irradiance_cubemap, prefiltered_cubemap);
+        }
+        else
+        {
+            shader->setInt("use_ibl", 0);
+        }
         atcg::Renderer::setPointSize(renderer.point_size);
         atcg::Renderer::draw(geometry.graph,
                              camera,
@@ -239,6 +314,14 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
         if(id != -1)
         {
             atcg::Renderer::pushTextureID(id);
+        }
+        if(ir_id != -1)
+        {
+            atcg::Renderer::pushTextureID(ir_id);
+        }
+        if(pre_id != -1)
+        {
+            atcg::Renderer::pushTextureID(pre_id);
         }
     }
 }
@@ -285,11 +368,25 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
+    auto irradiance_cubemap  = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("irradiance_cubemap", nullptr);
+    auto prefiltered_cubemap = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("prefiltered_cubemap", nullptr);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && irradiance_cubemap && prefiltered_cubemap;
+
     auto shader = override_shader ? override_shader : atcg::ShaderManager::getShader("edge");
 
     if(renderer.visible)
     {
-        uint32_t id = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t ir_id  = -1;
+        uint32_t pre_id = -1;
+        if(has_skybox)
+        {
+            std::tie(ir_id, pre_id) = _setSkyLight(shader, irradiance_cubemap, prefiltered_cubemap);
+        }
+        else
+        {
+            shader->setInt("use_ibl", 0);
+        }
         atcg::Renderer::draw(geometry.graph,
                              camera,
                              transform.getModel(),
@@ -301,6 +398,14 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
         if(id != -1)
         {
             atcg::Renderer::pushTextureID(id);
+        }
+        if(ir_id != -1)
+        {
+            atcg::Renderer::pushTextureID(ir_id);
+        }
+        if(pre_id != -1)
+        {
+            atcg::Renderer::pushTextureID(pre_id);
         }
     }
 }
@@ -347,11 +452,25 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
+    auto irradiance_cubemap  = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("irradiance_cubemap", nullptr);
+    auto prefiltered_cubemap = auxiliary.getValueOr<atcg::ref_ptr<TextureCube>>("prefiltered_cubemap", nullptr);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false) && irradiance_cubemap && prefiltered_cubemap;
+
     auto shader = override_shader ? override_shader : atcg::ShaderManager::getShader("cylinder_edge");
 
     if(renderer.visible)
     {
-        uint32_t id = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t id     = _setLights(scene, point_light_depth_maps, shader);
+        uint32_t ir_id  = -1;
+        uint32_t pre_id = -1;
+        if(has_skybox)
+        {
+            std::tie(ir_id, pre_id) = _setSkyLight(shader, irradiance_cubemap, prefiltered_cubemap);
+        }
+        else
+        {
+            shader->setInt("use_ibl", 0);
+        }
         shader->setFloat("edge_radius", renderer.radius);
         atcg::Renderer::draw(geometry.graph,
                              camera,
@@ -364,6 +483,14 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
         if(id != -1)
         {
             atcg::Renderer::pushTextureID(id);
+        }
+        if(ir_id != -1)
+        {
+            atcg::Renderer::pushTextureID(ir_id);
+        }
+        if(pre_id != -1)
+        {
+            atcg::Renderer::pushTextureID(pre_id);
         }
     }
 }

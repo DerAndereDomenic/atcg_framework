@@ -177,44 +177,17 @@ public:
     glm::vec4 getViewport() const;
 
     /**
-     * @brief Set a skybox
+     * @brief Preprocess a skybox
      *
      * @param skybox An equirectangular representation of the skybox
+     * @param skybox_cubemap The output skybox as a cubemap
+     * @param irradiance_cubemap The output irradiance cubemap
+     * @param prefiltered_cubemap The output prefiltered cubemap for ibl
      */
-    void setSkybox(const atcg::ref_ptr<Image>& skybox);
-
-    /**
-     * @brief Set a skybox
-     *
-     * @param skybox An equirectangular representation of the skybox
-     */
-    void setSkybox(const atcg::ref_ptr<Texture2D>& skybox);
-
-    /**
-     * @brief If a skybox is set.
-     *
-     * @return True if there is a skybox set.
-     */
-    bool hasSkybox() const;
-
-    /**
-     * @brief Remove the skybox
-     */
-    void removeSkybox();
-
-    /**
-     * @brief Return the equirectangular skybox texture
-     *
-     * @return A pointer to the texture (only is valid if hasSkybox() == true)
-     */
-    atcg::ref_ptr<Texture2D> getSkyboxTexture() const;
-
-    /**
-     * @brief Get the cube map of the skybox
-     *
-     * @return The skybox cubemap
-     */
-    atcg::ref_ptr<TextureCube> getSkyboxCubemap() const;
+    void processSkybox(const atcg::ref_ptr<Texture2D>& skybox,
+                       const atcg::ref_ptr<TextureCube>& skybox_cubemap,
+                       const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
+                       const atcg::ref_ptr<TextureCube>& prefiltered_cubemap);
 
     /**
      * @brief Change the size of the renderer
@@ -330,9 +303,10 @@ public:
     /**
      * @brief Draw a skybox
      *
+     * @param skybox The skybox cubemap
      * @param camera The camera
      */
-    void drawSkybox(const atcg::ref_ptr<Camera>& camera);
+    void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera);
 
     /**
      * @brief Draw camera frustrums
@@ -621,61 +595,22 @@ ATCG_INLINE glm::vec4 getViewport()
 }
 
 /**
- * @brief Set a skybox
+ * @brief Preprocess a skybox
  *
  * @param skybox An equirectangular representation of the skybox
+ * @param skybox_cubemap The output skybox as a cubemap
+ * @param irradiance_cubemap The output irradiance cubemap
+ * @param prefiltered_cubemap The output prefiltered cubemap for ibl
  */
-ATCG_INLINE void setSkybox(const atcg::ref_ptr<Image>& skybox)
+ATCG_INLINE void processSkybox(const atcg::ref_ptr<Texture2D>& skybox,
+                               const atcg::ref_ptr<TextureCube>& skybox_cubemap,
+                               const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
+                               const atcg::ref_ptr<TextureCube>& prefiltered_cubemap)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setSkybox(skybox);
-}
-
-/**
- * @brief Set a skybox
- *
- * @param skybox An equirectangular representation of the skybox
- */
-ATCG_INLINE void setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setSkybox(skybox);
-}
-
-/**
- * @brief If a skybox is set.
- *
- * @return True if there is a skybox set.
- */
-ATCG_INLINE bool hasSkybox()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->hasSkybox();
-}
-
-/**
- * @brief Remove the skybox
- */
-ATCG_INLINE void removeSkybox()
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->removeSkybox();
-}
-
-/**
- * @brief Return the equirectangular skybox texture
- *
- * @return A pointer to the texture (only is valid if hasSkybox() == true)
- */
-ATCG_INLINE atcg::ref_ptr<Texture2D> getSkyboxTexture()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getSkyboxTexture();
-}
-
-/**
- * @brief Get the cube map of the skybox
- *
- * @return The skybox cubemap
- */
-ATCG_INLINE atcg::ref_ptr<TextureCube> getSkyboxCubemap()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getSkyboxCubemap();
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->processSkybox(skybox,
+                                                                                  skybox_cubemap,
+                                                                                  irradiance_cubemap,
+                                                                                  prefiltered_cubemap);
 }
 
 /**
@@ -738,11 +673,12 @@ ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
 /**
  * @brief Draw a skybox
  *
+ * @param skybox The skybox cubemap
  * @param camera The camera
  */
-ATCG_INLINE void drawSkybox(const atcg::ref_ptr<Camera>& camera)
+ATCG_INLINE void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(camera);
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(skybox_cubemap, camera);
 }
 
 /**
