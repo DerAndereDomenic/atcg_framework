@@ -8,6 +8,7 @@
 #include <Renderer/Texture.h>
 #include <DataStructure/Dictionary.h>
 #include <DataStructure/Image.h>
+#include <DataStructure/Skybox.h>
 
 #include <memory>
 #include <entt.hpp>
@@ -165,6 +166,13 @@ public:
      * @return The skybox cubemap
      */
     atcg::ref_ptr<TextureCube> getSkyboxCubemap() const;
+
+    /**
+     * @brief Get the skybox
+     *
+     * @return The skybox
+     */
+    atcg::ref_ptr<Skybox> Scene::getSkybox() const;
 
 private:
     void _updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id);

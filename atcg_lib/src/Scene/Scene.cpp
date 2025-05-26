@@ -26,46 +26,20 @@ public:
 
     atcg::ref_ptr<atcg::RenderGraph> _render_graph;
 
-    atcg::ref_ptr<Texture2D> skybox_texture;
-    atcg::ref_ptr<TextureCube> skybox_cubemap;
-    atcg::ref_ptr<TextureCube> irradiance_cubemap;
-    atcg::ref_ptr<TextureCube> prefiltered_cubemap;
+    atcg::ref_ptr<Skybox> skybox;
     bool has_skybox = false;
 };
 
 Scene::Impl::Impl()
 {
     // Skybox
-    TextureSpecification spec_skybox;
-    spec_skybox.width               = 1024;
-    spec_skybox.height              = 1024;
-    spec_skybox.format              = TextureFormat::RGBAFLOAT;
-    spec_skybox.sampler.wrap_mode   = TextureWrapMode::CLAMP_TO_EDGE;
-    spec_skybox.sampler.filter_mode = TextureFilterMode::MIPMAP_LINEAR;
-    skybox_cubemap                  = atcg::TextureCube::create(spec_skybox);
-
-    TextureSpecification spec_irradiance_cubemap;
-    spec_irradiance_cubemap.width             = 32;
-    spec_irradiance_cubemap.height            = 32;
-    spec_irradiance_cubemap.format            = TextureFormat::RGBAFLOAT;
-    spec_irradiance_cubemap.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
-    irradiance_cubemap                        = atcg::TextureCube::create(spec_irradiance_cubemap);
-
-    TextureSpecification spec_prefiltered_cubemap;
-    spec_prefiltered_cubemap.width               = 128;
-    spec_prefiltered_cubemap.height              = 128;
-    spec_prefiltered_cubemap.format              = TextureFormat::RGBAFLOAT;
-    spec_prefiltered_cubemap.sampler.wrap_mode   = TextureWrapMode::CLAMP_TO_EDGE;
-    spec_prefiltered_cubemap.sampler.filter_mode = TextureFilterMode::MIPMAP_LINEAR;
-    spec_prefiltered_cubemap.sampler.mip_map     = true;
-    prefiltered_cubemap                          = atcg::TextureCube::create(spec_prefiltered_cubemap);
+    skybox = atcg::make_ref<Skybox>();
 
     _render_graph = atcg::make_ref<atcg::RenderGraph>();
 
-    auto skybox_handle = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(skybox_cubemap));
+    auto skybox_handle = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(skybox));
     auto shadow_handle = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
-    auto output_handle =
-        _render_graph->addRenderPass(atcg::make_ref<ForwardPass>(irradiance_cubemap, prefiltered_cubemap));
+    auto output_handle = _render_graph->addRenderPass(atcg::make_ref<ForwardPass>(skybox));
 
     _render_graph->addDependency(skybox_handle, "framebuffer", output_handle, "framebuffer");
     _render_graph->addDependency(shadow_handle, "point_light_depth_maps", output_handle, "point_light_depth_maps");
@@ -200,12 +174,8 @@ void Scene::setSkybox(const atcg::ref_ptr<Image>& skybox)
 
 void Scene::setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
 {
-    impl->has_skybox     = true;
-    impl->skybox_texture = skybox;
-    Renderer::processSkybox(impl->skybox_texture,
-                            impl->skybox_cubemap,
-                            impl->irradiance_cubemap,
-                            impl->prefiltered_cubemap);
+    impl->has_skybox = true;
+    impl->skybox->setSkyboxTexture(skybox);
 }
 
 bool Scene::hasSkybox() const
@@ -220,12 +190,17 @@ void Scene::removeSkybox()
 
 atcg::ref_ptr<Texture2D> Scene::getSkyboxTexture() const
 {
-    return impl->skybox_texture;
+    return impl->skybox->getSkyboxTexture();
 }
 
 atcg::ref_ptr<TextureCube> Scene::getSkyboxCubemap() const
 {
-    return impl->skybox_cubemap;
+    return impl->skybox->getSkyboxCubeMap();
+}
+
+atcg::ref_ptr<Skybox> Scene::getSkybox() const
+{
+    return impl->skybox;
 }
 
 void Scene::_updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id)

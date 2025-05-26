@@ -6,12 +6,13 @@
 
 namespace atcg
 {
-ForwardPass::ForwardPass(const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
-                         const atcg::ref_ptr<TextureCube>& prefiltered_cubemap)
-    : RenderPass("ForwardPass")
+ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("ForwardPass"), _skybox(skybox)
 {
-    _data.setValue("irradiance_cubemap", irradiance_cubemap);
-    _data.setValue("prefiltered_cubemap", prefiltered_cubemap);
+    if(!_skybox)
+    {
+        _skybox = atcg::make_ref<Skybox>();
+    }
+    _data.setValue("skybox", _skybox);
 
     setRenderFunction(
         [](Dictionary& context, const Dictionary& inputs, Dictionary& data, Dictionary&)
@@ -32,10 +33,7 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
 
             Dictionary auxiliary;
             auxiliary.setValue("point_light_depth_maps", point_light_depth_maps);
-            auxiliary.setValue("irradiance_cubemap",
-                               data.getValueOr<atcg::ref_ptr<TextureCube>>("irradiance_cubemap", nullptr));
-            auxiliary.setValue("prefiltered_cubemap",
-                               data.getValueOr<atcg::ref_ptr<TextureCube>>("prefiltered_cubemap", nullptr));
+            auxiliary.setValue("skybox", data.getValue<atcg::ref_ptr<Skybox>>("skybox"));
             auxiliary.setValue("has_skybox", context.getValueOr<bool>("has_skybox", false));
 
             ComponentRenderer component_renderer;
