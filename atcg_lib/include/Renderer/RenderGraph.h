@@ -49,7 +49,7 @@ public:
      *
      * @return A tuple with a RenderPassHandle and a RenderPass
      */
-    RenderPassHandle addRenderPass(std::string_view name = "", const atcg::ref_ptr<RenderPass>& pass)
+    RenderPassHandle addRenderPass(const atcg::ref_ptr<RenderPass>& pass)
     {
         RenderPassHandle handle = (RenderPassHandle)_passes.size();
         _passes.push_back(pass);

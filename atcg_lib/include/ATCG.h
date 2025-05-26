@@ -44,6 +44,11 @@
 #include <Renderer/VRSystem.h>
 #include <Renderer/RenderGraph.h>
 
+//-------- Render Passes ------
+#include <Renderer/RenderPasses/SkyboxPass.h>
+#include <Renderer/RenderPasses/ShadowPass.h>
+#include <Renderer/RenderPasses/ForwardPass.h>
+
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
 

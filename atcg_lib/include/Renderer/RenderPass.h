@@ -35,6 +35,8 @@ public:
         };
     }
 
+    virtual ~RenderPass() = default;
+
     /**
      * @brief Set the setup function.
      * This function is called when the RenderGraph is compiled
