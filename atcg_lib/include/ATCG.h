@@ -79,6 +79,7 @@
 #ifndef ATCG_HEADLESS
     #include <imgui.h>
     #include <ImGui/Guizmo.h>
+    #include <implot.h>
 #endif
 
 //-------- Scene -----------
