@@ -6,6 +6,7 @@
 
 #include <Renderer/Camera.h>
 #include <Renderer/Texture.h>
+#include <Renderer/RenderGraph.h>
 #include <DataStructure/Dictionary.h>
 #include <DataStructure/Image.h>
 #include <DataStructure/Skybox.h>
@@ -179,6 +180,21 @@ public:
      * @return The skybox
      */
     atcg::ref_ptr<Skybox> Scene::getSkybox() const;
+
+    /**
+     * @brief Set a new render graph.
+     * The graph needs to be compiled
+     *
+     * @param graph The new graph
+     */
+    void setRenderGraph(const atcg::ref_ptr<RenderGraph>& graph);
+
+    /**
+     * @brief Get the rendergraph
+     *
+     * @return The render graph
+     */
+    atcg::ref_ptr<RenderGraph> getRenderGraph() const;
 
 private:
     void _updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id);

@@ -203,6 +203,16 @@ atcg::ref_ptr<Skybox> Scene::getSkybox() const
     return impl->skybox;
 }
 
+void Scene::setRenderGraph(const atcg::ref_ptr<RenderGraph>& graph)
+{
+    impl->_render_graph = graph;
+}
+
+atcg::ref_ptr<RenderGraph> Scene::getRenderGraph() const
+{
+    return impl->_render_graph;
+}
+
 void Scene::_updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id)
 {
     impl->_entities.erase(old_id);
