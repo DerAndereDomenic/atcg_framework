@@ -25,6 +25,8 @@ public:
 
     /**
      * @brief Default constructor
+     *
+     * @param name The name of the render pass
      */
     RenderPass(std::string_view name = "RenderPass") : _name(name)
     {
@@ -35,6 +37,9 @@ public:
         };
     }
 
+    /**
+     * @brief Destructor
+     */
     virtual ~RenderPass() = default;
 
     /**
@@ -42,6 +47,7 @@ public:
      * This function is called when the RenderGraph is compiled
      *
      * @param f The setup function
+     * @return this
      */
     ATCG_INLINE RenderPass* setSetupFunction(SetupFunction f)
     {
@@ -54,6 +60,7 @@ public:
      * This function is called when the RenderGraph is executed
      *
      * @param f The render function
+     * @return this
      */
     ATCG_INLINE RenderPass* setRenderFunction(RenderFunction f)
     {
@@ -63,9 +70,10 @@ public:
 
     /**
      * @brief Add an input to the Render pass.
-     * This can be any type but if this node is not a root node, it will be an instance of atcg::ref_ptr
      *
+     * @param port_name The input port name
      * @param input The input
+     * @return this
      */
     ATCG_INLINE virtual RenderPass* addInput(std::string_view port_name, std::any input)
     {
@@ -78,6 +86,7 @@ public:
      *
      * @param port_name The output name
      * @param output The output variable
+     * @return this
      */
     ATCG_INLINE virtual RenderPass* registerOutput(std::string_view port_name, std::any output)
     {
@@ -100,11 +109,9 @@ public:
     ATCG_INLINE virtual void execute(Dictionary& context) { _render_f(context, _inputs, _data, _output); }
 
     /**
-     * @brief Get the output.
-     * When creating a render pass, an atcg::ref_ptr will be allocated that holds the output
+     * @brief Get the outputs.
      *
-     * @return An atcg::ref_ptr with type specified by the instance of atcg::RenderPass, i.e.,
-     * atcg::ref_ptr<RenderPassOutputT>
+     * @return Dictionary containing the output variables to the corresponding ports
      */
     ATCG_INLINE virtual const Dictionary& getOutputs() const { return _output; }
 

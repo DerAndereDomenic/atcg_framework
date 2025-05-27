@@ -124,6 +124,12 @@ public:
 
     /**
      * @brief Render the scene
+     * The only manditory entry in the context is the "camera" key which should hold an atcg::ref_ptr<Camera>. If this
+     * is not given and the scene has a camera via setCamera, this camera is used instead. Otherwise, this is a NOP. The
+     * Dictionary will be changed by this method, in particular it will add the "scene" key with a pointer to this and
+     * "has_skybox" if the scene is equipped with a skybox.
+     *
+     * @param context The context (mutable, will be changed)
      */
     void draw(Dictionary& context);
 

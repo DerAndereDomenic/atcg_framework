@@ -10,8 +10,6 @@ namespace atcg
 
 /**
  * @brief A class the model a RenderGraph.
- *
- * @tparam RenderContextT The Render context data
  */
 class RenderGraph
 {
@@ -25,10 +23,10 @@ public:
 
     /**
      * @brief Add a render pass to the graph.
-     * This functions returns a handle and a RenderPass. The builder is an intermediate class that collects all
-     * the data associated with the rendering pass and then gets compiled into the final render pass when compile() is
-     * called. The handle can be used to access different render passes to add dependencies between them (by using
-     * addDependency()).
+     * This functions returns a handle and a RenderPass. The handle can be used to access different render passes to add
+     * dependencies between them (by using addDependency()).
+     *
+     * @param name The name of the RenderPass
      *
      * @return A tuple with a RenderPassHandle and a RenderPass
      */
@@ -42,12 +40,12 @@ public:
 
     /**
      * @brief Add a render pass to the graph.
-     * This functions returns a handle and a RenderPass. The builder is an intermediate class that collects all
-     * the data associated with the rendering pass and then gets compiled into the final render pass when compile() is
-     * called. The handle can be used to access different render passes to add dependencies between them (by using
+     * The handle can be used to access different render passes to add dependencies between them (by using
      * addDependency()).
      *
-     * @return A tuple with a RenderPassHandle and a RenderPass
+     * @param pass The render pass
+     *
+     * @return The handle to the renderpass
      */
     RenderPassHandle addRenderPass(const atcg::ref_ptr<RenderPass>& pass)
     {
@@ -57,11 +55,13 @@ public:
     }
 
     /**
-     * @brief Create a dependency between two Renderpasses.
-     * Creates the directed edge (source, target) into the Graph. The handles are obtained by calling addRenderPass().
+     * @brief Create a connection between two ports of an output and input node.
+     * The handles are obtained by "addRenderPass()"
      *
      * @param source The source handle
+     * @param source_name The name of the source port
      * @param target The target handle
+     * @param target_name The name of the target port
      */
     void addDependency(const RenderPassHandle& source,
                        std::string_view source_name,
@@ -74,6 +74,8 @@ public:
     /**
      * @brief Compile the graph.
      * This has to be called before executing the graph.
+     *
+     * @param ctx The context
      */
     void compile(Dictionary& ctx)
     {
@@ -137,12 +139,12 @@ public:
         {
             throw std::runtime_error("Graph has a cycle. Topological sorting is not possible.");
         }
-
-        //_builder.clear();
     }
 
     /**
      * @brief Execute the graph.
+     *
+     * @param ctx The context holding per-frame data
      */
     void execute(Dictionary& ctx)
     {
@@ -152,6 +154,11 @@ public:
         }
     }
 
+    /**
+     * @brief Exports the graph into a DOT format txt file for debugging porpuses.
+     *
+     * @param path The path of the exported file
+     */
     void exportToDOT(const std::string& path) const
     {
         std::ofstream out(path);

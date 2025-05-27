@@ -12,7 +12,7 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
         _skybox = atcg::make_ref<Skybox>();
     }
 
-
+    registerOutput("framebuffer", nullptr);
     setSetupFunction(
         [this](Dictionary& context, Dictionary& data, Dictionary& output)
         {
