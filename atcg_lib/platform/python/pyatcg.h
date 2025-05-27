@@ -740,6 +740,18 @@ inline void defineBindings(py::module_& m)
             "camera"_a,
             "width"_a,
             "path"_a)
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const uint32_t height,
+               const std::string& path) { atcg::Renderer::screenshot(scene, cam, width, height, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "height"_a,
+            "path"_a)
         .def("resize", &atcg::Renderer::resize)
         .def("getFrame", &atcg::Renderer::getFrame, "device"_a)
         .def("getZBuffer", &atcg::Renderer::getZBuffer, "device"_a)
@@ -854,6 +866,19 @@ inline void defineBindings(py::module_& m)
             "scene"_a,
             "camera"_a,
             "width"_a,
+            "path"_a)
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const uint32_t height,
+               const std::string& path) { self->screenshot(scene, cam, width, height, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "height"_a,
             "path"_a)
         .def("resize", &atcg::RendererSystem::resize)
         .def("getFrame", &atcg::RendererSystem::getFrame, "device"_a)
