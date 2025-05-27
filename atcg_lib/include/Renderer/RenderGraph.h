@@ -79,6 +79,8 @@ public:
      */
     void compile(Dictionary& ctx)
     {
+        _compiled_passes.clear();
+
         size_t node_size = _passes.size();
         std::vector<int> inDegree(node_size, 0);
         std::vector<std::vector<RenderPassHandle>> adj(node_size);
