@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Added Cubemap Array textures
-- Possibility to create textures from device tensors
+- Added possibility to create textures from device tensors
 - Added function to remove entities from a scene
 - Added possibility to remove entities via the scene hierarchy panel
 - Added Python bindings for Entity Management in the scene class
@@ -45,6 +45,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added PixelUnpackBuffers
 - Added possibility to set texture data from PixelUnpackBuffers
 - Added options to configure the python side build
+- Added draw method to scene
+- Added skyboxes to scene
+- Added Dictionaries
+- Added Skybox class
+- Added a more flexible render pass system that allows also the use of predefined renderpass
 
 ### Changed
 
@@ -72,6 +77,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Torch DLLs are NO LONGER COPIED to the output directory on Windows. The user has to make sure the `PATH` variables point to the correct DLLs.
 - The `PythonFrontend.py` no longer compiles the project. It now requires that the package is installed via pip.
 - The python folder was moved into atcg_lib
+- Reworked design of RenderGraph
+- The atcg::RendererSystem is now no longer responsible to render scenes and handle cubemaps. This is now done in the scene class
+- Renderer::getFramebuffer now returns the internally used framebuffer which might be a MSAA framebuffer if MSAA is enabled. Specific getters for both framebuffers were added
 
 ### Fixed
 
