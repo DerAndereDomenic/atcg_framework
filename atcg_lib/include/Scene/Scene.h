@@ -187,7 +187,7 @@ public:
      *
      * @return The skybox
      */
-    atcg::ref_ptr<Skybox> Scene::getSkybox() const;
+    atcg::ref_ptr<Skybox> getSkybox() const;
 
     /**
      * @brief Set a new render graph.
