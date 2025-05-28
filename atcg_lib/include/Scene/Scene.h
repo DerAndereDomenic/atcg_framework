@@ -5,6 +5,11 @@
 #include <Core/Memory.h>
 
 #include <Renderer/Camera.h>
+#include <Renderer/Texture.h>
+#include <Renderer/RenderGraph.h>
+#include <DataStructure/Dictionary.h>
+#include <DataStructure/Image.h>
+#include <DataStructure/Skybox.h>
 
 #include <memory>
 #include <entt.hpp>
@@ -117,6 +122,87 @@ public:
      * @brief Remove the registered main camera
      */
     void removeCamera();
+
+    /**
+     * @brief Render the scene
+     * The only manditory entry in the context is the "camera" key which should hold an atcg::ref_ptr<Camera>. If this
+     * is not given and the scene has a camera via setCamera, this camera is used instead. Otherwise, this is a NOP. The
+     * Dictionary will be changed by this method, in particular it will add the "scene" key with a pointer to this and
+     * "has_skybox" if the scene is equipped with a skybox.
+     *
+     * @param context The context (mutable, will be changed)
+     */
+    void draw(Dictionary& context);
+
+    /**
+     * @brief Render the scene
+     * A shortcut if the only thing inside the context is the camera.
+     *
+     * @param camera The camera
+     */
+    void draw(const atcg::ref_ptr<Camera>& camera);
+
+    /**
+     * @brief Set a skybox
+     *
+     * @param skybox An equirectangular representation of the skybox
+     */
+    void setSkybox(const atcg::ref_ptr<Image>& skybox);
+
+    /**
+     * @brief Set a skybox
+     *
+     * @param skybox An equirectangular representation of the skybox
+     */
+    void setSkybox(const atcg::ref_ptr<Texture2D>& skybox);
+
+    /**
+     * @brief If a skybox is set.
+     *
+     * @return True if there is a skybox set.
+     */
+    bool hasSkybox() const;
+
+    /**
+     * @brief Remove the skybox
+     */
+    void removeSkybox();
+
+    /**
+     * @brief Return the equirectangular skybox texture
+     *
+     * @return A pointer to the texture (only is valid if hasSkybox() == true)
+     */
+    atcg::ref_ptr<Texture2D> getSkyboxTexture() const;
+
+    /**
+     * @brief Get the cube map of the skybox
+     *
+     * @return The skybox cubemap
+     */
+    atcg::ref_ptr<TextureCube> getSkyboxCubemap() const;
+
+    /**
+     * @brief Get the skybox
+     *
+     * @return The skybox
+     */
+    atcg::ref_ptr<Skybox> getSkybox() const;
+
+    /**
+     * @brief Set a new render graph.
+     * The graph needs to be compiled
+     *
+     * @param graph The new graph
+     */
+    void setRenderGraph(const atcg::ref_ptr<RenderGraph>& graph);
+
+    /**
+     * @brief Get the rendergraph
+     *
+     * @return The render graph
+     */
+    atcg::ref_ptr<RenderGraph> getRenderGraph() const;
 
 private:
     void _updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id);

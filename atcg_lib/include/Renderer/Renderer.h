@@ -170,44 +170,24 @@ public:
     void setDefaultViewport();
 
     /**
-     * @brief Set a skybox
+     * @brief Get the current viewport dimensions
+     *
+     * @return A vec4 containing the viewport (x,y,width,height)
+     */
+    glm::vec4 getViewport() const;
+
+    /**
+     * @brief Preprocess a skybox
      *
      * @param skybox An equirectangular representation of the skybox
+     * @param skybox_cubemap The output skybox as a cubemap
+     * @param irradiance_cubemap The output irradiance cubemap
+     * @param prefiltered_cubemap The output prefiltered cubemap for ibl
      */
-    void setSkybox(const atcg::ref_ptr<Image>& skybox);
-
-    /**
-     * @brief Set a skybox
-     *
-     * @param skybox An equirectangular representation of the skybox
-     */
-    void setSkybox(const atcg::ref_ptr<Texture2D>& skybox);
-
-    /**
-     * @brief If a skybox is set.
-     *
-     * @return True if there is a skybox set.
-     */
-    bool hasSkybox() const;
-
-    /**
-     * @brief Remove the skybox
-     */
-    void removeSkybox();
-
-    /**
-     * @brief Return the equirectangular skybox texture
-     *
-     * @return A pointer to the texture (only is valid if hasSkybox() == true)
-     */
-    atcg::ref_ptr<Texture2D> getSkyboxTexture() const;
-
-    /**
-     * @brief Get the cube map of the skybox
-     *
-     * @return The skybox cubemap
-     */
-    atcg::ref_ptr<TextureCube> getSkyboxCubemap() const;
+    void processSkybox(const atcg::ref_ptr<Texture2D>& skybox,
+                       const atcg::ref_ptr<TextureCube>& skybox_cubemap,
+                       const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
+                       const atcg::ref_ptr<TextureCube>& prefiltered_cubemap);
 
     /**
      * @brief Change the size of the renderer
@@ -274,44 +254,17 @@ public:
      * @param color An optional color
      * @param shader The shader
      * @param draw_mode The draw mode
+     * @param material The material
+     * @param entity_id The entity id
      */
     void draw(const atcg::ref_ptr<Graph>& mesh,
-              const atcg::ref_ptr<Camera>& camera = {},
-              const glm::mat4& model              = glm::mat4(1),
-              const glm::vec3& color              = glm::vec3(1),
-              const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-              DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
-
-    /**
-     * @brief Draw a specific component of an entity
-     *
-     * @tparam Component The component to draw. Must be ones of the RenderComponents in Components.h
-     * @param entity The entity to draw
-     * @param camera The camera
-     * @param shader An optional shader. The shader (if not nullptr) overrides what is stored in the component AND what
-     * is internally used. This means if you want to use a custom shader for a PointSphereRenderer component, for
-     * example, you have to make sure that it is compatible with this rendering mode.
-     */
-    template<typename Component>
-    void drawComponent(Entity entity,
-                       const atcg::ref_ptr<Camera>& camera       = {},
-                       const atcg::ref_ptr<atcg::Shader>& shader = nullptr);
-
-    /**
-     * @brief Render an entity
-     *
-     * @param entity The entity to render
-     * @param camera The camera
-     */
-    void draw(Entity entity, const atcg::ref_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Render a scene
-     *
-     * @param scene The scene to render
-     * @param camera The camera
-     */
-    void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
+              const atcg::ref_ptr<Camera>& camera     = {},
+              const glm::mat4& model                  = glm::mat4(1),
+              const glm::vec3& color                  = glm::vec3(1),
+              const atcg::ref_ptr<Shader>& shader     = atcg::ShaderManager::getShader("base"),
+              DrawMode draw_mode                      = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+              const std::optional<Material>& material = {},
+              const uint32_t entity_id                = -1);
 
     /**
      * @brief Draw Circle
@@ -350,9 +303,10 @@ public:
     /**
      * @brief Draw a skybox
      *
+     * @param skybox The skybox cubemap
      * @param camera The camera
      */
-    void drawSkybox(const atcg::ref_ptr<Camera>& camera);
+    void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera);
 
     /**
      * @brief Draw camera frustrums
@@ -380,6 +334,15 @@ public:
 
     /**
      * @brief Get the framebuffer objects that is used by the renderer.
+     * Depending on if MSAA is enabled or not, this may be a MSAA framebuffer that can only be used for additional
+     * rendering tasks. Data reads can not be performed in this case.
+     *
+     * @return The framebuffer of last frame
+     */
+    atcg::ref_ptr<Framebuffer> getFramebuffer() const;
+
+    /**
+     * @brief Get the framebuffer objects that is used by the renderer.
      * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
      * the current frame data, refer to getFramebufferMSAA().
      * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
@@ -388,7 +351,7 @@ public:
      *
      * @return The framebuffer of last frame
      */
-    atcg::ref_ptr<Framebuffer> getFramebuffer() const;
+    atcg::ref_ptr<Framebuffer> getResolvedFramebuffer() const;
 
     /**
      * @brief Get the framebuffer object that is used by the renderer.
@@ -622,61 +585,32 @@ ATCG_INLINE void setDefaultViewport()
 }
 
 /**
- * @brief Set a skybox
+ * @brief Get the current viewport dimensions
+ *
+ * @return A vec4 containing the viewport (x,y,width,height)
+ */
+ATCG_INLINE glm::vec4 getViewport()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getViewport();
+}
+
+/**
+ * @brief Preprocess a skybox
  *
  * @param skybox An equirectangular representation of the skybox
+ * @param skybox_cubemap The output skybox as a cubemap
+ * @param irradiance_cubemap The output irradiance cubemap
+ * @param prefiltered_cubemap The output prefiltered cubemap for ibl
  */
-ATCG_INLINE void setSkybox(const atcg::ref_ptr<Image>& skybox)
+ATCG_INLINE void processSkybox(const atcg::ref_ptr<Texture2D>& skybox,
+                               const atcg::ref_ptr<TextureCube>& skybox_cubemap,
+                               const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
+                               const atcg::ref_ptr<TextureCube>& prefiltered_cubemap)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setSkybox(skybox);
-}
-
-/**
- * @brief Set a skybox
- *
- * @param skybox An equirectangular representation of the skybox
- */
-ATCG_INLINE void setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setSkybox(skybox);
-}
-
-/**
- * @brief If a skybox is set.
- *
- * @return True if there is a skybox set.
- */
-ATCG_INLINE bool hasSkybox()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->hasSkybox();
-}
-
-/**
- * @brief Remove the skybox
- */
-ATCG_INLINE void removeSkybox()
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->removeSkybox();
-}
-
-/**
- * @brief Return the equirectangular skybox texture
- *
- * @return A pointer to the texture (only is valid if hasSkybox() == true)
- */
-ATCG_INLINE atcg::ref_ptr<Texture2D> getSkyboxTexture()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getSkyboxTexture();
-}
-
-/**
- * @brief Get the cube map of the skybox
- *
- * @return The skybox cubemap
- */
-ATCG_INLINE atcg::ref_ptr<TextureCube> getSkyboxCubemap()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getSkyboxCubemap();
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->processSkybox(skybox,
+                                                                                  skybox_cubemap,
+                                                                                  irradiance_cubemap,
+                                                                                  prefiltered_cubemap);
 }
 
 /**
@@ -719,65 +653,32 @@ ATCG_INLINE void useScreenBuffer()
  * @param color An optional color
  * @param shader The shader
  * @param draw_mode The draw mode
+ * @param material The material
+ * @param entity_id The entity id
  */
 ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
-                      const atcg::ref_ptr<Camera>& camera = {},
-                      const glm::mat4& model              = glm::mat4(1),
-                      const glm::vec3& color              = glm::vec3(1),
-                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+                      const atcg::ref_ptr<Camera>& camera     = {},
+                      const glm::mat4& model                  = glm::mat4(1),
+                      const glm::vec3& color                  = glm::vec3(1),
+                      const atcg::ref_ptr<Shader>& shader     = atcg::ShaderManager::getShader("base"),
+                      DrawMode draw_mode                      = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+                      const std::optional<Material>& material = {},
+                      const uint32_t entity_id                = -1)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->draw(mesh, camera, model, color, shader, draw_mode);
-}
-
-/**
- * @brief Draw a specific component of an entity
- *
- * @tparam Component The component to draw. Must be ones of the RenderComponents in Components.h
- * @param entity The entity to draw
- * @param camera The camera
- * @param shader An optional shader. The shader (if not nullptr) overrides what is stored in the component AND what
- * is internally used. This means if you want to use a custom shader for a PointSphereRenderer component, for
- * example, you have to make sure that it is compatible with this rendering mode.
- */
-template<typename Component>
-ATCG_INLINE void drawComponent(Entity entity,
-                               const atcg::ref_ptr<Camera>& camera       = {},
-                               const atcg::ref_ptr<atcg::Shader>& shader = nullptr)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawComponent<Component>(entity, camera, shader);
-}
-
-/**
- * @brief Render an entity
- *
- * @param entity The entity to render
- * @param camera The camera
- */
-ATCG_INLINE void draw(Entity entity, const atcg::ref_ptr<Camera>& camera = {})
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->draw(entity, camera);
-}
-
-/**
- * @brief Render a scene
- *
- * @param scene The scene to render
- * @param camera The camera
- */
-ATCG_INLINE void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->draw(scene, camera);
+    SystemRegistry::instance()
+        ->getSystem<RendererSystem>()
+        ->draw(mesh, camera, model, color, shader, draw_mode, material, entity_id);
 }
 
 /**
  * @brief Draw a skybox
  *
+ * @param skybox The skybox cubemap
  * @param camera The camera
  */
-ATCG_INLINE void drawSkybox(const atcg::ref_ptr<Camera>& camera)
+ATCG_INLINE void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(camera);
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(skybox_cubemap, camera);
 }
 
 /**
@@ -869,6 +770,21 @@ ATCG_INLINE void drawImage(const atcg::ref_ptr<Texture2D>& img)
 ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebuffer()
 {
     return SystemRegistry::instance()->getSystem<RendererSystem>()->getFramebuffer();
+}
+
+/**
+ * @brief Get the framebuffer objects that is used by the renderer.
+ * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
+ * the current frame data, refer to getFramebufferMSAA().
+ * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
+ * operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using
+ * toggleMSAA.
+ *
+ * @return The framebuffer of last frame
+ */
+ATCG_INLINE atcg::ref_ptr<Framebuffer> getResolvedFramebuffer()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getResolvedFramebuffer();
 }
 
 /**

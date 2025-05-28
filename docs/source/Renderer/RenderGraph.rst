@@ -4,15 +4,19 @@ Render Graph
 .. doxygenclass:: atcg::RenderGraph
    :members:
    :undoc-members:
-.. doxygenclass:: atcg::RenderPassBase
-   :members:
-   :undoc-members:
 .. doxygenclass:: atcg::RenderPass
    :members:
    :undoc-members:
-.. doxygenclass:: atcg::RenderPassBuilderBase
+
+Render Passes
+=============
+
+.. doxygenclass:: atcg::SkyboxPass
    :members:
    :undoc-members:
-.. doxygenclass:: atcg::RenderPassBuilder
+.. doxygenclass:: atcg::ShadowPass
+   :members:
+   :undoc-members:
+.. doxygenclass:: atcg::ForwardPass
    :members:
    :undoc-members:

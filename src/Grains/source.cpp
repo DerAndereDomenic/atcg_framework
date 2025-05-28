@@ -520,7 +520,9 @@ public:
 
         atcg::Renderer::drawCADGrid(camera_controller->getCamera());
 
-        atcg::Renderer::draw(scene, camera_controller->getCamera());
+        atcg::Dictionary context;
+        context.setValue<atcg::ref_ptr<atcg::Camera>>("scene", camera_controller->getCamera());
+        scene->draw(context);
 
         dt = delta_time;
     }

@@ -44,6 +44,11 @@
 #include <Renderer/VRSystem.h>
 #include <Renderer/RenderGraph.h>
 
+//-------- Render Passes ------
+#include <Renderer/RenderPasses/SkyboxPass.h>
+#include <Renderer/RenderPasses/ShadowPass.h>
+#include <Renderer/RenderPasses/ForwardPass.h>
+
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
 
@@ -58,6 +63,8 @@
 #include <DataStructure/Worker.h>
 #include <DataStructure/WorkerPool.h>
 #include <DataStructure/PerformancePanel.h>
+#include <DataStructure/Dictionary.h>
+#include <DataStructure/Skybox.h>
 #ifdef ATCG_CUDA_BACKEND
     #include <DataStructure/JPEGDecoder.h>
     #include <DataStructure/JPEGEncoder.h>
@@ -90,6 +97,7 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/RevisionStack.h>
+#include <Scene/ComponentRenderer.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>

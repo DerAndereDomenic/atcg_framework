@@ -151,15 +151,15 @@ void SceneHierarchyPanel<GUIHandler>::drawSceneProperties()
 
     if(open)
     {
-        if(Renderer::hasSkybox())
+        if(_scene->hasSkybox())
         {
-            ImGui::Image((ImTextureID)Renderer::getSkyboxTexture()->getID(),
+            ImGui::Image((ImTextureID)_scene->getSkyboxTexture()->getID(),
                          ImVec2(content_scale * 128, content_scale * 64),
                          ImVec2 {0, 1},
                          ImVec2 {1, 0});
             if(ImGui::Button("Remove skybox##skybox"))
             {
-                Renderer::removeSkybox();
+                _scene->removeSkybox();
             }
         }
         else
@@ -189,7 +189,7 @@ void SceneHierarchyPanel<GUIHandler>::drawSceneProperties()
                 if(!files.empty())
                 {
                     auto img = IO::imread(files[0]);
-                    Renderer::setSkybox(img);
+                    _scene->setSkybox(img);
                 }
             }
         }
