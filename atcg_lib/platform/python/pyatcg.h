@@ -716,6 +716,18 @@ inline void defineBindings(py::module_& m)
             "camera"_a,
             "width"_a,
             "path"_a)
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const uint32_t height,
+               const std::string& path) { atcg::Renderer::screenshot(scene, cam, width, height, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "height"_a,
+            "path"_a)
         .def("resize", &atcg::Renderer::resize)
         .def("getFrame", &atcg::Renderer::getFrame, "device"_a)
         .def("getZBuffer", &atcg::Renderer::getZBuffer, "device"_a)
@@ -802,6 +814,19 @@ inline void defineBindings(py::module_& m)
             "scene"_a,
             "camera"_a,
             "width"_a,
+            "path"_a)
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const uint32_t height,
+               const std::string& path) { self->screenshot(scene, cam, width, height, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "height"_a,
             "path"_a)
         .def("resize", &atcg::RendererSystem::resize)
         .def("getFrame", &atcg::RendererSystem::getFrame, "device"_a)
@@ -975,6 +1000,9 @@ inline void defineBindings(py::module_& m)
             "setData",
             [](const atcg::ref_ptr<atcg::Texture2D>& texture, const torch::Tensor& data) { texture->setData(data); },
             "data"_a)
+        .def("__setitem__",
+             [](const atcg::ref_ptr<atcg::Texture2D>& texture, py::slice idx, const torch::Tensor& t)
+             { texture->setData(t); })
         //.def("setData", [](const atcg::ref_ptr<atcg::Texture2D>& texture, const
         // atcg::ref_ptr<atcg::PixelUnpackBuffer>& data) {texture->setData(data);}, "data"_a)
         .def("getData", &atcg::Texture2D::getData);
@@ -1607,6 +1635,26 @@ inline void defineBindings(py::module_& m)
         py::arg("width"),
         py::arg("height"),
         py::return_value_policy::automatic_reference);
+
+    m_imgui.def(
+        "plot",
+        [](std::vector<std::vector<float>>& data, const std::vector<std::string>& names, const float line_width = -1)
+        {
+            if(ImPlot::BeginPlot("##", ImVec2(-1, -1)))
+            {
+                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
+                for(int i = 0; i < data.size(); ++i)
+                {
+                    std::vector<float> x(data[i].size());
+                    std::iota(x.begin(), x.end(), 0.0f);
+
+                    ImPlot::SetNextLineStyle(IMPLOT_AUTO_COL, line_width);
+                    ImPlot::PlotLine(names[i].c_str(), x.data(), data[i].data(), data[i].size(), 0, 0, sizeof(float));
+                }
+                ImPlot::EndPlot();
+            }
+        });
 
     m_imgui.def("isUsing", &ImGuizmo::IsUsing);
 
