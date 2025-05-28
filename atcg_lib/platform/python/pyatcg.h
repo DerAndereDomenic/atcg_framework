@@ -663,32 +663,8 @@ inline void defineBindings(py::module_& m)
         .def("setLineSize", &atcg::Renderer::setLineSize, "size"_a)
         .def("setViewport", &atcg::Renderer::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
         .def("setDefaultViewport", &atcg::Renderer::setDefaultViewport)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::Image>& skybox) { atcg::Renderer::setSkybox(skybox); },
-            "skybox"_a)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::Texture2D>& skybox) { atcg::Renderer::setSkybox(skybox); },
-            "skybox"_a)
-        .def("hasSkybox", &atcg::Renderer::hasSkybox)
-        .def("removeSkybox", &atcg::Renderer::removeSkybox)
-        .def("getSkyboxTexture", &atcg::Renderer::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::Renderer::getSkyboxCubemap)
         .def("useScreenBuffer", &atcg::Renderer::useScreenBuffer)
         .def("clear", &atcg::Renderer::clear)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-            { atcg::Renderer::draw(scene, camera); },
-            "scene"_a,
-            "camera"_a)
-        .def(
-            "draw",
-            [](atcg::Entity entity, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-            { atcg::Renderer::draw(entity, camera); },
-            "entity"_a,
-            "camera"_a)
         .def(
             "draw",
             [](const atcg::ref_ptr<atcg::Graph>& mesh,
@@ -762,36 +738,8 @@ inline void defineBindings(py::module_& m)
         .def("setLineSize", &atcg::RendererSystem::setLineSize, "size"_a)
         .def("setViewport", &atcg::RendererSystem::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
         .def("setDefaultViewport", &atcg::RendererSystem::setDefaultViewport)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Image>& skybox)
-            { self->setSkybox(skybox); },
-            "skybox"_a)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Texture2D>& skybox)
-            { self->setSkybox(skybox); },
-            "skybox"_a)
-        .def("hasSkybox", &atcg::RendererSystem::hasSkybox)
-        .def("removeSkybox", &atcg::RendererSystem::removeSkybox)
-        .def("getSkyboxTexture", &atcg::RendererSystem::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::RendererSystem::getSkyboxCubemap)
         .def("useScreenBuffer", &atcg::RendererSystem::useScreenBuffer)
         .def("clear", &atcg::RendererSystem::clear)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(scene, camera); },
-            "scene"_a,
-            "camera"_a)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               atcg::Entity entity,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(entity, camera); },
-            "entity"_a,
-            "camera"_a)
         .def(
             "draw",
             [](const atcg::ref_ptr<atcg::RendererSystem>& self,
@@ -1307,7 +1255,30 @@ inline void defineBindings(py::module_& m)
         .def("removeAllEntities", &atcg::Scene::removeAllEntites)
         .def("setCamera", &atcg::Scene::setCamera)
         .def("getCamera", &atcg::Scene::getCamera)
-        .def("removeCamera", &atcg::Scene::removeCamera);
+        .def("removeCamera", &atcg::Scene::removeCamera)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Image>& skybox)
+            { scene->setSkybox(skybox); },
+            "skybox"_a)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Texture2D>& skybox)
+            { scene->setSkybox(skybox); },
+            "skybox"_a)
+        .def("hasSkybox", &atcg::Scene::hasSkybox)
+        .def("removeSkybox", &atcg::Scene::removeSkybox)
+        .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
+        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            {
+                atcg::Dictionary context;
+                context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera);
+                scene->draw(context);
+            },
+            "camera"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
