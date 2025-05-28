@@ -135,6 +135,14 @@ public:
     void draw(Dictionary& context);
 
     /**
+     * @brief Render the scene
+     * A shortcut if the only thing inside the context is the camera.
+     *
+     * @param camera The camera
+     */
+    void draw(const atcg::ref_ptr<Camera>& camera);
+
+    /**
      * @brief Set a skybox
      *
      * @param skybox An equirectangular representation of the skybox

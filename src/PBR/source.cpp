@@ -92,9 +92,7 @@ public:
 
             atcg::Renderer::clear();
 
-            atcg::Dictionary context;
-            context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", controller->getCameraLeft());
-            scene->draw(context);
+            scene->draw(controller->getCameraLeft());
 
             atcg::Renderer::drawCameras(scene, controller->getCameraLeft());
             atcg::Renderer::drawLights(scene, controller->getCameraLeft());
@@ -110,8 +108,7 @@ public:
 
             atcg::Renderer::clear();
 
-            context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", controller->getCameraRight());
-            scene->draw(context);
+            scene->draw(controller->getCameraRight());
 
             atcg::Renderer::drawCameras(scene, controller->getCameraRight());
             atcg::Renderer::drawLights(scene, controller->getCameraRight());
@@ -132,9 +129,7 @@ public:
         {
             atcg::Renderer::clear();
 
-            atcg::Dictionary context;
-            context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
-            scene->draw(context);
+            scene->draw(camera_controller->getCamera());
 
             atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
             atcg::Renderer::drawLights(scene, camera_controller->getCamera());

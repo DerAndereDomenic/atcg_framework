@@ -167,6 +167,13 @@ void Scene::draw(Dictionary& context)
     impl->_render_graph->execute(context);
 }
 
+void Scene::draw(const atcg::ref_ptr<Camera>& camera)
+{
+    Dictionary context;
+    context.setValue("camera", camera);
+    draw(std::move(context));
+}
+
 void Scene::setSkybox(const atcg::ref_ptr<Image>& skybox)
 {
     setSkybox(atcg::Texture2D::create(skybox));
