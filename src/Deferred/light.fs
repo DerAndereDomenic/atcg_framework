@@ -1,4 +1,4 @@
-#version 330 core
+#version 400 core
 
 #define PI 3.14159
 
@@ -25,7 +25,7 @@ uniform sampler2D lut;
 uniform vec3 light_positions[64];
 uniform vec3 light_colors[64];
 uniform float light_intensities[64];
-uniform samplerCube light_shadows[64];
+uniform samplerCubeArray shadow_maps;
 uniform int num_lights;
 
 float distributionGGX(float NdotH, float roughness)
@@ -73,20 +73,20 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness)
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * clamped * clamped * clamped * clamped * clamped;
 } 
 
-float shadowCalculation(int i, vec3 frag_pos)
+float shadowCalculation(int i, vec3 pos)
 {
     // get vector between fragment position and light position
-    vec3 fragToLight = frag_pos - light_positions[i];
+    vec3 fragToLight = pos - light_positions[i];
     // use the light to fragment vector to sample from the depth map    
-    float closestDepth = texture(light_shadows[i], fragToLight).r;
+    float closestDepth = texture(shadow_maps, vec4(fragToLight, float(i))).r;
     // it is currently in linear range between [0,1]. Re-transform back to original value
-    float far_plane = 25.0;
+    float far_plane = 100.0;
     closestDepth *= far_plane;
     // now get current linear depth as the length between the fragment and light position
     float currentDepth = length(fragToLight);
     // now test for shadows
-    float bias = 0.05; 
-    float shadow = currentDepth -  bias > closestDepth ? 1.0 : 0.0;
+    float bias = 0.05;
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
 
     return shadow;
 }

@@ -10,72 +10,6 @@
 #include <random>
 #include <stb_image.h>
 
-struct PointLightComponent
-{
-    PointLightComponent() : intensity(10.0f), color(glm::vec3(1))
-    {
-        atcg::TextureSpecification spec;
-        spec.width  = 1024;
-        spec.height = 1024;
-        spec.format = atcg::TextureFormat::DEPTH;
-        depth_map   = atcg::TextureCube::create(spec);
-
-        framebuffer = atcg::make_ref<atcg::Framebuffer>(spec.width, spec.height);
-        // framebuffer->attachColor();
-        framebuffer->attachDepth(depth_map);
-        framebuffer->complete();
-    }
-
-    float intensity;
-    glm::vec3 color;
-    atcg::ref_ptr<atcg::TextureCube> depth_map;
-    atcg::ref_ptr<atcg::Framebuffer> framebuffer;
-
-    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "PointLight"; }
-};
-
-class MyComponentGUIHandler : public atcg::ComponentGUIHandler
-{
-public:
-    MyComponentGUIHandler(const atcg::ref_ptr<atcg::Scene>& scene) : ComponentGUIHandler(scene) {}
-
-    template<typename T>
-    void draw_component(atcg::Entity entity, T& component)
-    {
-        atcg::ComponentGUIHandler::draw_component<T>(entity, component);
-    }
-};
-
-template<>
-void MyComponentGUIHandler::draw_component<PointLightComponent>(atcg::Entity entity, PointLightComponent& component)
-{
-#ifndef ATCG_HEADLESS
-    ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color));
-    ImGui::InputFloat("Intensity##PointLight", &component.intensity);
-#endif
-}
-struct RenderContext
-{
-    atcg::ref_ptr<atcg::Scene> scene;
-    atcg::ref_ptr<atcg::Camera> camera;
-};
-
-struct GeometryPassData
-{
-    atcg::ref_ptr<atcg::Shader> geometry_pass_shader;
-};
-
-struct LightPassData
-{
-    atcg::ref_ptr<atcg::Shader> light_pass_shader;
-    atcg::ref_ptr<atcg::Graph> screen_quad;
-};
-
-struct ShadowPassData
-{
-    atcg::ref_ptr<atcg::Shader> depth_pass_shader;
-};
-
 class DeferredLayer : public atcg::Layer
 {
 public:
@@ -83,269 +17,303 @@ public:
 
     void createRenderGraph()
     {
-        context         = atcg::make_ref<RenderContext>();
-        context->scene  = scene;
-        context->camera = camera_controller->getCamera();
-        graph           = atcg::make_ref<atcg::RenderGraph<RenderContext>>(context);
+        atcg::Dictionary context;
+        graph = atcg::make_ref<atcg::RenderGraph>();
 
-        auto [geometry_handle, geometry_builder] = graph->addRenderPass<GeometryPassData, atcg::Framebuffer>();
+        auto [geometry_handle, geometry_builder] = graph->addRenderPass("Geometry Pass");
 
-        geometry_builder->setSetupFunction(
-            [](const atcg::ref_ptr<RenderContext>& context,
-               const atcg::ref_ptr<GeometryPassData>& data,
-               atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-            {
-                uint32_t width  = atcg::Renderer::getFramebuffer()->width();
-                uint32_t height = atcg::Renderer::getFramebuffer()->height();
-
-                // Setup the G-Buffer
-                atcg::TextureSpecification spec_float3;
-                spec_float3.width  = width;
-                spec_float3.height = height;
-                spec_float3.format = atcg::TextureFormat::RGBFLOAT;
-                auto position_map  = atcg::Texture2D::create(spec_float3);
-                auto normal_map    = atcg::Texture2D::create(spec_float3);
-                auto color_map     = atcg::Texture2D::create(spec_float3);
-
-                atcg::TextureSpecification spec_float2;
-                spec_float2.width  = width;
-                spec_float2.height = height;
-                spec_float2.format = atcg::TextureFormat::RGFLOAT;
-                auto spec_met_map  = atcg::Texture2D::create(spec_float2);
-
-                atcg::TextureSpecification spec_int;
-                spec_int.width               = width;
-                spec_int.height              = height;
-                spec_int.format              = atcg::TextureFormat::RINT;
-                spec_int.sampler.filter_mode = atcg::TextureFilterMode::NEAREST;
-                auto entity_map              = atcg::Texture2D::create(spec_int);
-
-                framebuffer = atcg::make_ref<atcg::Framebuffer>(width, height);
-                framebuffer->attachTexture(position_map);
-                framebuffer->attachTexture(normal_map);
-                framebuffer->attachTexture(color_map);
-                framebuffer->attachTexture(spec_met_map);
-                framebuffer->attachTexture(entity_map);
-                framebuffer->attachDepth();
-                framebuffer->complete();
-
-                // Load the geometry pass shader
-                std::string vertex_path    = std::string(ATCG_TARGET_DIR) + "/geometry.vs";
-                std::string fragment_path  = std::string(ATCG_TARGET_DIR) + "/geometry.fs";
-                data->geometry_pass_shader = atcg::make_ref<atcg::Shader>(vertex_path, fragment_path);
-            });
-
-        geometry_builder->setRenderFunction(
-            [](const atcg::ref_ptr<RenderContext>& context,
-               const std::vector<std::any>& inputs,
-               const atcg::ref_ptr<GeometryPassData>& data,
-               const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-            {
-                // auto framebuffer = std::any_cast<atcg::ref_ptr<atcg::Framebuffer>>(inputs[0]);
-                framebuffer->use();
-                atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
-                atcg::Renderer::setViewport(0, 0, framebuffer->width(), framebuffer->height());
-                atcg::Renderer::clear();
-                int value = -1;
-                framebuffer->getColorAttachement(4)->fill(&value);
-
-                const auto& view = context->scene->getAllEntitiesWith<atcg::TransformComponent,
-                                                                      atcg::GeometryComponent,
-                                                                      atcg::MeshRenderComponent>();
-
-                for(auto e: view)
+        geometry_builder
+            ->setSetupFunction(
+                [](atcg::Dictionary& context, atcg::Dictionary& data, atcg::Dictionary& output)
                 {
-                    atcg::Entity entity(e, context->scene.get());
+                    uint32_t width  = atcg::Renderer::getFramebuffer()->width();
+                    uint32_t height = atcg::Renderer::getFramebuffer()->height();
 
-                    atcg::Renderer::drawComponent<atcg::MeshRenderComponent>(entity,
-                                                                             context->camera,
-                                                                             data->geometry_pass_shader);
-                }
-            });
+                    // Setup the G-Buffer
+                    atcg::TextureSpecification spec_float3;
+                    spec_float3.width  = width;
+                    spec_float3.height = height;
+                    spec_float3.format = atcg::TextureFormat::RGBFLOAT;
+                    auto position_map  = atcg::Texture2D::create(spec_float3);
+                    auto normal_map    = atcg::Texture2D::create(spec_float3);
+                    auto color_map     = atcg::Texture2D::create(spec_float3);
 
-        auto [light_handle, light_builder] = graph->addRenderPass<LightPassData, atcg::Framebuffer>();
+                    atcg::TextureSpecification spec_float2;
+                    spec_float2.width  = width;
+                    spec_float2.height = height;
+                    spec_float2.format = atcg::TextureFormat::RGFLOAT;
+                    auto spec_met_map  = atcg::Texture2D::create(spec_float2);
 
-        light_builder->setSetupFunction(
-            [](const atcg::ref_ptr<RenderContext>& context,
-               const atcg::ref_ptr<LightPassData>& data,
-               atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-            {
-                framebuffer = atcg::Renderer::getFramebuffer();
+                    atcg::TextureSpecification spec_int;
+                    spec_int.width               = width;
+                    spec_int.height              = height;
+                    spec_int.format              = atcg::TextureFormat::RINT;
+                    spec_int.sampler.filter_mode = atcg::TextureFilterMode::NEAREST;
+                    auto entity_map              = atcg::Texture2D::create(spec_int);
 
-                // Load the geometry pass shader
-                std::string vertex_path   = std::string(ATCG_TARGET_DIR) + "/light.vs";
-                std::string fragment_path = std::string(ATCG_TARGET_DIR) + "/light.fs";
-                data->light_pass_shader   = atcg::make_ref<atcg::Shader>(vertex_path, fragment_path);
+                    auto framebuffer = atcg::make_ref<atcg::Framebuffer>(width, height);
+                    framebuffer->attachTexture(position_map);
+                    framebuffer->attachTexture(normal_map);
+                    framebuffer->attachTexture(color_map);
+                    framebuffer->attachTexture(spec_met_map);
+                    framebuffer->attachTexture(entity_map);
+                    framebuffer->attachDepth();
+                    framebuffer->complete();
 
-                std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
-                                                      atcg::Vertex(glm::vec3(1, -1, 0)),
-                                                      atcg::Vertex(glm::vec3(1, 1, 0)),
-                                                      atcg::Vertex(glm::vec3(-1, 1, 0))};
+                    output.setValue("g_buffer", framebuffer);
 
-                std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
-
-                data->screen_quad = atcg::Graph::createTriangleMesh(vertices, edges);
-            });
-
-        light_builder->setRenderFunction(
-            [](const atcg::ref_ptr<RenderContext>& context,
-               const std::vector<std::any>& inputs,
-               const atcg::ref_ptr<LightPassData>& data,
-               const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-            {
-                auto g_buffer = std::any_cast<atcg::ref_ptr<atcg::Framebuffer>>(inputs[0]);
-
-                framebuffer->use();
-                atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
-                atcg::Renderer::setDefaultViewport();
-                atcg::Renderer::clear();
-
-                atcg::Renderer::drawSkybox(context->camera);
-
-                framebuffer->blit(g_buffer, false);
-
-
-                auto light_view = context->scene->getAllEntitiesWith<PointLightComponent>();
-                int num_lights  = 0;
-
-                for(auto e: light_view)
+                    // Load the geometry pass shader
+                    std::string vertex_path   = std::string(ATCG_TARGET_DIR) + "/geometry.vs";
+                    std::string fragment_path = std::string(ATCG_TARGET_DIR) + "/geometry.fs";
+                    auto geometry_pass_shader = atcg::make_ref<atcg::Shader>(vertex_path, fragment_path);
+                    data.setValue("geometry_pass_shader", geometry_pass_shader);
+                })
+            ->setRenderFunction(
+                [](atcg::Dictionary& context,
+                   const atcg::Dictionary& inputs,
+                   atcg::Dictionary& data,
+                   atcg::Dictionary& output)
                 {
-                    atcg::Entity light(e, context->scene.get());
-                    auto& light_transform = light.getComponent<atcg::TransformComponent>();
-                    auto& point_light     = light.getComponent<PointLightComponent>();
-                    std::stringstream ss;
-                    ss << "[" << std::to_string(num_lights) << "]";
-                    data->light_pass_shader->setVec3("light_positions" + ss.str(), light_transform.getPosition());
-                    data->light_pass_shader->setFloat("light_intensities" + ss.str(), point_light.intensity);
-                    data->light_pass_shader->setVec3("light_colors" + ss.str(), point_light.color);
-                    data->light_pass_shader->setInt("light_shadows" + ss.str(), 14 + num_lights);
-                    point_light.depth_map->use(14 + num_lights);
-                    ++num_lights;
-                }
-                data->light_pass_shader->setInt("num_lights", num_lights);
-
-                data->light_pass_shader->setInt("position_texture", 9);
-                data->light_pass_shader->setInt("normal_texture", 10);
-                data->light_pass_shader->setInt("color_texture", 11);
-                data->light_pass_shader->setInt("spec_met_texture", 12);
-                data->light_pass_shader->setInt("entity_texture", 13);
-                data->light_pass_shader->setVec3("camera_pos", context->camera->getPosition());
-                data->light_pass_shader->setVec3("camera_dir", context->camera->getDirection());
-                g_buffer->getColorAttachement(0)->use(9);
-                g_buffer->getColorAttachement(1)->use(10);
-                g_buffer->getColorAttachement(2)->use(11);
-                g_buffer->getColorAttachement(3)->use(12);
-                g_buffer->getColorAttachement(4)->use(13);
-                atcg::Renderer::toggleDepthTesting(false);
-                atcg::Renderer::draw(data->screen_quad, {}, glm::mat4(1), glm::vec3(1), data->light_pass_shader);
-                atcg::Renderer::toggleDepthTesting(true);
-
-                // const auto& view = context->scene->getAllEntitiesWith<atcg::TransformComponent>();
-
-                // for(auto e: view)
-                // {
-                //     atcg::Entity entity(e, context->scene.get());
-
-                //     if(entity.hasAnyComponent<atcg::PointRenderComponent,
-                //                               atcg::EdgeRenderComponent,
-                //                               atcg::EdgeCylinderRenderComponent>())
-                //     {
-                //         atcg::Renderer::draw(entity, context->camera);
-                //     }
-                // }
-            });
-
-        auto [shadow_handle, shadow_builder] = graph->addRenderPass<ShadowPassData, int>();
-
-        shadow_builder->setSetupFunction(
-            [](const atcg::ref_ptr<RenderContext>& context,
-               const atcg::ref_ptr<ShadowPassData>& data,
-               atcg::ref_ptr<int>&)
-            {
-                std::string vertex_path   = std::string(ATCG_TARGET_DIR) + "/depth.vs";
-                std::string geometry_path = std::string(ATCG_TARGET_DIR) + "/depth.gs";
-                std::string fragment_path = std::string(ATCG_TARGET_DIR) + "/depth.fs";
-                data->depth_pass_shader   = atcg::make_ref<atcg::Shader>(vertex_path, fragment_path, geometry_path);
-            });
-
-        shadow_builder->setRenderFunction(
-            [](const atcg::ref_ptr<RenderContext>& context,
-               const std::vector<std::any>& inputs,
-               const atcg::ref_ptr<ShadowPassData>& data,
-               const atcg::ref_ptr<int>&)
-            {
-                float n              = 1.0f;
-                float f              = 25.0f;
-                glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, n, f);
-
-                data->depth_pass_shader->setFloat("far_plane", f);
-
-                auto light_view = context->scene->getAllEntitiesWith<PointLightComponent>();
-                for(auto e: light_view)
-                {
-                    atcg::Entity entity(e, context->scene.get());
-
-                    auto& point_light = entity.getComponent<PointLightComponent>();
-                    auto& transform   = entity.getComponent<atcg::TransformComponent>();
-                    point_light.framebuffer->use();
-                    atcg::Renderer::setViewport(0,
-                                                0,
-                                                point_light.framebuffer->width(),
-                                                point_light.framebuffer->height());
+                    auto framebuffer = output.getValue<atcg::ref_ptr<atcg::Framebuffer>>("g_buffer");
+                    framebuffer->use();
+                    atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
+                    atcg::Renderer::setViewport(0, 0, framebuffer->width(), framebuffer->height());
                     atcg::Renderer::clear();
+                    int value = -1;
+                    framebuffer->getColorAttachement(4)->fill(&value);
 
-                    glm::vec3 lightPos = transform.getPosition();
-                    data->depth_pass_shader->setVec3("lightPos", lightPos);
-                    data->depth_pass_shader->setMat4("shadowMatrices[0]",
-                                                     projection * glm::lookAt(lightPos,
-                                                                              lightPos + glm::vec3(1.0, 0.0, 0.0),
-                                                                              glm::vec3(0.0, -1.0, 0.0)));
-                    data->depth_pass_shader->setMat4("shadowMatrices[1]",
-                                                     projection * glm::lookAt(lightPos,
-                                                                              lightPos + glm::vec3(-1.0, 0.0, 0.0),
-                                                                              glm::vec3(0.0, -1.0, 0.0)));
-                    data->depth_pass_shader->setMat4("shadowMatrices[2]",
-                                                     projection * glm::lookAt(lightPos,
-                                                                              lightPos + glm::vec3(0.0, 1.0, 0.0),
-                                                                              glm::vec3(0.0, 0.0, 1.0)));
-                    data->depth_pass_shader->setMat4("shadowMatrices[3]",
-                                                     projection * glm::lookAt(lightPos,
-                                                                              lightPos + glm::vec3(0.0, -1.0, 0.0),
-                                                                              glm::vec3(0.0, 0.0, -1.0)));
-                    data->depth_pass_shader->setMat4("shadowMatrices[4]",
-                                                     projection * glm::lookAt(lightPos,
-                                                                              lightPos + glm::vec3(0.0, 0.0, 1.0),
-                                                                              glm::vec3(0.0, -1.0, 0.0)));
-                    data->depth_pass_shader->setMat4("shadowMatrices[5]",
-                                                     projection * glm::lookAt(lightPos,
-                                                                              lightPos + glm::vec3(0.0, 0.0, -1.0),
-                                                                              glm::vec3(0.0, -1.0, 0.0)));
+                    auto scene       = context.getValue<atcg::Scene*>("scene");
+                    const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent,
+                                                                 atcg::GeometryComponent,
+                                                                 atcg::MeshRenderComponent>();
 
-                    const auto& view = context->scene->getAllEntitiesWith<atcg::TransformComponent,
-                                                                          atcg::GeometryComponent,
-                                                                          atcg::MeshRenderComponent>();
+                    atcg::ComponentRenderer component_renderer;
+                    auto camera = context.getValue<atcg::ref_ptr<atcg::Camera>>("camera");
 
-                    // Draw scene
+                    auto geometry_pass_shader = data.getValue<atcg::ref_ptr<atcg::Shader>>("geometry_pass_shader");
+                    atcg::Dictionary auxiliary;
+                    auxiliary.setValue("override_shader", geometry_pass_shader);
                     for(auto e: view)
                     {
-                        atcg::Entity entity(e, context->scene.get());
+                        atcg::Entity entity(e, scene);
 
-                        auto& transform = entity.getComponent<atcg::TransformComponent>();
-                        auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
-
-                        atcg::Renderer::draw(geometry.graph,
-                                             context->camera,
-                                             transform.getModel(),
-                                             glm::vec3(1),
-                                             data->depth_pass_shader);
+                        component_renderer.renderComponent<atcg::MeshRenderComponent>(entity, camera, auxiliary);
                     }
-                }
-            });
+                });
 
-        graph->addDependency(geometry_handle, light_handle);
-        graph->addDependency(shadow_handle, light_handle);
+        auto [light_handle, light_builder] = graph->addRenderPass("Lighting Pass");
 
-        graph->compile();
+        light_builder
+            ->setSetupFunction(
+                [](atcg::Dictionary& context, atcg::Dictionary& data, atcg::Dictionary& output)
+                {
+                    auto framebuffer = atcg::Renderer::getFramebuffer();
+                    output.setValue("framebuffer", framebuffer);
+
+                    // Load the geometry pass shader
+                    std::string vertex_path   = std::string(ATCG_TARGET_DIR) + "/light.vs";
+                    std::string fragment_path = std::string(ATCG_TARGET_DIR) + "/light.fs";
+                    auto light_pass_shader    = atcg::make_ref<atcg::Shader>(vertex_path, fragment_path);
+                    data.setValue("light_pass_shader", light_pass_shader);
+
+                    std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
+                                                          atcg::Vertex(glm::vec3(1, -1, 0)),
+                                                          atcg::Vertex(glm::vec3(1, 1, 0)),
+                                                          atcg::Vertex(glm::vec3(-1, 1, 0))};
+
+                    std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+
+                    auto screen_quad = atcg::Graph::createTriangleMesh(vertices, edges);
+                    data.setValue("screen_quad", screen_quad);
+                })
+            ->setRenderFunction(
+                [](atcg::Dictionary& context,
+                   const atcg::Dictionary& inputs,
+                   atcg::Dictionary& data,
+                   atcg::Dictionary& output)
+                {
+                    auto g_buffer = inputs.getValue<atcg::ref_ptr<atcg::Framebuffer>>("g_buffer");
+
+                    auto framebuffer = output.getValue<atcg::ref_ptr<atcg::Framebuffer>>("framebuffer");
+
+                    framebuffer->use();
+                    atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
+                    atcg::Renderer::setDefaultViewport();
+                    atcg::Renderer::clear();
+
+                    auto camera = context.getValue<atcg::ref_ptr<atcg::Camera>>("camera");
+
+                    // TODO skybox
+                    auto scene = context.getValue<atcg::Scene*>("scene");
+                    atcg::Renderer::drawSkybox(scene->getSkyboxCubemap(), camera);
+
+                    framebuffer->blit(g_buffer, false);
+
+                    auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent>();
+                    int num_lights  = 0;
+
+                    auto light_pass_shader = data.getValue<atcg::ref_ptr<atcg::Shader>>("light_pass_shader");
+                    for(auto e: light_view)
+                    {
+                        atcg::Entity light(e, scene);
+                        auto& light_transform = light.getComponent<atcg::TransformComponent>();
+                        auto& point_light     = light.getComponent<atcg::PointLightComponent>();
+                        std::stringstream ss;
+                        ss << "[" << std::to_string(num_lights) << "]";
+                        light_pass_shader->setVec3("light_positions" + ss.str(), light_transform.getPosition());
+                        light_pass_shader->setFloat("light_intensities" + ss.str(), point_light.intensity);
+                        light_pass_shader->setVec3("light_colors" + ss.str(), point_light.color);
+                        ++num_lights;
+                    }
+                    light_pass_shader->setInt("num_lights", num_lights);
+
+
+                    uint32_t point_light_id = atcg::Renderer::popTextureID();
+                    auto point_light_depth_maps =
+                        *inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<atcg::TextureCubeArray>>>("point_light_depth_"
+                                                                                               "maps");
+                    point_light_depth_maps->use(point_light_id);
+                    light_pass_shader->setInt("point_light_depth_maps", point_light_id);
+
+                    uint32_t position_texture_id = atcg::Renderer::popTextureID();
+                    light_pass_shader->setInt("position_texture", position_texture_id);
+                    uint32_t normal_texture_id = atcg::Renderer::popTextureID();
+                    light_pass_shader->setInt("normal_texture", normal_texture_id);
+                    uint32_t color_texture_id = atcg::Renderer::popTextureID();
+                    light_pass_shader->setInt("color_texture", color_texture_id);
+                    uint32_t spec_met_texture_id = atcg::Renderer::popTextureID();
+                    light_pass_shader->setInt("spec_met_texture", spec_met_texture_id);
+                    uint32_t entity_texture_id = atcg::Renderer::popTextureID();
+                    light_pass_shader->setInt("entity_texture", entity_texture_id);
+                    light_pass_shader->setVec3("camera_pos", camera->getPosition());
+                    light_pass_shader->setVec3("camera_dir", camera->getDirection());
+
+                    g_buffer->getColorAttachement(0)->use(position_texture_id);
+                    g_buffer->getColorAttachement(1)->use(normal_texture_id);
+                    g_buffer->getColorAttachement(2)->use(color_texture_id);
+                    g_buffer->getColorAttachement(3)->use(spec_met_texture_id);
+                    g_buffer->getColorAttachement(4)->use(entity_texture_id);
+
+                    auto screen_quad = data.getValue<atcg::ref_ptr<atcg::Graph>>("screen_quad");
+                    atcg::Renderer::toggleDepthTesting(false);
+                    atcg::Renderer::draw(screen_quad, {}, glm::mat4(1), glm::vec3(1), light_pass_shader);
+                    atcg::Renderer::toggleDepthTesting(true);
+
+                    atcg::Renderer::pushTextureID(position_texture_id);
+                    atcg::Renderer::pushTextureID(normal_texture_id);
+                    atcg::Renderer::pushTextureID(color_texture_id);
+                    atcg::Renderer::pushTextureID(spec_met_texture_id);
+                    atcg::Renderer::pushTextureID(entity_texture_id);
+                    atcg::Renderer::pushTextureID(point_light_id);
+
+                    // const auto& view = context->scene->getAllEntitiesWith<atcg::TransformComponent>();
+
+                    // for(auto e: view)
+                    // {
+                    //     atcg::Entity entity(e, context->scene.get());
+
+                    //     if(entity.hasAnyComponent<atcg::PointRenderComponent,
+                    //                               atcg::EdgeRenderComponent,
+                    //                               atcg::EdgeCylinderRenderComponent>())
+                    //     {
+                    //         atcg::Renderer::draw(entity, context->camera);
+                    //     }
+                    // }
+                });
+
+        auto shadow_handle = graph->addRenderPass(atcg::make_ref<atcg::ShadowPass>());
+
+        // shadow_builder->setSetupFunction(
+        //     [](const atcg::ref_ptr<RenderContext>& context,
+        //        const atcg::ref_ptr<ShadowPassData>& data,
+        //        atcg::ref_ptr<int>&)
+        //     {
+        //         std::string vertex_path   = std::string(ATCG_TARGET_DIR) + "/depth.vs";
+        //         std::string geometry_path = std::string(ATCG_TARGET_DIR) + "/depth.gs";
+        //         std::string fragment_path = std::string(ATCG_TARGET_DIR) + "/depth.fs";
+        //         data->depth_pass_shader   = atcg::make_ref<atcg::Shader>(vertex_path, fragment_path, geometry_path);
+        //     });
+
+        // shadow_builder->setRenderFunction(
+        //     [](const atcg::ref_ptr<RenderContext>& context,
+        //        const std::vector<std::any>& inputs,
+        //        const atcg::ref_ptr<ShadowPassData>& data,
+        //        const atcg::ref_ptr<int>&)
+        //     {
+        //         float n              = 1.0f;
+        //         float f              = 25.0f;
+        //         glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, n, f);
+
+        //         data->depth_pass_shader->setFloat("far_plane", f);
+
+        //         auto light_view = context->scene->getAllEntitiesWith<PointLightComponent>();
+        //         for(auto e: light_view)
+        //         {
+        //             atcg::Entity entity(e, context->scene.get());
+
+        //             auto& point_light = entity.getComponent<PointLightComponent>();
+        //             auto& transform   = entity.getComponent<atcg::TransformComponent>();
+        //             point_light.framebuffer->use();
+        //             atcg::Renderer::setViewport(0,
+        //                                         0,
+        //                                         point_light.framebuffer->width(),
+        //                                         point_light.framebuffer->height());
+        //             atcg::Renderer::clear();
+
+        //             glm::vec3 lightPos = transform.getPosition();
+        //             data->depth_pass_shader->setVec3("lightPos", lightPos);
+        //             data->depth_pass_shader->setMat4("shadowMatrices[0]",
+        //                                              projection * glm::lookAt(lightPos,
+        //                                                                       lightPos + glm::vec3(1.0, 0.0, 0.0),
+        //                                                                       glm::vec3(0.0, -1.0, 0.0)));
+        //             data->depth_pass_shader->setMat4("shadowMatrices[1]",
+        //                                              projection * glm::lookAt(lightPos,
+        //                                                                       lightPos + glm::vec3(-1.0, 0.0, 0.0),
+        //                                                                       glm::vec3(0.0, -1.0, 0.0)));
+        //             data->depth_pass_shader->setMat4("shadowMatrices[2]",
+        //                                              projection * glm::lookAt(lightPos,
+        //                                                                       lightPos + glm::vec3(0.0, 1.0, 0.0),
+        //                                                                       glm::vec3(0.0, 0.0, 1.0)));
+        //             data->depth_pass_shader->setMat4("shadowMatrices[3]",
+        //                                              projection * glm::lookAt(lightPos,
+        //                                                                       lightPos + glm::vec3(0.0, -1.0, 0.0),
+        //                                                                       glm::vec3(0.0, 0.0, -1.0)));
+        //             data->depth_pass_shader->setMat4("shadowMatrices[4]",
+        //                                              projection * glm::lookAt(lightPos,
+        //                                                                       lightPos + glm::vec3(0.0, 0.0, 1.0),
+        //                                                                       glm::vec3(0.0, -1.0, 0.0)));
+        //             data->depth_pass_shader->setMat4("shadowMatrices[5]",
+        //                                              projection * glm::lookAt(lightPos,
+        //                                                                       lightPos + glm::vec3(0.0, 0.0, -1.0),
+        //                                                                       glm::vec3(0.0, -1.0, 0.0)));
+
+        //             const auto& view = context->scene->getAllEntitiesWith<atcg::TransformComponent,
+        //                                                                   atcg::GeometryComponent,
+        //                                                                   atcg::MeshRenderComponent>();
+
+        //             // Draw scene
+        //             for(auto e: view)
+        //             {
+        //                 atcg::Entity entity(e, context->scene.get());
+
+        //                 auto& transform = entity.getComponent<atcg::TransformComponent>();
+        //                 auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
+
+        //                 atcg::Renderer::draw(geometry.graph,
+        //                                      context->camera,
+        //                                      transform.getModel(),
+        //                                      glm::vec3(1),
+        //                                      data->depth_pass_shader);
+        //             }
+        //         }
+        //     });
+
+        graph->addDependency(geometry_handle, "g_buffer", light_handle, "g_buffer");
+        graph->addDependency(shadow_handle, "point_light_depth_maps", light_handle, "point_light_depth_maps");
+
+        graph->compile(context);
+
+        scene->setRenderGraph(graph);
     }
 
     // This is run at the start of the program
@@ -362,12 +330,12 @@ public:
         scene = atcg::IO::read_scene((atcg::resource_directory() / "test_scene.obj").string());
 
         auto point_light = scene->createEntity("Light");
-        auto& light      = point_light.addComponent<PointLightComponent>();
+        auto& light      = point_light.addComponent<atcg::PointLightComponent>();
         light.color      = glm::vec3(1);
         light.intensity  = 10.0f;
         point_light.addComponent<atcg::TransformComponent>(glm::vec3(0, 5, 0));
 
-        panel = atcg::SceneHierarchyPanel<MyComponentGUIHandler>(scene);
+        panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -386,7 +354,9 @@ public:
 
         atcg::Renderer::clear();
 
-        graph->execute();
+        atcg::Dictionary context;
+        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+        scene->draw(context);
 
         // atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
 
@@ -436,7 +406,7 @@ public:
             ImGui::End();
         }
 
-        panel.renderPanel<PointLightComponent>();
+        panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
 
         atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());
@@ -512,8 +482,7 @@ public:
 #endif
 
 private:
-    atcg::ref_ptr<RenderContext> context;
-    atcg::ref_ptr<atcg::RenderGraph<RenderContext>> graph;
+    atcg::ref_ptr<atcg::RenderGraph> graph;
 
     atcg::ref_ptr<atcg::Scene> scene;
     atcg::Entity hovered_entity;
@@ -522,7 +491,7 @@ private:
 
     atcg::ref_ptr<atcg::Graph> plane;
 
-    atcg::SceneHierarchyPanel<MyComponentGUIHandler> panel;
+    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
 
     float time       = 0.0f;
     bool in_viewport = false;

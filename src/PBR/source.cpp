@@ -23,9 +23,9 @@ public:
 
         auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
         ATCG_DEBUG("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
-        atcg::Renderer::setSkybox(skybox);
 
         scene = atcg::IO::read_scene((atcg::resource_directory() / "test_scene.obj").string());
+        scene->setSkybox(skybox);
 
         {
             auto sphere  = scene->getEntitiesByName("Icosphere").front();
@@ -92,7 +92,9 @@ public:
 
             atcg::Renderer::clear();
 
-            atcg::Renderer::draw(scene, controller->getCameraLeft());
+            atcg::Dictionary context;
+            context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", controller->getCameraLeft());
+            scene->draw(context);
 
             atcg::Renderer::drawCameras(scene, controller->getCameraLeft());
             atcg::Renderer::drawLights(scene, controller->getCameraLeft());
@@ -108,7 +110,8 @@ public:
 
             atcg::Renderer::clear();
 
-            atcg::Renderer::draw(scene, controller->getCameraRight());
+            context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", controller->getCameraRight());
+            scene->draw(context);
 
             atcg::Renderer::drawCameras(scene, controller->getCameraRight());
             atcg::Renderer::drawLights(scene, controller->getCameraRight());
@@ -129,7 +132,9 @@ public:
         {
             atcg::Renderer::clear();
 
-            atcg::Renderer::draw(scene, camera_controller->getCamera());
+            atcg::Dictionary context;
+            context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+            scene->draw(context);
 
             atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
             atcg::Renderer::drawLights(scene, camera_controller->getCamera());

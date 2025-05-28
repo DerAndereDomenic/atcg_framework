@@ -117,7 +117,7 @@ public:
 
         output_img->store("skybox.hdr");
 
-        atcg::Renderer::setSkybox(output_img);
+        scene->setSkybox(output_img);
     }
 
     // This gets called each frame
@@ -127,7 +127,9 @@ public:
 
         atcg::Renderer::clear();
 
-        atcg::Renderer::draw(scene, camera_controller->getCamera());
+        atcg::Dictionary context;
+        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+        scene->draw(context);
     }
 
     virtual void onImGuiRender() override {}
