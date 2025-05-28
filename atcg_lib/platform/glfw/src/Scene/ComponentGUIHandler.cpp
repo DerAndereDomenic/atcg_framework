@@ -196,7 +196,10 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     component.preview->use();
     atcg::Renderer::clear();
     atcg::Renderer::setViewport(0, 0, preview_width, preview_height);
-    atcg::Renderer::draw(_scene, component.camera);
+
+    atcg::Dictionary context;
+    context.setValue("camera", component.camera);
+    _scene->draw(context);
     atcg::Renderer::useScreenBuffer();
     atcg::Renderer::setDefaultViewport();
 
