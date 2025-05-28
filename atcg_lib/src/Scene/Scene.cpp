@@ -171,7 +171,7 @@ void Scene::draw(const atcg::ref_ptr<Camera>& camera)
 {
     Dictionary context;
     context.setValue("camera", camera);
-    draw(std::move(context));
+    draw(context);
 }
 
 void Scene::setSkybox(const atcg::ref_ptr<Image>& skybox)
