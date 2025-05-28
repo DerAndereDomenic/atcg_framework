@@ -50,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Dictionaries
 - Added Skybox class
 - Added a more flexible render pass system that allows also the use of predefined renderpass
+- Added a component renderer class that handles rendering of different components
 
 ### Changed
 
