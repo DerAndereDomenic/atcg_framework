@@ -69,17 +69,22 @@ atcg::ref_ptr<atcg::TriMesh> solve_radiosity_gpu(const atcg::ref_ptr<atcg::TriMe
     // Copy mesh in a super convuluted way because the documentation doesn't state how to do it right
     atcg::ref_ptr<TriMesh> result = atcg::make_ref<TriMesh>();
     result->operator=(*mesh);
-    result->request_face_colors();
+    result->request_vertex_colors();
 
-    for(auto ft = result->faces_begin(); ft != result->faces_end(); ++ft)
+    for(auto vt = result->vertices_begin(); vt != result->vertices_end(); ++vt)
     {
-        torch::Tensor radiostiy = solution.index({ft->idx(), Slice()});
-        glm::vec3 color         = glm::vec3(radiostiy.index({0}).item<float>(),
-                                    radiostiy.index({1}).item<float>(),
-                                    radiostiy.index({2}).item<float>());
-        color                   = glm::pow(1.0f - glm::exp(-color), glm::vec3(1.0f / 2.4f));
-        for(auto vt = ft->vertices().begin(); vt != ft->vertices().end(); ++vt)
-            result->set_color(*vt, 255.0f * color);
+        glm::vec3 color(0.0f);
+        uint32_t n_faces = 0;
+        for(auto ft = vt->faces().begin(); ft != vt->faces().end(); ++ft)
+        {
+            torch::Tensor radiostiy = solution.index({ft->idx(), Slice()});
+            color += glm::vec3(radiostiy[0].item<float>(), radiostiy[1].item<float>(), radiostiy[2].item<float>());
+            ++n_faces;
+        }
+
+        color /= float(n_faces);
+        color = glm::pow(1.0f - glm::exp(-color), glm::vec3(1.0f / 2.4f));
+        result->set_color(*vt, color * 255.0f);
     }
 
     return result;
@@ -206,17 +211,22 @@ atcg::ref_ptr<TriMesh> solve_radiosity_cpu(const atcg::ref_ptr<TriMesh>& mesh, c
     // Copy mesh in a super convuluted way because the documentation doesn't state how to do it right
     atcg::ref_ptr<TriMesh> result = atcg::make_ref<TriMesh>();
     result->operator=(*mesh);
-    result->request_face_colors();
+    result->request_vertex_colors();
 
-    for(auto ft = result->faces_begin(); ft != result->faces_end(); ++ft)
+    for(auto vt = result->vertices_begin(); vt != result->vertices_end(); ++vt)
     {
-        torch::Tensor radiostiy = solution.index({ft->idx(), Slice()});
-        glm::vec3 color         = glm::vec3(radiostiy.index({0}).item<float>(),
-                                    radiostiy.index({1}).item<float>(),
-                                    radiostiy.index({2}).item<float>());
-        color                   = glm::pow(1.0f - glm::exp(-color), glm::vec3(1.0f / 2.4f));
-        for(auto vt = ft->vertices().begin(); vt != ft->vertices().end(); ++vt)
-            result->set_color(*vt, 255.0f * color);
+        glm::vec3 color(0.0f);
+        uint32_t n_faces = 0;
+        for(auto ft = vt->faces().begin(); ft != vt->faces().end(); ++ft)
+        {
+            torch::Tensor radiostiy = solution.index({ft->idx(), Slice()});
+            color += glm::vec3(radiostiy[0].item<float>(), radiostiy[1].item<float>(), radiostiy[2].item<float>());
+            ++n_faces;
+        }
+
+        color /= float(n_faces);
+        color = glm::pow(1.0f - glm::exp(-color), glm::vec3(1.0f / 2.4f));
+        result->set_color(*vt, color * 255.0f);
     }
 
     return result;
