@@ -21,9 +21,9 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
                                                const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     std::vector<const EmitterVPtrTable*> tables;
-    if(Renderer::hasSkybox())
+    if(_scene->hasSkybox())
     {
-        auto skybox_texture = Renderer::getSkyboxTexture();
+        auto skybox_texture = _scene->getSkyboxTexture();
 
         _environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(skybox_texture);
         _environment_emitter->initializePipeline(pipeline, sbt);
