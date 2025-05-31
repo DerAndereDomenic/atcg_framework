@@ -16,6 +16,7 @@ struct SurfaceInteraction
     glm::vec3 incoming_direction;
     float incoming_distance;
     uint32_t primitive_idx;
+    uint32_t entity_id;
 
     const BSDFVPtrTable* bsdf;
 };

@@ -67,6 +67,7 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         shape_data.setValue("shape", shape);
         shape_data.setValue("bsdf", bsdf);
         shape_data.setValue("transform", transform.getModel());
+        shape_data.setValue<int32_t>("entity_id", (int32_t)e);
         auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
         shape_instance->initializePipeline(pipeline, sbt);
 
@@ -95,8 +96,9 @@ void PathtracingIntegrator::reset()
 
 void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 {
-    auto camera = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
-    auto output = in_out_dictionary.getValue<torch::Tensor>("output");
+    auto camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
+    auto output     = in_out_dictionary.getValue<torch::Tensor>("output");
+    auto entity_ids = in_out_dictionary.getValueOr<torch::Tensor>("entity_ids", torch::empty({0}));
 
     if(_accumulation_buffer.numel() == 0 || _frame_counter == 0 || _accumulation_buffer.size(0) != output.size(0) ||
        _accumulation_buffer.size(1) != output.size(1))
@@ -119,6 +121,7 @@ void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
     params.image_width  = output.size(1);
     params.handle       = _ias->getTraversableHandle();
 
+    params.entity_ids = entity_ids.numel() > 0 ? (int32_t*)entity_ids.data_ptr() : nullptr;
 
     params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
 

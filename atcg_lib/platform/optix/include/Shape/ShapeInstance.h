@@ -20,6 +20,7 @@ public:
      * - shape: atcg::ref_ptr<Shape>
      * - bsdf: atcg::ref_ptr<BSDF>
      * - transform: glm::mat4
+     * - entity_id: int32_t
      *
      * @param shape_data The shape data
      */
@@ -54,5 +55,6 @@ private:
     glm::mat4 _transform;
     atcg::ref_ptr<Shape> _shape;
     atcg::ref_ptr<BSDF> _bsdf;
+    uint32_t _entity_id;
 };
 }    // namespace atcg

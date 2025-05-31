@@ -35,6 +35,7 @@ extern "C" __global__ void __raygen__rg()
     glm::vec3 ray_origin = cam_eye;
     glm::vec3 radiance(0);
     glm::vec3 throughput(1);
+    int32_t entity_id = -1;
 
     glm::vec3 next_origin;
     glm::vec3 next_dir;
@@ -57,6 +58,11 @@ extern "C" __global__ void __raygen__rg()
                                                              1e16f,
                                                              &si,
                                                              params.surface_trace_params);
+
+        if(si.valid && n == 0)
+        {
+            entity_id = si.entity_id;
+        }
 
         if(si.valid)
         {
@@ -163,6 +169,11 @@ extern "C" __global__ void __raygen__rg()
                                                    (uint8_t)(tone_mapped.y * 255.0f),
                                                    (uint8_t)(tone_mapped.z * 255.0f),
                                                    255);
+
+    if(params.entity_ids)
+    {
+        params.entity_ids[pixel_index] = entity_id;
+    }
 }
 
 extern "C" __global__ void __miss__ms()

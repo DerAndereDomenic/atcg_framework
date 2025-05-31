@@ -9,5 +9,6 @@ struct ShapeInstanceData
 {
     ShapeData* shape;
     const BSDFVPtrTable* bsdf;
+    uint32_t entity_id;
 };
 }    // namespace atcg

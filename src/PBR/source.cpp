@@ -20,7 +20,20 @@ class PBRLayer : public atcg::Layer
 public:
     void createOutputTexture(int width, int height)
     {
-        output_tensor = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
+        output_tensor   = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
+        output_entities = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
+
+        atcg::TextureSpecification spec;
+        spec.width     = width;
+        spec.height    = height;
+        spec.format    = atcg::TextureFormat::RGBA;
+        output_texture = atcg::Texture2D::create(spec);
+
+        atcg::TextureSpecification spec_int;
+        spec_int.width        = width;
+        spec_int.height       = height;
+        spec_int.format       = atcg::TextureFormat::RINT;
+        output_entity_texture = atcg::Texture2D::create(spec_int);
     }
 
     void initializePathtracer()
@@ -163,23 +176,28 @@ public:
         {
             atcg::Renderer::clear();
 
-            scene->draw(camera_controller->getCamera());
+            if(enable_pathtracing)
+            {
+                atcg::Dictionary dict;
+                dict.setValue("camera", camera_controller->getCamera());
+                dict.setValue("output", output_tensor);
+                dict.setValue("entity_ids", output_entities);
+                integrator->generateRays(dict);
+                output_texture->setData(output_tensor);
+                output_entity_texture->setData(output_entities);
+
+                atcg::Renderer::drawImage(output_texture, output_entity_texture);
+            }
+            else
+            {
+                scene->draw(camera_controller->getCamera());
+            }
 
             atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
             atcg::Renderer::drawLights(scene, camera_controller->getCamera());
 
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
         }
-
-        atcg::Dictionary dict;
-        dict.setValue("camera", camera_controller->getCamera());
-        dict.setValue("output", output_tensor);
-        integrator->generateRays(dict);
-        atcg::Framebuffer::useDefault();
-        atcg::Renderer::getFramebuffer()->getColorAttachement(0)->setData(output_tensor);
-        atcg::Renderer::useScreenBuffer();
-        // output_texture->setData(output_tensor);
-
 
         uint32_t current_revision = atcg::RevisionStack::numUndos();
         if(current_revision != last_revision)
@@ -262,6 +280,8 @@ public:
                 }
                 ImGui::EndCombo();
             }
+
+            ImGui::Checkbox("Path Tracing", &enable_pathtracing);
 
             ImGui::End();
         }
@@ -370,6 +390,8 @@ private:
     bool show_render_settings = false;
     bool vsync                = true;
 
+    bool enable_pathtracing = false;
+
     uint32_t msaa_samples[6]              = {1, 2, 4, 8, 16, 32};
     const char* msaa_samples_str[6]       = {"1", "2", "4", "8", "16", "32"};
     uint32_t current_msaa_selection_index = 3;
@@ -384,6 +406,9 @@ private:
 
     torch::Tensor output_tensor;
     atcg::ref_ptr<atcg::Texture2D> output_texture;
+
+    torch::Tensor output_entities;
+    atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
 
     uint32_t last_revision = 0;
 };

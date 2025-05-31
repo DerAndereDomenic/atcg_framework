@@ -55,4 +55,6 @@ extern "C" __global__ void __closesthit__mesh()
     // TODO
     si->bsdf = _sbt_data.bsdf;
     // si->emitter = sbt_data.emitter;
+
+    si->entity_id = _sbt_data.entity_id;
 }
