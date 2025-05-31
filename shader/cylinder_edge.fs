@@ -32,6 +32,7 @@ uniform vec3 light_positions[MAX_LIGHTS];
 uniform samplerCubeArray shadow_maps;
 uniform int num_lights = 0;
 uniform int receive_shadow;
+uniform int shadow_pass = 0;
 
 float shadowCalculation(int i, vec3 pos)
 {
@@ -48,7 +49,7 @@ float shadowCalculation(int i, vec3 pos)
     float bias = 0.05;
     float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
 
-    return receive_shadow * shadow;
+    return shadow_pass * receive_shadow * shadow;
 }
 
 void main()

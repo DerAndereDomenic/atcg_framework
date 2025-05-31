@@ -155,8 +155,11 @@ public:
         atcg::ShaderManager::getShader("volume")->setFloat("sigma_a_base", sigma_a_base);
         atcg::ShaderManager::getShader("volume")->setFloat("g", g);
         noise_texture->use();
-        atcg::Renderer::draw(cube_entity, camera_controller->getCamera());
-        atcg::Renderer::draw(light_entity, camera_controller->getCamera());
+
+        atcg::Dictionary context;
+        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+        scene->draw(context);
+
         dt = delta_time;
     }
 

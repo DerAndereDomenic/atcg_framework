@@ -59,7 +59,7 @@ class PythonLayer(atcg.Layer):
 
         atcg.Renderer.clear()
 
-        atcg.Renderer.draw(self.scene, self.camera_controller.getCamera())
+        self.scene.draw(self.camera_controller.getCamera())
 
         atcg.Renderer.drawCameras(self.scene, self.camera_controller.getCamera())
 

@@ -663,32 +663,8 @@ inline void defineBindings(py::module_& m)
         .def("setLineSize", &atcg::Renderer::setLineSize, "size"_a)
         .def("setViewport", &atcg::Renderer::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
         .def("setDefaultViewport", &atcg::Renderer::setDefaultViewport)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::Image>& skybox) { atcg::Renderer::setSkybox(skybox); },
-            "skybox"_a)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::Texture2D>& skybox) { atcg::Renderer::setSkybox(skybox); },
-            "skybox"_a)
-        .def("hasSkybox", &atcg::Renderer::hasSkybox)
-        .def("removeSkybox", &atcg::Renderer::removeSkybox)
-        .def("getSkyboxTexture", &atcg::Renderer::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::Renderer::getSkyboxCubemap)
         .def("useScreenBuffer", &atcg::Renderer::useScreenBuffer)
         .def("clear", &atcg::Renderer::clear)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-            { atcg::Renderer::draw(scene, camera); },
-            "scene"_a,
-            "camera"_a)
-        .def(
-            "draw",
-            [](atcg::Entity entity, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-            { atcg::Renderer::draw(entity, camera); },
-            "entity"_a,
-            "camera"_a)
         .def(
             "draw",
             [](const atcg::ref_ptr<atcg::Graph>& mesh,
@@ -740,6 +716,18 @@ inline void defineBindings(py::module_& m)
             "camera"_a,
             "width"_a,
             "path"_a)
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const uint32_t height,
+               const std::string& path) { atcg::Renderer::screenshot(scene, cam, width, height, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "height"_a,
+            "path"_a)
         .def("resize", &atcg::Renderer::resize)
         .def("getFrame", &atcg::Renderer::getFrame, "device"_a)
         .def("getZBuffer", &atcg::Renderer::getZBuffer, "device"_a)
@@ -762,36 +750,8 @@ inline void defineBindings(py::module_& m)
         .def("setLineSize", &atcg::RendererSystem::setLineSize, "size"_a)
         .def("setViewport", &atcg::RendererSystem::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
         .def("setDefaultViewport", &atcg::RendererSystem::setDefaultViewport)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Image>& skybox)
-            { self->setSkybox(skybox); },
-            "skybox"_a)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Texture2D>& skybox)
-            { self->setSkybox(skybox); },
-            "skybox"_a)
-        .def("hasSkybox", &atcg::RendererSystem::hasSkybox)
-        .def("removeSkybox", &atcg::RendererSystem::removeSkybox)
-        .def("getSkyboxTexture", &atcg::RendererSystem::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::RendererSystem::getSkyboxCubemap)
         .def("useScreenBuffer", &atcg::RendererSystem::useScreenBuffer)
         .def("clear", &atcg::RendererSystem::clear)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(scene, camera); },
-            "scene"_a,
-            "camera"_a)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               atcg::Entity entity,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(entity, camera); },
-            "entity"_a,
-            "camera"_a)
         .def(
             "draw",
             [](const atcg::ref_ptr<atcg::RendererSystem>& self,
@@ -854,6 +814,19 @@ inline void defineBindings(py::module_& m)
             "scene"_a,
             "camera"_a,
             "width"_a,
+            "path"_a)
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const uint32_t height,
+               const std::string& path) { self->screenshot(scene, cam, width, height, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "height"_a,
             "path"_a)
         .def("resize", &atcg::RendererSystem::resize)
         .def("getFrame", &atcg::RendererSystem::getFrame, "device"_a)
@@ -1027,6 +1000,9 @@ inline void defineBindings(py::module_& m)
             "setData",
             [](const atcg::ref_ptr<atcg::Texture2D>& texture, const torch::Tensor& data) { texture->setData(data); },
             "data"_a)
+        .def("__setitem__",
+             [](const atcg::ref_ptr<atcg::Texture2D>& texture, py::slice idx, const torch::Tensor& t)
+             { texture->setData(t); })
         //.def("setData", [](const atcg::ref_ptr<atcg::Texture2D>& texture, const
         // atcg::ref_ptr<atcg::PixelUnpackBuffer>& data) {texture->setData(data);}, "data"_a)
         .def("getData", &atcg::Texture2D::getData);
@@ -1307,7 +1283,30 @@ inline void defineBindings(py::module_& m)
         .def("removeAllEntities", &atcg::Scene::removeAllEntites)
         .def("setCamera", &atcg::Scene::setCamera)
         .def("getCamera", &atcg::Scene::getCamera)
-        .def("removeCamera", &atcg::Scene::removeCamera);
+        .def("removeCamera", &atcg::Scene::removeCamera)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Image>& skybox)
+            { scene->setSkybox(skybox); },
+            "skybox"_a)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Texture2D>& skybox)
+            { scene->setSkybox(skybox); },
+            "skybox"_a)
+        .def("hasSkybox", &atcg::Scene::hasSkybox)
+        .def("removeSkybox", &atcg::Scene::removeSkybox)
+        .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
+        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            {
+                atcg::Dictionary context;
+                context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera);
+                scene->draw(context);
+            },
+            "camera"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
@@ -1636,6 +1635,26 @@ inline void defineBindings(py::module_& m)
         py::arg("width"),
         py::arg("height"),
         py::return_value_policy::automatic_reference);
+
+    m_imgui.def(
+        "plot",
+        [](std::vector<std::vector<float>>& data, const std::vector<std::string>& names, const float line_width = -1)
+        {
+            if(ImPlot::BeginPlot("##", ImVec2(-1, -1)))
+            {
+                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
+                for(int i = 0; i < data.size(); ++i)
+                {
+                    std::vector<float> x(data[i].size());
+                    std::iota(x.begin(), x.end(), 0.0f);
+
+                    ImPlot::SetNextLineStyle(IMPLOT_AUTO_COL, line_width);
+                    ImPlot::PlotLine(names[i].c_str(), x.data(), data[i].data(), data[i].size(), 0, 0, sizeof(float));
+                }
+                ImPlot::EndPlot();
+            }
+        });
 
     m_imgui.def("isUsing", &ImGuizmo::IsUsing);
 

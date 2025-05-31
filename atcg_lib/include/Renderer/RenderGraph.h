@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Renderer/RenderPass.h>
+#include <DataStructure/Dictionary.h>
 
 #include <queue>
 
@@ -9,10 +10,7 @@ namespace atcg
 
 /**
  * @brief A class the model a RenderGraph.
- *
- * @tparam RenderContextT The Render context data
  */
-template<typename RenderContextT>
 class RenderGraph
 {
 public:
@@ -20,67 +18,98 @@ public:
 
     /**
      * @brief Create a Rendergraph
-     *
-     * @param ctx The Render context
      */
-    RenderGraph(const atcg::ref_ptr<RenderContextT>& ctx) : _context(ctx) {}
+    RenderGraph() = default;
 
     /**
      * @brief Add a render pass to the graph.
-     * This functions returns a handle and a RenderPassBuilder. The builder is an intermediate class that collects all
-     * the data associated with the rendering pass and then gets compiled into the final render pass when compile() is
-     * called. The handle can be used to access different render passes to add dependencies between them (by using
-     * addDependency()).
+     * This functions returns a handle and a RenderPass. The handle can be used to access different render passes to add
+     * dependencies between them (by using addDependency()).
      *
-     * @tparam RenderPassDataT The datatype of intermediate buffers used during the render pass
-     * @tparam RenderPassOutputT The output type of the RenderPass
+     * @param name The name of the RenderPass
      *
-     * @return A tuple with a RenderPassHandle and a RenderPassBuilder
+     * @return A tuple with a RenderPassHandle and a RenderPass
      */
-    template<typename RenderPassDataT, typename RenderPassOutputT>
-    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPassBuilder<RenderContextT, RenderPassDataT, RenderPassOutputT>>>
-    addRenderPass()
+    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPass>> addRenderPass(std::string_view name = "")
     {
-        auto builder = atcg::make_ref<RenderPassBuilder<RenderContextT, RenderPassDataT, RenderPassOutputT>>();
-        RenderPassHandle handle = (RenderPassHandle)_builder.size();
-        _builder.push_back(builder);
+        auto builder            = atcg::make_ref<RenderPass>(name);
+        RenderPassHandle handle = (RenderPassHandle)_passes.size();
+        _passes.push_back(builder);
         return std::make_pair(handle, builder);
     }
 
     /**
-     * @brief Create a dependency between two Renderpasses.
-     * Creates the directed edge (source, target) into the Graph. The handles are obtained by calling addRenderPass().
+     * @brief Add a render pass to the graph.
+     * The handle can be used to access different render passes to add dependencies between them (by using
+     * addDependency()).
+     *
+     * @param pass The render pass
+     *
+     * @return The handle to the renderpass
+     */
+    RenderPassHandle addRenderPass(const atcg::ref_ptr<RenderPass>& pass)
+    {
+        RenderPassHandle handle = (RenderPassHandle)_passes.size();
+        _passes.push_back(pass);
+        return handle;
+    }
+
+    /**
+     * @brief Create a connection between two ports of an output and input node.
+     * The handles are obtained by "addRenderPass()"
      *
      * @param source The source handle
+     * @param source_name The name of the source port
      * @param target The target handle
+     * @param target_name The name of the target port
      */
-    void addDependency(const RenderPassHandle& source, const RenderPassHandle& target)
+    void addDependency(const RenderPassHandle& source,
+                       std::string_view source_name,
+                       const RenderPassHandle& target,
+                       std::string_view target_name)
     {
-        _edges.push_back(std::make_pair(source, target));
+        _edges.push_back(PortEdge {source, target, std::string(source_name), std::string(target_name)});
     }
 
     /**
      * @brief Compile the graph.
      * This has to be called before executing the graph.
+     *
+     * @param ctx The context
      */
-    void compile()
+    void compile(Dictionary& ctx)
     {
-        size_t node_size = _builder.size();
+        _compiled_passes.clear();
+
+        size_t node_size = _passes.size();
         std::vector<int> inDegree(node_size, 0);
         std::vector<std::vector<RenderPassHandle>> adj(node_size);
 
-        std::vector<atcg::ref_ptr<RenderPassBase<RenderContextT>>> passes;
-        for(auto builder: _builder)
+        for(auto pass: _passes)
         {
-            auto pass = builder->build(_context);
-            passes.push_back(pass);
+            pass->setup(ctx);
         }
 
-        for(const auto& [from, to]: _edges)
+        std::set<std::pair<RenderPassHandle, RenderPassHandle>> uniqueEdges;
+        for(const auto& edge: _edges)
         {
-            adj[from].push_back(to);
-            ++inDegree[to];
-            passes[to]->addInput(passes[from]->getOutput());
+            RenderPassHandle from = edge.from;
+            RenderPassHandle to   = edge.to;
+
+            if(uniqueEdges.insert({from, to}).second)
+            {
+                adj[from].push_back(to);
+                ++inDegree[to];
+            }
+
+            const auto& outputs = _passes[from]->getOutputs();
+            if(!outputs.contains(edge.from_port))
+            {
+                ATCG_ERROR("Error while compiling Render Graph: {} does not exist as an output", edge.from_port);
+                continue;
+            }
+
+            _passes[to]->addInput(edge.to_port, outputs.getValueRaw(edge.from_port));
         }
 
         std::queue<RenderPassHandle> zeroInDegree;
@@ -97,7 +126,7 @@ public:
             RenderPassHandle handle = zeroInDegree.front();
             zeroInDegree.pop();
 
-            _compiled_passes.push_back(passes[handle]);
+            _compiled_passes.push_back(_passes[handle]);
 
             for(int neighbor: adj[handle])
             {
@@ -112,25 +141,59 @@ public:
         {
             throw std::runtime_error("Graph has a cycle. Topological sorting is not possible.");
         }
-
-        _builder.clear();
     }
 
     /**
      * @brief Execute the graph.
+     *
+     * @param ctx The context holding per-frame data
      */
-    void execute()
+    void execute(Dictionary& ctx)
     {
         for(auto pass: _compiled_passes)
         {
-            pass->execute(_context);
+            pass->execute(ctx);
         }
     }
 
+    /**
+     * @brief Exports the graph into a DOT format txt file for debugging porpuses.
+     *
+     * @param path The path of the exported file
+     */
+    void exportToDOT(const std::string& path) const
+    {
+        std::ofstream out(path);
+        out << "digraph RenderGraph {\n";
+        out << "    rankdir=LR;\n";    // optional: makes the graph left-to-right instead of top-down
+
+        for(RenderPassHandle i = 0; i < _passes.size(); ++i)
+        {
+            out << "    " << i << " [label=\"" << _passes[i]->name() << "\"];\n";
+        }
+
+        for(const auto& edge: _edges)
+        {
+            out << "    " << edge.from << " -> " << edge.to << " [label=\"" << edge.from_port << " → " << edge.to_port
+                << "\"];\n";
+        }
+
+        out << "}\n";
+    }
+
+
 private:
-    std::vector<atcg::ref_ptr<RenderPassBuilderBase<RenderContextT>>> _builder;
-    std::vector<atcg::ref_ptr<RenderPassBase<RenderContextT>>> _compiled_passes;
-    std::vector<std::tuple<RenderPassHandle, RenderPassHandle>> _edges;
-    atcg::ref_ptr<RenderContextT> _context;
+    struct PortEdge
+    {
+        RenderPassHandle from;
+        RenderPassHandle to;
+        std::string from_port;
+        std::string to_port;
+    };
+
+private:
+    std::vector<atcg::ref_ptr<RenderPass>> _passes;
+    std::vector<atcg::ref_ptr<RenderPass>> _compiled_passes;    // Same data as _passes but topologically sorted
+    std::vector<PortEdge> _edges;
 };
 }    // namespace atcg
