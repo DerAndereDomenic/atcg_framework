@@ -284,8 +284,8 @@ public:
     /**
      * @brief Display an image/texture in the main viewport. It is assumed that the image resolution is the same as the
      * viewport resolution. This function can be used to display results generated with a custom framebuffer. However,
-     * entity selection is then not possible as the entity buffer is not filled. This function will assume that color
-     * attachement 0 of the framebuffer is used.
+     * entity selection is only available if this framebuffer has an additional atcg::TextureFormat::RINT attachement in
+     * slot 1.
      *
      * @param img The image to display
      */
@@ -294,11 +294,12 @@ public:
     /**
      * @brief Display an image/texture in the main viewport. It is assumed that the image resolution is the same as the
      * viewport resolution. This function can be used to display results generated with a custom framebuffer. However,
-     * entity selection is then not possible as the entity buffer is not filled.
+     * entity selection is only possible if an additional entity map is given as RINT.
      *
      * @param img The image to display
+     * @param entity_ids The entity id map
      */
-    void drawImage(const atcg::ref_ptr<Texture2D>& img);
+    void drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::ref_ptr<Texture2D>& entity_ids = nullptr);
 
     /**
      * @brief Draw a skybox
@@ -735,8 +736,8 @@ ATCG_INLINE void drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& t
 /**
  * @brief Display an image/texture in the main viewport. It is assumed that the image resolution is the same as the
  * viewport resolution. This function can be used to display results generated with a custom framebuffer. However,
- * entity selection is then not possible as the entity buffer is not filled. This function will assume that color
- * attachement 0 of the framebuffer is used.
+ * entity selection is only available if this framebuffer has an additional atcg::TextureFormat::RINT attachement in
+ * slot 1.
  *
  * @param img The image to display
  */
@@ -748,13 +749,14 @@ ATCG_INLINE void drawImage(const atcg::ref_ptr<Framebuffer>& img)
 /**
  * @brief Display an image/texture in the main viewport. It is assumed that the image resolution is the same as the
  * viewport resolution. This function can be used to display results generated with a custom framebuffer. However,
- * entity selection is then not possible as the entity buffer is not filled.
+ * entity selection is only possible if an additional entity map is given as RINT.
  *
  * @param img The image to display
+ * @param entity_ids The entity id map
  */
-ATCG_INLINE void drawImage(const atcg::ref_ptr<Texture2D>& img)
+ATCG_INLINE void drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::ref_ptr<Texture2D>& entity_ids = nullptr)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawImage(img);
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawImage(img, entity_ids);
 }
 
 /**
