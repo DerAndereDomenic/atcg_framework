@@ -60,10 +60,14 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         shape->initializePipeline(pipeline, sbt);
         shape->prepareAccelerationStructure(_context);
 
-        auto bsdf = atcg::make_ref<PBRBSDF>(material);
+        atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
         bsdf->initializePipeline(pipeline, sbt);
 
-        auto shape_instance = atcg::make_ref<ShapeInstance>(shape, bsdf, transform.getModel());
+        Dictionary shape_data;
+        shape_data.setValue("shape", shape);
+        shape_data.setValue("bsdf", bsdf);
+        shape_data.setValue("transform", transform.getModel());
+        auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
         shape_instance->initializePipeline(pipeline, sbt);
 
         _shapes.push_back(shape_instance);
@@ -89,14 +93,16 @@ void PathtracingIntegrator::reset()
     _frame_counter = 0;
 }
 
-void PathtracingIntegrator::generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera,
-                                         const std::vector<torch::Tensor>& output)
+void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 {
-    if(_accumulation_buffer.numel() == 0 || _frame_counter == 0 || _accumulation_buffer.size(0) != output[0].size(0) ||
-       _accumulation_buffer.size(1) != output[0].size(1))
+    auto camera = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
+    auto output = in_out_dictionary.getValue<torch::Tensor>("output");
+
+    if(_accumulation_buffer.numel() == 0 || _frame_counter == 0 || _accumulation_buffer.size(0) != output.size(0) ||
+       _accumulation_buffer.size(1) != output.size(1))
     {
         _accumulation_buffer =
-            torch::zeros({output[0].size(0), output[0].size(1), 3}, atcg::TensorOptions::floatDeviceOptions());
+            torch::zeros({output.size(0), output.size(1), 3}, atcg::TensorOptions::floatDeviceOptions());
     }
 
     PathtracingParams params;
@@ -108,9 +114,9 @@ void PathtracingIntegrator::generateRays(const atcg::ref_ptr<PerspectiveCamera>&
     memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
     params.fov_y = camera->getFOV();
 
-    params.output_image = (glm::u8vec4*)output[0].data_ptr();
-    params.image_height = output[0].size(0);
-    params.image_width  = output[0].size(1);
+    params.output_image = (glm::u8vec4*)output.data_ptr();
+    params.image_height = output.size(0);
+    params.image_width  = output.size(1);
     params.handle       = _ias->getTraversableHandle();
 
 
@@ -139,8 +145,8 @@ void PathtracingIntegrator::generateRays(const atcg::ref_ptr<PerspectiveCamera>&
                             (CUdeviceptr)_launch_params.get(),
                             sizeof(PathtracingParams),
                             _sbt->getSBT(_raygen_index),
-                            output[0].size(1),
-                            output[0].size(0),
+                            output.size(1),
+                            output.size(0),
                             1));    // depth
 
     CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));

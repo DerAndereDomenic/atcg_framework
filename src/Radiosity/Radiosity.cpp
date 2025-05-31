@@ -30,7 +30,9 @@ atcg::ref_ptr<atcg::TriMesh> solve_radiosity_gpu(const atcg::ref_ptr<atcg::TriMe
 
     torch::Tensor form_factors =
         torch::zeros({(int)mesh->n_faces(), (int)mesh->n_faces()}, atcg::TensorOptions::floatDeviceOptions());
-    generator.generateRays(nullptr, {form_factors});
+    atcg::Dictionary dict;
+    dict.setValue("output", form_factors);
+    generator.generateRays(dict);
 
     ATCG_TRACE("Solving");
 

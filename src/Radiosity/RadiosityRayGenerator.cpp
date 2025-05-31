@@ -12,7 +12,9 @@ void RadiosityRayGenerator::initializePipeline(const atcg::ref_ptr<atcg::RayTrac
     _shape->initializePipeline(pipeline, sbt);
     _shape->prepareAccelerationStructure(_context);
 
-    auto shape_instance = atcg::make_ref<atcg::ShapeInstance>(_shape, nullptr, glm::mat4(1));
+    atcg::Dictionary shape_data;
+    shape_data.setValue("shape", _shape);
+    auto shape_instance = atcg::make_ref<atcg::ShapeInstance>(shape_data);
     shape_instance->initializePipeline(pipeline, sbt);
     _shapes.push_back(shape_instance);
 
@@ -29,10 +31,10 @@ void RadiosityRayGenerator::initializePipeline(const atcg::ref_ptr<atcg::RayTrac
     _sbt      = sbt;
 }
 
-void RadiosityRayGenerator::generateRays(const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-                                         const std::vector<torch::Tensor>& output)
+void RadiosityRayGenerator::generateRays(atcg::Dictionary& dict)
 {
-    uint32_t n_primitives = output[0].size(0);
+    auto output           = dict.getValue<torch::Tensor>("output");
+    uint32_t n_primitives = output.size(0);
 
     RadiosityParams params;
 
@@ -42,8 +44,8 @@ void RadiosityRayGenerator::generateRays(const atcg::ref_ptr<atcg::PerspectiveCa
     params.occlusion_trace_params.SBTstride = 1;
     params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
 
-    params.form_factors = (float*)output[0].data_ptr();
-    params.shape        = _shape->getMeshShapeData().get();
+    params.form_factors = (float*)output.data_ptr();
+    params.shape        = std::static_pointer_cast<atcg::MeshShape>(_shape)->getMeshShapeData().get();
     params.n_faces      = n_primitives;
 
     _launch_params.upload(&params);

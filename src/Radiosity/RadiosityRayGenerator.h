@@ -16,8 +16,7 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<atcg::RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<atcg::ShaderBindingTable>& sbt) override;
 
-    virtual void generateRays(const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-                              const std::vector<torch::Tensor>& output) override;
+    virtual void generateRays(atcg::Dictionary& dict) override;
 
     virtual void reset() override;
 
@@ -25,7 +24,7 @@ public:
 
 private:
     atcg::ref_ptr<atcg::TriMesh> _mesh;
-    atcg::ref_ptr<atcg::MeshShape> _shape;
+    atcg::ref_ptr<atcg::Shape> _shape;
 
     uint32_t _raygen_index;
     uint32_t _occlusion_miss_index;

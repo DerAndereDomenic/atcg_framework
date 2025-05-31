@@ -39,12 +39,13 @@ public:
 
     /**
      * @brief Generate the rays and write to some output tensors
+     * This integrator expects:
+     * camera - atcg::ref_ptr<PerspectiveCamera>
+     * output - torch::Tensor
      *
-     * @param camera The camera
-     * @param output The vector with output tensors
+     * @param in_out_dictionary The input output dictionary
      */
-    virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera,
-                              const std::vector<torch::Tensor>& output) override;
+    virtual void generateRays(Dictionary& in_out_dictionary) override;
 
     /**
      * @brief Reset the internal structure of the integrator

@@ -52,13 +52,11 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
 
     /**
-     * @brief Generate the rays and write to some output tensors
+     * @brief Generate the rays and write output
      *
-     * @param camera The camera
-     * @param output The vector with output tensors
+     * @param in_out_dictionary The input and output data
      */
-    virtual void generateRays(const atcg::ref_ptr<PerspectiveCamera>& camera,
-                              const std::vector<torch::Tensor>& output) = 0;
+    virtual void generateRays(Dictionary& in_out_dictionary) = 0;
 
     /**
      * @brief Reset the internal structure of the integrator

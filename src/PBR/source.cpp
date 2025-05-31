@@ -171,7 +171,10 @@ public:
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
         }
 
-        integrator->generateRays(camera_controller->getCamera(), {output_tensor});
+        atcg::Dictionary dict;
+        dict.setValue("camera", camera_controller->getCamera());
+        dict.setValue("output", output_tensor);
+        integrator->generateRays(dict);
         atcg::Framebuffer::useDefault();
         atcg::Renderer::getFramebuffer()->getColorAttachement(0)->setData(output_tensor);
         atcg::Renderer::useScreenBuffer();

@@ -2,6 +2,7 @@
 
 #include <Core/OptixComponent.h>
 #include <Core/glm.h>
+#include <DataStructure/Dictionary.h>
 #include <Shape/Shape.h>
 #include <BSDF/BSDF.h>
 
@@ -14,13 +15,15 @@ class ShapeInstance : public OptixComponent
 {
 public:
     /**
-     * @brief Constructor
+     * @brief Constructor from a dictionary.
+     * The dictionary expects
+     * - shape: atcg::ref_ptr<Shape>
+     * - bsdf: atcg::ref_ptr<BSDF>
+     * - transform: glm::mat4
      *
-     * @param shape The shape
-     * @param bsdf The bsdf
-     * @param transform The transform
+     * @param shape_data The shape data
      */
-    ShapeInstance(const atcg::ref_ptr<Shape>& shape, const atcg::ref_ptr<BSDF>& bsdf, const glm::mat4& transform);
+    ShapeInstance(const Dictionary& shape_data);
 
     /**
      * @brief Initialize a pipeline.
