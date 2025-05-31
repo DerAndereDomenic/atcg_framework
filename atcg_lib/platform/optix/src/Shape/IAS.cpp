@@ -6,7 +6,8 @@
 
 namespace atcg
 {
-IAS::IAS(const atcg::ref_ptr<RaytracingContext>& context, const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes)
+InstanceAccelerationStructure::InstanceAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context,
+                                                             const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes)
 {
     std::vector<OptixInstance> optix_instances;
     int num_instances = 0;

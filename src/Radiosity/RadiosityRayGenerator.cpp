@@ -23,7 +23,7 @@ void RadiosityRayGenerator::initializePipeline(const atcg::ref_ptr<atcg::RayTrac
     _raygen_index         = sbt->addRaygenEntry(raygen_prog_group);
     _occlusion_miss_index = sbt->addMissEntry(occl_prog_group);
 
-    _ias = atcg::make_ref<atcg::IAS>(_context, _shapes);
+    _ias = atcg::make_ref<atcg::InstanceAccelerationStructure>(_context, _shapes);
 
     _pipeline = pipeline;
     _sbt      = sbt;

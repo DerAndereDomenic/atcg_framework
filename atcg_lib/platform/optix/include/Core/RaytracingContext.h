@@ -9,11 +9,22 @@ namespace atcg
 {
 class RaytracingContextManagerSystem;
 
+/**
+ * @brief A class to model a raytracing context
+ */
 class RaytracingContext
 {
 public:
+    /**
+     * @brief Initializes the ray tracing API
+     */
     void initRaytracingAPI();
 
+    /**
+     * @brief Get the context handle
+     * 
+     * @return The Optix Context
+     */
     ATCG_INLINE OptixDeviceContext getContextHandle() const { return _context; }
 
 private:

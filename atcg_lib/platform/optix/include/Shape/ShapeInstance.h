@@ -7,16 +7,44 @@
 
 namespace atcg
 {
+/**
+ * @brief Class to model a shape instance
+ */
 class ShapeInstance : public OptixComponent
 {
 public:
+    /**
+     * @brief Constructor
+     *
+     * @param shape The shape
+     * @param bsdf The bsdf
+     * @param transform The transform
+     */
     ShapeInstance(const atcg::ref_ptr<Shape>& shape, const atcg::ref_ptr<BSDF>& bsdf, const glm::mat4& transform);
 
+    /**
+     * @brief Initialize a pipeline.
+     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
+     * sbt.
+     *
+     * @param pipeline The pipeline
+     * @param sbt The shader binding table
+     */
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
+    /**
+     * @brief Get the shape
+     *
+     * @return The shape
+     */
     ATCG_INLINE atcg::ref_ptr<Shape> getShape() const { return _shape; }
 
+    /**
+     * @brief Get the transform
+     *
+     * @return The transform
+     */
     ATCG_INLINE const glm::mat4& getTransform() const { return _transform; }
 
 private:

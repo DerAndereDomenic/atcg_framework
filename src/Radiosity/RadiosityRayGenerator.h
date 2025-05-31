@@ -33,5 +33,5 @@ private:
     atcg::dref_ptr<RadiosityParams> _launch_params;
 
     std::vector<atcg::ref_ptr<atcg::ShapeInstance>> _shapes;
-    atcg::ref_ptr<atcg::IAS> _ias;
+    atcg::ref_ptr<atcg::InstanceAccelerationStructure> _ias;
 };

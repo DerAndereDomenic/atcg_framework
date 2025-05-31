@@ -5,11 +5,26 @@
 
 namespace atcg
 {
-class IAS
+/**
+ * @brief A class to model an acceleration structure for multiple instances
+ */
+class InstanceAccelerationStructure
 {
 public:
-    IAS(const atcg::ref_ptr<RaytracingContext>& context, const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes);
+    /**
+     * @brief Constructor
+     *
+     * @param context The raytracing context
+     * @param shapes The vector of shapes to build the IAS over
+     */
+    InstanceAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context,
+                                  const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes);
 
+    /**
+     * @brief Get the traversable handle
+     *
+     * @return The handle
+     */
     ATCG_INLINE OptixTraversableHandle getTraversableHandle() const { return _handle; }
 
 private:

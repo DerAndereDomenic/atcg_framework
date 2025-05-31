@@ -78,7 +78,7 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
     _surface_miss_index   = sbt->addMissEntry(miss_prog_group);
     _occlusion_miss_index = sbt->addMissEntry(occl_prog_group);
 
-    _ias = atcg::make_ref<IAS>(_context, _shapes);
+    _ias = atcg::make_ref<InstanceAccelerationStructure>(_context, _shapes);
 
     _pipeline = pipeline;
     _sbt      = sbt;
