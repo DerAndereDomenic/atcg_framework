@@ -123,6 +123,11 @@ public:
     ATCG_INLINE uint32_t height() const { return _height; }
 
     /**
+     * @brief Get the number of color attachements
+     */
+    ATCG_INLINE uint32_t getNumberAttachements() const { return _color_attachements.size(); }
+
+    /**
      * @brief Get the currently bound fbo
      *
      * @return ID of the fbo
