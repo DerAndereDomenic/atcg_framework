@@ -35,8 +35,10 @@ void Application::init(const WindowProps& props)
     _context_manager = atcg::make_ref<ContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_context_manager.get());
 
+#ifdef ATCG_ENABLE_OPTIX
     _rt_context_manager = atcg::make_ref<RaytracingContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_rt_context_manager.get());
+#endif
 
     _shader_manager = atcg::make_ref<ShaderManagerSystem>();
     SystemRegistry::instance()->registerSystem(_shader_manager.get());

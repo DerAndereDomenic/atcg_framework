@@ -2,6 +2,8 @@
 
 #include <Core/Common.h>
 
+#include <optix_stubs.h>
+
 namespace atcg
 {
 MeshShape::MeshShape(const atcg::ref_ptr<Graph>& mesh)

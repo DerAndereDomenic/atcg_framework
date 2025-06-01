@@ -21,6 +21,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Manage options
 option(ATCG_CUDA_BACKEND "Compile cuda backend" ON)
 option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
+option(ATCG_OPTIX_PATHTRACING "Build the Optix Pathtracer" ON)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
 option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
@@ -45,11 +46,12 @@ else()
 endif()
 
 # Check for CUDA
-if(ATCG_CUDA_BACKEND AND NOT "CUDA" IN_LIST CMAKE_ENABLED_LANGUAGES)
+if(ATCG_CUDA_BACKEND AND NOT CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
+endif()
 
+if(ATCG_OPTIX_PATHTRACING AND CMAKE_CUDA_COMPILER)
     find_package(OptiX)
-    message("${OptiX_FOUND}")
     if(OptiX_INCLUDE)
         message("FOUND OPTIX --- building with OptiX pathtracing")
         set(ATCG_ENABLE_OPTIX ON)

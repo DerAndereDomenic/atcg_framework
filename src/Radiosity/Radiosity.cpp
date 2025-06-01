@@ -2,7 +2,9 @@
 
 #include <glm/ext/scalar_constants.hpp>
 
-#include "RadiosityRayGenerator.h"
+#ifdef ATCG_ENABLE_OPTIX
+    #include "RadiosityRayGenerator.h"
+#endif
 
 #include <nanort.h>
 
@@ -11,12 +13,18 @@ using namespace torch::indexing;
 
 atcg::ref_ptr<atcg::TriMesh> solve_radiosity(const atcg::ref_ptr<atcg::TriMesh>& mesh, const torch::Tensor& emission)
 {
+#ifdef ATCG_ENABLE_OPTIX
     return solve_radiosity_gpu(mesh, emission);
+#else
+    return solve_radiosity_cpu(mesh, emission);
+#endif
 }
 
 atcg::ref_ptr<atcg::TriMesh> solve_radiosity_gpu(const atcg::ref_ptr<atcg::TriMesh>& mesh,
                                                  const torch::Tensor& emission)
 {
+    atcg::ref_ptr<TriMesh> result = atcg::make_ref<TriMesh>();
+#ifdef ATCG_ENABLE_OPTIX
     auto optx_context = atcg::RaytracingContextManager::createContext();
     auto pipeline     = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
     auto sbt          = atcg::make_ref<atcg::ShaderBindingTable>();
@@ -69,7 +77,6 @@ atcg::ref_ptr<atcg::TriMesh> solve_radiosity_gpu(const atcg::ref_ptr<atcg::TriMe
     printf("Done\n");
 
     // Copy mesh in a super convuluted way because the documentation doesn't state how to do it right
-    atcg::ref_ptr<TriMesh> result = atcg::make_ref<TriMesh>();
     result->operator=(*mesh);
     result->request_vertex_colors();
 
@@ -88,7 +95,7 @@ atcg::ref_ptr<atcg::TriMesh> solve_radiosity_gpu(const atcg::ref_ptr<atcg::TriMe
         color = glm::pow(1.0f - glm::exp(-color), glm::vec3(1.0f / 2.4f));
         result->set_color(*vt, color * 255.0f);
     }
-
+#endif
     return result;
 }
 

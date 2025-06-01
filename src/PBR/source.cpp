@@ -10,9 +10,6 @@
 #include <random>
 #include <stb_image.h>
 
-#include <optix.h>
-#include <optix_stubs.h>
-
 #include <Core/Common.h>
 
 class PBRLayer : public atcg::Layer
@@ -20,6 +17,7 @@ class PBRLayer : public atcg::Layer
 public:
     void createOutputTexture(int width, int height)
     {
+#ifdef ATCG_ENABLE_OPTIX
         output_tensor   = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
         output_entities = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
 
@@ -34,10 +32,12 @@ public:
         spec_int.height       = height;
         spec_int.format       = atcg::TextureFormat::RINT;
         output_entity_texture = atcg::Texture2D::create(spec_int);
+#endif
     }
 
     void initializePathtracer()
     {
+#ifdef ATCG_ENABLE_OPTIX
         pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
         sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
 
@@ -47,6 +47,7 @@ public:
 
         pipeline->createPipeline();
         sbt->createSBT();
+#endif
     }
 
     PBRLayer(const std::string& name) : atcg::Layer(name) {}
@@ -98,7 +99,9 @@ public:
                 atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
         }
 
+#ifdef ATCG_ENABLE_OPTIX
         optx_context = atcg::RaytracingContextManager::createContext();
+#endif
 
         initializePathtracer();
 
@@ -113,10 +116,12 @@ public:
         performance_panel.registerFrameTime(delta_time);
         bool updated = camera_controller->onUpdate(delta_time);
 
+#ifdef ATCG_ENABLE_OPTIX
         if(updated)
         {
             integrator->reset();
         }
+#endif
 
         atcg::Scripting::handleScriptUpdates(scene, delta_time);
 
@@ -178,6 +183,7 @@ public:
 
             if(enable_pathtracing)
             {
+#ifdef ATCG_ENABLE_OPTIX
                 atcg::Dictionary dict;
                 dict.setValue("camera", camera_controller->getCamera());
                 dict.setValue("output", output_tensor);
@@ -187,6 +193,7 @@ public:
                 output_entity_texture->setData(output_entities);
 
                 atcg::Renderer::drawImage(output_texture, output_entity_texture);
+#endif
             }
             else
             {
@@ -281,7 +288,9 @@ public:
                 ImGui::EndCombo();
             }
 
+    #ifdef ATCG_ENABLE_OPTIX
             ImGui::Checkbox("Path Tracing", &enable_pathtracing);
+    #endif
 
             ImGui::End();
         }
@@ -399,10 +408,13 @@ private:
 #ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif
+
+#ifdef ATCG_ENABLE_OPTIX
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
     atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
     atcg::ref_ptr<atcg::PathtracingIntegrator> integrator;
+#endif
 
     torch::Tensor output_tensor;
     atcg::ref_ptr<atcg::Texture2D> output_texture;
