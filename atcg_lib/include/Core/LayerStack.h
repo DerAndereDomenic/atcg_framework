@@ -6,6 +6,9 @@
 
 namespace atcg
 {
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2023
+
 /**
  * @brief This class handles the layers of the application
  */

@@ -6,6 +6,9 @@
     #include <GLFW/glfw3.h>
 #endif
 
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2023
+
 namespace atcg
 {
 bool Input::isKeyPressed(const int32_t& key)

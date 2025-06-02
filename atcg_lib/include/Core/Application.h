@@ -25,9 +25,11 @@ int atcg_main();
 
 namespace atcg
 {
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2022
+
 /**
- * @brief Each exercise is an application
- *
+ * @brief A class to model an application
  */
 class Application
 {
