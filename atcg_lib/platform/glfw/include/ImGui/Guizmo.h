@@ -12,9 +12,13 @@ namespace atcg
 /**
  * @brief Draw a guizmo of the selected entity
  *
+ * @param scene The scene
  * @param entity The entity
  * @param operation The guizmo operation
  * @param camera The camera to draw from
  */
-void drawGuizmo(Entity entity, ImGuizmo::OPERATION operation, const atcg::ref_ptr<PerspectiveCamera>& camera);
+void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
+                Entity entity,
+                ImGuizmo::OPERATION operation,
+                const atcg::ref_ptr<PerspectiveCamera>& camera);
 }    // namespace atcg

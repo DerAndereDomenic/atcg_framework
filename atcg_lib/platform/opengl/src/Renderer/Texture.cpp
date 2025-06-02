@@ -5,6 +5,7 @@
 
 #ifdef ATCG_CUDA_BACKEND
     #include <cuda_gl_interop.h>
+    #include <c10/cuda/CUDAStream.h>
 #endif
 
 namespace atcg
@@ -707,12 +708,14 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const torch::Tensor& img)
         }
         break;
     }
-    return create(img.data_ptr(), spec);
+    return create(img, spec);
 }
 
 atcg::ref_ptr<Texture2D> Texture2D::create(const torch::Tensor& img, const TextureSpecification& spec)
 {
-    return create(img.data_ptr(), spec);
+    auto result = create(spec);
+    result->setData(img);
+    return result;
 }
 
 Texture2D::~Texture2D()
@@ -744,14 +747,17 @@ void Texture2D::setData(const torch::Tensor& data)
         {
 #ifdef ATCG_CUDA_BACKEND
             atcg::textureArray array = getTextureArray();
-            CUDA_SAFE_CALL(cudaMemcpy2DToArray(array,
-                                               0,
-                                               0,
-                                               pixel_data.data_ptr(),
-                                               pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
-                                               pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
-                                               _spec.height,
-                                               cudaMemcpyDeviceToDevice));
+            auto torch_stream        = torch::cuda::getCurrentCUDAStream();
+            CUDA_SAFE_CALL(cudaMemcpy2DToArrayAsync(array,
+                                                    0,
+                                                    0,
+                                                    pixel_data.data_ptr(),
+                                                    pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
+                                                    pixel_data.size(1) * pixel_data.size(2) * pixel_data.element_size(),
+                                                    _spec.height,
+                                                    cudaMemcpyDeviceToDevice,
+                                                    torch_stream));
+            torch_stream.synchronize();
             unmapPointers();
 #endif
             return;
@@ -774,6 +780,32 @@ void Texture2D::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
+void Texture2D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    TORCH_CHECK_EQ(data->size(),
+                   _spec.width * _spec.height * detail::toChannelSize(_spec.format) *
+                       detail::num_channels(_spec.format));
+
+    data->use();
+    use(0);
+
+    if(_spec.format != TextureFormat::DEPTH)
+        impl->deinitResource();    // Somehow no registered resource is allowed when doing pbo transfers
+    glTexImage2D(GL_TEXTURE_2D,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)nullptr);
+
+    if(_spec.format != TextureFormat::DEPTH)
+        impl->initResource(_ID, GL_TEXTURE_2D);    // Somehow no registered resource is allowed when doing pbo transfers
+    data->unbind();
+}
+
 torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
@@ -794,15 +826,17 @@ torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip
 
         atcg::textureArray array = getTextureArray(mip_level);
 
-        CUDA_SAFE_CALL(cudaMemcpy2DFromArray(result.data_ptr(),
-                                             result.size(1) * result.size(2) * result.element_size(),
-                                             array,
-                                             0,
-                                             0,
-                                             result.size(1) * result.size(2) * result.element_size(),
-                                             height,
-                                             cudaMemcpyDeviceToDevice));
-
+        auto torch_stream = torch::cuda::getCurrentCUDAStream();
+        CUDA_SAFE_CALL(cudaMemcpy2DFromArrayAsync(result.data_ptr(),
+                                                  result.size(1) * result.size(2) * result.element_size(),
+                                                  array,
+                                                  0,
+                                                  0,
+                                                  result.size(1) * result.size(2) * result.element_size(),
+                                                  height,
+                                                  cudaMemcpyDeviceToDevice,
+                                                  torch_stream));
+        torch_stream.synchronize();
         unmapPointers();
 
         return result;
@@ -964,12 +998,14 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const torch::Tensor& img)
         }
         break;
     }
-    return create(img.data_ptr(), spec);
+    return create(img, spec);
 }
 
 atcg::ref_ptr<Texture3D> Texture3D::create(const torch::Tensor& img, const TextureSpecification& spec)
 {
-    return create(img.data_ptr(), spec);
+    auto result = create(spec);
+    result->setData(img);
+    return result;
 }
 
 Texture3D::~Texture3D()
@@ -1009,6 +1045,7 @@ void Texture3D::setData(const torch::Tensor& data)
 
             CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
 
+            auto torch_stream   = torch::cuda::getCurrentCUDAStream();
             cudaMemcpy3DParms p = {0};
             p.dstArray          = array;
             p.kind              = cudaMemcpyDeviceToDevice;
@@ -1018,7 +1055,8 @@ void Texture3D::setData(const torch::Tensor& data)
             p.srcPtr.ysize      = ext.height;
             p.extent            = ext;
 
-            CUDA_SAFE_CALL(cudaMemcpy3D(&p));
+            CUDA_SAFE_CALL(cudaMemcpy3DAsync(&p, torch_stream));
+            torch_stream.synchronize();
             unmapPointers();
 #endif
             return;
@@ -1041,6 +1079,33 @@ void Texture3D::setData(const torch::Tensor& data)
                     detail::toGLformat(_spec.format),
                     detail::toGLtype(_spec.format),
                     (void*)pixel_data.data_ptr());
+}
+
+void Texture3D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    TORCH_CHECK_EQ(data->size(),
+                   _spec.width * _spec.height * _spec.depth * detail::toChannelSize(_spec.format) *
+                       detail::num_channels(_spec.format));
+
+    data->use();
+    use(0);
+
+    if(_spec.format != TextureFormat::DEPTH) impl->deinitResource();
+
+    glTexImage3D(GL_TEXTURE_3D,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 _spec.depth,
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)nullptr);
+
+    if(_spec.format != TextureFormat::DEPTH) impl->initResource(_ID, GL_TEXTURE_3D);
+
+    data->unbind();
 }
 
 torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip_level) const
@@ -1070,6 +1135,7 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
 
         CUDA_SAFE_CALL(cudaArrayGetInfo(&desc, &ext, &array_flags, array));
 
+        auto torch_stream   = torch::cuda::getCurrentCUDAStream();
         cudaMemcpy3DParms p = {0};
         p.srcArray          = array;
         p.kind              = cudaMemcpyDeviceToDevice;
@@ -1079,7 +1145,8 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
         p.dstPtr.ysize      = ext.height;
         p.extent            = ext;
 
-        CUDA_SAFE_CALL(cudaMemcpy3D(&p));
+        CUDA_SAFE_CALL(cudaMemcpy3DAsync(&p, torch_stream));
+        torch_stream.synchronize();
 
         unmapPointers();
 
@@ -1205,8 +1272,7 @@ atcg::ref_ptr<TextureCube> TextureCube::create(const torch::Tensor& img)
     TextureSpecification spec;
     spec.width  = std::max<uint32_t>(1, img.size(2));
     spec.height = std::max<uint32_t>(1, img.size(1));
-    spec.depth  = std::max<uint32_t>(1, img.size(0));
-    TORCH_CHECK_EQ(spec.depth, 6);
+    TORCH_CHECK_EQ(img.size(0), 6);
     TORCH_CHECK_EQ(spec.width, spec.height);
     switch(img.size(3))
     {
@@ -1251,7 +1317,7 @@ void TextureCube::use(const uint32_t& slot) const
 
 void TextureCube::setData(const torch::Tensor& data)
 {
-    TORCH_CHECK_EQ(data.numel() * data.element_size() / 6, _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.numel() * data.element_size(), 6 * _spec.width * _spec.height * detail::toSize(_spec.format));
     TORCH_CHECK_EQ(data.size(0), 6);
     TORCH_CHECK_EQ(data.size(1), _spec.height);
     TORCH_CHECK_EQ(data.size(2), _spec.width);
@@ -1276,6 +1342,35 @@ void TextureCube::setData(const torch::Tensor& data)
                         detail::toGLtype(_spec.format),
                         (void*)pixel_data.index({i, 0, 0, 0}).data_ptr());
     }
+}
+
+void TextureCube::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    size_t faceSize =
+        _spec.width * _spec.height * detail::toChannelSize(_spec.format) * detail::num_channels(_spec.format);
+
+    TORCH_CHECK_EQ(data->size(), faceSize * 6);
+
+    data->use();
+    use(0);
+
+    for(int i = 0; i < 6; ++i)
+    {
+        // Offset pointer into PBO for this face
+        void* offset = reinterpret_cast<void*>(faceSize * i);
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                     0,
+                     detail::to2GLinternalFormat(_spec.format),
+                     _spec.width,
+                     _spec.height,
+                     0,
+                     detail::toGLformat(_spec.format),
+                     detail::toGLtype(_spec.format),
+                     offset);    // NULL + offset into bound PBO
+    }
+
+    data->unbind();
 }
 
 torch::Tensor TextureCube::getData(const torch::Device& device, const uint32_t mip_level) const
@@ -1353,7 +1448,6 @@ atcg::ref_ptr<Texture> TextureCube::clone() const
 
     return result;
 }
-
 
 atcg::ref_ptr<TextureArray> TextureArray::create(const TextureSpecification& spec)
 {
@@ -1436,12 +1530,14 @@ atcg::ref_ptr<TextureArray> TextureArray::create(const torch::Tensor& img)
         }
         break;
     }
-    return create(img.data_ptr(), spec);
+    return create(img, spec);
 }
 
 atcg::ref_ptr<TextureArray> TextureArray::create(const torch::Tensor& img, const TextureSpecification& spec)
 {
-    return create(img.data_ptr(), spec);
+    auto result = create(spec);
+    result->setData(img);
+    return result;
 }
 
 TextureArray::~TextureArray()
@@ -1477,14 +1573,18 @@ void TextureArray::setData(const torch::Tensor& data)
             for(int i = 0; i < _spec.depth; ++i)
             {
                 atcg::textureArray array = getTextureArray(0, i);
-                CUDA_SAFE_CALL(cudaMemcpy2DToArray(array,
-                                                   0,
-                                                   0,
-                                                   pixel_data[i].data_ptr(),
-                                                   pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
-                                                   pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
-                                                   _spec.height,
-                                                   cudaMemcpyDeviceToDevice));
+                auto torch_stream        = torch::cuda::getCurrentCUDAStream();
+                CUDA_SAFE_CALL(
+                    cudaMemcpy2DToArrayAsync(array,
+                                             0,
+                                             0,
+                                             pixel_data[i].data_ptr(),
+                                             pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
+                                             pixel_data.size(2) * pixel_data.size(3) * pixel_data.element_size(),
+                                             _spec.height,
+                                             cudaMemcpyDeviceToDevice,
+                                             torch_stream));
+                torch_stream.synchronize();
                 unmapPointers();
             }
 #endif
@@ -1510,6 +1610,33 @@ void TextureArray::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
+void TextureArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    TORCH_CHECK_EQ(data->size(),
+                   _spec.width * _spec.height * _spec.depth * detail::toChannelSize(_spec.format) *
+                       detail::num_channels(_spec.format));
+
+    data->use();
+    use(0);
+
+    if(_spec.format != TextureFormat::DEPTH) impl->deinitResource();
+
+    glTexImage3D(GL_TEXTURE_2D_ARRAY,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 _spec.depth,    // Number of layers
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)nullptr);
+
+    if(_spec.format != TextureFormat::DEPTH) impl->initResource(_ID, GL_TEXTURE_2D_ARRAY);
+
+    data->unbind();
+}
+
 torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t mip_level) const
 {
     int num_channels = detail::num_channels(_spec.format);
@@ -1529,21 +1656,23 @@ torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t 
                                                                         : atcg::TensorOptions::uint8DeviceOptions());
         result       = torch::empty({depth, height, width, num_channels}, options);
 
+        auto torch_stream = torch::cuda::getCurrentCUDAStream();
         for(int i = 0; i < _spec.depth; ++i)
         {
             atcg::textureArray array = getTextureArray(mip_level, i);
 
-            CUDA_SAFE_CALL(cudaMemcpy2DFromArray(result[i].data_ptr(),
-                                                 result.size(2) * result.size(3) * result.element_size(),
-                                                 array,
-                                                 0,
-                                                 0,
-                                                 result.size(2) * result.size(3) * result.element_size(),
-                                                 height,
-                                                 cudaMemcpyDeviceToDevice));
-
-            unmapPointers();
+            CUDA_SAFE_CALL(cudaMemcpy2DFromArrayAsync(result[i].data_ptr(),
+                                                      result.size(2) * result.size(3) * result.element_size(),
+                                                      array,
+                                                      0,
+                                                      0,
+                                                      result.size(2) * result.size(3) * result.element_size(),
+                                                      height,
+                                                      cudaMemcpyDeviceToDevice,
+                                                      torch_stream));
         }
+        torch_stream.synchronize();
+        unmapPointers();
 
         return result;
     }
@@ -1621,6 +1750,283 @@ atcg::ref_ptr<Texture> TextureArray::clone() const
 
 
     return result;
+}
+
+atcg::ref_ptr<TextureCubeArray> TextureCubeArray::create(const TextureSpecification& spec)
+{
+    atcg::ref_ptr<TextureCubeArray> result = atcg::make_ref<TextureCubeArray>();
+    result->_spec                          = spec;
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, result->_ID);
+
+    glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY,
+                 0,
+                 detail::to2GLinternalFormat(spec.format),
+                 spec.width,
+                 spec.height,
+                 6 * spec.depth,
+                 0,
+                 detail::toGLformat(spec.format),
+                 detail::toGLtype(spec.format),
+                 nullptr);
+
+    auto filtermode = detail::toGLFilterMode(spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, detail::toGLWrapMode(spec.sampler.wrap_mode));
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, filtermode);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+
+    if(spec.sampler.mip_map)
+    {
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP_ARRAY);
+    }
+
+    return result;
+}
+
+atcg::ref_ptr<TextureCubeArray> TextureCubeArray::create(const torch::Tensor& img)
+{
+    TextureSpecification spec;
+    spec.width  = std::max<uint32_t>(1, img.size(3));
+    spec.height = std::max<uint32_t>(1, img.size(2));
+    spec.depth  = std::max<uint32_t>(1, img.size(0));
+    TORCH_CHECK_EQ(img.size(1), 6);
+    TORCH_CHECK_EQ(spec.width, spec.height);
+    switch(img.size(4))
+    {
+        case 1:
+        {
+            spec.format = (img.dtype() == torch::kFloat32
+                               ? TextureFormat::RFLOAT
+                               : (img.dtype() == torch::kInt32 ? TextureFormat::RINT : TextureFormat::RINT8));
+        }
+        break;
+        case 2:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGFLOAT : TextureFormat::RG);
+        }
+        break;
+        case 3:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBFLOAT : TextureFormat::RGB);
+        }
+        break;
+        case 4:
+        {
+            spec.format = (img.dtype() == torch::kFloat32 ? TextureFormat::RGBAFLOAT : TextureFormat::RGBA);
+        }
+        break;
+    }
+    auto result = create(spec);
+    result->setData(img);
+    return result;
+}
+
+TextureCubeArray::~TextureCubeArray()
+{
+    glDeleteTextures(1, &_ID);
+}
+
+void TextureCubeArray::use(const uint32_t& slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, _ID);
+}
+
+void TextureCubeArray::setData(const torch::Tensor& data)
+{
+    TORCH_CHECK_EQ(data.numel() * data.element_size() / 6,
+                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.size(1), 6);
+    TORCH_CHECK_EQ(data.size(2), _spec.height);
+    TORCH_CHECK_EQ(data.size(3), _spec.width);
+    int num_channels = detail::num_channels(_spec.format);
+    TORCH_CHECK_EQ(data.size(4), num_channels);
+    TORCH_CHECK_EQ(_spec.width, _spec.height);
+
+    torch::Tensor pixel_data = data.to(atcg::CPU);
+
+    unmapPointers();
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, _ID);
+
+    for(int layer_idx = 0; layer_idx < _spec.depth; ++layer_idx)
+    {
+        for(int face_idx = 0; face_idx < 6; ++face_idx)
+        {
+            glTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY,
+                            0,
+                            0,
+                            0,
+                            6 * layer_idx + face_idx,
+                            _spec.width,
+                            _spec.height,
+                            1,
+                            detail::toGLformat(_spec.format),
+                            detail::toGLtype(_spec.format),
+                            (void*)pixel_data.index({layer_idx, face_idx, 0, 0}).data_ptr());
+        }
+    }
+}
+
+void TextureCubeArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    TORCH_CHECK_EQ(data->size(),
+                   _spec.width * _spec.height * _spec.depth * 6 * detail::toChannelSize(_spec.format) *
+                       detail::num_channels(_spec.format));
+
+    data->use();
+    use(0);
+
+    glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY,
+                 0,
+                 detail::to2GLinternalFormat(_spec.format),
+                 _spec.width,
+                 _spec.height,
+                 _spec.depth * 6,    // Each cube has 6 faces
+                 0,
+                 detail::toGLformat(_spec.format),
+                 detail::toGLtype(_spec.format),
+                 (void*)nullptr);
+
+    data->unbind();
+}
+
+torch::Tensor TextureCubeArray::getData(const torch::Device& device, const uint32_t mip_level) const
+{
+    int num_channels = detail::num_channels(_spec.format);
+    bool hdr         = isHDR();
+    int channel_size = detail::toChannelSize(_spec.format);
+
+    auto options = hdr ? atcg::TensorOptions::floatHostOptions()
+                       : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32HostOptions()
+                                                                    : atcg::TensorOptions::uint8HostOptions());
+    auto result  = torch::empty({_spec.depth, 6, _spec.height, _spec.width, num_channels}, options);
+
+    unmapPointers();
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, _ID);
+
+
+    glGetTexImage(GL_TEXTURE_CUBE_MAP_ARRAY,
+                  mip_level,
+                  detail::toGLformat(_spec.format),
+                  detail::toGLtype(_spec.format),
+                  (void*)result.data_ptr());
+
+
+    return result.to(device);
+}
+
+void TextureCubeArray::generateMipmaps()
+{
+    use();
+    _spec.sampler.mip_map = true;
+    auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY,
+                    GL_TEXTURE_MAG_FILTER,
+                    filtermode == GL_LINEAR_MIPMAP_LINEAR ? GL_LINEAR : filtermode);
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP_ARRAY);
+}
+
+atcg::ref_ptr<Texture> TextureCubeArray::clone() const
+{
+    auto result = atcg::TextureCubeArray::create(_spec);
+
+    use();
+
+    int max_level = _spec.sampler.mip_map
+                        ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
+                        : 1;
+
+    for(int lvl = 0; lvl < max_level + 1; lvl++)
+    {
+        int width, height;
+        glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_ARRAY, lvl, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_CUBE_MAP_ARRAY, lvl, GL_TEXTURE_HEIGHT, &height);
+
+        glCopyImageSubData(_ID,
+                           GL_TEXTURE_CUBE_MAP_ARRAY,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           result->getID(),
+                           GL_TEXTURE_CUBE_MAP_ARRAY,
+                           lvl,
+                           0,
+                           0,
+                           0,
+                           width,
+                           height,
+                           _spec.depth * 6);
+    }
+
+
+    return result;
+}
+
+atcg::ref_ptr<Texture2DMultiSample> Texture2DMultiSample::create(uint32_t num_samples, const TextureSpecification& spec)
+{
+    atcg::ref_ptr<Texture2DMultiSample> result = atcg::make_ref<Texture2DMultiSample>();
+    result->_spec                              = spec;
+    result->_spec.width                        = std::max<uint32_t>(1, result->_spec.width);
+    result->_spec.height                       = std::max<uint32_t>(1, result->_spec.height);
+
+    glGenTextures(1, &(result->_ID));
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, result->_ID);
+
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
+                            num_samples,
+                            detail::to2GLinternalFormat(result->_spec.format),
+                            result->_spec.width,
+                            result->_spec.height,
+                            GL_TRUE);
+    ATCG_LOG_ALLOCATION("Allocated Texture of size {} x {}", result->_spec.width, result->_spec.height);
+
+    return result;
+}
+
+Texture2DMultiSample::~Texture2DMultiSample()
+{
+    unmapPointers();
+    glDeleteTextures(1, &_ID);
+}
+
+void Texture2DMultiSample::setData(const torch::Tensor& data)
+{
+    // No Op
+}
+
+void Texture2DMultiSample::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+{
+    // No Op
+}
+
+torch::Tensor Texture2DMultiSample::getData(const torch::Device& device, const uint32_t mip_level) const
+{
+    // No Op
+    return {};
+}
+
+void Texture2DMultiSample::use(const uint32_t& slot) const
+{
+    unmapPointers();
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, _ID);
+}
+
+void Texture2DMultiSample::generateMipmaps()
+{
+    // No Op
+}
+
+atcg::ref_ptr<Texture> Texture2DMultiSample::clone() const
+{
+    // No Op
+    return nullptr;
 }
 
 }    // namespace atcg

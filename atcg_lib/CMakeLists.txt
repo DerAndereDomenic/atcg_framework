@@ -5,7 +5,16 @@ charonload_add_torch_library(atcg_lib STATIC)
 if(ATCG_CUDA_BACKEND)
     set(ATCG_BACKEND "cuda")
 
-    find_package(CUDAToolkit REQUIRED)
+    if(NOT CUDAToolkit_FOUND)
+        find_package(CUDAToolkit REQUIRED)
+    endif()
+
+    set_target_properties(atcg_lib PROPERTIES
+        CUDA_ARCHITECTURES native
+    )
+    target_compile_options(atcg_lib PUBLIC 
+        $<$<COMPILE_LANGUAGE:CUDA>:-use_fast_math>
+    )
 
     target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
@@ -22,60 +31,70 @@ if(ATCG_HEADLESS)
 else()
     set(ATCG_CONTEXT "glfw")
     target_link_libraries(atcg_lib PUBLIC glfw
-                                          imgui
-                                          imguizmo
-                                          implot)
+                                          atcg::imgui
+                                          atcg::imguizmo
+                                          atcg::implot)
 endif()
 
 # Find backend files
-file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/src/**.c*"
-                                                          "${CMAKE_SOURCE_DIR}/atcg_lib/include/**.h")
+file (GLOB_RECURSE atcg_lib_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/src/**.c*"
+                                                          "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/include/**.h")
 
-file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_BACKEND}/**.c*"
-                                                          "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_BACKEND}/**.h")
+file(GLOB_RECURSE atcg_backend_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_BACKEND}/**.c*"
+                                                          "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_BACKEND}/**.h")
 
-file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/**.c*"
-                                                              "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/**.h")
+file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/opengl/**.c*"
+                                                              "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/opengl/**.h")
 
 
-file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.c*"
-                                                            "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.h")
+file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.c*"
+                                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.h")
 
 target_sources(atcg_lib PRIVATE ${atcg_lib_files} 
                                 ${atcg_backend_files} 
                                 ${atcg_renderer_files} 
                                 ${atcg_window_files})
 
+if (NOT ATCG_PYTHON_MODULE)
+    file (GLOB_RECURSE atcg_lib_python_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python/**.h"
+                                                             "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python/**.c*")
+    target_sources(atcg_lib PRIVATE ${atcg_lib_python_files})
+    target_compile_definitions(atcg_lib PUBLIC TORCH_EXTENSION_NAME=pyatcg)
+    target_compile_definitions(atcg_lib PUBLIC ATCG_INIT_PYTHON)
+endif()
+
 target_compile_definitions(atcg_lib PUBLIC _USE_MATH_DEFINES 
                                             NO_WARN_MBCS_MFC_DEPRECATION 
                                             _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS 
                                             _CRT_NONSTDC_NO_WARNINGS
-                                            ATCG_BASE_DIR="${CMAKE_SOURCE_DIR}"
-                                            ATCG_SHADER_DIR="${CMAKE_SOURCE_DIR}/shader"
-                                            ATCG_RESOURCE_DIR="${CMAKE_SOURCE_DIR}/res")
-target_precompile_headers(atcg_lib PRIVATE "${CMAKE_SOURCE_DIR}/atcg_lib/include/atcgpch.h")
+                                            ATCG_BASE_DIR="${ATCG_PROJECT_ROOT_DIR}"
+                                            ATCG_SHADER_DIR="${ATCG_PROJECT_ROOT_DIR}/shader"
+                                            ATCG_RESOURCE_DIR="${ATCG_PROJECT_ROOT_DIR}/res")
+target_precompile_headers(atcg_lib PRIVATE "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/include/atcgpch.h")
 
-target_include_directories(atcg_lib PUBLIC "${CMAKE_SOURCE_DIR}/atcg_lib/include"
-                                           "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_BACKEND}/include"
-                                           "${CMAKE_SOURCE_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/include"
-                                           "${CMAKE_SOURCE_DIR}/atcg_lib/platform/opengl/include"
-                                           "python"
+target_include_directories(atcg_lib PUBLIC "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/include"
+                                           "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_BACKEND}/include"
+                                           "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/include"
+                                           "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/opengl/include"
+                                           "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python"
 )
 
-target_link_libraries(atcg_lib PUBLIC glad
+target_link_libraries(atcg_lib PUBLIC atcg::glad
                                       OpenGL::GL
                                       OpenMeshCore
                                       OpenMeshTools
                                       stb_image
-                                      tinyobjloader
-                                      entt
-                                      nanort
-                                      portable_file_dialogs
+                                      atcg::tinyobjloader
+                                      atcg::entt
+                                      atcg::nanort
+                                      atcg::portable_file_dialogs
                                       nanoflann
                                       glm
                                       spdlog_header_only
-                                      json
+                                      atcg::json
                                       SFML::System
                                       SFML::Network
-                                      ${ATCG_OPENVR_TARGET}
+                                      Python::Python
+                                      torch_python_interface
+                                      atcg::openvr
 )

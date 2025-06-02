@@ -8,7 +8,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <torch/python.h>
-#include <Core/EntryPoint.h>
+#ifdef ATCG_PYTHON_MODULE
+    #include <Core/EntryPoint.h>
+#endif
 #include <ATCG.h>
 
 class PythonLayer : public atcg::Layer
@@ -52,29 +54,33 @@ class PythonContext
 public:
     PythonContext()
     {
-        _logger = atcg::make_ref<atcg::Logger>();
+        _logger = spdlog::stdout_color_mt("ATCG");
+        _logger->set_pattern("%^[%T] %n: %v%$");
+        _logger->set_level(spdlog::level::trace);
         atcg::SystemRegistry::init();
         atcg::SystemRegistry::instance()->registerSystem(_logger.get());
     }
 
     void onExit()
     {
+#ifdef ATCG_PYTHON_MODULE
         atcg::print_statistics();
+#endif
         atcg::SystemRegistry::shutdown();
     }
 
-    const atcg::ref_ptr<atcg::Logger> getLogger() const { return _logger; }
-
 private:
-    atcg::ref_ptr<atcg::Logger> _logger;
+    atcg::ref_ptr<spdlog::logger> _logger;
 };
 
 
 //* This function isn't called but is needed for the linker
+#ifdef ATCG_PYTHON_MODULE
 atcg::Application* atcg::createApplication()
 {
     return nullptr;
 }
+#endif
 
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
@@ -85,6 +91,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_event       = py::class_<atcg::Event>(m, "Event");                                                                   \
     auto m_camera =                                                                                                             \
         py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");                    \
+    auto m_extrinsics          = py::class_<atcg::CameraExtrinsics>(m, "CameraExtrinsics");                                     \
+    auto m_intrinsics          = py::class_<atcg::CameraIntrinsics>(m, "CameraIntrinsics");                                     \
     auto m_controller          = py::class_<atcg::FirstPersonController, atcg::ref_ptr<atcg::FirstPersonController>>(m,         \
                                                                                                             "FirstPer" \
                                                                                                                      "sonContr" \
@@ -134,6 +142,8 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_texture_specification = py::class_<atcg::TextureSpecification>(m, "TextureSpecification");                           \
     auto m_image          = py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image", py::buffer_protocol());             \
     auto m_texture2d      = py::class_<atcg::Texture2D, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D");                        \
+    auto m_texture_cube   = py::class_<atcg::TextureCube, atcg::ref_ptr<atcg::TextureCube>>(m, "TextureCube");                  \
+    auto m_framebuffer    = py::class_<atcg::Framebuffer, atcg::ref_ptr<atcg::Framebuffer>>(m, "Framebuffer");                  \
     auto m_entity_handle  = py::class_<entt::entity>(m, "EntityHandle");                                                        \
     auto m_material       = py::class_<atcg::Material>(m, "Material");                                                          \
     auto m_transform      = py::class_<atcg::TransformComponent>(m, "TransformComponent");                                      \
@@ -144,17 +154,21 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_edge_renderer          = py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent");                            \
     auto m_edge_cylinder_renderer = py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent");            \
     auto m_name                   = py::class_<atcg::NameComponent>(m, "NameComponent");                                        \
+    auto m_point_light            = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                            \
+    auto m_script_component       = py::class_<atcg::ScriptComponent>(m, "ScriptComponent");                                    \
     auto m_scene_hierarchy_panel =                                                                                              \
         py::class_<atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>>(m, "SceneHierarchyPanel");                             \
-    auto m_hit_info         = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                 \
-    auto m_utils            = m.def_submodule("Utils");                                                                         \
-    auto m_imgui            = m.def_submodule("ImGui");                                                                         \
-    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");                                       \
-    auto m_draw_mode        = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                         \
-    auto m_cull_mode        = py::enum_<atcg::CullMode>(m, "CullMode");                                                         \
-    auto m_network          = m.def_submodule("Network");                                                                       \
-    auto m_tcp_server       = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                              \
-    auto m_tcp_client       = py::class_<atcg::TCPClient>(m_network, "TCPClient");
+    auto m_hit_info          = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                \
+    auto m_utils             = m.def_submodule("Utils");                                                                        \
+    auto m_draw_mode         = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                        \
+    auto m_cull_mode         = py::enum_<atcg::CullMode>(m, "CullMode");                                                        \
+    auto m_network           = m.def_submodule("Network");                                                                      \
+    auto m_tcp_server        = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                             \
+    auto m_tcp_client        = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                             \
+    auto m_performance_panel = py::class_<atcg::PerformancePanel>(m, "PerformancePanel");                                       \
+    auto m_scriptengine =                                                                                                       \
+        py::class_<atcg::PythonScriptEngine, atcg::ref_ptr<atcg::PythonScriptEngine>>(m, "ScriptEngine");                       \
+    auto m_script = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");
 
 inline void defineBindings(py::module_& m)
 {
@@ -170,13 +184,19 @@ inline void defineBindings(py::module_& m)
 
     // ---------------- CORE ---------------------
     ATCG_DEFINE_MODULES(m)
+#ifndef ATCG_HEADLESS
+    auto m_imgui            = m.def_submodule("ImGui");
+    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
+#endif
 
-    // On module initialization and destruction
+// On module initialization and destruction
+#ifdef ATCG_PYTHON_MODULE
     py::class_<PythonContext>(m, "PythonContext").def(py::init<>());
     static PythonContext context;
 
     py::module atexit = py::module::import("atexit");
     atexit.attr("register")(py::cpp_function([]() { context.onExit(); }));
+#endif
 
     // py::object python_context = py::cast(new PythonContext());
     // m.attr("_python_context") = python_context;
@@ -204,6 +224,7 @@ inline void defineBindings(py::module_& m)
     m.def("resource_directory", []() { return atcg::resource_directory().string(); });
 
     m_application.def(py::init<atcg::Layer*>())
+        .def(py::init<atcg::WindowProps>())
         .def(py::init<atcg::Layer*, atcg::WindowProps>())
         .def("run", &atcg::Application::run);
     m_layer.def(py::init<>())
@@ -272,16 +293,9 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::vec2& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       1,
-                                       {2},
-                                       {sizeof(float)});
-            })
+        .def("numpy",
+             [](glm::vec2& v) -> py::array_t<float>
+             { return py::array_t<float>({2}, {sizeof(float)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::vec2::x)
         .def_readwrite("y", &glm::vec2::y);
 
@@ -298,16 +312,8 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::ivec2& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(int),
-                                       py::format_descriptor<int>::format(),
-                                       1,
-                                       {2},
-                                       {sizeof(int)});
-            })
+        .def("numpy",
+             [](glm::ivec2& v) -> py::array_t<int> { return py::array_t<int>({2}, {sizeof(int)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::ivec2::x)
         .def_readwrite("y", &glm::ivec2::y);
 
@@ -324,16 +330,9 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::vec3& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       1,
-                                       {3},
-                                       {sizeof(float)});
-            })
+        .def("numpy",
+             [](glm::vec3& v) -> py::array_t<float>
+             { return py::array_t<float>({3}, {sizeof(float)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::vec3::x)
         .def_readwrite("y", &glm::vec3::y)
         .def_readwrite("z", &glm::vec3::z);
@@ -351,16 +350,9 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::ivec3& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(int),
-                                       py::format_descriptor<int>::format(),
-                                       1,
-                                       {3},
-                                       {sizeof(int)});
-            })
+        .def("numpy",
+             [](glm::ivec3& v) -> py::array_t<float>
+             { return py::array_t<int>({3}, {sizeof(int)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::ivec3::x)
         .def_readwrite("y", &glm::ivec3::y)
         .def_readwrite("z", &glm::ivec3::z);
@@ -378,16 +370,9 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::u32vec3& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(int),
-                                       py::format_descriptor<uint32_t>::format(),
-                                       1,
-                                       {3},
-                                       {sizeof(int)});
-            })
+        .def("numpy",
+             [](glm::u32vec3& v) -> py::array_t<uint32_t>
+             { return py::array_t<uint32_t>({3}, {sizeof(uint32_t)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::u32vec3::x)
         .def_readwrite("y", &glm::u32vec3::y)
         .def_readwrite("z", &glm::u32vec3::z);
@@ -406,16 +391,9 @@ inline void defineBindings(py::module_& m)
              "array"_a)
         .def(py::init<float, float, float, float>(), "x"_a, "y"_a, "z"_a, "w"_a)
         .def(py::init<float>(), "value"_a)
-        .def_buffer(
-            [](glm::vec4& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       1,
-                                       {4},
-                                       {sizeof(float)});
-            })
+        .def("numpy",
+             [](glm::vec4& v) -> py::array_t<float>
+             { return py::array_t<float>({4}, {sizeof(float)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::vec4::x)
         .def_readwrite("y", &glm::vec4::y)
         .def_readwrite("z", &glm::vec4::z)
@@ -434,16 +412,8 @@ inline void defineBindings(py::module_& m)
                      return v;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::ivec4& v) -> py::buffer_info
-            {
-                return py::buffer_info(glm::value_ptr(v),
-                                       sizeof(int),
-                                       py::format_descriptor<int>::format(),
-                                       1,
-                                       {4},
-                                       {sizeof(int)});
-            })
+        .def("numpy",
+             [](glm::ivec4& v) -> py::array_t<int> { return py::array_t<int>({4}, {sizeof(int)}, glm::value_ptr(v)); })
         .def_readwrite("x", &glm::ivec4::x)
         .def_readwrite("y", &glm::ivec4::y)
         .def_readwrite("z", &glm::ivec4::z)
@@ -469,26 +439,21 @@ inline void defineBindings(py::module_& m)
                      return M;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::mat3& M) -> py::buffer_info
-            {
-                float data[3][3];
+        .def("numpy",
+             [](glm::mat3& M) -> py::array_t<float>
+             {
+                 float data[3][3];
 
-                for(int i = 0; i < 3; ++i)
-                {
-                    for(int j = 0; j < 3; ++j)
-                    {
-                        data[i][j] = M[j][i];
-                    }
-                }
+                 for(int i = 0; i < 3; ++i)
+                 {
+                     for(int j = 0; j < 3; ++j)
+                     {
+                         data[i][j] = M[j][i];
+                     }
+                 }
 
-                return py::buffer_info(data,
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       2,
-                                       {3, 3},
-                                       {sizeof(float) * 3, sizeof(float)});
-            });
+                 return py::array_t<float>({3, 3}, {sizeof(float) * 3, sizeof(float)}, (const float*)data);
+             });
 
     m_mat4
         .def(py::init(
@@ -510,26 +475,21 @@ inline void defineBindings(py::module_& m)
                      return M;
                  }),
              "array"_a)
-        .def_buffer(
-            [](glm::mat4& M) -> py::buffer_info
-            {
-                float data[4][4];
+        .def("numpy",
+             [](glm::mat4& M) -> py::array_t<float>
+             {
+                 float data[4][4];
 
-                for(int i = 0; i < 4; ++i)
-                {
-                    for(int j = 0; j < 4; ++j)
-                    {
-                        data[i][j] = M[j][i];
-                    }
-                }
+                 for(int i = 0; i < 4; ++i)
+                 {
+                     for(int j = 0; j < 4; ++j)
+                     {
+                         data[i][j] = M[j][i];
+                     }
+                 }
 
-                return py::buffer_info(data,
-                                       sizeof(float),
-                                       py::format_descriptor<float>::format(),
-                                       2,
-                                       {4, 4},
-                                       {sizeof(float) * 4, sizeof(float)});
-            });
+                 return py::array_t<float>({4, 4}, {sizeof(float) * 4, sizeof(float)}, (const float*)data);
+             });
 
     // ------------------- Datastructure ---------------------------------
 
@@ -611,10 +571,35 @@ inline void defineBindings(py::module_& m)
 
     m.def("read_scene", [](const std::string& path) { return atcg::IO::read_scene(path); }, "path"_a);
 
+    m_intrinsics.def(py::init<>())
+        .def(py::init<const float, const float, const float, const float, const glm::vec2&>())
+        .def(py::init<const glm::mat4&>())
+        .def("setAspectRatio", &atcg::CameraIntrinsics::setAspectRatio, "aspect_ratio"_a)
+        .def("setFOV", &atcg::CameraIntrinsics::setFOV, "fov"_a)
+        .def("setNear", &atcg::CameraIntrinsics::setNear, "near"_a)
+        .def("setFar", &atcg::CameraIntrinsics::setFar, "far"_a)
+        .def("setOpticalCenter", &atcg::CameraIntrinsics::setOpticalCenter, "optical_center"_a)
+        .def("setProjection", &atcg::CameraIntrinsics::setProjection, "projection"_a)
+        .def("aspectRatio", &atcg::CameraIntrinsics::aspectRatio)
+        .def("FOV", &atcg::CameraIntrinsics::FOV)
+        .def("zNear", &atcg::CameraIntrinsics::zNear)
+        .def("zFar", &atcg::CameraIntrinsics::zFar)
+        .def("opticalCenter", &atcg::CameraIntrinsics::opticalCenter)
+        .def("projection", &atcg::CameraIntrinsics::projection);
+
+    m_extrinsics.def(py::init<>())
+        .def(py::init<const glm::vec3&, const glm::vec3&>())
+        .def(py::init<const glm::mat4&>())
+        .def("setPosition", &atcg::CameraExtrinsics::setPosition, "position"_a)
+        .def("setTarget", &atcg::CameraExtrinsics::setTarget, "target"_a)
+        .def("setExtrinsicMatrix", &atcg::CameraExtrinsics::setExtrinsicMatrix, "view"_a)
+        .def("position", &atcg::CameraExtrinsics::position)
+        .def("target", &atcg::CameraExtrinsics::target)
+        .def("extrinsicMatrix", &atcg::CameraExtrinsics::extrinsicMatrix);
+
 
     m_camera
-        .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::PerspectiveCamera>(aspect_ratio); }),
-             "aspect_ratio"_a)
+        .def(py::init<atcg::CameraExtrinsics, atcg::CameraIntrinsics>(), "camera_extrinsics"_a, "camera_intrinsics"_a)
         .def("getPosition", &atcg::PerspectiveCamera::getPosition)
         .def("setPosition", &atcg::PerspectiveCamera::setPosition)
         .def("getView", &atcg::PerspectiveCamera::getView)
@@ -635,8 +620,7 @@ inline void defineBindings(py::module_& m)
         .def("getFar", &atcg::PerspectiveCamera::getFar)
         .def("setFar", &atcg::PerspectiveCamera::setFar);
 
-    m_controller
-        .def(py::init<>([](float aspect_ratio) { return atcg::make_ref<atcg::FirstPersonController>(aspect_ratio); }))
+    m_controller.def(py::init<const atcg::ref_ptr<atcg::PerspectiveCamera>&>(), "camera"_a)
         .def("onUpdate", &atcg::FirstPersonController::onUpdate, "delta_time"_a)
         .def("onEvent", &atcg::FirstPersonController::onEvent, "event"_a)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
@@ -644,6 +628,17 @@ inline void defineBindings(py::module_& m)
     m_serializer.def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
         .def("serialize", &atcg::Serializer<atcg::ComponentSerializer>::serialize<>, "file_path"_a)
         .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
+
+    m_performance_panel.def(py::init<>())
+        .def(
+            "renderPanel",
+            [](atcg::PerformancePanel& panel, bool show_window)
+            {
+                panel.renderPanel(show_window);
+                return show_window;
+            },
+            "show_window"_a)
+        .def("registerFrameTime", &atcg::PerformancePanel::registerFrameTime);
 
     // ------------------- RENDERER ---------------------------------
     m_draw_mode.value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
@@ -668,32 +663,8 @@ inline void defineBindings(py::module_& m)
         .def("setLineSize", &atcg::Renderer::setLineSize, "size"_a)
         .def("setViewport", &atcg::Renderer::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
         .def("setDefaultViewport", &atcg::Renderer::setDefaultViewport)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::Image>& skybox) { atcg::Renderer::setSkybox(skybox); },
-            "skybox"_a)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::Texture2D>& skybox) { atcg::Renderer::setSkybox(skybox); },
-            "skybox"_a)
-        .def("hasSkybox", &atcg::Renderer::hasSkybox)
-        .def("removeSkybox", &atcg::Renderer::removeSkybox)
-        .def("getSkyboxTexture", &atcg::Renderer::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::Renderer::getSkyboxCubemap)
         .def("useScreenBuffer", &atcg::Renderer::useScreenBuffer)
         .def("clear", &atcg::Renderer::clear)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-            { atcg::Renderer::draw(scene, camera); },
-            "scene"_a,
-            "camera"_a)
-        .def(
-            "draw",
-            [](atcg::Entity entity, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-            { atcg::Renderer::draw(entity, camera); },
-            "entity"_a,
-            "camera"_a)
         .def(
             "draw",
             [](const atcg::ref_ptr<atcg::Graph>& mesh,
@@ -730,6 +701,7 @@ inline void defineBindings(py::module_& m)
         .def("getFramebuffer", &atcg::Renderer::getFramebuffer)
         .def("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
         .def("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
+        .def("toggleMSAA", &atcg::Renderer::toggleMSAA, "enabled"_a)
         .def("screenshot",
              [](const atcg::ref_ptr<atcg::Scene>& scene,
                 const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
@@ -744,6 +716,18 @@ inline void defineBindings(py::module_& m)
             "camera"_a,
             "width"_a,
             "path"_a)
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const uint32_t height,
+               const std::string& path) { atcg::Renderer::screenshot(scene, cam, width, height, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "height"_a,
+            "path"_a)
         .def("resize", &atcg::Renderer::resize)
         .def("getFrame", &atcg::Renderer::getFrame, "device"_a)
         .def("getZBuffer", &atcg::Renderer::getZBuffer, "device"_a)
@@ -751,7 +735,10 @@ inline void defineBindings(py::module_& m)
         .def("setCullFace", &atcg::Renderer::setCullFace, "mode"_a)
         .def("getFrameCounter", &atcg::Renderer::getFrameCounter)
         .def("popTextureID", &atcg::Renderer::popTextureID)
-        .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a);
+        .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a)
+        .def("setMSAA", &atcg::Renderer::setMSAA, "num_samples"_a)
+        .def("getMSAA", &atcg::Renderer::getMSAA)
+        .def("getFramebufferMSAA", &atcg::Renderer::getFramebufferMSAA);
 
     m_renderer_system.def(py::init<>())
         .def("setClearColor", &atcg::RendererSystem::setClearColor, "color"_a)
@@ -763,36 +750,8 @@ inline void defineBindings(py::module_& m)
         .def("setLineSize", &atcg::RendererSystem::setLineSize, "size"_a)
         .def("setViewport", &atcg::RendererSystem::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
         .def("setDefaultViewport", &atcg::RendererSystem::setDefaultViewport)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Image>& skybox)
-            { self->setSkybox(skybox); },
-            "skybox"_a)
-        .def(
-            "setSkybox",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::Texture2D>& skybox)
-            { self->setSkybox(skybox); },
-            "skybox"_a)
-        .def("hasSkybox", &atcg::RendererSystem::hasSkybox)
-        .def("removeSkybox", &atcg::RendererSystem::removeSkybox)
-        .def("getSkyboxTexture", &atcg::RendererSystem::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::RendererSystem::getSkyboxCubemap)
         .def("useScreenBuffer", &atcg::RendererSystem::useScreenBuffer)
         .def("clear", &atcg::RendererSystem::clear)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(scene, camera); },
-            "scene"_a,
-            "camera"_a)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               atcg::Entity entity,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->draw(entity, camera); },
-            "entity"_a,
-            "camera"_a)
         .def(
             "draw",
             [](const atcg::ref_ptr<atcg::RendererSystem>& self,
@@ -855,6 +814,19 @@ inline void defineBindings(py::module_& m)
             "scene"_a,
             "camera"_a,
             "width"_a,
+            "path"_a)
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const uint32_t height,
+               const std::string& path) { self->screenshot(scene, cam, width, height, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "height"_a,
             "path"_a)
         .def("resize", &atcg::RendererSystem::resize)
         .def("getFrame", &atcg::RendererSystem::getFrame, "device"_a)
@@ -1023,8 +995,55 @@ inline void defineBindings(py::module_& m)
             [](const torch::Tensor& img) { return atcg::Texture2D::create(img); },
             "img"_a)
         .def("getID", &atcg::Texture2D::getID)
-        .def("setData", &atcg::Texture2D::setData, "data"_a)
+        .def("use", &atcg::Texture2D::use)
+        .def(
+            "setData",
+            [](const atcg::ref_ptr<atcg::Texture2D>& texture, const torch::Tensor& data) { texture->setData(data); },
+            "data"_a)
+        .def("__setitem__",
+             [](const atcg::ref_ptr<atcg::Texture2D>& texture, py::slice idx, const torch::Tensor& t)
+             { texture->setData(t); })
+        //.def("setData", [](const atcg::ref_ptr<atcg::Texture2D>& texture, const
+        // atcg::ref_ptr<atcg::PixelUnpackBuffer>& data) {texture->setData(data);}, "data"_a)
         .def("getData", &atcg::Texture2D::getData);
+
+    m_texture_cube
+        .def_static(
+            "create",
+            [](atcg::TextureSpecification spec) { return atcg::TextureCube::create(spec); },
+            "specification"_a)
+        .def_static(
+            "create",
+            [](const torch::Tensor& img) { return atcg::TextureCube::create(img); },
+            "img"_a)
+        .def("getID", &atcg::TextureCube::getID)
+        .def("use", &atcg::TextureCube::use)
+        .def(
+            "setData",
+            [](const atcg::ref_ptr<atcg::TextureCube>& texture, const torch::Tensor& data) { texture->setData(data); },
+            "data"_a)
+        //.def("setData", [](const atcg::ref_ptr<atcg::TextureCube>& texture, const
+        // atcg::ref_ptr<atcg::PixelUnpackBuffer>& data) {texture->setData(data);}, "data"_a)
+        .def("getData", &atcg::TextureCube::getData);
+
+    m_framebuffer.def(py::init<>())
+        .def(py::init<uint32_t, uint32_t>())
+        .def("use", &atcg::Framebuffer::use)
+        .def("attachColor", &atcg::Framebuffer::attachColor)
+        .def("attachColorMultiSample", &atcg::Framebuffer::attachColorMultiSample)
+        .def("attachTexture", &atcg::Framebuffer::attachTexture)
+        .def("attachDepth", [](const atcg::ref_ptr<atcg::Framebuffer>& fbo) { fbo->attachDepth(); })
+        .def("attachDepthMultiSample", &atcg::Framebuffer::attachDepthMultiSample)
+        .def("blit", &atcg::Framebuffer::blit)
+        .def("getColorAttachement", &atcg::Framebuffer::getColorAttachement)
+        .def("getDepthAttachement", &atcg::Framebuffer::getDepthAttachement)
+        .def("getID", &atcg::Framebuffer::getID)
+        .def("width", &atcg::Framebuffer::width)
+        .def("height", &atcg::Framebuffer::height)
+        .def("currentFramebuffer", &atcg::Framebuffer::currentFramebuffer)
+        .def("bindByID", &atcg::Framebuffer::bindByID)
+        .def("useDefault", &atcg::Framebuffer::useDefault)
+        .def("complete", &atcg::Framebuffer::complete);
 
     // ------------------- Scene ---------------------------------
     m_entity_handle.def(py::init<uint32_t>(), "handle"_a);
@@ -1086,7 +1105,16 @@ inline void defineBindings(py::module_& m)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
         .def_readwrite("material", &atcg::EdgeCylinderRenderComponent::material);
 
-    m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def_readwrite("name", &atcg::NameComponent::name);
+    m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def("name", &atcg::NameComponent::name);
+
+    m_point_light.def(py::init<float, glm::vec3>(), "intensity"_a, "color"_a)
+        .def_readwrite("intensity", &atcg::PointLightComponent::intensity)
+        .def_readwrite("color", &atcg::PointLightComponent::color)
+        .def_readwrite("cast_shadow", &atcg::PointLightComponent::cast_shadow);
+
+    m_script_component.def(py::init<>())
+        .def(py::init<const atcg::ref_ptr<atcg::PythonScript>&>())
+        .def_readwrite("script", &atcg::ScriptComponent::script);
 
     m_entity.def(py::init<>())
         .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)
@@ -1171,12 +1199,29 @@ inline void defineBindings(py::module_& m)
             [](atcg::Entity& entity, atcg::EdgeCylinderRenderComponent& component)
             { return entity.replaceComponent<atcg::EdgeCylinderRenderComponent>(component); },
             "component"_a)
+        .def(
+            "addPointLightComponent",
+            [](atcg::Entity& entity, float intensity, const glm::vec3& color)
+            { return entity.addComponent<atcg::PointLightComponent>(intensity, color); },
+            "intensity"_a,
+            "color"_a)
+        .def(
+            "replacePointLightComponent",
+            [](atcg::Entity& entity, atcg::PointLightComponent& component)
+            { return entity.replaceComponent<atcg::PointLightComponent>(component); },
+            "component"_a)
         .def("addNameComponent",
              [](atcg::Entity& entity, const std::string& name)
              { return entity.addComponent<atcg::NameComponent>(name); })
         .def("replaceNameComponent",
              [](atcg::Entity& entity, atcg::NameComponent& component)
              { return entity.replaceComponent<atcg::NameComponent>(component); })
+        .def("addScriptComponent",
+             [](atcg::Entity& entity, const atcg::ref_ptr<atcg::PythonScript>& script)
+             { return entity.addComponent<atcg::ScriptComponent>(script); })
+        .def("replaceScriptComponent",
+             [](atcg::Entity& entity, atcg::ScriptComponent component)
+             { return entity.replaceComponent<atcg::ScriptComponent>(component); })
         .def("hasTransformComponent", &atcg::Entity::hasComponent<atcg::TransformComponent>)
         .def("hasGeometryComponent", &atcg::Entity::hasComponent<atcg::GeometryComponent>)
         .def("hasMeshRenderComponent", &atcg::Entity::hasComponent<atcg::MeshRenderComponent>)
@@ -1184,18 +1229,25 @@ inline void defineBindings(py::module_& m)
         .def("hasPointSphereRenderComponent", &atcg::Entity::hasComponent<atcg::PointSphereRenderComponent>)
         .def("hasEdgeRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeRenderComponent>)
         .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>)
+        .def("hasPointLightComponent", &atcg::Entity::hasComponent<atcg::PointLightComponent>)
         .def("hasNameComponent", &atcg::Entity::hasComponent<atcg::NameComponent>)
+        .def("hasScriptComponent", &atcg::Entity::hasComponent<atcg::ScriptComponent>)
         .def("getTransformComponent", &atcg::Entity::getComponent<atcg::TransformComponent>)
         .def("getGeometryComponent", &atcg::Entity::getComponent<atcg::GeometryComponent>)
         .def("getMeshRenderComponent", &atcg::Entity::getComponent<atcg::MeshRenderComponent>)
         .def("getPointRenderComponent", &atcg::Entity::getComponent<atcg::PointRenderComponent>)
         .def("getPointSphereRenderComponent", &atcg::Entity::getComponent<atcg::PointSphereRenderComponent>)
         .def("getEdgeRenderComponent", &atcg::Entity::getComponent<atcg::EdgeRenderComponent>)
+        .def("getPointLightComponent", &atcg::Entity::getComponent<atcg::PointLightComponent>)
         .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
+        .def("getScriptComponent", &atcg::Entity::getComponent<atcg::ScriptComponent>)
         .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>);
 
     m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
-        .def("createEntity", &atcg::Scene::createEntity, "name"_a = "Entity")
+        .def(
+            "createEntity",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const std::string& name) { return scene->createEntity(name); },
+            "name"_a = "Entity")
         .def("getEntityByName", &atcg::Scene::getEntitiesByName, "name"_a)
         .def("getEntities",
              [](const atcg::ref_ptr<atcg::Scene>& scene)
@@ -1207,7 +1259,54 @@ inline void defineBindings(py::module_& m)
                      entities.push_back(atcg::Entity(e, scene.get()));
                  }
                  return entities;
-             });
+             })
+        .def(
+            "getEntityByID",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, uint64_t id)
+            {
+                atcg::UUID uuid(id);
+                return scene->getEntityByID(uuid);
+            },
+            "uuid"_a)
+        .def(
+            "removeEntity",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, uint64_t id)
+            {
+                atcg::UUID uuid(id);
+                scene->removeEntity(uuid);
+            },
+            "uuid"_a)
+        .def(
+            "removeEntity",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) { scene->removeEntity(entity); },
+            "entity"_a)
+        .def("removeAllEntities", &atcg::Scene::removeAllEntites)
+        .def("setCamera", &atcg::Scene::setCamera)
+        .def("getCamera", &atcg::Scene::getCamera)
+        .def("removeCamera", &atcg::Scene::removeCamera)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Image>& skybox)
+            { scene->setSkybox(skybox); },
+            "skybox"_a)
+        .def(
+            "setSkybox",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Texture2D>& skybox)
+            { scene->setSkybox(skybox); },
+            "skybox"_a)
+        .def("hasSkybox", &atcg::Scene::hasSkybox)
+        .def("removeSkybox", &atcg::Scene::removeSkybox)
+        .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
+        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            {
+                atcg::Dictionary context;
+                context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera);
+                scene->draw(context);
+            },
+            "camera"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
@@ -1415,8 +1514,26 @@ inline void defineBindings(py::module_& m)
                       return std::make_pair(data, offset);
                   });
 
+    // ------------------- Scripting ---------------------------------
+    m_scriptengine.def(py::init<>())
+        .def("init", &atcg::PythonScriptEngine::init)
+        .def("destroy", &atcg::PythonScriptEngine::destroy);
+
+    m_script.def(py::init<const std::filesystem::path&>())
+        .def("init", &atcg::PythonScript::init)
+        .def("onAttach", &atcg::PythonScript::onAttach)
+        .def("onUpdate", &atcg::PythonScript::onUpdate)
+        .def("onEvent", &atcg::PythonScript::onEvent)
+        .def("onDetach", &atcg::PythonScript::onDetach)
+        .def("reload", &atcg::PythonScript::reload);
+
+    m.def("handleScriptReloads", &atcg::Scripting::handleScriptReloads);
+    m.def("handleScriptEvents", &atcg::Scripting::handleScriptEvents);
+    m.def("handleScriptUpdates", &atcg::Scripting::handleScriptUpdates);
+
     // IMGUI BINDINGS
 
+#ifndef ATCG_HEADLESS
     m_imgui.def("BeginMainMenuBar", &ImGui::BeginMainMenuBar);
     m_imgui.def("EndMainMenuBar", &ImGui::EndMainMenuBar);
     m_imgui.def("BeginMenu", &ImGui::BeginMenu, py::arg("label"), py::arg("enabled") = true);
@@ -1519,6 +1636,26 @@ inline void defineBindings(py::module_& m)
         py::arg("height"),
         py::return_value_policy::automatic_reference);
 
+    m_imgui.def(
+        "plot",
+        [](std::vector<std::vector<float>>& data, const std::vector<std::string>& names, const float line_width = -1)
+        {
+            if(ImPlot::BeginPlot("##", ImVec2(-1, -1)))
+            {
+                ImPlot::SetupAxes("X", "Y", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupLegend(ImPlotLocation_North, ImPlotLegendFlags_Horizontal | ImPlotLegendFlags_Outside);
+                for(int i = 0; i < data.size(); ++i)
+                {
+                    std::vector<float> x(data[i].size());
+                    std::iota(x.begin(), x.end(), 0.0f);
+
+                    ImPlot::SetNextLineStyle(IMPLOT_AUTO_COL, line_width);
+                    ImPlot::PlotLine(names[i].c_str(), x.data(), data[i].data(), data[i].size(), 0, 0, sizeof(float));
+                }
+                ImPlot::EndPlot();
+            }
+        });
+
     m_imgui.def("isUsing", &ImGuizmo::IsUsing);
 
     m_guizmo_operation.value("TRANSLATE", ImGuizmo::OPERATION::TRANSLATE)
@@ -1526,6 +1663,7 @@ inline void defineBindings(py::module_& m)
         .value("SCALE", ImGuizmo::OPERATION::SCALE)
         .export_values();
     m_imgui.def("drawGuizmo", atcg::drawGuizmo);
+#endif
 
 #ifdef VERSION_INFO
     m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

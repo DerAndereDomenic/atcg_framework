@@ -105,7 +105,10 @@ public:
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
+        atcg::CameraIntrinsics intrinsics;
+        intrinsics.setAspectRatio(aspect_ratio);
+        camera_controller = atcg::make_ref<atcg::FocusedController>(
+            atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
 
         cube = atcg::IO::read_mesh((atcg::resource_directory() / "cube.obj").string());
 
@@ -152,8 +155,11 @@ public:
         atcg::ShaderManager::getShader("volume")->setFloat("sigma_a_base", sigma_a_base);
         atcg::ShaderManager::getShader("volume")->setFloat("g", g);
         noise_texture->use();
-        atcg::Renderer::draw(cube_entity, camera_controller->getCamera());
-        atcg::Renderer::draw(light_entity, camera_controller->getCamera());
+
+        atcg::Dictionary context;
+        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+        scene->draw(context);
+
         dt = delta_time;
     }
 

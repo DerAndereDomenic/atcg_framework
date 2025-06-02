@@ -14,3 +14,6 @@ DataStructure
    Statistics
    Grid
    BufferView
+   PerformancePanel
+   Dictionary
+   Skybox

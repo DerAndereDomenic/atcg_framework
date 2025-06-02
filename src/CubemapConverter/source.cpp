@@ -22,7 +22,10 @@ public:
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FirstPersonController>(aspect_ratio);
+        atcg::CameraIntrinsics intrinsics;
+        intrinsics.setAspectRatio(aspect_ratio);
+        camera_controller = atcg::make_ref<atcg::FirstPersonController>(
+            atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
 
         auto face_0                         = atcg::IO::imread("../Cubemap/image_2.hdr");
         auto face_1                         = atcg::IO::imread("../Cubemap/image_0.hdr");
@@ -114,7 +117,7 @@ public:
 
         output_img->store("skybox.hdr");
 
-        atcg::Renderer::setSkybox(output_img);
+        scene->setSkybox(output_img);
     }
 
     // This gets called each frame
@@ -124,7 +127,9 @@ public:
 
         atcg::Renderer::clear();
 
-        atcg::Renderer::draw(scene, camera_controller->getCamera());
+        atcg::Dictionary context;
+        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+        scene->draw(context);
     }
 
     virtual void onImGuiRender() override {}

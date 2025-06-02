@@ -8,22 +8,16 @@
 
 namespace atcg
 {
-CameraController::CameraController(const float& aspect_ratio, const glm::vec3& position, const glm::vec3& look_at)
-{
-    _camera = atcg::make_ref<PerspectiveCamera>(aspect_ratio, position, look_at);
-}
-
 CameraController::CameraController(const atcg::ref_ptr<PerspectiveCamera>& camera) : _camera(camera) {}
-
-FocusedController::FocusedController(const float& aspect_ratio) : CameraController(aspect_ratio) {}
 
 FocusedController::FocusedController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera)
 {
     _distance = glm::length(_camera->getPosition() - _camera->getLookAt());
 }
 
-void FocusedController::onUpdate(float delta_time)
+bool FocusedController::onUpdate(float delta_time)
 {
+    bool update         = false;
     glm::vec2 mouse_pos = Input::getMousePosition();
     _currentX           = mouse_pos.x;
     _currentY           = mouse_pos.y;
@@ -47,6 +41,7 @@ void FocusedController::onUpdate(float delta_time)
             forward = glm::rotate(q, forward);
 
             _camera->setPosition(_camera->getLookAt() + _distance * forward);
+            update = true;
         }
     }
     else if(Input::isMouseButtonPressed(ATCG_MOUSE_BUTTON_RIGHT))
@@ -68,11 +63,15 @@ void FocusedController::onUpdate(float delta_time)
 
             _camera->setPosition(_camera->getPosition() + tangent);
             _camera->setLookAt(_camera->getLookAt() + tangent);
+
+            update = true;
         }
     }
 
     _lastX = _currentX;
     _lastY = _currentY;
+
+    return update;
 }
 
 void FocusedController::onEvent(Event* e)
@@ -100,22 +99,13 @@ bool FocusedController::onWindowResize(WindowResizeEvent* event)
     return false;
 }
 
-
-FirstPersonController::FirstPersonController(const float& aspect_ratio,
-                                             const glm::vec3& position,
-                                             const glm::vec3& view_direction,
-                                             const float& speed)
-    : CameraController(aspect_ratio, position, position + view_direction),
-      _speed(speed)
-{
-}
-
 FirstPersonController::FirstPersonController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera)
 {
 }
 
-void FirstPersonController::onUpdate(float delta_time)
+bool FirstPersonController::onUpdate(float delta_time)
 {
+    bool update         = false;
     glm::vec2 mouse_pos = Input::getMousePosition();
     _currentX           = mouse_pos.x;
     _currentY           = mouse_pos.y;
@@ -138,6 +128,7 @@ void FirstPersonController::onUpdate(float delta_time)
             forward = glm::rotate(q, forward);
 
             _camera->setLookAt(_camera->getPosition() + forward);
+            update = true;
         }
     }
 
@@ -162,6 +153,8 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_forward += delta_velocity;
         else if(_velocity_forward < 0.0f)
             _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) - delta_velocity;
+
+        update = true;
     }
     else if(_pressed_S && !_pressed_W)    // backward
     {
@@ -171,6 +164,8 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_forward -= delta_velocity;
         else if(0.0f < _velocity_forward)
             _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) + delta_velocity;
+
+        update = true;
     }
     else
     {
@@ -188,6 +183,8 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_right -= delta_velocity;
         else if(0.0f < _velocity_right)
             _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) + delta_velocity;
+
+        update = true;
     }
     else if(_pressed_D && !_pressed_A)    // right
     {
@@ -197,6 +194,8 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_right += delta_velocity;
         else if(_velocity_right < 0.0)
             _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) - delta_velocity;
+
+        update = true;
     }
     else
     {
@@ -214,6 +213,8 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_up += delta_velocity;
         else if(_velocity_up < 0.0)
             _velocity_up -= deceleration(delta_velocity, _velocity_up, max_velocity) - delta_velocity;
+
+        update = true;
     }
     else if(_pressed_Q && !_pressed_E)    // down
     {
@@ -223,6 +224,8 @@ void FirstPersonController::onUpdate(float delta_time)
             _velocity_up -= delta_velocity;
         else if(0.0f < _velocity_up)
             _velocity_up -= deceleration(delta_velocity, _velocity_up, max_velocity) + delta_velocity;
+
+        update = true;
     }
     else
     {
@@ -245,6 +248,9 @@ void FirstPersonController::onUpdate(float delta_time)
 
     glm::vec3 total_velocity =
         _speed * (forwardDirection * _velocity_forward + rightDirection * _velocity_right + upDirection * _velocity_up);
+
+    if(glm::length2(total_velocity) > 1e-5f) update = true;
+
     _camera->setPosition(_camera->getPosition() + total_velocity * delta_time);
     _camera->setLookAt(_camera->getLookAt() + total_velocity * delta_time);
 
@@ -258,6 +264,8 @@ void FirstPersonController::onUpdate(float delta_time)
     if(!Input::isKeyPressed(ATCG_KEY_D)) _pressed_D = false;
     if(!Input::isKeyPressed(ATCG_KEY_Q)) _pressed_Q = false;
     if(!Input::isKeyPressed(ATCG_KEY_E)) _pressed_E = false;
+
+    return update;
 }
 
 void FirstPersonController::onEvent(Event* e)
@@ -336,24 +344,17 @@ bool FirstPersonController::onMouseButtonReleased(MouseButtonReleasedEvent* even
     return true;
 }
 
-
-VRController::VRController(const float& aspect_ratio, const float& speed)
-    : CameraController(aspect_ratio, glm::vec3(0), glm::vec3(0, 0, 1)),
-      _speed(speed)
+VRController::VRController(const atcg::ref_ptr<PerspectiveCamera>& camera_left,
+                           const atcg::ref_ptr<PerspectiveCamera>& camera_right)
+    : CameraController(camera_left)
 {
-    _cam_left  = atcg::make_ref<PerspectiveCamera>(aspect_ratio);
-    _cam_right = atcg::make_ref<PerspectiveCamera>(aspect_ratio);
-    _camera    = _cam_left;
-
-    auto [p_left, p_right] = VR::getProjections();
-    _cam_left->setProjection(p_left);
-    _cam_right->setProjection(p_right);
+    _cam_left  = camera_left;
+    _cam_right = camera_right;
 }
 
-VRController::VRController(const atcg::ref_ptr<PerspectiveCamera>& camera) : CameraController(camera) {}
-
-void VRController::onUpdate(float delta_time)
+bool VRController::onUpdate(float delta_time)
 {
+    bool update          = false;
     float delta_velocity = _acceleration * delta_time;
     float max_velocity   = _max_velocity;
     auto deceleration    = [](float delta_velocity, float current_velocity, float max_velocity)
@@ -375,6 +376,8 @@ void VRController::onUpdate(float delta_time)
             _velocity_forward += delta_velocity;
         else if(_velocity_forward < 0.0f)
             _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) - delta_velocity;
+
+        update = true;
     }
     else if(_pressed_S && !_pressed_W)    // backward
     {
@@ -384,6 +387,8 @@ void VRController::onUpdate(float delta_time)
             _velocity_forward -= delta_velocity;
         else if(0.0f < _velocity_forward)
             _velocity_forward -= deceleration(delta_velocity, _velocity_forward, max_velocity) + delta_velocity;
+
+        update = true;
     }
     else
     {
@@ -401,6 +406,8 @@ void VRController::onUpdate(float delta_time)
             _velocity_right -= delta_velocity;
         else if(0.0f < _velocity_right)
             _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) + delta_velocity;
+
+        update = true;
     }
     else if(_pressed_D && !_pressed_A)    // right
     {
@@ -410,6 +417,8 @@ void VRController::onUpdate(float delta_time)
             _velocity_right += delta_velocity;
         else if(_velocity_right < 0.0)
             _velocity_right -= deceleration(delta_velocity, _velocity_right, max_velocity) - delta_velocity;
+
+        update = true;
     }
     else
     {
@@ -437,6 +446,7 @@ void VRController::onUpdate(float delta_time)
     glm::vec3 current_offset = VR::getOffset();
     current_offset += total_velocity * delta_time;
 
+    if(glm::length2(total_velocity) > 1e-5f) update = true;
 
     // The trigger is currently down
     if(_trigger_pressed)
@@ -455,6 +465,8 @@ void VRController::onUpdate(float delta_time)
         {
             _controller_intersection = _controller_position + 1000.0f * _controller_direction;
         }
+
+        update = true;
     }
 
     // Update camera position
@@ -470,6 +482,8 @@ void VRController::onUpdate(float delta_time)
             rl_pos.y       = 0;
             current_offset = _controller_position + t * _controller_direction - rl_pos;
         }
+
+        update = true;
     }
 
     VR::setOffset(current_offset);
@@ -478,6 +492,8 @@ void VRController::onUpdate(float delta_time)
     if(!Input::isKeyPressed(ATCG_KEY_A)) _pressed_A = false;
     if(!Input::isKeyPressed(ATCG_KEY_S)) _pressed_S = false;
     if(!Input::isKeyPressed(ATCG_KEY_D)) _pressed_D = false;
+
+    return update;
 }
 
 void VRController::onEvent(Event* e)

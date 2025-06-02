@@ -62,7 +62,7 @@ void Image::store(const std::string& filename)
     {
         stbi_write_tga(filename.c_str(), (int)_width, (int)_height, (int)_channels, (const void*)_img_data.data_ptr());
     }
-    else if(file_ending == "jpg")
+    else if(file_ending == "jpg" || file_ending == "jpeg")
     {
         stbi_write_jpg(filename.c_str(),
                        (int)_width,

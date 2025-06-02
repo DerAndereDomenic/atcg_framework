@@ -13,6 +13,7 @@
    source/DataStructure/DataStructureIndex
    source/Renderer/RendererIndex
    source/Scene/SceneIndex
+   source/Scripting/ScriptingIndex
    source/Math/MathIndex
    source/ImGui/ImGui
    source/IO/IO

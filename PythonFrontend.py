@@ -1,26 +1,8 @@
 import torch
-import charonload
-import pathlib
 
-VSCODE_STUBS_DIRECTORY = pathlib.Path(__file__).parent / "build_python/typings"
-
-charonload.module_config["pyatcg"] = charonload.Config(
-    # All paths must be absolute
-    project_directory=pathlib.Path(__file__).parent,
-    build_directory=pathlib.Path(__file__).parent / "build_python",
-    cmake_options={
-        "ATCG_CUDA_BACKEND": "On",
-        "ATCG_PYTHON_BINDINGS": "On",
-        "ATCG_PYTHON_MODULE": "On",
-    },
-    stubs_directory=VSCODE_STUBS_DIRECTORY,
-    build_type="RelWithDebInfo",
-    verbose=True,
-    stubs_invalid_ok=True,
-)
+# RUN: pip install -e . before running this file
 
 import pyatcg as atcg
-import numpy as np
 
 
 class PythonLayer(atcg.Layer):
@@ -33,11 +15,16 @@ class PythonLayer(atcg.Layer):
         atcg.Renderer.setClearColor(atcg.vec4(0, 0, 0, 1))
         aspect_ratio = atcg.width() / atcg.height()
 
-        self.camera_controller = atcg.FirstPersonController(aspect_ratio)
+        extrinsics = atcg.CameraExtrinsics()
+        intrinsics = atcg.CameraIntrinsics()
+        intrinsics.setAspectRatio(aspect_ratio)
+        camera = atcg.PerspectiveCamera(extrinsics, intrinsics)
+        self.camera_controller = atcg.FirstPersonController(camera)
 
         self.scene = atcg.Scene()
 
         self.panel = atcg.SceneHierarchyPanel(self.scene)
+        self.performance_panel = atcg.PerformancePanel()
         entity = self.scene.createEntity("Cylinder")
         self.graph = atcg.read_mesh(f"{atcg.resource_directory()}/cylinder.obj")
         entity.addGeometryComponent(self.graph)
@@ -65,11 +52,14 @@ class PythonLayer(atcg.Layer):
         self.current_operation = atcg.ImGui.GuizmoOperation.TRANSLATE
 
     def onUpdate(self, dt):
+        self.performance_panel.registerFrameTime(dt)
         self.camera_controller.onUpdate(dt)
+
+        atcg.handleScriptUpdates(self.scene, dt)
 
         atcg.Renderer.clear()
 
-        atcg.Renderer.draw(self.scene, self.camera_controller.getCamera())
+        self.scene.draw(self.camera_controller.getCamera())
 
         atcg.Renderer.drawCameras(self.scene, self.camera_controller.getCamera())
 
@@ -80,12 +70,19 @@ class PythonLayer(atcg.Layer):
 
         selected_entity = self.panel.getSelectedEntity()
 
+        self.performance_panel.renderPanel(True)
+
         atcg.ImGui.drawGuizmo(
-            selected_entity, self.current_operation, self.camera_controller.getCamera()
+            self.scene,
+            selected_entity,
+            self.current_operation,
+            self.camera_controller.getCamera(),
         )
 
     def onEvent(self, event):
         self.camera_controller.onEvent(event)
+
+        atcg.handleScriptEvents(self.scene, event)
 
         if event.getName() == "ViewportResize":
             resize_event = atcg.WindowResizeEvent(event.getWidth(), event.getHeight())
@@ -94,8 +91,8 @@ class PythonLayer(atcg.Layer):
 
 def main():
     props = atcg.WindowProps()
-    props.width = 2560
-    props.height = 1440
+    props.width = 1600
+    props.height = 900
 
     layer = PythonLayer()
     app = atcg.PythonApplication(layer, props)

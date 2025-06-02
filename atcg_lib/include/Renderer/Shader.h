@@ -2,6 +2,7 @@
 
 #include <Core/glm.h>
 #include <Renderer/Buffer.h>
+#include <Renderer/ShaderType.h>
 
 #include <string>
 #include <variant>
@@ -154,6 +155,14 @@ public:
     void setMat4(const std::string& name, const glm::mat4& value);
 
     /**
+     * @brief Choose a subroutine
+     *
+     * @param subroutine_type The name of the subroutine
+     * @param subroutine_name The shader type where the subroutine is located
+     */
+    void selectSubroutine(const std::string& subroutine_type, const std::string& subroutine_name);
+
+    /**
      * @brief Set the model, view, and projection matrix.
      *
      * @param M The model matrix
@@ -190,12 +199,6 @@ private:
         std::variant<int, float, glm::vec2, glm::vec3, glm::vec4, glm::mat4> data;
     };
 
-    void readShaderCode(const std::string& path, std::string* code);
-
-    uint32_t compileShader(unsigned int shaderType, const std::string& shader_source);
-
-    void linkShader(const uint32_t* shaders, const uint32_t& num_shaders);
-
     Uniform& getUniform(const std::string& name);
 
     template<typename T>
@@ -210,5 +213,11 @@ private:
     bool _has_geometry         = false;
     bool _is_compute           = false;
     std::unordered_map<std::string, Uniform> _uniforms;
+    std::unordered_map<std::string, uint32_t> _vertex_subroutines_locations;
+    std::unordered_map<std::string, uint32_t> _fragment_subroutines_locations;
+    std::unordered_map<std::string, uint32_t> _geometry_subroutines_locations;
+    std::vector<unsigned int> _vertex_subroutines;
+    std::vector<unsigned int> _fragment_subroutines;
+    std::vector<unsigned int> _geometry_subroutines;
 };
 }    // namespace atcg

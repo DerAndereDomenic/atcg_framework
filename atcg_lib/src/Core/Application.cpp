@@ -22,12 +22,18 @@ Application::Application(const WindowProps& props)
     init(props);
 }
 
-Application::~Application() {}
+Application::~Application()
+{
+    if(_script_engine) _script_engine->destroy();
+}
 
 void Application::init(const WindowProps& props)
 {
     ATCG_ASSERT(!s_instance, "There can only be one application instance at a time.");
     ATCG_ASSERT(SystemRegistry::instance(), "SystemRegistry must be initialized before initializing the Application");
+
+    _context_manager = atcg::make_ref<ContextManagerSystem>();
+    SystemRegistry::instance()->registerSystem(_context_manager.get());
 
     _shader_manager = atcg::make_ref<ShaderManagerSystem>();
     SystemRegistry::instance()->registerSystem(_shader_manager.get());
@@ -42,6 +48,13 @@ void Application::init(const WindowProps& props)
     _vr_system = atcg::make_ref<VRSystem>();
     _vr_system->init(ATCG_BIND_EVENT_FN(Application::onEvent));
     SystemRegistry::instance()->registerSystem(_vr_system.get());
+
+    _revision_system = atcg::make_ref<RevisionSystem>();
+    SystemRegistry::instance()->registerSystem(_revision_system.get());
+
+    _script_engine = atcg::make_ref<PythonScriptEngine>();
+    _script_engine->init();
+    SystemRegistry::instance()->registerSystem(_script_engine.get());
 
     Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 
@@ -118,7 +131,7 @@ void Application::run()
                 "There must be a registered ShaderManager before starting the app");
     ATCG_ASSERT(SystemRegistry::instance()->hasSystem<VRSystem>(),
                 "There must be a registered VRSystem before starting the app");
-    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<Logger>(),
+    ATCG_ASSERT(SystemRegistry::instance()->hasSystem<spdlog::logger>(),
                 "There must be a registered Logger before starting the app");
 
     _running          = true;
@@ -204,6 +217,17 @@ bool Application::onKeyPress(KeyPressedEvent* e)
     {
         _window->toggleFullscreen();
     }
+
+    if(e->getKeyCode() == ATCG_KEY_Y && atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
+    {
+        _revision_system->rollback();
+    }
+
+    if(e->getKeyCode() == ATCG_KEY_Z && atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
+    {
+        _revision_system->apply();
+    }
+
     return false;
 }
 }    // namespace atcg

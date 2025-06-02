@@ -1,5 +1,5 @@
 #version 430 core
-layout (location = 0) in vec3 aPosition;
+layout(location = 0) in vec3 aPosition;
 
 out vec3 frag_tex;
 
@@ -10,4 +10,4 @@ void main()
 {
     frag_tex = aPosition;
     gl_Position = (P * V * vec4(aPosition, 0.0)).xyww;
-} 
+}

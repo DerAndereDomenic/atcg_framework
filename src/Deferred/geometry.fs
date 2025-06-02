@@ -15,7 +15,7 @@ in vec2 frag_uv;
 in mat3 frag_tbn;
 
 uniform vec3 flat_color;
-uniform int entity_ID;
+uniform int entityID;
 
 // Material textures
 uniform sampler2D texture_diffuse;
@@ -39,5 +39,5 @@ void main()
     outNormal = vec4(normal, 1);
     outBaseColor = vec4(color_diffuse, 1);
     outSpecMet = vec4(metallic, roughness, 0, 1);
-    outEntityID = entity_ID;
+    outEntityID = entityID;
 }

@@ -17,3 +17,4 @@ Renderer
    Camera
    VRSystem
    Context
+   ContextManager

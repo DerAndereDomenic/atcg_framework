@@ -79,11 +79,20 @@ public:
         recalculateProjection();
     }
 
+    /**
+     * @brief Create a copy of the camera
+     *
+     * @return The deep copy
+     */
+    virtual atcg::ref_ptr<Camera> copy() const override;
+
 protected:
     virtual void recalculateView() override;
     virtual void recalculateProjection() override;
 
 private:
     float _left, _right, _bottom, _top;
+
+    glm::mat4 _projection;
 };
 }    // namespace atcg

@@ -3,13 +3,12 @@
 #include <pybind11/numpy.h>
 #include <pybind11/cast.h>
 #include <pybind11/stl.h>
-#include <Core/EntryPoint.h>
 #include <ATCG.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <torch/python.h>
 
-#include <imgui.h>
+// #include <imgui.h>
 
 #include "pyatcg.h"
 

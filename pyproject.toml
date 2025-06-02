@@ -1,7 +1,7 @@
 
 [project]
 name = "pyatcg"
-version = "0.1.1beta"
+version = "0.2.0beta"
 authors = [{ name = "Domenic Zingsheim", email = "zingsheim@cs.uni-bonn.de" }]
 description = ""
 readme = "README.md"
@@ -34,4 +34,4 @@ dev = [
 ]
 
 [tool.setuptools.packages.find]
-where = ["python"]
+where = ["atcg_lib/platform/python"]

@@ -6,9 +6,12 @@
 #include <Events/WindowEvent.h>
 #include <Events/KeyEvent.h>
 #include <Core/Platform.h>
+#include <Scene/RevisionStack.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
+#include <Renderer/ContextManager.h>
+#include <Scripting/ScriptEngine.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
@@ -22,9 +25,11 @@ int atcg_main();
 
 namespace atcg
 {
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2022
+
 /**
- * @brief Each exercise is an application
- *
+ * @brief A class to model an application
  */
 class Application
 {
@@ -132,6 +137,7 @@ private:
 
 private:
     bool _running = false;
+    atcg::ref_ptr<ContextManagerSystem> _context_manager;
     atcg::scope_ptr<Window> _window;
 #ifndef ATCG_HEADLESS
     ImGuiLayer* _imgui_layer;
@@ -142,6 +148,8 @@ private:
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
+    atcg::ref_ptr<ScriptEngine> _script_engine;
+    atcg::ref_ptr<RevisionSystem> _revision_system;
 
     friend int atcg::atcg_main();
     static Application* s_instance;

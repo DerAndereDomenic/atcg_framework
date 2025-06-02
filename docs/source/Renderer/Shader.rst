@@ -8,6 +8,9 @@ Shader
 .. doxygenclass:: atcg::Shader
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::ShaderCompiler
+   :members:
+   :undoc-members:
 .. doxygenclass:: atcg::ShaderManagerSystem
    :members:
    :undoc-members:

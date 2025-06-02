@@ -5,7 +5,6 @@
 
 #include <glad/glad.h>
 
-#include <GLFW/glfw3.h>
 #include <algorithm>
 
 #include <random>
@@ -23,7 +22,10 @@ public:
         atcg::Application::get()->enableDockSpace(true);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
+        atcg::CameraIntrinsics intrinsics;
+        intrinsics.setAspectRatio(aspect_ratio);
+        camera_controller = atcg::make_ref<atcg::FocusedController>(
+            atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
 
         std::vector<atcg::Vertex> host_points;
         for(int i = 0; i < grid_size; ++i)
@@ -117,7 +119,10 @@ public:
             geometry.graph->getVerticesBuffer()->unmapPointers();
         }
 
-        atcg::Renderer::draw(scene, camera_controller->getCamera());
+        atcg::Dictionary context;
+        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+        scene->draw(context);
+
 
         atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
     }
@@ -177,7 +182,7 @@ public:
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
 
-        atcg::drawGuizmo(hovered_entity, current_operation, camera_controller->getCamera());
+        atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());
     }
 #endif
 

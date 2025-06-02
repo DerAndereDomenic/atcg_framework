@@ -18,7 +18,10 @@ public:
         atcg::Renderer::setPointSize(2.0f);
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
+        atcg::CameraIntrinsics intrinsics;
+        intrinsics.setAspectRatio(aspect_ratio);
+        camera_controller = atcg::make_ref<atcg::FocusedController>(
+            atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
 
         depth_values.resize(search_radius * search_radius);
 
@@ -149,7 +152,10 @@ public:
         // Also reset camera
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
-        camera_controller  = atcg::make_ref<atcg::FocusedController>(aspect_ratio);
+        atcg::CameraIntrinsics intrinsics;
+        intrinsics.setAspectRatio(aspect_ratio);
+        camera_controller = atcg::make_ref<atcg::FocusedController>(
+            atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
 
         return true;
     }

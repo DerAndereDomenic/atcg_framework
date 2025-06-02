@@ -75,6 +75,11 @@ public:
     void finishFrame();
 
     /**
+     * @brief Stalls the CPU until all rendering requests are finished
+     */
+    void finish() const;
+
+    /**
      * @brief Set the clear color
      *
      * @param color The clear color
@@ -103,6 +108,52 @@ public:
     void setLineSize(const float& size);
 
     /**
+     * @brief Set the number of MSAA samples
+     *
+     * @param num_samples The number of MSAA samples
+     */
+    void setMSAA(uint32_t num_samples);
+
+    /**
+     * @brief Get the current number of MSAA samples
+     *
+     * @return The number of samples
+     */
+    uint32_t getMSAA() const;
+
+    /**
+     * @brief Toggle MSAA (on per default).
+     * This can be used to "disable" the internal msaa framebuffer. This can be useful if it is desired to directly draw
+     * into the final framebuffer of the renderer that can be accessed with getFramebuffer(). If MSAA is enabled, this
+     * framebuffer will be overwritten with the result of the msaa buffer by blitting. This will not be done if MSAA is
+     * toggled off.
+     *
+     * @param enable If MSAA should be enabled
+     */
+    void toggleMSAA(const bool enable = true);
+
+    /**
+     * @brief Toggle depth testing
+     *
+     * @param enable If it should be enabled or disabled
+     */
+    void toggleDepthTesting(bool enable = true);
+
+    /**
+     * @brief Toggle face culling
+     *
+     * @param enable If it should be enabled or disabled
+     */
+    void toggleCulling(bool enable = true);
+
+    /**
+     * @brief Set the cull face
+     *
+     * @param mode The culling mode
+     */
+    void setCullFace(CullMode mode);
+
+    /**
      * @brief Change the viewport of the renderer
      *
      * @param x The viewport x location
@@ -119,44 +170,24 @@ public:
     void setDefaultViewport();
 
     /**
-     * @brief Set a skybox
+     * @brief Get the current viewport dimensions
+     *
+     * @return A vec4 containing the viewport (x,y,width,height)
+     */
+    glm::vec4 getViewport() const;
+
+    /**
+     * @brief Preprocess a skybox
      *
      * @param skybox An equirectangular representation of the skybox
+     * @param skybox_cubemap The output skybox as a cubemap
+     * @param irradiance_cubemap The output irradiance cubemap
+     * @param prefiltered_cubemap The output prefiltered cubemap for ibl
      */
-    void setSkybox(const atcg::ref_ptr<Image>& skybox);
-
-    /**
-     * @brief Set a skybox
-     *
-     * @param skybox An equirectangular representation of the skybox
-     */
-    void setSkybox(const atcg::ref_ptr<Texture2D>& skybox);
-
-    /**
-     * @brief If a skybox is set.
-     *
-     * @return True if there is a skybox set.
-     */
-    bool hasSkybox() const;
-
-    /**
-     * @brief Remove the skybox
-     */
-    void removeSkybox();
-
-    /**
-     * @brief Return the equirectangular skybox texture
-     *
-     * @return A pointer to the texture (only is valid if hasSkybox() == true)
-     */
-    atcg::ref_ptr<Texture2D> getSkyboxTexture() const;
-
-    /**
-     * @brief Get the cube map of the skybox
-     *
-     * @return The skybox cubemap
-     */
-    atcg::ref_ptr<TextureCube> getSkyboxCubemap() const;
+    void processSkybox(const atcg::ref_ptr<Texture2D>& skybox,
+                       const atcg::ref_ptr<TextureCube>& skybox_cubemap,
+                       const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
+                       const atcg::ref_ptr<TextureCube>& prefiltered_cubemap);
 
     /**
      * @brief Change the size of the renderer
@@ -167,30 +198,42 @@ public:
     void resize(const uint32_t& width, const uint32_t& height);
 
     /**
-     * @brief Use the default screen fbo
+     * @brief Use the default screen fbo.
+     * Per default this will be a MSAA framebuffer. If MSAA is disabled using toggleMSAA, this function will bind the
+     * normal framebuffer that is used in the end to render to the screen.
      */
     void useScreenBuffer() const;
 
     /**
-     * @brief Render a mesh
+     * @brief Get the current frame counter
      *
-     * The default draw mode is "base". It applys slight shading based on the vertex normals.
-     * An optional color can be given to color the whole mesh with a constant color.
-     * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
-     *
-     * @param mesh The mesh
-     * @param camera The camera
-     * @param model The optional model matrix
-     * @param color An optional color
-     * @param shader The shader
-     * @param draw_mode The draw mode
+     * @return The index of the current frame
      */
-    void draw(const atcg::ref_ptr<Graph>& mesh,
-              const atcg::ref_ptr<Camera>& camera = {},
-              const glm::mat4& model              = glm::mat4(1),
-              const glm::vec3& color              = glm::vec3(1),
-              const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-              DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
+    uint32_t getFrameCounter() const;
+
+    /**
+     * @brief Generates a new texture ID that is not used yet.
+     * The renderer internally uses a fixed set of render IDs that should not be used by the client. This function
+     * guarantees that the given texture id is not yet taken (unless manual texture ids are created). If a texture id is
+     * no longer in use, it should be released with pushTextureID.
+     *
+     * @return The texture ID
+     */
+    uint32_t popTextureID();
+
+    /**
+     * @brief Free a texture ID.
+     * Should only be used on ids that were generated using popTextureID. Adding other IDs may break the system because
+     * some ids are reserved for the internals of the Renderer.
+     *
+     * @param id The id generated by popTextureID
+     */
+    void pushTextureID(const uint32_t id);
+
+    /**
+     * @brief Clear the currently bound framebuffer
+     */
+    void clear() const;
 
     /**
      * @brief Render a mesh
@@ -198,54 +241,30 @@ public:
      * The default draw mode is "base". It applys slight shading based on the vertex normals.
      * An optional color can be given to color the whole mesh with a constant color.
      * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
-     * This function also takes in a material
+     *
+     * For ATCG_DRAW_MDOE_SPHERE The custom shader has to implement an instance rendering scheme like the "base" shader.
+     * If no custom shader is to be used, stick to the "base" shader. For ATCG_DRAW_MODE_EDGE and
+     * ATCG_DRAW_MODE_CYLINDER, you can pass nullptr for the shader to use the built in "edge" and "edge_cylinder"
+     * shader. If a custom shader should be used, it has to implement the basic instancing the is used in the
+     * aforementioned shaders.
      *
      * @param mesh The mesh
+     * @param camera The camera
+     * @param model The optional model matrix
+     * @param color An optional color
+     * @param shader The shader
+     * @param draw_mode The draw mode
      * @param material The material
-     * @param camera The camera
-     * @param model The optional model matrix
-     * @param color An optional color
-     * @param shader The shader
-     * @param draw_mode The draw mode
+     * @param entity_id The entity id
      */
     void draw(const atcg::ref_ptr<Graph>& mesh,
-              const Material& material,
-              const atcg::ref_ptr<Camera>& camera = {},
-              const glm::mat4& model              = glm::mat4(1),
-              const glm::vec3& color              = glm::vec3(1),
-              const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-              DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE);
-
-    /**
-     * @brief Render an entity
-     *
-     * @param entity The entity to render
-     * @param camera The camera
-     */
-    void draw(Entity entity, const atcg::ref_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Render a scene
-     *
-     * @param scene The scene to render
-     * @param camera The camera
-     */
-    void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Draw a skybox
-     *
-     * @param camera The camera
-     */
-    void drawSkybox(const atcg::ref_ptr<Camera>& camera);
-
-    /**
-     * @brief Draw camera frustrums
-     *
-     * @param scene The scene
-     * @param camera The camera
-     */
-    void drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
+              const atcg::ref_ptr<Camera>& camera     = {},
+              const glm::mat4& model                  = glm::mat4(1),
+              const glm::vec3& color                  = glm::vec3(1),
+              const atcg::ref_ptr<Shader>& shader     = atcg::ShaderManager::getShader("base"),
+              DrawMode draw_mode                      = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+              const std::optional<Material>& material = {},
+              const uint32_t entity_id                = -1);
 
     /**
      * @brief Draw Circle
@@ -261,14 +280,6 @@ public:
                     const float& thickness,
                     const glm::vec3& color,
                     const atcg::ref_ptr<Camera>& camera = {});
-
-    /**
-     * @brief Draws a CAD grid with three resolutions (0.1, 1, 10)
-     *
-     * @param camera The camera
-     * @param transparency The transparency of the grid
-     */
-    void drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency = 0.6f);
 
     /**
      * @brief Display an image/texture in the main viewport. It is assumed that the image resolution is the same as the
@@ -290,11 +301,88 @@ public:
     void drawImage(const atcg::ref_ptr<Texture2D>& img);
 
     /**
-     * @brief Get the framebuffer object that is used by the renderer
+     * @brief Draw a skybox
+     *
+     * @param skybox The skybox cubemap
+     * @param camera The camera
+     */
+    void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera);
+
+    /**
+     * @brief Draw camera frustrums
+     *
+     * @param scene The scene
+     * @param camera The camera
+     */
+    void drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
+
+    /**
+     * @brief Draw light sources
+     *
+     * @param scene The scene
+     * @param camera The camera
+     */
+    void drawLights(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
+
+    /**
+     * @brief Draws a CAD grid with three resolutions (0.1, 1, 10)
+     *
+     * @param camera The camera
+     * @param transparency The transparency of the grid
+     */
+    void drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency = 0.6f);
+
+    /**
+     * @brief Get the framebuffer objects that is used by the renderer.
+     * Depending on if MSAA is enabled or not, this may be a MSAA framebuffer that can only be used for additional
+     * rendering tasks. Data reads can not be performed in this case.
+     *
+     * @return The framebuffer of last frame
+     */
+    atcg::ref_ptr<Framebuffer> getFramebuffer() const;
+
+    /**
+     * @brief Get the framebuffer objects that is used by the renderer.
+     * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
+     * the current frame data, refer to getFramebufferMSAA().
+     * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
+     * operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using
+     * toggleMSAA.
+     *
+     * @return The framebuffer of last frame
+     */
+    atcg::ref_ptr<Framebuffer> getResolvedFramebuffer() const;
+
+    /**
+     * @brief Get the framebuffer object that is used by the renderer.
+     * This is a multi sample framebuffer that can only be used for drawing operations. If you want to read rendered
+     * data, either use getFramebufefr() which contains the render of the last frame. If you need the current
+     * state of the framebuffer for this frame, you have to manually blit it.
      *
      * @return The fbo
      */
-    atcg::ref_ptr<Framebuffer> getFramebuffer() const;
+    atcg::ref_ptr<Framebuffer> getFramebufferMSAA() const;
+
+    /**
+     * @brief Get a buffer representing the color attachement of the screen frame buffer.
+     * @note This copies memory between GPU and CPU if device = CPU
+     *
+     * @param device The device
+     *
+     * @return The buffer containing the frame image.
+     */
+    torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU) const;
+
+    /**
+     * @brief Get the Z-buffer of the current frame as torch tensor
+     * @note This function always does a GPU-CPU memcopy because depth maps can not be mapped from OpenGL to CUDA. If
+     * device = GPU is specified, an additional memcpy from CPU to GPU is performed.
+     *
+     * @param device The device
+     *
+     * @return The depth buffer
+     */
+    torch::Tensor getZBuffer(const torch::DeviceType& device = atcg::GPU) const;
 
     /**
      * @brief Get the entity index that was rendered onto the given pixel
@@ -343,79 +431,6 @@ public:
      */
     torch::Tensor
     screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width);
-
-    /**
-     * @brief Get a buffer representing the color attachement of the screen frame buffer.
-     * @note This copies memory between GPU and CPU if device = CPU
-     *
-     * @param device The device
-     *
-     * @return The buffer containing the frame image.
-     */
-    torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU) const;
-
-    /**
-     * @brief Get the Z-buffer of the current frame as torch tensor
-     * @note This function always does a GPU-CPU memcopy because depth maps can not be mapped from OpenGL to CUDA. If
-     * device = GPU is specified, an additional memcpy from CPU to GPU is performed.
-     *
-     * @param device The device
-     *
-     * @return The depth buffer
-     */
-    torch::Tensor getZBuffer(const torch::DeviceType& device = atcg::GPU) const;
-
-    /**
-     * @brief Clear the currently bound framebuffer
-     */
-    void clear() const;
-
-    /**
-     * @brief Toggle depth testing
-     *
-     * @param enable If it should be enabled or disabled
-     */
-    void toggleDepthTesting(bool enable = true);
-
-    /**
-     * @brief Toggle face culling
-     *
-     * @param enable If it should be enabled or disabled
-     */
-    void toggleCulling(bool enable = true);
-
-    /**
-     * @brief Set the cull face
-     *
-     * @param mode The culling mode
-     */
-    void setCullFace(CullMode mode);
-
-    /**
-     * @brief Get the current frame counter
-     *
-     * @return The index of the current frame
-     */
-    uint32_t getFrameCounter() const;
-
-    /**
-     * @brief Generates a new texture ID that is not used yet.
-     * The renderer internally uses a fixed set of render IDs that should not be used by the client. This function
-     * guarantees that the given texture id is not yet taken (unless manual texture ids are created). If a texture id is
-     * no longer in use, it should be released with pushTextureID.
-     *
-     * @return The texture ID
-     */
-    uint32_t popTextureID();
-
-    /**
-     * @brief Free a texture ID.
-     * Should only be used on ids that were generated using popTextureID. Adding other IDs may break the system because
-     * some ids are reserved for the internals of the Renderer.
-     *
-     * @param id The id generated by popTextureID
-     */
-    void pushTextureID(const uint32_t id);
 
     RendererSystem();
 
@@ -466,6 +481,14 @@ ATCG_INLINE void finishFrame()
 }
 
 /**
+ * @brief Stalls the CPU until all rendering requests are finished
+ */
+ATCG_INLINE void finish()
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->finish();
+}
+
+/**
  * @brief Set the clear color
  *
  * @param color The clear color
@@ -506,6 +529,40 @@ ATCG_INLINE void setLineSize(const float& size)
 }
 
 /**
+ * @brief Set the number of MSAA samples
+ *
+ * @param num_samples The number of MSAA samples
+ */
+ATCG_INLINE void setMSAA(uint32_t num_samples)
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->setMSAA(num_samples);
+}
+
+/**
+ * @brief Get the current number of MSAA samples
+ *
+ * @return The number of samples
+ */
+ATCG_INLINE uint32_t getMSAA()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getMSAA();
+}
+
+/**
+ * @brief Toggle MSAA (on per default).
+ * This can be used to "disable" the internal msaa framebuffer. This can be useful if it is desired to directly draw
+ * into the final framebuffer of the renderer that can be accessed with getFramebuffer(). If MSAA is enabled, this
+ * framebuffer will be overwritten with the result of the msaa buffer by blitting. This will not be done if MSAA is
+ * toggled off.
+ *
+ * @param enable If MSAA should be enabled
+ */
+ATCG_INLINE void toggleMSAA(const bool enable = true)
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->toggleMSAA(enable);
+}
+
+/**
  * @brief Change the viewport of the renderer
  *
  * @param x The viewport x location
@@ -528,61 +585,32 @@ ATCG_INLINE void setDefaultViewport()
 }
 
 /**
- * @brief Set a skybox
+ * @brief Get the current viewport dimensions
+ *
+ * @return A vec4 containing the viewport (x,y,width,height)
+ */
+ATCG_INLINE glm::vec4 getViewport()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getViewport();
+}
+
+/**
+ * @brief Preprocess a skybox
  *
  * @param skybox An equirectangular representation of the skybox
+ * @param skybox_cubemap The output skybox as a cubemap
+ * @param irradiance_cubemap The output irradiance cubemap
+ * @param prefiltered_cubemap The output prefiltered cubemap for ibl
  */
-ATCG_INLINE void setSkybox(const atcg::ref_ptr<Image>& skybox)
+ATCG_INLINE void processSkybox(const atcg::ref_ptr<Texture2D>& skybox,
+                               const atcg::ref_ptr<TextureCube>& skybox_cubemap,
+                               const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
+                               const atcg::ref_ptr<TextureCube>& prefiltered_cubemap)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setSkybox(skybox);
-}
-
-/**
- * @brief Set a skybox
- *
- * @param skybox An equirectangular representation of the skybox
- */
-ATCG_INLINE void setSkybox(const atcg::ref_ptr<Texture2D>& skybox)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setSkybox(skybox);
-}
-
-/**
- * @brief If a skybox is set.
- *
- * @return True if there is a skybox set.
- */
-ATCG_INLINE bool hasSkybox()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->hasSkybox();
-}
-
-/**
- * @brief Remove the skybox
- */
-ATCG_INLINE void removeSkybox()
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->removeSkybox();
-}
-
-/**
- * @brief Return the equirectangular skybox texture
- *
- * @return A pointer to the texture (only is valid if hasSkybox() == true)
- */
-ATCG_INLINE atcg::ref_ptr<Texture2D> getSkyboxTexture()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getSkyboxTexture();
-}
-
-/**
- * @brief Get the cube map of the skybox
- *
- * @return The skybox cubemap
- */
-ATCG_INLINE atcg::ref_ptr<TextureCube> getSkyboxCubemap()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getSkyboxCubemap();
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->processSkybox(skybox,
+                                                                                  skybox_cubemap,
+                                                                                  irradiance_cubemap,
+                                                                                  prefiltered_cubemap);
 }
 
 /**
@@ -597,7 +625,9 @@ ATCG_INLINE void resize(const uint32_t& width, const uint32_t& height)
 }
 
 /**
- * @brief Use the default screen fbo
+ * @brief Use the default screen fbo.
+ * Per default this will be a MSAA framebuffer. If MSAA is disabled using toggleMSAA, this function will bind the
+ * normal framebuffer that is used in the end to render to the screen.
  */
 ATCG_INLINE void useScreenBuffer()
 {
@@ -611,83 +641,44 @@ ATCG_INLINE void useScreenBuffer()
  * An optional color can be given to color the whole mesh with a constant color.
  * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
  *
+ * For ATCG_DRAW_MDOE_SPHERE The custom shader has to implement an instance rendering scheme like the "base" shader.
+ * If no custom shader is to be used, stick to the "base" shader. For ATCG_DRAW_MODE_EDGE and
+ * ATCG_DRAW_MODE_CYLINDER, you can pass nullptr for the shader to use the built in "edge" and "edge_cylinder"
+ * shader. If a custom shader should be used, it has to implement the basic instancing the is used in the
+ * aforementioned shaders.
+ *
  * @param mesh The mesh
  * @param camera The camera
  * @param model The optional model matrix
  * @param color An optional color
  * @param shader The shader
  * @param draw_mode The draw mode
- */
-ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
-                      const atcg::ref_ptr<Camera>& camera = {},
-                      const glm::mat4& model              = glm::mat4(1),
-                      const glm::vec3& color              = glm::vec3(1),
-                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->draw(mesh, camera, model, color, shader, draw_mode);
-}
-
-/**
- * @brief Render a mesh
- *
- * The default draw mode is "base". It applys slight shading based on the vertex normals.
- * An optional color can be given to color the whole mesh with a constant color.
- * If given a custom shader, color is ignored except if the shader variable "flat_color" is used.
- * This function also takes in a material
- *
- * @param mesh The mesh
  * @param material The material
- * @param camera The camera
- * @param model The optional model matrix
- * @param color An optional color
- * @param shader The shader
- * @param draw_mode The draw mode
+ * @param entity_id The entity id
  */
 ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
-                      const Material& material,
-                      const atcg::ref_ptr<Camera>& camera = {},
-                      const glm::mat4& model              = glm::mat4(1),
-                      const glm::vec3& color              = glm::vec3(1),
-                      const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                      DrawMode draw_mode                  = DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+                      const atcg::ref_ptr<Camera>& camera     = {},
+                      const glm::mat4& model                  = glm::mat4(1),
+                      const glm::vec3& color                  = glm::vec3(1),
+                      const atcg::ref_ptr<Shader>& shader     = atcg::ShaderManager::getShader("base"),
+                      DrawMode draw_mode                      = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+                      const std::optional<Material>& material = {},
+                      const uint32_t entity_id                = -1)
 {
     SystemRegistry::instance()
         ->getSystem<RendererSystem>()
-        ->draw(mesh, material, camera, model, color, shader, draw_mode);
-}
-
-
-/**
- * @brief Render an entity
- *
- * @param entity The entity to render
- * @param camera The camera
- */
-ATCG_INLINE void draw(Entity entity, const atcg::ref_ptr<Camera>& camera = {})
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->draw(entity, camera);
-}
-
-/**
- * @brief Render a scene
- *
- * @param scene The scene to render
- * @param camera The camera
- */
-ATCG_INLINE void draw(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->draw(scene, camera);
+        ->draw(mesh, camera, model, color, shader, draw_mode, material, entity_id);
 }
 
 /**
  * @brief Draw a skybox
  *
+ * @param skybox The skybox cubemap
  * @param camera The camera
  */
-ATCG_INLINE void drawSkybox(const atcg::ref_ptr<Camera>& camera)
+ATCG_INLINE void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera)
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(camera);
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(skybox_cubemap, camera);
 }
 
 /**
@@ -699,6 +690,17 @@ ATCG_INLINE void drawSkybox(const atcg::ref_ptr<Camera>& camera)
 ATCG_INLINE void drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->drawCameras(scene, camera);
+}
+
+/**
+ * @brief Draw light sources
+ *
+ * @param scene The scene
+ * @param camera The camera
+ */
+ATCG_INLINE void drawLights(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawLights(scene, camera);
 }
 
 /**
@@ -756,13 +758,46 @@ ATCG_INLINE void drawImage(const atcg::ref_ptr<Texture2D>& img)
 }
 
 /**
- * @brief Get the framebuffer object that is used by the renderer
+ * @brief Get the framebuffer objects that is used by the renderer.
+ * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
+ * the current frame data, refer to getFramebufferMSAA().
+ * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
+ * operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using
+ * toggleMSAA.
  *
- * @return The fbo
+ * @return The framebuffer of last frame
  */
 ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebuffer()
 {
     return SystemRegistry::instance()->getSystem<RendererSystem>()->getFramebuffer();
+}
+
+/**
+ * @brief Get the framebuffer objects that is used by the renderer.
+ * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
+ * the current frame data, refer to getFramebufferMSAA().
+ * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
+ * operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using
+ * toggleMSAA.
+ *
+ * @return The framebuffer of last frame
+ */
+ATCG_INLINE atcg::ref_ptr<Framebuffer> getResolvedFramebuffer()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getResolvedFramebuffer();
+}
+
+/**
+ * @brief Get the framebuffer object that is used by the renderer.
+ * This is a multi sample framebuffer that can only be used for drawing operations. If you want to read rendered
+ * data, either use getFramebuffer() which contains the render of the last frame. If you need the current state of
+ * the framebuffer for this frame, you have to manually blit it.
+ *
+ * @return The fbo
+ */
+ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebufferMSAA()
+{
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getFramebufferMSAA();
 }
 
 /**

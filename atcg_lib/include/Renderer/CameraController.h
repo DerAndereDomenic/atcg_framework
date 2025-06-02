@@ -20,15 +20,6 @@ class CameraController
 {
 public:
     /**
-     * @brief Construct a new Camera Controller object
-     *
-     * @param aspect_ratio The aspect ratio of the camera
-     */
-    CameraController(const float& aspect_ratio,
-                     const glm::vec3& position = glm::vec3(0, 0, -1),
-                     const glm::vec3& look_at  = glm::vec3(0));
-
-    /**
      * @brief Create a camera controller with a given camera.
      *
      * @param camera The camera
@@ -39,8 +30,10 @@ public:
      * @brief Gets called every frame
      *
      * @param delta_time Time since last frame
+     *
+     * @return If the camera was moved
      */
-    virtual void onUpdate(float delta_time) = 0;
+    virtual bool onUpdate(float delta_time) = 0;
 
     /**
      * @brief Handles events
@@ -71,13 +64,6 @@ class FocusedController : public CameraController
 {
 public:
     /**
-     * @brief Construct a new Focus Camera object
-     *
-     * @param aspect_ratio The aspect ratio of the camera
-     */
-    FocusedController(const float& aspect_ratio);
-
-    /**
      * @brief Construct a new First Person Camera object
      *
      * @param camera The camera
@@ -88,15 +74,17 @@ public:
      * @brief Gets called every frame
      *
      * @param delta_time Time since last frame
+     *
+     * @return If the camera was moved
      */
-    virtual void onUpdate(float delta_time);
+    virtual bool onUpdate(float delta_time) override;
 
     /**
      * @brief Handles events
      *
      * @param e The event
      */
-    virtual void onEvent(Event* e);
+    virtual void onEvent(Event* e) override;
 
 private:
     bool onMouseZoom(MouseScrolledEvent* event);
@@ -115,16 +103,6 @@ public:
     /**
      * @brief Construct a new First Person Camera object
      *
-     * @param aspect_ratio The aspect ratio of the camera
-     */
-    FirstPersonController(const float& aspect_ratio,
-                          const glm::vec3& position       = glm::vec3(0),
-                          const glm::vec3& view_direction = glm::vec3(1, 0, 0),
-                          const float& speed              = 1.0f);
-
-    /**
-     * @brief Construct a new First Person Camera object
-     *
      * @param camera The camera
      */
     FirstPersonController(const atcg::ref_ptr<PerspectiveCamera>& camera);
@@ -133,15 +111,17 @@ public:
      * @brief Gets called every frame
      *
      * @param delta_time Time since last frame
+     *
+     * @return If the camera was moved
      */
-    virtual void onUpdate(float delta_time);
+    virtual bool onUpdate(float delta_time) override;
 
     /**
      * @brief Handles events
      *
      * @param e The event
      */
-    virtual void onEvent(Event* e);
+    virtual void onEvent(Event* e) override;
 
 private:
     bool onWindowResize(WindowResizeEvent* event);
@@ -150,7 +130,7 @@ private:
     bool onMouseButtonPressed(MouseButtonPressedEvent* event);
     bool onMouseButtonReleased(MouseButtonReleasedEvent* event);
 
-    float _speed;
+    float _speed              = 1.0f;
     float _velocity_forward   = 0.0f;
     float _velocity_right     = 0.0f;
     float _velocity_up        = 0.0f;
@@ -176,30 +156,25 @@ public:
     /**
      * @brief Construct a new First Person Camera object
      *
-     * @param aspect_ratio The aspect ratio of the camera
+     * @param camera_left The camera of the left eye
+     * @param camera_right The camera of the right eye
      */
-    VRController(const float& aspect_ratio, const float& speed = 1.0f);
-
-    /**
-     * @brief Construct a new First Person Camera object
-     *
-     * @param camera The camera
-     */
-    VRController(const atcg::ref_ptr<PerspectiveCamera>& camera);
+    VRController(const atcg::ref_ptr<PerspectiveCamera>& camera_left,
+                 const atcg::ref_ptr<PerspectiveCamera>& camera_right);
 
     /**
      * @brief Gets called every frame
      *
      * @param delta_time Time since last frame
      */
-    virtual void onUpdate(float delta_time);
+    virtual bool onUpdate(float delta_time) override;
 
     /**
      * @brief Handles events
      *
      * @param e The event
      */
-    virtual void onEvent(Event* e);
+    virtual void onEvent(Event* e) override;
 
     /**
      * @brief Get the camera of the left eye
@@ -251,7 +226,7 @@ private:
     bool onVRButtonPressed(VRButtonPressedEvent* event);
     bool onVRButtonReleased(VRButtonReleasedEvent* event);
 
-    float _speed;
+    float _speed              = 1.0f;
     float _velocity_forward   = 0.0f;
     float _velocity_right     = 0.0f;
     float _velocity_threshold = 0.3f;

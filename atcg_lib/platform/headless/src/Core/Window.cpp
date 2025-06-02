@@ -2,6 +2,7 @@
 #include <Core/Assert.h>
 
 #include <Renderer/Context.h>
+#include <Renderer/ContextManager.h>
 #include <Renderer/ContextData.h>
 
 namespace atcg
@@ -9,9 +10,7 @@ namespace atcg
 
 Window::Window(const WindowProps& props)
 {
-    _context = atcg::make_ref<Context>();
-
-    _context->create();
+    _context = ContextManager::createContext();
     _context->initGraphicsAPI();
 
     EGLint pbufferAttribs[] = {EGL_WIDTH,
@@ -35,7 +34,7 @@ Window::Window(const WindowProps& props)
 
 Window::~Window()
 {
-    _context->destroy();
+    ContextManager::destroyContext(_context);
 }
 
 void Window::onUpdate()
@@ -52,7 +51,7 @@ void Window::setEventCallback(const EventCallbackFn& callback)
 
 void* Window::getNativeWindow() const
 {
-    return _context->getContextHandle();
+    return (void*)_context->getContextHandle();
 }
 
 void Window::resize(const uint32_t& _width, const uint32_t& _height)

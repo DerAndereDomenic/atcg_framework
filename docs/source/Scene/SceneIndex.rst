@@ -11,3 +11,5 @@ Scene
    Components
    SceneHierarchyPanel
    Serializer
+   RevisionSystem
+   ComponentRenderer

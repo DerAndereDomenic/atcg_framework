@@ -34,7 +34,12 @@ From the main folder of this project (aka the folder where this file is located)
 cmake --build build --parallel --config <Debug|Release>
 ```
 
-to compile the project.
+to compile the project. The project uses your pytorch installation to link against libtorch. On Windows, you have to 
+include
+```
+<PATH_TO_PYTHON>/Lib/site-packages/torch/lib
+```
+into your `PATH` variables because otherwise it will not find the necessary dlls.
 
 ### Building with CUDA Support
 
@@ -47,11 +52,45 @@ If CUDA is not used, you should also use a pytorch version without CUDA.
 
 ### Build python bindings
 
-The project come with python bindings which can be install via
+The project comes with python bindings which can be install via
 ```
 pip install -e .
 ```
-it requires [charonload](https://github.com/vc-bonn/charonload) as additional dependency. Per default, it is built with CUDA backend.
+it requires [charonload](https://github.com/vc-bonn/charonload) as additional dependency. The python build can be configured using environment variables:
+
+```python
+os.environ["ATCG_CUDA_BACKEND"] = "Off"
+import pyatcg
+```
+turns off CUDA support (default = "On").
+
+```python
+os.environ["ATCG_HEADLESS"] = "On"
+import pyatcg
+```
+builds in headless mode (default = "Off", only with CUDA enabled and on Linux systems).
+
+```python
+os.environ["ATCG_BUILD_TYPE"] = "Release"
+import pyatcg
+```
+configures the build type (default = "RelWithDebInfo").
+
+```python
+os.environ["ATCG_STUBS_DIR"] = "typings"
+import pyatcg
+```
+set the sub directory (default = Root directory of this file).
+
+```python
+os.environ["ATCG_VERBOSE"] = True
+import pyatcg
+```
+builds in verbose mode (default = False).
+
+### Python Scripting
+
+When you compile the project as a standard C++ project, you can use Python as a scripting API. For this, we refer to an example in `src/PBR`.
 
 ### Building the documentation
 
@@ -75,7 +114,7 @@ Run the `atcg_lib_test` target to run the tests.
 
 ## Project Structure
 
-The code base is based on the [Hazel Game Engine](https://github.com/TheCherno/Hazel). The framework also includes several dependencies that are used to implement different computer graphics algorithms.
+This framework includes several dependencies that are used to implement different computer graphics algorithms.
 The project consists of the following components:
 
 -**atcg_lib**: This library handles the rendering and event handling of the application. It defines an entry point for each application that uses this library. Each executable uses this entry point to build its application.
@@ -100,15 +139,13 @@ You can edit shaders while the program is running!
 
 -**external**: Contains the exernal libraries used in this framework. There is no need to install any external libraries (except for OpenGL/Driver and torch) as all dependencies come with this repository.
 
--**python**: Contains the python bindings.
-
 -**tests**: Contains the tests.
 
 -**docs**: Contains the documentation.
 
 ## Usage
 
-All exercises have the same structure, that is rougly outlined here. More examples can be found in `src`.
+All examples have the same structure, that is roughly outlined here. More examples can be found in `src`.
 
 ```c++
 #include <Core/EntryPoint.h>
@@ -158,7 +195,7 @@ public:
         //Any physics based updates and rendering is handled here
 
         //...
-        atcg::Renderer::draw(scene, camera_controller->getCamera());
+        scene->draw(camera_controller->getCamera());
     }
 
     //All draw calls to ImGui to create a user interface
@@ -234,6 +271,22 @@ atcg::Application* atcg::createApplication()
 }
 ```
 
+To add your own executables, either create a folder in `src` similar to the other projects or add the framework into your CMake project like this:
+```cmake
+cmake_minimum_required(VERSION 3.27)
+
+project(MyProject LANGUAGES C CXX VERSION 1.0)
+
+# Set output dir to bin because atcg_framework will copy its dlls automatically here. Otherwise, do so manually
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+
+set(ATCG_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(atcg_framework)
+
+# target_name is the output variable
+ATCG_add_executable(MyApp target_name source.cpp)
+```
+
 ### Custom shared pointers
 
 The framework internally uses a custom shared pointer implementation that is very similar to the STL shared_ptr architecture (although not all std::shared_ptr features are implemented):
@@ -298,7 +351,14 @@ There is also a CUDA API for textures. However, because textures work differentl
 - [stbimage](https://github.com/nothings/stb) - For image I/O.
 - [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader) - For loading obj meshes.
 - [json](https://github.com/nlohmann/json) - For serializing JSON files.
-- [charonload_cpp](https://github.com/nlohmann/json) - For torch integration. This needs to be installed via pip if you want to use python bindings.
+- [charonload_cpp](https://github.com/vc-bonn/charonload) - For torch integration. This needs to be installed via pip if you want to use python bindings.
 - [openvr](https://github.com/ValveSoftware/openvr) - For VR support.
 - [googletest](https://github.com/google/googletest) - For testing.
 - [sfml](https://github.com/SFML/SFML) - For networking. (*Note: Might require additional dependencies on Linux, see SFML repositoriy.*) 
+
+## License
+
+This project is licensed under the MIT License.
+
+Portions of this project are based on the Hazel Engine (https://github.com/TheCherno/Hazel),
+which is made available under the Apache License 2.0. See [LICENSE](LICENSE) for more details.

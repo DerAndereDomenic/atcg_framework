@@ -5,8 +5,12 @@
 #include <Core/Path.h>
 
 #include <Renderer/Context.h>
+#include <Renderer/ContextManager.h>
 
 #include <stb_image.h>
+
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2023
 
 namespace atcg
 {
@@ -22,8 +26,6 @@ static void GLFWErrorCallback(int error, const char* description)
 
 Window::Window(const WindowProps& props)
 {
-    _context = atcg::make_ref<Context>();
-
     // Initialize glfw
     if(!detail::s_glfw_initialized)
     {
@@ -34,14 +36,14 @@ Window::Window(const WindowProps& props)
         glfwSetErrorCallback(detail::GLFWErrorCallback);
     }
 
-    _context->create();
+    _context = atcg::ContextManager::createContext();
     _context->initGraphicsAPI();
 
     _data.width      = props.width;
     _data.height     = props.height;
     _data.fullscreen = false;
 
-    void* window = _context->getContextHandle();
+    void* window = (void*)_context->getContextHandle();
     glfwSetWindowTitle((GLFWwindow*)window, props.title.c_str());
     glfwSetWindowSize((GLFWwindow*)window, props.width, props.height);
 
@@ -178,7 +180,7 @@ Window::Window(const WindowProps& props)
     std::string icon_path = props.icon_path;
     if(props.icon_path == "")
     {
-        icon_path = "./docs/_static/icon.png";
+        icon_path = (atcg::resource_directory() / "../docs/_static/icon.png").string();
     }
 
     int width, height, channels;
@@ -207,7 +209,7 @@ Window::Window(const WindowProps& props)
 
 Window::~Window()
 {
-    _context->destroy();
+    ContextManager::destroyContext(_context);
     if(detail::s_glfw_initialized)
     {
         glfwTerminate();
@@ -230,7 +232,7 @@ void Window::setEventCallback(const EventCallbackFn& callback)
 
 void* Window::getNativeWindow() const
 {
-    return _context->getContextHandle();
+    return (void*)_context->getContextHandle();
 }
 
 void Window::resize(const uint32_t& _width, const uint32_t& _height)

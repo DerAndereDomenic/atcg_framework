@@ -301,4 +301,28 @@ void IndexBuffer::setData(const uint32_t* data, size_t count)
     glBufferSubData(GL_ARRAY_BUFFER, 0, count * sizeof(uint32_t), data);
 }
 
+
+PixelUnpackBuffer::PixelUnpackBuffer() : VertexBuffer() {}
+
+PixelUnpackBuffer::PixelUnpackBuffer(size_t size) : VertexBuffer(size) {}
+
+PixelUnpackBuffer::PixelUnpackBuffer(const void* data, size_t size) : VertexBuffer(data, size) {}
+
+PixelUnpackBuffer::~PixelUnpackBuffer()
+{
+    unbind();
+}
+
+void PixelUnpackBuffer::use() const
+{
+    unmapPointers();
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, _ID);
+}
+
+void PixelUnpackBuffer::unbind() const
+{
+    unmapPointers();
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+}
+
 }    // namespace atcg

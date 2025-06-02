@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2023
+
 namespace atcg
 {
 /**
@@ -191,7 +194,7 @@ public:
     /**
      * @brief Destroy the Vertex Buffer object
      */
-    ~VertexBuffer();
+    virtual ~VertexBuffer();
 
     /**
      * @brief Use this vbo
@@ -431,5 +434,51 @@ public:
     ATCG_INLINE size_t getCount() const { return size() / sizeof(uint32_t); }
 
 private:
+};
+
+/**
+ * @brief A class to model a pixel unpack buffer
+ */
+class PixelUnpackBuffer : public VertexBuffer
+{
+public:
+    /**
+     * @brief Construct a new Pixel Unpack Buffer object
+     */
+    PixelUnpackBuffer();
+
+    /**
+     * @brief Construct a new empty Pixel Unpack Buffer object
+     *
+     * @param size The size of bytes allocated on the GPU
+     */
+    PixelUnpackBuffer(size_t size);
+
+    /**
+     * @brief Construct a new Pixel Unpack Buffer object
+     *
+     * @param data The data to fill the buffer with
+     * @param size The size in bytes
+     */
+    PixelUnpackBuffer(const void* data, size_t size);
+
+    /**
+     * @brief Destroy the Pixel Unpack Buffer object
+     */
+    ~PixelUnpackBuffer();
+
+    /**
+     * @brief Use this vbo
+     *
+     * @note Invalidades the device pointer obtained by getDevicePointer()
+     */
+    void use() const;
+
+    /**
+     * @brief Unbindes the pbo
+     */
+    void unbind() const;
+
+protected:
 };
 }    // namespace atcg

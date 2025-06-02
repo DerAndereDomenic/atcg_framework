@@ -27,8 +27,11 @@
 #include <Events/VREvent.h>
 
 //-------- Renderer ------
+#include <Renderer/Context.h>
+#include <Renderer/ContextManager.h>
 #include <Renderer/Renderer.h>
 #include <Renderer/Shader.h>
+#include <Renderer/ShaderCompiler.h>
 #include <Renderer/ShaderManager.h>
 #include <Renderer/PerspectiveCamera.h>
 #include <Renderer/OrthographicCamera.h>
@@ -40,6 +43,11 @@
 #include <Renderer/Material.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/RenderGraph.h>
+
+//-------- Render Passes ------
+#include <Renderer/RenderPasses/SkyboxPass.h>
+#include <Renderer/RenderPasses/ShadowPass.h>
+#include <Renderer/RenderPasses/ForwardPass.h>
 
 //-------- OpenMesh -------
 // #include <OpenMesh/OpenMesh.h>
@@ -54,6 +62,9 @@
 #include <DataStructure/Image.h>
 #include <DataStructure/Worker.h>
 #include <DataStructure/WorkerPool.h>
+#include <DataStructure/PerformancePanel.h>
+#include <DataStructure/Dictionary.h>
+#include <DataStructure/Skybox.h>
 #ifdef ATCG_CUDA_BACKEND
     #include <DataStructure/JPEGDecoder.h>
     #include <DataStructure/JPEGEncoder.h>
@@ -75,6 +86,7 @@
 #ifndef ATCG_HEADLESS
     #include <imgui.h>
     #include <ImGui/Guizmo.h>
+    #include <implot.h>
 #endif
 
 //-------- Scene -----------
@@ -85,6 +97,12 @@
 #include <Scene/SceneHierarchyPanel.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/RevisionStack.h>
+#include <Scene/ComponentRenderer.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>
+
+//-------- Scripting ------------
+#include <Scripting/ScriptEngine.h>
+#include <Scripting/Script.h>
