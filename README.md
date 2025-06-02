@@ -351,7 +351,7 @@ There is also a CUDA API for textures. However, because textures work differentl
 - [stbimage](https://github.com/nothings/stb) - For image I/O.
 - [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader) - For loading obj meshes.
 - [json](https://github.com/nlohmann/json) - For serializing JSON files.
-- [charonload_cpp](https://github.com/nlohmann/json) - For torch integration. This needs to be installed via pip if you want to use python bindings.
+- [charonload_cpp](https://github.com/vc-bonn/charonload) - For torch integration. This needs to be installed via pip if you want to use python bindings.
 - [openvr](https://github.com/ValveSoftware/openvr) - For VR support.
 - [googletest](https://github.com/google/googletest) - For testing.
 - [sfml](https://github.com/SFML/SFML) - For networking. (*Note: Might require additional dependencies on Linux, see SFML repositoriy.*) 

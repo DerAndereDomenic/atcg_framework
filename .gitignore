@@ -9,3 +9,4 @@ __pycache__
 typings
 
 docs/processed_README.md
+docs/_static/LICENSE
