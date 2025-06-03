@@ -1216,7 +1216,6 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    atcg::ref_ptr<PerspectiveCamera> cam         = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
     atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
     screenshot_buffer->attachColor();
     screenshot_buffer->attachDepth();
@@ -1226,7 +1225,7 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
     clear();
     setViewport(0, 0, width, height);
     atcg::Dictionary context;
-    context.setValue("camera", cam);
+    context.setValue("camera", camera);
     scene->draw(context);
     useScreenBuffer();
     setDefaultViewport();
@@ -1243,8 +1242,7 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    atcg::ref_ptr<PerspectiveCamera> cam         = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
-    float height                                 = (float)width / cam->getAspectRatio();
+    float height                                 = (float)width / camera->getIntrinsics().aspectRatio();
     atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
     screenshot_buffer->attachColor();
     screenshot_buffer->attachDepth();
@@ -1254,7 +1252,7 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     clear();
     setViewport(0, 0, width, height);
     atcg::Dictionary context;
-    context.setValue("camera", cam);
+    context.setValue("camera", camera);
     scene->draw(context);
     useScreenBuffer();
     setDefaultViewport();
