@@ -1,0 +1,700 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Core" href="source/Core/CoreIndex.html" />
+
+    <link rel="shortcut icon" href="_static/icon.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>ATCG Framework documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="#"><div class="brand">ATCG Framework  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="#">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ATCG Framework  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="source/Core/CoreIndex.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="source/Core/API.html">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Core/Application.html">Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Core/Input.html">Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Core/Layer.html">Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Core/Memory.html">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Core/Window.html">Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Core/UUID.html">UUID</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="source/Events/EventIndex.html">Events</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Events</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="source/Events/Event.html">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Events/KeyEvents.html">KeyEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Events/MouseEvents.html">MoueEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Events/WindowEvents.html">WindowEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Events/FileEvents.html">FileEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Events/VREvents.html">VREvents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="source/DataStructure/DataStructureIndex.html">DataStructure</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of DataStructure</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/Image.html">Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/Timer.html">Timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/TensorOptions.html">TensorOptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/Worker.html">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/Statistics.html">Statistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/Grid.html">Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/BufferView.html">BufferView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/PerformancePanel.html">PerformancePanel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/Dictionary.html">Dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/DataStructure/Skybox.html">Skybox</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="source/Renderer/RendererIndex.html">Renderer</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Renderer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/Renderer.html">Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/Shader.html">Shader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/Material.html">Material</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/Texture.html">Texture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/Framebuffer.html">Framebuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/RenderGraph.html">Render Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/RenderGraph.html#render-passes">Render Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/Buffer.html">Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/VertexArray.html">VertexArray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/Camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/VRSystem.html">VRSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/Context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Renderer/ContextManager.html">Context</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="source/Scene/SceneIndex.html">Scene</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Scene</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="source/Scene/Scene.html">Scene</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Scene/Entity.html">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Scene/Components.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Scene/SceneHierarchyPanel.html">Scene Hierarchy Panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Scene/Serializer.html">Serializer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Scene/RevisionSystem.html">RevisionSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Scene/ComponentRenderer.html">ComponentRenderer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="source/Scripting/ScriptingIndex.html">Scripting</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Scripting</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="source/Scripting/ScriptEngine.html">ScriptEngine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Scripting/Script.html">Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="source/Math/MathIndex.html">Math</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Math</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="source/Math/Color.html">Color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Math/Constants.html">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Math/MeshManipulation.html">Mesh Manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Math/Tracing.html">Tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="source/ImGui/ImGui.html">ImGui</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/IO/IO.html">IO</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="source/Network/NetworkIndex.html">Network</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Network</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="source/Network/TCPServer.html">TCPServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Network/TCPClient.html">TCPClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source/Network/NetworkUtils.html">Network Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="source/OpenMesh/OpenMesh.html">OpenMesh</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="_sources/index.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <div class="toctree-wrapper compound">
+</div>
+<section id="atcg-framework-documentation">
+<h1>ATCG Framework Documentation<a class="headerlink" href="#atcg-framework-documentation" title="Link to this heading">¶</a></h1>
+<p>This repository contains a C++ 3D rendering framework for research applications and scientific computation/visualization. It combines the OpenGL rendering pipeline with high performance CUDA integration using torch.</p>
+<section id="building">
+<h2>Building<a class="headerlink" href="#building" title="Link to this heading">¶</a></h2>
+<p>This framework is primarily tested on Windows using MSVC. For Linux, gcc is recommended. Additional dependencies needed for building the project are <a class="reference external" href="https://cmake.org">CMake&gt;=3.27</a>, <a class="reference external" href="https://www.python.org">Python&gt;=3.9</a>, <a class="reference external" href="https://developer.nvidia.com/cuda-toolkit">CUDA&gt;=12.1</a>, and <a class="reference external" href="https://pytorch.org">pytorch2.4.0</a> with the same CUDA version as your global CUDA installation.</p>
+<p>After installing the dependencies, clone the repository recursively (to include submodules)</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="o">--</span><span class="n">recursive</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">grossglockner</span><span class="o">.</span><span class="n">cs</span><span class="o">.</span><span class="n">uni</span><span class="o">-</span><span class="n">bonn</span><span class="o">.</span><span class="n">de</span><span class="o">/</span><span class="n">zingsheim</span><span class="o">/</span><span class="n">atcg_framework</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p>If you already cloned the repository without recursive cloning, run</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">submodule</span> <span class="n">update</span> <span class="o">--</span><span class="n">init</span> <span class="o">--</span><span class="n">recursive</span>
+</pre></div>
+</div>
+<p>Navigate to the project folder and create and run the following command to setup the project.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">.</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span>
+</pre></div>
+</div>
+<p>From the main folder of this project (aka the folder where this file is located), run</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">--</span><span class="n">build</span> <span class="n">build</span> <span class="o">--</span><span class="n">parallel</span> <span class="o">--</span><span class="n">config</span> <span class="o">&lt;</span><span class="n">Debug</span><span class="o">|</span><span class="n">Release</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>to compile the project. The project uses your pytorch installation to link against libtorch. On Windows, you have to
+include</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">PATH_TO_PYTHON</span><span class="o">&gt;/</span><span class="n">Lib</span><span class="o">/</span><span class="n">site</span><span class="o">-</span><span class="n">packages</span><span class="o">/</span><span class="n">torch</span><span class="o">/</span><span class="n">lib</span>
+</pre></div>
+</div>
+<p>into your <code class="docutils literal notranslate"><span class="pre">PATH</span></code> variables because otherwise it will not find the necessary dlls.</p>
+<section id="building-with-cuda-support">
+<h3>Building with CUDA Support<a class="headerlink" href="#building-with-cuda-support" title="Link to this heading">¶</a></h3>
+<p>Per default the project is built with CUDA support enabled. You can disable this behavior by disabling the ATCG_CUDA_BACKEND option</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">.</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span> <span class="o">-</span><span class="n">DATCG_CUDA_BACKEND</span><span class="o">=</span><span class="n">OFF</span>
+</pre></div>
+</div>
+<p>If CUDA is not used, you should also use a pytorch version without CUDA.</p>
+</section>
+<section id="build-python-bindings">
+<h3>Build python bindings<a class="headerlink" href="#build-python-bindings" title="Link to this heading">¶</a></h3>
+<p>The project comes with python bindings which can be install via</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
+</pre></div>
+</div>
+<p>it requires <a class="reference external" href="https://github.com/vc-bonn/charonload">charonload</a> as additional dependency. The python build can be configured using environment variables:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ATCG_CUDA_BACKEND&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Off&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyatcg</span>
+</pre></div>
+</div>
+<p>turns off CUDA support (default = “On”).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ATCG_HEADLESS&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;On&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyatcg</span>
+</pre></div>
+</div>
+<p>builds in headless mode (default = “Off”, only with CUDA enabled and on Linux systems).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ATCG_BUILD_TYPE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Release&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyatcg</span>
+</pre></div>
+</div>
+<p>configures the build type (default = “RelWithDebInfo”).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ATCG_STUBS_DIR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;typings&quot;</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyatcg</span>
+</pre></div>
+</div>
+<p>set the sub directory (default = Root directory of this file).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;ATCG_VERBOSE&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyatcg</span>
+</pre></div>
+</div>
+<p>builds in verbose mode (default = False).</p>
+</section>
+<section id="python-scripting">
+<h3>Python Scripting<a class="headerlink" href="#python-scripting" title="Link to this heading">¶</a></h3>
+<p>When you compile the project as a standard C++ project, you can use Python as a scripting API. For this, we refer to an example in <code class="docutils literal notranslate"><span class="pre">src/PBR</span></code>.</p>
+</section>
+<section id="building-the-documentation">
+<h3>Building the documentation<a class="headerlink" href="#building-the-documentation" title="Link to this heading">¶</a></h3>
+<p>The documentation can be built using <a class="reference external" href="https://www.doxygen.nl/index.html">doxygen</a> and <a class="reference external" href="https://www.sphinx-doc.org/en/master/">sphinx</a>. Install the following dependencies using pip</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">sphinx</span> <span class="n">furo</span> <span class="n">breathe</span> <span class="n">myst_parser</span>
+</pre></div>
+</div>
+<p>and set the <code class="docutils literal notranslate"><span class="pre">ATCG_BUILD_DOCS</span></code> option to <code class="docutils literal notranslate"><span class="pre">ON</span></code> when generating the CMake project.</p>
+</section>
+<section id="building-tests-experimental">
+<h3>Building tests (experimental)<a class="headerlink" href="#building-tests-experimental" title="Link to this heading">¶</a></h3>
+<p>To build the unit tests, set the <code class="docutils literal notranslate"><span class="pre">ATCG_BUILD_TESTS</span></code> option to true.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cmake</span> <span class="o">.</span> <span class="o">-</span><span class="n">B</span> <span class="n">build</span> <span class="o">-</span><span class="n">DATCG_BUILD_TESTS</span><span class="o">=</span><span class="n">On</span>
+</pre></div>
+</div>
+<p>Run the <code class="docutils literal notranslate"><span class="pre">atcg_lib_test</span></code> target to run the tests.</p>
+</section>
+</section>
+<section id="project-structure">
+<h2>Project Structure<a class="headerlink" href="#project-structure" title="Link to this heading">¶</a></h2>
+<p>This framework includes several dependencies that are used to implement different computer graphics algorithms.
+The project consists of the following components:</p>
+<p>-<strong>atcg_lib</strong>: This library handles the rendering and event handling of the application. It defines an entry point for each application that uses this library. Each executable uses this entry point to build its application.</p>
+<p>-<strong>src</strong>: Contains the targets for each executable. See <em>Usage</em> for more details on its structure.</p>
+<p>-<strong>shader</strong>: Contains the opengl shaders used for rendering. You can add custom shaders by providing a vertex (<code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.vs</span></code>), fragment (<code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.fs</span></code>), and (optionally) a geometry (<code class="docutils literal notranslate"><span class="pre">&lt;name&gt;.gs</span></code>) shader. To use them in a project you have to add it via</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">atcg</span><span class="o">::</span><span class="n">ShaderManager</span><span class="o">::</span><span class="n">addShader</span><span class="p">(</span><span class="s">&quot;&lt;name&gt;&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>and use it by</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">atcg</span><span class="o">::</span><span class="n">ShaderManager</span><span class="o">::</span><span class="n">getShader</span><span class="p">(</span><span class="s">&quot;&lt;name&gt;&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>You can edit shaders while the program is running!</p>
+<p>-<strong>res</strong>: Contains resources (meshes and textures)</p>
+<p>-<strong>external</strong>: Contains the exernal libraries used in this framework. There is no need to install any external libraries (except for OpenGL/Driver and torch) as all dependencies come with this repository.</p>
+<p>-<strong>tests</strong>: Contains the tests.</p>
+<p>-<strong>docs</strong>: Contains the documentation.</p>
+</section>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
+<p>All examples have the same structure, that is roughly outlined here. More examples can be found in <code class="docutils literal notranslate"><span class="pre">src</span></code>.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;Core/EntryPoint.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;ATCG.h&gt;</span>
+
+<span class="c1">//This class holds the methods that are called by the framework internally</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MyLayer</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">atcg</span><span class="o">::</span><span class="n">Layer</span>
+<span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+
+<span class="w">    </span><span class="n">MyLayer</span><span class="p">(</span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&amp;</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="n">atcg</span><span class="o">::</span><span class="n">Layer</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+
+<span class="w">    </span><span class="c1">// This is run at the start of the program</span>
+<span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">onAttach</span><span class="p">()</span><span class="w"> </span><span class="k">override</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">//Initialize members, etc.</span>
+<span class="w">        </span><span class="c1">// ...</span>
+
+<span class="w">        </span><span class="c1">// Load meshes</span>
+<span class="w">        </span><span class="n">mesh</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atcg</span><span class="o">::</span><span class="n">IO</span><span class="o">::</span><span class="n">read_mesh</span><span class="p">(</span><span class="s">&quot;path/to/mesh&quot;</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// Load images and create textures</span>
+<span class="w">        </span><span class="n">diffuse_image</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atcg</span><span class="o">::</span><span class="n">IO</span><span class="o">::</span><span class="n">imread</span><span class="p">(</span><span class="s">&quot;path/to/image&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="n">diffuse_texture</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atcg</span><span class="o">::</span><span class="n">Texture2D</span><span class="o">::</span><span class="n">create</span><span class="p">(</span><span class="n">diffuse_image</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// Create a scene using the custom shared pointer atcg::ref_ptr</span>
+<span class="w">        </span><span class="n">scene</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atcg</span><span class="o">::</span><span class="n">make_ref</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">Scene</span><span class="o">&gt;</span><span class="p">();</span>
+
+<span class="w">        </span><span class="c1">// Create an entity inside the scene</span>
+<span class="w">        </span><span class="n">atcg</span><span class="o">::</span><span class="n">Entity</span><span class="w"> </span><span class="n">entity</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">scene</span><span class="o">-&gt;</span><span class="n">createEntity</span><span class="p">(</span><span class="s">&quot;Entity Name&quot;</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// Add components to entity and edit them</span>
+<span class="w">        </span><span class="n">entity</span><span class="p">.</span><span class="n">addComponent</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">TransformComponent</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">        </span><span class="n">entity</span><span class="p">.</span><span class="n">addComponent</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">GeometryComponent</span><span class="o">&gt;</span><span class="p">(</span><span class="n">mesh</span><span class="p">);</span>
+<span class="w">        </span><span class="k">auto</span><span class="o">&amp;</span><span class="w"> </span><span class="n">renderer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">entity</span><span class="p">.</span><span class="n">addComponent</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">MeshRenderComponent</span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">        </span><span class="n">renderer</span><span class="p">.</span><span class="n">material</span><span class="p">.</span><span class="n">setDiffuseTexture</span><span class="p">(</span><span class="n">diffuse_texture</span><span class="p">);</span>
+<span class="w">        </span><span class="n">renderer</span><span class="p">.</span><span class="n">material</span><span class="p">.</span><span class="n">setMetallic</span><span class="p">(</span><span class="mf">0.5f</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">//...</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// This gets called each frame</span>
+<span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">onUpdate</span><span class="p">(</span><span class="kt">float</span><span class="w"> </span><span class="n">delta_time</span><span class="p">)</span><span class="w"> </span><span class="k">override</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">camera_controller</span><span class="o">-&gt;</span><span class="n">onUpdate</span><span class="p">(</span><span class="n">delta_time</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">//Any physics based updates and rendering is handled here</span>
+
+<span class="w">        </span><span class="c1">//...</span>
+<span class="w">        </span><span class="n">scene</span><span class="o">-&gt;</span><span class="n">draw</span><span class="p">(</span><span class="n">camera_controller</span><span class="o">-&gt;</span><span class="n">getCamera</span><span class="p">());</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">//All draw calls to ImGui to create a user interface</span>
+<span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">onImGuiRender</span><span class="p">()</span><span class="w"> </span><span class="k">override</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">ImGui</span><span class="o">::</span><span class="n">BeginMainMenuBar</span><span class="p">();</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">ImGui</span><span class="o">::</span><span class="n">BeginMenu</span><span class="p">(</span><span class="s">&quot;Rendering&quot;</span><span class="p">))</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">ImGui</span><span class="o">::</span><span class="n">MenuItem</span><span class="p">(</span><span class="s">&quot;Show Render Settings&quot;</span><span class="p">,</span><span class="w"> </span><span class="k">nullptr</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">show_render_settings</span><span class="p">);</span>
+
+<span class="w">            </span><span class="n">ImGui</span><span class="o">::</span><span class="n">EndMenu</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">        </span><span class="n">ImGui</span><span class="o">::</span><span class="n">EndMainMenuBar</span><span class="p">();</span>
+
+<span class="w">        </span><span class="k">if</span><span class="p">(</span><span class="n">show_render_settings</span><span class="p">)</span>
+<span class="w">        </span><span class="p">{</span>
+<span class="w">            </span><span class="n">ImGui</span><span class="o">::</span><span class="n">Begin</span><span class="p">(</span><span class="s">&quot;Settings&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">show_render_settings</span><span class="p">);</span>
+
+<span class="w">            </span><span class="c1">// Set some settings</span>
+
+<span class="w">            </span><span class="n">ImGui</span><span class="o">::</span><span class="n">End</span><span class="p">();</span>
+<span class="w">        </span><span class="p">}</span>
+
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="c1">// This function is evaluated if an event (key, mouse, resize events, etc.) are triggered</span>
+<span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">onEvent</span><span class="p">(</span><span class="n">atcg</span><span class="o">::</span><span class="n">Event</span><span class="o">&amp;</span><span class="w"> </span><span class="n">event</span><span class="p">)</span><span class="w"> </span><span class="k">override</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">camera_controller</span><span class="o">-&gt;</span><span class="n">onEvent</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+
+<span class="w">        </span><span class="n">atcg</span><span class="o">::</span><span class="n">EventDispatcher</span><span class="w"> </span><span class="nf">dispatcher</span><span class="p">(</span><span class="n">event</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">//Add a custom function that gets called when an event is triggered</span>
+<span class="w">        </span><span class="n">dispatcher</span><span class="p">.</span><span class="n">dispatch</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">MouseClickedEvent</span><span class="o">&gt;</span><span class="p">(</span><span class="n">ATCG_BIND_EVENT_FN</span><span class="p">(</span><span class="n">MyLayer</span><span class="o">::</span><span class="n">onMouseClicked</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">onMouseClicked</span><span class="p">(</span><span class="n">atcg</span><span class="o">::</span><span class="n">MouseClickedEvent</span><span class="o">&amp;</span><span class="w"> </span><span class="n">event</span><span class="p">)</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="c1">//Do something if the mouse is clicked</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="k">private</span><span class="o">:</span>
+<span class="w">    </span><span class="n">atcg</span><span class="o">::</span><span class="n">ref_ptr</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">Scene</span><span class="o">&gt;</span><span class="w"> </span><span class="n">scene</span><span class="p">;</span>
+<span class="w">    </span><span class="n">atcg</span><span class="o">::</span><span class="n">ref_ptr</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">CameraController</span><span class="o">&gt;</span><span class="w"> </span><span class="n">camera_controller</span><span class="p">;</span>
+<span class="w">    </span><span class="n">atcg</span><span class="o">::</span><span class="n">ref_ptr</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">Mesh</span><span class="o">&gt;</span><span class="w"> </span><span class="n">mesh</span><span class="p">;</span>
+
+<span class="w">    </span><span class="n">atcg</span><span class="o">::</span><span class="n">ref_ptr</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">Image</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diffuse_image</span><span class="p">;</span>
+<span class="w">    </span><span class="n">atcg</span><span class="o">::</span><span class="n">ref_ptr</span><span class="o">&lt;</span><span class="n">atcg</span><span class="o">::</span><span class="n">Texture2D</span><span class="o">&gt;</span><span class="w"> </span><span class="n">diffuse_texture</span><span class="p">;</span>
+
+<span class="w">    </span><span class="kt">bool</span><span class="w"> </span><span class="n">show_render_settings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">false</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MyApplication</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">atcg</span><span class="o">::</span><span class="n">Application</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">public</span><span class="o">:</span>
+
+<span class="w">    </span><span class="n">MyApplication</span><span class="p">()</span>
+<span class="w">        </span><span class="o">:</span><span class="n">atcg</span><span class="o">::</span><span class="n">Application</span><span class="p">()</span>
+<span class="w">    </span><span class="p">{</span>
+<span class="w">        </span><span class="n">pushLayer</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">MyLayer</span><span class="p">(</span><span class="s">&quot;Layer&quot;</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="o">~</span><span class="n">MyApplication</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span>
+
+<span class="p">};</span>
+
+<span class="c1">//Entry point of the app</span>
+<span class="n">atcg</span><span class="o">::</span><span class="n">Application</span><span class="o">*</span><span class="w"> </span><span class="nf">atcg::createApplication</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MyApplication</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To add your own executables, either create a folder in <code class="docutils literal notranslate"><span class="pre">src</span></code> similar to the other projects or add the framework into your CMake project like this:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span><span class="w"> </span><span class="s">3.27</span><span class="p">)</span>
+
+<span class="nb">project</span><span class="p">(</span><span class="s">MyProject</span><span class="w"> </span><span class="s">LANGUAGES</span><span class="w"> </span><span class="s">C</span><span class="w"> </span><span class="s">CXX</span><span class="w"> </span><span class="s">VERSION</span><span class="w"> </span><span class="s">1.0</span><span class="p">)</span>
+
+<span class="c"># Set output dir to bin because atcg_framework will copy its dlls automatically here. Otherwise, do so manually</span>
+<span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_RUNTIME_OUTPUT_DIRECTORY</span><span class="w"> </span><span class="o">${</span><span class="nv">CMAKE_SOURCE_DIR</span><span class="o">}</span><span class="s">/bin</span><span class="p">)</span>
+
+<span class="nb">set</span><span class="p">(</span><span class="s">ATCG_BUILD_EXAMPLES</span><span class="w"> </span><span class="s">OFF</span><span class="w"> </span><span class="s">CACHE</span><span class="w"> </span><span class="s">BOOL</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="w"> </span><span class="s">FORCE</span><span class="p">)</span>
+<span class="nb">add_subdirectory</span><span class="p">(</span><span class="s">atcg_framework</span><span class="p">)</span>
+
+<span class="c"># target_name is the output variable</span>
+<span class="nb">ATCG_add_executable</span><span class="p">(</span><span class="s">MyApp</span><span class="w"> </span><span class="s">target_name</span><span class="w"> </span><span class="s">source.cpp</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="custom-shared-pointers">
+<h3>Custom shared pointers<a class="headerlink" href="#custom-shared-pointers" title="Link to this heading">¶</a></h3>
+<p>The framework internally uses a custom shared pointer implementation that is very similar to the STL shared_ptr architecture (although not all std::shared_ptr features are implemented):</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">atcg</span><span class="o">::</span><span class="n">ref_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atcg</span><span class="o">::</span><span class="n">make_ref</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="p">(...);</span>
+<span class="n">p</span><span class="o">-&gt;</span><span class="n">foo</span><span class="p">();</span>
+<span class="n">T</span><span class="o">*</span><span class="w"> </span><span class="n">raw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">get</span><span class="p">();</span>
+</pre></div>
+</div>
+<p>This implementation is used to implement CUDA shared pointers (if enabled) and can be used like:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="n">atcg</span><span class="o">::</span><span class="n">dref_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This shared pointer acts as a standard std::shared_ptr but handles CUDA device memory (i.e. the memory is freed if the internal references count reaches zero).</p>
+<p><strong>IMPORTANT</strong>: Note that CUDAs memory API is more a C than C++ API. Therefore object construction works a bit differently. Do NOT use atcg::make_shared when constructing a device ptr but use the given constructors. To initialize an object correctly, you have to copy it from host.</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="c1">// Creates a device buffer with 10 ints</span>
+<span class="n">atcg</span><span class="o">::</span><span class="n">DeviceBuffer</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="w"> </span><span class="n">p</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+
+<span class="c1">// ...</span>
+
+<span class="c1">// Creates an object and initializes it from a host object</span>
+<span class="n">T</span><span class="w"> </span><span class="nf">host_object</span><span class="p">(...);</span>
+<span class="c1">// atcg::dref_ptr as shortcut for atcg::ref_ptr&lt;..., atcg::device_allocator&gt;</span>
+<span class="n">atcg</span><span class="o">::</span><span class="n">dref_ptr</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span><span class="w"> </span><span class="n">device_ptr</span><span class="p">;</span>
+<span class="n">device_ptr</span><span class="p">.</span><span class="n">upload</span><span class="p">(</span><span class="o">&amp;</span><span class="n">host_object</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="torch-api">
+<h2>Torch API<a class="headerlink" href="#torch-api" title="Link to this heading">¶</a></h2>
+<p>Many (OpenGL) objects offer torch interfaces to handle device memory. This allows for efficient manipulation of device buffers with host-device memory uploads. For example, for meshes:</p>
+<div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">positions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">graph</span><span class="o">-&gt;</span><span class="n">getPositions</span><span class="p">(</span><span class="n">atcg</span><span class="o">::</span><span class="n">GPU</span><span class="p">);</span><span class="w"> </span><span class="c1">// Get a direct pointer to OpenGL buffer</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">colors</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="n">graph</span><span class="o">-&gt;</span><span class="n">getDeviceColors</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">normals</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="n">graph</span><span class="o">-&gt;</span><span class="n">getHostNormals</span><span class="p">();</span><span class="w"> </span><span class="c1">// Map OpenGL buffer to host memory (requires copy)</span>
+</pre></div>
+</div>
+<p>When mapping OpenGL buffers to CUDA, one has to make sure that the memory is unmapped before any further OpenGL operations use this memory. This can be done using the <code class="docutils literal notranslate"><span class="pre">graph-&gt;unamp&lt;Device|Host|All&gt;Pointer()</span></code> methods.</p>
+<p>There is also a CUDA API for textures. However, because textures work differently to standard memory buffers, it is not possible to retreive a simple pointer to the memory addresses but the texture is binded to a <code class="docutils literal notranslate"><span class="pre">cudaArray_t</span></code> objet. This can be converted to a <code class="docutils literal notranslate"><span class="pre">cudaTextureObject_t</span></code> or <code class="docutils literal notranslate"><span class="pre">cudaSurfaceObject_t</span></code> to read or write to texture memory in CUDA kernels. Texture data can also be retreived/set using torch tensors. In this case (for 1 and 4 channel textures), the texture data is uploaded using a device-device copy.</p>
+</section>
+<section id="dependencies-included">
+<h2>Dependencies (included)<a class="headerlink" href="#dependencies-included" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://gitlab.vci.rwth-aachen.de:9000/OpenMesh/OpenMesh">OpenMesh</a> - For mesh manipulation.</p></li>
+<li><p><a class="reference external" href="https://glad.dav1d.de">Glad</a> - For loading OpenGL.</p></li>
+<li><p><a class="reference external" href="https://github.com/ocornut/imgui">ImGui</a> - For interactive GUI.</p></li>
+<li><p><a class="reference external" href="https://github.com/CedricGuillemet/ImGuizmo">ImGuizmo</a> - For guizmos.</p></li>
+<li><p><a class="reference external" href="https://github.com/epezent/implot">ImPlot</a> - For plots.</p></li>
+<li><p><a class="reference external" href="https://github.com/glfw/glfw">GLFW</a> - For window creation and handling</p></li>
+<li><p><a class="reference external" href="https://github.com/g-truc/glm">GLM</a> - For OpenGL math.</p></li>
+<li><p><a class="reference external" href="https://github.com/skypjack/entt">entt</a> - For the entity component system.</p></li>
+<li><p><a class="reference external" href="https://github.com/jlblancoc/nanoflann">nanoflann</a> - For kD-Trees.</p></li>
+<li><p><a class="reference external" href="https://github.com/lighttransport/nanort">nanort</a> - For ray - mesh intersection tests.</p></li>
+<li><p><a class="reference external" href="https://github.com/samhocevar/portable-file-dialogs">protable-file-dialogs</a> - For file dialogs.</p></li>
+<li><p><a class="reference external" href="https://github.com/gabime/spdlog">spdlog</a> - For logging.</p></li>
+<li><p><a class="reference external" href="https://github.com/nothings/stb">stbimage</a> - For image I/O.</p></li>
+<li><p><a class="reference external" href="https://github.com/tinyobjloader/tinyobjloader">tinyobjloader</a> - For loading obj meshes.</p></li>
+<li><p><a class="reference external" href="https://github.com/nlohmann/json">json</a> - For serializing JSON files.</p></li>
+<li><p><a class="reference external" href="https://github.com/vc-bonn/charonload">charonload_cpp</a> - For torch integration. This needs to be installed via pip if you want to use python bindings.</p></li>
+<li><p><a class="reference external" href="https://github.com/ValveSoftware/openvr">openvr</a> - For VR support.</p></li>
+<li><p><a class="reference external" href="https://github.com/google/googletest">googletest</a> - For testing.</p></li>
+<li><p><a class="reference external" href="https://github.com/SFML/SFML">sfml</a> - For networking. (<em>Note: Might require additional dependencies on Linux, see SFML repositoriy.</em>)</p></li>
+</ul>
+</section>
+<section id="license">
+<h2>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h2>
+<p>This project is licensed under the MIT License.</p>
+<p>Portions of this project are based on the Hazel Engine (https://github.com/TheCherno/Hazel),
+which is made available under the Apache License 2.0. See <a href="_static/LICENSE" download>LICENSE</a> for more details.</p>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+</ul>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="source/Core/CoreIndex.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Core</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Domenic Zingsheim
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

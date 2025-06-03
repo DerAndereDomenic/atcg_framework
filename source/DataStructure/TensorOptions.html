@@ -1,0 +1,839 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Worker" href="Worker.html" /><link rel="prev" title="Timer" href="Timer.html" />
+
+    <link rel="shortcut icon" href="../../_static/icon.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>TensorOptions - ATCG Framework documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ATCG Framework  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ATCG Framework  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Core/CoreIndex.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Core/API.html">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Application.html">Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Input.html">Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Layer.html">Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Memory.html">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Window.html">Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/UUID.html">UUID</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Events/EventIndex.html">Events</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Events</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Events/Event.html">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/KeyEvents.html">KeyEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/MouseEvents.html">MoueEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/WindowEvents.html">WindowEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/FileEvents.html">FileEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/VREvents.html">VREvents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="DataStructureIndex.html">DataStructure</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of DataStructure</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Image.html">Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Timer.html">Timer</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">TensorOptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Worker.html">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Statistics.html">Statistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Grid.html">Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="BufferView.html">BufferView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="PerformancePanel.html">PerformancePanel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Dictionary.html">Dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Skybox.html">Skybox</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Renderer/RendererIndex.html">Renderer</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Renderer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Renderer.html">Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Shader.html">Shader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Material.html">Material</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Texture.html">Texture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Framebuffer.html">Framebuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html">Render Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html#render-passes">Render Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Buffer.html">Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VertexArray.html">VertexArray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VRSystem.html">VRSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/ContextManager.html">Context</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scene/SceneIndex.html">Scene</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Scene</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Scene.html">Scene</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Entity.html">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Components.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/SceneHierarchyPanel.html">Scene Hierarchy Panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Serializer.html">Serializer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/RevisionSystem.html">RevisionSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/ComponentRenderer.html">ComponentRenderer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scripting/ScriptingIndex.html">Scripting</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Scripting</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/ScriptEngine.html">ScriptEngine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/Script.html">Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Math/MathIndex.html">Math</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Math</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Color.html">Color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Constants.html">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/MeshManipulation.html">Mesh Manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Tracing.html">Tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ImGui/ImGui.html">ImGui</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IO/IO.html">IO</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Network/NetworkIndex.html">Network</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Network</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPServer.html">TCPServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPClient.html">TCPClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/NetworkUtils.html">Network Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../OpenMesh/OpenMesh.html">OpenMesh</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/source/DataStructure/TensorOptions.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="tensoroptions">
+<h1>TensorOptions<a class="headerlink" href="#tensoroptions" title="Link to this heading">¶</a></h1>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions16uint8HostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions16uint8HostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions16uint8HostOptionsEv"></span><span id="atcg::TensorOptions::uint8HostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a5fb7e4de10414cebdd2d652aa5fa166b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">uint8HostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions16uint8HostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions15int8HostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions15int8HostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions15int8HostOptionsEv"></span><span id="atcg::TensorOptions::int8HostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a1cf25f18e238ca5920f613ec53c27e31"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int8HostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions15int8HostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions17uint16HostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions17uint16HostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions17uint16HostOptionsEv"></span><span id="atcg::TensorOptions::uint16HostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a1872f490bebfb591ac687afae43bef29"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">uint16HostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions17uint16HostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions16int16HostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions16int16HostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions16int16HostOptionsEv"></span><span id="atcg::TensorOptions::int16HostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a4554846844e5e098c0f55b770039c971"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int16HostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions16int16HostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions17uint32HostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions17uint32HostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions17uint32HostOptionsEv"></span><span id="atcg::TensorOptions::uint32HostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a3cfcb576a14e96481e8fe042145dda14"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">uint32HostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions17uint32HostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions16int32HostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions16int32HostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions16int32HostOptionsEv"></span><span id="atcg::TensorOptions::int32HostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1ac1377acbd5c8d526e0311f5c550fcce5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int32HostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions16int32HostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions17uint64HostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions17uint64HostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions17uint64HostOptionsEv"></span><span id="atcg::TensorOptions::uint64HostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a11fc33b98ef738192e8425548e73d1f7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">uint64HostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions17uint64HostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions16int64HostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions16int64HostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions16int64HostOptionsEv"></span><span id="atcg::TensorOptions::int64HostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a5c1cb75e0ee5783679a2916e57b93bc4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int64HostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions16int64HostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions16floatHostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions16floatHostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions16floatHostOptionsEv"></span><span id="atcg::TensorOptions::floatHostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a8d6c4f79278eaaa56a87358065608e63"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">floatHostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions16floatHostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions17doubleHostOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions17doubleHostOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions17doubleHostOptionsEv"></span><span id="atcg::TensorOptions::doubleHostOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a38d7e8fa451940b491254d417f73e614"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doubleHostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions17doubleHostOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions17int8DeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions17int8DeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions17int8DeviceOptionsEv"></span><span id="atcg::TensorOptions::int8DeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a4bc48dd04e8ca52115cc3c1dbc32eb04"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int8DeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions17int8DeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions18uint8DeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions18uint8DeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions18uint8DeviceOptionsEv"></span><span id="atcg::TensorOptions::uint8DeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1aa82f4f7cfad8d477a149b9e59bfdb754"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">uint8DeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions18uint8DeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions19uint16DeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions19uint16DeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions19uint16DeviceOptionsEv"></span><span id="atcg::TensorOptions::uint16DeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a4dead7bc77de21e85f9f1dbb4a9c21af"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">uint16DeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions19uint16DeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions18int16DeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions18int16DeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions18int16DeviceOptionsEv"></span><span id="atcg::TensorOptions::int16DeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a2376e0680ce75912f277af53df21a4a7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int16DeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions18int16DeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions19uint32DeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions19uint32DeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions19uint32DeviceOptionsEv"></span><span id="atcg::TensorOptions::uint32DeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a5175956420b5872f6b0d5ef61f53c5b0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">uint32DeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions19uint32DeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions18int32DeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions18int32DeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions18int32DeviceOptionsEv"></span><span id="atcg::TensorOptions::int32DeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a0a353183096c0a22bd9495a43589a58c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int32DeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions18int32DeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions19uint64DeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions19uint64DeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions19uint64DeviceOptionsEv"></span><span id="atcg::TensorOptions::uint64DeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a24c5576f6dfff641f2dc11220683524e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">uint64DeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions19uint64DeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions18int64DeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions18int64DeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions18int64DeviceOptionsEv"></span><span id="atcg::TensorOptions::int64DeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a63d54d93a5b5a6bc34b30186745d4515"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">int64DeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions18int64DeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions18floatDeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions18floatDeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions18floatDeviceOptionsEv"></span><span id="atcg::TensorOptions::floatDeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1a2c3d2034a86238a57da50cb8caf256c4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">floatDeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions18floatDeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13TensorOptions19doubleDeviceOptionsEv">
+<span id="_CPPv3N4atcg13TensorOptions19doubleDeviceOptionsEv"></span><span id="_CPPv2N4atcg13TensorOptions19doubleDeviceOptionsEv"></span><span id="atcg::TensorOptions::doubleDeviceOptions"></span><span class="target" id="namespaceatcg_1_1_tensor_options_1ab9f16769f30317103019967e5e91ae37"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">doubleDeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13TensorOptions19doubleDeviceOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg13TensorOptions11HostOptionsEN5torch13TensorOptionsEv">
+<span id="_CPPv3I0EN4atcg13TensorOptions11HostOptionsEv"></span><span id="_CPPv2I0EN4atcg13TensorOptions11HostOptionsEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1_1_tensor_options_1ad2210ab8c355e3b3aafdb852fc1f0da9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">HostOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg13TensorOptions11HostOptionsEN5torch13TensorOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg13TensorOptions13DeviceOptionsEN5torch13TensorOptionsEv">
+<span id="_CPPv3I0EN4atcg13TensorOptions13DeviceOptionsEv"></span><span id="_CPPv2I0EN4atcg13TensorOptions13DeviceOptionsEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1_1_tensor_options_1a22ff54e84785a94d51519922f756c783"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">DeviceOptions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg13TensorOptions13DeviceOptionsEN5torch13TensorOptionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN5torch13TensorOptionsE">
+<span id="_CPPv3N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN5torch13TensorOptionsE"></span><span id="_CPPv2N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN5torch13TensorOptionsE"></span><span id="atcg::createTensorFromPointer__voidP.at::IntArrayRefCR.torch::TensorOptionsCR"></span><span class="target" id="namespaceatcg_1ac35a98af433ed0afc0a038cac125121e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">createTensorFromPointer</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pointer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IntArrayRef</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">options</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN5torch13TensorOptionsE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a pointer. The tensor does not take ownership of the memory. The pointer has to be on the same device as specified by the passed options. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pointer</strong> – The data pointer </p></li>
+<li><p><strong>size</strong> – The size </p></li>
+<li><p><strong>options</strong> – The options</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN2at11IntArrayRefERKN5torch13TensorOptionsE">
+<span id="_CPPv3N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN2at11IntArrayRefERKN5torch13TensorOptionsE"></span><span id="_CPPv2N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN2at11IntArrayRefERKN5torch13TensorOptionsE"></span><span id="atcg::createTensorFromPointer__voidP.at::IntArrayRefCR.at::IntArrayRefCR.torch::TensorOptionsCR"></span><span class="target" id="namespaceatcg_1a12b0d388cf23c0f48bbbbcdc8713b67f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">createTensorFromPointer</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pointer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IntArrayRef</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IntArrayRef</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">stride</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">TensorOptions</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">options</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN2at11IntArrayRefERKN5torch13TensorOptionsE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a pointer. The tensor does not take ownership of the memory. The pointer has to be on the same device as specified by the passed options. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pointer</strong> – The data pointer </p></li>
+<li><p><strong>size</strong> – The size </p></li>
+<li><p><strong>stride</strong> – The stride </p></li>
+<li><p><strong>options</strong> – The options</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg27createHostTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefE">
+<span id="_CPPv3I0EN4atcg27createHostTensorFromPointerEP1TRKN2at11IntArrayRefE"></span><span id="_CPPv2I0EN4atcg27createHostTensorFromPointerEP1TRKN2at11IntArrayRefE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1ad292d7dad6a523029a928e6d9e79f787"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">createHostTensorFromPointer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN4atcg27createHostTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefE" title="atcg::createHostTensorFromPointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pointer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IntArrayRef</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg27createHostTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a pointer. The tensor does not take ownership of the memory. The pointer has to describe a host memory address. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>T</strong> – The datatype </p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>pointer</strong> – The data pointer </p></li>
+<li><p><strong>size</strong> – The size</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg27createHostTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE">
+<span id="_CPPv3I0EN4atcg27createHostTensorFromPointerEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE"></span><span id="_CPPv2I0EN4atcg27createHostTensorFromPointerEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1aabfa2c2b3d6541740fcb2618f756acd6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">createHostTensorFromPointer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN4atcg27createHostTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE" title="atcg::createHostTensorFromPointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pointer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IntArrayRef</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IntArrayRef</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">stride</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg27createHostTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a pointer. The tensor does not take ownership of the memory. The pointer has to describe a host memory address. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>T</strong> – The datatype </p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>pointer</strong> – The data pointer </p></li>
+<li><p><strong>size</strong> – The size </p></li>
+<li><p><strong>stride</strong> – The stride</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg29createDeviceTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefE">
+<span id="_CPPv3I0EN4atcg29createDeviceTensorFromPointerEP1TRKN2at11IntArrayRefE"></span><span id="_CPPv2I0EN4atcg29createDeviceTensorFromPointerEP1TRKN2at11IntArrayRefE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1adad1d6447bd115400bfffc9b436e9a70"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">createDeviceTensorFromPointer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN4atcg29createDeviceTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefE" title="atcg::createDeviceTensorFromPointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pointer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IntArrayRef</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg29createDeviceTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a pointer. The tensor does not take ownership of the memory. The pointer has to describe a device memory address. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>T</strong> – The datatype </p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>pointer</strong> – The data pointer </p></li>
+<li><p><strong>size</strong> – The size</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg29createDeviceTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE">
+<span id="_CPPv3I0EN4atcg29createDeviceTensorFromPointerEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE"></span><span id="_CPPv2I0EN4atcg29createDeviceTensorFromPointerEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1a893c7936e0e03cbd51a57edbff2ba38b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">createDeviceTensorFromPointer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN4atcg29createDeviceTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE" title="atcg::createDeviceTensorFromPointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">pointer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IntArrayRef</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">at</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">IntArrayRef</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">stride</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg29createDeviceTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a pointer. The tensor does not take ownership of the memory. The pointer has to describe a device memory address. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>T</strong> – The datatype </p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>pointer</strong> – The data pointer </p></li>
+<li><p><strong>size</strong> – The size </p></li>
+<li><p><strong>stride</strong> – The stride</p></li>
+</ul>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg27getVertexBufferAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg27getVertexBufferAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg27getVertexBufferAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getVertexBufferAsHostTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1aa2643a48112fd0df721b66738d74f14e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getVertexBufferAsHostTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg27getVertexBufferAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::VERTEX_SIZE) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg29getVertexBufferAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg29getVertexBufferAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg29getVertexBufferAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getVertexBufferAsDeviceTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1a1d7bb85f764b80870d4402bd75453d7e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getVertexBufferAsDeviceTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg29getVertexBufferAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::VERTEX_SIZE) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg24getPositionsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg24getPositionsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg24getPositionsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getPositionsAsHostTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1a4a6cc99b5f7122aa75396838f8076c8a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getPositionsAsHostTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg24getPositionsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex positions. This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::POSITION_END - atcg::VertexSpecification::POSITION_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg26getPositionsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg26getPositionsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg26getPositionsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getPositionsAsDeviceTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1a2528e1d37ff7e8462924cacd28d2992b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getPositionsAsDeviceTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg26getPositionsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex positions. This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::POSITION_END - atcg::VertexSpecification::POSITION_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21getColorsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg21getColorsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg21getColorsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getColorsAsHostTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1a3d3ad2ffdf1d57880db44c272172187a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getColorsAsHostTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg21getColorsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex colors. This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::COLOR_END - atcg::VertexSpecification::COLOR_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23getColorsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg23getColorsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg23getColorsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getColorsAsDeviceTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1ad6c229ecf6ab944c81d4d4ff138ee05b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getColorsAsDeviceTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg23getColorsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex colors. This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::COLOR_END - atcg::VertexSpecification::COLOR_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg22getNormalsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg22getNormalsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg22getNormalsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getNormalsAsHostTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1a56da7b880f0f59ba7233355e87729f6d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getNormalsAsHostTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg22getNormalsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex normals. This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::NORMAL_END - atcg::VertexSpecification::NORMAL_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg24getNormalsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg24getNormalsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg24getNormalsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getNormalsAsDeviceTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1a01cb64db457be8af71affcd5512d06a2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getNormalsAsDeviceTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg24getNormalsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex normals. This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::NORMAL_END - atcg::VertexSpecification::NORMAL_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23getTangentsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg23getTangentsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg23getTangentsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getTangentsAsHostTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1a024de6722f6aa4e7c51ced0c76b85f2e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getTangentsAsHostTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg23getTangentsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex tangents. This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::TANGENT_END - atcg::VertexSpecification::TANGENT_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg25getTangentsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg25getTangentsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg25getTangentsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getTangentsAsDeviceTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1a14d1ccd57a1221b77bf11b77f04ee057"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getTangentsAsDeviceTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg25getTangentsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex tangents. This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::TANGENT_END - atcg::VertexSpecification::TANGENT_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18getUVsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg18getUVsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg18getUVsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getUVsAsHostTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1add858aca3614e0e009e697b6a58c9cc8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getUVsAsHostTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18getUVsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex uvs. This function maps the host pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::UV_END - atcg::VertexSpecification::UV_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg20getUVsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE">
+<span id="_CPPv3N4atcg20getUVsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="_CPPv2N4atcg20getUVsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"></span><span id="atcg::getUVsAsDeviceTensor__atcg::ref_ptr:atcg::VertexBuffer:CR"></span><span class="target" id="namespaceatcg_1a9dbe7a57420d0a4154eb61751a614e02"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getUVsAsDeviceTensor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">buffer</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg20getUVsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a tensor from a vertex buffer without taking ownership. It creates a view to the vertex uvs. This function maps the device pointer of the vertex buffer. It has to be unmapped manually by the caller if the given vertex buffer is used when rendering. It is assumed that this vertex buffer represents the vertices in an <a class="reference internal" href="Graph.html#classatcg_1_1_graph"><span class="std std-ref">atcg::Graph</span></a> object. Therefore, it will have a size of (n_vertices, atcg::VertexSpecification::UV_END - atcg::VertexSpecification::UV_BEGIN) (see <a class="reference internal" href="Graph.html#structatcg_1_1_vertex"><span class="std std-ref">atcg::Vertex</span></a>). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>buffer</strong> – The vertex buffer</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A tensor that wraps around the data pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="Worker.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Worker</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Timer.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Timer</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Domenic Zingsheim
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">TensorOptions</a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions16uint8HostOptionsEv"><code class="docutils literal notranslate"><span class="pre">uint8HostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions15int8HostOptionsEv"><code class="docutils literal notranslate"><span class="pre">int8HostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions17uint16HostOptionsEv"><code class="docutils literal notranslate"><span class="pre">uint16HostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions16int16HostOptionsEv"><code class="docutils literal notranslate"><span class="pre">int16HostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions17uint32HostOptionsEv"><code class="docutils literal notranslate"><span class="pre">uint32HostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions16int32HostOptionsEv"><code class="docutils literal notranslate"><span class="pre">int32HostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions17uint64HostOptionsEv"><code class="docutils literal notranslate"><span class="pre">uint64HostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions16int64HostOptionsEv"><code class="docutils literal notranslate"><span class="pre">int64HostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions16floatHostOptionsEv"><code class="docutils literal notranslate"><span class="pre">floatHostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions17doubleHostOptionsEv"><code class="docutils literal notranslate"><span class="pre">doubleHostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions17int8DeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">int8DeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions18uint8DeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">uint8DeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions19uint16DeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">uint16DeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions18int16DeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">int16DeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions19uint32DeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">uint32DeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions18int32DeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">int32DeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions19uint64DeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">uint64DeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions18int64DeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">int64DeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions18floatDeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">floatDeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13TensorOptions19doubleDeviceOptionsEv"><code class="docutils literal notranslate"><span class="pre">doubleDeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg13TensorOptions11HostOptionsEN5torch13TensorOptionsEv"><code class="docutils literal notranslate"><span class="pre">HostOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg13TensorOptions13DeviceOptionsEN5torch13TensorOptionsEv"><code class="docutils literal notranslate"><span class="pre">DeviceOptions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN5torch13TensorOptionsE"><code class="docutils literal notranslate"><span class="pre">createTensorFromPointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23createTensorFromPointerEPvRKN2at11IntArrayRefERKN2at11IntArrayRefERKN5torch13TensorOptionsE"><code class="docutils literal notranslate"><span class="pre">createTensorFromPointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg27createHostTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefE"><code class="docutils literal notranslate"><span class="pre">createHostTensorFromPointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg27createHostTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE"><code class="docutils literal notranslate"><span class="pre">createHostTensorFromPointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg29createDeviceTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefE"><code class="docutils literal notranslate"><span class="pre">createDeviceTensorFromPointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg29createDeviceTensorFromPointerEN5torch6TensorEP1TRKN2at11IntArrayRefERKN2at11IntArrayRefE"><code class="docutils literal notranslate"><span class="pre">createDeviceTensorFromPointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg27getVertexBufferAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getVertexBufferAsHostTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg29getVertexBufferAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getVertexBufferAsDeviceTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg24getPositionsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getPositionsAsHostTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg26getPositionsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getPositionsAsDeviceTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21getColorsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getColorsAsHostTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23getColorsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getColorsAsDeviceTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg22getNormalsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getNormalsAsHostTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg24getNormalsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getNormalsAsDeviceTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23getTangentsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getTangentsAsHostTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg25getTangentsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getTangentsAsDeviceTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18getUVsAsHostTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getUVsAsHostTensor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg20getUVsAsDeviceTensorERKN4atcg7ref_ptrIN4atcg12VertexBufferEEE"><code class="docutils literal notranslate"><span class="pre">getUVsAsDeviceTensor()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

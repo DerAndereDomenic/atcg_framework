@@ -1,0 +1,943 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="ComponentRenderer" href="ComponentRenderer.html" /><link rel="prev" title="Serializer" href="Serializer.html" />
+
+    <link rel="shortcut icon" href="../../_static/icon.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>RevisionSystem - ATCG Framework documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ATCG Framework  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ATCG Framework  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Core/CoreIndex.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Core/API.html">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Application.html">Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Input.html">Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Layer.html">Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Memory.html">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Window.html">Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/UUID.html">UUID</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Events/EventIndex.html">Events</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Events</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Events/Event.html">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/KeyEvents.html">KeyEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/MouseEvents.html">MoueEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/WindowEvents.html">WindowEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/FileEvents.html">FileEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/VREvents.html">VREvents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../DataStructure/DataStructureIndex.html">DataStructure</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of DataStructure</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Image.html">Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Timer.html">Timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/TensorOptions.html">TensorOptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Worker.html">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Statistics.html">Statistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Grid.html">Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/BufferView.html">BufferView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/PerformancePanel.html">PerformancePanel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Dictionary.html">Dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Skybox.html">Skybox</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Renderer/RendererIndex.html">Renderer</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Renderer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Renderer.html">Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Shader.html">Shader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Material.html">Material</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Texture.html">Texture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Framebuffer.html">Framebuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html">Render Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html#render-passes">Render Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Buffer.html">Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VertexArray.html">VertexArray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VRSystem.html">VRSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/ContextManager.html">Context</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="SceneIndex.html">Scene</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Scene</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Scene.html">Scene</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Entity.html">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Components.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SceneHierarchyPanel.html">Scene Hierarchy Panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Serializer.html">Serializer</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">RevisionSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ComponentRenderer.html">ComponentRenderer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scripting/ScriptingIndex.html">Scripting</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Scripting</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/ScriptEngine.html">ScriptEngine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/Script.html">Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Math/MathIndex.html">Math</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Math</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Color.html">Color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Constants.html">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/MeshManipulation.html">Mesh Manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Tracing.html">Tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ImGui/ImGui.html">ImGui</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IO/IO.html">IO</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Network/NetworkIndex.html">Network</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Network</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPServer.html">TCPServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPClient.html">TCPClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/NetworkUtils.html">Network Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../OpenMesh/OpenMesh.html">OpenMesh</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/source/Scene/RevisionSystem.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="revisionsystem">
+<h1>RevisionSystem<a class="headerlink" href="#revisionsystem" title="Link to this heading">¶</a></h1>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RevisionSystemE">
+<span id="_CPPv3N4atcg14RevisionSystemE"></span><span id="_CPPv2N4atcg14RevisionSystemE"></span><span id="atcg::RevisionSystem"></span><span class="target" id="classatcg_1_1_revision_system"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RevisionSystem</span></span></span><a class="headerlink" href="#_CPPv4N4atcg14RevisionSystemE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>A class to model a revision system. This can be used to take snapshots of a scene and rollback to previous versions. The default <a class="reference internal" href="#classatcg_1_1_revision"><span class="std std-ref">Revision</span></a> System (atcg::RevisionStack) tracks the standard components of the engine (see Components.h). It is used to implement Redo and Undo functionality in the editor. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RevisionSystem14RevisionSystemEv">
+<span id="_CPPv3N4atcg14RevisionSystem14RevisionSystemEv"></span><span id="_CPPv2N4atcg14RevisionSystem14RevisionSystemEv"></span><span id="atcg::RevisionSystem::RevisionSystem"></span><span class="target" id="classatcg_1_1_revision_system_1a606b700d61deed8c430372ac85149ec4"></span><span class="sig-name descname"><span class="n"><span class="pre">RevisionSystem</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg14RevisionSystem14RevisionSystemEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Default constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RevisionSystemD0Ev">
+<span id="_CPPv3N4atcg14RevisionSystemD0Ev"></span><span id="_CPPv2N4atcg14RevisionSystemD0Ev"></span><span id="atcg::RevisionSystem::~RevisionSystem"></span><span class="target" id="classatcg_1_1_revision_system_1aaacc33f1e72dce2edda421d5e5fb9273"></span><span class="sig-name descname"><span class="n"><span class="pre">~RevisionSystem</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg14RevisionSystemD0Ev" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Default destructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RevisionSystem12pushRevisionERKN4atcg7ref_ptrI8RevisionEE">
+<span id="_CPPv3N4atcg14RevisionSystem12pushRevisionERKN4atcg7ref_ptrI8RevisionEE"></span><span id="_CPPv2N4atcg14RevisionSystem12pushRevisionERKN4atcg7ref_ptrI8RevisionEE"></span><span id="atcg::RevisionSystem::pushRevision__atcg::ref_ptr:Revision:CR"></span><span class="target" id="classatcg_1_1_revision_system_1a8027c109f308b51930cd00ba6ec0567b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pushRevision</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg8RevisionE" title="atcg::Revision"><span class="n"><span class="pre">Revision</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">revision</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RevisionSystem12pushRevisionERKN4atcg7ref_ptrI8RevisionEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Push a new revision. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>revision</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RevisionSystem5applyEv">
+<span id="_CPPv3N4atcg14RevisionSystem5applyEv"></span><span id="_CPPv2N4atcg14RevisionSystem5applyEv"></span><span id="atcg::RevisionSystem::apply"></span><span class="target" id="classatcg_1_1_revision_system_1a95067243b72a23863ec07c821797455c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">apply</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RevisionSystem5applyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Applies a revision that was undone previously. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RevisionSystem8rollbackEv">
+<span id="_CPPv3N4atcg14RevisionSystem8rollbackEv"></span><span id="_CPPv2N4atcg14RevisionSystem8rollbackEv"></span><span id="atcg::RevisionSystem::rollback"></span><span class="target" id="classatcg_1_1_revision_system_1a071de472f6ac976c658e4643f3fb3d0c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rollback</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RevisionSystem8rollbackEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Rolls back to the previous revision. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg14RevisionSystem14startRecordingEvRKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE">
+<span id="_CPPv3I0EN4atcg14RevisionSystem14startRecordingERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="_CPPv2I0EN4atcg14RevisionSystem14startRecordingERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RevisionType</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_revision_system_1a72368b509b4180a2141b6a813de5016a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">startRecording</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Entity.html#_CPPv4N4atcg6EntityE" title="atcg::Entity"><span class="n"><span class="pre">Entity</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">entity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg14RevisionSystem14startRecordingEvRKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Start recording a revision. Each revision that should be handled by the system has to be recorded. There can always be only one recording at a time. The recording has to be stopped using <a class="reference internal" href="#classatcg_1_1_revision_system_1a1cbfcab6ce5509a4ab41ac04a8d7cc34"><span class="std std-ref">RevisionSystem::endRecording</span></a> before a new recording can be started. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RevisionType</strong> – The type of the revision that should be recorded </p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>entity</strong> – The entity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RevisionSystem12endRecordingEv">
+<span id="_CPPv3N4atcg14RevisionSystem12endRecordingEv"></span><span id="_CPPv2N4atcg14RevisionSystem12endRecordingEv"></span><span id="atcg::RevisionSystem::endRecording"></span><span class="target" id="classatcg_1_1_revision_system_1a1cbfcab6ce5509a4ab41ac04a8d7cc34"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">endRecording</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RevisionSystem12endRecordingEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>End a recording. This function should only be called after a recording was started using <a class="reference internal" href="#classatcg_1_1_revision_system_1a1cbfcab6ce5509a4ab41ac04a8d7cc34"><span class="std std-ref">RevisionSystem::endRecording</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RevisionSystem8numUndosEv">
+<span id="_CPPv3NK4atcg14RevisionSystem8numUndosEv"></span><span id="_CPPv2NK4atcg14RevisionSystem8numUndosEv"></span><span id="atcg::RevisionSystem::numUndosC"></span><span class="target" id="classatcg_1_1_revision_system_1a6dfc4da8b4d0acb9c66942e1d4b6fb20"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">numUndos</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RevisionSystem8numUndosEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the current number of possible undos. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The number of undos </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RevisionSystem8numRedosEv">
+<span id="_CPPv3NK4atcg14RevisionSystem8numRedosEv"></span><span id="_CPPv2NK4atcg14RevisionSystem8numRedosEv"></span><span id="atcg::RevisionSystem::numRedosC"></span><span class="target" id="classatcg_1_1_revision_system_1af81b834eea2cfbf8968c48b25486fa55"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">numRedos</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RevisionSystem8numRedosEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the current number of possible redos. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The number of redos </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RevisionSystem11isRecordingEv">
+<span id="_CPPv3NK4atcg14RevisionSystem11isRecordingEv"></span><span id="_CPPv2NK4atcg14RevisionSystem11isRecordingEv"></span><span id="atcg::RevisionSystem::isRecordingC"></span><span class="target" id="classatcg_1_1_revision_system_1a5191d39ffb83928d29dbe1bc3a8aa6da"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">isRecording</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RevisionSystem11isRecordingEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>If there is a recording currently taking place. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if a recording was started and is not yet finished </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RevisionSystem14totalRevisionsEv">
+<span id="_CPPv3NK4atcg14RevisionSystem14totalRevisionsEv"></span><span id="_CPPv2NK4atcg14RevisionSystem14totalRevisionsEv"></span><span id="atcg::RevisionSystem::totalRevisionsC"></span><span class="target" id="classatcg_1_1_revision_system_1a4991b7c5f834276755b0049cc508cdd6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">totalRevisions</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RevisionSystem14totalRevisionsEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>The total number of revisions that were recorded by the system. This is not reset if the cache was cleared using RevisionSystem::clearCache. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The number of revisions </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RevisionSystem11clearChacheEv">
+<span id="_CPPv3N4atcg14RevisionSystem11clearChacheEv"></span><span id="_CPPv2N4atcg14RevisionSystem11clearChacheEv"></span><span id="atcg::RevisionSystem::clearChache"></span><span class="target" id="classatcg_1_1_revision_system_1a32cdb1f0e64337fc8ec622badb9f05ca"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearChache</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RevisionSystem11clearChacheEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Clears the cache of revisions. This should only be called if there is no active recording. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8RevisionE">
+<span id="_CPPv3N4atcg8RevisionE"></span><span id="_CPPv2N4atcg8RevisionE"></span><span id="atcg::Revision"></span><span class="target" id="classatcg_1_1_revision"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Revision</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8RevisionE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>This class models a revision of a scene element. </p>
+<p>Subclassed by <a class="reference internal" href="#classatcg_1_1_component_added_revision"><span class="std std-ref">ComponentAddedRevision&lt; Component &gt;</span></a>, <a class="reference internal" href="#classatcg_1_1_component_edited_revision"><span class="std std-ref">ComponentEditedRevision&lt; Component &gt;</span></a>, <a class="reference internal" href="#classatcg_1_1_component_removed_revision"><span class="std std-ref">ComponentRemovedRevision&lt; Component &gt;</span></a>, <a class="reference internal" href="#classatcg_1_1_entity_added_revision"><span class="std std-ref">EntityAddedRevision</span></a>, <a class="reference internal" href="#classatcg_1_1_entity_removed_revision"><span class="std std-ref">EntityRemovedRevision</span></a>, <a class="reference internal" href="#classatcg_1_1_union_revision"><span class="std std-ref">UnionRevision&lt; RevisionType1, RevisionType2 &gt;</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8Revision8RevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE">
+<span id="_CPPv3N4atcg8Revision8RevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="_CPPv2N4atcg8Revision8RevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="atcg::Revision::Revision__atcg::ref_ptr:atcg::Scene:CR.atcg::Entity"></span><span class="target" id="classatcg_1_1_revision_1a179d2cdd74eeaae0176fdf9883943786"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Revision</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Entity.html#_CPPv4N4atcg6EntityE" title="atcg::Entity"><span class="n"><span class="pre">Entity</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">entity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg8Revision8RevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>entity</strong> – The entity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8Revision8rollbackEv">
+<span id="_CPPv3N4atcg8Revision8rollbackEv"></span><span id="_CPPv2N4atcg8Revision8rollbackEv"></span><span id="atcg::Revision::rollback"></span><span class="target" id="classatcg_1_1_revision_1aeeef290e1388da83ab49c5d81b5ccd09"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rollback</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4atcg8Revision8rollbackEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a rollback. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8Revision5applyEv">
+<span id="_CPPv3N4atcg8Revision5applyEv"></span><span id="_CPPv2N4atcg8Revision5applyEv"></span><span id="atcg::Revision::apply"></span><span class="target" id="classatcg_1_1_revision_1ae8035f1283a63c55fbbfb4e786db8a98"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">apply</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4atcg8Revision5applyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a redo. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8Revision18record_start_stateEv">
+<span id="_CPPv3N4atcg8Revision18record_start_stateEv"></span><span id="_CPPv2N4atcg8Revision18record_start_stateEv"></span><span id="atcg::Revision::record_start_state"></span><span class="target" id="classatcg_1_1_revision_1aa804afaf53bf1cf2c1982c4b7dba1756"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_start_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4atcg8Revision18record_start_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the start of a capture. This should store all relevant information before any changes to the scene elements were made. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8Revision16record_end_stateEv">
+<span id="_CPPv3N4atcg8Revision16record_end_stateEv"></span><span id="_CPPv2N4atcg8Revision16record_end_stateEv"></span><span id="atcg::Revision::record_end_state"></span><span class="target" id="classatcg_1_1_revision_1a21e8a5a43329b7504b96e1b1b783ff6d"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_end_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4atcg8Revision16record_end_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the end of a capture. This should store all relevant information after the scene element was changed. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EntityAddedRevisionE">
+<span id="_CPPv3N4atcg19EntityAddedRevisionE"></span><span id="_CPPv2N4atcg19EntityAddedRevisionE"></span><span id="atcg::EntityAddedRevision"></span><span class="target" id="classatcg_1_1_entity_added_revision"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EntityAddedRevision</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg8RevisionE" title="atcg::Revision"><span class="n"><span class="pre">Revision</span></span></a><a class="headerlink" href="#_CPPv4N4atcg19EntityAddedRevisionE" title="Link to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classatcg_1_1_revision"><span class="std std-ref">Revision</span></a> if an entity was added to the scene. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EntityAddedRevision19EntityAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE">
+<span id="_CPPv3N4atcg19EntityAddedRevision19EntityAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="_CPPv2N4atcg19EntityAddedRevision19EntityAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="atcg::EntityAddedRevision::EntityAddedRevision__atcg::ref_ptr:atcg::Scene:CR.atcg::Entity"></span><span class="target" id="classatcg_1_1_entity_added_revision_1ab9d7bce4fb6975f9a51fc1c28a91be0b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EntityAddedRevision</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Entity.html#_CPPv4N4atcg6EntityE" title="atcg::Entity"><span class="n"><span class="pre">Entity</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">entity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg19EntityAddedRevision19EntityAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>entity</strong> – The entity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EntityAddedRevision5applyEv">
+<span id="_CPPv3N4atcg19EntityAddedRevision5applyEv"></span><span id="_CPPv2N4atcg19EntityAddedRevision5applyEv"></span><span id="atcg::EntityAddedRevision::apply"></span><span class="target" id="classatcg_1_1_entity_added_revision_1a4478f1e2333370e04d5d8da86696d093"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">apply</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg19EntityAddedRevision5applyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a redo. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EntityAddedRevision8rollbackEv">
+<span id="_CPPv3N4atcg19EntityAddedRevision8rollbackEv"></span><span id="_CPPv2N4atcg19EntityAddedRevision8rollbackEv"></span><span id="atcg::EntityAddedRevision::rollback"></span><span class="target" id="classatcg_1_1_entity_added_revision_1a4f060968c436c5fe2d03a7c288832913"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rollback</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg19EntityAddedRevision8rollbackEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a rollback. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EntityAddedRevision18record_start_stateEv">
+<span id="_CPPv3N4atcg19EntityAddedRevision18record_start_stateEv"></span><span id="_CPPv2N4atcg19EntityAddedRevision18record_start_stateEv"></span><span id="atcg::EntityAddedRevision::record_start_state"></span><span class="target" id="classatcg_1_1_entity_added_revision_1aa40a04f97efee0a71869c1612ba76aa3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_start_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg19EntityAddedRevision18record_start_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the start of a capture. This should store all relevant information before any changes to the scene elements were made. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EntityAddedRevision16record_end_stateEv">
+<span id="_CPPv3N4atcg19EntityAddedRevision16record_end_stateEv"></span><span id="_CPPv2N4atcg19EntityAddedRevision16record_end_stateEv"></span><span id="atcg::EntityAddedRevision::record_end_state"></span><span class="target" id="classatcg_1_1_entity_added_revision_1a34abd2ae0a6824be7a9495221c2ef6e0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_end_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg19EntityAddedRevision16record_end_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the end of a capture. This should store all relevant information after the scene element was changed. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21EntityRemovedRevisionE">
+<span id="_CPPv3N4atcg21EntityRemovedRevisionE"></span><span id="_CPPv2N4atcg21EntityRemovedRevisionE"></span><span id="atcg::EntityRemovedRevision"></span><span class="target" id="classatcg_1_1_entity_removed_revision"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EntityRemovedRevision</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg8RevisionE" title="atcg::Revision"><span class="n"><span class="pre">Revision</span></span></a><a class="headerlink" href="#_CPPv4N4atcg21EntityRemovedRevisionE" title="Link to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classatcg_1_1_revision"><span class="std std-ref">Revision</span></a> if an entity was removed from the scene. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21EntityRemovedRevision21EntityRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE">
+<span id="_CPPv3N4atcg21EntityRemovedRevision21EntityRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="_CPPv2N4atcg21EntityRemovedRevision21EntityRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="atcg::EntityRemovedRevision::EntityRemovedRevision__atcg::ref_ptr:atcg::Scene:CR.atcg::Entity"></span><span class="target" id="classatcg_1_1_entity_removed_revision_1a89f69a5a3268a274a09fbef0053ff996"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EntityRemovedRevision</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Entity.html#_CPPv4N4atcg6EntityE" title="atcg::Entity"><span class="n"><span class="pre">Entity</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">entity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg21EntityRemovedRevision21EntityRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>entity</strong> – The entity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21EntityRemovedRevision5applyEv">
+<span id="_CPPv3N4atcg21EntityRemovedRevision5applyEv"></span><span id="_CPPv2N4atcg21EntityRemovedRevision5applyEv"></span><span id="atcg::EntityRemovedRevision::apply"></span><span class="target" id="classatcg_1_1_entity_removed_revision_1a4478f1e2333370e04d5d8da86696d093"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">apply</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg21EntityRemovedRevision5applyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a redo. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21EntityRemovedRevision8rollbackEv">
+<span id="_CPPv3N4atcg21EntityRemovedRevision8rollbackEv"></span><span id="_CPPv2N4atcg21EntityRemovedRevision8rollbackEv"></span><span id="atcg::EntityRemovedRevision::rollback"></span><span class="target" id="classatcg_1_1_entity_removed_revision_1a4f060968c436c5fe2d03a7c288832913"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rollback</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg21EntityRemovedRevision8rollbackEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a rollback. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21EntityRemovedRevision18record_start_stateEv">
+<span id="_CPPv3N4atcg21EntityRemovedRevision18record_start_stateEv"></span><span id="_CPPv2N4atcg21EntityRemovedRevision18record_start_stateEv"></span><span id="atcg::EntityRemovedRevision::record_start_state"></span><span class="target" id="classatcg_1_1_entity_removed_revision_1aa40a04f97efee0a71869c1612ba76aa3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_start_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg21EntityRemovedRevision18record_start_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the start of a capture. This should store all relevant information before any changes to the scene elements were made. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21EntityRemovedRevision16record_end_stateEv">
+<span id="_CPPv3N4atcg21EntityRemovedRevision16record_end_stateEv"></span><span id="_CPPv2N4atcg21EntityRemovedRevision16record_end_stateEv"></span><span id="atcg::EntityRemovedRevision::record_end_state"></span><span class="target" id="classatcg_1_1_entity_removed_revision_1a34abd2ae0a6824be7a9495221c2ef6e0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_end_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg21EntityRemovedRevision16record_end_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the end of a capture. This should store all relevant information after the scene element was changed. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg22ComponentAddedRevisionE">
+<span id="_CPPv3I0EN4atcg22ComponentAddedRevisionE"></span><span id="_CPPv2I0EN4atcg22ComponentAddedRevisionE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Component</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_component_added_revision"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ComponentAddedRevision</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg8RevisionE" title="atcg::Revision"><span class="n"><span class="pre">Revision</span></span></a><a class="headerlink" href="#_CPPv4I0EN4atcg22ComponentAddedRevisionE" title="Link to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classatcg_1_1_revision"><span class="std std-ref">Revision</span></a> if a component was added to an entity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Component</strong> – The type of the component that was added </p>
+</dd>
+</dl>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg22ComponentAddedRevision22ComponentAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE">
+<span id="_CPPv3N4atcg22ComponentAddedRevision22ComponentAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="_CPPv2N4atcg22ComponentAddedRevision22ComponentAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="atcg::ComponentAddedRevision::ComponentAddedRevision__atcg::ref_ptr:atcg::Scene:CR.atcg::Entity"></span><span class="target" id="classatcg_1_1_component_added_revision_1a403a6a602fde434351d58433e2bc24c0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ComponentAddedRevision</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Entity.html#_CPPv4N4atcg6EntityE" title="atcg::Entity"><span class="n"><span class="pre">Entity</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">entity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg22ComponentAddedRevision22ComponentAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>entity</strong> – The entity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg22ComponentAddedRevision5applyEv">
+<span id="_CPPv3N4atcg22ComponentAddedRevision5applyEv"></span><span id="_CPPv2N4atcg22ComponentAddedRevision5applyEv"></span><span id="atcg::ComponentAddedRevision::apply"></span><span class="target" id="classatcg_1_1_component_added_revision_1a4478f1e2333370e04d5d8da86696d093"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">apply</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg22ComponentAddedRevision5applyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a redo. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg22ComponentAddedRevision8rollbackEv">
+<span id="_CPPv3N4atcg22ComponentAddedRevision8rollbackEv"></span><span id="_CPPv2N4atcg22ComponentAddedRevision8rollbackEv"></span><span id="atcg::ComponentAddedRevision::rollback"></span><span class="target" id="classatcg_1_1_component_added_revision_1a4f060968c436c5fe2d03a7c288832913"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rollback</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg22ComponentAddedRevision8rollbackEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a rollback. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg22ComponentAddedRevision18record_start_stateEv">
+<span id="_CPPv3N4atcg22ComponentAddedRevision18record_start_stateEv"></span><span id="_CPPv2N4atcg22ComponentAddedRevision18record_start_stateEv"></span><span id="atcg::ComponentAddedRevision::record_start_state"></span><span class="target" id="classatcg_1_1_component_added_revision_1aa40a04f97efee0a71869c1612ba76aa3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_start_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg22ComponentAddedRevision18record_start_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the start of a capture. This should store all relevant information before any changes to the scene elements were made. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg22ComponentAddedRevision16record_end_stateEv">
+<span id="_CPPv3N4atcg22ComponentAddedRevision16record_end_stateEv"></span><span id="_CPPv2N4atcg22ComponentAddedRevision16record_end_stateEv"></span><span id="atcg::ComponentAddedRevision::record_end_state"></span><span class="target" id="classatcg_1_1_component_added_revision_1a34abd2ae0a6824be7a9495221c2ef6e0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_end_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg22ComponentAddedRevision16record_end_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the end of a capture. This should store all relevant information after the scene element was changed. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg24ComponentRemovedRevisionE">
+<span id="_CPPv3I0EN4atcg24ComponentRemovedRevisionE"></span><span id="_CPPv2I0EN4atcg24ComponentRemovedRevisionE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Component</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_component_removed_revision"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ComponentRemovedRevision</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg8RevisionE" title="atcg::Revision"><span class="n"><span class="pre">Revision</span></span></a><a class="headerlink" href="#_CPPv4I0EN4atcg24ComponentRemovedRevisionE" title="Link to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classatcg_1_1_revision"><span class="std std-ref">Revision</span></a> if a component was removed from the entity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Component</strong> – The type of the component that was removed </p>
+</dd>
+</dl>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg24ComponentRemovedRevision24ComponentRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE">
+<span id="_CPPv3N4atcg24ComponentRemovedRevision24ComponentRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="_CPPv2N4atcg24ComponentRemovedRevision24ComponentRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="atcg::ComponentRemovedRevision::ComponentRemovedRevision__atcg::ref_ptr:atcg::Scene:CR.atcg::Entity"></span><span class="target" id="classatcg_1_1_component_removed_revision_1a436a5e17ff786489a422c7e8af886f33"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ComponentRemovedRevision</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Entity.html#_CPPv4N4atcg6EntityE" title="atcg::Entity"><span class="n"><span class="pre">Entity</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">entity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg24ComponentRemovedRevision24ComponentRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>entity</strong> – The entity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg24ComponentRemovedRevision5applyEv">
+<span id="_CPPv3N4atcg24ComponentRemovedRevision5applyEv"></span><span id="_CPPv2N4atcg24ComponentRemovedRevision5applyEv"></span><span id="atcg::ComponentRemovedRevision::apply"></span><span class="target" id="classatcg_1_1_component_removed_revision_1a4478f1e2333370e04d5d8da86696d093"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">apply</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg24ComponentRemovedRevision5applyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a redo. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg24ComponentRemovedRevision8rollbackEv">
+<span id="_CPPv3N4atcg24ComponentRemovedRevision8rollbackEv"></span><span id="_CPPv2N4atcg24ComponentRemovedRevision8rollbackEv"></span><span id="atcg::ComponentRemovedRevision::rollback"></span><span class="target" id="classatcg_1_1_component_removed_revision_1a4f060968c436c5fe2d03a7c288832913"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rollback</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg24ComponentRemovedRevision8rollbackEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a rollback. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg24ComponentRemovedRevision18record_start_stateEv">
+<span id="_CPPv3N4atcg24ComponentRemovedRevision18record_start_stateEv"></span><span id="_CPPv2N4atcg24ComponentRemovedRevision18record_start_stateEv"></span><span id="atcg::ComponentRemovedRevision::record_start_state"></span><span class="target" id="classatcg_1_1_component_removed_revision_1aa40a04f97efee0a71869c1612ba76aa3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_start_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg24ComponentRemovedRevision18record_start_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the start of a capture. This should store all relevant information before any changes to the scene elements were made. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg24ComponentRemovedRevision16record_end_stateEv">
+<span id="_CPPv3N4atcg24ComponentRemovedRevision16record_end_stateEv"></span><span id="_CPPv2N4atcg24ComponentRemovedRevision16record_end_stateEv"></span><span id="atcg::ComponentRemovedRevision::record_end_state"></span><span class="target" id="classatcg_1_1_component_removed_revision_1a34abd2ae0a6824be7a9495221c2ef6e0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_end_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg24ComponentRemovedRevision16record_end_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the end of a capture. This should store all relevant information after the scene element was changed. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg23ComponentEditedRevisionE">
+<span id="_CPPv3I0EN4atcg23ComponentEditedRevisionE"></span><span id="_CPPv2I0EN4atcg23ComponentEditedRevisionE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Component</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_component_edited_revision"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ComponentEditedRevision</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg8RevisionE" title="atcg::Revision"><span class="n"><span class="pre">Revision</span></span></a><a class="headerlink" href="#_CPPv4I0EN4atcg23ComponentEditedRevisionE" title="Link to this definition">¶</a><br /></dt>
+<dd><p><a class="reference internal" href="#classatcg_1_1_revision"><span class="std std-ref">Revision</span></a> if a component was updated. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Component</strong> – The type of the component that was edited </p>
+</dd>
+</dl>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23ComponentEditedRevision23ComponentEditedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE">
+<span id="_CPPv3N4atcg23ComponentEditedRevision23ComponentEditedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="_CPPv2N4atcg23ComponentEditedRevision23ComponentEditedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="atcg::ComponentEditedRevision::ComponentEditedRevision__atcg::ref_ptr:atcg::Scene:CR.atcg::Entity"></span><span class="target" id="classatcg_1_1_component_edited_revision_1a4d39be3a6ec5915d245afebae89f3fd2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ComponentEditedRevision</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Entity.html#_CPPv4N4atcg6EntityE" title="atcg::Entity"><span class="n"><span class="pre">Entity</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">entity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg23ComponentEditedRevision23ComponentEditedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>entity</strong> – The entity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23ComponentEditedRevision5applyEv">
+<span id="_CPPv3N4atcg23ComponentEditedRevision5applyEv"></span><span id="_CPPv2N4atcg23ComponentEditedRevision5applyEv"></span><span id="atcg::ComponentEditedRevision::apply"></span><span class="target" id="classatcg_1_1_component_edited_revision_1a4478f1e2333370e04d5d8da86696d093"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">apply</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg23ComponentEditedRevision5applyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a redo. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23ComponentEditedRevision8rollbackEv">
+<span id="_CPPv3N4atcg23ComponentEditedRevision8rollbackEv"></span><span id="_CPPv2N4atcg23ComponentEditedRevision8rollbackEv"></span><span id="atcg::ComponentEditedRevision::rollback"></span><span class="target" id="classatcg_1_1_component_edited_revision_1a4f060968c436c5fe2d03a7c288832913"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rollback</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg23ComponentEditedRevision8rollbackEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a rollback. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23ComponentEditedRevision18record_start_stateEv">
+<span id="_CPPv3N4atcg23ComponentEditedRevision18record_start_stateEv"></span><span id="_CPPv2N4atcg23ComponentEditedRevision18record_start_stateEv"></span><span id="atcg::ComponentEditedRevision::record_start_state"></span><span class="target" id="classatcg_1_1_component_edited_revision_1aa40a04f97efee0a71869c1612ba76aa3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_start_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg23ComponentEditedRevision18record_start_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the start of a capture. This should store all relevant information before any changes to the scene elements were made. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23ComponentEditedRevision16record_end_stateEv">
+<span id="_CPPv3N4atcg23ComponentEditedRevision16record_end_stateEv"></span><span id="_CPPv2N4atcg23ComponentEditedRevision16record_end_stateEv"></span><span id="atcg::ComponentEditedRevision::record_end_state"></span><span class="target" id="classatcg_1_1_component_edited_revision_1a34abd2ae0a6824be7a9495221c2ef6e0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_end_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg23ComponentEditedRevision16record_end_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the end of a capture. This should store all relevant information after the scene element was changed. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN4atcg13UnionRevisionE">
+<span id="_CPPv3I00EN4atcg13UnionRevisionE"></span><span id="_CPPv2I00EN4atcg13UnionRevisionE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RevisionType1</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RevisionType2</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_union_revision"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">UnionRevision</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg8RevisionE" title="atcg::Revision"><span class="n"><span class="pre">Revision</span></span></a><a class="headerlink" href="#_CPPv4I00EN4atcg13UnionRevisionE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>A tuple of two revisions. This can be used if multiple components update in one revision step (for example if transform and geometry change by normalization). </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>RevisionType1</strong> – The revision type of the first revision </p></li>
+<li><p><strong>RevisionType2</strong> – The revision type of the second revision </p></li>
+</ul>
+</dd>
+</dl>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13UnionRevision13UnionRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE">
+<span id="_CPPv3N4atcg13UnionRevision13UnionRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="_CPPv2N4atcg13UnionRevision13UnionRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"></span><span id="atcg::UnionRevision::UnionRevision__atcg::ref_ptr:atcg::Scene:CR.atcg::Entity"></span><span class="target" id="classatcg_1_1_union_revision_1ab51792c02fb5828f4243eb288363c21e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">UnionRevision</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Entity.html#_CPPv4N4atcg6EntityE" title="atcg::Entity"><span class="n"><span class="pre">Entity</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">entity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13UnionRevision13UnionRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>entity</strong> – The entity </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13UnionRevision5applyEv">
+<span id="_CPPv3N4atcg13UnionRevision5applyEv"></span><span id="_CPPv2N4atcg13UnionRevision5applyEv"></span><span id="atcg::UnionRevision::apply"></span><span class="target" id="classatcg_1_1_union_revision_1a4478f1e2333370e04d5d8da86696d093"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">apply</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg13UnionRevision5applyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a redo. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13UnionRevision8rollbackEv">
+<span id="_CPPv3N4atcg13UnionRevision8rollbackEv"></span><span id="_CPPv2N4atcg13UnionRevision8rollbackEv"></span><span id="atcg::UnionRevision::rollback"></span><span class="target" id="classatcg_1_1_union_revision_1a4f060968c436c5fe2d03a7c288832913"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rollback</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg13UnionRevision8rollbackEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Callback that is called on a rollback. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13UnionRevision18record_start_stateEv">
+<span id="_CPPv3N4atcg13UnionRevision18record_start_stateEv"></span><span id="_CPPv2N4atcg13UnionRevision18record_start_stateEv"></span><span id="atcg::UnionRevision::record_start_state"></span><span class="target" id="classatcg_1_1_union_revision_1aa40a04f97efee0a71869c1612ba76aa3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_start_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg13UnionRevision18record_start_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the start of a capture. This should store all relevant information before any changes to the scene elements were made. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13UnionRevision16record_end_stateEv">
+<span id="_CPPv3N4atcg13UnionRevision16record_end_stateEv"></span><span id="_CPPv2N4atcg13UnionRevision16record_end_stateEv"></span><span id="atcg::UnionRevision::record_end_state"></span><span class="target" id="classatcg_1_1_union_revision_1a34abd2ae0a6824be7a9495221c2ef6e0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">record_end_state</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg13UnionRevision16record_end_stateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Function that is called at the end of a capture. This should store all relevant information after the scene element was changed. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="ComponentRenderer.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">ComponentRenderer</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Serializer.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Serializer</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Domenic Zingsheim
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">RevisionSystem</a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RevisionSystemE"><code class="docutils literal notranslate"><span class="pre">atcg::RevisionSystem</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RevisionSystem14RevisionSystemEv"><code class="docutils literal notranslate"><span class="pre">RevisionSystem()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RevisionSystemD0Ev"><code class="docutils literal notranslate"><span class="pre">~RevisionSystem()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RevisionSystem12pushRevisionERKN4atcg7ref_ptrI8RevisionEE"><code class="docutils literal notranslate"><span class="pre">pushRevision()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RevisionSystem5applyEv"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RevisionSystem8rollbackEv"><code class="docutils literal notranslate"><span class="pre">rollback()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg14RevisionSystem14startRecordingEvRKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"><code class="docutils literal notranslate"><span class="pre">startRecording()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RevisionSystem12endRecordingEv"><code class="docutils literal notranslate"><span class="pre">endRecording()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RevisionSystem8numUndosEv"><code class="docutils literal notranslate"><span class="pre">numUndos()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RevisionSystem8numRedosEv"><code class="docutils literal notranslate"><span class="pre">numRedos()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RevisionSystem11isRecordingEv"><code class="docutils literal notranslate"><span class="pre">isRecording()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RevisionSystem14totalRevisionsEv"><code class="docutils literal notranslate"><span class="pre">totalRevisions()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RevisionSystem11clearChacheEv"><code class="docutils literal notranslate"><span class="pre">clearChache()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8RevisionE"><code class="docutils literal notranslate"><span class="pre">atcg::Revision</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg8Revision8RevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"><code class="docutils literal notranslate"><span class="pre">Revision()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8Revision8rollbackEv"><code class="docutils literal notranslate"><span class="pre">rollback()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8Revision5applyEv"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8Revision18record_start_stateEv"><code class="docutils literal notranslate"><span class="pre">record_start_state()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8Revision16record_end_stateEv"><code class="docutils literal notranslate"><span class="pre">record_end_state()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EntityAddedRevisionE"><code class="docutils literal notranslate"><span class="pre">atcg::EntityAddedRevision</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EntityAddedRevision19EntityAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"><code class="docutils literal notranslate"><span class="pre">EntityAddedRevision()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EntityAddedRevision5applyEv"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EntityAddedRevision8rollbackEv"><code class="docutils literal notranslate"><span class="pre">rollback()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EntityAddedRevision18record_start_stateEv"><code class="docutils literal notranslate"><span class="pre">record_start_state()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EntityAddedRevision16record_end_stateEv"><code class="docutils literal notranslate"><span class="pre">record_end_state()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21EntityRemovedRevisionE"><code class="docutils literal notranslate"><span class="pre">atcg::EntityRemovedRevision</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg21EntityRemovedRevision21EntityRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"><code class="docutils literal notranslate"><span class="pre">EntityRemovedRevision()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21EntityRemovedRevision5applyEv"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21EntityRemovedRevision8rollbackEv"><code class="docutils literal notranslate"><span class="pre">rollback()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21EntityRemovedRevision18record_start_stateEv"><code class="docutils literal notranslate"><span class="pre">record_start_state()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21EntityRemovedRevision16record_end_stateEv"><code class="docutils literal notranslate"><span class="pre">record_end_state()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg22ComponentAddedRevisionE"><code class="docutils literal notranslate"><span class="pre">atcg::ComponentAddedRevision</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg22ComponentAddedRevision22ComponentAddedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"><code class="docutils literal notranslate"><span class="pre">ComponentAddedRevision()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg22ComponentAddedRevision5applyEv"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg22ComponentAddedRevision8rollbackEv"><code class="docutils literal notranslate"><span class="pre">rollback()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg22ComponentAddedRevision18record_start_stateEv"><code class="docutils literal notranslate"><span class="pre">record_start_state()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg22ComponentAddedRevision16record_end_stateEv"><code class="docutils literal notranslate"><span class="pre">record_end_state()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg24ComponentRemovedRevisionE"><code class="docutils literal notranslate"><span class="pre">atcg::ComponentRemovedRevision</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg24ComponentRemovedRevision24ComponentRemovedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"><code class="docutils literal notranslate"><span class="pre">ComponentRemovedRevision()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg24ComponentRemovedRevision5applyEv"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg24ComponentRemovedRevision8rollbackEv"><code class="docutils literal notranslate"><span class="pre">rollback()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg24ComponentRemovedRevision18record_start_stateEv"><code class="docutils literal notranslate"><span class="pre">record_start_state()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg24ComponentRemovedRevision16record_end_stateEv"><code class="docutils literal notranslate"><span class="pre">record_end_state()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg23ComponentEditedRevisionE"><code class="docutils literal notranslate"><span class="pre">atcg::ComponentEditedRevision</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg23ComponentEditedRevision23ComponentEditedRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"><code class="docutils literal notranslate"><span class="pre">ComponentEditedRevision()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23ComponentEditedRevision5applyEv"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23ComponentEditedRevision8rollbackEv"><code class="docutils literal notranslate"><span class="pre">rollback()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23ComponentEditedRevision18record_start_stateEv"><code class="docutils literal notranslate"><span class="pre">record_start_state()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23ComponentEditedRevision16record_end_stateEv"><code class="docutils literal notranslate"><span class="pre">record_end_state()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4I00EN4atcg13UnionRevisionE"><code class="docutils literal notranslate"><span class="pre">atcg::UnionRevision</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg13UnionRevision13UnionRevisionERKN4atcg7ref_ptrIN4atcg5SceneEEEN4atcg6EntityE"><code class="docutils literal notranslate"><span class="pre">UnionRevision()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13UnionRevision5applyEv"><code class="docutils literal notranslate"><span class="pre">apply()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13UnionRevision8rollbackEv"><code class="docutils literal notranslate"><span class="pre">rollback()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13UnionRevision18record_start_stateEv"><code class="docutils literal notranslate"><span class="pre">record_start_state()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13UnionRevision16record_end_stateEv"><code class="docutils literal notranslate"><span class="pre">record_end_state()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

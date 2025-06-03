@@ -1,0 +1,1146 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Scene Hierarchy Panel" href="SceneHierarchyPanel.html" /><link rel="prev" title="Entity" href="Entity.html" />
+
+    <link rel="shortcut icon" href="../../_static/icon.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>Components - ATCG Framework documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ATCG Framework  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ATCG Framework  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Core/CoreIndex.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Core/API.html">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Application.html">Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Input.html">Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Layer.html">Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Memory.html">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Window.html">Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/UUID.html">UUID</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Events/EventIndex.html">Events</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Events</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Events/Event.html">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/KeyEvents.html">KeyEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/MouseEvents.html">MoueEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/WindowEvents.html">WindowEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/FileEvents.html">FileEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/VREvents.html">VREvents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../DataStructure/DataStructureIndex.html">DataStructure</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of DataStructure</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Image.html">Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Timer.html">Timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/TensorOptions.html">TensorOptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Worker.html">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Statistics.html">Statistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Grid.html">Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/BufferView.html">BufferView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/PerformancePanel.html">PerformancePanel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Dictionary.html">Dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Skybox.html">Skybox</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Renderer/RendererIndex.html">Renderer</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Renderer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Renderer.html">Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Shader.html">Shader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Material.html">Material</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Texture.html">Texture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Framebuffer.html">Framebuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html">Render Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html#render-passes">Render Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Buffer.html">Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VertexArray.html">VertexArray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VRSystem.html">VRSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/ContextManager.html">Context</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="SceneIndex.html">Scene</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Scene</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Scene.html">Scene</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Entity.html">Entity</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="SceneHierarchyPanel.html">Scene Hierarchy Panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Serializer.html">Serializer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RevisionSystem.html">RevisionSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ComponentRenderer.html">ComponentRenderer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scripting/ScriptingIndex.html">Scripting</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Scripting</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/ScriptEngine.html">ScriptEngine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/Script.html">Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Math/MathIndex.html">Math</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Math</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Color.html">Color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Constants.html">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/MeshManipulation.html">Mesh Manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Tracing.html">Tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ImGui/ImGui.html">ImGui</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IO/IO.html">IO</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Network/NetworkIndex.html">Network</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Network</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPServer.html">TCPServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPClient.html">TCPClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/NetworkUtils.html">Network Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../OpenMesh/OpenMesh.html">OpenMesh</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/source/Scene/Components.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="components">
+<h1>Components<a class="headerlink" href="#components" title="Link to this heading">¶</a></h1>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18TransformComponentE">
+<span id="_CPPv3N4atcg18TransformComponentE"></span><span id="_CPPv2N4atcg18TransformComponentE"></span><span id="atcg::TransformComponent"></span><span class="target" id="structatcg_1_1_transform_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TransformComponent</span></span></span><a class="headerlink" href="#_CPPv4N4atcg18TransformComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18TransformComponent18TransformComponentERKN3glm4vec3ERKN3glm4vec3ERKN3glm4vec3E">
+<span id="_CPPv3N4atcg18TransformComponent18TransformComponentERKN3glm4vec3ERKN3glm4vec3ERKN3glm4vec3E"></span><span id="_CPPv2N4atcg18TransformComponent18TransformComponentERKN3glm4vec3ERKN3glm4vec3ERKN3glm4vec3E"></span><span id="atcg::TransformComponent::TransformComponent__glm::vec3CR.glm::vec3CR.glm::vec3CR"></span><span class="target" id="structatcg_1_1_transform_component_1a3997c14a93cb16fa2f1a7f465fb02485"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TransformComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">position</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">)</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scale</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rotation</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">)</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18TransformComponent18TransformComponentERKN3glm4vec3ERKN3glm4vec3ERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a transform component. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>position</strong> – The position </p></li>
+<li><p><strong>scale</strong> – The scale </p></li>
+<li><p><strong>rotation</strong> – Rotation in Euler angles </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18TransformComponent18TransformComponentERKN3glm4mat4E">
+<span id="_CPPv3N4atcg18TransformComponent18TransformComponentERKN3glm4mat4E"></span><span id="_CPPv2N4atcg18TransformComponent18TransformComponentERKN3glm4mat4E"></span><span id="atcg::TransformComponent::TransformComponent__glm::mat4CR"></span><span class="target" id="structatcg_1_1_transform_component_1ac37f27f4d9cd291b294008190230d782"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TransformComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">model</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18TransformComponent18TransformComponentERKN3glm4mat4E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a transform component. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> – The model matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18TransformComponent11setPositionERKN3glm4vec3E">
+<span id="_CPPv3N4atcg18TransformComponent11setPositionERKN3glm4vec3E"></span><span id="_CPPv2N4atcg18TransformComponent11setPositionERKN3glm4vec3E"></span><span id="atcg::TransformComponent::setPosition__glm::vec3CR"></span><span class="target" id="structatcg_1_1_transform_component_1aabfdefe293925216fd849cc3b36772cd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setPosition</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">position</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18TransformComponent11setPositionERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>position</strong> – The position </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18TransformComponent11setRotationERKN3glm4vec3E">
+<span id="_CPPv3N4atcg18TransformComponent11setRotationERKN3glm4vec3E"></span><span id="_CPPv2N4atcg18TransformComponent11setRotationERKN3glm4vec3E"></span><span id="atcg::TransformComponent::setRotation__glm::vec3CR"></span><span class="target" id="structatcg_1_1_transform_component_1a1313643022d92ca3c2b1a835960ac50d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setRotation</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rotation</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18TransformComponent11setRotationERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the rotation (Euler angles) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rotation</strong> – The euler angles </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18TransformComponent8setScaleERKN3glm4vec3E">
+<span id="_CPPv3N4atcg18TransformComponent8setScaleERKN3glm4vec3E"></span><span id="_CPPv2N4atcg18TransformComponent8setScaleERKN3glm4vec3E"></span><span id="atcg::TransformComponent::setScale__glm::vec3CR"></span><span class="target" id="structatcg_1_1_transform_component_1ad07d3278ba85e7fc21c00ec2ededead2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setScale</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scale</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18TransformComponent8setScaleERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the scale. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>scale</strong> – The scale </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18TransformComponent8setModelERKN3glm4mat4E">
+<span id="_CPPv3N4atcg18TransformComponent8setModelERKN3glm4mat4E"></span><span id="_CPPv2N4atcg18TransformComponent8setModelERKN3glm4mat4E"></span><span id="atcg::TransformComponent::setModel__glm::mat4CR"></span><span class="target" id="structatcg_1_1_transform_component_1a28981a2512ac53b84fbb2e209c0bef4e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setModel</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">model</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18TransformComponent8setModelERKN3glm4mat4E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the model matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> – The model matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18TransformComponent8getModelEv">
+<span id="_CPPv3NK4atcg18TransformComponent8getModelEv"></span><span id="_CPPv2NK4atcg18TransformComponent8getModelEv"></span><span id="atcg::TransformComponent::getModelC"></span><span class="target" id="structatcg_1_1_transform_component_1ac86d2c16b8efe4c3a07ddb516801fafd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getModel</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg18TransformComponent8getModelEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the model matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The model matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18TransformComponent11getPositionEv">
+<span id="_CPPv3NK4atcg18TransformComponent11getPositionEv"></span><span id="_CPPv2NK4atcg18TransformComponent11getPositionEv"></span><span id="atcg::TransformComponent::getPositionC"></span><span class="target" id="structatcg_1_1_transform_component_1a197faf3d3a2e55111fcf0e19b931c07f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg18TransformComponent11getPositionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The position </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18TransformComponent8getScaleEv">
+<span id="_CPPv3NK4atcg18TransformComponent8getScaleEv"></span><span id="_CPPv2NK4atcg18TransformComponent8getScaleEv"></span><span id="atcg::TransformComponent::getScaleC"></span><span class="target" id="structatcg_1_1_transform_component_1a18d649902a887e9ff71970753f4aea0a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getScale</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg18TransformComponent8getScaleEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the scale. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The scale </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18TransformComponent11getRotationEv">
+<span id="_CPPv3NK4atcg18TransformComponent11getRotationEv"></span><span id="_CPPv2NK4atcg18TransformComponent11getRotationEv"></span><span id="atcg::TransformComponent::getRotationC"></span><span class="target" id="structatcg_1_1_transform_component_1a666daa4c41fad82fe289d974b49c50ed"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getRotation</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg18TransformComponent11getRotationEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the rotation. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The rotation </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18TransformComponent8revisionEv">
+<span id="_CPPv3NK4atcg18TransformComponent8revisionEv"></span><span id="_CPPv2NK4atcg18TransformComponent8revisionEv"></span><span id="atcg::TransformComponent::revisionC"></span><span class="target" id="structatcg_1_1_transform_component_1ac1ab21cb66784b2f781d79c6a224284a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">revision</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg18TransformComponent8revisionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the number of revision (edits) of the transform component. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The number of revisions </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18TransformComponentcvN3glm4mat4EEv">
+<span id="_CPPv3NK4atcg18TransformComponentcvN3glm4mat4EEv"></span><span id="_CPPv2NK4atcg18TransformComponentcvN3glm4mat4EEv"></span><span id="atcg::TransformComponent::castto-glm::mat4-operatorC"></span><span class="target" id="structatcg_1_1_transform_component_1a7634a4e4aafd3e202d82eefb10337676"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg18TransformComponentcvN3glm4mat4EEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18TransformComponent8toStringEv">
+<span id="_CPPv3N4atcg18TransformComponent8toStringEv"></span><span id="_CPPv2N4atcg18TransformComponent8toStringEv"></span><span id="atcg::TransformComponent::toStringCE"></span><span class="target" id="structatcg_1_1_transform_component_1a2a5cdfcf386412d529255e2599bffa7c"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">toString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18TransformComponent8toStringEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11IDComponentE">
+<span id="_CPPv3N4atcg11IDComponentE"></span><span id="_CPPv2N4atcg11IDComponentE"></span><span id="atcg::IDComponent"></span><span class="target" id="structatcg_1_1_i_d_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">IDComponent</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11IDComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11IDComponent11IDComponentEv">
+<span id="_CPPv3N4atcg11IDComponent11IDComponentEv"></span><span id="_CPPv2N4atcg11IDComponent11IDComponentEv"></span><span id="atcg::IDComponent::IDComponent"></span><span class="target" id="structatcg_1_1_i_d_component_1a6a6956dcaf685a3137bf4c75b9e2a6a4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">IDComponent</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg11IDComponent11IDComponentEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11IDComponent11IDComponentE8uint64_t">
+<span id="_CPPv3N4atcg11IDComponent11IDComponentE8uint64_t"></span><span id="_CPPv2N4atcg11IDComponent11IDComponentE8uint64_t"></span><span id="atcg::IDComponent::IDComponent__uint64_t"></span><span class="target" id="structatcg_1_1_i_d_component_1adf1c81d6d0752367f87f120a17916bb5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">IDComponent</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg11IDComponent11IDComponentE8uint64_t" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg11IDComponent2IDEv">
+<span id="_CPPv3NK4atcg11IDComponent2IDEv"></span><span id="_CPPv2NK4atcg11IDComponent2IDEv"></span><span id="atcg::IDComponent::IDC"></span><span class="target" id="structatcg_1_1_i_d_component_1a5cc4a17fb7823197d145b45b57baa97f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="../Core/UUID.html#_CPPv4N4atcg4UUIDE" title="atcg::UUID"><span class="n"><span class="pre">UUID</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ID</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg11IDComponent2IDEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13NameComponentE">
+<span id="_CPPv3N4atcg13NameComponentE"></span><span id="_CPPv2N4atcg13NameComponentE"></span><span id="atcg::NameComponent"></span><span class="target" id="structatcg_1_1_name_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">NameComponent</span></span></span><a class="headerlink" href="#_CPPv4N4atcg13NameComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13NameComponent13NameComponentEv">
+<span id="_CPPv3N4atcg13NameComponent13NameComponentEv"></span><span id="_CPPv2N4atcg13NameComponent13NameComponentEv"></span><span id="atcg::NameComponent::NameComponent"></span><span class="target" id="structatcg_1_1_name_component_1a9b374fee1dd5c362686d3023f4890f88"></span><span class="sig-name descname"><span class="n"><span class="pre">NameComponent</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg13NameComponent13NameComponentEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13NameComponent13NameComponentERKNSt6stringE">
+<span id="_CPPv3N4atcg13NameComponent13NameComponentERKNSt6stringE"></span><span id="_CPPv2N4atcg13NameComponent13NameComponentERKNSt6stringE"></span><span id="atcg::NameComponent::NameComponent__ssCR"></span><span class="target" id="structatcg_1_1_name_component_1a0d318f84e1fbbdc13182ea5ea41500b9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">NameComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">name</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13NameComponent13NameComponentERKNSt6stringE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg13NameComponent4nameEv">
+<span id="_CPPv3NK4atcg13NameComponent4nameEv"></span><span id="_CPPv2NK4atcg13NameComponent4nameEv"></span><span id="atcg::NameComponent::nameC"></span><span class="target" id="structatcg_1_1_name_component_1a24dcbf29c0d6cd766009a182a6484e3b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg13NameComponent4nameEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17GeometryComponentE">
+<span id="_CPPv3N4atcg17GeometryComponentE"></span><span id="_CPPv2N4atcg17GeometryComponentE"></span><span id="atcg::GeometryComponent"></span><span class="target" id="structatcg_1_1_geometry_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GeometryComponent</span></span></span><a class="headerlink" href="#_CPPv4N4atcg17GeometryComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17GeometryComponent17GeometryComponentEv">
+<span id="_CPPv3N4atcg17GeometryComponent17GeometryComponentEv"></span><span id="_CPPv2N4atcg17GeometryComponent17GeometryComponentEv"></span><span id="atcg::GeometryComponent::GeometryComponent"></span><span class="target" id="structatcg_1_1_geometry_component_1a22182a2d5db2d7845ef3feeb8651527b"></span><span class="sig-name descname"><span class="n"><span class="pre">GeometryComponent</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg17GeometryComponent17GeometryComponentEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17GeometryComponent17GeometryComponentERKN4atcg7ref_ptrI5GraphEE">
+<span id="_CPPv3N4atcg17GeometryComponent17GeometryComponentERKN4atcg7ref_ptrI5GraphEE"></span><span id="_CPPv2N4atcg17GeometryComponent17GeometryComponentERKN4atcg7ref_ptrI5GraphEE"></span><span id="atcg::GeometryComponent::GeometryComponent__atcg::ref_ptr:Graph:CR"></span><span class="target" id="structatcg_1_1_geometry_component_1a91d69daca28fac2c9a736b9633df6be1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">GeometryComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../DataStructure/Graph.html#_CPPv4N4atcg5GraphE" title="atcg::Graph"><span class="n"><span class="pre">Graph</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">graph</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17GeometryComponent17GeometryComponentERKN4atcg7ref_ptrI5GraphEE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17GeometryComponent5graphE">
+<span id="_CPPv3N4atcg17GeometryComponent5graphE"></span><span id="_CPPv2N4atcg17GeometryComponent5graphE"></span><span id="atcg::GeometryComponent::graph__atcg::ref_ptr:Graph:"></span><span class="target" id="structatcg_1_1_geometry_component_1afc895065484293fed769fb715e26599a"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../DataStructure/Graph.html#_CPPv4N4atcg5GraphE" title="atcg::Graph"><span class="n"><span class="pre">Graph</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">graph</span></span></span><a class="headerlink" href="#_CPPv4N4atcg17GeometryComponent5graphE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17GeometryComponent8toStringEv">
+<span id="_CPPv3N4atcg17GeometryComponent8toStringEv"></span><span id="_CPPv2N4atcg17GeometryComponent8toStringEv"></span><span id="atcg::GeometryComponent::toStringCE"></span><span class="target" id="structatcg_1_1_geometry_component_1a2a5cdfcf386412d529255e2599bffa7c"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">toString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17GeometryComponent8toStringEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg30AccelerationStructureComponentE">
+<span id="_CPPv3N4atcg30AccelerationStructureComponentE"></span><span id="_CPPv2N4atcg30AccelerationStructureComponentE"></span><span id="atcg::AccelerationStructureComponent"></span><span class="target" id="structatcg_1_1_acceleration_structure_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">AccelerationStructureComponent</span></span></span><a class="headerlink" href="#_CPPv4N4atcg30AccelerationStructureComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg30AccelerationStructureComponent30AccelerationStructureComponentEv">
+<span id="_CPPv3N4atcg30AccelerationStructureComponent30AccelerationStructureComponentEv"></span><span id="_CPPv2N4atcg30AccelerationStructureComponent30AccelerationStructureComponentEv"></span><span id="atcg::AccelerationStructureComponent::AccelerationStructureComponent"></span><span class="target" id="structatcg_1_1_acceleration_structure_component_1ae98772aa66692ce2f624416a7008dd72"></span><span class="sig-name descname"><span class="n"><span class="pre">AccelerationStructureComponent</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg30AccelerationStructureComponent30AccelerationStructureComponentEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg30AccelerationStructureComponent8verticesE">
+<span id="_CPPv3N4atcg30AccelerationStructureComponent8verticesE"></span><span id="_CPPv2N4atcg30AccelerationStructureComponent8verticesE"></span><span id="atcg::AccelerationStructureComponent::vertices__atcg::MemoryBuffer:glm::vec3:"></span><span class="target" id="structatcg_1_1_acceleration_structure_component_1adf0f91d38cca7776f5555d11242faef2"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer"><span class="n"><span class="pre">MemoryBuffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">vertices</span></span></span><a class="headerlink" href="#_CPPv4N4atcg30AccelerationStructureComponent8verticesE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg30AccelerationStructureComponent5facesE">
+<span id="_CPPv3N4atcg30AccelerationStructureComponent5facesE"></span><span id="_CPPv2N4atcg30AccelerationStructureComponent5facesE"></span><span id="atcg::AccelerationStructureComponent::faces__atcg::MemoryBuffer:glm::u32vec3:"></span><span class="target" id="structatcg_1_1_acceleration_structure_component_1a6b37cb5c400f747cf67daf421e51b090"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer"><span class="n"><span class="pre">MemoryBuffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">u32vec3</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">faces</span></span></span><a class="headerlink" href="#_CPPv4N4atcg30AccelerationStructureComponent5facesE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg30AccelerationStructureComponent5accelE">
+<span id="_CPPv3N4atcg30AccelerationStructureComponent5accelE"></span><span id="_CPPv2N4atcg30AccelerationStructureComponent5accelE"></span><span id="atcg::AccelerationStructureComponent::accel__nanort::BVHAccel:float:"></span><span class="target" id="structatcg_1_1_acceleration_structure_component_1ae1f7cb3ecfede31c3518264f9c615d97"></span><span class="n"><span class="pre">nanort</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">BVHAccel</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">float</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">accel</span></span></span><a class="headerlink" href="#_CPPv4N4atcg30AccelerationStructureComponent5accelE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponentE">
+<span id="_CPPv3N4atcg15CameraComponentE"></span><span id="_CPPv2N4atcg15CameraComponentE"></span><span id="atcg::CameraComponent"></span><span class="target" id="structatcg_1_1_camera_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CameraComponent</span></span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by <a class="reference internal" href="#structatcg_1_1_editor_camera_component"><span class="std std-ref">EditorCameraComponent</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent15CameraComponentEv">
+<span id="_CPPv3N4atcg15CameraComponent15CameraComponentEv"></span><span id="_CPPv2N4atcg15CameraComponent15CameraComponentEv"></span><span id="atcg::CameraComponent::CameraComponent"></span><span class="target" id="structatcg_1_1_camera_component_1a8c1e5f132f8e3d4e475918ea860fb806"></span><span class="sig-name descname"><span class="n"><span class="pre">CameraComponent</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent15CameraComponentEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent15CameraComponentERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_t">
+<span id="_CPPv3N4atcg15CameraComponent15CameraComponentERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_t"></span><span id="_CPPv2N4atcg15CameraComponent15CameraComponentERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_t"></span><span id="atcg::CameraComponent::CameraComponent__atcg::ref_ptr:Camera:CR.uint32_tC.uint32_tC"></span><span class="target" id="structatcg_1_1_camera_component_1aab74f68187e753a53d1487fc4a54dcd5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CameraComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1024</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">height</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1024</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent15CameraComponentERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent6cameraE">
+<span id="_CPPv3N4atcg15CameraComponent6cameraE"></span><span id="_CPPv2N4atcg15CameraComponent6cameraE"></span><span id="atcg::CameraComponent::camera__atcg::ref_ptr:Camera:"></span><span class="target" id="structatcg_1_1_camera_component_1a19c7cee5b272eb1be5734094d4e92a7f"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">camera</span></span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent6cameraE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent5colorE">
+<span id="_CPPv3N4atcg15CameraComponent5colorE"></span><span id="_CPPv2N4atcg15CameraComponent5colorE"></span><span id="atcg::CameraComponent::color__glm::vec3"></span><span class="target" id="structatcg_1_1_camera_component_1a0475c18c501e71cebb5fbd79145f8e81"></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">color</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent5colorE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent11perspectiveE">
+<span id="_CPPv3N4atcg15CameraComponent11perspectiveE"></span><span id="_CPPv2N4atcg15CameraComponent11perspectiveE"></span><span id="atcg::CameraComponent::perspective__b"></span><span class="target" id="structatcg_1_1_camera_component_1a35bef8d4568a5e59f4a5b01ca78d8378"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">perspective</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent11perspectiveE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent5widthE">
+<span id="_CPPv3N4atcg15CameraComponent5widthE"></span><span id="_CPPv2N4atcg15CameraComponent5widthE"></span><span id="atcg::CameraComponent::width__uint32_t"></span><span class="target" id="structatcg_1_1_camera_component_1a325272ddd9a962f05deb905101d25cbd"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">width</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1024</span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent5widthE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent6heightE">
+<span id="_CPPv3N4atcg15CameraComponent6heightE"></span><span id="_CPPv2N4atcg15CameraComponent6heightE"></span><span id="atcg::CameraComponent::height__uint32_t"></span><span class="target" id="structatcg_1_1_camera_component_1a6ad4f820ce4e75cda0686fcaad5168be"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">height</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1024</span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent6heightE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent12render_scaleE">
+<span id="_CPPv3N4atcg15CameraComponent12render_scaleE"></span><span id="_CPPv2N4atcg15CameraComponent12render_scaleE"></span><span id="atcg::CameraComponent::render_scale__float"></span><span class="target" id="structatcg_1_1_camera_component_1a0e90c2ed07231e0ee7e810b1f04be993"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">render_scale</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.0f</span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent12render_scaleE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent7previewE">
+<span id="_CPPv3N4atcg15CameraComponent7previewE"></span><span id="_CPPv2N4atcg15CameraComponent7previewE"></span><span id="atcg::CameraComponent::preview__atcg::ref_ptr:atcg::Framebuffer:"></span><span class="target" id="structatcg_1_1_camera_component_1af9e35b1a1fd45942270745eab249659b"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Framebuffer.html#_CPPv4N4atcg11FramebufferE" title="atcg::Framebuffer"><span class="n"><span class="pre">Framebuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">preview</span></span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent7previewE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent5imageE">
+<span id="_CPPv3N4atcg15CameraComponent5imageE"></span><span id="_CPPv2N4atcg15CameraComponent5imageE"></span><span id="atcg::CameraComponent::image__atcg::ref_ptr:atcg::Texture2D:"></span><span class="target" id="structatcg_1_1_camera_component_1a1ca79e213040c6e9d14f797289f5e3b1"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Texture.html#_CPPv4N4atcg9Texture2DE" title="atcg::Texture2D"><span class="n"><span class="pre">Texture2D</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">image</span></span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent5imageE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent14render_previewE">
+<span id="_CPPv3N4atcg15CameraComponent14render_previewE"></span><span id="_CPPv2N4atcg15CameraComponent14render_previewE"></span><span id="atcg::CameraComponent::render_preview__b"></span><span class="target" id="structatcg_1_1_camera_component_1a00939ea247d0f8bb45260ec565102ddc"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">render_preview</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent14render_previewE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15CameraComponent8toStringEv">
+<span id="_CPPv3N4atcg15CameraComponent8toStringEv"></span><span id="_CPPv2N4atcg15CameraComponent8toStringEv"></span><span id="atcg::CameraComponent::toStringCE"></span><span class="target" id="structatcg_1_1_camera_component_1a2a5cdfcf386412d529255e2599bffa7c"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">toString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg15CameraComponent8toStringEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21EditorCameraComponentE">
+<span id="_CPPv3N4atcg21EditorCameraComponentE"></span><span id="_CPPv2N4atcg21EditorCameraComponentE"></span><span id="atcg::EditorCameraComponent"></span><span class="target" id="structatcg_1_1_editor_camera_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EditorCameraComponent</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg15CameraComponentE" title="atcg::CameraComponent"><span class="n"><span class="pre">CameraComponent</span></span></a><a class="headerlink" href="#_CPPv4N4atcg21EditorCameraComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21EditorCameraComponent21EditorCameraComponentEv">
+<span id="_CPPv3N4atcg21EditorCameraComponent21EditorCameraComponentEv"></span><span id="_CPPv2N4atcg21EditorCameraComponent21EditorCameraComponentEv"></span><span id="atcg::EditorCameraComponent::EditorCameraComponent"></span><span class="target" id="structatcg_1_1_editor_camera_component_1abd0243e62daf035ea95e8724b4dc092f"></span><span class="sig-name descname"><span class="n"><span class="pre">EditorCameraComponent</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg21EditorCameraComponent21EditorCameraComponentEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21EditorCameraComponent21EditorCameraComponentERKN4atcg7ref_ptrI6CameraEE">
+<span id="_CPPv3N4atcg21EditorCameraComponent21EditorCameraComponentERKN4atcg7ref_ptrI6CameraEE"></span><span id="_CPPv2N4atcg21EditorCameraComponent21EditorCameraComponentERKN4atcg7ref_ptrI6CameraEE"></span><span id="atcg::EditorCameraComponent::EditorCameraComponent__atcg::ref_ptr:Camera:CR"></span><span class="target" id="structatcg_1_1_editor_camera_component_1a61c73e9731fdb7f8bcc83e1b1a06b7c5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EditorCameraComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg21EditorCameraComponent21EditorCameraComponentERKN4atcg7ref_ptrI6CameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15RenderComponentE">
+<span id="_CPPv3N4atcg15RenderComponentE"></span><span id="_CPPv2N4atcg15RenderComponentE"></span><span id="atcg::RenderComponent"></span><span class="target" id="structatcg_1_1_render_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RenderComponent</span></span></span><a class="headerlink" href="#_CPPv4N4atcg15RenderComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by <a class="reference internal" href="#structatcg_1_1_custom_render_component"><span class="std std-ref">CustomRenderComponent</span></a>, <a class="reference internal" href="#structatcg_1_1_edge_cylinder_render_component"><span class="std std-ref">EdgeCylinderRenderComponent</span></a>, <a class="reference internal" href="#structatcg_1_1_edge_render_component"><span class="std std-ref">EdgeRenderComponent</span></a>, <a class="reference internal" href="#structatcg_1_1_instance_render_component"><span class="std std-ref">InstanceRenderComponent</span></a>, <a class="reference internal" href="#structatcg_1_1_mesh_render_component"><span class="std std-ref">MeshRenderComponent</span></a>, <a class="reference internal" href="#structatcg_1_1_point_render_component"><span class="std std-ref">PointRenderComponent</span></a>, <a class="reference internal" href="#structatcg_1_1_point_sphere_render_component"><span class="std std-ref">PointSphereRenderComponent</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15RenderComponent15RenderComponentEN4atcg8DrawModeE">
+<span id="_CPPv3N4atcg15RenderComponent15RenderComponentEN4atcg8DrawModeE"></span><span id="_CPPv2N4atcg15RenderComponent15RenderComponentEN4atcg8DrawModeE"></span><span id="atcg::RenderComponent::RenderComponent__atcg::DrawMode"></span><span class="target" id="structatcg_1_1_render_component_1af5fc8f296395a7c0aa09c22a9d1e8d44"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RenderComponent</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Renderer.html#_CPPv4N4atcg8DrawModeE" title="atcg::DrawMode"><span class="n"><span class="pre">DrawMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">draw_mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg15RenderComponent15RenderComponentEN4atcg8DrawModeE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15RenderComponent9draw_modeE">
+<span id="_CPPv3N4atcg15RenderComponent9draw_modeE"></span><span id="_CPPv2N4atcg15RenderComponent9draw_modeE"></span><span id="atcg::RenderComponent::draw_mode__atcg::DrawMode"></span><span class="target" id="structatcg_1_1_render_component_1aad035e003fadeb6171768d21aea1618a"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Renderer.html#_CPPv4N4atcg8DrawModeE" title="atcg::DrawMode"><span class="n"><span class="pre">DrawMode</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">draw_mode</span></span></span><a class="headerlink" href="#_CPPv4N4atcg15RenderComponent9draw_modeE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15RenderComponent7visibleE">
+<span id="_CPPv3N4atcg15RenderComponent7visibleE"></span><span id="_CPPv2N4atcg15RenderComponent7visibleE"></span><span id="atcg::RenderComponent::visible__b"></span><span class="target" id="structatcg_1_1_render_component_1aa54a57ae048476d840caf6d4d2c47aa3"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">visible</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">true</span></span><a class="headerlink" href="#_CPPv4N4atcg15RenderComponent7visibleE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19MeshRenderComponentE">
+<span id="_CPPv3N4atcg19MeshRenderComponentE"></span><span id="_CPPv2N4atcg19MeshRenderComponentE"></span><span id="atcg::MeshRenderComponent"></span><span class="target" id="structatcg_1_1_mesh_render_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MeshRenderComponent</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg15RenderComponentE" title="atcg::RenderComponent"><span class="n"><span class="pre">RenderComponent</span></span></a><a class="headerlink" href="#_CPPv4N4atcg19MeshRenderComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19MeshRenderComponent19MeshRenderComponentERKN4atcg7ref_ptrI6ShaderEE">
+<span id="_CPPv3N4atcg19MeshRenderComponent19MeshRenderComponentERKN4atcg7ref_ptrI6ShaderEE"></span><span id="_CPPv2N4atcg19MeshRenderComponent19MeshRenderComponentERKN4atcg7ref_ptrI6ShaderEE"></span><span id="atcg::MeshRenderComponent::MeshRenderComponent__atcg::ref_ptr:Shader:CR"></span><span class="target" id="structatcg_1_1_mesh_render_component_1aaffbb2456dd48bc68d5f6accab7f0046"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MeshRenderComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Shader.html#_CPPv4N4atcg6ShaderE" title="atcg::Shader"><span class="n"><span class="pre">Shader</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shader</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ShaderManager</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">getShader</span></span><span class="p"><span class="pre">(</span></span><span class="s"><span class="pre">&quot;base&quot;</span></span><span class="p"><span class="pre">)</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg19MeshRenderComponent19MeshRenderComponentERKN4atcg7ref_ptrI6ShaderEE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19MeshRenderComponent6shaderE">
+<span id="_CPPv3N4atcg19MeshRenderComponent6shaderE"></span><span id="_CPPv2N4atcg19MeshRenderComponent6shaderE"></span><span id="atcg::MeshRenderComponent::shader__atcg::ref_ptr:Shader:"></span><span class="target" id="structatcg_1_1_mesh_render_component_1a5c8ccb99cbd9ce72324373cb1c058b2f"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Shader.html#_CPPv4N4atcg6ShaderE" title="atcg::Shader"><span class="n"><span class="pre">Shader</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">shader</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ShaderManager</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">getShader</span></span><span class="p"><span class="pre">(</span></span><span class="s"><span class="pre">&quot;base&quot;</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#_CPPv4N4atcg19MeshRenderComponent6shaderE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19MeshRenderComponent8materialE">
+<span id="_CPPv3N4atcg19MeshRenderComponent8materialE"></span><span id="_CPPv2N4atcg19MeshRenderComponent8materialE"></span><span id="atcg::MeshRenderComponent::material__Material"></span><span class="target" id="structatcg_1_1_mesh_render_component_1a9125bed39e4fb621f8731a0a9e635a09"></span><a class="reference internal" href="../Renderer/Material.html#_CPPv4N4atcg8MaterialE" title="atcg::Material"><span class="n"><span class="pre">Material</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">material</span></span></span><a class="headerlink" href="#_CPPv4N4atcg19MeshRenderComponent8materialE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19MeshRenderComponent14receive_shadowE">
+<span id="_CPPv3N4atcg19MeshRenderComponent14receive_shadowE"></span><span id="_CPPv2N4atcg19MeshRenderComponent14receive_shadowE"></span><span id="atcg::MeshRenderComponent::receive_shadow__b"></span><span class="target" id="structatcg_1_1_mesh_render_component_1abe94ee000a9b9e2e7c49d4e93f518a16"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">receive_shadow</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">true</span></span><a class="headerlink" href="#_CPPv4N4atcg19MeshRenderComponent14receive_shadowE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19MeshRenderComponent8toStringEv">
+<span id="_CPPv3N4atcg19MeshRenderComponent8toStringEv"></span><span id="_CPPv2N4atcg19MeshRenderComponent8toStringEv"></span><span id="atcg::MeshRenderComponent::toStringCE"></span><span class="target" id="structatcg_1_1_mesh_render_component_1a2a5cdfcf386412d529255e2599bffa7c"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">toString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg19MeshRenderComponent8toStringEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg20PointRenderComponentE">
+<span id="_CPPv3N4atcg20PointRenderComponentE"></span><span id="_CPPv2N4atcg20PointRenderComponentE"></span><span id="atcg::PointRenderComponent"></span><span class="target" id="structatcg_1_1_point_render_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PointRenderComponent</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg15RenderComponentE" title="atcg::RenderComponent"><span class="n"><span class="pre">RenderComponent</span></span></a><a class="headerlink" href="#_CPPv4N4atcg20PointRenderComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg20PointRenderComponent20PointRenderComponentERKN4atcg7ref_ptrI6ShaderEERKN3glm4vec3ERKf">
+<span id="_CPPv3N4atcg20PointRenderComponent20PointRenderComponentERKN4atcg7ref_ptrI6ShaderEERKN3glm4vec3ERKf"></span><span id="_CPPv2N4atcg20PointRenderComponent20PointRenderComponentERKN4atcg7ref_ptrI6ShaderEERKN3glm4vec3ERKf"></span><span id="atcg::PointRenderComponent::PointRenderComponent__atcg::ref_ptr:Shader:CR.glm::vec3CR.floatCR"></span><span class="target" id="structatcg_1_1_point_render_component_1a657b3d93ff7eaf213af2662d4b7526d9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PointRenderComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Shader.html#_CPPv4N4atcg6ShaderE" title="atcg::Shader"><span class="n"><span class="pre">Shader</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shader</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ShaderManager</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">getShader</span></span><span class="p"><span class="pre">(</span></span><span class="s"><span class="pre">&quot;base&quot;</span></span><span class="p"><span class="pre">)</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">color</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">point_size</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.0f</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg20PointRenderComponent20PointRenderComponentERKN4atcg7ref_ptrI6ShaderEERKN3glm4vec3ERKf" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg20PointRenderComponent6shaderE">
+<span id="_CPPv3N4atcg20PointRenderComponent6shaderE"></span><span id="_CPPv2N4atcg20PointRenderComponent6shaderE"></span><span id="atcg::PointRenderComponent::shader__atcg::ref_ptr:Shader:"></span><span class="target" id="structatcg_1_1_point_render_component_1a5c8ccb99cbd9ce72324373cb1c058b2f"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Shader.html#_CPPv4N4atcg6ShaderE" title="atcg::Shader"><span class="n"><span class="pre">Shader</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">shader</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ShaderManager</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">getShader</span></span><span class="p"><span class="pre">(</span></span><span class="s"><span class="pre">&quot;base&quot;</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#_CPPv4N4atcg20PointRenderComponent6shaderE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg20PointRenderComponent5colorE">
+<span id="_CPPv3N4atcg20PointRenderComponent5colorE"></span><span id="_CPPv2N4atcg20PointRenderComponent5colorE"></span><span id="atcg::PointRenderComponent::color__glm::vec3"></span><span class="target" id="structatcg_1_1_point_render_component_1a0475c18c501e71cebb5fbd79145f8e81"></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">color</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#_CPPv4N4atcg20PointRenderComponent5colorE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg20PointRenderComponent10point_sizeE">
+<span id="_CPPv3N4atcg20PointRenderComponent10point_sizeE"></span><span id="_CPPv2N4atcg20PointRenderComponent10point_sizeE"></span><span id="atcg::PointRenderComponent::point_size__float"></span><span class="target" id="structatcg_1_1_point_render_component_1abfe376881d2f1271e9428d92be918826"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">point_size</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1.0f</span></span><a class="headerlink" href="#_CPPv4N4atcg20PointRenderComponent10point_sizeE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg20PointRenderComponent8toStringEv">
+<span id="_CPPv3N4atcg20PointRenderComponent8toStringEv"></span><span id="_CPPv2N4atcg20PointRenderComponent8toStringEv"></span><span id="atcg::PointRenderComponent::toStringCE"></span><span class="target" id="structatcg_1_1_point_render_component_1a2a5cdfcf386412d529255e2599bffa7c"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">toString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg20PointRenderComponent8toStringEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg26PointSphereRenderComponentE">
+<span id="_CPPv3N4atcg26PointSphereRenderComponentE"></span><span id="_CPPv2N4atcg26PointSphereRenderComponentE"></span><span id="atcg::PointSphereRenderComponent"></span><span class="target" id="structatcg_1_1_point_sphere_render_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PointSphereRenderComponent</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg15RenderComponentE" title="atcg::RenderComponent"><span class="n"><span class="pre">RenderComponent</span></span></a><a class="headerlink" href="#_CPPv4N4atcg26PointSphereRenderComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg26PointSphereRenderComponent26PointSphereRenderComponentERKN4atcg7ref_ptrI6ShaderEERKf">
+<span id="_CPPv3N4atcg26PointSphereRenderComponent26PointSphereRenderComponentERKN4atcg7ref_ptrI6ShaderEERKf"></span><span id="_CPPv2N4atcg26PointSphereRenderComponent26PointSphereRenderComponentERKN4atcg7ref_ptrI6ShaderEERKf"></span><span id="atcg::PointSphereRenderComponent::PointSphereRenderComponent__atcg::ref_ptr:Shader:CR.floatCR"></span><span class="target" id="structatcg_1_1_point_sphere_render_component_1ada0196d8a2ceb9331000b04f3c434bbd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PointSphereRenderComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Shader.html#_CPPv4N4atcg6ShaderE" title="atcg::Shader"><span class="n"><span class="pre">Shader</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shader</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ShaderManager</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">getShader</span></span><span class="p"><span class="pre">(</span></span><span class="s"><span class="pre">&quot;base&quot;</span></span><span class="p"><span class="pre">)</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">point_size</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.1f</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg26PointSphereRenderComponent26PointSphereRenderComponentERKN4atcg7ref_ptrI6ShaderEERKf" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg26PointSphereRenderComponent6shaderE">
+<span id="_CPPv3N4atcg26PointSphereRenderComponent6shaderE"></span><span id="_CPPv2N4atcg26PointSphereRenderComponent6shaderE"></span><span id="atcg::PointSphereRenderComponent::shader__atcg::ref_ptr:Shader:"></span><span class="target" id="structatcg_1_1_point_sphere_render_component_1a5c8ccb99cbd9ce72324373cb1c058b2f"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Shader.html#_CPPv4N4atcg6ShaderE" title="atcg::Shader"><span class="n"><span class="pre">Shader</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">shader</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ShaderManager</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">getShader</span></span><span class="p"><span class="pre">(</span></span><span class="s"><span class="pre">&quot;base&quot;</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#_CPPv4N4atcg26PointSphereRenderComponent6shaderE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg26PointSphereRenderComponent10point_sizeE">
+<span id="_CPPv3N4atcg26PointSphereRenderComponent10point_sizeE"></span><span id="_CPPv2N4atcg26PointSphereRenderComponent10point_sizeE"></span><span id="atcg::PointSphereRenderComponent::point_size__float"></span><span class="target" id="structatcg_1_1_point_sphere_render_component_1abfe376881d2f1271e9428d92be918826"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">point_size</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.1f</span></span><a class="headerlink" href="#_CPPv4N4atcg26PointSphereRenderComponent10point_sizeE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg26PointSphereRenderComponent8materialE">
+<span id="_CPPv3N4atcg26PointSphereRenderComponent8materialE"></span><span id="_CPPv2N4atcg26PointSphereRenderComponent8materialE"></span><span id="atcg::PointSphereRenderComponent::material__Material"></span><span class="target" id="structatcg_1_1_point_sphere_render_component_1a9125bed39e4fb621f8731a0a9e635a09"></span><a class="reference internal" href="../Renderer/Material.html#_CPPv4N4atcg8MaterialE" title="atcg::Material"><span class="n"><span class="pre">Material</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">material</span></span></span><a class="headerlink" href="#_CPPv4N4atcg26PointSphereRenderComponent8materialE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg26PointSphereRenderComponent8toStringEv">
+<span id="_CPPv3N4atcg26PointSphereRenderComponent8toStringEv"></span><span id="_CPPv2N4atcg26PointSphereRenderComponent8toStringEv"></span><span id="atcg::PointSphereRenderComponent::toStringCE"></span><span class="target" id="structatcg_1_1_point_sphere_render_component_1a2a5cdfcf386412d529255e2599bffa7c"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">toString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg26PointSphereRenderComponent8toStringEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EdgeRenderComponentE">
+<span id="_CPPv3N4atcg19EdgeRenderComponentE"></span><span id="_CPPv2N4atcg19EdgeRenderComponentE"></span><span id="atcg::EdgeRenderComponent"></span><span class="target" id="structatcg_1_1_edge_render_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EdgeRenderComponent</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg15RenderComponentE" title="atcg::RenderComponent"><span class="n"><span class="pre">RenderComponent</span></span></a><a class="headerlink" href="#_CPPv4N4atcg19EdgeRenderComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EdgeRenderComponent19EdgeRenderComponentERKN3glm4vec3E">
+<span id="_CPPv3N4atcg19EdgeRenderComponent19EdgeRenderComponentERKN3glm4vec3E"></span><span id="_CPPv2N4atcg19EdgeRenderComponent19EdgeRenderComponentERKN3glm4vec3E"></span><span id="atcg::EdgeRenderComponent::EdgeRenderComponent__glm::vec3CR"></span><span class="target" id="structatcg_1_1_edge_render_component_1ad02507fea3138a9209c05c86f70f75bd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EdgeRenderComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">color</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg19EdgeRenderComponent19EdgeRenderComponentERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EdgeRenderComponent5colorE">
+<span id="_CPPv3N4atcg19EdgeRenderComponent5colorE"></span><span id="_CPPv2N4atcg19EdgeRenderComponent5colorE"></span><span id="atcg::EdgeRenderComponent::color__glm::vec3"></span><span class="target" id="structatcg_1_1_edge_render_component_1a0475c18c501e71cebb5fbd79145f8e81"></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">color</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#_CPPv4N4atcg19EdgeRenderComponent5colorE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg19EdgeRenderComponent8toStringEv">
+<span id="_CPPv3N4atcg19EdgeRenderComponent8toStringEv"></span><span id="_CPPv2N4atcg19EdgeRenderComponent8toStringEv"></span><span id="atcg::EdgeRenderComponent::toStringCE"></span><span class="target" id="structatcg_1_1_edge_render_component_1a2a5cdfcf386412d529255e2599bffa7c"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">toString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg19EdgeRenderComponent8toStringEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg27EdgeCylinderRenderComponentE">
+<span id="_CPPv3N4atcg27EdgeCylinderRenderComponentE"></span><span id="_CPPv2N4atcg27EdgeCylinderRenderComponentE"></span><span id="atcg::EdgeCylinderRenderComponent"></span><span class="target" id="structatcg_1_1_edge_cylinder_render_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EdgeCylinderRenderComponent</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg15RenderComponentE" title="atcg::RenderComponent"><span class="n"><span class="pre">RenderComponent</span></span></a><a class="headerlink" href="#_CPPv4N4atcg27EdgeCylinderRenderComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg27EdgeCylinderRenderComponent27EdgeCylinderRenderComponentEf">
+<span id="_CPPv3N4atcg27EdgeCylinderRenderComponent27EdgeCylinderRenderComponentEf"></span><span id="_CPPv2N4atcg27EdgeCylinderRenderComponent27EdgeCylinderRenderComponentEf"></span><span id="atcg::EdgeCylinderRenderComponent::EdgeCylinderRenderComponent__float"></span><span class="target" id="structatcg_1_1_edge_cylinder_render_component_1a65aeca65fbf441bb8b8253b7f350420b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EdgeCylinderRenderComponent</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">radius</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.001f</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg27EdgeCylinderRenderComponent27EdgeCylinderRenderComponentEf" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg27EdgeCylinderRenderComponent6radiusE">
+<span id="_CPPv3N4atcg27EdgeCylinderRenderComponent6radiusE"></span><span id="_CPPv2N4atcg27EdgeCylinderRenderComponent6radiusE"></span><span id="atcg::EdgeCylinderRenderComponent::radius__float"></span><span class="target" id="structatcg_1_1_edge_cylinder_render_component_1a5050a760c11da521cd4aee6336f6529f"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">radius</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.001f</span></span><a class="headerlink" href="#_CPPv4N4atcg27EdgeCylinderRenderComponent6radiusE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg27EdgeCylinderRenderComponent8materialE">
+<span id="_CPPv3N4atcg27EdgeCylinderRenderComponent8materialE"></span><span id="_CPPv2N4atcg27EdgeCylinderRenderComponent8materialE"></span><span id="atcg::EdgeCylinderRenderComponent::material__Material"></span><span class="target" id="structatcg_1_1_edge_cylinder_render_component_1a9125bed39e4fb621f8731a0a9e635a09"></span><a class="reference internal" href="../Renderer/Material.html#_CPPv4N4atcg8MaterialE" title="atcg::Material"><span class="n"><span class="pre">Material</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">material</span></span></span><a class="headerlink" href="#_CPPv4N4atcg27EdgeCylinderRenderComponent8materialE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg27EdgeCylinderRenderComponent8toStringEv">
+<span id="_CPPv3N4atcg27EdgeCylinderRenderComponent8toStringEv"></span><span id="_CPPv2N4atcg27EdgeCylinderRenderComponent8toStringEv"></span><span id="atcg::EdgeCylinderRenderComponent::toStringCE"></span><span class="target" id="structatcg_1_1_edge_cylinder_render_component_1a2a5cdfcf386412d529255e2599bffa7c"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">toString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg27EdgeCylinderRenderComponent8toStringEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23InstanceRenderComponentE">
+<span id="_CPPv3N4atcg23InstanceRenderComponentE"></span><span id="_CPPv2N4atcg23InstanceRenderComponentE"></span><span id="atcg::InstanceRenderComponent"></span><span class="target" id="structatcg_1_1_instance_render_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">InstanceRenderComponent</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg15RenderComponentE" title="atcg::RenderComponent"><span class="n"><span class="pre">RenderComponent</span></span></a><a class="headerlink" href="#_CPPv4N4atcg23InstanceRenderComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23InstanceRenderComponent23InstanceRenderComponentEv">
+<span id="_CPPv3N4atcg23InstanceRenderComponent23InstanceRenderComponentEv"></span><span id="_CPPv2N4atcg23InstanceRenderComponent23InstanceRenderComponentEv"></span><span id="atcg::InstanceRenderComponent::InstanceRenderComponent"></span><span class="target" id="structatcg_1_1_instance_render_component_1a4846ec691f508d86f5eb767551ebdcf6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">InstanceRenderComponent</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg23InstanceRenderComponent23InstanceRenderComponentEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23InstanceRenderComponent23InstanceRenderComponentERKNSt6vectorIN4atcg8InstanceEEE">
+<span id="_CPPv3N4atcg23InstanceRenderComponent23InstanceRenderComponentERKNSt6vectorIN4atcg8InstanceEEE"></span><span id="_CPPv2N4atcg23InstanceRenderComponent23InstanceRenderComponentERKNSt6vectorIN4atcg8InstanceEEE"></span><span id="atcg::InstanceRenderComponent::InstanceRenderComponent__std::vector:atcg::Instance:CR"></span><span class="target" id="structatcg_1_1_instance_render_component_1a42c43f62c8495fa23ae8e4c12fb567e1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">InstanceRenderComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../DataStructure/Graph.html#_CPPv4N4atcg8InstanceE" title="atcg::Instance"><span class="n"><span class="pre">Instance</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">instances</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg23InstanceRenderComponent23InstanceRenderComponentERKNSt6vectorIN4atcg8InstanceEEE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23InstanceRenderComponent12instance_vboE">
+<span id="_CPPv3N4atcg23InstanceRenderComponent12instance_vboE"></span><span id="_CPPv2N4atcg23InstanceRenderComponent12instance_vboE"></span><span id="atcg::InstanceRenderComponent::instance_vbo__atcg::ref_ptr:VertexBuffer:"></span><span class="target" id="structatcg_1_1_instance_render_component_1ab27dc1a7fc697759adb9886adc4853c0"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Buffer.html#_CPPv4N4atcg12VertexBufferE" title="atcg::VertexBuffer"><span class="n"><span class="pre">VertexBuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">instance_vbo</span></span></span><a class="headerlink" href="#_CPPv4N4atcg23InstanceRenderComponent12instance_vboE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23InstanceRenderComponent8materialE">
+<span id="_CPPv3N4atcg23InstanceRenderComponent8materialE"></span><span id="_CPPv2N4atcg23InstanceRenderComponent8materialE"></span><span id="atcg::InstanceRenderComponent::material__Material"></span><span class="target" id="structatcg_1_1_instance_render_component_1a9125bed39e4fb621f8731a0a9e635a09"></span><a class="reference internal" href="../Renderer/Material.html#_CPPv4N4atcg8MaterialE" title="atcg::Material"><span class="n"><span class="pre">Material</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">material</span></span></span><a class="headerlink" href="#_CPPv4N4atcg23InstanceRenderComponent8materialE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg23InstanceRenderComponent8toStringEv">
+<span id="_CPPv3N4atcg23InstanceRenderComponent8toStringEv"></span><span id="_CPPv2N4atcg23InstanceRenderComponent8toStringEv"></span><span id="atcg::InstanceRenderComponent::toStringCE"></span><span class="target" id="structatcg_1_1_instance_render_component_1a2a5cdfcf386412d529255e2599bffa7c"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">toString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg23InstanceRenderComponent8toStringEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21CustomRenderComponentE">
+<span id="_CPPv3N4atcg21CustomRenderComponentE"></span><span id="_CPPv2N4atcg21CustomRenderComponentE"></span><span id="atcg::CustomRenderComponent"></span><span class="target" id="structatcg_1_1_custom_render_component"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CustomRenderComponent</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg15RenderComponentE" title="atcg::RenderComponent"><span class="n"><span class="pre">RenderComponent</span></span></a><a class="headerlink" href="#_CPPv4N4atcg21CustomRenderComponentE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21CustomRenderComponent16RenderCallbackFnE">
+<span id="_CPPv3N4atcg21CustomRenderComponent16RenderCallbackFnE"></span><span id="_CPPv2N4atcg21CustomRenderComponent16RenderCallbackFnE"></span><span class="target" id="structatcg_1_1_custom_render_component_1acf5d782b8f38203bbb8077c305992489"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RenderCallbackFn</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="Entity.html#_CPPv4N4atcg6EntityE" title="atcg::Entity"><span class="n"><span class="pre">Entity</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n"><span class="pre">camera</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4atcg21CustomRenderComponent16RenderCallbackFnE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21CustomRenderComponent21CustomRenderComponentERK16RenderCallbackFnN4atcg8DrawModeE">
+<span id="_CPPv3N4atcg21CustomRenderComponent21CustomRenderComponentERK16RenderCallbackFnN4atcg8DrawModeE"></span><span id="_CPPv2N4atcg21CustomRenderComponent21CustomRenderComponentERK16RenderCallbackFnN4atcg8DrawModeE"></span><span id="atcg::CustomRenderComponent::CustomRenderComponent__RenderCallbackFnCR.atcg::DrawMode"></span><span class="target" id="structatcg_1_1_custom_render_component_1a744719b585b86dbe197b5e79b6005629"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CustomRenderComponent</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg21CustomRenderComponent16RenderCallbackFnE" title="atcg::CustomRenderComponent::RenderCallbackFn"><span class="n"><span class="pre">RenderCallbackFn</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">callback</span></span>, <span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Renderer/Renderer.html#_CPPv4N4atcg8DrawModeE" title="atcg::DrawMode"><span class="n"><span class="pre">DrawMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">draw_mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg21CustomRenderComponent21CustomRenderComponentERK16RenderCallbackFnN4atcg8DrawModeE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21CustomRenderComponent8callbackE">
+<span id="_CPPv3N4atcg21CustomRenderComponent8callbackE"></span><span id="_CPPv2N4atcg21CustomRenderComponent8callbackE"></span><span id="atcg::CustomRenderComponent::callback__RenderCallbackFn"></span><span class="target" id="structatcg_1_1_custom_render_component_1a880824d9c9f33b7146604c389bc16fc0"></span><a class="reference internal" href="#_CPPv4N4atcg21CustomRenderComponent16RenderCallbackFnE" title="atcg::CustomRenderComponent::RenderCallbackFn"><span class="n"><span class="pre">RenderCallbackFn</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">callback</span></span></span><a class="headerlink" href="#_CPPv4N4atcg21CustomRenderComponent8callbackE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="SceneHierarchyPanel.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Scene Hierarchy Panel</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Entity.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Entity</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Domenic Zingsheim
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Components</a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg18TransformComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::TransformComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg18TransformComponent18TransformComponentERKN3glm4vec3ERKN3glm4vec3ERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">TransformComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18TransformComponent18TransformComponentERKN3glm4mat4E"><code class="docutils literal notranslate"><span class="pre">TransformComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18TransformComponent11setPositionERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">setPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18TransformComponent11setRotationERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">setRotation()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18TransformComponent8setScaleERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">setScale()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18TransformComponent8setModelERKN3glm4mat4E"><code class="docutils literal notranslate"><span class="pre">setModel()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18TransformComponent8getModelEv"><code class="docutils literal notranslate"><span class="pre">getModel()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18TransformComponent11getPositionEv"><code class="docutils literal notranslate"><span class="pre">getPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18TransformComponent8getScaleEv"><code class="docutils literal notranslate"><span class="pre">getScale()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18TransformComponent11getRotationEv"><code class="docutils literal notranslate"><span class="pre">getRotation()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18TransformComponent8revisionEv"><code class="docutils literal notranslate"><span class="pre">revision()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18TransformComponentcvN3glm4mat4EEv"><code class="docutils literal notranslate"><span class="pre">operator</span> <span class="pre">glm::mat4()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18TransformComponent8toStringEv"><code class="docutils literal notranslate"><span class="pre">toString()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11IDComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::IDComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg11IDComponent11IDComponentEv"><code class="docutils literal notranslate"><span class="pre">IDComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11IDComponent11IDComponentE8uint64_t"><code class="docutils literal notranslate"><span class="pre">IDComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg11IDComponent2IDEv"><code class="docutils literal notranslate"><span class="pre">ID()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13NameComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::NameComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg13NameComponent13NameComponentEv"><code class="docutils literal notranslate"><span class="pre">NameComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13NameComponent13NameComponentERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">NameComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg13NameComponent4nameEv"><code class="docutils literal notranslate"><span class="pre">name()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17GeometryComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::GeometryComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg17GeometryComponent17GeometryComponentEv"><code class="docutils literal notranslate"><span class="pre">GeometryComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17GeometryComponent17GeometryComponentERKN4atcg7ref_ptrI5GraphEE"><code class="docutils literal notranslate"><span class="pre">GeometryComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17GeometryComponent5graphE"><code class="docutils literal notranslate"><span class="pre">graph</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17GeometryComponent8toStringEv"><code class="docutils literal notranslate"><span class="pre">toString()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg30AccelerationStructureComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::AccelerationStructureComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg30AccelerationStructureComponent30AccelerationStructureComponentEv"><code class="docutils literal notranslate"><span class="pre">AccelerationStructureComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg30AccelerationStructureComponent8verticesE"><code class="docutils literal notranslate"><span class="pre">vertices</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg30AccelerationStructureComponent5facesE"><code class="docutils literal notranslate"><span class="pre">faces</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg30AccelerationStructureComponent5accelE"><code class="docutils literal notranslate"><span class="pre">accel</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::CameraComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent15CameraComponentEv"><code class="docutils literal notranslate"><span class="pre">CameraComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent15CameraComponentERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_t"><code class="docutils literal notranslate"><span class="pre">CameraComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent6cameraE"><code class="docutils literal notranslate"><span class="pre">camera</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent5colorE"><code class="docutils literal notranslate"><span class="pre">color</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent11perspectiveE"><code class="docutils literal notranslate"><span class="pre">perspective</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent5widthE"><code class="docutils literal notranslate"><span class="pre">width</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent6heightE"><code class="docutils literal notranslate"><span class="pre">height</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent12render_scaleE"><code class="docutils literal notranslate"><span class="pre">render_scale</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent7previewE"><code class="docutils literal notranslate"><span class="pre">preview</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent5imageE"><code class="docutils literal notranslate"><span class="pre">image</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent14render_previewE"><code class="docutils literal notranslate"><span class="pre">render_preview</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15CameraComponent8toStringEv"><code class="docutils literal notranslate"><span class="pre">toString()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21EditorCameraComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::EditorCameraComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg21EditorCameraComponent21EditorCameraComponentEv"><code class="docutils literal notranslate"><span class="pre">EditorCameraComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21EditorCameraComponent21EditorCameraComponentERKN4atcg7ref_ptrI6CameraEE"><code class="docutils literal notranslate"><span class="pre">EditorCameraComponent()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15RenderComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::RenderComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg15RenderComponent15RenderComponentEN4atcg8DrawModeE"><code class="docutils literal notranslate"><span class="pre">RenderComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15RenderComponent9draw_modeE"><code class="docutils literal notranslate"><span class="pre">draw_mode</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15RenderComponent7visibleE"><code class="docutils literal notranslate"><span class="pre">visible</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19MeshRenderComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::MeshRenderComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg19MeshRenderComponent19MeshRenderComponentERKN4atcg7ref_ptrI6ShaderEE"><code class="docutils literal notranslate"><span class="pre">MeshRenderComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19MeshRenderComponent6shaderE"><code class="docutils literal notranslate"><span class="pre">shader</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19MeshRenderComponent8materialE"><code class="docutils literal notranslate"><span class="pre">material</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19MeshRenderComponent14receive_shadowE"><code class="docutils literal notranslate"><span class="pre">receive_shadow</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19MeshRenderComponent8toStringEv"><code class="docutils literal notranslate"><span class="pre">toString()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg20PointRenderComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::PointRenderComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg20PointRenderComponent20PointRenderComponentERKN4atcg7ref_ptrI6ShaderEERKN3glm4vec3ERKf"><code class="docutils literal notranslate"><span class="pre">PointRenderComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg20PointRenderComponent6shaderE"><code class="docutils literal notranslate"><span class="pre">shader</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg20PointRenderComponent5colorE"><code class="docutils literal notranslate"><span class="pre">color</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg20PointRenderComponent10point_sizeE"><code class="docutils literal notranslate"><span class="pre">point_size</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg20PointRenderComponent8toStringEv"><code class="docutils literal notranslate"><span class="pre">toString()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg26PointSphereRenderComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::PointSphereRenderComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg26PointSphereRenderComponent26PointSphereRenderComponentERKN4atcg7ref_ptrI6ShaderEERKf"><code class="docutils literal notranslate"><span class="pre">PointSphereRenderComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg26PointSphereRenderComponent6shaderE"><code class="docutils literal notranslate"><span class="pre">shader</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg26PointSphereRenderComponent10point_sizeE"><code class="docutils literal notranslate"><span class="pre">point_size</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg26PointSphereRenderComponent8materialE"><code class="docutils literal notranslate"><span class="pre">material</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg26PointSphereRenderComponent8toStringEv"><code class="docutils literal notranslate"><span class="pre">toString()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EdgeRenderComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::EdgeRenderComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EdgeRenderComponent19EdgeRenderComponentERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">EdgeRenderComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EdgeRenderComponent5colorE"><code class="docutils literal notranslate"><span class="pre">color</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg19EdgeRenderComponent8toStringEv"><code class="docutils literal notranslate"><span class="pre">toString()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg27EdgeCylinderRenderComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::EdgeCylinderRenderComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg27EdgeCylinderRenderComponent27EdgeCylinderRenderComponentEf"><code class="docutils literal notranslate"><span class="pre">EdgeCylinderRenderComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg27EdgeCylinderRenderComponent6radiusE"><code class="docutils literal notranslate"><span class="pre">radius</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg27EdgeCylinderRenderComponent8materialE"><code class="docutils literal notranslate"><span class="pre">material</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg27EdgeCylinderRenderComponent8toStringEv"><code class="docutils literal notranslate"><span class="pre">toString()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23InstanceRenderComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::InstanceRenderComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg23InstanceRenderComponent23InstanceRenderComponentEv"><code class="docutils literal notranslate"><span class="pre">InstanceRenderComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23InstanceRenderComponent23InstanceRenderComponentERKNSt6vectorIN4atcg8InstanceEEE"><code class="docutils literal notranslate"><span class="pre">InstanceRenderComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23InstanceRenderComponent12instance_vboE"><code class="docutils literal notranslate"><span class="pre">instance_vbo</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23InstanceRenderComponent8materialE"><code class="docutils literal notranslate"><span class="pre">material</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg23InstanceRenderComponent8toStringEv"><code class="docutils literal notranslate"><span class="pre">toString()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21CustomRenderComponentE"><code class="docutils literal notranslate"><span class="pre">atcg::CustomRenderComponent</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg21CustomRenderComponent16RenderCallbackFnE"><code class="docutils literal notranslate"><span class="pre">RenderCallbackFn</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21CustomRenderComponent21CustomRenderComponentERK16RenderCallbackFnN4atcg8DrawModeE"><code class="docutils literal notranslate"><span class="pre">CustomRenderComponent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21CustomRenderComponent8callbackE"><code class="docutils literal notranslate"><span class="pre">callback</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

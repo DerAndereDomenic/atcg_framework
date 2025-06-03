@@ -1,0 +1,1592 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="VRSystem" href="VRSystem.html" /><link rel="prev" title="VertexArray" href="VertexArray.html" />
+
+    <link rel="shortcut icon" href="../../_static/icon.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>Camera - ATCG Framework documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ATCG Framework  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ATCG Framework  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Core/CoreIndex.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Core/API.html">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Application.html">Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Input.html">Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Layer.html">Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Memory.html">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Window.html">Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/UUID.html">UUID</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Events/EventIndex.html">Events</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Events</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Events/Event.html">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/KeyEvents.html">KeyEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/MouseEvents.html">MoueEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/WindowEvents.html">WindowEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/FileEvents.html">FileEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/VREvents.html">VREvents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../DataStructure/DataStructureIndex.html">DataStructure</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of DataStructure</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Image.html">Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Timer.html">Timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/TensorOptions.html">TensorOptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Worker.html">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Statistics.html">Statistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Grid.html">Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/BufferView.html">BufferView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/PerformancePanel.html">PerformancePanel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Dictionary.html">Dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Skybox.html">Skybox</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="RendererIndex.html">Renderer</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Renderer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="Renderer.html">Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Shader.html">Shader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Material.html">Material</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Texture.html">Texture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Framebuffer.html">Framebuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RenderGraph.html">Render Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RenderGraph.html#render-passes">Render Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Buffer.html">Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="VertexArray.html">VertexArray</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="VRSystem.html">VRSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContextManager.html">Context</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scene/SceneIndex.html">Scene</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Scene</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Scene.html">Scene</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Entity.html">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Components.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/SceneHierarchyPanel.html">Scene Hierarchy Panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Serializer.html">Serializer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/RevisionSystem.html">RevisionSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/ComponentRenderer.html">ComponentRenderer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scripting/ScriptingIndex.html">Scripting</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Scripting</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/ScriptEngine.html">ScriptEngine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/Script.html">Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Math/MathIndex.html">Math</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Math</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Color.html">Color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Constants.html">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/MeshManipulation.html">Mesh Manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Tracing.html">Tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ImGui/ImGui.html">ImGui</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IO/IO.html">IO</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Network/NetworkIndex.html">Network</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Network</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPServer.html">TCPServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPClient.html">TCPClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/NetworkUtils.html">Network Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../OpenMesh/OpenMesh.html">OpenMesh</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/source/Renderer/Camera.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="camera">
+<h1>Camera<a class="headerlink" href="#camera" title="Link to this heading">¶</a></h1>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraExtrinsicsE">
+<span id="_CPPv3N4atcg16CameraExtrinsicsE"></span><span id="_CPPv2N4atcg16CameraExtrinsicsE"></span><span id="atcg::CameraExtrinsics"></span><span class="target" id="classatcg_1_1_camera_extrinsics"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CameraExtrinsics</span></span></span><a class="headerlink" href="#_CPPv4N4atcg16CameraExtrinsicsE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>A class to model camera extrinsics. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraExtrinsics16CameraExtrinsicsEv">
+<span id="_CPPv3N4atcg16CameraExtrinsics16CameraExtrinsicsEv"></span><span id="_CPPv2N4atcg16CameraExtrinsics16CameraExtrinsicsEv"></span><span id="atcg::CameraExtrinsics::CameraExtrinsics"></span><span class="target" id="classatcg_1_1_camera_extrinsics_1aa6104b59933766934debc6a38f5854b2"></span><span class="sig-name descname"><span class="n"><span class="pre">CameraExtrinsics</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg16CameraExtrinsics16CameraExtrinsicsEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Default constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4vec3ERKN3glm4vec3E">
+<span id="_CPPv3N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4vec3ERKN3glm4vec3E"></span><span id="_CPPv2N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4vec3ERKN3glm4vec3E"></span><span id="atcg::CameraExtrinsics::CameraExtrinsics__glm::vec3CR.glm::vec3CR"></span><span class="target" id="classatcg_1_1_camera_extrinsics_1a9dd7f9d785bc7a57c85c0e735311974c"></span><span class="sig-name descname"><span class="n"><span class="pre">CameraExtrinsics</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">position</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">target</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4vec3ERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>position</strong> – The position </p></li>
+<li><p><strong>target</strong> – The look at target </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4mat4E">
+<span id="_CPPv3N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4mat4E"></span><span id="_CPPv2N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4mat4E"></span><span id="atcg::CameraExtrinsics::CameraExtrinsics__glm::mat4CR"></span><span class="target" id="classatcg_1_1_camera_extrinsics_1a03fc9e93897b272a06f7c8fce429a557"></span><span class="sig-name descname"><span class="n"><span class="pre">CameraExtrinsics</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">extrinsics_matrix</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4mat4E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>extrinsics_matrix</strong> – The camera extrinsic matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraExtrinsics11setPositionERKN3glm4vec3E">
+<span id="_CPPv3N4atcg16CameraExtrinsics11setPositionERKN3glm4vec3E"></span><span id="_CPPv2N4atcg16CameraExtrinsics11setPositionERKN3glm4vec3E"></span><span id="atcg::CameraExtrinsics::setPosition__glm::vec3CR"></span><span class="target" id="classatcg_1_1_camera_extrinsics_1aabfdefe293925216fd849cc3b36772cd"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setPosition</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">position</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraExtrinsics11setPositionERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>position</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraExtrinsics9setTargetERKN3glm4vec3E">
+<span id="_CPPv3N4atcg16CameraExtrinsics9setTargetERKN3glm4vec3E"></span><span id="_CPPv2N4atcg16CameraExtrinsics9setTargetERKN3glm4vec3E"></span><span id="atcg::CameraExtrinsics::setTarget__glm::vec3CR"></span><span class="target" id="classatcg_1_1_camera_extrinsics_1ad03d9554615617ed881d94d38448fa03"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setTarget</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">target</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraExtrinsics9setTargetERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the look at target. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraExtrinsics18setExtrinsicMatrixERKN3glm4mat4E">
+<span id="_CPPv3N4atcg16CameraExtrinsics18setExtrinsicMatrixERKN3glm4mat4E"></span><span id="_CPPv2N4atcg16CameraExtrinsics18setExtrinsicMatrixERKN3glm4mat4E"></span><span id="atcg::CameraExtrinsics::setExtrinsicMatrix__glm::mat4CR"></span><span class="target" id="classatcg_1_1_camera_extrinsics_1aad65dcaa7d04c22f90ae557ff5a6a172"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setExtrinsicMatrix</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">extrinsics</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraExtrinsics18setExtrinsicMatrixERKN3glm4mat4E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set extrinsic matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>extrinsics</strong> – The extrinsic matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraExtrinsics8positionEv">
+<span id="_CPPv3NK4atcg16CameraExtrinsics8positionEv"></span><span id="_CPPv2NK4atcg16CameraExtrinsics8positionEv"></span><span id="atcg::CameraExtrinsics::positionC"></span><span class="target" id="classatcg_1_1_camera_extrinsics_1adb41e6ae8b490ba116b3d1525d95b951"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">position</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraExtrinsics8positionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The position </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraExtrinsics6targetEv">
+<span id="_CPPv3NK4atcg16CameraExtrinsics6targetEv"></span><span id="_CPPv2NK4atcg16CameraExtrinsics6targetEv"></span><span id="atcg::CameraExtrinsics::targetC"></span><span class="target" id="classatcg_1_1_camera_extrinsics_1afca0d22700b3bc672398048fd7d3663f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">target</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraExtrinsics6targetEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the target. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The look at target </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraExtrinsics15extrinsicMatrixEv">
+<span id="_CPPv3NK4atcg16CameraExtrinsics15extrinsicMatrixEv"></span><span id="_CPPv2NK4atcg16CameraExtrinsics15extrinsicMatrixEv"></span><span id="atcg::CameraExtrinsics::extrinsicMatrixC"></span><span class="target" id="classatcg_1_1_camera_extrinsics_1acc51ac6444c0925e101542dec964ced0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">extrinsicMatrix</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraExtrinsics15extrinsicMatrixEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the extrinsics matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The extrinsic matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsicsE">
+<span id="_CPPv3N4atcg16CameraIntrinsicsE"></span><span id="_CPPv2N4atcg16CameraIntrinsicsE"></span><span id="atcg::CameraIntrinsics"></span><span class="target" id="classatcg_1_1_camera_intrinsics"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CameraIntrinsics</span></span></span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsicsE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>A class to model camera intrinsics. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsics16CameraIntrinsicsEv">
+<span id="_CPPv3N4atcg16CameraIntrinsics16CameraIntrinsicsEv"></span><span id="_CPPv2N4atcg16CameraIntrinsics16CameraIntrinsicsEv"></span><span id="atcg::CameraIntrinsics::CameraIntrinsics"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1abff2aca3bfe6c86f82db2107a3ab950d"></span><span class="sig-name descname"><span class="n"><span class="pre">CameraIntrinsics</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsics16CameraIntrinsicsEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Default constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsics16CameraIntrinsicsEKfKfKfKfRKN3glm4vec2E">
+<span id="_CPPv3N4atcg16CameraIntrinsics16CameraIntrinsicsEKfKfKfKfRKN3glm4vec2E"></span><span id="_CPPv2N4atcg16CameraIntrinsics16CameraIntrinsicsEKfKfKfKfRKN3glm4vec2E"></span><span id="atcg::CameraIntrinsics::CameraIntrinsics__floatC.floatC.floatC.floatC.glm::vec2CR"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a04707fac9fca0d9c8b61690ff6e87bbe"></span><span class="sig-name descname"><span class="n"><span class="pre">CameraIntrinsics</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">aspect_ratio</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fov_y</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">znear</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.01f</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zfar</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1000.0f</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec2</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">optical_center</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec2</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">)</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsics16CameraIntrinsicsEKfKfKfKfRKN3glm4vec2E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>aspect_ratio</strong> – The aspect ratio </p></li>
+<li><p><strong>fov_y</strong> – The fov in y direction </p></li>
+<li><p><strong>znear</strong> – The near plane </p></li>
+<li><p><strong>zfar</strong> – The far plane </p></li>
+<li><p><strong>optical_center</strong> – The optical center </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsics16CameraIntrinsicsERKN3glm4mat4E">
+<span id="_CPPv3N4atcg16CameraIntrinsics16CameraIntrinsicsERKN3glm4mat4E"></span><span id="_CPPv2N4atcg16CameraIntrinsics16CameraIntrinsicsERKN3glm4mat4E"></span><span id="atcg::CameraIntrinsics::CameraIntrinsics__glm::mat4CR"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a8c65c5c2ddaa9de8c58483acc469c887"></span><span class="sig-name descname"><span class="n"><span class="pre">CameraIntrinsics</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">projection</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsics16CameraIntrinsicsERKN3glm4mat4E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>projection</strong> – The projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsics14setAspectRatioEKf">
+<span id="_CPPv3N4atcg16CameraIntrinsics14setAspectRatioEKf"></span><span id="_CPPv2N4atcg16CameraIntrinsics14setAspectRatioEKf"></span><span id="atcg::CameraIntrinsics::setAspectRatio__floatC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a9f66c5f19daba00ed19924a86315dfe4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setAspectRatio</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">aspect_ratio</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsics14setAspectRatioEKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the aspect ratio This aspect ratio is given by a = w / h * fy / fx where fx and fy are the typical OpenCV camera parameters. If we have a perfect camera, then fy / fx = 1 and therefore a = w / h, i.e., the aspect ratio of the image. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>aspect_ratio</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsics6setFOVEKf">
+<span id="_CPPv3N4atcg16CameraIntrinsics6setFOVEKf"></span><span id="_CPPv2N4atcg16CameraIntrinsics6setFOVEKf"></span><span id="atcg::CameraIntrinsics::setFOV__floatC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a789e78fac8f91ffcbb473b4269bd6335"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setFOV</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fov_y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsics6setFOVEKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the y FOV. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fov_y</strong> – The fov in degrees </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsics7setNearEKf">
+<span id="_CPPv3N4atcg16CameraIntrinsics7setNearEKf"></span><span id="_CPPv2N4atcg16CameraIntrinsics7setNearEKf"></span><span id="atcg::CameraIntrinsics::setNear__floatC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1ad1de0af28726f3450a547254bce5d966"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setNear</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">znear</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsics7setNearEKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the near plane. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>znear</strong> – The near plane </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsics6setFarEKf">
+<span id="_CPPv3N4atcg16CameraIntrinsics6setFarEKf"></span><span id="_CPPv2N4atcg16CameraIntrinsics6setFarEKf"></span><span id="atcg::CameraIntrinsics::setFar__floatC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a57fad8b41c0e26e9957c78ca7063fb96"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setFar</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">zfar</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsics6setFarEKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the far plane. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>zfar</strong> – The far plane </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsics16setOpticalCenterERKN3glm4vec2E">
+<span id="_CPPv3N4atcg16CameraIntrinsics16setOpticalCenterERKN3glm4vec2E"></span><span id="_CPPv2N4atcg16CameraIntrinsics16setOpticalCenterERKN3glm4vec2E"></span><span id="atcg::CameraIntrinsics::setOpticalCenter__glm::vec2CR"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a09ec4eeb8f204808a6f4b87e08f24564"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setOpticalCenter</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec2</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">optical_center</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsics16setOpticalCenterERKN3glm4vec2E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the optical center. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>optical_center</strong> – The optical center </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraIntrinsics13setProjectionERKN3glm4mat4E">
+<span id="_CPPv3N4atcg16CameraIntrinsics13setProjectionERKN3glm4mat4E"></span><span id="_CPPv2N4atcg16CameraIntrinsics13setProjectionERKN3glm4mat4E"></span><span id="atcg::CameraIntrinsics::setProjection__glm::mat4CR"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a0eabf73650b9259ce72967a5cabf4d62"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setProjection</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">projection</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraIntrinsics13setProjectionERKN3glm4mat4E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the projection matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>projection</strong> – The projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraIntrinsics11aspectRatioEv">
+<span id="_CPPv3NK4atcg16CameraIntrinsics11aspectRatioEv"></span><span id="_CPPv2NK4atcg16CameraIntrinsics11aspectRatioEv"></span><span id="atcg::CameraIntrinsics::aspectRatioC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a4bc9572460a332f84958084c678ff036"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">aspectRatio</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraIntrinsics11aspectRatioEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the aspect ratio This aspect ratio is given by a = w / h * fy / fx where fx and fy are the typical OpenCV camera parameters. If we have a perfect camera, then fy / fx = 1 and therefore a = w / h, i.e., the aspect ratio of the image. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The aspect ratio </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraIntrinsics3FOVEv">
+<span id="_CPPv3NK4atcg16CameraIntrinsics3FOVEv"></span><span id="_CPPv2NK4atcg16CameraIntrinsics3FOVEv"></span><span id="atcg::CameraIntrinsics::FOVC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a2266a3db681e2c75190538bb5e7377d6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FOV</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraIntrinsics3FOVEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the fov in y direction. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The fov in degrees </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraIntrinsics5zNearEv">
+<span id="_CPPv3NK4atcg16CameraIntrinsics5zNearEv"></span><span id="_CPPv2NK4atcg16CameraIntrinsics5zNearEv"></span><span id="atcg::CameraIntrinsics::zNearC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1ac5ff32dd17c32ac4cf77f2868d38e8cd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">zNear</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraIntrinsics5zNearEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the near plane. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The near plane </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraIntrinsics4zFarEv">
+<span id="_CPPv3NK4atcg16CameraIntrinsics4zFarEv"></span><span id="_CPPv2NK4atcg16CameraIntrinsics4zFarEv"></span><span id="atcg::CameraIntrinsics::zFarC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a242aa93b9ae4f416af2f5826102bfefe"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">zFar</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraIntrinsics4zFarEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the far plane. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The far plane </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraIntrinsics13opticalCenterEv">
+<span id="_CPPv3NK4atcg16CameraIntrinsics13opticalCenterEv"></span><span id="_CPPv2NK4atcg16CameraIntrinsics13opticalCenterEv"></span><span id="atcg::CameraIntrinsics::opticalCenterC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1ab4b1bcfb875a89810fbed37368b4875c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec2</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">opticalCenter</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraIntrinsics13opticalCenterEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the optical center. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The optical center </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraIntrinsics10projectionEv">
+<span id="_CPPv3NK4atcg16CameraIntrinsics10projectionEv"></span><span id="_CPPv2NK4atcg16CameraIntrinsics10projectionEv"></span><span id="atcg::CameraIntrinsics::projectionC"></span><span class="target" id="classatcg_1_1_camera_intrinsics_1a739bf0c515fdfa5a32ca17835b487bef"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">projection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraIntrinsics10projectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the projection matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11CameraUtils17convert_to_opencvERKN3glm4mat4EK8uint32_tK8uint32_t">
+<span id="_CPPv3N4atcg11CameraUtils17convert_to_opencvERKN3glm4mat4EK8uint32_tK8uint32_t"></span><span id="_CPPv2N4atcg11CameraUtils17convert_to_opencvERKN3glm4mat4EK8uint32_tK8uint32_t"></span><span id="atcg::CameraUtils::convert_to_opencv__glm::mat4CR.uint32_tC.uint32_tC"></span><span class="target" id="_camera_utils_8h_1ab7dd5c85065218d86294b3395078f4ff"></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat3</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">CameraUtils</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">convert_to_opencv</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">projection</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">height</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg11CameraUtils17convert_to_opencvERKN3glm4mat4EK8uint32_tK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Convert an opengl clip space matrix to an opencv intrinsics matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>projection</strong> – The clip space projection matrix </p></li>
+<li><p><strong>width</strong> – The image width </p></li>
+<li><p><strong>height</strong> – The image height</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The opencv projection matrix K </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11CameraUtils17convert_to_opencvERK16CameraIntrinsicsK8uint32_tK8uint32_t">
+<span id="_CPPv3N4atcg11CameraUtils17convert_to_opencvERK16CameraIntrinsicsK8uint32_tK8uint32_t"></span><span id="_CPPv2N4atcg11CameraUtils17convert_to_opencvERK16CameraIntrinsicsK8uint32_tK8uint32_t"></span><span id="atcg::CameraUtils::convert_to_opencv__CameraIntrinsicsCR.uint32_tC.uint32_tC"></span><span class="target" id="_camera_utils_8h_1a9748b8cce4e6523e47d907f6453b8913"></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat3</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">CameraUtils</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">convert_to_opencv</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsicsE" title="atcg::CameraIntrinsics"><span class="n"><span class="pre">CameraIntrinsics</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">intrinsics</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">height</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg11CameraUtils17convert_to_opencvERK16CameraIntrinsicsK8uint32_tK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Convert an opengl clip space matrix to an opencv intrinsics matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>intrinsics</strong> – The camera intrinsics </p></li>
+<li><p><strong>width</strong> – The image width </p></li>
+<li><p><strong>height</strong> – The image height</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The opencv projection matrix K </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11CameraUtils19convert_from_opencvEKfKfKfKfKfKfK8uint32_tK8uint32_t">
+<span id="_CPPv3N4atcg11CameraUtils19convert_from_opencvEKfKfKfKfKfKfK8uint32_tK8uint32_t"></span><span id="_CPPv2N4atcg11CameraUtils19convert_from_opencvEKfKfKfKfKfKfK8uint32_tK8uint32_t"></span><span id="atcg::CameraUtils::convert_from_opencv__floatC.floatC.floatC.floatC.floatC.floatC.uint32_tC.uint32_tC"></span><span class="target" id="_camera_utils_8h_1a806035b59235a4b66c1554ad7a3f5cee"></span><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsicsE" title="atcg::CameraIntrinsics"><span class="n"><span class="pre">CameraIntrinsics</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">CameraUtils</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">convert_from_opencv</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fy</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">cx</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">cy</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">f</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">height</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg11CameraUtils19convert_from_opencvEKfKfKfKfKfKfK8uint32_tK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Convert an opencv projection matrix to an opengl clipspace matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fx</strong> – The focal length in x </p></li>
+<li><p><strong>fy</strong> – The focal length in y </p></li>
+<li><p><strong>cx</strong> – The principal point in x </p></li>
+<li><p><strong>cy</strong> – The principal point in y </p></li>
+<li><p><strong>n</strong> – The near plane </p></li>
+<li><p><strong>f</strong> – The far plane </p></li>
+<li><p><strong>width</strong> – The image width </p></li>
+<li><p><strong>height</strong> – The image height</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Converted camera intrinsics </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11CameraUtils19convert_from_opencvERKN3glm4mat3EKfKfK8uint32_tK8uint32_t">
+<span id="_CPPv3N4atcg11CameraUtils19convert_from_opencvERKN3glm4mat3EKfKfK8uint32_tK8uint32_t"></span><span id="_CPPv2N4atcg11CameraUtils19convert_from_opencvERKN3glm4mat3EKfKfK8uint32_tK8uint32_t"></span><span id="atcg::CameraUtils::convert_from_opencv__glm::mat3CR.floatC.floatC.uint32_tC.uint32_tC"></span><span class="target" id="_camera_utils_8h_1a65807cc62f7e3cb41112c1decc0789c3"></span><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsicsE" title="atcg::CameraIntrinsics"><span class="n"><span class="pre">CameraIntrinsics</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">CameraUtils</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">convert_from_opencv</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">K</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">f</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">height</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg11CameraUtils19convert_from_opencvERKN3glm4mat3EKfKfK8uint32_tK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Convert an opencv projection matrix to an opengl clipspace matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>K</strong> – The opencv camera intrinsics matrix </p></li>
+<li><p><strong>n</strong> – The near plane </p></li>
+<li><p><strong>f</strong> – The far plane</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Converted camera intrinsics </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6CameraE">
+<span id="_CPPv3N4atcg6CameraE"></span><span id="_CPPv2N4atcg6CameraE"></span><span id="atcg::Camera"></span><span class="target" id="classatcg_1_1_camera"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Camera</span></span></span><a class="headerlink" href="#_CPPv4N4atcg6CameraE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Subclassed by <a class="reference internal" href="#classatcg_1_1_orthographic_camera"><span class="std std-ref">OrthographicCamera</span></a>, <a class="reference internal" href="#classatcg_1_1_perspective_camera"><span class="std std-ref">PerspectiveCamera</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Camera13getProjectionEv">
+<span id="_CPPv3NK4atcg6Camera13getProjectionEv"></span><span id="_CPPv2NK4atcg6Camera13getProjectionEv"></span><span id="atcg::Camera::getProjectionC"></span><span class="target" id="classatcg_1_1_camera_1a343048fdceaf2e7d65cad4703e8887b2"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getProjection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Camera13getProjectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Projection matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::mat4 The projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Camera17getViewProjectionEv">
+<span id="_CPPv3NK4atcg6Camera17getViewProjectionEv"></span><span id="_CPPv2NK4atcg6Camera17getViewProjectionEv"></span><span id="atcg::Camera::getViewProjectionC"></span><span class="target" id="classatcg_1_1_camera_1aaa469fa17a773ce5eb6ade10d237ed12"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getViewProjection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Camera17getViewProjectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the View Projection matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::mat4 The view-projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Camera7getViewEv">
+<span id="_CPPv3NK4atcg6Camera7getViewEv"></span><span id="_CPPv2NK4atcg6Camera7getViewEv"></span><span id="atcg::Camera::getViewC"></span><span class="target" id="classatcg_1_1_camera_1af60ca0039f4c7e9710faebda742e7574"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getView</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Camera7getViewEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the View matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::mat4 The view matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Camera11getPositionEv">
+<span id="_CPPv3NK4atcg6Camera11getPositionEv"></span><span id="_CPPv2NK4atcg6Camera11getPositionEv"></span><span id="atcg::Camera::getPositionC"></span><span class="target" id="classatcg_1_1_camera_1a93562e7ea35ff06ffc46663e0e2607d5"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Camera11getPositionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::vec3 The position </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Camera12getDirectionEv">
+<span id="_CPPv3NK4atcg6Camera12getDirectionEv"></span><span id="_CPPv2NK4atcg6Camera12getDirectionEv"></span><span id="atcg::Camera::getDirectionC"></span><span class="target" id="classatcg_1_1_camera_1a8ca56e4b896af59c5bdbbadfdbef71ee"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getDirection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Camera12getDirectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Direction. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::vec3 The view direction </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Camera4copyEv">
+<span id="_CPPv3NK4atcg6Camera4copyEv"></span><span id="_CPPv2NK4atcg6Camera4copyEv"></span><span id="atcg::Camera::copyC"></span><span class="target" id="classatcg_1_1_camera_1ad052b8e93a544217df82fefa6470ff59"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">copy</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Camera4copyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a copy of the camera. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The deep copy </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Camera13getExtrinsicsEv">
+<span id="_CPPv3NK4atcg6Camera13getExtrinsicsEv"></span><span id="_CPPv2NK4atcg6Camera13getExtrinsicsEv"></span><span id="atcg::Camera::getExtrinsicsC"></span><span class="target" id="classatcg_1_1_camera_1a58b10924ae8832278cb89126b04addfd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsicsE" title="atcg::CameraExtrinsics"><span class="n"><span class="pre">CameraExtrinsics</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getExtrinsics</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Camera13getExtrinsicsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Camera13getIntrinsicsEv">
+<span id="_CPPv3NK4atcg6Camera13getIntrinsicsEv"></span><span id="_CPPv2NK4atcg6Camera13getIntrinsicsEv"></span><span id="atcg::Camera::getIntrinsicsC"></span><span class="target" id="classatcg_1_1_camera_1a1ffe4beb34aa4c70c0b2d8c93a838010"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsicsE" title="atcg::CameraIntrinsics"><span class="n"><span class="pre">CameraIntrinsics</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getIntrinsics</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Camera13getIntrinsicsEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Camera13setIntrinsicsERK16CameraIntrinsics">
+<span id="_CPPv3N4atcg6Camera13setIntrinsicsERK16CameraIntrinsics"></span><span id="_CPPv2N4atcg6Camera13setIntrinsicsERK16CameraIntrinsics"></span><span id="atcg::Camera::setIntrinsics__CameraIntrinsicsCR"></span><span class="target" id="classatcg_1_1_camera_1aa0dbeb792724cb284ba4ac66c32b63a2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setIntrinsics</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsicsE" title="atcg::CameraIntrinsics"><span class="n"><span class="pre">CameraIntrinsics</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">intrinsics</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Camera13setIntrinsicsERK16CameraIntrinsics" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Camera13setExtrinsicsERK16CameraExtrinsics">
+<span id="_CPPv3N4atcg6Camera13setExtrinsicsERK16CameraExtrinsics"></span><span id="_CPPv2N4atcg6Camera13setExtrinsicsERK16CameraExtrinsics"></span><span id="atcg::Camera::setExtrinsics__CameraExtrinsicsCR"></span><span class="target" id="classatcg_1_1_camera_1aaf9f5dae4120d0623f453d5a22571bf8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setExtrinsics</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsicsE" title="atcg::CameraExtrinsics"><span class="n"><span class="pre">CameraExtrinsics</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">extrinsics</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Camera13setExtrinsicsERK16CameraExtrinsics" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18OrthographicCameraE">
+<span id="_CPPv3N4atcg18OrthographicCameraE"></span><span id="_CPPv2N4atcg18OrthographicCameraE"></span><span id="atcg::OrthographicCamera"></span><span class="target" id="classatcg_1_1_orthographic_camera"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">OrthographicCamera</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><a class="headerlink" href="#_CPPv4N4atcg18OrthographicCameraE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>A class to model an orthographic camera. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18OrthographicCamera18OrthographicCameraERKfRKfRKfRKf">
+<span id="_CPPv3N4atcg18OrthographicCamera18OrthographicCameraERKfRKfRKfRKf"></span><span id="_CPPv2N4atcg18OrthographicCamera18OrthographicCameraERKfRKfRKfRKf"></span><span id="atcg::OrthographicCamera::OrthographicCamera__floatCR.floatCR.floatCR.floatCR"></span><span class="target" id="classatcg_1_1_orthographic_camera_1a37e715c7a8b79d454b8df48d6732f6de"></span><span class="sig-name descname"><span class="n"><span class="pre">OrthographicCamera</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">left</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">right</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">bottom</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">top</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18OrthographicCamera18OrthographicCameraERKfRKfRKfRKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct a new Orthographic <a class="reference internal" href="#classatcg_1_1_camera"><span class="std std-ref">Camera</span></a> object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>left</strong> – </p></li>
+<li><p><strong>right</strong> – </p></li>
+<li><p><strong>bottom</strong> – </p></li>
+<li><p><strong>top</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18OrthographicCameraD0Ev">
+<span id="_CPPv3N4atcg18OrthographicCameraD0Ev"></span><span id="_CPPv2N4atcg18OrthographicCameraD0Ev"></span><span id="atcg::OrthographicCamera::~OrthographicCamera"></span><span class="target" id="classatcg_1_1_orthographic_camera_1a330b174635e0e2bb82341bca5a6251d1"></span><span class="sig-name descname"><span class="n"><span class="pre">~OrthographicCamera</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg18OrthographicCameraD0Ev" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Destroy the Orthographic <a class="reference internal" href="#classatcg_1_1_camera"><span class="std std-ref">Camera</span></a> object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18OrthographicCamera13getProjectionEv">
+<span id="_CPPv3NK4atcg18OrthographicCamera13getProjectionEv"></span><span id="_CPPv2NK4atcg18OrthographicCamera13getProjectionEv"></span><span id="atcg::OrthographicCamera::getProjectionC"></span><span class="target" id="classatcg_1_1_orthographic_camera_1aeb813895b144fabf8107de16bb85d4e1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getProjection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg18OrthographicCamera13getProjectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Projection matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::mat4 The projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18OrthographicCamera17getViewProjectionEv">
+<span id="_CPPv3NK4atcg18OrthographicCamera17getViewProjectionEv"></span><span id="_CPPv2NK4atcg18OrthographicCamera17getViewProjectionEv"></span><span id="atcg::OrthographicCamera::getViewProjectionC"></span><span class="target" id="classatcg_1_1_orthographic_camera_1a05af4d299317dedd4cdf02eddadc141a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getViewProjection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg18OrthographicCamera17getViewProjectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the View Projection matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::mat4 The view-projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18OrthographicCamera7getViewEv">
+<span id="_CPPv3NK4atcg18OrthographicCamera7getViewEv"></span><span id="_CPPv2NK4atcg18OrthographicCamera7getViewEv"></span><span id="atcg::OrthographicCamera::getViewC"></span><span class="target" id="classatcg_1_1_orthographic_camera_1af3be97532818cd30f9dafda5ef985555"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getView</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg18OrthographicCamera7getViewEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the View matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::mat4 The view matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18OrthographicCamera11getPositionEv">
+<span id="_CPPv3NK4atcg18OrthographicCamera11getPositionEv"></span><span id="_CPPv2NK4atcg18OrthographicCamera11getPositionEv"></span><span id="atcg::OrthographicCamera::getPositionC"></span><span class="target" id="classatcg_1_1_orthographic_camera_1a8e2ee615eead530f307acd8bfbfe3835"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg18OrthographicCamera11getPositionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::vec3 The position </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18OrthographicCamera12getDirectionEv">
+<span id="_CPPv3NK4atcg18OrthographicCamera12getDirectionEv"></span><span id="_CPPv2NK4atcg18OrthographicCamera12getDirectionEv"></span><span id="atcg::OrthographicCamera::getDirectionC"></span><span class="target" id="classatcg_1_1_orthographic_camera_1a367efcfef7fb0e2de7b80c056f0b10d8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getDirection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg18OrthographicCamera12getDirectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Direction. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::vec3 The view direction </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg18OrthographicCamera13setProjectionERKfRKfRKfRKf">
+<span id="_CPPv3N4atcg18OrthographicCamera13setProjectionERKfRKfRKfRKf"></span><span id="_CPPv2N4atcg18OrthographicCamera13setProjectionERKfRKfRKfRKf"></span><span id="atcg::OrthographicCamera::setProjection__floatCR.floatCR.floatCR.floatCR"></span><span class="target" id="classatcg_1_1_orthographic_camera_1aaa0072ac2bc1b0f8ab6ae7a6fe9c8652"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setProjection</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">left</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">right</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">bottom</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">top</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg18OrthographicCamera13setProjectionERKfRKfRKfRKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the Projection. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>left</strong> – </p></li>
+<li><p><strong>right</strong> – </p></li>
+<li><p><strong>bottom</strong> – </p></li>
+<li><p><strong>top</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg18OrthographicCamera4copyEv">
+<span id="_CPPv3NK4atcg18OrthographicCamera4copyEv"></span><span id="_CPPv2NK4atcg18OrthographicCamera4copyEv"></span><span id="atcg::OrthographicCamera::copyC"></span><span class="target" id="classatcg_1_1_orthographic_camera_1a70ca40ce8a4ea3566cd76797b8d0f89a"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">copy</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg18OrthographicCamera4copyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a copy of the camera. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The deep copy </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCameraE">
+<span id="_CPPv3N4atcg17PerspectiveCameraE"></span><span id="_CPPv2N4atcg17PerspectiveCameraE"></span><span id="atcg::PerspectiveCamera"></span><span class="target" id="classatcg_1_1_perspective_camera"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PerspectiveCamera</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCameraE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>A class to model a camera. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCamera17PerspectiveCameraERK16CameraExtrinsicsRK16CameraIntrinsics">
+<span id="_CPPv3N4atcg17PerspectiveCamera17PerspectiveCameraERK16CameraExtrinsicsRK16CameraIntrinsics"></span><span id="_CPPv2N4atcg17PerspectiveCamera17PerspectiveCameraERK16CameraExtrinsicsRK16CameraIntrinsics"></span><span id="atcg::PerspectiveCamera::PerspectiveCamera__CameraExtrinsicsCR.CameraIntrinsicsCR"></span><span class="target" id="classatcg_1_1_perspective_camera_1a2470dd9149429ff78cc2314d4b9855af"></span><span class="sig-name descname"><span class="n"><span class="pre">PerspectiveCamera</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsicsE" title="atcg::CameraExtrinsics"><span class="n"><span class="pre">CameraExtrinsics</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">extrinsics</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsicsE" title="atcg::CameraIntrinsics"><span class="n"><span class="pre">CameraIntrinsics</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">intrinsics</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCamera17PerspectiveCameraERK16CameraExtrinsicsRK16CameraIntrinsics" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classatcg_1_1_camera"><span class="std std-ref">Camera</span></a> object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extrinsics</strong> – The camera extrinsics </p></li>
+<li><p><strong>intrinsics</strong> – The camera intrinsics </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera11getPositionEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera11getPositionEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera11getPositionEv"></span><span id="atcg::PerspectiveCamera::getPositionC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a8e2ee615eead530f307acd8bfbfe3835"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera11getPositionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::vec3 The position </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera12getDirectionEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera12getDirectionEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera12getDirectionEv"></span><span id="atcg::PerspectiveCamera::getDirectionC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a367efcfef7fb0e2de7b80c056f0b10d8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getDirection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera12getDirectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Direction. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::vec3 The view direction </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera9getLookAtEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera9getLookAtEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera9getLookAtEv"></span><span id="atcg::PerspectiveCamera::getLookAtC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a651e6e4f60d924b0d3e1013afaf8b814"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getLookAt</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera9getLookAtEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Look At target. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::vec3 The look at target </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera5getUpEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera5getUpEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera5getUpEv"></span><span id="atcg::PerspectiveCamera::getUpC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a68c48776f82985ffaa2524413a159a8a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getUp</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera5getUpEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Up direction. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::vec3 The up direction </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera13getProjectionEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera13getProjectionEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera13getProjectionEv"></span><span id="atcg::PerspectiveCamera::getProjectionC"></span><span class="target" id="classatcg_1_1_perspective_camera_1aeb813895b144fabf8107de16bb85d4e1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getProjection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera13getProjectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Projection matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::mat4 The projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCamera13setProjectionERKN3glm4mat4E">
+<span id="_CPPv3N4atcg17PerspectiveCamera13setProjectionERKN3glm4mat4E"></span><span id="_CPPv2N4atcg17PerspectiveCamera13setProjectionERKN3glm4mat4E"></span><span id="atcg::PerspectiveCamera::setProjection__glm::mat4CR"></span><span class="target" id="classatcg_1_1_perspective_camera_1a0eabf73650b9259ce72967a5cabf4d62"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setProjection</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">projection</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCamera13setProjectionERKN3glm4mat4E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the projection matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>projection</strong> – The new projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera17getViewProjectionEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera17getViewProjectionEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera17getViewProjectionEv"></span><span id="atcg::PerspectiveCamera::getViewProjectionC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a05af4d299317dedd4cdf02eddadc141a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getViewProjection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera17getViewProjectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the View Projection matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::mat4 The view-projection matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera14getAspectRatioEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera14getAspectRatioEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera14getAspectRatioEv"></span><span id="atcg::PerspectiveCamera::getAspectRatioC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a58999f854a2c91215ccb6b69ae78c0c3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getAspectRatio</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera14getAspectRatioEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Aspect Ratio. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float The aspect ratio </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera7getViewEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera7getViewEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera7getViewEv"></span><span id="atcg::PerspectiveCamera::getViewC"></span><span class="target" id="classatcg_1_1_perspective_camera_1af3be97532818cd30f9dafda5ef985555"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getView</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera7getViewEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the View matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>glm::mat4 The view matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCamera7setViewERKN3glm4mat4E">
+<span id="_CPPv3N4atcg17PerspectiveCamera7setViewERKN3glm4mat4E"></span><span id="_CPPv2N4atcg17PerspectiveCamera7setViewERKN3glm4mat4E"></span><span id="atcg::PerspectiveCamera::setView__glm::mat4CR"></span><span class="target" id="classatcg_1_1_perspective_camera_1a4fbf73ca1a3cd197624578f0586a04bf"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setView</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">view</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCamera7setViewERKN3glm4mat4E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the view matrix. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>view</strong> – The new orthonormal view matrix </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCamera11setPositionERKN3glm4vec3E">
+<span id="_CPPv3N4atcg17PerspectiveCamera11setPositionERKN3glm4vec3E"></span><span id="_CPPv2N4atcg17PerspectiveCamera11setPositionERKN3glm4vec3E"></span><span id="atcg::PerspectiveCamera::setPosition__glm::vec3CR"></span><span class="target" id="classatcg_1_1_perspective_camera_1aabfdefe293925216fd849cc3b36772cd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setPosition</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">position</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCamera11setPositionERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the Position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>position</strong> – The new position </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCamera9setLookAtERKN3glm4vec3E">
+<span id="_CPPv3N4atcg17PerspectiveCamera9setLookAtERKN3glm4vec3E"></span><span id="_CPPv2N4atcg17PerspectiveCamera9setLookAtERKN3glm4vec3E"></span><span id="atcg::PerspectiveCamera::setLookAt__glm::vec3CR"></span><span class="target" id="classatcg_1_1_perspective_camera_1a9b34f66adda7e718e848abe09454fd04"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setLookAt</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">look_at</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCamera9setLookAtERKN3glm4vec3E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the Look At Target. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>look_at</strong> – The new target </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCamera14setAspectRatioERKf">
+<span id="_CPPv3N4atcg17PerspectiveCamera14setAspectRatioERKf"></span><span id="_CPPv2N4atcg17PerspectiveCamera14setAspectRatioERKf"></span><span id="atcg::PerspectiveCamera::setAspectRatio__floatCR"></span><span class="target" id="classatcg_1_1_perspective_camera_1a079ad977d9402d6f70eb6280d92a213c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setAspectRatio</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">aspect_ratio</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCamera14setAspectRatioERKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the Aspect Ratio. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>aspect_ratio</strong> – The new aspect ratio </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCamera6setFOVERKf">
+<span id="_CPPv3N4atcg17PerspectiveCamera6setFOVERKf"></span><span id="_CPPv2N4atcg17PerspectiveCamera6setFOVERKf"></span><span id="atcg::PerspectiveCamera::setFOV__floatCR"></span><span class="target" id="classatcg_1_1_perspective_camera_1afb01cdd7ab1412e467de28e0280ad296"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setFOV</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fov</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCamera6setFOVERKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the fov in y direction. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fov</strong> – The fov in degrees </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera7getNearEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera7getNearEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera7getNearEv"></span><span id="atcg::PerspectiveCamera::getNearC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a11d2507b4c6a044bf5ba5fe2419106ff"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getNear</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera7getNearEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the near plane. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The near plane </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera6getFarEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera6getFarEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera6getFarEv"></span><span id="atcg::PerspectiveCamera::getFarC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a666e4d4dd189bedb765e5c9cd0af9e44"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getFar</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera6getFarEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the far plane. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The far plane </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera6getFOVEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera6getFOVEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera6getFOVEv"></span><span id="atcg::PerspectiveCamera::getFOVC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a0c8996f11bc46e88b354e2117e3c8367"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getFOV</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera6getFOVEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the camera fov in y direction. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The fov (in degree) </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCamera7setNearEf">
+<span id="_CPPv3N4atcg17PerspectiveCamera7setNearEf"></span><span id="_CPPv2N4atcg17PerspectiveCamera7setNearEf"></span><span id="atcg::PerspectiveCamera::setNear__float"></span><span class="target" id="classatcg_1_1_perspective_camera_1ab392ee4732fcaccc921dcc5fd7d85e69"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setNear</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">near_plane</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCamera7setNearEf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the near plane. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>near_plane</strong> – The near plane </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17PerspectiveCamera6setFarEf">
+<span id="_CPPv3N4atcg17PerspectiveCamera6setFarEf"></span><span id="_CPPv2N4atcg17PerspectiveCamera6setFarEf"></span><span id="atcg::PerspectiveCamera::setFar__float"></span><span class="target" id="classatcg_1_1_perspective_camera_1a705441496637bdd6827abc90a134aa4e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setFar</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">far_plane</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17PerspectiveCamera6setFarEf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the far plane. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>far_plane</strong> – The far plane </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg17PerspectiveCamera4copyEv">
+<span id="_CPPv3NK4atcg17PerspectiveCamera4copyEv"></span><span id="_CPPv2NK4atcg17PerspectiveCamera4copyEv"></span><span id="atcg::PerspectiveCamera::copyC"></span><span class="target" id="classatcg_1_1_perspective_camera_1a70ca40ce8a4ea3566cd76797b8d0f89a"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">copy</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK4atcg17PerspectiveCamera4copyEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a copy of the camera. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The deep copy </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraControllerE">
+<span id="_CPPv3N4atcg16CameraControllerE"></span><span id="_CPPv2N4atcg16CameraControllerE"></span><span id="atcg::CameraController"></span><span class="target" id="classatcg_1_1_camera_controller"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">CameraController</span></span></span><a class="headerlink" href="#_CPPv4N4atcg16CameraControllerE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>A class to model camera movement (only for perspective camera for now) Scroll to zoom Drag to rotate. </p>
+<p>Subclassed by <a class="reference internal" href="#classatcg_1_1_first_person_controller"><span class="std std-ref">FirstPersonController</span></a>, <a class="reference internal" href="#classatcg_1_1_focused_controller"><span class="std std-ref">FocusedController</span></a>, <a class="reference internal" href="#classatcg_1_1_v_r_controller"><span class="std std-ref">VRController</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraController16CameraControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE">
+<span id="_CPPv3N4atcg16CameraController16CameraControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="_CPPv2N4atcg16CameraController16CameraControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="atcg::CameraController::CameraController__atcg::ref_ptr:PerspectiveCamera:CR"></span><span class="target" id="classatcg_1_1_camera_controller_1a5d40c824ba0af47a2e3552b89232a3a2"></span><span class="sig-name descname"><span class="n"><span class="pre">CameraController</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE" title="atcg::PerspectiveCamera"><span class="n"><span class="pre">PerspectiveCamera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraController16CameraControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a camera controller with a given camera. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>camera</strong> – The camera </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraController8onUpdateEf">
+<span id="_CPPv3N4atcg16CameraController8onUpdateEf"></span><span id="_CPPv2N4atcg16CameraController8onUpdateEf"></span><span id="atcg::CameraController::onUpdate__float"></span><span class="target" id="classatcg_1_1_camera_controller_1aa07bd58d8b4ad86a572b0213aa84c863"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onUpdate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">delta_time</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4atcg16CameraController8onUpdateEf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Gets called every frame. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>delta_time</strong> – Time since last frame</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the camera was moved </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraController7onEventEP5Event">
+<span id="_CPPv3N4atcg16CameraController7onEventEP5Event"></span><span id="_CPPv2N4atcg16CameraController7onEventEP5Event"></span><span id="atcg::CameraController::onEvent__EventP"></span><span class="target" id="classatcg_1_1_camera_controller_1a03708e5295d6353b93fbce8f39ed27b4"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onEvent</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../Events/Event.html#_CPPv4N4atcg5EventE" title="atcg::Event"><span class="n"><span class="pre">Event</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">e</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4atcg16CameraController7onEventEP5Event" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Handles events. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>e</strong> – The event </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg16CameraController9getCameraEv">
+<span id="_CPPv3NK4atcg16CameraController9getCameraEv"></span><span id="_CPPv2NK4atcg16CameraController9getCameraEv"></span><span id="atcg::CameraController::getCameraC"></span><span class="target" id="classatcg_1_1_camera_controller_1a94e392bc34af69cec1b54210b1f7ae15"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE" title="atcg::PerspectiveCamera"><span class="n"><span class="pre">PerspectiveCamera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getCamera</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg16CameraController9getCameraEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the <a class="reference internal" href="#classatcg_1_1_camera"><span class="std std-ref">Camera</span></a> object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>const atcg::scope_ptr&lt;Camera&gt;&amp; The camera </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg16CameraController9setCameraERKN4atcg7ref_ptrI17PerspectiveCameraEE">
+<span id="_CPPv3N4atcg16CameraController9setCameraERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="_CPPv2N4atcg16CameraController9setCameraERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="atcg::CameraController::setCamera__atcg::ref_ptr:PerspectiveCamera:CR"></span><span class="target" id="classatcg_1_1_camera_controller_1a12db2900e7fc36f93162acb6e31b2cb1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setCamera</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE" title="atcg::PerspectiveCamera"><span class="n"><span class="pre">PerspectiveCamera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg16CameraController9setCameraERKN4atcg7ref_ptrI17PerspectiveCameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the <a class="reference internal" href="#classatcg_1_1_camera"><span class="std std-ref">Camera</span></a> object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>camera</strong> – The camera </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17FocusedControllerE">
+<span id="_CPPv3N4atcg17FocusedControllerE"></span><span id="_CPPv2N4atcg17FocusedControllerE"></span><span id="atcg::FocusedController"></span><span class="target" id="classatcg_1_1_focused_controller"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FocusedController</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraControllerE" title="atcg::CameraController"><span class="n"><span class="pre">CameraController</span></span></a><a class="headerlink" href="#_CPPv4N4atcg17FocusedControllerE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17FocusedController17FocusedControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE">
+<span id="_CPPv3N4atcg17FocusedController17FocusedControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="_CPPv2N4atcg17FocusedController17FocusedControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="atcg::FocusedController::FocusedController__atcg::ref_ptr:PerspectiveCamera:CR"></span><span class="target" id="classatcg_1_1_focused_controller_1a3c4d302d3a17a5d22e4f35d01be244af"></span><span class="sig-name descname"><span class="n"><span class="pre">FocusedController</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE" title="atcg::PerspectiveCamera"><span class="n"><span class="pre">PerspectiveCamera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg17FocusedController17FocusedControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct a new First Person <a class="reference internal" href="#classatcg_1_1_camera"><span class="std std-ref">Camera</span></a> object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>camera</strong> – The camera </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17FocusedController8onUpdateEf">
+<span id="_CPPv3N4atcg17FocusedController8onUpdateEf"></span><span id="_CPPv2N4atcg17FocusedController8onUpdateEf"></span><span id="atcg::FocusedController::onUpdate__float"></span><span class="target" id="classatcg_1_1_focused_controller_1a7087721db40f623b8e494eeb89cb4781"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onUpdate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">delta_time</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg17FocusedController8onUpdateEf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Gets called every frame. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>delta_time</strong> – Time since last frame</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the camera was moved </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg17FocusedController7onEventEP5Event">
+<span id="_CPPv3N4atcg17FocusedController7onEventEP5Event"></span><span id="_CPPv2N4atcg17FocusedController7onEventEP5Event"></span><span id="atcg::FocusedController::onEvent__EventP"></span><span class="target" id="classatcg_1_1_focused_controller_1a58c2e06314e346f4b27ed99f98dc229c"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onEvent</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../Events/Event.html#_CPPv4N4atcg5EventE" title="atcg::Event"><span class="n"><span class="pre">Event</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">e</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg17FocusedController7onEventEP5Event" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Handles events. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>e</strong> – The event </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21FirstPersonControllerE">
+<span id="_CPPv3N4atcg21FirstPersonControllerE"></span><span id="_CPPv2N4atcg21FirstPersonControllerE"></span><span id="atcg::FirstPersonController"></span><span class="target" id="classatcg_1_1_first_person_controller"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">FirstPersonController</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraControllerE" title="atcg::CameraController"><span class="n"><span class="pre">CameraController</span></span></a><a class="headerlink" href="#_CPPv4N4atcg21FirstPersonControllerE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21FirstPersonController21FirstPersonControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE">
+<span id="_CPPv3N4atcg21FirstPersonController21FirstPersonControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="_CPPv2N4atcg21FirstPersonController21FirstPersonControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="atcg::FirstPersonController::FirstPersonController__atcg::ref_ptr:PerspectiveCamera:CR"></span><span class="target" id="classatcg_1_1_first_person_controller_1a8b982cf1ac4c850cae043cb7aabd5066"></span><span class="sig-name descname"><span class="n"><span class="pre">FirstPersonController</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE" title="atcg::PerspectiveCamera"><span class="n"><span class="pre">PerspectiveCamera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg21FirstPersonController21FirstPersonControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct a new First Person <a class="reference internal" href="#classatcg_1_1_camera"><span class="std std-ref">Camera</span></a> object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>camera</strong> – The camera </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21FirstPersonController8onUpdateEf">
+<span id="_CPPv3N4atcg21FirstPersonController8onUpdateEf"></span><span id="_CPPv2N4atcg21FirstPersonController8onUpdateEf"></span><span id="atcg::FirstPersonController::onUpdate__float"></span><span class="target" id="classatcg_1_1_first_person_controller_1a7087721db40f623b8e494eeb89cb4781"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onUpdate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">delta_time</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg21FirstPersonController8onUpdateEf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Gets called every frame. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>delta_time</strong> – Time since last frame</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the camera was moved </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg21FirstPersonController7onEventEP5Event">
+<span id="_CPPv3N4atcg21FirstPersonController7onEventEP5Event"></span><span id="_CPPv2N4atcg21FirstPersonController7onEventEP5Event"></span><span id="atcg::FirstPersonController::onEvent__EventP"></span><span class="target" id="classatcg_1_1_first_person_controller_1a58c2e06314e346f4b27ed99f98dc229c"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onEvent</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../Events/Event.html#_CPPv4N4atcg5EventE" title="atcg::Event"><span class="n"><span class="pre">Event</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">e</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg21FirstPersonController7onEventEP5Event" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Handles events. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>e</strong> – The event </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12VRControllerE">
+<span id="_CPPv3N4atcg12VRControllerE"></span><span id="_CPPv2N4atcg12VRControllerE"></span><span id="atcg::VRController"></span><span class="target" id="classatcg_1_1_v_r_controller"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VRController</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg16CameraControllerE" title="atcg::CameraController"><span class="n"><span class="pre">CameraController</span></span></a><a class="headerlink" href="#_CPPv4N4atcg12VRControllerE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12VRController12VRControllerERKN4atcg7ref_ptrI17PerspectiveCameraEERKN4atcg7ref_ptrI17PerspectiveCameraEE">
+<span id="_CPPv3N4atcg12VRController12VRControllerERKN4atcg7ref_ptrI17PerspectiveCameraEERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="_CPPv2N4atcg12VRController12VRControllerERKN4atcg7ref_ptrI17PerspectiveCameraEERKN4atcg7ref_ptrI17PerspectiveCameraEE"></span><span id="atcg::VRController::VRController__atcg::ref_ptr:PerspectiveCamera:CR.atcg::ref_ptr:PerspectiveCamera:CR"></span><span class="target" id="classatcg_1_1_v_r_controller_1ab5e57aa345b614e81568e1923bd6929a"></span><span class="sig-name descname"><span class="n"><span class="pre">VRController</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE" title="atcg::PerspectiveCamera"><span class="n"><span class="pre">PerspectiveCamera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera_left</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE" title="atcg::PerspectiveCamera"><span class="n"><span class="pre">PerspectiveCamera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera_right</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12VRController12VRControllerERKN4atcg7ref_ptrI17PerspectiveCameraEERKN4atcg7ref_ptrI17PerspectiveCameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct a new First Person <a class="reference internal" href="#classatcg_1_1_camera"><span class="std std-ref">Camera</span></a> object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>camera_left</strong> – The camera of the left eye </p></li>
+<li><p><strong>camera_right</strong> – The camera of the right eye </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12VRController8onUpdateEf">
+<span id="_CPPv3N4atcg12VRController8onUpdateEf"></span><span id="_CPPv2N4atcg12VRController8onUpdateEf"></span><span id="atcg::VRController::onUpdate__float"></span><span class="target" id="classatcg_1_1_v_r_controller_1a7087721db40f623b8e494eeb89cb4781"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onUpdate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">delta_time</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg12VRController8onUpdateEf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Gets called every frame. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>delta_time</strong> – Time since last frame </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12VRController7onEventEP5Event">
+<span id="_CPPv3N4atcg12VRController7onEventEP5Event"></span><span id="_CPPv2N4atcg12VRController7onEventEP5Event"></span><span id="atcg::VRController::onEvent__EventP"></span><span class="target" id="classatcg_1_1_v_r_controller_1a58c2e06314e346f4b27ed99f98dc229c"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onEvent</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../Events/Event.html#_CPPv4N4atcg5EventE" title="atcg::Event"><span class="n"><span class="pre">Event</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">e</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N4atcg12VRController7onEventEP5Event" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Handles events. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>e</strong> – The event </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12VRController13getCameraLeftEv">
+<span id="_CPPv3NK4atcg12VRController13getCameraLeftEv"></span><span id="_CPPv2NK4atcg12VRController13getCameraLeftEv"></span><span id="atcg::VRController::getCameraLeftC"></span><span class="target" id="classatcg_1_1_v_r_controller_1a598539a4537294f5a84f79e377c6ef79"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE" title="atcg::PerspectiveCamera"><span class="n"><span class="pre">PerspectiveCamera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getCameraLeft</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12VRController13getCameraLeftEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the camera of the left eye. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The camera </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12VRController14getCameraRightEv">
+<span id="_CPPv3NK4atcg12VRController14getCameraRightEv"></span><span id="_CPPv2NK4atcg12VRController14getCameraRightEv"></span><span id="atcg::VRController::getCameraRightC"></span><span class="target" id="classatcg_1_1_v_r_controller_1a9210bce8cd4ab12902215fa900f628d5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE" title="atcg::PerspectiveCamera"><span class="n"><span class="pre">PerspectiveCamera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getCameraRight</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12VRController14getCameraRightEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the camera of the right eye. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The camera </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12VRController21getControllerPositionEv">
+<span id="_CPPv3NK4atcg12VRController21getControllerPositionEv"></span><span id="_CPPv2NK4atcg12VRController21getControllerPositionEv"></span><span id="atcg::VRController::getControllerPositionC"></span><span class="target" id="classatcg_1_1_v_r_controller_1ae6c89be2e99670c01ed5dac74b6aa92e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getControllerPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12VRController21getControllerPositionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the position of the controller if the trigger is pressed for movement. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The Controller position </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12VRController22getControllerDirectionEv">
+<span id="_CPPv3NK4atcg12VRController22getControllerDirectionEv"></span><span id="_CPPv2NK4atcg12VRController22getControllerDirectionEv"></span><span id="atcg::VRController::getControllerDirectionC"></span><span class="target" id="classatcg_1_1_v_r_controller_1aa6a70fae0cb90d12f28c6792a09f8c1b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getControllerDirection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12VRController22getControllerDirectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the direction of the controller if the trigger is pressed for movement. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The Controller direction </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12VRController25getControllerIntersectionEv">
+<span id="_CPPv3NK4atcg12VRController25getControllerIntersectionEv"></span><span id="_CPPv2NK4atcg12VRController25getControllerIntersectionEv"></span><span id="atcg::VRController::getControllerIntersectionC"></span><span class="target" id="classatcg_1_1_v_r_controller_1a7fc8a23fd706d52c7ed035b2bbc0ccfa"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getControllerIntersection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12VRController25getControllerIntersectionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the position of the intersection of the controller with the floor plane if the trigger is pressed for movement. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The intersection </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12VRController10inMovementEv">
+<span id="_CPPv3NK4atcg12VRController10inMovementEv"></span><span id="_CPPv2NK4atcg12VRController10inMovementEv"></span><span id="atcg::VRController::inMovementC"></span><span class="target" id="classatcg_1_1_v_r_controller_1a6b75804c7cff4effc3b5f5bbe4156208"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">inMovement</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12VRController10inMovementEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Check if we are currently trying to move. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the trigger is pressed and we try to move </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="VRSystem.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">VRSystem</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="VertexArray.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">VertexArray</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Domenic Zingsheim
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Camera</a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsicsE"><code class="docutils literal notranslate"><span class="pre">atcg::CameraExtrinsics</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsics16CameraExtrinsicsEv"><code class="docutils literal notranslate"><span class="pre">CameraExtrinsics()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4vec3ERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">CameraExtrinsics()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsics16CameraExtrinsicsERKN3glm4mat4E"><code class="docutils literal notranslate"><span class="pre">CameraExtrinsics()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsics11setPositionERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">setPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsics9setTargetERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">setTarget()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraExtrinsics18setExtrinsicMatrixERKN3glm4mat4E"><code class="docutils literal notranslate"><span class="pre">setExtrinsicMatrix()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraExtrinsics8positionEv"><code class="docutils literal notranslate"><span class="pre">position()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraExtrinsics6targetEv"><code class="docutils literal notranslate"><span class="pre">target()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraExtrinsics15extrinsicMatrixEv"><code class="docutils literal notranslate"><span class="pre">extrinsicMatrix()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsicsE"><code class="docutils literal notranslate"><span class="pre">atcg::CameraIntrinsics</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsics16CameraIntrinsicsEv"><code class="docutils literal notranslate"><span class="pre">CameraIntrinsics()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsics16CameraIntrinsicsEKfKfKfKfRKN3glm4vec2E"><code class="docutils literal notranslate"><span class="pre">CameraIntrinsics()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsics16CameraIntrinsicsERKN3glm4mat4E"><code class="docutils literal notranslate"><span class="pre">CameraIntrinsics()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsics14setAspectRatioEKf"><code class="docutils literal notranslate"><span class="pre">setAspectRatio()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsics6setFOVEKf"><code class="docutils literal notranslate"><span class="pre">setFOV()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsics7setNearEKf"><code class="docutils literal notranslate"><span class="pre">setNear()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsics6setFarEKf"><code class="docutils literal notranslate"><span class="pre">setFar()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsics16setOpticalCenterERKN3glm4vec2E"><code class="docutils literal notranslate"><span class="pre">setOpticalCenter()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraIntrinsics13setProjectionERKN3glm4mat4E"><code class="docutils literal notranslate"><span class="pre">setProjection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraIntrinsics11aspectRatioEv"><code class="docutils literal notranslate"><span class="pre">aspectRatio()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraIntrinsics3FOVEv"><code class="docutils literal notranslate"><span class="pre">FOV()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraIntrinsics5zNearEv"><code class="docutils literal notranslate"><span class="pre">zNear()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraIntrinsics4zFarEv"><code class="docutils literal notranslate"><span class="pre">zFar()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraIntrinsics13opticalCenterEv"><code class="docutils literal notranslate"><span class="pre">opticalCenter()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraIntrinsics10projectionEv"><code class="docutils literal notranslate"><span class="pre">projection()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11CameraUtils17convert_to_opencvERKN3glm4mat4EK8uint32_tK8uint32_t"><code class="docutils literal notranslate"><span class="pre">convert_to_opencv()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11CameraUtils17convert_to_opencvERK16CameraIntrinsicsK8uint32_tK8uint32_t"><code class="docutils literal notranslate"><span class="pre">convert_to_opencv()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11CameraUtils19convert_from_opencvEKfKfKfKfKfKfK8uint32_tK8uint32_t"><code class="docutils literal notranslate"><span class="pre">convert_from_opencv()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11CameraUtils19convert_from_opencvERKN3glm4mat3EKfKfK8uint32_tK8uint32_t"><code class="docutils literal notranslate"><span class="pre">convert_from_opencv()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6CameraE"><code class="docutils literal notranslate"><span class="pre">atcg::Camera</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Camera13getProjectionEv"><code class="docutils literal notranslate"><span class="pre">getProjection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Camera17getViewProjectionEv"><code class="docutils literal notranslate"><span class="pre">getViewProjection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Camera7getViewEv"><code class="docutils literal notranslate"><span class="pre">getView()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Camera11getPositionEv"><code class="docutils literal notranslate"><span class="pre">getPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Camera12getDirectionEv"><code class="docutils literal notranslate"><span class="pre">getDirection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Camera4copyEv"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Camera13getExtrinsicsEv"><code class="docutils literal notranslate"><span class="pre">getExtrinsics()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Camera13getIntrinsicsEv"><code class="docutils literal notranslate"><span class="pre">getIntrinsics()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Camera13setIntrinsicsERK16CameraIntrinsics"><code class="docutils literal notranslate"><span class="pre">setIntrinsics()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Camera13setExtrinsicsERK16CameraExtrinsics"><code class="docutils literal notranslate"><span class="pre">setExtrinsics()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18OrthographicCameraE"><code class="docutils literal notranslate"><span class="pre">atcg::OrthographicCamera</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg18OrthographicCamera18OrthographicCameraERKfRKfRKfRKf"><code class="docutils literal notranslate"><span class="pre">OrthographicCamera()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18OrthographicCameraD0Ev"><code class="docutils literal notranslate"><span class="pre">~OrthographicCamera()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18OrthographicCamera13getProjectionEv"><code class="docutils literal notranslate"><span class="pre">getProjection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18OrthographicCamera17getViewProjectionEv"><code class="docutils literal notranslate"><span class="pre">getViewProjection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18OrthographicCamera7getViewEv"><code class="docutils literal notranslate"><span class="pre">getView()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18OrthographicCamera11getPositionEv"><code class="docutils literal notranslate"><span class="pre">getPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18OrthographicCamera12getDirectionEv"><code class="docutils literal notranslate"><span class="pre">getDirection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg18OrthographicCamera13setProjectionERKfRKfRKfRKf"><code class="docutils literal notranslate"><span class="pre">setProjection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg18OrthographicCamera4copyEv"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCameraE"><code class="docutils literal notranslate"><span class="pre">atcg::PerspectiveCamera</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCamera17PerspectiveCameraERK16CameraExtrinsicsRK16CameraIntrinsics"><code class="docutils literal notranslate"><span class="pre">PerspectiveCamera()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera11getPositionEv"><code class="docutils literal notranslate"><span class="pre">getPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera12getDirectionEv"><code class="docutils literal notranslate"><span class="pre">getDirection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera9getLookAtEv"><code class="docutils literal notranslate"><span class="pre">getLookAt()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera5getUpEv"><code class="docutils literal notranslate"><span class="pre">getUp()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera13getProjectionEv"><code class="docutils literal notranslate"><span class="pre">getProjection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCamera13setProjectionERKN3glm4mat4E"><code class="docutils literal notranslate"><span class="pre">setProjection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera17getViewProjectionEv"><code class="docutils literal notranslate"><span class="pre">getViewProjection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera14getAspectRatioEv"><code class="docutils literal notranslate"><span class="pre">getAspectRatio()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera7getViewEv"><code class="docutils literal notranslate"><span class="pre">getView()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCamera7setViewERKN3glm4mat4E"><code class="docutils literal notranslate"><span class="pre">setView()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCamera11setPositionERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">setPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCamera9setLookAtERKN3glm4vec3E"><code class="docutils literal notranslate"><span class="pre">setLookAt()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCamera14setAspectRatioERKf"><code class="docutils literal notranslate"><span class="pre">setAspectRatio()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCamera6setFOVERKf"><code class="docutils literal notranslate"><span class="pre">setFOV()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera7getNearEv"><code class="docutils literal notranslate"><span class="pre">getNear()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera6getFarEv"><code class="docutils literal notranslate"><span class="pre">getFar()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera6getFOVEv"><code class="docutils literal notranslate"><span class="pre">getFOV()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCamera7setNearEf"><code class="docutils literal notranslate"><span class="pre">setNear()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17PerspectiveCamera6setFarEf"><code class="docutils literal notranslate"><span class="pre">setFar()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg17PerspectiveCamera4copyEv"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraControllerE"><code class="docutils literal notranslate"><span class="pre">atcg::CameraController</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraController16CameraControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE"><code class="docutils literal notranslate"><span class="pre">CameraController()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraController8onUpdateEf"><code class="docutils literal notranslate"><span class="pre">onUpdate()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraController7onEventEP5Event"><code class="docutils literal notranslate"><span class="pre">onEvent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg16CameraController9getCameraEv"><code class="docutils literal notranslate"><span class="pre">getCamera()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg16CameraController9setCameraERKN4atcg7ref_ptrI17PerspectiveCameraEE"><code class="docutils literal notranslate"><span class="pre">setCamera()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17FocusedControllerE"><code class="docutils literal notranslate"><span class="pre">atcg::FocusedController</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg17FocusedController17FocusedControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE"><code class="docutils literal notranslate"><span class="pre">FocusedController()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17FocusedController8onUpdateEf"><code class="docutils literal notranslate"><span class="pre">onUpdate()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg17FocusedController7onEventEP5Event"><code class="docutils literal notranslate"><span class="pre">onEvent()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21FirstPersonControllerE"><code class="docutils literal notranslate"><span class="pre">atcg::FirstPersonController</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg21FirstPersonController21FirstPersonControllerERKN4atcg7ref_ptrI17PerspectiveCameraEE"><code class="docutils literal notranslate"><span class="pre">FirstPersonController()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21FirstPersonController8onUpdateEf"><code class="docutils literal notranslate"><span class="pre">onUpdate()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg21FirstPersonController7onEventEP5Event"><code class="docutils literal notranslate"><span class="pre">onEvent()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12VRControllerE"><code class="docutils literal notranslate"><span class="pre">atcg::VRController</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg12VRController12VRControllerERKN4atcg7ref_ptrI17PerspectiveCameraEERKN4atcg7ref_ptrI17PerspectiveCameraEE"><code class="docutils literal notranslate"><span class="pre">VRController()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12VRController8onUpdateEf"><code class="docutils literal notranslate"><span class="pre">onUpdate()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12VRController7onEventEP5Event"><code class="docutils literal notranslate"><span class="pre">onEvent()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12VRController13getCameraLeftEv"><code class="docutils literal notranslate"><span class="pre">getCameraLeft()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12VRController14getCameraRightEv"><code class="docutils literal notranslate"><span class="pre">getCameraRight()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12VRController21getControllerPositionEv"><code class="docutils literal notranslate"><span class="pre">getControllerPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12VRController22getControllerDirectionEv"><code class="docutils literal notranslate"><span class="pre">getControllerDirection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12VRController25getControllerIntersectionEv"><code class="docutils literal notranslate"><span class="pre">getControllerIntersection()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12VRController10inMovementEv"><code class="docutils literal notranslate"><span class="pre">inMovement()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

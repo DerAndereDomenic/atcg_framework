@@ -1,0 +1,1223 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Window" href="Window.html" /><link rel="prev" title="Layer" href="Layer.html" />
+
+    <link rel="shortcut icon" href="../../_static/icon.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>Memory - ATCG Framework documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ATCG Framework  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ATCG Framework  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="CoreIndex.html">Core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="API.html">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Application.html">Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Input.html">Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Layer.html">Layer</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Window.html">Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UUID.html">UUID</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Events/EventIndex.html">Events</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Events</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Events/Event.html">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/KeyEvents.html">KeyEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/MouseEvents.html">MoueEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/WindowEvents.html">WindowEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/FileEvents.html">FileEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/VREvents.html">VREvents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../DataStructure/DataStructureIndex.html">DataStructure</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of DataStructure</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Image.html">Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Timer.html">Timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/TensorOptions.html">TensorOptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Worker.html">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Statistics.html">Statistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Grid.html">Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/BufferView.html">BufferView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/PerformancePanel.html">PerformancePanel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Dictionary.html">Dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Skybox.html">Skybox</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Renderer/RendererIndex.html">Renderer</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Renderer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Renderer.html">Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Shader.html">Shader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Material.html">Material</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Texture.html">Texture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Framebuffer.html">Framebuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html">Render Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html#render-passes">Render Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Buffer.html">Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VertexArray.html">VertexArray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VRSystem.html">VRSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/ContextManager.html">Context</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scene/SceneIndex.html">Scene</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Scene</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Scene.html">Scene</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Entity.html">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Components.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/SceneHierarchyPanel.html">Scene Hierarchy Panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Serializer.html">Serializer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/RevisionSystem.html">RevisionSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/ComponentRenderer.html">ComponentRenderer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scripting/ScriptingIndex.html">Scripting</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Scripting</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/ScriptEngine.html">ScriptEngine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/Script.html">Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Math/MathIndex.html">Math</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Math</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Color.html">Color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Constants.html">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/MeshManipulation.html">Mesh Manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Tracing.html">Tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ImGui/ImGui.html">ImGui</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IO/IO.html">IO</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Network/NetworkIndex.html">Network</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Network</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPServer.html">TCPServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPClient.html">TCPClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/NetworkUtils.html">Network Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../OpenMesh/OpenMesh.html">OpenMesh</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/source/Core/Memory.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="memory">
+<h1>Memory<a class="headerlink" href="#memory" title="Link to this heading">¶</a></h1>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14host_allocatorE">
+<span id="_CPPv3N4atcg14host_allocatorE"></span><span id="_CPPv2N4atcg14host_allocatorE"></span><span id="atcg::host_allocator"></span><span class="target" id="structatcg_1_1host__allocator"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">host_allocator</span></span></span><a class="headerlink" href="#_CPPv4N4atcg14host_allocatorE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>An allocator that handles memory allocated on the host. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14host_allocator8allocateENSt6size_tE">
+<span id="_CPPv3N4atcg14host_allocator8allocateENSt6size_tE"></span><span id="_CPPv2N4atcg14host_allocator8allocateENSt6size_tE"></span><span id="atcg::host_allocator::allocate__std::s"></span><span class="target" id="structatcg_1_1host__allocator_1af48fecef581d20b2ced7d7eab8e6a8b5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">allocate</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14host_allocator8allocateENSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Allocate n bytes on the host. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> – The number to allocate in bytes</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A pointer to the allocated memory </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14host_allocator10deallocateEPvNSt6size_tE">
+<span id="_CPPv3N4atcg14host_allocator10deallocateEPvNSt6size_tE"></span><span id="_CPPv2N4atcg14host_allocator10deallocateEPvNSt6size_tE"></span><span id="atcg::host_allocator::deallocate__voidP.std::s"></span><span class="target" id="structatcg_1_1host__allocator_1acb56f79b792741383b7a2c764b1eb4dd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">deallocate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptr</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14host_allocator10deallocateEPvNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Deletes the memory associated with the pointer. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ptr</strong> – The memory that should be deleted </p></li>
+<li><p><strong>n</strong> – The number of bytes that are deleted </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14host_allocator16memcpy_host2hostEPvPKvNSt6size_tE">
+<span id="_CPPv3N4atcg14host_allocator16memcpy_host2hostEPvPKvNSt6size_tE"></span><span id="_CPPv2N4atcg14host_allocator16memcpy_host2hostEPvPKvNSt6size_tE"></span><span id="atcg::host_allocator::memcpy_host2host__voidP.voidCP.std::s"></span><span class="target" id="structatcg_1_1host__allocator_1ad1852783c8c253ebc2a791497a1d26f1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">memcpy_host2host</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dst</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14host_allocator16memcpy_host2hostEPvPKvNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Performs a memcopy from host to host. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst</strong> – The host destination pointer </p></li>
+<li><p><strong>src</strong> – The host source pointer </p></li>
+<li><p><strong>n</strong> – The number of bytes to copy </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14host_allocator15memcpy_dev2hostEPvPKvNSt6size_tE">
+<span id="_CPPv3N4atcg14host_allocator15memcpy_dev2hostEPvPKvNSt6size_tE"></span><span id="_CPPv2N4atcg14host_allocator15memcpy_dev2hostEPvPKvNSt6size_tE"></span><span id="atcg::host_allocator::memcpy_dev2host__voidP.voidCP.std::s"></span><span class="target" id="structatcg_1_1host__allocator_1a855afeff851d72f1e76dbcfe0f85acd1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">memcpy_dev2host</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dst</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14host_allocator15memcpy_dev2hostEPvPKvNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Performs a memcopy from device to host. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst</strong> – The device destination pointer </p></li>
+<li><p><strong>src</strong> – The host source pointer </p></li>
+<li><p><strong>n</strong> – The number of bytes to copy </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14host_allocator15memcpy_host2devEPvPKvNSt6size_tE">
+<span id="_CPPv3N4atcg14host_allocator15memcpy_host2devEPvPKvNSt6size_tE"></span><span id="_CPPv2N4atcg14host_allocator15memcpy_host2devEPvPKvNSt6size_tE"></span><span id="atcg::host_allocator::memcpy_host2dev__voidP.voidCP.std::s"></span><span class="target" id="structatcg_1_1host__allocator_1a4a2a888459fd0c2d79e9ac13762f40ef"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">memcpy_host2dev</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dst</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14host_allocator15memcpy_host2devEPvPKvNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Performs a memcopy from host to device. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst</strong> – The device destination pointer </p></li>
+<li><p><strong>src</strong> – The host source pointer </p></li>
+<li><p><strong>n</strong> – The number of bytes to copy </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14host_allocator14memcpy_dev2devEPvPKvNSt6size_tE">
+<span id="_CPPv3N4atcg14host_allocator14memcpy_dev2devEPvPKvNSt6size_tE"></span><span id="_CPPv2N4atcg14host_allocator14memcpy_dev2devEPvPKvNSt6size_tE"></span><span id="atcg::host_allocator::memcpy_dev2dev__voidP.voidCP.std::s"></span><span class="target" id="structatcg_1_1host__allocator_1a3908b49bd3accf17aee345c7cf8d6059"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">memcpy_dev2dev</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">dst</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14host_allocator14memcpy_dev2devEPvPKvNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Performs a memcopy from device to device. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dst</strong> – The device destination pointer </p></li>
+<li><p><strong>src</strong> – The device source pointer </p></li>
+<li><p><strong>n</strong> – The number of bytes to copy </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-attributes">Public Static Attributes</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14host_allocator15bytes_allocatedE">
+<span id="_CPPv3N4atcg14host_allocator15bytes_allocatedE"></span><span id="_CPPv2N4atcg14host_allocator15bytes_allocatedE"></span><span id="atcg::host_allocator::bytes_allocated__std::s"></span><span class="target" id="structatcg_1_1host__allocator_1aab83defc828366f11fee27d4db3d379d"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bytes_allocated</span></span></span><a class="headerlink" href="#_CPPv4N4atcg14host_allocator15bytes_allocatedE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14host_allocator17bytes_deallocatedE">
+<span id="_CPPv3N4atcg14host_allocator17bytes_deallocatedE"></span><span id="_CPPv2N4atcg14host_allocator17bytes_deallocatedE"></span><span id="atcg::host_allocator::bytes_deallocated__std::s"></span><span class="target" id="structatcg_1_1host__allocator_1a649d6a1547989054908cc395a74126f1"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bytes_deallocated</span></span></span><a class="headerlink" href="#_CPPv4N4atcg14host_allocator17bytes_deallocatedE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg15MemoryContainerE">
+<span id="_CPPv3I0EN4atcg15MemoryContainerE"></span><span id="_CPPv2I0EN4atcg15MemoryContainerE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">allocator</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_memory_container"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MemoryContainer</span></span></span><a class="headerlink" href="#_CPPv4I0EN4atcg15MemoryContainerE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>This class handles a buffer. It is device agnostic for cuda code. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15MemoryContainer15MemoryContainerEv">
+<span id="_CPPv3N4atcg15MemoryContainer15MemoryContainerEv"></span><span id="_CPPv2N4atcg15MemoryContainer15MemoryContainerEv"></span><span id="atcg::MemoryContainer::MemoryContainer"></span><span class="target" id="classatcg_1_1_memory_container_1a38fbfb4eea74ef41b09083826d2943c6"></span><span class="sig-name descname"><span class="n"><span class="pre">MemoryContainer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N4atcg15MemoryContainer15MemoryContainerEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a memory container. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15MemoryContainer15MemoryContainerEPvNSt6size_tE">
+<span id="_CPPv3N4atcg15MemoryContainer15MemoryContainerEPvNSt6size_tE"></span><span id="_CPPv2N4atcg15MemoryContainer15MemoryContainerEPvNSt6size_tE"></span><span id="atcg::MemoryContainer::MemoryContainer__voidP.std::s"></span><span class="target" id="classatcg_1_1_memory_container_1a7538e0c4aa621418d73439bcc83d35f0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MemoryContainer</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptr</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg15MemoryContainer15MemoryContainerEPvNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a memory container that gets unique ownership of the supplied pointer. The memory will be freed if this object is destroyed. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ptr</strong> – The pointer to take ownership from </p></li>
+<li><p><strong>size</strong> – The size of the underlying memory in bytes </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15MemoryContainer15MemoryContainerER15MemoryContainer">
+<span id="_CPPv3N4atcg15MemoryContainer15MemoryContainerER15MemoryContainer"></span><span id="_CPPv2N4atcg15MemoryContainer15MemoryContainerER15MemoryContainer"></span><span id="atcg::MemoryContainer::MemoryContainer__MemoryContainerR"></span><span class="target" id="classatcg_1_1_memory_container_1a556c29ade50c9ce6f5abde83378fb6be"></span><span class="sig-name descname"><span class="n"><span class="pre">MemoryContainer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4atcg15MemoryContainer15MemoryContainerER15MemoryContainer" title="atcg::MemoryContainer::MemoryContainer"><span class="n"><span class="pre">MemoryContainer</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">delete</span></span><a class="headerlink" href="#_CPPv4N4atcg15MemoryContainer15MemoryContainerER15MemoryContainer" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15MemoryContaineraSER15MemoryContainer">
+<span id="_CPPv3N4atcg15MemoryContaineraSER15MemoryContainer"></span><span id="_CPPv2N4atcg15MemoryContaineraSER15MemoryContainer"></span><span id="atcg::MemoryContainer::assign-operator__MemoryContainerR"></span><span class="target" id="classatcg_1_1_memory_container_1afd2e7b74bbbf24cea559dd324403501c"></span><a class="reference internal" href="#_CPPv4I0EN4atcg15MemoryContainerE" title="atcg::MemoryContainer"><span class="n"><span class="pre">MemoryContainer</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN4atcg15MemoryContainerE" title="atcg::MemoryContainer"><span class="n"><span class="pre">MemoryContainer</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">delete</span></span><a class="headerlink" href="#_CPPv4N4atcg15MemoryContaineraSER15MemoryContainer" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15MemoryContainerD0Ev">
+<span id="_CPPv3N4atcg15MemoryContainerD0Ev"></span><span id="_CPPv2N4atcg15MemoryContainerD0Ev"></span><span id="atcg::MemoryContainer::~MemoryContainer"></span><span class="target" id="classatcg_1_1_memory_container_1a742dc6a1c04825252f71af6fee6347c1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~MemoryContainer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg15MemoryContainerD0Ev" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Destructor, frees the memory owned by this buffer. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15MemoryContainer6createENSt6size_tE">
+<span id="_CPPv3N4atcg15MemoryContainer6createENSt6size_tE"></span><span id="_CPPv2N4atcg15MemoryContainer6createENSt6size_tE"></span><span id="atcg::MemoryContainer::create__std::s"></span><span class="target" id="classatcg_1_1_memory_container_1a15f88030202a4e5d376b61433302a80b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg15MemoryContainer6createENSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a memory container of size n (bytes). Only allocates new memory if n &lt; capacity of the container. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> – The memory to allocate in bytes </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the allocation was succesfull </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15MemoryContainer6uploadEPKvNSt6size_tE">
+<span id="_CPPv3N4atcg15MemoryContainer6uploadEPKvNSt6size_tE"></span><span id="_CPPv2N4atcg15MemoryContainer6uploadEPKvNSt6size_tE"></span><span id="atcg::MemoryContainer::upload__voidCP.std::s"></span><span class="target" id="classatcg_1_1_memory_container_1aa07466868d90aa21cc6ea0b2327868fe"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">upload</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">host_data</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg15MemoryContainer6uploadEPKvNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Upload data onto the device. Will allocate n bytes if the buffer is too small. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For CPU backend, a memory copy is performed</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>host_data</strong> – The data to upload </p></li>
+<li><p><strong>n</strong> – The size to be uploaded in bytes </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15MemoryContainer8downloadEPvNSt6size_tE">
+<span id="_CPPv3N4atcg15MemoryContainer8downloadEPvNSt6size_tE"></span><span id="_CPPv2N4atcg15MemoryContainer8downloadEPvNSt6size_tE"></span><span id="atcg::MemoryContainer::download__voidP.std::s"></span><span class="target" id="classatcg_1_1_memory_container_1a5f2d33258698cc478ad2676460e48a42"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">download</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">host_data</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg15MemoryContainer8downloadEPvNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Download data from the device. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For CPU backed, a memory copy is performed</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>host_data</strong> – Pointer to where the data should be written to </p></li>
+<li><p><strong>n</strong> – The size to be copied in bytes </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg15MemoryContainer4copyEPKvNSt6size_tE">
+<span id="_CPPv3N4atcg15MemoryContainer4copyEPKvNSt6size_tE"></span><span id="_CPPv2N4atcg15MemoryContainer4copyEPKvNSt6size_tE"></span><span id="atcg::MemoryContainer::copy__voidCP.std::s"></span><span class="target" id="classatcg_1_1_memory_container_1aad3220e23c2aa149e917bc4dd918072b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">copy</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src_data</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg15MemoryContainer4copyEPKvNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Copy data on the device. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – The data to copy from </p></li>
+<li><p><strong>n</strong> – The size to be copied in bytes </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg15MemoryContainer4sizeEv">
+<span id="_CPPv3NK4atcg15MemoryContainer4sizeEv"></span><span id="_CPPv2NK4atcg15MemoryContainer4sizeEv"></span><span id="atcg::MemoryContainer::sizeC"></span><span class="target" id="classatcg_1_1_memory_container_1ade1601ccf1fa3bcf050867f0852ca4e5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg15MemoryContainer4sizeEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>The size of the container, i.e., bytes of the buffer. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The size in bytes </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg15MemoryContainer8capacityEv">
+<span id="_CPPv3NK4atcg15MemoryContainer8capacityEv"></span><span id="_CPPv2NK4atcg15MemoryContainer8capacityEv"></span><span id="atcg::MemoryContainer::capacityC"></span><span class="target" id="classatcg_1_1_memory_container_1a6ef28724b4cefc3f3ba730a09f07a3b2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">capacity</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg15MemoryContainer8capacityEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>The capacity of the container in bytes. May be larger than its size. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The capacity in bytes </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg15MemoryContainer3getEv">
+<span id="_CPPv3NK4atcg15MemoryContainer3getEv"></span><span id="_CPPv2NK4atcg15MemoryContainer3getEv"></span><span id="atcg::MemoryContainer::getC"></span><span class="target" id="classatcg_1_1_memory_container_1ac6eca3869563090fbe65d276e47837ef"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">get</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg15MemoryContainer3getEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the raw (device) buffer. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The device buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN4atcg13DevicePointerE">
+<span id="_CPPv3I00EN4atcg13DevicePointerE"></span><span id="_CPPv2I00EN4atcg13DevicePointerE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">allocator</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg14host_allocatorE" title="atcg::host_allocator"><span class="n"><span class="pre">host_allocator</span></span></a><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_device_pointer"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DevicePointer</span></span></span><a class="headerlink" href="#_CPPv4I00EN4atcg13DevicePointerE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>A device buffer with managed memory. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13DevicePointer13DevicePointerEv">
+<span id="_CPPv3N4atcg13DevicePointer13DevicePointerEv"></span><span id="_CPPv2N4atcg13DevicePointer13DevicePointerEv"></span><span id="atcg::DevicePointer::DevicePointer"></span><span class="target" id="classatcg_1_1_device_pointer_1a1901f9dd56d9a475044fd7ceca34ebaf"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DevicePointer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13DevicePointer13DevicePointerEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13DevicePointer13DevicePointerENSt9nullptr_tE">
+<span id="_CPPv3N4atcg13DevicePointer13DevicePointerENSt9nullptr_tE"></span><span id="_CPPv2N4atcg13DevicePointer13DevicePointerENSt9nullptr_tE"></span><span id="atcg::DevicePointer::DevicePointer__std::nullptr_tCE"></span><span class="target" id="classatcg_1_1_device_pointer_1a2e9b00f5e22df589c4fecd3970273f8c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DevicePointer</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullptr_t</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N4atcg13DevicePointer13DevicePointerENSt9nullptr_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Assign nullptr. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13DevicePointer13DevicePointerEP1T">
+<span id="_CPPv3N4atcg13DevicePointer13DevicePointerEP1T"></span><span id="_CPPv2N4atcg13DevicePointer13DevicePointerEP1T"></span><span id="atcg::DevicePointer::DevicePointer__TP"></span><span class="target" id="classatcg_1_1_device_pointer_1aa420ade95506d197e555eb0d69000fc3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DevicePointer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13DevicePointer13DevicePointerEP1T" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct a device buffer from a pointer. The pointer already has to be on the right device. The memory will be assumed to be exactly the size of on object (sizeof(T)) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ptr</strong> – The pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13DevicePointerD0Ev">
+<span id="_CPPv3N4atcg13DevicePointerD0Ev"></span><span id="_CPPv2N4atcg13DevicePointerD0Ev"></span><span id="atcg::DevicePointer::~DevicePointer"></span><span class="target" id="classatcg_1_1_device_pointer_1a5da8d0219ccfa7fb0753371527789271"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~DevicePointer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13DevicePointerD0Ev" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Destructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg13DevicePointer3getEv">
+<span id="_CPPv3NK4atcg13DevicePointer3getEv"></span><span id="_CPPv2NK4atcg13DevicePointer3getEv"></span><span id="atcg::DevicePointer::getC"></span><span class="target" id="classatcg_1_1_device_pointer_1aed182ab5a4742a6fc2f9fe79773c12e1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">get</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg13DevicePointer3getEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the data. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Data pointer on the device </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg13DevicePointermlEv">
+<span id="_CPPv3NK4atcg13DevicePointermlEv"></span><span id="_CPPv2NK4atcg13DevicePointermlEv"></span><span id="atcg::DevicePointer::mul-operatorC"></span><span class="target" id="classatcg_1_1_device_pointer_1ace03f0482d8ed5c52f22166a136a61a6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">*</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg13DevicePointermlEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the data. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Data pointer on the device </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg13DevicePointerptEv">
+<span id="_CPPv3NK4atcg13DevicePointerptEv"></span><span id="_CPPv2NK4atcg13DevicePointerptEv"></span><span id="atcg::DevicePointer::pointer-operatorC"></span><span class="target" id="classatcg_1_1_device_pointer_1a84e9959608997de8fe4355def47ff45a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">-&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg13DevicePointerptEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the data. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Data pointer on the device </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg13DevicePointercvbEv">
+<span id="_CPPv3NK4atcg13DevicePointercvbEv"></span><span id="_CPPv2NK4atcg13DevicePointercvbEv"></span><span id="atcg::DevicePointer::castto-b-operatorC"></span><span class="target" id="classatcg_1_1_device_pointer_1a67b76affb3b5d35fa419ac234144038b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg13DevicePointercvbEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>operator bool </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if this buffer manages any memory </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0ENK4atcg13DevicePointercv13DevicePointerI1U9allocatorEEv">
+<span id="_CPPv3I0ENK4atcg13DevicePointercv13DevicePointerI1U9allocatorEEv"></span><span id="_CPPv2I0ENK4atcg13DevicePointercv13DevicePointerI1U9allocatorEEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">U</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_device_pointer_1a103ff98ee3417903a0c3f5af3107fba0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer"><span class="n"><span class="pre">DevicePointer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0ENK4atcg13DevicePointercv13DevicePointerI1U9allocatorEEv" title="atcg::DevicePointer::operator DevicePointer&lt;U, allocator&gt;::U"><span class="n"><span class="pre">U</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::allocator"><span class="n"><span class="pre">allocator</span></span></a><span class="p"><span class="pre">&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I0ENK4atcg13DevicePointercv13DevicePointerI1U9allocatorEEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Convert between different types that are holded by this buffer. After this operation, the use count of the underlying shared_ptr will be 2. Both, the original and the newly constructed object will handle the same memory just interpreted differently. This means that MemoryBuffer&lt;float&gt; a = MemoryBuffer&lt;int&gt;(5) will not cast 5 to 5.0f but will just interpet the bits of 5 as float. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>The</strong> – type of the other object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13DevicePointer6uploadEP1T">
+<span id="_CPPv3N4atcg13DevicePointer6uploadEP1T"></span><span id="_CPPv2N4atcg13DevicePointer6uploadEP1T"></span><span id="atcg::DevicePointer::upload__TP"></span><span class="target" id="classatcg_1_1_device_pointer_1afd3e93e1ccbb74d436dd8e3f8d6aace1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">upload</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">host_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13DevicePointer6uploadEP1T" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Upload the data. Copies buffer-&gt;size() many elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>host_data</strong> – The source host buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13DevicePointer8downloadEP1T">
+<span id="_CPPv3N4atcg13DevicePointer8downloadEP1T"></span><span id="_CPPv2N4atcg13DevicePointer8downloadEP1T"></span><span id="atcg::DevicePointer::download__TP"></span><span class="target" id="classatcg_1_1_device_pointer_1a175ec236d25258223c46bf75e22b4bb4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">download</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">host_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13DevicePointer8downloadEP1T" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Download the data. Copies buffer-&gt;size() many elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>host_data</strong> – The target host buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13DevicePointer4copyEP1T">
+<span id="_CPPv3N4atcg13DevicePointer4copyEP1T"></span><span id="_CPPv2N4atcg13DevicePointer4copyEP1T"></span><span id="atcg::DevicePointer::copy__TP"></span><span class="target" id="classatcg_1_1_device_pointer_1af277e4c8b20d7c016ad7d6ad14d30a54"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">copy</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13DevicePointer4copyEP1T" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Copy to the buffer Copies buffer-&gt;size() many elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>src_data</strong> – The source buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13DevicePointer4copyERK13DevicePointerI1T9allocatorE">
+<span id="_CPPv3N4atcg13DevicePointer4copyERK13DevicePointerI1T9allocatorE"></span><span id="_CPPv2N4atcg13DevicePointer4copyERK13DevicePointerI1T9allocatorE"></span><span id="atcg::DevicePointer::copy__DevicePointer:T.allocator:CR"></span><span class="target" id="classatcg_1_1_device_pointer_1a298403edeb2e43404531631d287ce03c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">copy</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer"><span class="n"><span class="pre">DevicePointer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer::allocator"><span class="n"><span class="pre">allocator</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">src</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg13DevicePointer4copyERK13DevicePointerI1T9allocatorE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Copy to the buffer. This allocates src.size() many objects. *this has to be the correct size beforehand. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>src</strong> – The source pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg13DevicePointer5resetEv">
+<span id="_CPPv3N4atcg13DevicePointer5resetEv"></span><span id="_CPPv2N4atcg13DevicePointer5resetEv"></span><span id="atcg::DevicePointer::reset"></span><span class="target" id="classatcg_1_1_device_pointer_1a20194325f0380eb3bbc6bc6c8b2697d9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reset</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N4atcg13DevicePointer5resetEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Reset this shared_ptr, i.e. decrement the ref counter of the underlying shared_ptr. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg13DevicePointer5resetEvP1U">
+<span id="_CPPv3I0EN4atcg13DevicePointer5resetEP1U"></span><span id="_CPPv2I0EN4atcg13DevicePointer5resetEP1U"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">U</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_device_pointer_1a9caa09234acd56783e41804e8365438d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reset</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN4atcg13DevicePointer5resetEvP1U" title="atcg::DevicePointer::reset::U"><span class="n"><span class="pre">U</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg13DevicePointer5resetEvP1U" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Reset this buffer and make it manage different memory. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>U</strong> – The type of the new data </p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ptr</strong> – Pointer to the new object. Size is assumed to be sizeof(U) </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg13DevicePointer9use_countEv">
+<span id="_CPPv3NK4atcg13DevicePointer9use_countEv"></span><span id="_CPPv2NK4atcg13DevicePointer9use_countEv"></span><span id="atcg::DevicePointer::use_countC"></span><span class="target" id="classatcg_1_1_device_pointer_1a843c8f8bf5e4253728a4d1f73752c7a0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">use_count</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg13DevicePointer9use_countEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the number of pointers that point to the memory owned by this object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The use count </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN4atcg12MemoryBufferE">
+<span id="_CPPv3I00EN4atcg12MemoryBufferE"></span><span id="_CPPv2I00EN4atcg12MemoryBufferE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">allocator</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg14host_allocatorE" title="atcg::host_allocator"><span class="n"><span class="pre">host_allocator</span></span></a><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_memory_buffer"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MemoryBuffer</span></span></span><a class="headerlink" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>A device buffer with managed memory. </p>
+<p>Subclassed by <a class="reference internal" href="../DataStructure/Statistics.html#classatcg_1_1_collection"><span class="std std-ref">Collection&lt; float &gt;</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer12MemoryBufferEv">
+<span id="_CPPv3N4atcg12MemoryBuffer12MemoryBufferEv"></span><span id="_CPPv2N4atcg12MemoryBuffer12MemoryBufferEv"></span><span id="atcg::MemoryBuffer::MemoryBuffer"></span><span class="target" id="classatcg_1_1_memory_buffer_1a2540bf516eafedaf6f0c7bb0f8a5a9a0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MemoryBuffer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer12MemoryBufferENSt6size_tE">
+<span id="_CPPv3N4atcg12MemoryBuffer12MemoryBufferENSt6size_tE"></span><span id="_CPPv2N4atcg12MemoryBuffer12MemoryBufferENSt6size_tE"></span><span id="atcg::MemoryBuffer::MemoryBuffer__std::s"></span><span class="target" id="classatcg_1_1_memory_buffer_1aa10f1b61924e4d2ace80fd933150514a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MemoryBuffer</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferENSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Constructor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> – Size of the buffer (number of elements) </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer12MemoryBufferENSt9nullptr_tE">
+<span id="_CPPv3N4atcg12MemoryBuffer12MemoryBufferENSt9nullptr_tE"></span><span id="_CPPv2N4atcg12MemoryBuffer12MemoryBufferENSt9nullptr_tE"></span><span id="atcg::MemoryBuffer::MemoryBuffer__std::nullptr_tCE"></span><span class="target" id="classatcg_1_1_memory_buffer_1afb29d84fc1b091c5674dac880220c292"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MemoryBuffer</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">nullptr_t</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferENSt9nullptr_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Assign nullptr. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer12MemoryBufferEP1T">
+<span id="_CPPv3N4atcg12MemoryBuffer12MemoryBufferEP1T"></span><span id="_CPPv2N4atcg12MemoryBuffer12MemoryBufferEP1T"></span><span id="atcg::MemoryBuffer::MemoryBuffer__TP"></span><span class="target" id="classatcg_1_1_memory_buffer_1ad724c84c0c182bf0d184ad5149a59c6a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MemoryBuffer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferEP1T" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct a device buffer from a pointer. The pointer already has to be on the right device. The memory will be assumed to be exactly the size of on object (no arrays) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ptr</strong> – The pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer12MemoryBufferEP1TNSt6size_tE">
+<span id="_CPPv3N4atcg12MemoryBuffer12MemoryBufferEP1TNSt6size_tE"></span><span id="_CPPv2N4atcg12MemoryBuffer12MemoryBufferEP1TNSt6size_tE"></span><span id="atcg::MemoryBuffer::MemoryBuffer__TP.std::s"></span><span class="target" id="classatcg_1_1_memory_buffer_1adf864005f376252a644060468f1cdd18"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">MemoryBuffer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptr</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferEP1TNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct a device buffer from a pointer. The pointer already has to be on the right device. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ptr</strong> – The pointer </p></li>
+<li><p><strong>size</strong> – The number of elements </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBufferD0Ev">
+<span id="_CPPv3N4atcg12MemoryBufferD0Ev"></span><span id="_CPPv2N4atcg12MemoryBufferD0Ev"></span><span id="atcg::MemoryBuffer::~MemoryBuffer"></span><span class="target" id="classatcg_1_1_memory_buffer_1acc260f92bbb8d19a0d4664826fc0c6fd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~MemoryBuffer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBufferD0Ev" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Destructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12MemoryBuffer3getEv">
+<span id="_CPPv3NK4atcg12MemoryBuffer3getEv"></span><span id="_CPPv2NK4atcg12MemoryBuffer3getEv"></span><span id="atcg::MemoryBuffer::getC"></span><span class="target" id="classatcg_1_1_memory_buffer_1aed182ab5a4742a6fc2f9fe79773c12e1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">get</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12MemoryBuffer3getEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the data. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Data pointer on the device </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12MemoryBuffermlEv">
+<span id="_CPPv3NK4atcg12MemoryBuffermlEv"></span><span id="_CPPv2NK4atcg12MemoryBuffermlEv"></span><span id="atcg::MemoryBuffer::mul-operatorC"></span><span class="target" id="classatcg_1_1_memory_buffer_1ace03f0482d8ed5c52f22166a136a61a6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">*</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12MemoryBuffermlEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the data. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Data pointer on the device </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12MemoryBufferptEv">
+<span id="_CPPv3NK4atcg12MemoryBufferptEv"></span><span id="_CPPv2NK4atcg12MemoryBufferptEv"></span><span id="atcg::MemoryBuffer::pointer-operatorC"></span><span class="target" id="classatcg_1_1_memory_buffer_1a84e9959608997de8fe4355def47ff45a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">-&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12MemoryBufferptEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the data. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Data pointer on the device </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12MemoryBuffercvbEv">
+<span id="_CPPv3NK4atcg12MemoryBuffercvbEv"></span><span id="_CPPv2NK4atcg12MemoryBuffercvbEv"></span><span id="atcg::MemoryBuffer::castto-b-operatorC"></span><span class="target" id="classatcg_1_1_memory_buffer_1a67b76affb3b5d35fa419ac234144038b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12MemoryBuffercvbEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>operator bool </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if this buffer manages any memory </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0ENK4atcg12MemoryBuffercv12MemoryBufferI1U9allocatorEEv">
+<span id="_CPPv3I0ENK4atcg12MemoryBuffercv12MemoryBufferI1U9allocatorEEv"></span><span id="_CPPv2I0ENK4atcg12MemoryBuffercv12MemoryBufferI1U9allocatorEEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">U</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_memory_buffer_1afc41a12decfd2efbfce17e00b1f3ab2b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer"><span class="n"><span class="pre">MemoryBuffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0ENK4atcg12MemoryBuffercv12MemoryBufferI1U9allocatorEEv" title="atcg::MemoryBuffer::operator MemoryBuffer&lt;U, allocator&gt;::U"><span class="n"><span class="pre">U</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::allocator"><span class="n"><span class="pre">allocator</span></span></a><span class="p"><span class="pre">&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I0ENK4atcg12MemoryBuffercv12MemoryBufferI1U9allocatorEEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Convert between different types that are holded by this buffer. After this operation, the use count of the underlying shared_ptr will be 2. Both, the original and the newly constructed object will handle the same memory just interpreted differently. This means that MemoryBuffer&lt;float&gt; a = MemoryBuffer&lt;int&gt;(5) will not cast 5 to 5.0f but will just interpet the bits of 5 as float. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>The</strong> – type of the other object </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12MemoryBuffer4sizeEv">
+<span id="_CPPv3NK4atcg12MemoryBuffer4sizeEv"></span><span id="_CPPv2NK4atcg12MemoryBuffer4sizeEv"></span><span id="atcg::MemoryBuffer::sizeC"></span><span class="target" id="classatcg_1_1_memory_buffer_1ade1601ccf1fa3bcf050867f0852ca4e5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12MemoryBuffer4sizeEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>The size of the container, i.e., the number of elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The size </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12MemoryBuffer8capacityEv">
+<span id="_CPPv3NK4atcg12MemoryBuffer8capacityEv"></span><span id="_CPPv2NK4atcg12MemoryBuffer8capacityEv"></span><span id="atcg::MemoryBuffer::capacityC"></span><span class="target" id="classatcg_1_1_memory_buffer_1a6ef28724b4cefc3f3ba730a09f07a3b2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">capacity</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12MemoryBuffer8capacityEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>The capacity of the container. May be larger than its size. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The capacity </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer6createENSt6size_tE">
+<span id="_CPPv3N4atcg12MemoryBuffer6createENSt6size_tE"></span><span id="_CPPv2N4atcg12MemoryBuffer6createENSt6size_tE"></span><span id="atcg::MemoryBuffer::create__std::s"></span><span class="target" id="classatcg_1_1_memory_buffer_1a15f88030202a4e5d376b61433302a80b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">create</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer6createENSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Create a buffer of size n. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>n</strong> – The number of elements </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the allocation was successful </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer6uploadEP1T">
+<span id="_CPPv3N4atcg12MemoryBuffer6uploadEP1T"></span><span id="_CPPv2N4atcg12MemoryBuffer6uploadEP1T"></span><span id="atcg::MemoryBuffer::upload__TP"></span><span class="target" id="classatcg_1_1_memory_buffer_1afd3e93e1ccbb74d436dd8e3f8d6aace1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">upload</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">host_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer6uploadEP1T" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Upload the data. Copies buffer-&gt;<a class="reference internal" href="#classatcg_1_1_memory_buffer_1ade1601ccf1fa3bcf050867f0852ca4e5"><span class="std std-ref">size()</span></a> many elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>host_data</strong> – The source host buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer6uploadEP1T6size_t">
+<span id="_CPPv3N4atcg12MemoryBuffer6uploadEP1T6size_t"></span><span id="_CPPv2N4atcg12MemoryBuffer6uploadEP1T6size_t"></span><span id="atcg::MemoryBuffer::upload__TP.s"></span><span class="target" id="classatcg_1_1_memory_buffer_1a583a5b7596b497d165548c574ac4ff06"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">upload</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">host_data</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer6uploadEP1T6size_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Upload the data. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>host_data</strong> – The source host buffer </p></li>
+<li><p><strong>n</strong> – The number of elements </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer8downloadEP1T">
+<span id="_CPPv3N4atcg12MemoryBuffer8downloadEP1T"></span><span id="_CPPv2N4atcg12MemoryBuffer8downloadEP1T"></span><span id="atcg::MemoryBuffer::download__TP"></span><span class="target" id="classatcg_1_1_memory_buffer_1a175ec236d25258223c46bf75e22b4bb4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">download</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">host_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer8downloadEP1T" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Download the data. Copies buffer-&gt;<a class="reference internal" href="#classatcg_1_1_memory_buffer_1ade1601ccf1fa3bcf050867f0852ca4e5"><span class="std std-ref">size()</span></a> many elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>host_data</strong> – The target host buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer8downloadEP1T6size_t">
+<span id="_CPPv3N4atcg12MemoryBuffer8downloadEP1T6size_t"></span><span id="_CPPv2N4atcg12MemoryBuffer8downloadEP1T6size_t"></span><span id="atcg::MemoryBuffer::download__TP.s"></span><span class="target" id="classatcg_1_1_memory_buffer_1aad8eea7b051c19a5adc31b3b07c2e69d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">download</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">host_data</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer8downloadEP1T6size_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Download the data. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>host_data</strong> – The target host buffer </p></li>
+<li><p><strong>n</strong> – The number of elements </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer4copyEP1T">
+<span id="_CPPv3N4atcg12MemoryBuffer4copyEP1T"></span><span id="_CPPv2N4atcg12MemoryBuffer4copyEP1T"></span><span id="atcg::MemoryBuffer::copy__TP"></span><span class="target" id="classatcg_1_1_memory_buffer_1af277e4c8b20d7c016ad7d6ad14d30a54"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">copy</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src_data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer4copyEP1T" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Copy to the buffer Copies buffer-&gt;<a class="reference internal" href="#classatcg_1_1_memory_buffer_1ade1601ccf1fa3bcf050867f0852ca4e5"><span class="std std-ref">size()</span></a> many elements. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>src_data</strong> – The source buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer4copyEP1TNSt6size_tE">
+<span id="_CPPv3N4atcg12MemoryBuffer4copyEP1TNSt6size_tE"></span><span id="_CPPv2N4atcg12MemoryBuffer4copyEP1TNSt6size_tE"></span><span id="atcg::MemoryBuffer::copy__TP.std::s"></span><span class="target" id="classatcg_1_1_memory_buffer_1a56702740e6fa9cbc847b1d2f68006bec"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">copy</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">src_data</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer4copyEP1TNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Copy to the buffer. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src_data</strong> – The source buffer </p></li>
+<li><p><strong>n</strong> – The number of elements </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer4copyERK12MemoryBufferI1T9allocatorE">
+<span id="_CPPv3N4atcg12MemoryBuffer4copyERK12MemoryBufferI1T9allocatorE"></span><span id="_CPPv2N4atcg12MemoryBuffer4copyERK12MemoryBufferI1T9allocatorE"></span><span id="atcg::MemoryBuffer::copy__MemoryBuffer:T.allocator:CR"></span><span class="target" id="classatcg_1_1_memory_buffer_1a4087f202611c3f528456b7c4f20b2606"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">copy</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer"><span class="n"><span class="pre">MemoryBuffer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE" title="atcg::MemoryBuffer::allocator"><span class="n"><span class="pre">allocator</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">src</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer4copyERK12MemoryBufferI1T9allocatorE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Copy to the buffer. This allocates src.size() many objects. *this has to be the correct size beforehand. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>src</strong> – The source pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg12MemoryBuffer5resetEv">
+<span id="_CPPv3N4atcg12MemoryBuffer5resetEv"></span><span id="_CPPv2N4atcg12MemoryBuffer5resetEv"></span><span id="atcg::MemoryBuffer::reset"></span><span class="target" id="classatcg_1_1_memory_buffer_1a20194325f0380eb3bbc6bc6c8b2697d9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reset</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N4atcg12MemoryBuffer5resetEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Reset this shared_ptr, i.e. decrement the ref counter of the underlying shared_ptr. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg12MemoryBuffer5resetEvP1U">
+<span id="_CPPv3I0EN4atcg12MemoryBuffer5resetEP1U"></span><span id="_CPPv2I0EN4atcg12MemoryBuffer5resetEP1U"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">U</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_memory_buffer_1a9caa09234acd56783e41804e8365438d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reset</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN4atcg12MemoryBuffer5resetEvP1U" title="atcg::MemoryBuffer::reset::U"><span class="n"><span class="pre">U</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg12MemoryBuffer5resetEvP1U" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Reset this buffer and make it manage different memory. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>U</strong> – The type of the new data </p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ptr</strong> – Pointer to the new object. Size is assumed to be sizeof(U) </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg12MemoryBuffer5resetEvP1UNSt6size_tE">
+<span id="_CPPv3I0EN4atcg12MemoryBuffer5resetEP1UNSt6size_tE"></span><span id="_CPPv2I0EN4atcg12MemoryBuffer5resetEP1UNSt6size_tE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">U</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatcg_1_1_memory_buffer_1adb3fe3c449d3503149e689d6734fde2b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reset</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN4atcg12MemoryBuffer5resetEvP1UNSt6size_tE" title="atcg::MemoryBuffer::reset::U"><span class="n"><span class="pre">U</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">ptr</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0EN4atcg12MemoryBuffer5resetEvP1UNSt6size_tE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Reset this buffer and make it manage different memory. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>U</strong> – The type of the new data </p>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ptr</strong> – Pointer to the new object. </p></li>
+<li><p><strong>size</strong> – The size </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg12MemoryBuffer9use_countEv">
+<span id="_CPPv3NK4atcg12MemoryBuffer9use_countEv"></span><span id="_CPPv2NK4atcg12MemoryBuffer9use_countEv"></span><span id="atcg::MemoryBuffer::use_countC"></span><span class="target" id="classatcg_1_1_memory_buffer_1a843c8f8bf5e4253728a4d1f73752c7a0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">use_count</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg12MemoryBuffer9use_countEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the number of pointers that point to the memory owned by this object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The use count </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg9scope_ptrE">
+<span id="_CPPv3I0EN4atcg9scope_ptrE"></span><span id="_CPPv2I0EN4atcg9scope_ptrE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1add6698f8985fe8724d8a51a9d2958026"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">scope_ptr</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unique_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN4atcg9scope_ptrE" title="atcg::scope_ptr::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0EN4atcg9scope_ptrE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg7ref_ptrE">
+<span id="_CPPv3I0EN4atcg7ref_ptrE"></span><span id="_CPPv2I0EN4atcg7ref_ptrE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1a93ea325bab5f8ba5d7a6b8555ab09949"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">ref_ptr</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0EN4atcg7ref_ptrE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4atcg8dref_ptrE">
+<span id="_CPPv3I0EN4atcg8dref_ptrE"></span><span id="_CPPv2I0EN4atcg8dref_ptrE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1aa0f4a43962b1e8e61e265e8c135e6c9b"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">dref_ptr</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE" title="atcg::DevicePointer"><span class="n"><span class="pre">DevicePointer</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN4atcg8dref_ptrE" title="atcg::dref_ptr::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">device_allocator</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0EN4atcg8dref_ptrE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0DpEN4atcg8make_refE7ref_ptrI1TEDpRR4Args">
+<span id="_CPPv3I0DpEN4atcg8make_refEDpRR4Args"></span><span id="_CPPv2I0DpEN4atcg8make_refEDpRR4Args"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname"><span class="n"><span class="pre">Args</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatcg_1a91c82376ef1a36840c858afb685a5a17"></span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0DpEN4atcg8make_refE7ref_ptrI1TEDpRR4Args" title="atcg::make_ref::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_ref</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0DpEN4atcg8make_refE7ref_ptrI1TEDpRR4Args" title="atcg::make_ref::Args"><span class="n"><span class="pre">Args</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0DpEN4atcg8make_refE7ref_ptrI1TEDpRR4Args" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct an object that is managed by the ref_ptr. This only constructs host objects. For device objects, use the explicit constructor by allocating a buffer of a given size or to pass ownership of a already allocated buffer. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> – The type that should be managed </p></li>
+<li><p><strong>Args</strong> – Constructor arguments of the object </p></li>
+</ul>
+</dd>
+<dt class="field-even">Parameters<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>args</strong> – Constructor arguments of the object</p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="Window.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Window</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Layer.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Layer</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Domenic Zingsheim
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Memory</a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg14host_allocatorE"><code class="docutils literal notranslate"><span class="pre">atcg::host_allocator</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg14host_allocator8allocateENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">allocate()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14host_allocator10deallocateEPvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">deallocate()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14host_allocator16memcpy_host2hostEPvPKvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">memcpy_host2host()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14host_allocator15memcpy_dev2hostEPvPKvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">memcpy_dev2host()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14host_allocator15memcpy_host2devEPvPKvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">memcpy_host2dev()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14host_allocator14memcpy_dev2devEPvPKvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">memcpy_dev2dev()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14host_allocator15bytes_allocatedE"><code class="docutils literal notranslate"><span class="pre">bytes_allocated</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14host_allocator17bytes_deallocatedE"><code class="docutils literal notranslate"><span class="pre">bytes_deallocated</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg15MemoryContainerE"><code class="docutils literal notranslate"><span class="pre">atcg::MemoryContainer</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg15MemoryContainer15MemoryContainerEv"><code class="docutils literal notranslate"><span class="pre">MemoryContainer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15MemoryContainer15MemoryContainerEPvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">MemoryContainer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15MemoryContainer15MemoryContainerER15MemoryContainer"><code class="docutils literal notranslate"><span class="pre">MemoryContainer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15MemoryContaineraSER15MemoryContainer"><code class="docutils literal notranslate"><span class="pre">operator=()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15MemoryContainerD0Ev"><code class="docutils literal notranslate"><span class="pre">~MemoryContainer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15MemoryContainer6createENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15MemoryContainer6uploadEPKvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">upload()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15MemoryContainer8downloadEPvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">download()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg15MemoryContainer4copyEPKvNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg15MemoryContainer4sizeEv"><code class="docutils literal notranslate"><span class="pre">size()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg15MemoryContainer8capacityEv"><code class="docutils literal notranslate"><span class="pre">capacity()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg15MemoryContainer3getEv"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4I00EN4atcg13DevicePointerE"><code class="docutils literal notranslate"><span class="pre">atcg::DevicePointer</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg13DevicePointer13DevicePointerEv"><code class="docutils literal notranslate"><span class="pre">DevicePointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13DevicePointer13DevicePointerENSt9nullptr_tE"><code class="docutils literal notranslate"><span class="pre">DevicePointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13DevicePointer13DevicePointerEP1T"><code class="docutils literal notranslate"><span class="pre">DevicePointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13DevicePointerD0Ev"><code class="docutils literal notranslate"><span class="pre">~DevicePointer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg13DevicePointer3getEv"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg13DevicePointermlEv"><code class="docutils literal notranslate"><span class="pre">operator*()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg13DevicePointerptEv"><code class="docutils literal notranslate"><span class="pre">operator-&gt;()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg13DevicePointercvbEv"><code class="docutils literal notranslate"><span class="pre">operator</span> <span class="pre">bool()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0ENK4atcg13DevicePointercv13DevicePointerI1U9allocatorEEv"><code class="docutils literal notranslate"><span class="pre">operator</span> <span class="pre">DevicePointer&lt;</span> <span class="pre">U,</span> <span class="pre">allocator</span> <span class="pre">&gt;()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13DevicePointer6uploadEP1T"><code class="docutils literal notranslate"><span class="pre">upload()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13DevicePointer8downloadEP1T"><code class="docutils literal notranslate"><span class="pre">download()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13DevicePointer4copyEP1T"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13DevicePointer4copyERK13DevicePointerI1T9allocatorE"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg13DevicePointer5resetEv"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg13DevicePointer5resetEvP1U"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg13DevicePointer9use_countEv"><code class="docutils literal notranslate"><span class="pre">use_count()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4I00EN4atcg12MemoryBufferE"><code class="docutils literal notranslate"><span class="pre">atcg::MemoryBuffer</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferEv"><code class="docutils literal notranslate"><span class="pre">MemoryBuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">MemoryBuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferENSt9nullptr_tE"><code class="docutils literal notranslate"><span class="pre">MemoryBuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferEP1T"><code class="docutils literal notranslate"><span class="pre">MemoryBuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer12MemoryBufferEP1TNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">MemoryBuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBufferD0Ev"><code class="docutils literal notranslate"><span class="pre">~MemoryBuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12MemoryBuffer3getEv"><code class="docutils literal notranslate"><span class="pre">get()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12MemoryBuffermlEv"><code class="docutils literal notranslate"><span class="pre">operator*()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12MemoryBufferptEv"><code class="docutils literal notranslate"><span class="pre">operator-&gt;()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12MemoryBuffercvbEv"><code class="docutils literal notranslate"><span class="pre">operator</span> <span class="pre">bool()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0ENK4atcg12MemoryBuffercv12MemoryBufferI1U9allocatorEEv"><code class="docutils literal notranslate"><span class="pre">operator</span> <span class="pre">MemoryBuffer&lt;</span> <span class="pre">U,</span> <span class="pre">allocator</span> <span class="pre">&gt;()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12MemoryBuffer4sizeEv"><code class="docutils literal notranslate"><span class="pre">size()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12MemoryBuffer8capacityEv"><code class="docutils literal notranslate"><span class="pre">capacity()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer6createENSt6size_tE"><code class="docutils literal notranslate"><span class="pre">create()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer6uploadEP1T"><code class="docutils literal notranslate"><span class="pre">upload()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer6uploadEP1T6size_t"><code class="docutils literal notranslate"><span class="pre">upload()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer8downloadEP1T"><code class="docutils literal notranslate"><span class="pre">download()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer8downloadEP1T6size_t"><code class="docutils literal notranslate"><span class="pre">download()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer4copyEP1T"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer4copyEP1TNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer4copyERK12MemoryBufferI1T9allocatorE"><code class="docutils literal notranslate"><span class="pre">copy()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg12MemoryBuffer5resetEv"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg12MemoryBuffer5resetEvP1U"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg12MemoryBuffer5resetEvP1UNSt6size_tE"><code class="docutils literal notranslate"><span class="pre">reset()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg12MemoryBuffer9use_countEv"><code class="docutils literal notranslate"><span class="pre">use_count()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg9scope_ptrE"><code class="docutils literal notranslate"><span class="pre">scope_ptr</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg7ref_ptrE"><code class="docutils literal notranslate"><span class="pre">ref_ptr</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0EN4atcg8dref_ptrE"><code class="docutils literal notranslate"><span class="pre">dref_ptr</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4I0DpEN4atcg8make_refE7ref_ptrI1TEDpRR4Args"><code class="docutils literal notranslate"><span class="pre">make_ref()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

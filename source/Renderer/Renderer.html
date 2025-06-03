@@ -1,0 +1,1044 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Shader" href="Shader.html" /><link rel="prev" title="Renderer" href="RendererIndex.html" />
+
+    <link rel="shortcut icon" href="../../_static/icon.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>Renderer - ATCG Framework documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ATCG Framework  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ATCG Framework  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Core/CoreIndex.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Core/API.html">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Application.html">Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Input.html">Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Layer.html">Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Memory.html">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/Window.html">Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Core/UUID.html">UUID</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Events/EventIndex.html">Events</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Events</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Events/Event.html">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/KeyEvents.html">KeyEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/MouseEvents.html">MoueEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/WindowEvents.html">WindowEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/FileEvents.html">FileEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/VREvents.html">VREvents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../DataStructure/DataStructureIndex.html">DataStructure</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of DataStructure</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Image.html">Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Timer.html">Timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/TensorOptions.html">TensorOptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Worker.html">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Statistics.html">Statistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Grid.html">Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/BufferView.html">BufferView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/PerformancePanel.html">PerformancePanel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Dictionary.html">Dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Skybox.html">Skybox</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="RendererIndex.html">Renderer</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Renderer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Shader.html">Shader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Material.html">Material</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Texture.html">Texture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Framebuffer.html">Framebuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RenderGraph.html">Render Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="RenderGraph.html#render-passes">Render Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Buffer.html">Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="VertexArray.html">VertexArray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="VRSystem.html">VRSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ContextManager.html">Context</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scene/SceneIndex.html">Scene</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Scene</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Scene.html">Scene</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Entity.html">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Components.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/SceneHierarchyPanel.html">Scene Hierarchy Panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Serializer.html">Serializer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/RevisionSystem.html">RevisionSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/ComponentRenderer.html">ComponentRenderer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scripting/ScriptingIndex.html">Scripting</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Scripting</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/ScriptEngine.html">ScriptEngine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/Script.html">Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Math/MathIndex.html">Math</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Math</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Color.html">Color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Constants.html">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/MeshManipulation.html">Mesh Manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Tracing.html">Tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ImGui/ImGui.html">ImGui</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IO/IO.html">IO</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Network/NetworkIndex.html">Network</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Network</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPServer.html">TCPServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPClient.html">TCPClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/NetworkUtils.html">Network Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../OpenMesh/OpenMesh.html">OpenMesh</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/source/Renderer/Renderer.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="renderer">
+<h1>Renderer<a class="headerlink" href="#renderer" title="Link to this heading">¶</a></h1>
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8DrawModeE">
+<span id="_CPPv3N4atcg8DrawModeE"></span><span id="_CPPv2N4atcg8DrawModeE"></span><span class="target" id="namespaceatcg_1a9a325db332d24e6105fe3b48a94604c3"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">DrawMode</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8DrawModeE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>An enum defining draw modes. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8DrawMode23ATCG_DRAW_MODE_TRIANGLEE">
+<span id="_CPPv3N4atcg8DrawMode23ATCG_DRAW_MODE_TRIANGLEE"></span><span id="_CPPv2N4atcg8DrawMode23ATCG_DRAW_MODE_TRIANGLEE"></span><span class="target" id="namespaceatcg_1a9a325db332d24e6105fe3b48a94604c3a13e5e67af13ce8e1f10a957f664c3965"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ATCG_DRAW_MODE_TRIANGLE</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8DrawMode23ATCG_DRAW_MODE_TRIANGLEE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8DrawMode21ATCG_DRAW_MODE_POINTSE">
+<span id="_CPPv3N4atcg8DrawMode21ATCG_DRAW_MODE_POINTSE"></span><span id="_CPPv2N4atcg8DrawMode21ATCG_DRAW_MODE_POINTSE"></span><span class="target" id="namespaceatcg_1a9a325db332d24e6105fe3b48a94604c3ad7f0dc70e3763c52e4fee299e24727a1"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ATCG_DRAW_MODE_POINTS</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8DrawMode21ATCG_DRAW_MODE_POINTSE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8DrawMode28ATCG_DRAW_MODE_POINTS_SPHEREE">
+<span id="_CPPv3N4atcg8DrawMode28ATCG_DRAW_MODE_POINTS_SPHEREE"></span><span id="_CPPv2N4atcg8DrawMode28ATCG_DRAW_MODE_POINTS_SPHEREE"></span><span class="target" id="namespaceatcg_1a9a325db332d24e6105fe3b48a94604c3ab9c69e75c8b9e75480384b3b6579225a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ATCG_DRAW_MODE_POINTS_SPHERE</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8DrawMode28ATCG_DRAW_MODE_POINTS_SPHEREE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8DrawMode20ATCG_DRAW_MODE_EDGESE">
+<span id="_CPPv3N4atcg8DrawMode20ATCG_DRAW_MODE_EDGESE"></span><span id="_CPPv2N4atcg8DrawMode20ATCG_DRAW_MODE_EDGESE"></span><span class="target" id="namespaceatcg_1a9a325db332d24e6105fe3b48a94604c3aadd1a65c264dec8bca6775f61c9310f5"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ATCG_DRAW_MODE_EDGES</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8DrawMode20ATCG_DRAW_MODE_EDGESE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8DrawMode29ATCG_DRAW_MODE_EDGES_CYLINDERE">
+<span id="_CPPv3N4atcg8DrawMode29ATCG_DRAW_MODE_EDGES_CYLINDERE"></span><span id="_CPPv2N4atcg8DrawMode29ATCG_DRAW_MODE_EDGES_CYLINDERE"></span><span class="target" id="namespaceatcg_1a9a325db332d24e6105fe3b48a94604c3af4bfda134b9b342ca94bdf1a0e4dee97"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ATCG_DRAW_MODE_EDGES_CYLINDER</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8DrawMode29ATCG_DRAW_MODE_EDGES_CYLINDERE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8DrawMode24ATCG_DRAW_MODE_INSTANCEDE">
+<span id="_CPPv3N4atcg8DrawMode24ATCG_DRAW_MODE_INSTANCEDE"></span><span id="_CPPv2N4atcg8DrawMode24ATCG_DRAW_MODE_INSTANCEDE"></span><span class="target" id="namespaceatcg_1a9a325db332d24e6105fe3b48a94604c3a04523d9d465f0597b28be0a28af4b391"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ATCG_DRAW_MODE_INSTANCED</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8DrawMode24ATCG_DRAW_MODE_INSTANCEDE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8CullModeE">
+<span id="_CPPv3N4atcg8CullModeE"></span><span id="_CPPv2N4atcg8CullModeE"></span><span class="target" id="namespaceatcg_1a9602dcbc7b9991767e322a6f55541e8a"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">CullMode</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8CullModeE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>An enum defining cull modes. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8CullMode23ATCG_FRONT_FACE_CULLINGE">
+<span id="_CPPv3N4atcg8CullMode23ATCG_FRONT_FACE_CULLINGE"></span><span id="_CPPv2N4atcg8CullMode23ATCG_FRONT_FACE_CULLINGE"></span><span class="target" id="namespaceatcg_1a9602dcbc7b9991767e322a6f55541e8aa65e8a9f38901f7b880c9cef80a5f2726"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ATCG_FRONT_FACE_CULLING</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8CullMode23ATCG_FRONT_FACE_CULLINGE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8CullMode22ATCG_BACK_FACE_CULLINGE">
+<span id="_CPPv3N4atcg8CullMode22ATCG_BACK_FACE_CULLINGE"></span><span id="_CPPv2N4atcg8CullMode22ATCG_BACK_FACE_CULLINGE"></span><span class="target" id="namespaceatcg_1a9602dcbc7b9991767e322a6f55541e8aab31ce08b26387b0766945c608ebd5f23"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ATCG_BACK_FACE_CULLING</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8CullMode22ATCG_BACK_FACE_CULLINGE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg8CullMode22ATCG_BOTH_FACE_CULLINGE">
+<span id="_CPPv3N4atcg8CullMode22ATCG_BOTH_FACE_CULLINGE"></span><span id="_CPPv2N4atcg8CullMode22ATCG_BOTH_FACE_CULLINGE"></span><span class="target" id="namespaceatcg_1a9602dcbc7b9991767e322a6f55541e8aa2896e796bd2dfdb625831662c9d165e8"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ATCG_BOTH_FACE_CULLING</span></span></span><a class="headerlink" href="#_CPPv4N4atcg8CullMode22ATCG_BOTH_FACE_CULLINGE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystemE">
+<span id="_CPPv3N4atcg14RendererSystemE"></span><span id="_CPPv2N4atcg14RendererSystemE"></span><span id="atcg::RendererSystem"></span><span class="target" id="classatcg_1_1_renderer_system"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RendererSystem</span></span></span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystemE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>This class models a renderer. This should be used if you are trying to create multiple renderer instances (e.g. for multi threading). Per default, use atcg::Renderer to use the default renderer. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem4initE8uint32_t8uint32_tRKN4atcg7ref_ptrI7ContextEERKN4atcg7ref_ptrI19ShaderManagerSystemEE">
+<span id="_CPPv3N4atcg14RendererSystem4initE8uint32_t8uint32_tRKN4atcg7ref_ptrI7ContextEERKN4atcg7ref_ptrI19ShaderManagerSystemEE"></span><span id="_CPPv2N4atcg14RendererSystem4initE8uint32_t8uint32_tRKN4atcg7ref_ptrI7ContextEERKN4atcg7ref_ptrI19ShaderManagerSystemEE"></span><span id="atcg::RendererSystem::init__uint32_t.uint32_t.atcg::ref_ptr:Context:CR.atcg::ref_ptr:ShaderManagerSystem:CR"></span><span class="target" id="classatcg_1_1_renderer_system_1af6264399f7b398cda9fbafc68931b32b"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">init</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">height</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Context.html#_CPPv4N4atcg7ContextE" title="atcg::Context"><span class="n"><span class="pre">Context</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">context</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Shader.html#_CPPv4N4atcg19ShaderManagerSystemE" title="atcg::ShaderManagerSystem"><span class="n"><span class="pre">ShaderManagerSystem</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shader_manager</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem4initE8uint32_t8uint32_tRKN4atcg7ref_ptrI7ContextEERKN4atcg7ref_ptrI19ShaderManagerSystemEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Initializes the renderer (should not be called by the client!) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> – The width </p></li>
+<li><p><strong>height</strong> – The height </p></li>
+<li><p><strong>context</strong> – The opengl context </p></li>
+<li><p><strong>shader_manager</strong> – The shader manager associated with this renderer </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem3useEv">
+<span id="_CPPv3N4atcg14RendererSystem3useEv"></span><span id="_CPPv2N4atcg14RendererSystem3useEv"></span><span id="atcg::RendererSystem::use"></span><span class="target" id="classatcg_1_1_renderer_system_1a8a05de24712939691a7cf8934d9e5c5f"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">use</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem3useEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Use this instance of the renderer. This only needs to be called if multiple renderer instances are in use or multi thread rendering is desired. This function will make the underlying context current for the thread. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem11finishFrameEv">
+<span id="_CPPv3N4atcg14RendererSystem11finishFrameEv"></span><span id="_CPPv2N4atcg14RendererSystem11finishFrameEv"></span><span id="atcg::RendererSystem::finishFrame"></span><span class="target" id="classatcg_1_1_renderer_system_1a0b68d2458686a0a7ab9041d5b7254128"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">finishFrame</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem11finishFrameEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Finished the currently drawn frame (should not be called by client!) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem6finishEv">
+<span id="_CPPv3NK4atcg14RendererSystem6finishEv"></span><span id="_CPPv2NK4atcg14RendererSystem6finishEv"></span><span id="atcg::RendererSystem::finishC"></span><span class="target" id="classatcg_1_1_renderer_system_1a2b011f0b79282e7f61bbb0c636e2e4c1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">finish</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem6finishEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Stalls the CPU until all rendering requests are finished. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem13setClearColorERKN3glm4vec4E">
+<span id="_CPPv3N4atcg14RendererSystem13setClearColorERKN3glm4vec4E"></span><span id="_CPPv2N4atcg14RendererSystem13setClearColorERKN3glm4vec4E"></span><span id="atcg::RendererSystem::setClearColor__glm::vec4CR"></span><span class="target" id="classatcg_1_1_renderer_system_1af7df9ec87a7374fd4f566e3014b7b1f8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setClearColor</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">color</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem13setClearColorERKN3glm4vec4E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the clear color. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>color</strong> – The clear color </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem13getClearColorEv">
+<span id="_CPPv3NK4atcg14RendererSystem13getClearColorEv"></span><span id="_CPPv2NK4atcg14RendererSystem13getClearColorEv"></span><span id="atcg::RendererSystem::getClearColorC"></span><span class="target" id="classatcg_1_1_renderer_system_1a797f88f5b0eecaccad836f726e5f0313"></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getClearColor</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem13getClearColorEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the current clear color. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The clear color </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem12setPointSizeERKf">
+<span id="_CPPv3N4atcg14RendererSystem12setPointSizeERKf"></span><span id="_CPPv2N4atcg14RendererSystem12setPointSizeERKf"></span><span id="atcg::RendererSystem::setPointSize__floatCR"></span><span class="target" id="classatcg_1_1_renderer_system_1a28f1b22dee0891900112a69c94f7bd46"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setPointSize</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem12setPointSizeERKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the size of rendered points. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>size</strong> – The size </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem11setLineSizeERKf">
+<span id="_CPPv3N4atcg14RendererSystem11setLineSizeERKf"></span><span id="_CPPv2N4atcg14RendererSystem11setLineSizeERKf"></span><span id="atcg::RendererSystem::setLineSize__floatCR"></span><span class="target" id="classatcg_1_1_renderer_system_1a8adea78575678fa14884bd0823c525cc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setLineSize</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem11setLineSizeERKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the size of rendered lines. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>size</strong> – The size </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem7setMSAAE8uint32_t">
+<span id="_CPPv3N4atcg14RendererSystem7setMSAAE8uint32_t"></span><span id="_CPPv2N4atcg14RendererSystem7setMSAAE8uint32_t"></span><span id="atcg::RendererSystem::setMSAA__uint32_t"></span><span class="target" id="classatcg_1_1_renderer_system_1a0a8e04f456d90650b44db998dc3c9c6a"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setMSAA</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">num_samples</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem7setMSAAE8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the number of MSAA samples. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>num_samples</strong> – The number of MSAA samples </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem7getMSAAEv">
+<span id="_CPPv3NK4atcg14RendererSystem7getMSAAEv"></span><span id="_CPPv2NK4atcg14RendererSystem7getMSAAEv"></span><span id="atcg::RendererSystem::getMSAAC"></span><span class="target" id="classatcg_1_1_renderer_system_1a0136183ddfb5ad4968211ded91a62b8f"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getMSAA</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem7getMSAAEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the current number of MSAA samples. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The number of samples </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem10toggleMSAAEKb">
+<span id="_CPPv3N4atcg14RendererSystem10toggleMSAAEKb"></span><span id="_CPPv2N4atcg14RendererSystem10toggleMSAAEKb"></span><span id="atcg::RendererSystem::toggleMSAA__bC"></span><span class="target" id="classatcg_1_1_renderer_system_1a65e226adb75def367ceabb3d5b3c9142"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">toggleMSAA</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">enable</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">true</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem10toggleMSAAEKb" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Toggle MSAA (on per default). This can be used to “disable” the internal msaa framebuffer. This can be useful if it is desired to directly draw into the final framebuffer of the renderer that can be accessed with <a class="reference internal" href="#classatcg_1_1_renderer_system_1a8fdeaaf8742c7528430a973486e831e7"><span class="std std-ref">getFramebuffer()</span></a>. If MSAA is enabled, this framebuffer will be overwritten with the result of the msaa buffer by blitting. This will not be done if MSAA is toggled off. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>enable</strong> – If MSAA should be enabled </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem18toggleDepthTestingEb">
+<span id="_CPPv3N4atcg14RendererSystem18toggleDepthTestingEb"></span><span id="_CPPv2N4atcg14RendererSystem18toggleDepthTestingEb"></span><span id="atcg::RendererSystem::toggleDepthTesting__b"></span><span class="target" id="classatcg_1_1_renderer_system_1a864cee9184f6f56631f392d9bf3a9101"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">toggleDepthTesting</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">enable</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">true</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem18toggleDepthTestingEb" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Toggle depth testing. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>enable</strong> – If it should be enabled or disabled </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem13toggleCullingEb">
+<span id="_CPPv3N4atcg14RendererSystem13toggleCullingEb"></span><span id="_CPPv2N4atcg14RendererSystem13toggleCullingEb"></span><span id="atcg::RendererSystem::toggleCulling__b"></span><span class="target" id="classatcg_1_1_renderer_system_1a83870e5fe8469c1cb42cf48db333cc0c"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">toggleCulling</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">enable</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">true</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem13toggleCullingEb" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Toggle face culling. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>enable</strong> – If it should be enabled or disabled </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem11setCullFaceE8CullMode">
+<span id="_CPPv3N4atcg14RendererSystem11setCullFaceE8CullMode"></span><span id="_CPPv2N4atcg14RendererSystem11setCullFaceE8CullMode"></span><span id="atcg::RendererSystem::setCullFace__CullMode"></span><span class="target" id="classatcg_1_1_renderer_system_1a8caffb7de5b389f26f74d4e8c927b793"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setCullFace</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4atcg8CullModeE" title="atcg::CullMode"><span class="n"><span class="pre">CullMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">mode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem11setCullFaceE8CullMode" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the cull face. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mode</strong> – The culling mode </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem11setViewportERK8uint32_tRK8uint32_tRK8uint32_tRK8uint32_t">
+<span id="_CPPv3N4atcg14RendererSystem11setViewportERK8uint32_tRK8uint32_tRK8uint32_tRK8uint32_t"></span><span id="_CPPv2N4atcg14RendererSystem11setViewportERK8uint32_tRK8uint32_tRK8uint32_tRK8uint32_t"></span><span id="atcg::RendererSystem::setViewport__uint32_tCR.uint32_tCR.uint32_tCR.uint32_tCR"></span><span class="target" id="classatcg_1_1_renderer_system_1ac6ce1ca8da955a8e1ba3cbb17e6dd5d0"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setViewport</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">x</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">y</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">width</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">height</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem11setViewportERK8uint32_tRK8uint32_tRK8uint32_tRK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Change the viewport of the renderer. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – The viewport x location </p></li>
+<li><p><strong>y</strong> – The viewport y location </p></li>
+<li><p><strong>width</strong> – The width </p></li>
+<li><p><strong>height</strong> – The height </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem18setDefaultViewportEv">
+<span id="_CPPv3N4atcg14RendererSystem18setDefaultViewportEv"></span><span id="_CPPv2N4atcg14RendererSystem18setDefaultViewportEv"></span><span id="atcg::RendererSystem::setDefaultViewport"></span><span class="target" id="classatcg_1_1_renderer_system_1adb63578afa306fefcdfc66dfc3fb9eee"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setDefaultViewport</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem18setDefaultViewportEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the viewport according to the current main screen render buffer. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem11getViewportEv">
+<span id="_CPPv3NK4atcg14RendererSystem11getViewportEv"></span><span id="_CPPv2NK4atcg14RendererSystem11getViewportEv"></span><span id="atcg::RendererSystem::getViewportC"></span><span class="target" id="classatcg_1_1_renderer_system_1a8bd0d759098336d3f82e9cf7ea125579"></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec4</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getViewport</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem11getViewportEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the current viewport dimensions. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A vec4 containing the viewport (x,y,width,height) </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem13processSkyboxERKN4atcg7ref_ptrI9Texture2DEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEE">
+<span id="_CPPv3N4atcg14RendererSystem13processSkyboxERKN4atcg7ref_ptrI9Texture2DEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEE"></span><span id="_CPPv2N4atcg14RendererSystem13processSkyboxERKN4atcg7ref_ptrI9Texture2DEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEE"></span><span id="atcg::RendererSystem::processSkybox__atcg::ref_ptr:Texture2D:CR.atcg::ref_ptr:TextureCube:CR.atcg::ref_ptr:TextureCube:CR.atcg::ref_ptr:TextureCube:CR"></span><span class="target" id="classatcg_1_1_renderer_system_1ac1f824642822901fe04b9914416d3c1f"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">processSkybox</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Texture.html#_CPPv4N4atcg9Texture2DE" title="atcg::Texture2D"><span class="n"><span class="pre">Texture2D</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">skybox</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Texture.html#_CPPv4N4atcg11TextureCubeE" title="atcg::TextureCube"><span class="n"><span class="pre">TextureCube</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">skybox_cubemap</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Texture.html#_CPPv4N4atcg11TextureCubeE" title="atcg::TextureCube"><span class="n"><span class="pre">TextureCube</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">irradiance_cubemap</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Texture.html#_CPPv4N4atcg11TextureCubeE" title="atcg::TextureCube"><span class="n"><span class="pre">TextureCube</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">prefiltered_cubemap</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem13processSkyboxERKN4atcg7ref_ptrI9Texture2DEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Preprocess a skybox. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>skybox</strong> – An equirectangular representation of the skybox </p></li>
+<li><p><strong>skybox_cubemap</strong> – The output skybox as a cubemap </p></li>
+<li><p><strong>irradiance_cubemap</strong> – The output irradiance cubemap </p></li>
+<li><p><strong>prefiltered_cubemap</strong> – The output prefiltered cubemap for ibl </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem6resizeERK8uint32_tRK8uint32_t">
+<span id="_CPPv3N4atcg14RendererSystem6resizeERK8uint32_tRK8uint32_t"></span><span id="_CPPv2N4atcg14RendererSystem6resizeERK8uint32_tRK8uint32_t"></span><span id="atcg::RendererSystem::resize__uint32_tCR.uint32_tCR"></span><span class="target" id="classatcg_1_1_renderer_system_1ae57b461c354767a1300e165aadcc9200"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">resize</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">width</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">height</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem6resizeERK8uint32_tRK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Change the size of the renderer. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> – The width </p></li>
+<li><p><strong>height</strong> – The height </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem15useScreenBufferEv">
+<span id="_CPPv3NK4atcg14RendererSystem15useScreenBufferEv"></span><span id="_CPPv2NK4atcg14RendererSystem15useScreenBufferEv"></span><span id="atcg::RendererSystem::useScreenBufferC"></span><span class="target" id="classatcg_1_1_renderer_system_1a8b237270f0327d13fd6ba130991596a4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">useScreenBuffer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem15useScreenBufferEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Use the default screen fbo. Per default this will be a MSAA framebuffer. If MSAA is disabled using toggleMSAA, this function will bind the normal framebuffer that is used in the end to render to the screen. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem15getFrameCounterEv">
+<span id="_CPPv3NK4atcg14RendererSystem15getFrameCounterEv"></span><span id="_CPPv2NK4atcg14RendererSystem15getFrameCounterEv"></span><span id="atcg::RendererSystem::getFrameCounterC"></span><span class="target" id="classatcg_1_1_renderer_system_1ad61b96f8fb308b14fe843e3b6e2643d2"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getFrameCounter</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem15getFrameCounterEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the current frame counter. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The index of the current frame </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem12popTextureIDEv">
+<span id="_CPPv3N4atcg14RendererSystem12popTextureIDEv"></span><span id="_CPPv2N4atcg14RendererSystem12popTextureIDEv"></span><span id="atcg::RendererSystem::popTextureID"></span><span class="target" id="classatcg_1_1_renderer_system_1a79488eeab8d6907ea72e5e4c4af96f5e"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">popTextureID</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem12popTextureIDEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Generates a new texture ID that is not used yet. The renderer internally uses a fixed set of render IDs that should not be used by the client. This function guarantees that the given texture id is not yet taken (unless manual texture ids are created). If a texture id is no longer in use, it should be released with pushTextureID. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The texture ID </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem13pushTextureIDEK8uint32_t">
+<span id="_CPPv3N4atcg14RendererSystem13pushTextureIDEK8uint32_t"></span><span id="_CPPv2N4atcg14RendererSystem13pushTextureIDEK8uint32_t"></span><span id="atcg::RendererSystem::pushTextureID__uint32_tC"></span><span class="target" id="classatcg_1_1_renderer_system_1acfe33801fafb28a01f8dd460d56b2401"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pushTextureID</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem13pushTextureIDEK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Free a texture ID. Should only be used on ids that were generated using popTextureID. Adding other IDs may break the system because some ids are reserved for the internals of the Renderer. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>id</strong> – The id generated by popTextureID </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem5clearEv">
+<span id="_CPPv3NK4atcg14RendererSystem5clearEv"></span><span id="_CPPv2NK4atcg14RendererSystem5clearEv"></span><span id="atcg::RendererSystem::clearC"></span><span class="target" id="classatcg_1_1_renderer_system_1adf1d9633e64d0de6a36e0af17ccd8163"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clear</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem5clearEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Clear the currently bound framebuffer. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem4drawERKN4atcg7ref_ptrI5GraphEERKN4atcg7ref_ptrI6CameraEERKN3glm4mat4ERKN3glm4vec3ERKN4atcg7ref_ptrI6ShaderEE8DrawModeRKNSt8optionalI8MaterialEEK8uint32_t">
+<span id="_CPPv3N4atcg14RendererSystem4drawERKN4atcg7ref_ptrI5GraphEERKN4atcg7ref_ptrI6CameraEERKN3glm4mat4ERKN3glm4vec3ERKN4atcg7ref_ptrI6ShaderEE8DrawModeRKNSt8optionalI8MaterialEEK8uint32_t"></span><span id="_CPPv2N4atcg14RendererSystem4drawERKN4atcg7ref_ptrI5GraphEERKN4atcg7ref_ptrI6CameraEERKN3glm4mat4ERKN3glm4vec3ERKN4atcg7ref_ptrI6ShaderEE8DrawModeRKNSt8optionalI8MaterialEEK8uint32_t"></span><span id="atcg::RendererSystem::draw__atcg::ref_ptr:Graph:CR.atcg::ref_ptr:Camera:CR.glm::mat4CR.glm::vec3CR.atcg::ref_ptr:Shader:CR.DrawMode.std::optional:Material:CR.uint32_tC"></span><span class="target" id="classatcg_1_1_renderer_system_1a814920bb6a14d10885bae81d39c408e1"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">draw</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../DataStructure/Graph.html#_CPPv4N4atcg5GraphE" title="atcg::Graph"><span class="n"><span class="pre">Graph</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">mesh</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">model</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mat4</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">color</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="p"><span class="pre">(</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Shader.html#_CPPv4N4atcg6ShaderE" title="atcg::Shader"><span class="n"><span class="pre">Shader</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shader</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ShaderManager</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">getShader</span></span><span class="p"><span class="pre">(</span></span><span class="s"><span class="pre">&quot;base&quot;</span></span><span class="p"><span class="pre">)</span></span>, <a class="reference internal" href="#_CPPv4N4atcg8DrawModeE" title="atcg::DrawMode"><span class="n"><span class="pre">DrawMode</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">draw_mode</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg8DrawModeE" title="atcg::DrawMode"><span class="n"><span class="pre">DrawMode</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N4atcg8DrawMode23ATCG_DRAW_MODE_TRIANGLEE" title="atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE"><span class="n"><span class="pre">ATCG_DRAW_MODE_TRIANGLE</span></span></a>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Material.html#_CPPv4N4atcg8MaterialE" title="atcg::Material"><span class="n"><span class="pre">Material</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">material</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">entity_id</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="o"><span class="pre">-</span></span><span class="m"><span class="pre">1</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem4drawERKN4atcg7ref_ptrI5GraphEERKN4atcg7ref_ptrI6CameraEERKN3glm4mat4ERKN3glm4vec3ERKN4atcg7ref_ptrI6ShaderEE8DrawModeRKNSt8optionalI8MaterialEEK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Render a mesh. </p>
+<p>The default draw mode is “base”. It applys slight shading based on the vertex normals. An optional color can be given to color the whole mesh with a constant color. If given a custom shader, color is ignored except if the shader variable “flat_color” is used.</p>
+<p>For ATCG_DRAW_MDOE_SPHERE The custom shader has to implement an instance rendering scheme like the “base” shader. If no custom shader is to be used, stick to the “base” shader. For ATCG_DRAW_MODE_EDGE and ATCG_DRAW_MODE_CYLINDER, you can pass nullptr for the shader to use the built in “edge” and “edge_cylinder” shader. If a custom shader should be used, it has to implement the basic instancing the is used in the aforementioned shaders.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh</strong> – The mesh </p></li>
+<li><p><strong>camera</strong> – The camera </p></li>
+<li><p><strong>model</strong> – The optional model matrix </p></li>
+<li><p><strong>color</strong> – An optional color </p></li>
+<li><p><strong>shader</strong> – The shader </p></li>
+<li><p><strong>draw_mode</strong> – The draw mode </p></li>
+<li><p><strong>material</strong> – The material </p></li>
+<li><p><strong>entity_id</strong> – The entity id </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem10drawCircleERKN3glm4vec3ERKfRKfRKN3glm4vec3ERKN4atcg7ref_ptrI6CameraEE">
+<span id="_CPPv3N4atcg14RendererSystem10drawCircleERKN3glm4vec3ERKfRKfRKN3glm4vec3ERKN4atcg7ref_ptrI6CameraEE"></span><span id="_CPPv2N4atcg14RendererSystem10drawCircleERKN3glm4vec3ERKfRKfRKN3glm4vec3ERKN4atcg7ref_ptrI6CameraEE"></span><span id="atcg::RendererSystem::drawCircle__glm::vec3CR.floatCR.floatCR.glm::vec3CR.atcg::ref_ptr:Camera:CR"></span><span class="target" id="classatcg_1_1_renderer_system_1a88c7ffc6c2f6401ede11fb039f18dc66"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">drawCircle</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">position</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">radius</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">thickness</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec3</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">color</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem10drawCircleERKN3glm4vec3ERKfRKfRKN3glm4vec3ERKN4atcg7ref_ptrI6CameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Draw Circle. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>position</strong> – The position </p></li>
+<li><p><strong>radius</strong> – The radius </p></li>
+<li><p><strong>thickness</strong> – The thickness of the circle </p></li>
+<li><p><strong>color</strong> – The color </p></li>
+<li><p><strong>camera</strong> – The camera </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI11FramebufferEE">
+<span id="_CPPv3N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI11FramebufferEE"></span><span id="_CPPv2N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI11FramebufferEE"></span><span id="atcg::RendererSystem::drawImage__atcg::ref_ptr:Framebuffer:CR"></span><span class="target" id="classatcg_1_1_renderer_system_1a830dd29b20a1727df9e36ef84de5ccc8"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">drawImage</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Framebuffer.html#_CPPv4N4atcg11FramebufferE" title="atcg::Framebuffer"><span class="n"><span class="pre">Framebuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">img</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI11FramebufferEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Display an image/texture in the main viewport. It is assumed that the image resolution is the same as the viewport resolution. This function can be used to display results generated with a custom framebuffer. However, entity selection is then not possible as the entity buffer is not filled. This function will assume that color attachement 0 of the framebuffer is used. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>img</strong> – The image to display </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI9Texture2DEE">
+<span id="_CPPv3N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI9Texture2DEE"></span><span id="_CPPv2N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI9Texture2DEE"></span><span id="atcg::RendererSystem::drawImage__atcg::ref_ptr:Texture2D:CR"></span><span class="target" id="classatcg_1_1_renderer_system_1a135286538b8e596938dd4485000fe344"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">drawImage</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Texture.html#_CPPv4N4atcg9Texture2DE" title="atcg::Texture2D"><span class="n"><span class="pre">Texture2D</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">img</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI9Texture2DEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Display an image/texture in the main viewport. It is assumed that the image resolution is the same as the viewport resolution. This function can be used to display results generated with a custom framebuffer. However, entity selection is then not possible as the entity buffer is not filled. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>img</strong> – The image to display </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem10drawSkyboxERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI6CameraEE">
+<span id="_CPPv3N4atcg14RendererSystem10drawSkyboxERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI6CameraEE"></span><span id="_CPPv2N4atcg14RendererSystem10drawSkyboxERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI6CameraEE"></span><span id="atcg::RendererSystem::drawSkybox__atcg::ref_ptr:TextureCube:CR.atcg::ref_ptr:Camera:CR"></span><span class="target" id="classatcg_1_1_renderer_system_1a7a1ee6306a42e74b3465084a3b63b8a2"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">drawSkybox</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Texture.html#_CPPv4N4atcg11TextureCubeE" title="atcg::TextureCube"><span class="n"><span class="pre">TextureCube</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">skybox_cubemap</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem10drawSkyboxERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI6CameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Draw a skybox. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>skybox</strong> – The skybox cubemap </p></li>
+<li><p><strong>camera</strong> – The camera </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem11drawCamerasERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE">
+<span id="_CPPv3N4atcg14RendererSystem11drawCamerasERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE"></span><span id="_CPPv2N4atcg14RendererSystem11drawCamerasERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE"></span><span id="atcg::RendererSystem::drawCameras__atcg::ref_ptr:Scene:CR.atcg::ref_ptr:Camera:CR"></span><span class="target" id="classatcg_1_1_renderer_system_1ab06fde90e71b04e5cfa49956ec6942d5"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">drawCameras</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Scene/Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem11drawCamerasERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Draw camera frustrums. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>camera</strong> – The camera </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem10drawLightsERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE">
+<span id="_CPPv3N4atcg14RendererSystem10drawLightsERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE"></span><span id="_CPPv2N4atcg14RendererSystem10drawLightsERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE"></span><span id="atcg::RendererSystem::drawLights__atcg::ref_ptr:Scene:CR.atcg::ref_ptr:Camera:CR"></span><span class="target" id="classatcg_1_1_renderer_system_1a7fbf7ea293a19458d6ead3a8384544b2"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">drawLights</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Scene/Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem10drawLightsERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Draw light sources. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>camera</strong> – The camera </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem11drawCADGridERKN4atcg7ref_ptrI6CameraEERKf">
+<span id="_CPPv3N4atcg14RendererSystem11drawCADGridERKN4atcg7ref_ptrI6CameraEERKf"></span><span id="_CPPv2N4atcg14RendererSystem11drawCADGridERKN4atcg7ref_ptrI6CameraEERKf"></span><span id="atcg::RendererSystem::drawCADGrid__atcg::ref_ptr:Camera:CR.floatCR"></span><span class="target" id="classatcg_1_1_renderer_system_1aa1bb58870db36a5d4f73cbc9bf83acfc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">drawCADGrid</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">transparency</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.6f</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem11drawCADGridERKN4atcg7ref_ptrI6CameraEERKf" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Draws a CAD grid with three resolutions (0.1, 1, 10) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>camera</strong> – The camera </p></li>
+<li><p><strong>transparency</strong> – The transparency of the grid </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem14getFramebufferEv">
+<span id="_CPPv3NK4atcg14RendererSystem14getFramebufferEv"></span><span id="_CPPv2NK4atcg14RendererSystem14getFramebufferEv"></span><span id="atcg::RendererSystem::getFramebufferC"></span><span class="target" id="classatcg_1_1_renderer_system_1a8fdeaaf8742c7528430a973486e831e7"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Framebuffer.html#_CPPv4N4atcg11FramebufferE" title="atcg::Framebuffer"><span class="n"><span class="pre">Framebuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getFramebuffer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem14getFramebufferEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the framebuffer objects that is used by the renderer. Depending on if MSAA is enabled or not, this may be a MSAA framebuffer that can only be used for additional rendering tasks. Data reads can not be performed in this case. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The framebuffer of last frame </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem22getResolvedFramebufferEv">
+<span id="_CPPv3NK4atcg14RendererSystem22getResolvedFramebufferEv"></span><span id="_CPPv2NK4atcg14RendererSystem22getResolvedFramebufferEv"></span><span id="atcg::RendererSystem::getResolvedFramebufferC"></span><span class="target" id="classatcg_1_1_renderer_system_1ad01c081cedbe0d61ff4bb2090508f172"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Framebuffer.html#_CPPv4N4atcg11FramebufferE" title="atcg::Framebuffer"><span class="n"><span class="pre">Framebuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getResolvedFramebuffer</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem22getResolvedFramebufferEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the framebuffer objects that is used by the renderer. This framebuffer does not represent the current frame but the last frame after <a class="reference internal" href="#classatcg_1_1_renderer_system_1a0b68d2458686a0a7ab9041d5b7254128"><span class="std std-ref">finishFrame()</span></a> was called. To get the current frame data, refer to <a class="reference internal" href="#classatcg_1_1_renderer_system_1ac97f09d574152b0f14ae8d1fb2788074"><span class="std std-ref">getFramebufferMSAA()</span></a>. Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using toggleMSAA. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The framebuffer of last frame </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem18getFramebufferMSAAEv">
+<span id="_CPPv3NK4atcg14RendererSystem18getFramebufferMSAAEv"></span><span id="_CPPv2NK4atcg14RendererSystem18getFramebufferMSAAEv"></span><span id="atcg::RendererSystem::getFramebufferMSAAC"></span><span class="target" id="classatcg_1_1_renderer_system_1ac97f09d574152b0f14ae8d1fb2788074"></span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Framebuffer.html#_CPPv4N4atcg11FramebufferE" title="atcg::Framebuffer"><span class="n"><span class="pre">Framebuffer</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getFramebufferMSAA</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem18getFramebufferMSAAEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the framebuffer object that is used by the renderer. This is a multi sample framebuffer that can only be used for drawing operations. If you want to read rendered data, either use getFramebufefr() which contains the render of the last frame. If you need the current state of the framebuffer for this frame, you have to manually blit it. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The fbo </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem8getFrameERKN5torch10DeviceTypeE">
+<span id="_CPPv3NK4atcg14RendererSystem8getFrameERKN5torch10DeviceTypeE"></span><span id="_CPPv2NK4atcg14RendererSystem8getFrameERKN5torch10DeviceTypeE"></span><span id="atcg::RendererSystem::getFrame__torch::DeviceTypeCRC"></span><span class="target" id="classatcg_1_1_renderer_system_1a501f4fc68a3f856110421b5642a79471"></span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getFrame</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">DeviceType</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">device</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">GPU</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem8getFrameERKN5torch10DeviceTypeE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get a buffer representing the color attachement of the screen frame buffer. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This copies memory between GPU and CPU if device = CPU</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> – The device</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The buffer containing the frame image. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem10getZBufferERKN5torch10DeviceTypeE">
+<span id="_CPPv3NK4atcg14RendererSystem10getZBufferERKN5torch10DeviceTypeE"></span><span id="_CPPv2NK4atcg14RendererSystem10getZBufferERKN5torch10DeviceTypeE"></span><span id="atcg::RendererSystem::getZBuffer__torch::DeviceTypeCRC"></span><span class="target" id="classatcg_1_1_renderer_system_1ac1222d84538f485c4db30fcfbdf3e749"></span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getZBuffer</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">DeviceType</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">device</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">GPU</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem10getZBufferERKN5torch10DeviceTypeE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Z-buffer of the current frame as torch tensor. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This function always does a GPU-CPU memcopy because depth maps can not be mapped from OpenGL to CUDA. If device = GPU is specified, an additional memcpy from CPU to GPU is performed.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> – The device</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The depth buffer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg14RendererSystem14getEntityIndexERKN3glm4vec2E">
+<span id="_CPPv3NK4atcg14RendererSystem14getEntityIndexERKN3glm4vec2E"></span><span id="_CPPv2NK4atcg14RendererSystem14getEntityIndexERKN3glm4vec2E"></span><span id="atcg::RendererSystem::getEntityIndex__glm::vec2CRC"></span><span class="target" id="classatcg_1_1_renderer_system_1aa741f7b725ea2656930f6f48c9592b1d"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getEntityIndex</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec2</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">mouse</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg14RendererSystem14getEntityIndexERKN3glm4vec2E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the entity index that was rendered onto the given pixel. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>mouse</strong> – The mouse position </p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The entity id </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tRKNSt6stringE">
+<span id="_CPPv3N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tRKNSt6stringE"></span><span id="_CPPv2N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tRKNSt6stringE"></span><span id="atcg::RendererSystem::screenshot__atcg::ref_ptr:Scene:CR.atcg::ref_ptr:Camera:CR.uint32_tC.ssCR"></span><span class="target" id="classatcg_1_1_renderer_system_1aef7b607a9fc4713385a5ccf034fcdf9b"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">screenshot</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Scene/Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">path</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tRKNSt6stringE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Take a screenshot and save it to disk. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>camera</strong> – The camera </p></li>
+<li><p><strong>width</strong> – The output width. Height is calculated from the camera’s aspect ratio </p></li>
+<li><p><strong>path</strong> – The output path </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_tRKNSt6stringE">
+<span id="_CPPv3N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_tRKNSt6stringE"></span><span id="_CPPv2N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_tRKNSt6stringE"></span><span id="atcg::RendererSystem::screenshot__atcg::ref_ptr:Scene:CR.atcg::ref_ptr:Camera:CR.uint32_tC.uint32_tC.ssCR"></span><span class="target" id="classatcg_1_1_renderer_system_1abf8d8dda5964eac63098e419da8c1587"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">screenshot</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Scene/Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">height</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">path</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_tRKNSt6stringE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Take a screenshot and save it to disk. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>camera</strong> – The camera </p></li>
+<li><p><strong>width</strong> – The output width </p></li>
+<li><p><strong>height</strong> – The output height </p></li>
+<li><p><strong>path</strong> – The output path </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_t">
+<span id="_CPPv3N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_t"></span><span id="_CPPv2N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_t"></span><span id="atcg::RendererSystem::screenshot__atcg::ref_ptr:Scene:CR.atcg::ref_ptr:Camera:CR.uint32_tC"></span><span class="target" id="classatcg_1_1_renderer_system_1ae5c52b30be65e5a7d8d979fd1fd92095"></span><span class="n"><span class="pre">torch</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Tensor</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">screenshot</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Scene/Scene.html#_CPPv4N4atcg5SceneE" title="atcg::Scene"><span class="n"><span class="pre">Scene</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">scene</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../Core/Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="Camera.html#_CPPv4N4atcg6CameraE" title="atcg::Camera"><span class="n"><span class="pre">Camera</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">camera</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Take a screenshot and return it as tensor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scene</strong> – The scene </p></li>
+<li><p><strong>camera</strong> – The camera </p></li>
+<li><p><strong>width</strong> – The output width. Height is calculated from the camera’s aspect ratio</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The pixel data as tensor </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystem14RendererSystemEv">
+<span id="_CPPv3N4atcg14RendererSystem14RendererSystemEv"></span><span id="_CPPv2N4atcg14RendererSystem14RendererSystemEv"></span><span id="atcg::RendererSystem::RendererSystem"></span><span class="target" id="classatcg_1_1_renderer_system_1a97dfff7e6d27e6bfa40faaf27168ca8d"></span><span class="sig-name descname"><span class="n"><span class="pre">RendererSystem</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystem14RendererSystemEv" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg14RendererSystemD0Ev">
+<span id="_CPPv3N4atcg14RendererSystemD0Ev"></span><span id="_CPPv2N4atcg14RendererSystemD0Ev"></span><span id="atcg::RendererSystem::~RendererSystem"></span><span class="target" id="classatcg_1_1_renderer_system_1a87108e725770ad192b1f844ecac238a1"></span><span class="sig-name descname"><span class="n"><span class="pre">~RendererSystem</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg14RendererSystemD0Ev" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="Shader.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Shader</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="RendererIndex.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Renderer</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Domenic Zingsheim
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Renderer</a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg8DrawModeE"><code class="docutils literal notranslate"><span class="pre">DrawMode</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg8DrawMode23ATCG_DRAW_MODE_TRIANGLEE"><code class="docutils literal notranslate"><span class="pre">ATCG_DRAW_MODE_TRIANGLE</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8DrawMode21ATCG_DRAW_MODE_POINTSE"><code class="docutils literal notranslate"><span class="pre">ATCG_DRAW_MODE_POINTS</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8DrawMode28ATCG_DRAW_MODE_POINTS_SPHEREE"><code class="docutils literal notranslate"><span class="pre">ATCG_DRAW_MODE_POINTS_SPHERE</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8DrawMode20ATCG_DRAW_MODE_EDGESE"><code class="docutils literal notranslate"><span class="pre">ATCG_DRAW_MODE_EDGES</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8DrawMode29ATCG_DRAW_MODE_EDGES_CYLINDERE"><code class="docutils literal notranslate"><span class="pre">ATCG_DRAW_MODE_EDGES_CYLINDER</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8DrawMode24ATCG_DRAW_MODE_INSTANCEDE"><code class="docutils literal notranslate"><span class="pre">ATCG_DRAW_MODE_INSTANCED</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8CullModeE"><code class="docutils literal notranslate"><span class="pre">CullMode</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg8CullMode23ATCG_FRONT_FACE_CULLINGE"><code class="docutils literal notranslate"><span class="pre">ATCG_FRONT_FACE_CULLING</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8CullMode22ATCG_BACK_FACE_CULLINGE"><code class="docutils literal notranslate"><span class="pre">ATCG_BACK_FACE_CULLING</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg8CullMode22ATCG_BOTH_FACE_CULLINGE"><code class="docutils literal notranslate"><span class="pre">ATCG_BOTH_FACE_CULLING</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystemE"><code class="docutils literal notranslate"><span class="pre">atcg::RendererSystem</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem4initE8uint32_t8uint32_tRKN4atcg7ref_ptrI7ContextEERKN4atcg7ref_ptrI19ShaderManagerSystemEE"><code class="docutils literal notranslate"><span class="pre">init()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem3useEv"><code class="docutils literal notranslate"><span class="pre">use()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem11finishFrameEv"><code class="docutils literal notranslate"><span class="pre">finishFrame()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem6finishEv"><code class="docutils literal notranslate"><span class="pre">finish()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem13setClearColorERKN3glm4vec4E"><code class="docutils literal notranslate"><span class="pre">setClearColor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem13getClearColorEv"><code class="docutils literal notranslate"><span class="pre">getClearColor()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem12setPointSizeERKf"><code class="docutils literal notranslate"><span class="pre">setPointSize()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem11setLineSizeERKf"><code class="docutils literal notranslate"><span class="pre">setLineSize()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem7setMSAAE8uint32_t"><code class="docutils literal notranslate"><span class="pre">setMSAA()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem7getMSAAEv"><code class="docutils literal notranslate"><span class="pre">getMSAA()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem10toggleMSAAEKb"><code class="docutils literal notranslate"><span class="pre">toggleMSAA()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem18toggleDepthTestingEb"><code class="docutils literal notranslate"><span class="pre">toggleDepthTesting()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem13toggleCullingEb"><code class="docutils literal notranslate"><span class="pre">toggleCulling()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem11setCullFaceE8CullMode"><code class="docutils literal notranslate"><span class="pre">setCullFace()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem11setViewportERK8uint32_tRK8uint32_tRK8uint32_tRK8uint32_t"><code class="docutils literal notranslate"><span class="pre">setViewport()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem18setDefaultViewportEv"><code class="docutils literal notranslate"><span class="pre">setDefaultViewport()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem11getViewportEv"><code class="docutils literal notranslate"><span class="pre">getViewport()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem13processSkyboxERKN4atcg7ref_ptrI9Texture2DEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI11TextureCubeEE"><code class="docutils literal notranslate"><span class="pre">processSkybox()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem6resizeERK8uint32_tRK8uint32_t"><code class="docutils literal notranslate"><span class="pre">resize()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem15useScreenBufferEv"><code class="docutils literal notranslate"><span class="pre">useScreenBuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem15getFrameCounterEv"><code class="docutils literal notranslate"><span class="pre">getFrameCounter()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem12popTextureIDEv"><code class="docutils literal notranslate"><span class="pre">popTextureID()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem13pushTextureIDEK8uint32_t"><code class="docutils literal notranslate"><span class="pre">pushTextureID()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem5clearEv"><code class="docutils literal notranslate"><span class="pre">clear()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem4drawERKN4atcg7ref_ptrI5GraphEERKN4atcg7ref_ptrI6CameraEERKN3glm4mat4ERKN3glm4vec3ERKN4atcg7ref_ptrI6ShaderEE8DrawModeRKNSt8optionalI8MaterialEEK8uint32_t"><code class="docutils literal notranslate"><span class="pre">draw()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem10drawCircleERKN3glm4vec3ERKfRKfRKN3glm4vec3ERKN4atcg7ref_ptrI6CameraEE"><code class="docutils literal notranslate"><span class="pre">drawCircle()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI11FramebufferEE"><code class="docutils literal notranslate"><span class="pre">drawImage()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem9drawImageERKN4atcg7ref_ptrI9Texture2DEE"><code class="docutils literal notranslate"><span class="pre">drawImage()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem10drawSkyboxERKN4atcg7ref_ptrI11TextureCubeEERKN4atcg7ref_ptrI6CameraEE"><code class="docutils literal notranslate"><span class="pre">drawSkybox()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem11drawCamerasERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE"><code class="docutils literal notranslate"><span class="pre">drawCameras()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem10drawLightsERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEE"><code class="docutils literal notranslate"><span class="pre">drawLights()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem11drawCADGridERKN4atcg7ref_ptrI6CameraEERKf"><code class="docutils literal notranslate"><span class="pre">drawCADGrid()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem14getFramebufferEv"><code class="docutils literal notranslate"><span class="pre">getFramebuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem22getResolvedFramebufferEv"><code class="docutils literal notranslate"><span class="pre">getResolvedFramebuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem18getFramebufferMSAAEv"><code class="docutils literal notranslate"><span class="pre">getFramebufferMSAA()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem8getFrameERKN5torch10DeviceTypeE"><code class="docutils literal notranslate"><span class="pre">getFrame()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem10getZBufferERKN5torch10DeviceTypeE"><code class="docutils literal notranslate"><span class="pre">getZBuffer()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg14RendererSystem14getEntityIndexERKN3glm4vec2E"><code class="docutils literal notranslate"><span class="pre">getEntityIndex()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tRKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">screenshot()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_tK8uint32_tRKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">screenshot()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem10screenshotERKN4atcg7ref_ptrI5SceneEERKN4atcg7ref_ptrI6CameraEEK8uint32_t"><code class="docutils literal notranslate"><span class="pre">screenshot()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystem14RendererSystemEv"><code class="docutils literal notranslate"><span class="pre">RendererSystem()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg14RendererSystemD0Ev"><code class="docutils literal notranslate"><span class="pre">~RendererSystem()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>

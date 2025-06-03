@@ -1,0 +1,692 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="UUID" href="UUID.html" /><link rel="prev" title="Memory" href="Memory.html" />
+
+    <link rel="shortcut icon" href="../../_static/icon.png"/><!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
+        <title>Window - ATCG Framework documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f8f8f8;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">ATCG Framework  documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../_static/logo.png" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">ATCG Framework  documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="CoreIndex.html">Core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="API.html">API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Application.html">Application</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Input.html">Input</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Layer.html">Layer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Memory.html">Memory</a></li>
+<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">Window</a></li>
+<li class="toctree-l2"><a class="reference internal" href="UUID.html">UUID</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Events/EventIndex.html">Events</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Events</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Events/Event.html">Events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/KeyEvents.html">KeyEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/MouseEvents.html">MoueEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/WindowEvents.html">WindowEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/FileEvents.html">FileEvents</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Events/VREvents.html">VREvents</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../DataStructure/DataStructureIndex.html">DataStructure</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of DataStructure</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Graph.html">Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Image.html">Image</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Timer.html">Timer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/TensorOptions.html">TensorOptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Worker.html">Worker</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Statistics.html">Statistic</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Grid.html">Grid</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/BufferView.html">BufferView</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/PerformancePanel.html">PerformancePanel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Dictionary.html">Dictionary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../DataStructure/Skybox.html">Skybox</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Renderer/RendererIndex.html">Renderer</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Renderer</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Renderer.html">Renderer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Shader.html">Shader</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Material.html">Material</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Texture.html">Texture</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Framebuffer.html">Framebuffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html">Render Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/RenderGraph.html#render-passes">Render Passes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Buffer.html">Buffer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VertexArray.html">VertexArray</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Camera.html">Camera</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/VRSystem.html">VRSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/Context.html">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Renderer/ContextManager.html">Context</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scene/SceneIndex.html">Scene</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Scene</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Scene.html">Scene</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Entity.html">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Components.html">Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/SceneHierarchyPanel.html">Scene Hierarchy Panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/Serializer.html">Serializer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/RevisionSystem.html">RevisionSystem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scene/ComponentRenderer.html">ComponentRenderer</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Scripting/ScriptingIndex.html">Scripting</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Scripting</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/ScriptEngine.html">ScriptEngine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Scripting/Script.html">Script</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Math/MathIndex.html">Math</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Math</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Color.html">Color</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Constants.html">Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/MeshManipulation.html">Mesh Manipulation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Math/Tracing.html">Tracing</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../ImGui/ImGui.html">ImGui</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../IO/IO.html">IO</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../Network/NetworkIndex.html">Network</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Network</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPServer.html">TCPServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/TCPClient.html">TCPClient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../Network/NetworkUtils.html">Network Utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../OpenMesh/OpenMesh.html">OpenMesh</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/source/Core/Window.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="window">
+<h1>Window<a class="headerlink" href="#window" title="Link to this heading">¶</a></h1>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowPropsE">
+<span id="_CPPv3N4atcg11WindowPropsE"></span><span id="_CPPv2N4atcg11WindowPropsE"></span><span id="atcg::WindowProps"></span><span class="target" id="structatcg_1_1_window_props"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">WindowProps</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11WindowPropsE" title="Link to this definition">¶</a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowProps11WindowPropsERKNSt6stringE8uint32_t8uint32_t7int32_t7int32_tbbRKNSt6stringE">
+<span id="_CPPv3N4atcg11WindowProps11WindowPropsERKNSt6stringE8uint32_t8uint32_t7int32_t7int32_tbbRKNSt6stringE"></span><span id="_CPPv2N4atcg11WindowProps11WindowPropsERKNSt6stringE8uint32_t8uint32_t7int32_t7int32_tbbRKNSt6stringE"></span><span id="atcg::WindowProps::WindowProps__ssCR.uint32_t.uint32_t.int32_t.int32_t.b.b.ssCR"></span><span class="target" id="structatcg_1_1_window_props_1a94e545a30ed04ada6c5ff7e812f2c4b2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">WindowProps</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">title</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="s"><span class="pre">&quot;ATCG&quot;</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">width</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1600</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">height</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">900</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pos_x</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">numeric_limits</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">int32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">max</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pos_y</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">numeric_limits</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">int32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">max</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">vsync</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">true</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">hidden</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">icon_path</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="s"><span class="pre">&quot;&quot;</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg11WindowProps11WindowPropsERKNSt6stringE8uint32_t8uint32_t7int32_t7int32_tbbRKNSt6stringE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowProps5titleE">
+<span id="_CPPv3N4atcg11WindowProps5titleE"></span><span id="_CPPv2N4atcg11WindowProps5titleE"></span><span id="atcg::WindowProps::title__ss"></span><span class="target" id="structatcg_1_1_window_props_1ac30fed21fe991cc8475ce543929f8b72"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">title</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11WindowProps5titleE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowProps5widthE">
+<span id="_CPPv3N4atcg11WindowProps5widthE"></span><span id="_CPPv2N4atcg11WindowProps5widthE"></span><span id="atcg::WindowProps::width__uint32_t"></span><span class="target" id="structatcg_1_1_window_props_1a325272ddd9a962f05deb905101d25cbd"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">width</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11WindowProps5widthE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowProps6heightE">
+<span id="_CPPv3N4atcg11WindowProps6heightE"></span><span id="_CPPv2N4atcg11WindowProps6heightE"></span><span id="atcg::WindowProps::height__uint32_t"></span><span class="target" id="structatcg_1_1_window_props_1a6ad4f820ce4e75cda0686fcaad5168be"></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">height</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11WindowProps6heightE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowProps5pos_xE">
+<span id="_CPPv3N4atcg11WindowProps5pos_xE"></span><span id="_CPPv2N4atcg11WindowProps5pos_xE"></span><span id="atcg::WindowProps::pos_x__int32_t"></span><span class="target" id="structatcg_1_1_window_props_1a42205434ff659fb94dfea3af43ede6b3"></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pos_x</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11WindowProps5pos_xE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowProps5pos_yE">
+<span id="_CPPv3N4atcg11WindowProps5pos_yE"></span><span id="_CPPv2N4atcg11WindowProps5pos_yE"></span><span id="atcg::WindowProps::pos_y__int32_t"></span><span class="target" id="structatcg_1_1_window_props_1ae57a210625612638be26e14d06560449"></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pos_y</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11WindowProps5pos_yE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowProps5vsyncE">
+<span id="_CPPv3N4atcg11WindowProps5vsyncE"></span><span id="_CPPv2N4atcg11WindowProps5vsyncE"></span><span id="atcg::WindowProps::vsync__b"></span><span class="target" id="structatcg_1_1_window_props_1a1196e170e242f04e8ee8ab20dff42d6a"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">vsync</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11WindowProps5vsyncE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowProps6hiddenE">
+<span id="_CPPv3N4atcg11WindowProps6hiddenE"></span><span id="_CPPv2N4atcg11WindowProps6hiddenE"></span><span id="atcg::WindowProps::hidden__b"></span><span class="target" id="structatcg_1_1_window_props_1a4aefc4965852492e2f02de00f05e6698"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hidden</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11WindowProps6hiddenE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg11WindowProps9icon_pathE">
+<span id="_CPPv3N4atcg11WindowProps9icon_pathE"></span><span id="_CPPv2N4atcg11WindowProps9icon_pathE"></span><span id="atcg::WindowProps::icon_path__ss"></span><span class="target" id="structatcg_1_1_window_props_1ae07a8ae033d64938d7fc87a72b4c00b1"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">icon_path</span></span></span><a class="headerlink" href="#_CPPv4N4atcg11WindowProps9icon_pathE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6WindowE">
+<span id="_CPPv3N4atcg6WindowE"></span><span id="_CPPv2N4atcg6WindowE"></span><span id="atcg::Window"></span><span class="target" id="classatcg_1_1_window"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Window</span></span></span><a class="headerlink" href="#_CPPv4N4atcg6WindowE" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Class to model a window. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window15EventCallbackFnE">
+<span id="_CPPv3N4atcg6Window15EventCallbackFnE"></span><span id="_CPPv2N4atcg6Window15EventCallbackFnE"></span><span class="target" id="classatcg_1_1_window_1a891b303f659bd89b9a01bac7bdb38763"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">EventCallbackFn</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="../Events/Event.html#_CPPv4N4atcg5EventE" title="atcg::Event"><span class="n"><span class="pre">Event</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4atcg6Window15EventCallbackFnE" title="Link to this definition">¶</a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window6WindowERK11WindowProps">
+<span id="_CPPv3N4atcg6Window6WindowERK11WindowProps"></span><span id="_CPPv2N4atcg6Window6WindowERK11WindowProps"></span><span id="atcg::Window::Window__WindowPropsCR"></span><span class="target" id="classatcg_1_1_window_1a73704a3bd560a2df00e91f8d3a3257df"></span><span class="sig-name descname"><span class="n"><span class="pre">Window</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg11WindowPropsE" title="atcg::WindowProps"><span class="n"><span class="pre">WindowProps</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">props</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window6WindowERK11WindowProps" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Construct a new <a class="reference internal" href="#classatcg_1_1_window"><span class="std std-ref">Window</span></a> object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>props</strong> – The window properties </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6WindowD0Ev">
+<span id="_CPPv3N4atcg6WindowD0Ev"></span><span id="_CPPv2N4atcg6WindowD0Ev"></span><span id="atcg::Window::~Window"></span><span class="target" id="classatcg_1_1_window_1a254ab61160c1cd5eaa46cc0475bb7a06"></span><span class="sig-name descname"><span class="n"><span class="pre">~Window</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6WindowD0Ev" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Destroy the <a class="reference internal" href="#classatcg_1_1_window"><span class="std std-ref">Window</span></a> object. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window8onUpdateEv">
+<span id="_CPPv3N4atcg6Window8onUpdateEv"></span><span id="_CPPv2N4atcg6Window8onUpdateEv"></span><span id="atcg::Window::onUpdate"></span><span class="target" id="classatcg_1_1_window_1abe687a263d660f51f574707481c19286"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onUpdate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window8onUpdateEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Handles the swap chain and other per frame properties of the renderer/window. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window16setEventCallbackERK15EventCallbackFn">
+<span id="_CPPv3N4atcg6Window16setEventCallbackERK15EventCallbackFn"></span><span id="_CPPv2N4atcg6Window16setEventCallbackERK15EventCallbackFn"></span><span id="atcg::Window::setEventCallback__EventCallbackFnCR"></span><span class="target" id="classatcg_1_1_window_1ad0c6ac2c67c01a9af4822c19de73f3bf"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setEventCallback</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4atcg6Window15EventCallbackFnE" title="atcg::Window::EventCallbackFn"><span class="n"><span class="pre">EventCallbackFn</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window16setEventCallbackERK15EventCallbackFn" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the <a class="reference internal" href="../Events/Event.html#classatcg_1_1_event"><span class="std std-ref">Event</span></a> Callback object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>callback</strong> – The callback function </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window4hideEv">
+<span id="_CPPv3N4atcg6Window4hideEv"></span><span id="_CPPv2N4atcg6Window4hideEv"></span><span id="atcg::Window::hide"></span><span class="target" id="classatcg_1_1_window_1ade42eb4da4eb77db85a8d1e4b92e7be4"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">hide</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window4hideEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Hides the window. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window4showEv">
+<span id="_CPPv3N4atcg6Window4showEv"></span><span id="_CPPv2N4atcg6Window4showEv"></span><span id="atcg::Window::show"></span><span class="target" id="classatcg_1_1_window_1a4b148f40a95444d5669406b918ad2f52"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">show</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window4showEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Shows the window. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Window15getNativeWindowEv">
+<span id="_CPPv3NK4atcg6Window15getNativeWindowEv"></span><span id="_CPPv2NK4atcg6Window15getNativeWindowEv"></span><span id="atcg::Window::getNativeWindowC"></span><span class="target" id="classatcg_1_1_window_1a57fa72e4ae25241dc97122a1b7d5e5e0"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getNativeWindow</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Window15getNativeWindowEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Native <a class="reference internal" href="#classatcg_1_1_window"><span class="std std-ref">Window</span></a> object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>GLFWwindow* The glfw window pointer </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window6resizeERK8uint32_tRK8uint32_t">
+<span id="_CPPv3N4atcg6Window6resizeERK8uint32_tRK8uint32_t"></span><span id="_CPPv2N4atcg6Window6resizeERK8uint32_tRK8uint32_t"></span><span id="atcg::Window::resize__uint32_tCR.uint32_tCR"></span><span class="target" id="classatcg_1_1_window_1ae57b461c354767a1300e165aadcc9200"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">resize</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">width</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">height</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window6resizeERK8uint32_tRK8uint32_t" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Resize the window. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>width</strong> – The width </p></li>
+<li><p><strong>height</strong> – The height </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window11toggleVSyncEb">
+<span id="_CPPv3N4atcg6Window11toggleVSyncEb"></span><span id="_CPPv2N4atcg6Window11toggleVSyncEb"></span><span id="atcg::Window::toggleVSync__b"></span><span class="target" id="classatcg_1_1_window_1a28833c94267ec38f4fb62d25025dc0af"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">toggleVSync</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">vsync</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window11toggleVSyncEb" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Toggle if vsync should be enabled or not. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>vsyinc</strong> – if vsync should be enabled </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window16toggleFullscreenEv">
+<span id="_CPPv3N4atcg6Window16toggleFullscreenEv"></span><span id="_CPPv2N4atcg6Window16toggleFullscreenEv"></span><span id="atcg::Window::toggleFullscreen"></span><span class="target" id="classatcg_1_1_window_1aad0757276ad4bc900c8826f8ecbe6ecc"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">toggleFullscreen</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window16toggleFullscreenEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Toggle fullscreen mode of the window. If the window is already in fullscreen, it will go back to window mode. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Window11getPositionEv">
+<span id="_CPPv3NK4atcg6Window11getPositionEv"></span><span id="_CPPv2NK4atcg6Window11getPositionEv"></span><span id="atcg::Window::getPositionC"></span><span class="target" id="classatcg_1_1_window_1a64413677cd002cb00c7a911610d5c7a5"></span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec2</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Window11getPositionEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the window position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Vector of (x,y) with the absolute window coordinates </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window11setPositionERKN3glm4vec2E">
+<span id="_CPPv3N4atcg6Window11setPositionERKN3glm4vec2E"></span><span id="_CPPv2N4atcg6Window11setPositionERKN3glm4vec2E"></span><span id="atcg::Window::setPosition__glm::vec2CR"></span><span class="target" id="classatcg_1_1_window_1a2cc146ab075229190419e1c8bc418de6"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setPosition</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">glm</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vec2</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">position</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window11setPositionERKN3glm4vec2E" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Set the window position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>position</strong> – The new position </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Window11isDecoratedEv">
+<span id="_CPPv3NK4atcg6Window11isDecoratedEv"></span><span id="_CPPv2NK4atcg6Window11isDecoratedEv"></span><span id="atcg::Window::isDecoratedC"></span><span class="target" id="classatcg_1_1_window_1a87546a7b65b078a677e2cc346d366513"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">isDecorated</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Window11isDecoratedEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Check if the window has decoration. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if the window is decoratd </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4atcg6Window16toogleDecorationEv">
+<span id="_CPPv3N4atcg6Window16toogleDecorationEv"></span><span id="_CPPv2N4atcg6Window16toogleDecorationEv"></span><span id="atcg::Window::toogleDecoration"></span><span class="target" id="classatcg_1_1_window_1ab3a6dea8f3c87e7aa516206875349ab5"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">toogleDecoration</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4atcg6Window16toogleDecorationEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Toggle the decoration of the window. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Window15getContentScaleEv">
+<span id="_CPPv3NK4atcg6Window15getContentScaleEv"></span><span id="_CPPv2NK4atcg6Window15getContentScaleEv"></span><span id="atcg::Window::getContentScaleC"></span><span class="target" id="classatcg_1_1_window_1af929e9d3bc4fa7ef38c820456cd18068"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getContentScale</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Window15getContentScaleEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the content scale of the window (4k support) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The content scaling factor </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Window8getWidthEv">
+<span id="_CPPv3NK4atcg6Window8getWidthEv"></span><span id="_CPPv2NK4atcg6Window8getWidthEv"></span><span id="atcg::Window::getWidthC"></span><span class="target" id="classatcg_1_1_window_1aca1b996bfd42e4d13365709e3fcab072"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getWidth</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Window8getWidthEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Width object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>uint32_t width </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Window9getHeightEv">
+<span id="_CPPv3NK4atcg6Window9getHeightEv"></span><span id="_CPPv2NK4atcg6Window9getHeightEv"></span><span id="atcg::Window::getHeightC"></span><span class="target" id="classatcg_1_1_window_1a41bfc989babe0999be4037c5b68119b5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getHeight</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Window9getHeightEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the Height object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>uint32_t height </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Window12isFullScreenEv">
+<span id="_CPPv3NK4atcg6Window12isFullScreenEv"></span><span id="_CPPv2NK4atcg6Window12isFullScreenEv"></span><span id="atcg::Window::isFullScreenC"></span><span class="target" id="classatcg_1_1_window_1a49e8f313e0344b8feb492b17a823c652"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">isFullScreen</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Window12isFullScreenEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Check if the window is currently in fullscreen mode. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if in fullscreen </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4atcg6Window10getContextEv">
+<span id="_CPPv3NK4atcg6Window10getContextEv"></span><span id="_CPPv2NK4atcg6Window10getContextEv"></span><span id="atcg::Window::getContextC"></span><span class="target" id="classatcg_1_1_window_1a5c989d2e5eeb5e86ff608e099aedfff2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">atcg</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="Memory.html#_CPPv4I0EN4atcg7ref_ptrE" title="atcg::ref_ptr"><span class="n"><span class="pre">ref_ptr</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../Renderer/Context.html#_CPPv4N4atcg7ContextE" title="atcg::Context"><span class="n"><span class="pre">Context</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getContext</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4atcg6Window10getContextEv" title="Link to this definition">¶</a><br /></dt>
+<dd><p>Get the context. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The context </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="UUID.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">UUID</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="Memory.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Memory</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2024, Domenic Zingsheim
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Window</a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowPropsE"><code class="docutils literal notranslate"><span class="pre">atcg::WindowProps</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowProps11WindowPropsERKNSt6stringE8uint32_t8uint32_t7int32_t7int32_tbbRKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">WindowProps()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowProps5titleE"><code class="docutils literal notranslate"><span class="pre">title</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowProps5widthE"><code class="docutils literal notranslate"><span class="pre">width</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowProps6heightE"><code class="docutils literal notranslate"><span class="pre">height</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowProps5pos_xE"><code class="docutils literal notranslate"><span class="pre">pos_x</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowProps5pos_yE"><code class="docutils literal notranslate"><span class="pre">pos_y</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowProps5vsyncE"><code class="docutils literal notranslate"><span class="pre">vsync</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowProps6hiddenE"><code class="docutils literal notranslate"><span class="pre">hidden</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg11WindowProps9icon_pathE"><code class="docutils literal notranslate"><span class="pre">icon_path</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6WindowE"><code class="docutils literal notranslate"><span class="pre">atcg::Window</span></code></a><ul>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window15EventCallbackFnE"><code class="docutils literal notranslate"><span class="pre">EventCallbackFn</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window6WindowERK11WindowProps"><code class="docutils literal notranslate"><span class="pre">Window()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6WindowD0Ev"><code class="docutils literal notranslate"><span class="pre">~Window()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window8onUpdateEv"><code class="docutils literal notranslate"><span class="pre">onUpdate()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window16setEventCallbackERK15EventCallbackFn"><code class="docutils literal notranslate"><span class="pre">setEventCallback()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window4hideEv"><code class="docutils literal notranslate"><span class="pre">hide()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window4showEv"><code class="docutils literal notranslate"><span class="pre">show()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Window15getNativeWindowEv"><code class="docutils literal notranslate"><span class="pre">getNativeWindow()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window6resizeERK8uint32_tRK8uint32_t"><code class="docutils literal notranslate"><span class="pre">resize()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window11toggleVSyncEb"><code class="docutils literal notranslate"><span class="pre">toggleVSync()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window16toggleFullscreenEv"><code class="docutils literal notranslate"><span class="pre">toggleFullscreen()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Window11getPositionEv"><code class="docutils literal notranslate"><span class="pre">getPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window11setPositionERKN3glm4vec2E"><code class="docutils literal notranslate"><span class="pre">setPosition()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Window11isDecoratedEv"><code class="docutils literal notranslate"><span class="pre">isDecorated()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4N4atcg6Window16toogleDecorationEv"><code class="docutils literal notranslate"><span class="pre">toogleDecoration()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Window15getContentScaleEv"><code class="docutils literal notranslate"><span class="pre">getContentScale()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Window8getWidthEv"><code class="docutils literal notranslate"><span class="pre">getWidth()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Window9getHeightEv"><code class="docutils literal notranslate"><span class="pre">getHeight()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Window12isFullScreenEv"><code class="docutils literal notranslate"><span class="pre">isFullScreen()</span></code></a></li>
+<li><a class="reference internal" href="#_CPPv4NK4atcg6Window10getContextEv"><code class="docutils literal notranslate"><span class="pre">getContext()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
+    </body>
+</html>
