@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added method to update the near and far plane of the VR System
 
+### Fixed
+
+- Fixed crash when a Script is held inside the revision system and the app is closed
+
 ## [0.2.1-beta]
 
 ### Fixed

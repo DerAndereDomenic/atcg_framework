@@ -24,6 +24,7 @@ Application::Application(const WindowProps& props)
 
 Application::~Application()
 {
+    _revision_system->clearChache();
     if(_script_engine) _script_engine->destroy();
 }
 
