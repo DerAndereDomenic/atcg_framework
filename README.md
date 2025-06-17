@@ -13,7 +13,7 @@ This framework is primarily tested on Windows using MSVC. For Linux, gcc is reco
 After installing the dependencies, clone the repository recursively (to include submodules)
 
 ```
-git clone --recursive https://grossglockner.cs.uni-bonn.de/zingsheim/atcg_framework.git
+git clone --recursive https://github.com/DerAndereDomenic/atcg_framework.git
 ```
 
 If you already cloned the repository without recursive cloning, run
