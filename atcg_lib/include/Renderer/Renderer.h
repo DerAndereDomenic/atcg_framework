@@ -432,6 +432,13 @@ public:
     torch::Tensor
     screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width);
 
+    /**
+     * @brief Get the shader manager associated with this renderer
+     *
+     * @return The shader manager
+     */
+    atcg::ref_ptr<ShaderManagerSystem> getShaderManager() const;
+
     RendererSystem();
 
     ~RendererSystem();
@@ -958,6 +965,16 @@ ATCG_INLINE uint32_t popTextureID()
 ATCG_INLINE void pushTextureID(const uint32_t id)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->pushTextureID(id);
+}
+
+/**
+ * @brief Get the shader manager associated with this renderer
+ *
+ * @return The shader manager
+ */
+ATCG_INLINE atcg::ref_ptr<ShaderManagerSystem> getShaderManager()
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->getShaderManager();
 }
 }    // namespace Renderer
 

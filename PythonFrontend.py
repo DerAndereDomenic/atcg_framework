@@ -1,6 +1,8 @@
-import torch
-
 # RUN: pip install -e . before running this file
+
+import torch
+import numpy as np
+
 
 import pyatcg as atcg
 
@@ -9,6 +11,62 @@ class PythonLayer(atcg.Layer):
 
     def __init__(self):
         atcg.Layer.__init__(self)
+
+    def create_instance(self):
+        mesh = atcg.read_mesh(f"{atcg.resource_directory()}/sphere_low.obj")
+        n_instances = 100
+
+        transforms = []
+        colors = []
+
+        for _ in range(n_instances):
+            pos = np.random.uniform(-5, 5, 3).astype(np.float32)
+            pos[1] += 10
+            m = np.eye(4).astype(np.float32)
+            m[-1, :-1] = pos
+
+            R = np.random.randn(3, 3)
+
+            # Symmetric positive-definite matrix
+            cov = R @ R.T
+
+            # Normalize to unit max eigenvalue
+            eigvals = np.linalg.eigvalsh(cov)
+            max_eig = np.max(eigvals)
+            cov_normalized = cov / max_eig
+
+            # Scale to desired max variance
+            cov_scaled = cov_normalized * 0.3
+
+            m[:3, :3] = cov_scaled
+
+            transforms.append(m)
+            color = np.random.uniform(0, 1, 4).astype(np.float32)
+            color[-1] = 1
+            colors.append(color)
+
+        transforms = np.array(transforms)
+        colors = np.array(colors)
+
+        layout_transforms = atcg.BufferLayout(
+            [atcg.BufferElement(atcg.ShaderDataType.Mat4, "Transform")]
+        )
+        vbo_transforms = atcg.VertexBuffer(transforms)
+        vbo_transforms.setLayout(layout_transforms)
+        layout_colors = atcg.BufferLayout(
+            [atcg.BufferElement(atcg.ShaderDataType.Float4, "Color")]
+        )
+        vbo_colors = atcg.VertexBuffer(colors)
+        vbo_colors.setLayout(layout_colors)
+
+        entity = self.scene.createEntity("Instances")
+        entity.addTransformComponent(atcg.vec3(0), atcg.vec3(1), atcg.vec3(0))
+        entity.addGeometryComponent(mesh)
+        instances = entity.addInstanceRenderComponent()
+
+        instances.instances = [vbo_transforms, vbo_colors]
+
+        entity.replaceInstanceRenderComponent(instances)
 
     def onAttach(self):
         atcg.enableDockSpace(True)
@@ -48,6 +106,8 @@ class PythonLayer(atcg.Layer):
         renderer.material.setRoughnessTexture(roughness_texture)
         renderer.material.setMetallicTexture(metallic_texture)
         entity.replaceMeshRenderComponent(renderer)
+
+        self.create_instance()
 
         self.current_operation = atcg.ImGui.GuizmoOperation.TRANSLATE
 

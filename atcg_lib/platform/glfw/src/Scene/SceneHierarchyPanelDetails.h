@@ -400,6 +400,7 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
                                PointSphereRenderComponent,
                                EdgeRenderComponent,
                                EdgeCylinderRenderComponent,
+                               InstanceRenderComponent,
                                PointLightComponent,
                                ScriptComponent,
                                CustomComponents...>(_selected_entity);

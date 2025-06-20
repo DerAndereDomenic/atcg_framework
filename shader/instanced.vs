@@ -8,7 +8,7 @@ layout(location = 4) in vec3 aUV;
 
 // Instance variables
 layout(location = 5) in mat4 aInstanceModel;
-layout(location = 9) in vec3 aInstanceColor;
+layout(location = 9) in vec4 aInstanceColor;
 
 uniform mat4 M, V, P;
 
@@ -33,7 +33,7 @@ void main()
     mat3 tbn = mat3(tangent, bitangent, axis);
     frag_tbn = tbn;
     frag_normal = axis;
-    frag_color = aColor * aInstanceColor;
+    frag_color = aColor * vec3(aInstanceColor);
 
     frag_uv = aUV.xy;
 }

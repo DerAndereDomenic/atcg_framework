@@ -89,6 +89,8 @@ protected:
     void serializeMaterial(nlohmann::json& out, Entity entity, const Material& material, const std::string& file_path);
     Material deserialize_material(const nlohmann::json& material_node);
     void serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path, float gamma = 1.0f);
+    nlohmann::json serializeLayout(const atcg::BufferLayout& layout);
+    atcg::BufferLayout deserializeLayout(nlohmann::json& layout_node);
     atcg::ref_ptr<Scene> _scene;
 };
 }    // namespace atcg

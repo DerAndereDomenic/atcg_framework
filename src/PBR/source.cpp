@@ -63,6 +63,46 @@ public:
         }
 
         scene->setCamera(camera_controller->getCamera());
+
+        // Instance Buffer Test
+        {
+            auto sphere     = atcg::IO::read_mesh((atcg::resource_directory() / "armadillo.obj").string());
+            int n_instances = 100;
+
+            std::random_device rd;
+            std::mt19937 gen(rd());
+            std::uniform_real_distribution<float> posDist(-5.0f, 5.0f);
+            std::uniform_real_distribution<float> colorDist(0.0f, 1.0f);
+
+            std::vector<glm::mat4> transforms;
+            std::vector<glm::vec4> colors;
+
+            for(int i = 0; i < n_instances; ++i)
+            {
+                glm::vec3 pos   = {posDist(gen), posDist(gen) + 10.0f, posDist(gen)};
+                glm::vec3 color = {colorDist(gen), colorDist(gen), colorDist(gen)};
+                glm::vec3 scale = glm::vec3(colorDist(gen) * 0.03f);
+                glm::vec3 axis  = {colorDist(gen), colorDist(gen), colorDist(gen)};
+                axis            = glm::normalize(2.0f * axis - 1.0f);
+                float angle     = atcg::Constants::two_pi<float>() * colorDist(gen);
+                transforms.push_back(glm::translate(pos) * glm::rotate(angle, axis) * glm::scale(scale));
+                colors.push_back(glm::vec4(color, 1));
+            }
+
+            atcg::ref_ptr<atcg::VertexBuffer> vbo_transforms =
+                atcg::make_ref<atcg::VertexBuffer>(transforms.data(), transforms.size() * sizeof(glm::mat4));
+            vbo_transforms->setLayout({{atcg::ShaderDataType::Mat4, "transform"}});
+            atcg::ref_ptr<atcg::VertexBuffer> vbo_colors =
+                atcg::make_ref<atcg::VertexBuffer>(colors.data(), colors.size() * sizeof(glm::vec4));
+            vbo_colors->setLayout({{atcg::ShaderDataType::Float4, "color"}});
+
+            auto entity = scene->createEntity("Instances");
+            entity.addComponent<atcg::TransformComponent>();
+            entity.addComponent<atcg::GeometryComponent>(sphere);
+            auto& instances = entity.addComponent<atcg::InstanceRenderComponent>();
+            instances.addInstanceBuffer(vbo_transforms);
+            instances.addInstanceBuffer(vbo_colors);
+        }
     }
 
     // This gets called each frame
