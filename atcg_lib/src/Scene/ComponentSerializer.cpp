@@ -37,6 +37,8 @@ namespace atcg
 #define POINT_SPHERE_RENDERER_KEY  "PointSphereRenderer"
 #define EDGE_RENDERER_KEY          "EdgeRenderer"
 #define EDGE_CYLINDER_RENDERER_KEY "EdgeCylinderRenderer"
+#define INSTANCE_RENDERER_KEY      "InstanceRenderer"
+#define INSTANCES_KEY              "Instances"
 #define COLOR_KEY                  "Color"
 #define POINT_SIZE_KEY             "PointSize"
 #define RADIUS_KEY                 "Radius"
@@ -57,6 +59,8 @@ namespace atcg
 #define RECEIVE_SHADOWS_KEY        "ReceiveShadow"
 #define SCRIPT_KEY                 "Script"
 #define RENDER_SCALE_KEY           "Scale"
+#define LAYOUT_KEY                 "Layout"
+#define PATH_KEY                   "Path"
 
 void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -229,6 +233,33 @@ Material ComponentSerializer::deserialize_material(const nlohmann::json& materia
     }
 
     return material;
+}
+
+nlohmann::json ComponentSerializer::serializeLayout(const atcg::BufferLayout& layout)
+{
+    nlohmann::json::array_t json_layout;
+    for(auto element: layout)
+    {
+        nlohmann::json::array_t json_element;
+        json_element.push_back((int)element.type);
+        json_element.push_back(element.name);
+
+        json_layout.push_back(json_element);
+    }
+
+    return json_layout;
+}
+
+atcg::BufferLayout ComponentSerializer::deserializeLayout(nlohmann::json& layout_node)
+{
+    std::vector<atcg::BufferElement> elements;
+    for(nlohmann::json::array_t element: layout_node)
+    {
+        atcg::BufferElement buffer_element((atcg::ShaderDataType)element[0], element[1]);
+        elements.push_back(buffer_element);
+    }
+
+    return atcg::BufferLayout(elements);
 }
 
 template<typename T>
@@ -408,6 +439,36 @@ void ComponentSerializer::serialize_component<EdgeCylinderRenderComponent>(const
 
     serializeMaterial(j[EDGE_CYLINDER_RENDERER_KEY], entity, component.material, file_path);
 }
+
+template<>
+void ComponentSerializer::serialize_component<InstanceRenderComponent>(const std::string& file_path,
+                                                                       Entity entity,
+                                                                       InstanceRenderComponent& component,
+                                                                       nlohmann::json& j)
+{
+    auto shader = component.shader ? component.shader : atcg::ShaderManager::getShader("instanced");
+    j[INSTANCE_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = shader->getVertexPath();
+    j[INSTANCE_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = shader->getFragmentPath();
+    j[INSTANCE_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = shader->getGeometryPath();
+    serializeMaterial(j[INSTANCE_RENDERER_KEY], entity, component.material, file_path);
+
+    IDComponent& id = entity.getComponent<IDComponent>();
+    nlohmann::json::array_t buffers;
+    for(int i = 0; i < component.instance_vbos.size(); ++i)
+    {
+        const char* buffer      = component.instance_vbos[i]->getHostPointer<char>();
+        std::string buffer_name = file_path + "." + std::to_string(id.ID()) + ".instance_" + std::to_string(i);
+        serializeBuffer(buffer_name, buffer, component.instance_vbos[i]->size());
+        nlohmann::json json_buffer;
+        json_buffer[PATH_KEY]   = buffer_name;
+        json_buffer[LAYOUT_KEY] = serializeLayout(component.instance_vbos[i]->getLayout());
+        buffers.push_back(json_buffer);
+        component.instance_vbos[i]->unmapHostPointers();
+    }
+
+    j[INSTANCE_RENDERER_KEY][INSTANCES_KEY] = buffers;
+}
+
 
 template<>
 void ComponentSerializer::serialize_component<PointLightComponent>(const std::string& file_path,
@@ -754,6 +815,64 @@ void ComponentSerializer::deserialize_component<EdgeCylinderRenderComponent>(con
         auto& material_node      = renderer[MATERIAL_KEY];
         Material material        = deserialize_material(material_node);
         renderComponent.material = material;
+    }
+}
+
+template<>
+void ComponentSerializer::deserialize_component<InstanceRenderComponent>(const std::string& file_path,
+                                                                         Entity entity,
+                                                                         nlohmann::json& j)
+{
+    if(!j.contains(INSTANCE_RENDERER_KEY))
+    {
+        return;
+    }
+
+    auto& renderer        = j[INSTANCE_RENDERER_KEY];
+    auto& renderComponent = entity.addComponent<InstanceRenderComponent>();
+    if(renderer.contains(MATERIAL_KEY))
+    {
+        auto& material_node      = renderer[MATERIAL_KEY];
+        Material material        = deserialize_material(material_node);
+        renderComponent.material = material;
+    }
+
+    std::string vertex_path =
+        renderer[SHADER_KEY].value(VERTEX_KEY, (atcg::shader_directory() / "instanced.vs").string());
+    std::string fragment_path =
+        renderer[SHADER_KEY].value(FRAGMENT_KEY, (atcg::shader_directory() / "instanced.fs").string());
+    std::string geometry_path = renderer[SHADER_KEY].value(GEOMETRY_KEY, "");
+
+    std::string shader_name = vertex_path.substr(vertex_path.find_last_of('/') + 1);
+    shader_name             = shader_name.substr(0, shader_name.find_first_of('.'));
+
+    if(ShaderManager::hasShader(shader_name))
+    {
+        renderComponent.shader = ShaderManager::getShader(shader_name);
+    }
+    else if(geometry_path != "")
+    {
+        renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path, geometry_path);
+    }
+    else
+    {
+        renderComponent.shader = atcg::make_ref<Shader>(vertex_path, fragment_path);
+    }
+
+    if(renderer.contains(INSTANCES_KEY))
+    {
+        nlohmann::json::array_t instances = renderer[INSTANCES_KEY];
+        renderComponent.instance_vbos.reserve(instances.size());
+
+        for(auto instance: instances)
+        {
+            std::string path                      = instance[PATH_KEY];
+            atcg::BufferLayout layout             = deserializeLayout(instance[LAYOUT_KEY]);
+            std::vector<uint8_t> buffer           = deserializeBuffer(path);
+            atcg::ref_ptr<atcg::VertexBuffer> vbo = atcg::make_ref<atcg::VertexBuffer>(buffer.data(), buffer.size());
+            vbo->setLayout(layout);
+            renderComponent.addInstanceBuffer(vbo);
+        }
     }
 }
 
