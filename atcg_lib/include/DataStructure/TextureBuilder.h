@@ -138,7 +138,7 @@ public:
     template<typename TextureT>
     ATCG_INLINE atcg::ref_ptr<TextureT> create()
     {
-        return TextureT::template create(_spec);
+        return TextureT::create(_spec);
     }
 
 private:
