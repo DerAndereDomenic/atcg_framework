@@ -1248,4 +1248,9 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 
     return data;
 }
+
+atcg::ref_ptr<ShaderManagerSystem> RendererSystem::getShaderManager() const
+{
+    return impl->shader_manager;
+}
 }    // namespace atcg
