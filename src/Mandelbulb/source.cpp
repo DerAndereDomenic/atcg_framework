@@ -28,11 +28,11 @@ public:
         auto shader = atcg::make_ref<atcg::Shader>("src/Mandelbulb/Mandelbulb.glsl");
         atcg::ShaderManager::addShader("Mandelbulb", shader);
 
-        atcg::TextureSpecification spec;
-        spec.width  = window->getWidth();
-        spec.height = window->getHeight();
-        spec.format = atcg::TextureFormat::RGBAFLOAT;
-        texture     = atcg::Texture2D::create(spec);
+        texture = atcg::TextureBuilder()
+                      .setWidth(window->getWidth())
+                      .setHeight(window->getHeight())
+                      .setFormat(atcg::TextureFormat::RGBAFLOAT)
+                      .create<atcg::Texture2D>();
 
         std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)),
                                               atcg::Vertex(glm::vec3(1.0f, -1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)),
