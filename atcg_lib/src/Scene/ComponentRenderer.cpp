@@ -104,16 +104,14 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
 
     auto scene = entity.scene();
 
-    atcg::ref_ptr<atcg::Shader> override_shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", nullptr);
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader);
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
     auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
     auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
-
-    auto shader = override_shader ? override_shader : renderer.shader;
 
     if(renderer.visible)
     {
@@ -180,16 +178,14 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
 
     auto scene = entity.scene();
 
-    atcg::ref_ptr<atcg::Shader> override_shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", nullptr);
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader);
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
     auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
     auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
-
-    auto shader = override_shader ? override_shader : renderer.shader;
 
     if(renderer.visible)
     {
@@ -256,16 +252,14 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
 
     auto scene = entity.scene();
 
-    atcg::ref_ptr<atcg::Shader> override_shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", nullptr);
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader);
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
     auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
     auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
-
-    auto shader = override_shader ? override_shader : renderer.shader;
 
     if(renderer.visible)
     {
@@ -332,16 +326,14 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
 
     auto scene = entity.scene();
 
-    atcg::ref_ptr<atcg::Shader> override_shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", nullptr);
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", atcg::ShaderManager::getShader("edge"));
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
     auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
     auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
-
-    auto shader = override_shader ? override_shader : atcg::ShaderManager::getShader("edge");
 
     if(renderer.visible)
     {
@@ -407,16 +399,14 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
 
     auto scene = entity.scene();
 
-    atcg::ref_ptr<atcg::Shader> override_shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", nullptr);
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", atcg::ShaderManager::getShader("cylinder_edge"));
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
     auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
     auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
-
-    auto shader = override_shader ? override_shader : atcg::ShaderManager::getShader("cylinder_edge");
 
     if(renderer.visible)
     {
@@ -479,32 +469,56 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
     geometry.graph->unmapAllPointers();
 
     // Actual rendering of component
-    // TODO
-    //  InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
+    InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
 
-    // auto shader = override_shader ? override_shader : shader_manager->getShader("instanced");
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", atcg::ShaderManager::getShader("instanced"));
 
-    // if(renderer.visible)
-    // {
-    //     if(geometry.graph->getVerticesArray()->peekVertexBuffer() != renderer.instance_vbo)
-    //     {
-    //         geometry.graph->getVerticesArray()->pushInstanceBuffer(renderer.instance_vbo);
-    //     }
+    auto point_light_depth_maps =
+        auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
 
-    //     shader->setInt("entityID", entity_id);
-    //     setMaterial(renderer.material, shader);
-    //     atcg::ref_ptr<VertexArray> vao_mesh      = geometry.graph->getVerticesArray();
-    //     atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
-    //     uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
-    //     drawVAO(vao_mesh,
-    //             camera,
-    //             glm::vec3(1),
-    //             shader,
-    //             transform.getModel(),
-    //             GL_TRIANGLES,
-    //             geometry.graph->n_vertices(),
-    //             n_instances);
-    //     freeTextureUnits();
-    // }
+    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", _dummy_skybox);
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
+
+    auto scene = entity.scene();
+
+    if(renderer.visible)
+    {
+        auto vao = geometry.graph->getVerticesArray();
+        for(int i = 0; i < renderer.instance_vbos.size(); ++i)
+        {
+            vao->pushInstanceBuffer(renderer.instance_vbos[i]);
+        }
+
+        uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
+        shader->setInt("use_ibl", has_skybox);
+        // shader->setInt("receive_shadow", (int)renderer.receive_shadow);
+        _renderer->draw(geometry.graph,
+                        camera,
+                        transform.getModel(),
+                        glm::vec3(1),
+                        shader,
+                        atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED,
+                        renderer.material,
+                        entity.entity_handle());
+        if(id != -1)
+        {
+            _renderer->pushTextureID(id);
+        }
+        if(ir_id != -1)
+        {
+            _renderer->pushTextureID(ir_id);
+        }
+        if(pre_id != -1)
+        {
+            _renderer->pushTextureID(pre_id);
+        }
+
+        for(int i = 0; i < renderer.instance_vbos.size(); ++i)
+        {
+            vao->popVertexBuffer();
+        }
+    }
 }
 }    // namespace atcg
