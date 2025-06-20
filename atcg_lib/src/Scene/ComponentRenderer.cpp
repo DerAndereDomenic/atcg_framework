@@ -327,7 +327,8 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
     auto scene = entity.scene();
 
     atcg::ref_ptr<atcg::Shader> shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", atcg::ShaderManager::getShader("edge"));
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader",
+                                                    _renderer->getShaderManager()->getShader("edge"));
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
@@ -400,7 +401,8 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
     auto scene = entity.scene();
 
     atcg::ref_ptr<atcg::Shader> shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", atcg::ShaderManager::getShader("cylinder_edge"));
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader",
+                                                    _renderer->getShaderManager()->getShader("cylinder_edge"));
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
@@ -471,7 +473,7 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
     // Actual rendering of component
     InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
 
-    auto override_shader = renderer.shader ? renderer.shader : atcg::ShaderManager::getShader("instanced");
+    auto override_shader = renderer.shader ? renderer.shader : _renderer->getShaderManager()->getShader("instanced");
 
     atcg::ref_ptr<atcg::Shader> shader =
         auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", override_shader);
