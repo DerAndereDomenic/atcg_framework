@@ -134,9 +134,11 @@ struct BufferElement
 class BufferLayout
 {
 public:
-    BufferLayout() {}
+    BufferLayout() = default;
 
     BufferLayout(std::initializer_list<BufferElement> elements) : _elements(elements) { calculateOffsetAndStride(); }
+
+    BufferLayout(const std::vector<BufferElement>& elements) : _elements(elements) { calculateOffsetAndStride(); }
 
     uint32_t getStride() const { return _stride; }
 
