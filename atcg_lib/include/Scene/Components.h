@@ -325,6 +325,7 @@ struct InstanceRenderComponent : public RenderComponent
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Instance Renderer"; }
 
     std::vector<atcg::ref_ptr<VertexBuffer>> instance_vbos;
+    atcg::ref_ptr<atcg::Shader> shader = nullptr;
     Material material;
 };
 

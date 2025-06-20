@@ -471,8 +471,10 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
     // Actual rendering of component
     InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
 
+    auto override_shader = renderer.shader ? renderer.shader : atcg::ShaderManager::getShader("instanced");
+
     atcg::ref_ptr<atcg::Shader> shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", atcg::ShaderManager::getShader("instanced"));
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", override_shader);
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
