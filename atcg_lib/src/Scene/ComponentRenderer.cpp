@@ -489,6 +489,7 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
         auto vao = geometry.graph->getVerticesArray();
         for(int i = 0; i < renderer.instance_vbos.size(); ++i)
         {
+            renderer.instance_vbos[i]->unmapPointers();
             vao->pushInstanceBuffer(renderer.instance_vbos[i]);
         }
 
