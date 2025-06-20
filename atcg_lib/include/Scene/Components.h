@@ -327,6 +327,7 @@ struct InstanceRenderComponent : public RenderComponent
     std::vector<atcg::ref_ptr<VertexBuffer>> instance_vbos;
     atcg::ref_ptr<atcg::Shader> shader = nullptr;
     Material material;
+    bool receive_shadow = true;
 };
 
 struct CustomRenderComponent : public RenderComponent

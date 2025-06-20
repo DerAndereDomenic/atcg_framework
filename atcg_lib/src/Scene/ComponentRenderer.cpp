@@ -498,7 +498,7 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
-        // shader->setInt("receive_shadow", (int)renderer.receive_shadow);
+        shader->setInt("receive_shadow", (int)renderer.receive_shadow);
         _renderer->draw(geometry.graph,
                         camera,
                         transform.getModel(),
