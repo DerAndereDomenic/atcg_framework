@@ -319,16 +319,12 @@ struct EdgeCylinderRenderComponent : public RenderComponent
 struct InstanceRenderComponent : public RenderComponent
 {
     InstanceRenderComponent() : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED) {}
-    InstanceRenderComponent(const std::vector<atcg::Instance>& instances)
-        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED)
-    {
-        instance_vbo = atcg::make_ref<VertexBuffer>((void*)instances.data(), instances.size() * sizeof(atcg::Instance));
-        instance_vbo->setLayout({{atcg::ShaderDataType::Mat4, "aModel"}, {atcg::ShaderDataType::Float3, "aColor"}});
-    }
+
+    void addInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& instance_vbo) { instance_vbos.push_back(instance_vbo); }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Instance Renderer"; }
 
-    atcg::ref_ptr<VertexBuffer> instance_vbo;
+    std::vector<atcg::ref_ptr<VertexBuffer>> instance_vbos;
     Material material;
 };
 
