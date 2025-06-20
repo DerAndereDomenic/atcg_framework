@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added serialization for InstanceRenderComponents
 - Added possibility to attach multiple vbos to a InstanceRenderComponent
 - Added python bindings for vertex buffers and related structures
+- Added a TextureBuilder class to improve texture instantiation
 
 ### Changed
 
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.2.1-beta]
 
 ### Fixed
+
 - Fixed bad any_cast in screenshot function
 
 ## [0.2.0-beta]
