@@ -1,5 +1,6 @@
 #include <Integrator/PathtracingIntegrator.h>
 
+#include <Core/Path.h>
 #include <Core/Assert.h>
 #include <Core/CUDA.h>
 #include <Core/Common.h>
@@ -52,6 +53,70 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
     shape_instance->initializePipeline(pipeline, sbt);
 
     _shapes.push_back(shape_instance);
+}
+
+template<>
+void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
+    Entity entity,
+    const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+    const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    if(!entity.hasComponent<PointSphereRenderComponent>()) return;
+
+    PointSphereRenderComponent& component = entity.getComponent<PointSphereRenderComponent>();
+
+    auto& transform            = entity.getComponent<TransformComponent>();
+    glm::mat4 global_transform = transform.getModel();
+    auto& material             = component.material;
+
+    auto graph                 = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
+    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
+    shape->initializePipeline(pipeline, sbt);
+    shape->prepareAccelerationStructure(_context);
+
+    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
+    bsdf->initializePipeline(pipeline, sbt);
+
+    auto mesh            = entity.getComponent<GeometryComponent>().graph;
+    uint32_t n_instances = mesh->n_vertices();
+
+    torch::Tensor offsets = mesh->getHostPositions();
+    torch::Tensor colors  = mesh->getHostColors();
+
+    // Logic from base.fs
+    glm::vec3 scale_model =
+        glm::vec3(glm::length(global_transform[0]), glm::length(global_transform[1]), glm::length(global_transform[2]));
+    glm::vec3 scale_point     = glm::vec3(component.point_size);
+    glm::mat4 inv_scale_model = glm::mat4(1);
+    inv_scale_model[0][0]     = 1.0 / scale_model.x;
+    inv_scale_model[1][1]     = 1.0 / scale_model.y;
+    inv_scale_model[2][2]     = 1.0 / scale_model.z;
+
+    glm::mat4 scale_primitive = glm::mat4(1);
+    scale_primitive[0][0]     = scale_point.x;
+    scale_primitive[1][1]     = scale_point.y;
+    scale_primitive[2][2]     = scale_point.z;
+    for(int i = 0; i < n_instances; ++i)
+    {
+        glm::vec3 offset =
+            glm::vec3(offsets[i][0].item<float>(), offsets[i][1].item<float>(), offsets[i][2].item<float>());
+        glm::vec3 color = glm::vec3(colors[i][0].item<float>(), colors[i][1].item<float>(), colors[i][2].item<float>());
+        glm::mat4 total_transform = glm::translate(glm::vec3(global_transform * glm::vec4(offset, 0))) *
+                                    global_transform * inv_scale_model * scale_primitive;
+
+        Dictionary shape_data;
+        shape_data.setValue("shape", shape);
+        shape_data.setValue("bsdf", bsdf);
+        shape_data.setValue("transform", total_transform);
+        shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
+        shape_data.setValue("color", color);
+        auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
+        shape_instance->initializePipeline(pipeline, sbt);
+
+        _shapes.push_back(shape_instance);
+    }
+
+    mesh->unmapAllHostPointers();
 }
 
 template<>
