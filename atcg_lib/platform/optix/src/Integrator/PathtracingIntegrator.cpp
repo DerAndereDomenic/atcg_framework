@@ -33,8 +33,12 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
 {
     if(!entity.hasComponent<MeshRenderComponent>()) return;
 
+    MeshRenderComponent& component = entity.getComponent<MeshRenderComponent>();
+
+    if(!component.visible) return;
+
     auto& transform = entity.getComponent<TransformComponent>();
-    auto& material  = entity.getComponent<MeshRenderComponent>().material;
+    auto& material  = component.material;
 
     auto graph                 = entity.getComponent<GeometryComponent>().graph;
     atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
@@ -64,6 +68,8 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
     if(!entity.hasComponent<PointSphereRenderComponent>()) return;
 
     PointSphereRenderComponent& component = entity.getComponent<PointSphereRenderComponent>();
+
+    if(!component.visible) return;
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
@@ -128,6 +134,8 @@ void PathtracingIntegrator::prepareComponent<EdgeCylinderRenderComponent>(
     if(!entity.hasComponent<EdgeCylinderRenderComponent>()) return;
 
     EdgeCylinderRenderComponent& component = entity.getComponent<EdgeCylinderRenderComponent>();
+
+    if(!component.visible) return;
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
@@ -207,6 +215,8 @@ void PathtracingIntegrator::prepareComponent<InstanceRenderComponent>(Entity ent
     if(!entity.hasComponent<InstanceRenderComponent>()) return;
 
     InstanceRenderComponent& component = entity.getComponent<InstanceRenderComponent>();
+
+    if(!component.visible) return;
 
     if(component.instance_vbos.size() != 2)
     {
