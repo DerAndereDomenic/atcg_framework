@@ -821,6 +821,78 @@ bool ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
         }
     }
 
+    ImGui::Separator();
+
+    updated = ImGui::Checkbox("Emissive", &material.emissive) || updated;
+
+    if(material.emissive)
+    {
+        auto spec        = material.getEmissiveTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        updated = ImGui::DragFloat("Scaling", &material.emission_scale, 0.005f, 0.0f, FLT_MAX) || updated;
+
+        if(!useTextures)
+        {
+            auto diffuse = material.getEmissiveTexture()->getData(atcg::CPU);
+
+            float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 1}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 2}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 3}).item<float>() / 255.0f};
+
+            if(ImGui::ColorEdit4(("Emissive##" + key).c_str(), color))
+            {
+                glm::vec4 new_color = glm::make_vec4(color);
+                material.setEmissiveColor(new_color);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##emissive" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                        pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                        pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0], 2.2f);
+                    auto texture = atcg::Texture2D::create(img);
+                    material.setEmissiveTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("Emissive Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##emissive" + key).c_str()))
+            {
+                material.setEmissiveColor(glm::vec4(1));
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material.getEmissiveTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+
     return updated;
 }
 }    // namespace atcg
