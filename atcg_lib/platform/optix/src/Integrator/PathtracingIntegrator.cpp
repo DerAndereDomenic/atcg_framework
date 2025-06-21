@@ -10,6 +10,7 @@
 #include <Shape/ShapeInstance.h>
 #include <Shape/MeshShape.h>
 #include <BSDF/PBRBSDF.h>
+#include <DataStructure/WorkerPool.h>
 
 #include <optix_stubs.h>
 
@@ -102,25 +103,54 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
     scale_primitive[0][0]     = scale_point.x;
     scale_primitive[1][1]     = scale_point.y;
     scale_primitive[2][2]     = scale_point.z;
+
+    std::vector<atcg::ref_ptr<ShapeInstance>> new_shapes(n_instances);
+
+    atcg::WorkerPool pool(32);
+    pool.start();
+
     for(int i = 0; i < n_instances; ++i)
     {
-        glm::vec3 offset =
-            glm::vec3(offsets[i][0].item<float>(), offsets[i][1].item<float>(), offsets[i][2].item<float>());
-        glm::vec3 color = glm::vec3(colors[i][0].item<float>(), colors[i][1].item<float>(), colors[i][2].item<float>());
-        glm::mat4 total_transform = glm::translate(glm::vec3(global_transform * glm::vec4(offset, 0))) *
-                                    global_transform * inv_scale_model * scale_primitive;
+        pool.pushJob(
+            [offsets,
+             colors,
+             i,
+             &global_transform,
+             &inv_scale_model,
+             &scale_primitive,
+             shape,
+             bsdf,
+             entity,
+             &new_shapes]()
+            {
+                glm::vec3 offset =
+                    glm::vec3(offsets[i][0].item<float>(), offsets[i][1].item<float>(), offsets[i][2].item<float>());
+                glm::vec3 color =
+                    glm::vec3(colors[i][0].item<float>(), colors[i][1].item<float>(), colors[i][2].item<float>());
+                glm::mat4 total_transform = glm::translate(glm::vec3(global_transform * glm::vec4(offset, 0))) *
+                                            global_transform * inv_scale_model * scale_primitive;
 
-        Dictionary shape_data;
-        shape_data.setValue("shape", shape);
-        shape_data.setValue("bsdf", bsdf);
-        shape_data.setValue("transform", total_transform);
-        shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-        shape_data.setValue("color", color);
-        auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
-        shape_instance->initializePipeline(pipeline, sbt);
+                Dictionary shape_data;
+                shape_data.setValue("shape", shape);
+                shape_data.setValue("bsdf", bsdf);
+                shape_data.setValue("transform", total_transform);
+                shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
+                shape_data.setValue("color", color);
+                auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
 
-        _shapes.push_back(shape_instance);
+                new_shapes[i] = shape_instance;
+            });
     }
+
+    pool.waitDone();
+
+    // Not thread safe
+    for(auto shape_instance: new_shapes)
+    {
+        shape_instance->initializePipeline(pipeline, sbt);
+    }
+
+    _shapes.insert(_shapes.end(), new_shapes.begin(), new_shapes.end());
 
     mesh->unmapAllHostPointers();
 }
@@ -155,54 +185,72 @@ void PathtracingIntegrator::prepareComponent<EdgeCylinderRenderComponent>(
     torch::Tensor positions = mesh->getHostPositions();
     torch::Tensor indices   = mesh->getHostEdges();
 
+    std::vector<atcg::ref_ptr<ShapeInstance>> new_shapes(n_instances);
+
+    atcg::WorkerPool pool(32);
+    pool.start();
+
     // Logic from cylinder_edge.vs
     for(int i = 0; i < n_instances; ++i)
     {
-        int edge_x = int(indices[i][0].item<float>());
-        int edge_y = int(indices[i][1].item<float>());
-        glm::vec3 edge_color =
-            glm::vec3(indices[i][2].item<float>(), indices[i][3].item<float>(), indices[i][4].item<float>());
-        float edge_radius        = indices[i][5].item<float>();
-        glm::vec3 aInstanceStart = glm::vec3(global_transform * glm::vec4(positions[edge_x][0].item<float>(),
-                                                                          positions[edge_x][1].item<float>(),
-                                                                          positions[edge_x][2].item<float>(),
-                                                                          1));
+        pool.pushJob(
+            [indices, positions, i, &global_transform, &component, shape, bsdf, entity, &new_shapes]()
+            {
+                int edge_x = int(indices[i][0].item<float>());
+                int edge_y = int(indices[i][1].item<float>());
+                glm::vec3 edge_color =
+                    glm::vec3(indices[i][2].item<float>(), indices[i][3].item<float>(), indices[i][4].item<float>());
+                float edge_radius        = indices[i][5].item<float>();
+                glm::vec3 aInstanceStart = glm::vec3(global_transform * glm::vec4(positions[edge_x][0].item<float>(),
+                                                                                  positions[edge_x][1].item<float>(),
+                                                                                  positions[edge_x][2].item<float>(),
+                                                                                  1));
 
-        glm::vec3 aInstanceEnd = glm::vec3(global_transform * glm::vec4(positions[edge_y][0].item<float>(),
-                                                                        positions[edge_y][1].item<float>(),
-                                                                        positions[edge_y][2].item<float>(),
-                                                                        1));
+                glm::vec3 aInstanceEnd = glm::vec3(global_transform * glm::vec4(positions[edge_y][0].item<float>(),
+                                                                                positions[edge_y][1].item<float>(),
+                                                                                positions[edge_y][2].item<float>(),
+                                                                                1));
 
-        glm::vec3 axis         = (aInstanceEnd - aInstanceStart);
-        glm::vec3 middle_point = aInstanceStart + axis / 2.0f;
+                glm::vec3 axis         = (aInstanceEnd - aInstanceStart);
+                glm::vec3 middle_point = aInstanceStart + axis / 2.0f;
 
-        glm::mat4 model_scale = glm::mat4(edge_radius * component.radius);
-        model_scale[1].y      = length(axis) / 2.0;
-        model_scale[3].w      = 1;
+                glm::mat4 model_scale = glm::mat4(edge_radius * component.radius);
+                model_scale[1].y      = length(axis) / 2.0;
+                model_scale[3].w      = 1;
 
-        glm::mat4 model_translate = glm::mat4(1);
-        model_translate[3]        = glm::vec4(middle_point, 1);
+                glm::mat4 model_translate = glm::mat4(1);
+                model_translate[3]        = glm::vec4(middle_point, 1);
 
-        axis        = glm::normalize(axis);
-        glm::vec3 x = glm::normalize(glm::cross(glm::vec3(0, axis.z, 1.0f - axis.z), axis));
-        glm::vec3 z = glm::normalize(glm::cross(x, axis));
+                axis        = glm::normalize(axis);
+                glm::vec3 x = glm::normalize(glm::cross(glm::vec3(0, axis.z, 1.0f - axis.z), axis));
+                glm::vec3 z = glm::normalize(glm::cross(x, axis));
 
-        glm::mat4 model_rotation =
-            glm::mat4(glm::vec4(x, 0), glm::vec4(axis, 0), glm::vec4(z, 0), glm::vec4(0, 0, 0, 1));
+                glm::mat4 model_rotation =
+                    glm::mat4(glm::vec4(x, 0), glm::vec4(axis, 0), glm::vec4(z, 0), glm::vec4(0, 0, 0, 1));
 
-        glm::mat4 model_edge = model_translate * model_rotation * model_scale;
+                glm::mat4 model_edge = model_translate * model_rotation * model_scale;
 
-        Dictionary shape_data;
-        shape_data.setValue("shape", shape);
-        shape_data.setValue("bsdf", bsdf);
-        shape_data.setValue("transform", model_edge);
-        shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-        shape_data.setValue("color", edge_color);
-        auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
-        shape_instance->initializePipeline(pipeline, sbt);
+                Dictionary shape_data;
+                shape_data.setValue("shape", shape);
+                shape_data.setValue("bsdf", bsdf);
+                shape_data.setValue("transform", model_edge);
+                shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
+                shape_data.setValue("color", edge_color);
+                auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
 
-        _shapes.push_back(shape_instance);
+                new_shapes[i] = shape_instance;
+            });
     }
+
+    pool.waitDone();
+
+    // Not thread safe
+    for(auto shape_instance: new_shapes)
+    {
+        shape_instance->initializePipeline(pipeline, sbt);
+    }
+
+    _shapes.insert(_shapes.end(), new_shapes.begin(), new_shapes.end());
 
     mesh->unmapAllHostPointers();
 }
@@ -246,19 +294,37 @@ void PathtracingIntegrator::prepareComponent<InstanceRenderComponent>(Entity ent
     glm::mat4* transforms = transform_vbo->getHostPointer<glm::mat4>();
     glm::vec4* colors     = color_vbo->getHostPointer<glm::vec4>();
 
+    std::vector<atcg::ref_ptr<ShapeInstance>> new_shapes(n_instances);
+
+    atcg::WorkerPool pool(32);
+    pool.start();
+
     for(int i = 0; i < n_instances; ++i)
     {
-        Dictionary shape_data;
-        shape_data.setValue("shape", shape);
-        shape_data.setValue("bsdf", bsdf);
-        shape_data.setValue("transform", global_transform * transforms[i]);
-        shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-        shape_data.setValue<glm::vec3>("color", glm::vec3(colors[i]));
-        auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
-        shape_instance->initializePipeline(pipeline, sbt);
+        pool.pushJob(
+            [shape, bsdf, &global_transform, i, transforms, colors, &new_shapes, entity]()
+            {
+                Dictionary shape_data;
+                shape_data.setValue("shape", shape);
+                shape_data.setValue("bsdf", bsdf);
+                shape_data.setValue("transform", global_transform * transforms[i]);
+                shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
+                shape_data.setValue<glm::vec3>("color", glm::vec3(colors[i]));
+                auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
 
-        _shapes.push_back(shape_instance);
+                new_shapes[i] = shape_instance;
+            });
     }
+
+    pool.waitDone();
+
+    // Not thread safe
+    for(auto shape_instance: new_shapes)
+    {
+        shape_instance->initializePipeline(pipeline, sbt);
+    }
+
+    _shapes.insert(_shapes.end(), new_shapes.begin(), new_shapes.end());
 
     transform_vbo->unmapHostPointers();
     color_vbo->unmapHostPointers();
@@ -304,8 +370,6 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         prepareComponent<EdgeCylinderRenderComponent>(entity, pipeline, sbt);
         prepareComponent<InstanceRenderComponent>(entity, pipeline, sbt);
     }
-
-    std::cout << _shapes.size() << "\n";
 
     const std::string ptx_raygen_filename = "./bin/PathtracingIntegrator_ptx.ptx";
     OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
