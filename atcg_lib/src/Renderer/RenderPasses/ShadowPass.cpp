@@ -2,14 +2,22 @@
 
 #include <Renderer/Renderer.h>
 #include <Scene/Components.h>
+#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
 ShadowPass::ShadowPass() : RenderPass("ShadowPass")
 {
     registerOutput("point_light_depth_maps", atcg::make_ref<atcg::ref_ptr<atcg::TextureCubeArray>>(nullptr));
-    setSetupFunction([](Dictionary&, Dictionary& data, Dictionary& output_data)
-                     { data.setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024)); });
+    setSetupFunction(
+        [](Dictionary& context, Dictionary& data, Dictionary& output_data)
+        {
+            auto renderer =
+                context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
+            data.setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024));
+            auto component_renderer = atcg::make_ref<atcg::ComponentRenderer>(renderer);
+            data.setValue("component_renderer", std::move(component_renderer));
+        });
     setRenderFunction(
         [](Dictionary& context, const Dictionary&, Dictionary& data, Dictionary& output_data)
         {
@@ -21,7 +29,7 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
             float f              = 100.0f;
             glm::mat4 projection = glm::perspective(glm::radians(90.0f), 1.0f, n, f);
 
-            const atcg::ref_ptr<Shader>& depth_pass_shader = atcg::ShaderManager::getShader("depth_pass");
+            const atcg::ref_ptr<Shader>& depth_pass_shader = renderer->getShaderManager()->getShader("depth_pass");
             depth_pass_shader->setFloat("far_plane", f);
 
             uint32_t active_fbo = atcg::Framebuffer::currentFramebuffer();
@@ -103,23 +111,19 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
                                                                     glm::vec3(0.0, -1.0, 0.0)));
                 depth_pass_shader->setInt("light_idx", light_idx);
 
-                const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent,
-                                                             atcg::GeometryComponent,
-                                                             atcg::MeshRenderComponent>();
+                auto component_renderer = data.getValue<atcg::ref_ptr<ComponentRenderer>>("component_renderer");
+                auto camera             = context.getValue<atcg::ref_ptr<Camera>>("camera");
+
+                const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
                 // Draw scene
+                Dictionary auxiliary;
+                auxiliary.setValue("override_shader", depth_pass_shader);
                 for(auto e: view)
                 {
                     atcg::Entity entity(e, scene);
 
-                    auto& transform = entity.getComponent<atcg::TransformComponent>();
-                    auto& geometry  = entity.getComponent<atcg::GeometryComponent>();
-
-                    renderer->draw(geometry.graph,
-                                   context.getValue<atcg::ref_ptr<Camera>>("camera"),
-                                   transform.getModel(),
-                                   glm::vec3(1),
-                                   depth_pass_shader);
+                    component_renderer->renderComponent<MeshRenderComponent>(entity, camera, auxiliary);
                 }
 
                 ++light_idx;
