@@ -153,9 +153,14 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_point_sphere_renderer  = py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent");              \
     auto m_edge_renderer          = py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent");                            \
     auto m_edge_cylinder_renderer = py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent");            \
-    auto m_name                   = py::class_<atcg::NameComponent>(m, "NameComponent");                                        \
-    auto m_point_light            = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                            \
-    auto m_script_component       = py::class_<atcg::ScriptComponent>(m, "ScriptComponent");                                    \
+    auto m_instance_renderer      = py::class_<atcg::InstanceRenderComponent>(m, "InstanceRenderComponent");                    \
+    auto m_vertex_buffer    = py::class_<atcg::VertexBuffer, atcg::ref_ptr<atcg::VertexBuffer>>(m, "VertexBuffer");             \
+    auto m_buffer_layout    = py::class_<atcg::BufferLayout>(m, "BufferLayout");                                                \
+    auto m_buffer_element   = py::class_<atcg::BufferElement>(m, "BufferElement");                                              \
+    auto m_shader_data_type = py::enum_<atcg::ShaderDataType>(m, "ShaderDataType");                                             \
+    auto m_name             = py::class_<atcg::NameComponent>(m, "NameComponent");                                              \
+    auto m_point_light      = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                                  \
+    auto m_script_component = py::class_<atcg::ScriptComponent>(m, "ScriptComponent");                                          \
     auto m_scene_hierarchy_panel =                                                                                              \
         py::class_<atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>>(m, "SceneHierarchyPanel");                             \
     auto m_hit_info          = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                \
@@ -1045,6 +1050,56 @@ inline void defineBindings(py::module_& m)
         .def("useDefault", &atcg::Framebuffer::useDefault)
         .def("complete", &atcg::Framebuffer::complete);
 
+    m_vertex_buffer.def(py::init<>())
+        .def(py::init<size_t>(), "size"_a)
+        .def(py::init(
+                 [](py::buffer buffer)
+                 {
+                     py::buffer_info info = buffer.request();
+                     return atcg::make_ref<atcg::VertexBuffer>(info.ptr, info.size * info.itemsize);
+                 }),
+
+             "data"_a)
+        .def(
+            "setData",
+            [](const atcg::ref_ptr<atcg::VertexBuffer>& vbo, py::buffer buffer)
+            {
+                py::buffer_info info = buffer.request();
+                vbo->setData(info.ptr, info.size * info.itemsize);
+            },
+            "data"_a)
+        .def("use", &atcg::VertexBuffer::use)
+        .def("resize", &atcg::VertexBuffer::resize, "size"_a)
+        .def("getLayout", &atcg::VertexBuffer::getLayout)
+        .def("setLayout", &atcg::VertexBuffer::setLayout, "setLayout"_a)
+        .def("size", &atcg::VertexBuffer::size)
+        .def("capacity", &atcg::VertexBuffer::capacity)
+        .def("ID", &atcg::VertexBuffer::ID);
+
+    m_buffer_layout.def(py::init<>())
+        .def(py::init<const std::vector<atcg::BufferElement>&>(), "elements_a")
+        .def("getStride", &atcg::BufferLayout::getStride)
+        .def("getElements", &atcg::BufferLayout::getElements);
+
+    m_buffer_element.def(py::init<>())
+        .def(py::init<atcg::ShaderDataType, std::string>(), "type"_a, "name"_a)
+        .def("getStgetComponentCountride", &atcg::BufferElement::getComponentCount);
+
+    m_shader_data_type.value("None", atcg::ShaderDataType::None)
+        .value("Float", atcg::ShaderDataType::Float)
+        .value("Float2", atcg::ShaderDataType::Float2)
+        .value("Float3", atcg::ShaderDataType::Float3)
+        .value("Float4", atcg::ShaderDataType::Float4)
+        .value("Mat3", atcg::ShaderDataType::Mat3)
+        .value("Mat4", atcg::ShaderDataType::Mat4)
+        .value("Int", atcg::ShaderDataType::Int)
+        .value("Int2", atcg::ShaderDataType::Int2)
+        .value("Int3", atcg::ShaderDataType::Int3)
+        .value("Int4", atcg::ShaderDataType::Int4)
+        .value("Bool", atcg::ShaderDataType::Bool)
+        .export_values();
+
+
     // ------------------- Scene ---------------------------------
     m_entity_handle.def(py::init<uint32_t>(), "handle"_a);
 
@@ -1104,6 +1159,11 @@ inline void defineBindings(py::module_& m)
     m_edge_cylinder_renderer.def(py::init<float>(), "radius"_a)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
         .def_readwrite("material", &atcg::EdgeCylinderRenderComponent::material);
+
+    m_instance_renderer.def(py::init<>())
+        .def_readwrite("visible", &atcg::InstanceRenderComponent::visible)
+        .def_readwrite("material", &atcg::InstanceRenderComponent::material)
+        .def_readwrite("instances", &atcg::InstanceRenderComponent::instance_vbos);
 
     m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def("name", &atcg::NameComponent::name);
 
@@ -1199,6 +1259,13 @@ inline void defineBindings(py::module_& m)
             [](atcg::Entity& entity, atcg::EdgeCylinderRenderComponent& component)
             { return entity.replaceComponent<atcg::EdgeCylinderRenderComponent>(component); },
             "component"_a)
+        .def("addInstanceRenderComponent",
+             [](atcg::Entity& entity) { return entity.addComponent<atcg::InstanceRenderComponent>(); })
+        .def(
+            "replaceInstanceRenderComponent",
+            [](atcg::Entity& entity, atcg::InstanceRenderComponent& component)
+            { return entity.replaceComponent<atcg::InstanceRenderComponent>(component); },
+            "component"_a)
         .def(
             "addPointLightComponent",
             [](atcg::Entity& entity, float intensity, const glm::vec3& color)
@@ -1229,6 +1296,7 @@ inline void defineBindings(py::module_& m)
         .def("hasPointSphereRenderComponent", &atcg::Entity::hasComponent<atcg::PointSphereRenderComponent>)
         .def("hasEdgeRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeRenderComponent>)
         .def("hasEdgeCylinderRenderComponent", &atcg::Entity::hasComponent<atcg::EdgeCylinderRenderComponent>)
+        .def("hasInstanceRenderComponent", &atcg::Entity::hasComponent<atcg::InstanceRenderComponent>)
         .def("hasPointLightComponent", &atcg::Entity::hasComponent<atcg::PointLightComponent>)
         .def("hasNameComponent", &atcg::Entity::hasComponent<atcg::NameComponent>)
         .def("hasScriptComponent", &atcg::Entity::hasComponent<atcg::ScriptComponent>)
@@ -1240,6 +1308,7 @@ inline void defineBindings(py::module_& m)
         .def("getEdgeRenderComponent", &atcg::Entity::getComponent<atcg::EdgeRenderComponent>)
         .def("getPointLightComponent", &atcg::Entity::getComponent<atcg::PointLightComponent>)
         .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
+        .def("getInstanceRenderComponent", &atcg::Entity::getComponent<atcg::InstanceRenderComponent>)
         .def("getScriptComponent", &atcg::Entity::getComponent<atcg::ScriptComponent>)
         .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>);
 

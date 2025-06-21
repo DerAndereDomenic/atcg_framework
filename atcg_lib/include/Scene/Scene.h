@@ -13,6 +13,10 @@
 
 #include <memory>
 #include <entt.hpp>
+
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2024
+
 namespace atcg
 {
 class Entity;

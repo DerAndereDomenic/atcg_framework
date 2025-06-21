@@ -5,6 +5,9 @@
 
 #include <entt.hpp>
 
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2024
+
 namespace atcg
 {
 struct IDComponent;
@@ -185,10 +188,10 @@ public:
 
     /**
      * @brief Get a pointer to the scene this entity belongs to
-     * 
+     *
      * @return The scene
      */
-    ATCG_INLINE Scene* scene() const {return _scene;}
+    ATCG_INLINE Scene* scene() const { return _scene; }
 
     /**
      * @brief Check if this is an empty entity

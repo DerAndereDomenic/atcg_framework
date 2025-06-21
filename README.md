@@ -13,7 +13,7 @@ This framework is primarily tested on Windows using MSVC. For Linux, gcc is reco
 After installing the dependencies, clone the repository recursively (to include submodules)
 
 ```
-git clone --recursive https://grossglockner.cs.uni-bonn.de/zingsheim/atcg_framework.git
+git clone --recursive https://github.com/DerAndereDomenic/atcg_framework.git
 ```
 
 If you already cloned the repository without recursive cloning, run
@@ -114,7 +114,7 @@ Run the `atcg_lib_test` target to run the tests.
 
 ## Project Structure
 
-The code base is based on the [Hazel Game Engine](https://github.com/TheCherno/Hazel). The framework also includes several dependencies that are used to implement different computer graphics algorithms.
+This framework includes several dependencies that are used to implement different computer graphics algorithms.
 The project consists of the following components:
 
 -**atcg_lib**: This library handles the rendering and event handling of the application. It defines an entry point for each application that uses this library. Each executable uses this entry point to build its application.
@@ -138,8 +138,6 @@ You can edit shaders while the program is running!
 -**res**: Contains resources (meshes and textures)
 
 -**external**: Contains the exernal libraries used in this framework. There is no need to install any external libraries (except for OpenGL/Driver and torch) as all dependencies come with this repository.
-
--**python**: Contains the python bindings.
 
 -**tests**: Contains the tests.
 
@@ -197,7 +195,7 @@ public:
         //Any physics based updates and rendering is handled here
 
         //...
-        atcg::Renderer::draw(scene, camera_controller->getCamera());
+        scene->draw(camera_controller->getCamera());
     }
 
     //All draw calls to ImGui to create a user interface
@@ -353,7 +351,14 @@ There is also a CUDA API for textures. However, because textures work differentl
 - [stbimage](https://github.com/nothings/stb) - For image I/O.
 - [tinyobjloader](https://github.com/tinyobjloader/tinyobjloader) - For loading obj meshes.
 - [json](https://github.com/nlohmann/json) - For serializing JSON files.
-- [charonload_cpp](https://github.com/nlohmann/json) - For torch integration. This needs to be installed via pip if you want to use python bindings.
+- [charonload_cpp](https://github.com/vc-bonn/charonload) - For torch integration. This needs to be installed via pip if you want to use python bindings.
 - [openvr](https://github.com/ValveSoftware/openvr) - For VR support.
 - [googletest](https://github.com/google/googletest) - For testing.
 - [sfml](https://github.com/SFML/SFML) - For networking. (*Note: Might require additional dependencies on Linux, see SFML repositoriy.*) 
+
+## License
+
+This project is licensed under the MIT License.
+
+Portions of this project are based on the Hazel Engine (https://github.com/TheCherno/Hazel),
+which is made available under the Apache License 2.0. See [LICENSE](LICENSE) for more details.

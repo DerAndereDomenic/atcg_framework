@@ -4,6 +4,9 @@
 
 namespace atcg
 {
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2024
+
 /**
  * @brief A class to model an UUID
  */

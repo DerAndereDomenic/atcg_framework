@@ -501,6 +501,7 @@ void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity,
     Material& material = component.material;
 
     updated = displayMaterial("instance", material) || updated;
+    updated = ImGui::Checkbox("Receive Shadows##InstanceRenderComponent", &component.receive_shadow) || updated;
 
     if(updated)
     {

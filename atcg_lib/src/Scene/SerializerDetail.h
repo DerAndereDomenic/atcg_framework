@@ -90,6 +90,7 @@ ATCG_INLINE void Serializer<ComponentSerializerT>::serialize(const std::string& 
                                              PointSphereRenderComponent,
                                              EdgeRenderComponent,
                                              EdgeCylinderRenderComponent,
+                                             InstanceRenderComponent,
                                              PointLightComponent,
                                              ScriptComponent,
                                              CustomComponents...>(file_path, entity);
@@ -133,6 +134,7 @@ ATCG_INLINE void Serializer<ComponentSerializerT>::deserialize(const std::string
                           PointSphereRenderComponent,
                           EdgeRenderComponent,
                           EdgeCylinderRenderComponent,
+                          InstanceRenderComponent,
                           PointLightComponent,
                           ScriptComponent,
                           CustomComponents...>(file_path, entity, entity_object);

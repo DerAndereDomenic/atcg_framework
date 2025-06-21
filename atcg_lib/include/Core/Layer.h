@@ -4,6 +4,9 @@
 
 namespace atcg
 {
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2023
+
 /**
  * @brief The layer system is used to handle events and draw calls in a specific order
  * In most of our cases we only have 1 layer -> the application layer that is created by the user.

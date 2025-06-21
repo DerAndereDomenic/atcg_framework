@@ -17,3 +17,4 @@ DataStructure
    PerformancePanel
    Dictionary
    Skybox
+   TextureBuilder

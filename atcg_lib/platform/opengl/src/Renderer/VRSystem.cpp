@@ -49,6 +49,9 @@ public:
     atcg::Entity right_controller_entity;
 
     glm::vec3 offset = glm::vec3(0);
+
+    float n = 0.01f;
+    float f = 1000.0f;
 };
 
 VRSystem::VRSystem() {}
@@ -307,8 +310,11 @@ void VRSystem::doTracking()
 
     // Update projection matrices
     {
-        vr::HmdMatrix44_t projection = impl->vr_pointer->GetProjectionMatrix(vr::EVREye::Eye_Left, 0.01f, 1000.0f);
-        glm::mat4 result             = glm::mat4(1);
+        vr::HmdMatrix44_t projection = impl->vr_pointer->GetProjectionMatrix(
+            vr::EVREye::Eye_Left,
+            2.0f * impl->n,
+            impl->f);    // ? SteamVR Bug, need to pass 2*near to get the correct value in the projection matrix
+        glm::mat4 result = glm::mat4(1);
         for(int i = 0; i < 4; ++i)
         {
             for(int j = 0; j < 4; ++j)
@@ -321,8 +327,11 @@ void VRSystem::doTracking()
     }
 
     {
-        vr::HmdMatrix44_t projection = impl->vr_pointer->GetProjectionMatrix(vr::EVREye::Eye_Right, 0.01f, 1000.0f);
-        glm::mat4 result             = glm::mat4(1);
+        vr::HmdMatrix44_t projection = impl->vr_pointer->GetProjectionMatrix(
+            vr::EVREye::Eye_Right,
+            2.0f * impl->n,
+            impl->f);    // ? SteamVR Bug, need to pass 2*near to get the correct value in the projection matrix
+        glm::mat4 result = glm::mat4(1);
         for(int i = 0; i < 4; ++i)
         {
             for(int j = 0; j < 4; ++j)
@@ -522,6 +531,16 @@ void VRSystem::setOffset(const glm::vec3& offset)
 glm::vec3 VRSystem::getOffset()
 {
     return impl->offset;
+}
+
+void VRSystem::setNear(const float n)
+{
+    impl->n = n;
+}
+
+void VRSystem::setFar(const float f)
+{
+    impl->f = f;
 }
 
 }    // namespace atcg

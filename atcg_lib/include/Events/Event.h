@@ -4,6 +4,9 @@
 #include <ostream>
 #include <Core/Platform.h>
 
+// Based on Hazel Engine (https://github.com/TheCherno/Hazel)
+// Modified by Domenic Zingsheim in 2023
+
 namespace atcg
 {
 enum class EventType

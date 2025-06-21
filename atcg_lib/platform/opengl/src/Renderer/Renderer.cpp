@@ -55,9 +55,7 @@ public:
 
     atcg::ref_ptr<Graph> sphere_mesh;
     atcg::ref_ptr<Graph> cylinder_mesh;
-    bool sphere_has_instance   = false;
-    bool cylinder_has_instance = false;
-    bool culling_enabled       = false;
+    bool culling_enabled = false;
     CullMode cull_mode;
 
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
@@ -380,18 +378,12 @@ void RendererSystem::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffe
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
     atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVerticesArray();
-    if(vao_sphere->peekVertexBuffer() != vbo)
-    {
-        if(sphere_has_instance)
-        {
-            vao_sphere->popVertexBuffer();
-        }
-        vao_sphere->pushInstanceBuffer(vbo);
-        sphere_has_instance = true;
-    }
-    glm::mat4 model_new = model;
+    glm::mat4 model_new                   = model;
     shader->setFloat("point_size", point_size);
+
+    vao_sphere->pushInstanceBuffer(vbo);
     drawVAO(vao_sphere, camera, color, shader, model_new, GL_TRIANGLES, sphere_mesh->n_vertices(), n_instances);
+    vao_sphere->popVertexBuffer();
 }
 
 void RendererSystem::Impl::drawCircle(const glm::vec3& position,
@@ -493,8 +485,8 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
         case ATCG_DRAW_MODE_INSTANCED:
         {
-            ATCG_ASSERT(shader, "Tried instance rendering without valid shader");
-            shader->setInt("entityID", entity_id);
+            auto override_shader = shader ? shader : shader_manager->getShader("instanced");
+            override_shader->setInt("entityID", entity_id);
             setMaterial(material, shader);
             atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
             atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
@@ -517,18 +509,13 @@ void RendererSystem::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
     atcg::ref_ptr<VertexArray> vao_cylinder = cylinder_mesh->getVerticesArray();
-    if(vao_cylinder->peekVertexBuffer() != indices)
-    {
-        if(cylinder_has_instance)
-        {
-            vao_cylinder->popVertexBuffer();
-        }
-        vao_cylinder->pushInstanceBuffer(indices);
-        cylinder_has_instance = true;
-    }
+
     uint32_t num_edges = indices->size() / (sizeof(Edge));
     points->bindStorage(0);
+
+    vao_cylinder->pushInstanceBuffer(indices);
     drawVAO(vao_cylinder, camera, color, shader, model, GL_TRIANGLES, cylinder_mesh->n_vertices(), num_edges);
+    vao_cylinder->popVertexBuffer();
 }
 
 void RendererSystem::init(uint32_t width,
@@ -1238,7 +1225,6 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    atcg::ref_ptr<PerspectiveCamera> cam         = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
     atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
     screenshot_buffer->attachColor();
     screenshot_buffer->attachDepth();
@@ -1248,7 +1234,7 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
     clear();
     setViewport(0, 0, width, height);
     atcg::Dictionary context;
-    context.setValue("camera", cam);
+    context.setValue("camera", camera);
     scene->draw(context);
     useScreenBuffer();
     setDefaultViewport();
@@ -1265,8 +1251,7 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    atcg::ref_ptr<PerspectiveCamera> cam         = std::dynamic_pointer_cast<PerspectiveCamera>(camera);
-    float height                                 = (float)width / cam->getAspectRatio();
+    float height                                 = (float)width / camera->getIntrinsics().aspectRatio();
     atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
     screenshot_buffer->attachColor();
     screenshot_buffer->attachDepth();
@@ -1276,7 +1261,7 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     clear();
     setViewport(0, 0, width, height);
     atcg::Dictionary context;
-    context.setValue("camera", cam);
+    context.setValue("camera", camera);
     scene->draw(context);
     useScreenBuffer();
     setDefaultViewport();
@@ -1284,5 +1269,10 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
     return data;
+}
+
+atcg::ref_ptr<ShaderManagerSystem> RendererSystem::getShaderManager() const
+{
+    return impl->shader_manager;
 }
 }    // namespace atcg

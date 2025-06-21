@@ -193,6 +193,20 @@ public:
      */
     glm::vec3 getOffset();
 
+    /**
+     * @brief Set the near plane of the projection matrices
+     *
+     * @param n The near plane
+     */
+    void setNear(const float n);
+
+    /**
+     * @brief Set the far plane of the projection matrices
+     *
+     * @param f The far plane
+     */
+    void setFar(const float f);
+
     VRSystem();
 
     ~VRSystem();
@@ -436,6 +450,27 @@ ATCG_INLINE glm::vec3 getOffset()
 {
     return SystemRegistry::instance()->getSystem<VRSystem>()->getOffset();
 }
+
+/**
+ * @brief Set the near plane of the projection matrices
+ *
+ * @param n The near plane
+ */
+ATCG_INLINE void setNear(const float n)
+{
+    SystemRegistry::instance()->getSystem<VRSystem>()->setNear(n);
+}
+
+/**
+ * @brief Set the far plane of the projection matrices
+ *
+ * @param f The far plane
+ */
+ATCG_INLINE void setFar(const float f)
+{
+    SystemRegistry::instance()->getSystem<VRSystem>()->setFar(f);
+}
+
 }    // namespace VR
 
 }    // namespace atcg

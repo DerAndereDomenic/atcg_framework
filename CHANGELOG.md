@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Added method to update the near and far plane of the VR System
+- Added serialization for InstanceRenderComponents
+- Added possibility to attach multiple vbos to a InstanceRenderComponent
+- Added python bindings for vertex buffers and related structures
+- Added a TextureBuilder class to improve texture instantiation
+
+### Changed
+
+- Removed atcg::Instance
+- InstanceRenderComponents now longer are hard typed to atcg::Instance but can be filled with an arbitrary number of instance buffers
+
+### Fixed
+
+- Fixed crash when a Script is held inside the revision system and the app is closed
+- Fixed rendering of InstanceRenderComponent
+
+## [0.2.1-beta]
+
+### Fixed
+
+- Fixed bad any_cast in screenshot function
+
+## [0.2.0-beta]
+
+### Added
+
 - Added Cubemap Array textures
 - Added possibility to create textures from device tensors
 - Added function to remove entities from a scene

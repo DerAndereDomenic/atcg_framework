@@ -6,6 +6,8 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import shutil
+
 project = "ATCG Framework"
 copyright = "2024, Domenic Zingsheim"
 author = "Domenic Zingsheim"
@@ -65,6 +67,10 @@ def preprocess_readme():
     idx = content.find("----")
     content = content[(idx + len("----")) :]
     content = "# ATCG Framework Documentation\n" + content
+    content = content.replace(
+        "[LICENSE](LICENSE)", '<a href="_static/LICENSE" download>LICENSE</a>'
+    )
+    shutil.copyfile("../LICENSE", "_static/LICENSE")
 
     with open(output_path, "w") as outfile:
         outfile.write(content)
