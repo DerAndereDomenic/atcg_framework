@@ -56,5 +56,6 @@ private:
     atcg::ref_ptr<Shape> _shape;
     atcg::ref_ptr<BSDF> _bsdf;
     uint32_t _entity_id;
+    glm::vec3 _color;
 };
 }    // namespace atcg

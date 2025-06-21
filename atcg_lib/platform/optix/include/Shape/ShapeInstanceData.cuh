@@ -10,5 +10,6 @@ struct ShapeInstanceData
     ShapeData* shape;
     const BSDFVPtrTable* bsdf;
     uint32_t entity_id;
+    glm::vec3 color;
 };
 }    // namespace atcg
