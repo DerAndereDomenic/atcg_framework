@@ -319,7 +319,7 @@ extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_pbrbsdf
     roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
     glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
-    diffuse_color            = glm::lerp(diffuse_color, glm::vec3(0), metallic);
+    diffuse_color            = glm::lerp(diffuse_color, glm::vec3(0), metallic) * si.color;
 
     return detail::samplePBR(si, diffuse_color, metallic_color, metallic, roughness, rng);
 }
@@ -335,7 +335,7 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
     float metallic          = tex2D<float>(sbt_data->metallic_texture, si.uv.x, si.uv.y);
     float roughness         = tex2D<float>(sbt_data->roughness_texture, si.uv.x, si.uv.y);
     roughness     = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
-    diffuse_color = glm::lerp(diffuse_color, glm::vec3(0), metallic);
+    diffuse_color = glm::lerp(diffuse_color, glm::vec3(0), metallic) * si.color;
 
     glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
 

@@ -53,6 +53,7 @@ public:
 private:
     torch::Tensor _positions;
     torch::Tensor _normals;
+    torch::Tensor _colors;
     torch::Tensor _uvs;
     torch::Tensor _faces;
 
