@@ -1,5 +1,6 @@
 #include <Integrator/PathtracingIntegrator.h>
 
+#include <Core/Assert.h>
 #include <Core/CUDA.h>
 #include <Core/Common.h>
 #include <Scene/Components.h>
@@ -53,6 +54,61 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
     _shapes.push_back(shape_instance);
 }
 
+template<>
+void PathtracingIntegrator::prepareComponent<InstanceRenderComponent>(Entity entity,
+                                                                      const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                                                      const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    if(!entity.hasComponent<InstanceRenderComponent>()) return;
+
+    InstanceRenderComponent& component = entity.getComponent<InstanceRenderComponent>();
+
+    if(component.instance_vbos.size() != 2)
+    {
+        ATCG_WARN("Expecting size two for number of instances in path tracer...");
+        return;
+    }
+
+    auto& transform            = entity.getComponent<TransformComponent>();
+    glm::mat4 global_transform = transform.getModel();
+    auto& material             = component.material;
+
+    auto graph                 = entity.getComponent<GeometryComponent>().graph;
+    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
+    shape->initializePipeline(pipeline, sbt);
+    shape->prepareAccelerationStructure(_context);
+
+    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
+    bsdf->initializePipeline(pipeline, sbt);
+
+    auto transform_vbo   = component.instance_vbos[0];
+    auto color_vbo       = component.instance_vbos[1];
+    uint32_t n_instances = transform_vbo->size() / transform_vbo->getLayout().getStride();
+
+    ATCG_ASSERT(n_instances == (color_vbo->size() / color_vbo->getLayout().getStride()),
+                "Instance buffers have wrong size");
+
+    glm::mat4* transforms = transform_vbo->getHostPointer<glm::mat4>();
+    glm::vec4* colors     = color_vbo->getHostPointer<glm::vec4>();
+
+    for(int i = 0; i < n_instances; ++i)
+    {
+        Dictionary shape_data;
+        shape_data.setValue("shape", shape);
+        shape_data.setValue("bsdf", bsdf);
+        shape_data.setValue("transform", global_transform * transforms[i]);
+        shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
+        shape_data.setValue<glm::vec3>("color", glm::vec3(colors[i]));
+        auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
+        shape_instance->initializePipeline(pipeline, sbt);
+
+        _shapes.push_back(shape_instance);
+    }
+
+    transform_vbo->unmapHostPointers();
+    color_vbo->unmapHostPointers();
+}
+
 void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                                const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
@@ -83,13 +139,18 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
     _emitters.upload(tables.data(), tables.size());
 
     // Extract scene information
-    auto view = _scene->getAllEntitiesWith<GeometryComponent, MeshRenderComponent, TransformComponent>();
+    auto view = _scene->getAllEntitiesWith<GeometryComponent, TransformComponent>();
     for(auto e: view)
     {
         Entity entity(e, _scene.get());
 
         prepareComponent<MeshRenderComponent>(entity, pipeline, sbt);
+        prepareComponent<PointSphereRenderComponent>(entity, pipeline, sbt);
+        prepareComponent<EdgeCylinderRenderComponent>(entity, pipeline, sbt);
+        prepareComponent<InstanceRenderComponent>(entity, pipeline, sbt);
     }
+
+    std::cout << _shapes.size() << "\n";
 
     const std::string ptx_raygen_filename = "./bin/PathtracingIntegrator_ptx.ptx";
     OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});

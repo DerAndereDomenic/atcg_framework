@@ -9,7 +9,7 @@ ShapeInstance::ShapeInstance(const Dictionary& shape_data)
     _bsdf      = shape_data.getValueOr<atcg::ref_ptr<BSDF>>("bsdf", nullptr);
     _transform = shape_data.getValueOr<glm::mat4>("transform", glm::mat4(1));
     _entity_id = shape_data.getValueOr<int32_t>("entity_id", -1);
-    _color     = shape_data.getValueOr<glm::vec3>("colr", glm::vec3(1));
+    _color     = shape_data.getValueOr<glm::vec3>("color", glm::vec3(1));
 }
 
 void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
