@@ -83,7 +83,7 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
     torch::Tensor offsets = mesh->getHostPositions();
     torch::Tensor colors  = mesh->getHostColors();
 
-    // Logic from base.fs
+    // Logic from base.vs
     glm::vec3 scale_model =
         glm::vec3(glm::length(global_transform[0]), glm::length(global_transform[1]), glm::length(global_transform[2]));
     glm::vec3 scale_point     = glm::vec3(component.point_size);
@@ -110,6 +110,86 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
         shape_data.setValue("transform", total_transform);
         shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
         shape_data.setValue("color", color);
+        auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
+        shape_instance->initializePipeline(pipeline, sbt);
+
+        _shapes.push_back(shape_instance);
+    }
+
+    mesh->unmapAllHostPointers();
+}
+
+template<>
+void PathtracingIntegrator::prepareComponent<EdgeCylinderRenderComponent>(
+    Entity entity,
+    const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+    const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    if(!entity.hasComponent<EdgeCylinderRenderComponent>()) return;
+
+    EdgeCylinderRenderComponent& component = entity.getComponent<EdgeCylinderRenderComponent>();
+
+    auto& transform            = entity.getComponent<TransformComponent>();
+    glm::mat4 global_transform = transform.getModel();
+    auto& material             = component.material;
+
+    auto graph                 = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
+    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
+    shape->initializePipeline(pipeline, sbt);
+    shape->prepareAccelerationStructure(_context);
+
+    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
+    bsdf->initializePipeline(pipeline, sbt);
+
+    auto mesh            = entity.getComponent<GeometryComponent>().graph;
+    uint32_t n_instances = mesh->n_edges();
+
+    torch::Tensor positions = mesh->getHostPositions();
+    torch::Tensor indices   = mesh->getHostEdges();
+
+    // Logic from cylinder_edge.vs
+    for(int i = 0; i < n_instances; ++i)
+    {
+        int edge_x = int(indices[i][0].item<float>());
+        int edge_y = int(indices[i][1].item<float>());
+        glm::vec3 edge_color =
+            glm::vec3(indices[i][2].item<float>(), indices[i][3].item<float>(), indices[i][4].item<float>());
+        float edge_radius        = indices[i][5].item<float>();
+        glm::vec3 aInstanceStart = glm::vec3(global_transform * glm::vec4(positions[edge_x][0].item<float>(),
+                                                                          positions[edge_x][1].item<float>(),
+                                                                          positions[edge_x][2].item<float>(),
+                                                                          1));
+
+        glm::vec3 aInstanceEnd = glm::vec3(global_transform * glm::vec4(positions[edge_y][0].item<float>(),
+                                                                        positions[edge_y][1].item<float>(),
+                                                                        positions[edge_y][2].item<float>(),
+                                                                        1));
+
+        glm::vec3 axis         = (aInstanceEnd - aInstanceStart);
+        glm::vec3 middle_point = aInstanceStart + axis / 2.0f;
+
+        glm::mat4 model_scale = glm::mat4(edge_radius * component.radius);
+        model_scale[1].y      = length(axis) / 2.0;
+        model_scale[3].w      = 1;
+
+        glm::mat4 model_translate = glm::mat4(1);
+        model_translate[3]        = glm::vec4(middle_point, 1);
+
+        axis        = glm::normalize(axis);
+        glm::vec3 x = glm::normalize(glm::cross(glm::vec3(0, axis.z, 1.0f - axis.z), axis));
+        glm::vec3 z = glm::normalize(glm::cross(x, axis));
+
+        glm::mat4 model_rotation =
+            glm::mat4(glm::vec4(x, 0), glm::vec4(axis, 0), glm::vec4(z, 0), glm::vec4(0, 0, 0, 1));
+
+        glm::mat4 model_edge = model_translate * model_rotation * model_scale;
+
+        Dictionary shape_data;
+        shape_data.setValue("shape", shape);
+        shape_data.setValue("bsdf", bsdf);
+        shape_data.setValue("transform", model_edge);
+        shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
+        shape_data.setValue("color", edge_color);
         auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
         shape_instance->initializePipeline(pipeline, sbt);
 
