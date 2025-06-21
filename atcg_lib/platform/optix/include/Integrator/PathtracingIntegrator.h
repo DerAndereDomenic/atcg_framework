@@ -53,6 +53,12 @@ public:
     virtual void reset() override;
 
 private:
+    template<typename T>
+    void prepareComponent(Entity entity,
+                          const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                          const atcg::ref_ptr<ShaderBindingTable>& sbt);
+
+private:
     uint32_t _raygen_index;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;

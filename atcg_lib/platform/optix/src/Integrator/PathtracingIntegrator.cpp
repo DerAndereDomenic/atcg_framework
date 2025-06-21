@@ -17,6 +17,42 @@ PathtracingIntegrator::PathtracingIntegrator(const atcg::ref_ptr<RaytracingConte
 
 PathtracingIntegrator::~PathtracingIntegrator() {}
 
+template<typename T>
+void PathtracingIntegrator::prepareComponent(Entity entity,
+                                             const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                             const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+}
+
+template<>
+void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
+                                                                  const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                                                  const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    if(!entity.hasComponent<MeshRenderComponent>()) return;
+
+    auto& transform = entity.getComponent<TransformComponent>();
+    auto& material  = entity.getComponent<MeshRenderComponent>().material;
+
+    auto graph                 = entity.getComponent<GeometryComponent>().graph;
+    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
+    shape->initializePipeline(pipeline, sbt);
+    shape->prepareAccelerationStructure(_context);
+
+    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
+    bsdf->initializePipeline(pipeline, sbt);
+
+    Dictionary shape_data;
+    shape_data.setValue("shape", shape);
+    shape_data.setValue("bsdf", bsdf);
+    shape_data.setValue("transform", transform.getModel());
+    shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
+    auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
+    shape_instance->initializePipeline(pipeline, sbt);
+
+    _shapes.push_back(shape_instance);
+}
+
 void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                                const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
@@ -52,26 +88,7 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
     {
         Entity entity(e, _scene.get());
 
-        auto& transform = entity.getComponent<TransformComponent>();
-        auto& material  = entity.getComponent<MeshRenderComponent>().material;
-
-        auto graph                 = entity.getComponent<GeometryComponent>().graph;
-        atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
-        shape->initializePipeline(pipeline, sbt);
-        shape->prepareAccelerationStructure(_context);
-
-        atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
-        bsdf->initializePipeline(pipeline, sbt);
-
-        Dictionary shape_data;
-        shape_data.setValue("shape", shape);
-        shape_data.setValue("bsdf", bsdf);
-        shape_data.setValue("transform", transform.getModel());
-        shape_data.setValue<int32_t>("entity_id", (int32_t)e);
-        auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
-        shape_instance->initializePipeline(pipeline, sbt);
-
-        _shapes.push_back(shape_instance);
+        prepareComponent<MeshRenderComponent>(entity, pipeline, sbt);
     }
 
     const std::string ptx_raygen_filename = "./bin/PathtracingIntegrator_ptx.ptx";
