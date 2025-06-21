@@ -66,6 +66,8 @@ if(ATCG_ENABLE_OPTIX)
     filter_ptx_sources("${atcg_optix_files}" ptx_files)
     list(REMOVE_ITEM atcg_optix_files ${ptx_files})
     add_ptx_module(atcg "${ptx_files}")
+    set(ptx_target "atcg_ptxmodules")
+    add_dependencies(atcg_lib ${ptx_target} ${ptx_target}-copy)
 endif()
 
 target_sources(atcg_lib PRIVATE ${atcg_lib_files} 

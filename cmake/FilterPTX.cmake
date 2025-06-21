@@ -40,7 +40,9 @@ function(add_ptx_module target_prefix ptx_files)
         )
         target_compile_definitions(${ptx_target} PUBLIC ATCG_CUDA_BACKEND _USE_MATH_DEFINES)
         target_compile_options(${ptx_target} PRIVATE -ptx)
-        target_link_libraries(${ptx_target} PRIVATE atcg_lib)
+        # target_link_libraries(${ptx_target} PRIVATE atcg_lib)
+        target_include_directories(${ptx_target} PRIVATE $<TARGET_PROPERTY:atcg_lib,INTERFACE_INCLUDE_DIRECTORIES>)
+        target_compile_definitions(${ptx_target} PRIVATE $<TARGET_PROPERTY:atcg_lib,INTERFACE_COMPILE_DEFINITIONS>)
 
         set(ptx_output_dir ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
         add_custom_target(${ptx_target}-copy ALL
