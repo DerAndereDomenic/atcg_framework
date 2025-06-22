@@ -6,6 +6,7 @@ namespace atcg
 {
 
 struct BSDFVPtrTable;
+struct EmitterVPtrTable;
 struct SurfaceInteraction
 {
     bool valid = false;
@@ -20,5 +21,6 @@ struct SurfaceInteraction
     uint32_t entity_id;
 
     const BSDFVPtrTable* bsdf;
+    const EmitterVPtrTable* emitter;
 };
 }    // namespace atcg

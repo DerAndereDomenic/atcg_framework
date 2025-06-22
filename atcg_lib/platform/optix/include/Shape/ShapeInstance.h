@@ -5,6 +5,7 @@
 #include <DataStructure/Dictionary.h>
 #include <Shape/Shape.h>
 #include <BSDF/BSDF.h>
+#include <Emitter/Emitter.h>
 
 namespace atcg
 {
@@ -21,6 +22,8 @@ public:
      * - bsdf: atcg::ref_ptr<BSDF>
      * - transform: glm::mat4
      * - entity_id: int32_t
+     * - color: glm::vec3
+     * - emitter: atcg::ref_ptr<Emitter>
      *
      * @param shape_data The shape data
      */
@@ -55,6 +58,7 @@ private:
     glm::mat4 _transform;
     atcg::ref_ptr<Shape> _shape;
     atcg::ref_ptr<BSDF> _bsdf;
+    atcg::ref_ptr<Emitter> _emitter;
     uint32_t _entity_id;
     glm::vec3 _color;
 };

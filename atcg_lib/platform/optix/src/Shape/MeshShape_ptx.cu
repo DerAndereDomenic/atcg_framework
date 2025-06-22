@@ -58,9 +58,8 @@ extern "C" __global__ void __closesthit__mesh()
     si->color          = (1.0f - si->barys.x - si->barys.y) * C0 + si->barys.x * C1 + si->barys.y * C2;
     si->color *= _sbt_data.color;
 
-    // TODO
-    si->bsdf = _sbt_data.bsdf;
-    // si->emitter = sbt_data.emitter;
+    si->bsdf    = _sbt_data.bsdf;
+    si->emitter = _sbt_data.emitter;
 
     si->entity_id = _sbt_data.entity_id;
 }
