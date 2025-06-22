@@ -99,16 +99,6 @@ public:
                 atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
         }
 
-#ifdef ATCG_ENABLE_OPTIX
-        optx_context = atcg::RaytracingContextManager::createContext();
-#endif
-
-        initializePathtracer();
-
-        createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
-
-        scene->setCamera(camera_controller->getCamera());
-
         // Instance Buffer Test
         {
             auto sphere     = atcg::IO::read_mesh((atcg::resource_directory() / "armadillo.obj").string());
@@ -148,6 +138,14 @@ public:
             instances.addInstanceBuffer(vbo_transforms);
             instances.addInstanceBuffer(vbo_colors);
         }
+
+#ifdef ATCG_ENABLE_OPTIX
+        optx_context = atcg::RaytracingContextManager::createContext();
+#endif
+
+        createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
+
+        scene->setCamera(camera_controller->getCamera());
     }
 
     // This gets called each frame
@@ -157,7 +155,7 @@ public:
         bool updated = camera_controller->onUpdate(delta_time);
 
 #ifdef ATCG_ENABLE_OPTIX
-        if(updated)
+        if(enable_pathtracing && updated)
         {
             integrator->reset();
         }
@@ -250,7 +248,7 @@ public:
         if(current_revision != last_revision)
         {
             last_revision = current_revision;
-            initializePathtracer();
+            if(enable_pathtracing) initializePathtracer();
         }
     }
 
@@ -329,7 +327,10 @@ public:
             }
 
     #ifdef ATCG_ENABLE_OPTIX
-            ImGui::Checkbox("Path Tracing", &enable_pathtracing);
+            if(ImGui::Checkbox("Path Tracing", &enable_pathtracing))
+            {
+                if(enable_pathtracing) initializePathtracer();
+            }
     #endif
 
             ImGui::End();
