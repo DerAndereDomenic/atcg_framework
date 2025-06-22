@@ -11,6 +11,7 @@
 #include <Shape/MeshShape.h>
 #include <BSDF/PBRBSDF.h>
 #include <DataStructure/WorkerPool.h>
+#include <Emitter/MeshEmitter.h>
 
 #include <optix_stubs.h>
 
@@ -49,11 +50,27 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
     atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
     bsdf->initializePipeline(pipeline, sbt);
 
+    atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
+    if(material.emissive)
+    {
+        Dictionary emitter_data;
+        emitter_data.setValue<atcg::ref_ptr<MeshShape>>("shape", std::dynamic_pointer_cast<MeshShape>(shape));
+        emitter_data.setValue("transform", transform.getModel());
+        emitter_data.setValue("emission_scaling", material.emission_scale);
+        emitter_data.setValue("texture_emissive", material.getEmissiveTexture());
+
+        mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
+        mesh_emitter->initializePipeline(pipeline, sbt);
+
+        _emitter.push_back(mesh_emitter);
+    }
+
     Dictionary shape_data;
     shape_data.setValue("shape", shape);
     shape_data.setValue("bsdf", bsdf);
     shape_data.setValue("transform", transform.getModel());
     shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
+    shape_data.setValue("emitter", mesh_emitter);
     auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
     shape_instance->initializePipeline(pipeline, sbt);
 
@@ -354,10 +371,8 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         auto point_light = atcg::make_ref<atcg::PointEmitter>(transform.getPosition(), point_light_component);
         point_light->initializePipeline(pipeline, sbt);
         _emitter.push_back(point_light);
-        tables.push_back(point_light->getVPtrTable());
     }
 
-    _emitters.upload(tables.data(), tables.size());
 
     // Extract scene information
     auto view = _scene->getAllEntitiesWith<GeometryComponent, TransformComponent>();
@@ -370,6 +385,13 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         prepareComponent<EdgeCylinderRenderComponent>(entity, pipeline, sbt);
         prepareComponent<InstanceRenderComponent>(entity, pipeline, sbt);
     }
+
+    // No all the emitters are initialized
+    for(auto emitter: _emitter)
+    {
+        tables.push_back(emitter->getVPtrTable());
+    }
+    _emitters.upload(tables.data(), tables.size());
 
     const std::string ptx_raygen_filename = "./bin/PathtracingIntegrator_ptx.ptx";
     OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});

@@ -67,7 +67,7 @@ private:
 
     atcg::DeviceBuffer<const EmitterVPtrTable*> _emitters;
     atcg::ref_ptr<EnvironmentEmitter> _environment_emitter = nullptr;
-    std::vector<atcg::ref_ptr<PointEmitter>> _emitter;
+    std::vector<atcg::ref_ptr<Emitter>> _emitter;
 
     atcg::ref_ptr<InstanceAccelerationStructure> _ias;
     atcg::dref_ptr<PathtracingParams> _launch_params;

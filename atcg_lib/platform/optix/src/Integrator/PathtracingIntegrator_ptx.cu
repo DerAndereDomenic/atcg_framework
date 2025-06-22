@@ -5,9 +5,9 @@
 #include <Integrator/PathtracingData.cuh>
 
 #include <Core/TraceParameters.h>
-#include <Math/Random.h>
 #include <Core/SurfaceInteraction.h>
 #include <Core/Payload.h>
+#include <Math/Random.h>
 
 extern "C"
 {
@@ -67,13 +67,13 @@ extern "C" __global__ void __raygen__rg()
         if(si.valid)
         {
             // Check for light source
-            // if(si.emitter)
-            // {
-            //     bool mis_valid             = last_si.valid;
-            //     float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-            //     float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-            //     radiance += mis_weight * throughput * si.emitter->evalLight(si);
-            // }
+            if(si.emitter)
+            {
+                bool mis_valid             = last_si.valid;
+                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
+                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                radiance += mis_weight * throughput * si.emitter->evalLight(si);
+            }
 
             // PBR Sampling
             if(si.bsdf)
@@ -83,7 +83,7 @@ extern "C" __global__ void __raygen__rg()
                 {
                     const atcg::EmitterVPtrTable* emitter = params.emitters[i];
 
-                    // if(si.emitter == emitter) continue;
+                    if(si.emitter == emitter) continue;
 
                     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
 
