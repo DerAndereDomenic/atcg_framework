@@ -50,6 +50,12 @@ public:
      */
     ATCG_INLINE atcg::dref_ptr<MeshShapeData> getMeshShapeData() const { return _data; }
 
+    ATCG_INLINE torch::Tensor getPositions() const { return _positions; }
+    ATCG_INLINE torch::Tensor getNormals() const { return _normals; }
+    ATCG_INLINE torch::Tensor getColors() const { return _colors; }
+    ATCG_INLINE torch::Tensor getUVs() const { return _uvs; }
+    ATCG_INLINE torch::Tensor getFaces() const { return _faces; }
+
 private:
     torch::Tensor _positions;
     torch::Tensor _normals;
