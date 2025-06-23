@@ -18,8 +18,9 @@ public:
      * @brief Constructor
      *
      * @param context The raytracing context
+     * @param dict Additional parameters
      */
-    PathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context);
+    PathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict);
 
     /**
      * @brief Destructor

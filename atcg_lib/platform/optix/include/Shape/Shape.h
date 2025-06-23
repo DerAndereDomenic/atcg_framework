@@ -2,6 +2,7 @@
 
 #include <Core/Memory.h>
 #include <Core/OptixComponent.h>
+#include <DataStructure/Dictionary.h>
 #include <Core/RaytracingContext.h>
 #include <Shape/ShapeData.cuh>
 
@@ -16,6 +17,18 @@ class ShapeInstance;
 class Shape : public OptixComponent
 {
 public:
+    /**
+     * @brief Constructor
+     */
+    Shape() = default;
+
+    /**
+     * @brief Create a shape with parameters
+     *
+     * @param dict The parameters
+     */
+    Shape(const atcg::Dictionary& dict) {}
+
     /**
      * @brief Destructor
      */
@@ -34,21 +47,21 @@ public:
 
     /**
      * @brief Prepare the acceleration structure of the shape
-     * 
+     *
      * @param context The raytracing context
      */
     virtual void prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context) = 0;
 
     /**
      * @brief Get the AST handle
-     * 
+     *
      * @return The handle
      */
     ATCG_INLINE OptixTraversableHandle getAST() { return _ast_handle; }
 
     /**
      * @brief Get the hit group
-     * 
+     *
      * @return The hit group
      */
     ATCG_INLINE OptixProgramGroup getHitGroup() const { return _hit_group; }

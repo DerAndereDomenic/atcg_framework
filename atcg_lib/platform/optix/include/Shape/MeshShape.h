@@ -15,10 +15,11 @@ class MeshShape : public Shape
 public:
     /**
      * @brief Constructor
+     * -"mesh": atcg::ref_ptr<Graph>
      *
-     * @param mesh The mesh to render
+     * @param dict The parameters
      */
-    MeshShape(const atcg::ref_ptr<Graph>& mesh);
+    MeshShape(const Dictionary& dict);
 
     /**
      * @brief Destructor

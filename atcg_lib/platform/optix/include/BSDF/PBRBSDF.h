@@ -13,11 +13,13 @@ class PBRBSDF : public BSDF
 {
 public:
     /**
-     * @brief Constructor
+     * @brief Construct a BSDF with arbitrary parameters.
+     * Input parameters:
+     * - "material": atcg::Material
      *
-     * @param material The material
+     * @param dict Dictionary holding the parameters
      */
-    PBRBSDF(const Material& material);
+    PBRBSDF(const atcg::Dictionary& dict);
 
     /**
      * @brief Destructor

@@ -25,8 +25,9 @@ public:
      * @brief Constructor
      *
      * @param context The raytracing context
+     * @param dict Additional paramaters
      */
-    Integrator(const atcg::ref_ptr<RaytracingContext>& context) : _context(context) {}
+    Integrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict) : _context(context) {}
 
     /**
      * @brief Destructor

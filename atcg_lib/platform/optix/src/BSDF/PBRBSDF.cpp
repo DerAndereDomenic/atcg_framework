@@ -70,8 +70,10 @@ ATCG_INLINE static void convertToTextureObject(const torch::Tensor& texture_data
 }
 }    // namespace detail
 
-PBRBSDF::PBRBSDF(const Material& material)
+PBRBSDF::PBRBSDF(const Dictionary& dict)
 {
+    atcg::Material material = dict.getValue<atcg::Material>("material");
+
     auto diffuse_texture   = material.getDiffuseTexture()->getData(atcg::GPU);
     auto metallic_texture  = material.getMetallicTexture()->getData(atcg::GPU);
     auto roughness_texture = material.getRoughnessTexture()->getData(atcg::GPU);

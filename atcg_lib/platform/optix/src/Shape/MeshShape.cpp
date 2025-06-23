@@ -6,8 +6,10 @@
 
 namespace atcg
 {
-MeshShape::MeshShape(const atcg::ref_ptr<Graph>& mesh)
+MeshShape::MeshShape(const Dictionary& dict)
 {
+    atcg::ref_ptr<Graph> mesh = dict.getValue<atcg::ref_ptr<Graph>>("mesh");
+
     _positions = mesh->getDevicePositions().clone();
     _normals   = mesh->getDeviceNormals().clone();
     _colors    = mesh->getDeviceColors().clone();

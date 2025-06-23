@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Scene/Components.h>
+#include <DataStructure/Dictionary.h>
 #include <Emitter/Emitter.h>
 #include <Emitter/PointEmitterData.cuh>
 
@@ -14,11 +15,13 @@ class PointEmitter : public Emitter
 public:
     /**
      * @brief Constructor
-     * 
-     * @param position The position
-     * @param point_light The point light component
+     * -"position": glm::vec3
+     * -"intensity": float
+     * -"color": glm::vec3
+     *
+     * @param dict The parameters
      */
-    PointEmitter(const glm::vec3& position, const PointLightComponent& point_light);
+    PointEmitter(const Dictionary& dict);
 
     /**
      * @brief Destructor

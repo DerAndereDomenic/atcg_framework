@@ -3,6 +3,7 @@
 #include <Core/Platform.h>
 #include <Core/OptixComponent.h>
 #include <Emitter/EmitterVPtrTable.cuh>
+#include <DataStructure/Dictionary.h>
 
 namespace atcg
 {
@@ -12,6 +13,18 @@ namespace atcg
 class Emitter : public OptixComponent
 {
 public:
+    /**
+     * @brief Constructor
+     */
+    Emitter() = default;
+
+    /**
+     * @brief Create an emitter
+     *
+     * @param dict The parameters
+     */
+    Emitter(const atcg::Dictionary& dict) {}
+
     /**
      * @brief Destructor
      */
@@ -30,7 +43,7 @@ public:
 
     /**
      * @brief Get the VPtrTable
-     * 
+     *
      * @return The VPtrTable
      */
     inline const EmitterVPtrTable* getVPtrTable() const { return _vptr_table.get(); }

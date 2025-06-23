@@ -13,11 +13,12 @@ class EnvironmentEmitter : public Emitter
 {
 public:
     /**
-     * @brief Constructor
-     * 
-     * @param environment_texture The equirectangular environment map
+     * @brief Create an emitter
+     * - "environment_texture": atcg::ref_ptr<atcg::Texture2D>, an equirectangular environment map
+     *
+     * @param dict The parameters
      */
-    EnvironmentEmitter(const atcg::ref_ptr<atcg::Texture2D>& environment_texture);
+    EnvironmentEmitter(const atcg::Dictionary& dict);
 
     /**
      * @brief Destructor

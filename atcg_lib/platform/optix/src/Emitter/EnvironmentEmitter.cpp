@@ -70,8 +70,10 @@ ATCG_INLINE static void convertToTextureObject(const torch::Tensor& texture_data
 }
 }    // namespace detail
 
-EnvironmentEmitter::EnvironmentEmitter(const atcg::ref_ptr<atcg::Texture2D>& texture)
+EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
 {
+    atcg::ref_ptr<atcg::Texture2D> texture = dict.getValue<atcg::ref_ptr<Texture2D>>("environment_texture");
+
     _flags                   = EmitterFlags::DistantEmitter;
     auto environment_texture = texture->getData(atcg::GPU);
 

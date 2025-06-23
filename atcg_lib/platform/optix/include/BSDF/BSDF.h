@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Platform.h>
+#include <DataStructure/Dictionary.h>
 #include <Core/OptixComponent.h>
 #include <BSDF/BSDFVPtrTable.cuh>
 
@@ -12,6 +13,18 @@ namespace atcg
 class BSDF : public OptixComponent
 {
 public:
+    /**
+     * @brief Constructor
+     */
+    BSDF() = default;
+
+    /**
+     * @brief Construct a BSDF with arbitrary parameters
+     *
+     * @param dict Dictionary holding the parameters
+     */
+    BSDF(const atcg::Dictionary& dict) {}
+
     /**
      * @brief Destructor
      */
@@ -30,14 +43,14 @@ public:
 
     /**
      * @brief Get the VPtrTable
-     * 
+     *
      * @return The VPtrTable
      */
     ATCG_INLINE const BSDFVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
 
     /**
      * @brief Get the bsdf flags
-     * 
+     *
      * @return The flags
      */
     ATCG_INLINE const BSDFComponentType& flags() const { return _flags; }

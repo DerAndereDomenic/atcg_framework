@@ -17,7 +17,10 @@
 
 namespace atcg
 {
-PathtracingIntegrator::PathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context) : Integrator(context) {}
+PathtracingIntegrator::PathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const Dictionary& dict)
+    : Integrator(context, dict)
+{
+}
 
 PathtracingIntegrator::~PathtracingIntegrator() {}
 
@@ -42,12 +45,16 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
     auto& transform = entity.getComponent<TransformComponent>();
     auto& material  = component.material;
 
-    auto graph                 = entity.getComponent<GeometryComponent>().graph;
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
+    auto graph = entity.getComponent<GeometryComponent>().graph;
+    atcg::Dictionary shape_dict;
+    shape_dict.setValue("mesh", graph);
+    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
     shape->initializePipeline(pipeline, sbt);
     shape->prepareAccelerationStructure(_context);
 
-    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
+    atcg::Dictionary bsdf_dict;
+    bsdf_dict.setValue("material", material);
+    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
     bsdf->initializePipeline(pipeline, sbt);
 
     atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
@@ -93,12 +100,16 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
     glm::mat4 global_transform = transform.getModel();
     auto& material             = component.material;
 
-    auto graph                 = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
+    auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
+    atcg::Dictionary shape_dict;
+    shape_dict.setValue("mesh", graph);
+    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
     shape->initializePipeline(pipeline, sbt);
     shape->prepareAccelerationStructure(_context);
 
-    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
+    atcg::Dictionary bsdf_dict;
+    bsdf_dict.setValue("material", material);
+    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
     bsdf->initializePipeline(pipeline, sbt);
 
     auto mesh            = entity.getComponent<GeometryComponent>().graph;
@@ -188,12 +199,16 @@ void PathtracingIntegrator::prepareComponent<EdgeCylinderRenderComponent>(
     glm::mat4 global_transform = transform.getModel();
     auto& material             = component.material;
 
-    auto graph                 = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
+    auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
+    atcg::Dictionary shape_dict;
+    shape_dict.setValue("mesh", graph);
+    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
     shape->initializePipeline(pipeline, sbt);
     shape->prepareAccelerationStructure(_context);
 
-    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
+    atcg::Dictionary bsdf_dict;
+    bsdf_dict.setValue("material", material);
+    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
     bsdf->initializePipeline(pipeline, sbt);
 
     auto mesh            = entity.getComponent<GeometryComponent>().graph;
@@ -293,12 +308,16 @@ void PathtracingIntegrator::prepareComponent<InstanceRenderComponent>(Entity ent
     glm::mat4 global_transform = transform.getModel();
     auto& material             = component.material;
 
-    auto graph                 = entity.getComponent<GeometryComponent>().graph;
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(graph);
+    auto graph = entity.getComponent<GeometryComponent>().graph;
+    atcg::Dictionary shape_dict;
+    shape_dict.setValue("mesh", graph);
+    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
     shape->initializePipeline(pipeline, sbt);
     shape->prepareAccelerationStructure(_context);
 
-    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(material);
+    atcg::Dictionary bsdf_dict;
+    bsdf_dict.setValue("material", material);
+    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
     bsdf->initializePipeline(pipeline, sbt);
 
     auto transform_vbo   = component.instance_vbos[0];
@@ -355,7 +374,9 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
     {
         auto skybox_texture = _scene->getSkyboxTexture();
 
-        _environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(skybox_texture);
+        atcg::Dictionary emitter_dict;
+        emitter_dict.setValue("environment_texture", skybox_texture);
+        _environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(emitter_dict);
         _environment_emitter->initializePipeline(pipeline, sbt);
         tables.push_back(_environment_emitter->getVPtrTable());
     }
@@ -368,7 +389,11 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         auto& point_light_component = entity.getComponent<PointLightComponent>();
         auto& transform             = entity.getComponent<TransformComponent>();
 
-        auto point_light = atcg::make_ref<atcg::PointEmitter>(transform.getPosition(), point_light_component);
+        atcg::Dictionary point_light_data;
+        point_light_data.setValue("position", transform.getPosition());
+        point_light_data.setValue("color", point_light_component.color);
+        point_light_data.setValue("intensiry", point_light_component.intensity);
+        auto point_light = atcg::make_ref<atcg::PointEmitter>(point_light_data);
         point_light->initializePipeline(pipeline, sbt);
         _emitter.push_back(point_light);
     }

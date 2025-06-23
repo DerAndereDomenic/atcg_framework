@@ -2,13 +2,13 @@
 
 namespace atcg
 {
-PointEmitter::PointEmitter(const glm::vec3& position, const PointLightComponent& point_light)
+PointEmitter::PointEmitter(const atcg::Dictionary& dict)
 {
     _flags = EmitterFlags::InfinitesimalSize;
     PointEmitterData data;
-    data.position  = position;
-    data.intensity = point_light.intensity;
-    data.color     = point_light.color;
+    data.position  = dict.getValue<glm::vec3>("position");
+    data.intensity = dict.getValue<float>("intensity");
+    data.color     = dict.getValue<glm::vec3>("color");
 
     _point_emitter_data.upload(&data);
 }

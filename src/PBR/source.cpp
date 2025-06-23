@@ -41,7 +41,7 @@ public:
         pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
         sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
 
-        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context);
+        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context, atcg::Dictionary());
         integrator->setScene(scene);
         integrator->initializePipeline(pipeline, sbt);
 
