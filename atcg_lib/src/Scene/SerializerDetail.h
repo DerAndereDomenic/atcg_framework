@@ -2,72 +2,56 @@
 
 #include <fstream>
 
+#include <Scene/ComponentSerializer.h>
+
 namespace atcg
+{
+
+namespace Serialization
 {
 
 namespace detail
 {
-template<typename ComponentSerializerT, typename Component>
-void serializeComponent(const std::string& file_name,
-                        const atcg::ref_ptr<ComponentSerializerT>& serializer,
-                        Entity entity,
-                        nlohmann::json& j)
+template<typename Component>
+ATCG_INLINE void
+serializeComponent(const std::string& file_name, const atcg::ref_ptr<Scene>& scene, Entity entity, nlohmann::json& j)
 {
     if(entity.hasComponent<Component>())
     {
         Component& component = entity.getComponent<Component>();
-        serializer->template serialize_component<Component>(file_name, entity, component, j);
+        ComponentSerializer<Component>().serialize_component(file_name, scene, entity, component, j);
     }
 }
 
-template<typename ComponentSerializerT, typename Component>
-void deserializeComponent(const std::string& file_name,
-                          const atcg::ref_ptr<ComponentSerializerT>& serializer,
-                          Entity entity,
-                          nlohmann::json& j)
+template<typename Component>
+ATCG_INLINE void
+deserializeComponent(const std::string& file_name, const atcg::ref_ptr<Scene>& scene, Entity entity, nlohmann::json& j)
 {
-    serializer->template deserialize_component<Component>(file_name, entity, j);
+    ComponentSerializer<Component>().deserialize_component(file_name, scene, entity, j);
 }
 }    // namespace detail
 
-template<typename ComponentSerializerT>
 template<typename... Components>
-nlohmann::json Serializer<ComponentSerializerT>::serializeEntity(const std::string& file_name, Entity entity)
+ATCG_INLINE nlohmann::json SceneSerializer::serializeEntity(const std::string& file_name, Entity entity)
 {
     auto entity_object = nlohmann::json::object();
 
-    (detail::serializeComponent<ComponentSerializerT, Components>(file_name,
-                                                                  _component_serializer,
-                                                                  entity,
-                                                                  entity_object),
-     ...);
+    (detail::serializeComponent<Components>(file_name, _scene, entity, entity_object), ...);
 
     return entity_object;
 }
 
-template<typename ComponentSerializerT>
 template<typename... Components>
-void Serializer<ComponentSerializerT>::deserializeEntity(const std::string& file_name,
-                                                         Entity entity,
-                                                         nlohmann::json& entity_object)
+ATCG_INLINE void
+SceneSerializer::deserializeEntity(const std::string& file_name, Entity entity, nlohmann::json& entity_object)
 {
-    (detail::deserializeComponent<ComponentSerializerT, Components>(file_name,
-                                                                    _component_serializer,
-                                                                    entity,
-                                                                    entity_object),
-     ...);
+    (detail::deserializeComponent<Components>(file_name, _scene, entity, entity_object), ...);
 }
 
-template<typename ComponentSerializerT>
-Serializer<ComponentSerializerT>::Serializer(const atcg::ref_ptr<Scene>& scene)
-    : _scene(scene),
-      _component_serializer(atcg::make_ref<ComponentSerializerT>(scene))
-{
-}
+ATCG_INLINE SceneSerializer::SceneSerializer(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
 
-template<typename ComponentSerializerT>
 template<typename... CustomComponents>
-ATCG_INLINE void Serializer<ComponentSerializerT>::serialize(const std::string& file_path)
+ATCG_INLINE void SceneSerializer::serialize(const std::string& file_path)
 {
     nlohmann::json j;
 
@@ -104,9 +88,8 @@ ATCG_INLINE void Serializer<ComponentSerializerT>::serialize(const std::string& 
     o << std::setw(4) << j << std::endl;
 }
 
-template<typename ComponentSerializerT>
 template<typename... CustomComponents>
-ATCG_INLINE void Serializer<ComponentSerializerT>::deserialize(const std::string& file_path)
+ATCG_INLINE void SceneSerializer::deserialize(const std::string& file_path)
 {
     std::ifstream i(file_path);
     nlohmann::json j;
@@ -140,4 +123,5 @@ ATCG_INLINE void Serializer<ComponentSerializerT>::deserialize(const std::string
                           CustomComponents...>(file_path, entity, entity_object);
     }
 }
+}    // namespace Serialization
 }    // namespace atcg

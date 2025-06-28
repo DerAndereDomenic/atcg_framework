@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Removed atcg::Instance
 - InstanceRenderComponents now longer are hard typed to atcg::Instance but can be filled with an arbitrary number of instance buffers
+- Renamed Serializer to SceneSerializer
+- Instead of having one class that handles serialization of all components, the design was changed to have individual ComponentSerializer structs that can be implemented via template specialization.
 
 ### Fixed
 
