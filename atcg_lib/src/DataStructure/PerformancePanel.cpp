@@ -6,6 +6,8 @@
 
 namespace atcg
 {
+namespace GUI
+{
 void PerformancePanel::renderPanel(bool& show_window)
 {
 #ifndef ATCG_HEADLESS
@@ -57,4 +59,5 @@ void PerformancePanel::registerFrameTime(const float frame_time)
     _frame_time_collection.addSample(frame_time * 1000.0f);
     ++_frame_id;
 }
+}    // namespace GUI
 }    // namespace atcg

@@ -169,7 +169,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_network               = m.def_submodule("Network");                                                                  \
     auto m_tcp_server            = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                         \
     auto m_tcp_client            = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                         \
-    auto m_performance_panel     = py::class_<atcg::PerformancePanel>(m, "PerformancePanel");                                   \
+    auto m_performance_panel     = py::class_<atcg::GUI::PerformancePanel>(m, "PerformancePanel");                              \
     auto m_scriptengine =                                                                                                       \
         py::class_<atcg::PythonScriptEngine, atcg::ref_ptr<atcg::PythonScriptEngine>>(m, "ScriptEngine");                       \
     auto m_script = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");
@@ -636,13 +636,13 @@ inline void defineBindings(py::module_& m)
     m_performance_panel.def(py::init<>())
         .def(
             "renderPanel",
-            [](atcg::PerformancePanel& panel, bool show_window)
+            [](atcg::GUI::PerformancePanel& panel, bool show_window)
             {
                 panel.renderPanel(show_window);
                 return show_window;
             },
             "show_window"_a)
-        .def("registerFrameTime", &atcg::PerformancePanel::registerFrameTime);
+        .def("registerFrameTime", &atcg::GUI::PerformancePanel::registerFrameTime);
 
     // ------------------- RENDERER ---------------------------------
     m_draw_mode.value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)

@@ -347,7 +347,7 @@ private:
     atcg::ref_ptr<atcg::Graph> plane;
 
     atcg::GUI::SceneHierarchyPanel panel;
-    atcg::PerformancePanel performance_panel;
+    atcg::GUI::PerformancePanel performance_panel;
     bool show_performance = false;
 
     float time       = 0.0f;
