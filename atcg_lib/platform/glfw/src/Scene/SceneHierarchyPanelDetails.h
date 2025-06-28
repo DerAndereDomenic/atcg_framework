@@ -7,12 +7,12 @@
 
 namespace atcg
 {
-
+namespace GUI
+{
 namespace detail
 {
-template<typename GUIHandler, typename T>
-ATCG_INLINE void
-drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity, const atcg::ref_ptr<GUIHandler>& gui_handler)
+template<typename T>
+ATCG_INLINE void drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
                                              ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
@@ -40,7 +40,7 @@ drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity, const atcg::ref_
 
         if(open)
         {
-            gui_handler->template draw_component<T>(entity, component);
+            ComponentGUIRenderer<T>().draw_component(scene, entity, component);
             ImGui::TreePop();
         }
 
@@ -91,15 +91,9 @@ ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<a
 
 }    // namespace detail
 
-template<typename GUIHandler>
-SceneHierarchyPanel<GUIHandler>::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene)
-    : _scene(scene),
-      _gui_handler(atcg::make_ref<GUIHandler>(scene))
-{
-}
+ATCG_INLINE SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
 
-template<typename GUIHandler>
-void SceneHierarchyPanel<GUIHandler>::drawEntityNode(Entity entity)
+ATCG_INLINE void SceneHierarchyPanel::drawEntityNode(Entity entity)
 {
     auto& tag = entity.getComponent<NameComponent>().name();
 
@@ -137,8 +131,7 @@ void SceneHierarchyPanel<GUIHandler>::drawEntityNode(Entity entity)
     }
 }
 
-template<typename GUIHandler>
-void SceneHierarchyPanel<GUIHandler>::drawSceneProperties()
+ATCG_INLINE void SceneHierarchyPanel::drawSceneProperties()
 {
     float content_scale                    = atcg::Application::get()->getWindow()->getContentScale();
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
@@ -294,9 +287,8 @@ void SceneHierarchyPanel<GUIHandler>::drawSceneProperties()
     }
 }
 
-template<typename GUIHandler>
 template<typename... Components>
-ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::drawComponents(Entity entity)
+ATCG_INLINE void SceneHierarchyPanel::drawComponents(Entity entity)
 {
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
     std::stringstream label;
@@ -334,19 +326,17 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::drawComponents(Entity entity)
 
     ImGui::PopItemWidth();
 
-    (detail::drawComponent<GUIHandler, Components>(_scene, entity, _gui_handler), ...);
+    (detail::drawComponent<Components>(_scene, entity), ...);
 }
 
-template<typename GUIHandler>
-ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::selectEntity(Entity entity)
+ATCG_INLINE void SceneHierarchyPanel::selectEntity(Entity entity)
 {
     _selected_entity   = entity;
     _focues_components = true;
 }
 
-template<typename GUIHandler>
 template<typename... CustomComponents>
-ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
+ATCG_INLINE void SceneHierarchyPanel::renderPanel()
 {
     ImGui::Begin("Scene Hierarchy");
 
@@ -420,4 +410,5 @@ ATCG_INLINE void SceneHierarchyPanel<GUIHandler>::renderPanel()
 
     ImGui::End();
 }
+}    // namespace GUI
 }    // namespace atcg

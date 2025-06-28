@@ -35,7 +35,7 @@ public:
             script.script->onAttach();
         }
 
-        panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
+        panel = atcg::GUI::SceneHierarchyPanel(scene);
 
         if(atcg::VR::isVRAvailable())
         {
@@ -346,7 +346,7 @@ private:
 
     atcg::ref_ptr<atcg::Graph> plane;
 
-    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
+    atcg::GUI::SceneHierarchyPanel panel;
     atcg::PerformancePanel performance_panel;
     bool show_performance = false;
 

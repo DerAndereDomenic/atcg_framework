@@ -9,13 +9,12 @@
 
 namespace atcg
 {
-template<typename T>
-void ComponentGUIHandler::draw_component(Entity entity, T& component)
+namespace GUI
 {
-}
 
-template<>
-void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, TransformComponent& transform)
+void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                              Entity entity,
+                                                              TransformComponent& transform) const
 {
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
 
@@ -24,7 +23,7 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     label << "Position##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position), 0.05f))
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(_scene, entity);
+        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         transform.setPosition(position);
         atcg::RevisionStack::endRecording();
     }
@@ -33,7 +32,7 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     label << "Scale##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale), 0.05f, 1e-5f, FLT_MAX))
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(_scene, entity);
+        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         scale = glm::clamp(scale, 1e-5f, FLT_MAX);
         transform.setScale(scale);
         atcg::RevisionStack::endRecording();
@@ -43,7 +42,7 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     label << "Rotation##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation), 0.05f))
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(_scene, entity);
+        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         transform.setRotation(glm::radians(rotation));
         atcg::RevisionStack::endRecording();
     }
@@ -54,7 +53,7 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
         {
             RevisionStack::startRecording<
                 UnionRevision<ComponentEditedRevision<TransformComponent>, ComponentEditedRevision<GeometryComponent>>>(
-                _scene,
+                scene,
                 entity);
             auto& geometry = entity.getComponent<atcg::GeometryComponent>();
             auto graph     = geometry.graph->copy();
@@ -67,7 +66,7 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
         {
             RevisionStack::startRecording<
                 UnionRevision<ComponentEditedRevision<TransformComponent>, ComponentEditedRevision<GeometryComponent>>>(
-                _scene,
+                scene,
                 entity);
             auto& geometry = entity.getComponent<atcg::GeometryComponent>();
             auto graph     = geometry.graph->copy();
@@ -78,8 +77,10 @@ void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, Tran
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraComponent& _component)
+
+void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                           Entity entity,
+                                                           CameraComponent& _component) const
 {
     CameraComponent component = _component;
     bool updated              = false;
@@ -199,7 +200,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
     atcg::Dictionary context;
     context.setValue("camera", component.camera);
-    _scene->draw(context);
+    scene->draw(context);
     atcg::Renderer::useScreenBuffer();
     atcg::Renderer::setDefaultViewport();
 
@@ -224,7 +225,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
         oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
 
-        atcg::Renderer::screenshot(_scene, component.camera, component.width, component.height, oss.str());
+        atcg::Renderer::screenshot(scene, component.camera, component.width, component.height, oss.str());
     }
     atcg::Framebuffer::useDefault();
 
@@ -283,7 +284,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
     ImGui::Separator();
 
-    auto scene_camera = _scene->getCamera();
+    auto scene_camera = scene->getCamera();
 
     if(scene_camera)
     {
@@ -311,7 +312,7 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(scene, entity);
         _component = component;
         camera->setIntrinsics(intrinsics);
         _component.camera = camera;
@@ -333,8 +334,10 @@ void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraC
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<GeometryComponent>(Entity entity, GeometryComponent& component)
+
+void ComponentGUIRenderer<GeometryComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                             Entity entity,
+                                                             GeometryComponent& component) const
 {
     if(ImGui::Button("Import Mesh##GeometryComponent"))
     {
@@ -343,7 +346,7 @@ void ComponentGUIHandler::draw_component<GeometryComponent>(Entity entity, Geome
         auto files = f.result();
         if(!files.empty())
         {
-            RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(_scene, entity);
+            RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
             auto mesh       = IO::read_any(files[0]);
             component.graph = mesh;
             atcg::RevisionStack::endRecording();
@@ -351,8 +354,10 @@ void ComponentGUIHandler::draw_component<GeometryComponent>(Entity entity, Geome
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<MeshRenderComponent>(Entity entity, MeshRenderComponent& component)
+
+void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                               Entity entity,
+                                                               MeshRenderComponent& component) const
 {
     MeshRenderComponent component_copy = component;
     bool updated                       = ImGui::Checkbox("Visible##visiblemesh", &component_copy.visible);
@@ -365,14 +370,16 @@ void ComponentGUIHandler::draw_component<MeshRenderComponent>(Entity entity, Mes
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<MeshRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<MeshRenderComponent>>(scene, entity);
         component = component_copy;
         atcg::RevisionStack::endRecording();
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<PointRenderComponent>(Entity entity, PointRenderComponent& _component)
+
+void ComponentGUIRenderer<PointRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                Entity entity,
+                                                                PointRenderComponent& _component) const
 {
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
 
@@ -399,15 +406,16 @@ void ComponentGUIHandler::draw_component<PointRenderComponent>(Entity entity, Po
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointRenderComponent>>(scene, entity);
         _component = component;
         atcg::RevisionStack::endRecording();
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<PointSphereRenderComponent>(Entity entity,
-                                                                     PointSphereRenderComponent& _component)
+
+void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                      Entity entity,
+                                                                      PointSphereRenderComponent& _component) const
 {
     PointSphereRenderComponent component = _component;
     std::string id                       = std::to_string(entity.getComponent<IDComponent>().ID());
@@ -430,14 +438,16 @@ void ComponentGUIHandler::draw_component<PointSphereRenderComponent>(Entity enti
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointSphereRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointSphereRenderComponent>>(scene, entity);
         _component = component;
         atcg::RevisionStack::endRecording();
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<EdgeRenderComponent>(Entity entity, EdgeRenderComponent& _component)
+
+void ComponentGUIRenderer<EdgeRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                               Entity entity,
+                                                               EdgeRenderComponent& _component) const
 {
     EdgeRenderComponent component = _component;
 
@@ -455,15 +465,16 @@ void ComponentGUIHandler::draw_component<EdgeRenderComponent>(Entity entity, Edg
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<EdgeRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<EdgeRenderComponent>>(scene, entity);
         _component = component;
         atcg::RevisionStack::endRecording();
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<EdgeCylinderRenderComponent>(Entity entity,
-                                                                      EdgeCylinderRenderComponent& _component)
+
+void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                       Entity entity,
+                                                                       EdgeCylinderRenderComponent& _component) const
 {
     EdgeCylinderRenderComponent component = _component;
     std::string id                        = std::to_string(entity.getComponent<IDComponent>().ID());
@@ -485,14 +496,16 @@ void ComponentGUIHandler::draw_component<EdgeCylinderRenderComponent>(Entity ent
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<EdgeCylinderRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<EdgeCylinderRenderComponent>>(scene, entity);
         _component = component;
         atcg::RevisionStack::endRecording();
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity, InstanceRenderComponent& _component)
+
+void ComponentGUIRenderer<InstanceRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                   Entity entity,
+                                                                   InstanceRenderComponent& _component) const
 {
     InstanceRenderComponent component = _component;
     bool updated                      = ImGui::Checkbox("Visible##visibleinstance", &component.visible);
@@ -505,14 +518,16 @@ void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity,
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<InstanceRenderComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<InstanceRenderComponent>>(scene, entity);
         _component = component;
         atcg::RevisionStack::endRecording();
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, PointLightComponent& _component)
+
+void ComponentGUIRenderer<PointLightComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                               Entity entity,
+                                                               PointLightComponent& _component) const
 {
     PointLightComponent component = _component;
     bool updated = ImGui::DragFloat("Intensity##PointLight", &component.intensity, 0.01f, 0.0f, FLT_MAX);
@@ -521,14 +536,16 @@ void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, Poi
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointLightComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointLightComponent>>(scene, entity);
         _component = component;
         atcg::RevisionStack::endRecording();
     }
 }
 
-template<>
-void ComponentGUIHandler::draw_component<ScriptComponent>(Entity entity, ScriptComponent& _component)
+
+void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                           Entity entity,
+                                                           ScriptComponent& _component) const
 {
     ScriptComponent component = _component;
     bool updated              = false;
@@ -547,7 +564,7 @@ void ComponentGUIHandler::draw_component<ScriptComponent>(Entity entity, ScriptC
             if(!files.empty())
             {
                 component.script = atcg::make_ref<atcg::PythonScript>(files[0]);
-                component.script->init(_scene, entity);
+                component.script->init(scene, entity);
                 component.script->onAttach();
             }
         }
@@ -569,13 +586,13 @@ void ComponentGUIHandler::draw_component<ScriptComponent>(Entity entity, ScriptC
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<ScriptComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<ScriptComponent>>(scene, entity);
         _component = component;
         atcg::RevisionStack::endRecording();
     }
 }
 
-bool ComponentGUIHandler::displayMaterial(const std::string& key, Material& material)
+bool displayMaterial(const std::string& key, Material& material)
 {
     bool updated = false;
 
@@ -823,4 +840,5 @@ bool ComponentGUIHandler::displayMaterial(const std::string& key, Material& mate
 
     return updated;
 }
+}    // namespace GUI
 }    // namespace atcg

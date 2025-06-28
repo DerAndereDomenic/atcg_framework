@@ -2,67 +2,90 @@
 
 namespace atcg
 {
-template<typename T>
-void ComponentGUIHandler::draw_component(Entity entity, T& component)
+namespace GUI
+{
+
+
+void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                              Entity entity,
+                                                              TransformComponent& transform) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<TransformComponent>(Entity entity, TransformComponent& transform)
+
+void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                           Entity entity,
+                                                           CameraComponent& camera_component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<CameraComponent>(Entity entity, CameraComponent& camera_component)
+
+void ComponentGUIRenderer<GeometryComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                             Entity entity,
+                                                             GeometryComponent& component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<GeometryComponent>(Entity entity, GeometryComponent& component)
+
+void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                               Entity entity,
+                                                               MeshRenderComponent& component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<MeshRenderComponent>(Entity entity, MeshRenderComponent& component)
+
+void ComponentGUIRenderer<PointRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                Entity entity,
+                                                                PointRenderComponent& component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<PointRenderComponent>(Entity entity, PointRenderComponent& component)
+
+void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                      Entity entity,
+                                                                      PointSphereRenderComponent& component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<PointSphereRenderComponent>(Entity entity,
-                                                                     PointSphereRenderComponent& component)
+
+void ComponentGUIRenderer<EdgeRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                               Entity entity,
+                                                               EdgeRenderComponent& component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<EdgeRenderComponent>(Entity entity, EdgeRenderComponent& component)
+
+void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                       Entity entity,
+                                                                       EdgeCylinderRenderComponent& component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<EdgeCylinderRenderComponent>(Entity entity,
-                                                                      EdgeCylinderRenderComponent& component)
+
+void ComponentGUIRenderer<InstanceRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                   Entity entity,
+                                                                   InstanceRenderComponent& component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<InstanceRenderComponent>(Entity entity, InstanceRenderComponent& component)
+
+void ComponentGUIRenderer<PointLightComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                               Entity entity,
+                                                               PointLightComponent& component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<PointLightComponent>(Entity entity, PointLightComponent& component)
+
+void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                           Entity entity,
+                                                           ScriptComponent& _component) const
 {
 }
 
-template<>
-void ComponentGUIHandler::draw_component<ScriptComponent>(Entity entity, ScriptComponent& _component)
+bool displayMaterial(const std::string& key, Material& material)
 {
+    return false;
 }
 
-bool ComponentGUIHandler::displayMaterial(const std::string& key, Material& material) {}
+}    // namespace GUI
 }    // namespace atcg

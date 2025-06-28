@@ -335,7 +335,7 @@ public:
         light.intensity  = 10.0f;
         point_light.addComponent<atcg::TransformComponent>(glm::vec3(0, 5, 0));
 
-        panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
+        panel = atcg::GUI::SceneHierarchyPanel(scene);
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -491,7 +491,7 @@ private:
 
     atcg::ref_ptr<atcg::Graph> plane;
 
-    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
+    atcg::GUI::SceneHierarchyPanel panel;
 
     float time       = 0.0f;
     bool in_viewport = false;

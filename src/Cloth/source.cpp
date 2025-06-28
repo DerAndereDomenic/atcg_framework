@@ -90,7 +90,7 @@ public:
         atcg::Entity camera_entity = scene->createEntity("EditorCamera");
         camera_entity.addComponent<atcg::EditorCameraComponent>(camera_controller->getCamera());
 
-        panel = atcg::SceneHierarchyPanel(scene);
+        panel = atcg::GUI::SceneHierarchyPanel(scene);
     }
 
     // This gets called each frame
@@ -156,7 +156,7 @@ public:
                 comp.shader->setFloat("checker_size", 0.1f);
 
                 hovered_entity = {entt::null, scene.get()};
-                panel          = atcg::SceneHierarchyPanel(scene);
+                panel          = atcg::GUI::SceneHierarchyPanel(scene);
                 panel.selectEntity(hovered_entity);
             }
 
@@ -263,7 +263,7 @@ private:
     atcg::ref_ptr<atcg::Graph> plane;
     atcg::ref_ptr<atcg::Shader> checkerboard_shader;
 
-    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
+    atcg::GUI::SceneHierarchyPanel panel;
 
     float time       = 0.0f;
     bool in_viewport = false;
