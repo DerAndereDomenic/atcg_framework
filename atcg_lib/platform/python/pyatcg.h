@@ -127,7 +127,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_vertex_specification  = py::class_<atcg::VertexSpecification>(m, "VertexSpecification");                             \
     auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");                                 \
     auto m_graph                 = py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph");                             \
-    auto m_serializer            = py::class_<atcg::Serializer<atcg::ComponentSerializer>>(m, "Serializer");                    \
+    auto m_serializer            = py::class_<atcg::Serialization::SceneSerializer>(m, "SceneSerializer");                      \
     auto m_renderer              = m.def_submodule("Renderer");                                                                 \
     auto m_renderer_system =                                                                                                    \
         py::class_<atcg::RendererSystem, atcg::ref_ptr<atcg::RendererSystem>>(m, "RendererSystem");                             \
@@ -631,8 +631,8 @@ inline void defineBindings(py::module_& m)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
 
     m_serializer.def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
-        .def("serialize", &atcg::Serializer<atcg::ComponentSerializer>::serialize<>, "file_path"_a)
-        .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
+        .def("serialize", &atcg::Serialization::SceneSerializer::serialize<>, "file_path"_a)
+        .def("deserialize", &atcg::Serialization::SceneSerializer::deserialize<>, "file_path"_a);
 
     m_performance_panel.def(py::init<>())
         .def(

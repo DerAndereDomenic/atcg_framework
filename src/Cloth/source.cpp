@@ -136,14 +136,14 @@ public:
         {
             if(ImGui::MenuItem("Save"))
             {
-                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
+                atcg::Serialization::SceneSerializer serializer(scene);
                 serializer.serialize((atcg::resource_directory() / "Cloth/Scene.yaml").string());
             }
 
             if(ImGui::MenuItem("Load"))
             {
                 scene = atcg::make_ref<atcg::Scene>();
-                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
+                atcg::Serialization::SceneSerializer serializer(scene);
                 serializer.deserialize((atcg::resource_directory() / "Cloth/Scene.yaml").string());
 
                 auto entities     = scene->getEntitiesByName("EditorCamera");

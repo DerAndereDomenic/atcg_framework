@@ -3,20 +3,18 @@
 #include <Core/Memory.h>
 #include <Scene/Entity.h>
 
-#include <Scene/ComponentSerializer.h>
-
 #include <json.hpp>
 
 namespace atcg
 {
 
+namespace Serialization
+{
+
 /**
  * @brief A class that handles scene serialization
- *
- * @tparam ComponentSerializerT The class that handles serialization of individual components
  */
-template<typename ComponentSerializerT = ComponentSerializer>
-class Serializer
+class SceneSerializer
 {
 public:
     /**
@@ -25,7 +23,7 @@ public:
      *
      * @param scene The scene.
      */
-    Serializer(const atcg::ref_ptr<Scene>& scene);
+    SceneSerializer(const atcg::ref_ptr<Scene>& scene);
 
     /**
      * @brief Serialize the scene.
@@ -58,8 +56,8 @@ private:
     void deserializeEntity(const std::string& file_path, Entity entity, nlohmann::json& entity_object);
 
     atcg::ref_ptr<Scene> _scene;
-    atcg::ref_ptr<ComponentSerializerT> _component_serializer;
 };
+}    // namespace Serialization
 }    // namespace atcg
 
 #include "../../src/Scene/SerializerDetail.h"

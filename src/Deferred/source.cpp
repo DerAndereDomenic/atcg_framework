@@ -372,7 +372,7 @@ public:
         {
             if(ImGui::MenuItem("Save"))
             {
-                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
+                atcg::Serialization::SceneSerializer serializer(scene);
 
                 serializer.serialize("../Scene/Scene.json");
             }
@@ -380,7 +380,7 @@ public:
             if(ImGui::MenuItem("Load"))
             {
                 scene->removeAllEntites();
-                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
+                atcg::Serialization::SceneSerializer serializer(scene);
 
                 serializer.deserialize("../Scene/Scene.json");
 

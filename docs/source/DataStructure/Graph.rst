@@ -15,9 +15,6 @@ Graph
 .. doxygenstruct:: atcg::EdgeSpecification
    :members:
    :undoc-members:
-.. doxygenstruct:: atcg::Instance
-   :members:
-   :undoc-members:
 .. doxygenclass:: atcg::Graph
    :members:
    :undoc-members:
