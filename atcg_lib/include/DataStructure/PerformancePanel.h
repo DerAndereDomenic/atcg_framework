@@ -5,6 +5,8 @@
 namespace atcg
 {
 
+namespace GUI
+{
 /**
  * @brief A debug panel to display frame times
  */
@@ -39,4 +41,5 @@ private:
         atcg::CyclicCollection<float>("Frame Time Collection", 5);
     uint32_t _frame_id = 0;
 };
+}    // namespace GUI
 }    // namespace atcg
