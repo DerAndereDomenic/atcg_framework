@@ -58,13 +58,14 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
     bsdf->initializePipeline(pipeline, sbt);
 
     atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
-    if(material.emissive)
+    if(entity.hasComponent<MeshLightComponent>())
     {
+        auto& mesh_light_component = entity.getComponent<MeshLightComponent>();
         Dictionary emitter_data;
         emitter_data.setValue<atcg::ref_ptr<MeshShape>>("shape", std::dynamic_pointer_cast<MeshShape>(shape));
         emitter_data.setValue("transform", transform.getModel());
-        emitter_data.setValue("emission_scaling", material.emission_scale);
-        emitter_data.setValue("texture_emissive", material.getEmissiveTexture());
+        emitter_data.setValue("emission_scaling", mesh_light_component.intensity);
+        emitter_data.setValue("texture_emissive", mesh_light_component.getEmissiveTexture());
 
         mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
         mesh_emitter->initializePipeline(pipeline, sbt);
