@@ -283,6 +283,7 @@ public:
                           InstanceRenderComponent,
                           CustomRenderComponent,
                           PointLightComponent,
+                          MeshLightComponent,
                           ScriptComponent>(entity);
     }
 
@@ -308,6 +309,7 @@ public:
                         InstanceRenderComponent,
                         CustomRenderComponent,
                         PointLightComponent,
+                        MeshLightComponent,
                         ScriptComponent>(entity);
     }
 

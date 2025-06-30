@@ -21,6 +21,15 @@ public:
         : _renderer(SystemRegistry::instance()->getSystem<RendererSystem>()),
           _dummy_skybox(atcg::make_ref<Skybox>())
     {
+        glm::vec3 color(0);
+        TextureSpecification spec_emissive;
+        spec_emissive.width  = 1;
+        spec_emissive.height = 1;
+        glm::u8vec4 color_quant((uint8_t)(color[0] * 255.0f),
+                                (uint8_t)(color[1] * 255.0f),
+                                (uint8_t)(color[2] * 255.0f),
+                                (uint8_t)(255.0f));
+        _dummy_emission = atcg::Texture2D::create(&color_quant, spec_emissive);
     }
 
     /**
@@ -29,7 +38,18 @@ public:
      * @param renderer A pointer to the renderer that should be used internally. This does not take ownership of the
      * renderer and expects that the pointer stays valid while this class is in use.
      */
-    ComponentRenderer(atcg::RendererSystem* renderer) : _renderer(renderer), _dummy_skybox(atcg::make_ref<Skybox>()) {}
+    ComponentRenderer(atcg::RendererSystem* renderer) : _renderer(renderer), _dummy_skybox(atcg::make_ref<Skybox>())
+    {
+        glm::vec3 color(0);
+        TextureSpecification spec_emissive;
+        spec_emissive.width  = 1;
+        spec_emissive.height = 1;
+        glm::u8vec4 color_quant((uint8_t)(color[0] * 255.0f),
+                                (uint8_t)(color[1] * 255.0f),
+                                (uint8_t)(color[2] * 255.0f),
+                                (uint8_t)(255.0f));
+        _dummy_emission = atcg::Texture2D::create(&color_quant, spec_emissive);
+    }
 
     /**
      * @brief Render a component.
@@ -62,5 +82,6 @@ protected:
 private:
     RendererSystem* _renderer;
     atcg::ref_ptr<Skybox> _dummy_skybox;
+    atcg::ref_ptr<Texture2D> _dummy_emission;
 };
 }    // namespace atcg

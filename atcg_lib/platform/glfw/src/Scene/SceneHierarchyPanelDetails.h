@@ -392,6 +392,7 @@ ATCG_INLINE void SceneHierarchyPanel::renderPanel()
                                EdgeCylinderRenderComponent,
                                InstanceRenderComponent,
                                PointLightComponent,
+                               MeshLightComponent,
                                ScriptComponent,
                                CustomComponents...>(_selected_entity);
             }

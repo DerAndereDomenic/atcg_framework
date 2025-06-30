@@ -76,6 +76,7 @@ ATCG_INLINE void SceneSerializer::serialize(const std::string& file_path)
                                              EdgeCylinderRenderComponent,
                                              InstanceRenderComponent,
                                              PointLightComponent,
+                                             MeshLightComponent,
                                              ScriptComponent,
                                              CustomComponents...>(file_path, entity);
 
@@ -119,6 +120,7 @@ ATCG_INLINE void SceneSerializer::deserialize(const std::string& file_path)
                           EdgeCylinderRenderComponent,
                           InstanceRenderComponent,
                           PointLightComponent,
+                          MeshLightComponent,
                           ScriptComponent,
                           CustomComponents...>(file_path, entity, entity_object);
     }

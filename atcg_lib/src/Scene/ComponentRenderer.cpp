@@ -115,6 +115,18 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
 
     if(renderer.visible)
     {
+        atcg::ref_ptr<Texture2D> emissive_texture = _dummy_emission;
+        if(entity.hasComponent<MeshLightComponent>())
+        {
+            MeshLightComponent& mesh_light = entity.getComponent<atcg::MeshLightComponent>();
+            shader->setFloat("emission_scale", mesh_light.intensity);
+            emissive_texture = mesh_light.getEmissiveTexture();
+        }
+        uint32_t emissive_id = _renderer->popTextureID();
+        shader->setInt("texture_emissive", emissive_id);
+        emissive_texture->use(emissive_id);
+
+
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
@@ -139,6 +151,8 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
         {
             _renderer->pushTextureID(pre_id);
         }
+
+        _renderer->pushTextureID(emissive_id);
     }
 }
 
@@ -189,6 +203,10 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
 
     if(renderer.visible)
     {
+        uint32_t emissive_id = _renderer->popTextureID();
+        shader->setInt("texture_emissive", emissive_id);
+        _dummy_emission->use(emissive_id);
+
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
@@ -213,6 +231,8 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
         {
             _renderer->pushTextureID(pre_id);
         }
+
+        _renderer->pushTextureID(emissive_id);
     }
 }
 
@@ -263,6 +283,10 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
 
     if(renderer.visible)
     {
+        uint32_t emissive_id = _renderer->popTextureID();
+        shader->setInt("texture_emissive", emissive_id);
+        _dummy_emission->use(emissive_id);
+
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
@@ -287,6 +311,7 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
         {
             _renderer->pushTextureID(pre_id);
         }
+        _renderer->pushTextureID(emissive_id);
     }
 }
 
@@ -338,6 +363,10 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
 
     if(renderer.visible)
     {
+        uint32_t emissive_id = _renderer->popTextureID();
+        shader->setInt("texture_emissive", emissive_id);
+        _dummy_emission->use(emissive_id);
+
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
@@ -361,6 +390,7 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
         {
             _renderer->pushTextureID(pre_id);
         }
+        _renderer->pushTextureID(emissive_id);
     }
 }
 
@@ -412,6 +442,10 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
 
     if(renderer.visible)
     {
+        uint32_t emissive_id = _renderer->popTextureID();
+        shader->setInt("texture_emissive", emissive_id);
+        _dummy_emission->use(emissive_id);
+
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
@@ -436,6 +470,7 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
         {
             _renderer->pushTextureID(pre_id);
         }
+        _renderer->pushTextureID(emissive_id);
     }
 }
 
@@ -488,6 +523,10 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
 
     if(renderer.visible)
     {
+        uint32_t emissive_id = _renderer->popTextureID();
+        shader->setInt("texture_emissive", emissive_id);
+        _dummy_emission->use(emissive_id);
+
         auto vao = geometry.graph->getVerticesArray();
         for(int i = 0; i < renderer.instance_vbos.size(); ++i)
         {
@@ -524,6 +563,8 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
         {
             vao->popVertexBuffer();
         }
+
+        _renderer->pushTextureID(emissive_id);
     }
 }
 }    // namespace atcg

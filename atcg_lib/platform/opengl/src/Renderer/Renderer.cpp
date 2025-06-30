@@ -319,14 +319,6 @@ void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref
     shader->setInt("texture_metallic", metallic_id);
     used_texture_units.push_back(metallic_id);
 
-    uint32_t emissive_id = renderer->popTextureID();
-    material.getEmissiveTexture()->use(emissive_id);
-    shader->setInt("texture_emissive", emissive_id);
-    used_texture_units.push_back(emissive_id);
-
-    shader->setFloat("emission_scale", material.emission_scale);
-    shader->setInt("emissive", (int)material.emissive);
-
     uint32_t lut_id = renderer->popTextureID();
     lut->use(lut_id);
     shader->setInt("lut", lut_id);
