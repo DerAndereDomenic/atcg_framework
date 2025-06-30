@@ -346,52 +346,53 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
     const auto& shapes        = reader.GetShapes();
     const auto& materials_obj = reader.GetMaterials();
 
-    std::vector<atcg::Material> materials(materials_obj.size());
+    std::vector<atcg::ref_ptr<Material>> materials(materials_obj.size());
 
     for(uint32_t i = 0; i < materials_obj.size(); ++i)
     {
         const tinyobj::material_t& mat_obj = materials_obj[i];
-        atcg::Material& material           = materials[i];
+        auto& material                     = materials[i];
+        material                           = atcg::make_ref<atcg::Material>();
 
         if(mat_obj.diffuse_texname != "")
         {
             float gamma  = mat_obj.diffuse_texopt.colorspace == "linear" ? 1.0f : 2.2f;
             auto img     = IO::imread(mat_obj.diffuse_texname, gamma);
             auto texture = atcg::Texture2D::create(img);
-            material.setDiffuseTexture(texture);
+            material->setDiffuseTexture(texture);
         }
         else
         {
-            material.setDiffuseColor(glm::make_vec3(mat_obj.diffuse));
+            material->setDiffuseColor(glm::make_vec3(mat_obj.diffuse));
         }
 
         if(mat_obj.metallic_texname != "")
         {
             auto img     = IO::imread(mat_obj.metallic_texname);
             auto texture = atcg::Texture2D::create(img);
-            material.setMetallicTexture(texture);
+            material->setMetallicTexture(texture);
         }
         else
         {
-            material.setMetallic(mat_obj.metallic);
+            material->setMetallic(mat_obj.metallic);
         }
 
         if(mat_obj.roughness_texname != "")
         {
             auto img     = IO::imread(mat_obj.roughness_texname);
             auto texture = atcg::Texture2D::create(img);
-            material.setRoughnessTexture(texture);
+            material->setRoughnessTexture(texture);
         }
         else
         {
-            material.setRoughness(mat_obj.roughness);
+            material->setRoughness(mat_obj.roughness);
         }
 
         if(mat_obj.bump_texname != "")
         {
             auto img     = IO::imread(mat_obj.bump_texname);
             auto texture = atcg::Texture2D::create(img);
-            material.setNormalTexture(texture);
+            material->setNormalTexture(texture);
         }
     }
 
@@ -433,7 +434,7 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
             if(shape.mesh.material_ids[0] != -1)
             {
-                renderer.material = materials[shape.mesh.material_ids[0]];
+                renderer.setMaterial(materials[shape.mesh.material_ids[0]]);
             }
         }
     }

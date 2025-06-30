@@ -363,7 +363,7 @@ void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_p
     bool updated                       = ImGui::Checkbox("Visible##visiblemesh", &component_copy.visible);
 
     // Material
-    Material& material = component_copy.material;
+    auto material = component_copy.material();
 
     updated = displayMaterial("mesh", material) || updated;
     updated = ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component_copy.receive_shadow) || updated;
@@ -432,7 +432,7 @@ void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg
     }
 
     // Material
-    Material& material = component.material;
+    auto material = component.material();
 
     updated = displayMaterial("pointsphere", material) || updated;
 
@@ -490,7 +490,7 @@ void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atc
     }
 
     // Material
-    Material& material = component.material;
+    auto material = component.material();
 
     updated = displayMaterial("edgecylinder", material) || updated;
 
@@ -511,7 +511,7 @@ void ComponentGUIRenderer<InstanceRenderComponent>::draw_component(const atcg::r
     bool updated                      = ImGui::Checkbox("Visible##visibleinstance", &component.visible);
 
     // Material
-    Material& material = component.material;
+    auto material = component.material();
 
     updated = displayMaterial("instance", material) || updated;
     updated = ImGui::Checkbox("Receive Shadows##InstanceRenderComponent", &component.receive_shadow) || updated;
@@ -592,7 +592,7 @@ void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<S
     }
 }
 
-bool displayMaterial(const std::string& key, Material& material)
+bool displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& material)
 {
     bool updated = false;
 
@@ -602,12 +602,12 @@ bool displayMaterial(const std::string& key, Material& material)
     ImGui::Text("Material");
 
     {
-        auto spec        = material.getDiffuseTexture()->getSpecification();
+        auto spec        = material->getDiffuseTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
 
         if(!useTextures)
         {
-            auto diffuse = material.getDiffuseTexture()->getData(atcg::CPU);
+            auto diffuse = material->getDiffuseTexture()->getData(atcg::CPU);
 
             float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
                               diffuse.index({0, 0, 1}).item<float>() / 255.0f,
@@ -617,7 +617,7 @@ bool displayMaterial(const std::string& key, Material& material)
             if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
             {
                 glm::vec4 new_color = glm::make_vec4(color);
-                material.setDiffuseColor(new_color);
+                material->setDiffuseColor(new_color);
                 updated = true;
             }
 
@@ -643,7 +643,7 @@ bool displayMaterial(const std::string& key, Material& material)
                 {
                     auto img     = IO::imread(files[0], 2.2f);
                     auto texture = atcg::Texture2D::create(img);
-                    material.setDiffuseTexture(texture);
+                    material->setDiffuseTexture(texture);
                     updated = true;
                 }
             }
@@ -655,11 +655,11 @@ bool displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("X##diffuse" + key).c_str()))
             {
-                material.setDiffuseColor(glm::vec4(1));
+                material->setDiffuseColor(glm::vec4(1));
                 updated = true;
             }
             else
-                ImGui::Image((ImTextureID)material.getDiffuseTexture()->getID(),
+                ImGui::Image((ImTextureID)material->getDiffuseTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
@@ -667,7 +667,7 @@ bool displayMaterial(const std::string& key, Material& material)
     }
 
     {
-        auto spec        = material.getNormalTexture()->getSpecification();
+        auto spec        = material->getNormalTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
 
         if(!useTextures)
@@ -694,7 +694,7 @@ bool displayMaterial(const std::string& key, Material& material)
                 {
                     auto img     = IO::imread(files[0]);
                     auto texture = atcg::Texture2D::create(img);
-                    material.setNormalTexture(texture);
+                    material->setNormalTexture(texture);
                     updated = true;
                 }
             }
@@ -706,11 +706,11 @@ bool displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("X##normal" + key).c_str()))
             {
-                material.removeNormalMap();
+                material->removeNormalMap();
                 updated = true;
             }
             else
-                ImGui::Image((ImTextureID)material.getNormalTexture()->getID(),
+                ImGui::Image((ImTextureID)material->getNormalTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
@@ -718,17 +718,17 @@ bool displayMaterial(const std::string& key, Material& material)
     }
 
     {
-        auto spec        = material.getRoughnessTexture()->getSpecification();
+        auto spec        = material->getRoughnessTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
 
         if(!useTextures)
         {
-            auto data       = material.getRoughnessTexture()->getData(atcg::CPU);
+            auto data       = material->getRoughnessTexture()->getData(atcg::CPU);
             float roughness = data.item<float>();
 
             if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
             {
-                material.setRoughness(roughness);
+                material->setRoughness(roughness);
                 updated = true;
             }
 
@@ -754,7 +754,7 @@ bool displayMaterial(const std::string& key, Material& material)
                 {
                     auto img     = IO::imread(files[0]);
                     auto texture = atcg::Texture2D::create(img);
-                    material.setRoughnessTexture(texture);
+                    material->setRoughnessTexture(texture);
                     updated = true;
                 }
             }
@@ -766,11 +766,11 @@ bool displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("X##roughness" + key).c_str()))
             {
-                material.setRoughness(1.0f);
+                material->setRoughness(1.0f);
                 updated = true;
             }
             else
-                ImGui::Image((ImTextureID)material.getRoughnessTexture()->getID(),
+                ImGui::Image((ImTextureID)material->getRoughnessTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
@@ -779,17 +779,17 @@ bool displayMaterial(const std::string& key, Material& material)
 
 
     {
-        auto spec        = material.getMetallicTexture()->getSpecification();
+        auto spec        = material->getMetallicTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
 
         if(!useTextures)
         {
-            auto data      = material.getMetallicTexture()->getData(atcg::CPU);
+            auto data      = material->getMetallicTexture()->getData(atcg::CPU);
             float metallic = data.item<float>();
 
             if(ImGui::DragFloat(("Metallic##" + key).c_str(), &metallic, 0.005f, 0.0f, 1.0f))
             {
-                material.setMetallic(metallic);
+                material->setMetallic(metallic);
                 updated = true;
             }
 
@@ -815,7 +815,7 @@ bool displayMaterial(const std::string& key, Material& material)
                 {
                     auto img     = IO::imread(files[0]);
                     auto texture = atcg::Texture2D::create(img);
-                    material.setMetallicTexture(texture);
+                    material->setMetallicTexture(texture);
                     updated = true;
                 }
             }
@@ -827,11 +827,11 @@ bool displayMaterial(const std::string& key, Material& material)
 
             if(ImGui::Button(("X##metallic" + key).c_str()))
             {
-                material.setMetallic(0.0f);
+                material->setMetallic(0.0f);
                 updated = true;
             }
             else
-                ImGui::Image((ImTextureID)material.getMetallicTexture()->getID(),
+                ImGui::Image((ImTextureID)material->getMetallicTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});

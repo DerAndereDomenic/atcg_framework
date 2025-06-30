@@ -44,7 +44,7 @@ public:
 
     void initFramebuffer(uint32_t num_frames, uint32_t width, uint32_t height);
 
-    Material standard_material;
+    atcg::ref_ptr<Material> standard_material = atcg::make_ref<Material>();
 
     atcg::ref_ptr<Texture2D> lut;
 
@@ -102,10 +102,10 @@ public:
               const glm::vec3& color,
               const atcg::ref_ptr<Shader>& shader,
               DrawMode draw_mode,
-              const Material& material,
+              const atcg::ref_ptr<Material>& material,
               uint32_t entity_id);
 
-    void setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader);
+    void setMaterial(const atcg::ref_ptr<Material>& material, const atcg::ref_ptr<Shader>& shader);
 
     std::vector<uint32_t> used_texture_units;
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
@@ -295,27 +295,27 @@ void RendererSystem::Impl::initFramebuffer(uint32_t num_samples, uint32_t width,
     screen_fbo_msaa->complete();
 }
 
-void RendererSystem::Impl::setMaterial(const Material& material, const atcg::ref_ptr<Shader>& shader)
+void RendererSystem::Impl::setMaterial(const atcg::ref_ptr<Material>& material, const atcg::ref_ptr<Shader>& shader)
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
     uint32_t diffuse_id = renderer->popTextureID();
-    material.getDiffuseTexture()->use(diffuse_id);
+    material->getDiffuseTexture()->use(diffuse_id);
     shader->setInt("texture_diffuse", diffuse_id);
     used_texture_units.push_back(diffuse_id);
 
     uint32_t normal_id = renderer->popTextureID();
-    material.getNormalTexture()->use(normal_id);
+    material->getNormalTexture()->use(normal_id);
     shader->setInt("texture_normal", normal_id);
     used_texture_units.push_back(normal_id);
 
     uint32_t roughness_id = renderer->popTextureID();
-    material.getRoughnessTexture()->use(roughness_id);
+    material->getRoughnessTexture()->use(roughness_id);
     shader->setInt("texture_roughness", roughness_id);
     used_texture_units.push_back(roughness_id);
 
     uint32_t metallic_id = renderer->popTextureID();
-    material.getMetallicTexture()->use(metallic_id);
+    material->getMetallicTexture()->use(metallic_id);
     shader->setInt("texture_metallic", metallic_id);
     used_texture_units.push_back(metallic_id);
 
@@ -422,7 +422,7 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
                                 const glm::vec3& color,
                                 const atcg::ref_ptr<Shader>& shader,
                                 DrawMode draw_mode,
-                                const Material& material,
+                                const atcg::ref_ptr<Material>& material,
                                 uint32_t entity_id)
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
@@ -919,12 +919,12 @@ void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
                           const glm::vec3& color,
                           const atcg::ref_ptr<Shader>& shader,
                           DrawMode draw_mode,
-                          const std::optional<Material>& material,
+                          const std::optional<atcg::ref_ptr<Material>>& material,
                           const uint32_t entity_id)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    const Material& used_material = material.value_or(impl->standard_material);
+    const atcg::ref_ptr<Material>& used_material = material.value_or(impl->standard_material);
 
     impl->draw(mesh, camera, model, color, shader, draw_mode, used_material, entity_id);
 }

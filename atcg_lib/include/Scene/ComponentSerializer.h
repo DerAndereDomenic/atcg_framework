@@ -143,7 +143,7 @@ std::vector<uint8_t> deserializeBuffer(const std::string& file_name);
  * @param material The material
  * @param file_path The file path
  */
-void serializeMaterial(nlohmann::json& out, Entity entity, const Material& material, const std::string& file_path);
+void serializeMaterial(nlohmann::json& out, Entity entity, const atcg::ref_ptr<Material>& material, const std::string& file_path);
 
 /**
  * @brief Deserialize the material
@@ -152,7 +152,7 @@ void serializeMaterial(nlohmann::json& out, Entity entity, const Material& mater
  *
  * @return The material
  */
-Material deserialize_material(const nlohmann::json& material_node);
+atcg::ref_ptr<Material> deserialize_material(const nlohmann::json& material_node);
 
 /**
  * @brief Serialize a texture

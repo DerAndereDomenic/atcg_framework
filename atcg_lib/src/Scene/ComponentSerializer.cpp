@@ -97,12 +97,15 @@ void serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path
     img.store(path);
 }
 
-void serializeMaterial(nlohmann::json& j, Entity entity, const Material& material, const std::string& file_path)
+void serializeMaterial(nlohmann::json& j,
+                       Entity entity,
+                       const atcg::ref_ptr<Material>& material,
+                       const std::string& file_path)
 {
-    auto diffuse_texture   = material.getDiffuseTexture();
-    auto normal_texture    = material.getNormalTexture();
-    auto metallic_texture  = material.getMetallicTexture();
-    auto roughness_texture = material.getRoughnessTexture();
+    auto diffuse_texture   = material->getDiffuseTexture();
+    auto normal_texture    = material->getNormalTexture();
+    auto metallic_texture  = material->getMetallicTexture();
+    auto roughness_texture = material->getRoughnessTexture();
 
     bool use_diffuse_texture   = !(diffuse_texture->width() == 1 && diffuse_texture->height() == 1);
     bool use_normal_texture    = !(normal_texture->width() == 1 && normal_texture->height() == 1);
@@ -176,22 +179,22 @@ void serializeMaterial(nlohmann::json& j, Entity entity, const Material& materia
     }
 }
 
-Material deserialize_material(const nlohmann::json& material_node)
+atcg::ref_ptr<Material> deserialize_material(const nlohmann::json& material_node)
 {
-    Material material;
+    atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
 
     // Diffuse
     if(material_node.contains(DIFFUSE_KEY))
     {
         std::vector<float> diffuse_color = material_node[DIFFUSE_KEY];
-        material.setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
+        material->setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
     }
     else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
     {
         std::string diffuse_path = material_node[DIFFUSE_TEXTURE_KEY];
         auto img                 = IO::imread(diffuse_path, 2.2f);
         auto diffuse_texture     = atcg::Texture2D::create(img);
-        material.setDiffuseTexture(diffuse_texture);
+        material->setDiffuseTexture(diffuse_texture);
     }
 
     // Normals
@@ -200,35 +203,35 @@ Material deserialize_material(const nlohmann::json& material_node)
         std::string normal_path = material_node[NORMAL_TEXTURE_KEY];
         auto img                = IO::imread(normal_path);
         auto normal_texture     = atcg::Texture2D::create(img);
-        material.setNormalTexture(normal_texture);
+        material->setNormalTexture(normal_texture);
     }
 
     // Roughness
     if(material_node.contains(ROUGHNESS_KEY))
     {
         float roughness = material_node[ROUGHNESS_KEY];
-        material.setRoughness(roughness);
+        material->setRoughness(roughness);
     }
     else if(material_node.contains(ROUGHNESS_TEXTURE_KEY))
     {
         std::string roughness_path = material_node[ROUGHNESS_TEXTURE_KEY];
         auto img                   = IO::imread(roughness_path);
         auto roughness_texture     = atcg::Texture2D::create(img);
-        material.setRoughnessTexture(roughness_texture);
+        material->setRoughnessTexture(roughness_texture);
     }
 
     // Metallic
     if(material_node.contains(METALLIC_KEY))
     {
         float metallic = material_node[METALLIC_KEY];
-        material.setMetallic(metallic);
+        material->setMetallic(metallic);
     }
     else if(material_node.contains(METALLIC_TEXTURE_KEY))
     {
         std::string metallic_path = material_node[METALLIC_TEXTURE_KEY];
         auto img                  = IO::imread(metallic_path);
         auto metallic_texture     = atcg::Texture2D::create(img);
-        material.setMetallicTexture(metallic_texture);
+        material->setMetallicTexture(metallic_texture);
     }
 
     return material;
@@ -387,7 +390,7 @@ void ComponentSerializer<MeshRenderComponent>::serialize_component(const std::st
     j[MESH_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
     j[MESH_RENDERER_KEY][RECEIVE_SHADOWS_KEY]      = component.receive_shadow;
 
-    serializeMaterial(j[MESH_RENDERER_KEY], entity, component.material, file_path);
+    serializeMaterial(j[MESH_RENDERER_KEY], entity, component.material(), file_path);
 }
 
 
@@ -416,7 +419,7 @@ void ComponentSerializer<PointSphereRenderComponent>::serialize_component(const 
     j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = component.shader->getFragmentPath();
     j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
 
-    serializeMaterial(j[POINT_SPHERE_RENDERER_KEY], entity, component.material, file_path);
+    serializeMaterial(j[POINT_SPHERE_RENDERER_KEY], entity, component.material(), file_path);
 }
 
 
@@ -438,7 +441,7 @@ void ComponentSerializer<EdgeCylinderRenderComponent>::serialize_component(const
 {
     j[EDGE_CYLINDER_RENDERER_KEY][RADIUS_KEY] = component.radius;
 
-    serializeMaterial(j[EDGE_CYLINDER_RENDERER_KEY], entity, component.material, file_path);
+    serializeMaterial(j[EDGE_CYLINDER_RENDERER_KEY], entity, component.material(), file_path);
 }
 
 
@@ -452,7 +455,7 @@ void ComponentSerializer<InstanceRenderComponent>::serialize_component(const std
     j[INSTANCE_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = shader->getVertexPath();
     j[INSTANCE_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = shader->getFragmentPath();
     j[INSTANCE_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = shader->getGeometryPath();
-    serializeMaterial(j[INSTANCE_RENDERER_KEY], entity, component.material, file_path);
+    serializeMaterial(j[INSTANCE_RENDERER_KEY], entity, component.material(), file_path);
 
     IDComponent& id = entity.getComponent<IDComponent>();
     nlohmann::json::array_t buffers;
@@ -694,9 +697,9 @@ void ComponentSerializer<MeshRenderComponent>::deserialize_component(const std::
 
     if(renderer.contains(MATERIAL_KEY))
     {
-        auto material_node       = renderer[MATERIAL_KEY];
-        Material material        = deserialize_material(material_node);
-        renderComponent.material = material;
+        auto material_node               = renderer[MATERIAL_KEY];
+        atcg::ref_ptr<Material> material = deserialize_material(material_node);
+        renderComponent.setMaterial(material);
     }
 
     renderComponent.receive_shadow = renderer.value(RECEIVE_SHADOWS_KEY, true);
@@ -778,9 +781,9 @@ void ComponentSerializer<PointSphereRenderComponent>::deserialize_component(cons
 
     if(renderer.contains(MATERIAL_KEY))
     {
-        auto material_node       = renderer[MATERIAL_KEY];
-        Material material        = deserialize_material(material_node);
-        renderComponent.material = material;
+        auto material_node               = renderer[MATERIAL_KEY];
+        atcg::ref_ptr<Material> material = deserialize_material(material_node);
+        renderComponent.setMaterial(material);
     }
 }
 
@@ -819,9 +822,9 @@ void ComponentSerializer<EdgeCylinderRenderComponent>::deserialize_component(con
 
     if(renderer.contains(MATERIAL_KEY))
     {
-        auto& material_node      = renderer[MATERIAL_KEY];
-        Material material        = deserialize_material(material_node);
-        renderComponent.material = material;
+        auto& material_node              = renderer[MATERIAL_KEY];
+        atcg::ref_ptr<Material> material = deserialize_material(material_node);
+        renderComponent.setMaterial(material);
     }
 }
 
@@ -840,9 +843,9 @@ void ComponentSerializer<InstanceRenderComponent>::deserialize_component(const s
     auto& renderComponent = entity.addComponent<InstanceRenderComponent>();
     if(renderer.contains(MATERIAL_KEY))
     {
-        auto& material_node      = renderer[MATERIAL_KEY];
-        Material material        = deserialize_material(material_node);
-        renderComponent.material = material;
+        auto& material_node              = renderer[MATERIAL_KEY];
+        atcg::ref_ptr<Material> material = deserialize_material(material_node);
+        renderComponent.setMaterial(material);
     }
 
     std::string vertex_path =

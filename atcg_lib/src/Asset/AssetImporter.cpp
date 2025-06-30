@@ -16,6 +16,11 @@ atcg::ref_ptr<Asset> AssetImporter::importAsset(const AssetMetaData& metadata)
             asset    = atcg::Texture2D::create(img);
         }
         break;
+        case AssetType::Material:
+        {
+            // TODO
+        }
+        break;
     }
 
     return asset;

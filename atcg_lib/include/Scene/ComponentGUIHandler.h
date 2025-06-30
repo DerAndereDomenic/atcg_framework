@@ -70,6 +70,6 @@ ATCG_DECLARE_COMPONENT_GUI_RENDERER(ScriptComponent);
  *
  * @return true if the material has been updated this frame
  */
-bool displayMaterial(const std::string& key, Material& material);
+bool displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& material);
 }    // namespace GUI
 }    // namespace atcg

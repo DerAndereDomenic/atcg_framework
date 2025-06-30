@@ -125,7 +125,7 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
                         glm::vec3(1),
                         shader,
                         atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE,
-                        renderer.material,
+                        renderer.material(),
                         entity.entity_handle());
         if(id != -1)
         {
@@ -273,7 +273,7 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
                         glm::vec3(1),
                         shader,
                         atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE,
-                        renderer.material,
+                        renderer.material(),
                         entity.entity_handle());
         if(id != -1)
         {
@@ -422,7 +422,7 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
                         glm::vec3(1),
                         shader,
                         atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER,
-                        renderer.material,
+                        renderer.material(),
                         entity.entity_handle());
         if(id != -1)
         {
@@ -505,7 +505,7 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
                         glm::vec3(1),
                         shader,
                         atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED,
-                        renderer.material,
+                        renderer.material(),
                         entity.entity_handle());
         if(id != -1)
         {

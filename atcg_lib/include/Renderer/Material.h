@@ -1,13 +1,14 @@
 #pragma once
 
 #include <Renderer/Texture.h>
+#include <Asset/Asset.h>
 
 namespace atcg
 {
 /**
  * @brief A class to model a material.
  */
-struct Material
+struct Material : public Asset
 {
     /**
      * @brief Constructor
@@ -105,6 +106,10 @@ struct Material
      * @brief Remove the normal map
      */
     void removeNormalMap();
+
+    ATCG_INLINE static AssetType getStaticType() { return AssetType::Material; }
+
+    ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
 
 private:
     atcg::ref_ptr<atcg::Texture2D> _diffuse_texture;

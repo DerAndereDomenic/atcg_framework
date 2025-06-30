@@ -145,7 +145,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_texture_cube   = py::class_<atcg::TextureCube, atcg::ref_ptr<atcg::TextureCube>>(m, "TextureCube");                  \
     auto m_framebuffer    = py::class_<atcg::Framebuffer, atcg::ref_ptr<atcg::Framebuffer>>(m, "Framebuffer");                  \
     auto m_entity_handle  = py::class_<entt::entity>(m, "EntityHandle");                                                        \
-    auto m_material       = py::class_<atcg::Material>(m, "Material");                                                          \
+    auto m_material       = py::class_<atcg::Material, atcg::ref_ptr<atcg::Material>>(m, "Material");                           \
     auto m_transform      = py::class_<atcg::TransformComponent>(m, "TransformComponent");                                      \
     auto m_geometry       = py::class_<atcg::GeometryComponent>(m, "GeometryComponent");                                        \
     auto m_mesh_renderer  = py::class_<atcg::MeshRenderComponent>(m, "MeshRenderComponent");                                    \
@@ -1138,7 +1138,7 @@ inline void defineBindings(py::module_& m)
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&>(), "shader"_a)
         .def_readwrite("visible", &atcg::MeshRenderComponent::visible)
         .def_readwrite("shader", &atcg::MeshRenderComponent::shader)
-        .def_readwrite("material", &atcg::MeshRenderComponent::material);
+        .def("material", &atcg::MeshRenderComponent::material);
 
     m_point_renderer
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
@@ -1149,7 +1149,7 @@ inline void defineBindings(py::module_& m)
     m_point_sphere_renderer.def(py::init<const atcg::ref_ptr<atcg::Shader>&, float>(), "shader"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointSphereRenderComponent::visible)
         .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader)
-        .def_readwrite("material", &atcg::PointSphereRenderComponent::material);
+        .def("material", &atcg::PointSphereRenderComponent::material);
 
     m_edge_renderer.def(py::init<glm::vec3>(), "color"_a)
         .def_readwrite("visible", &atcg::EdgeRenderComponent::visible)
@@ -1157,11 +1157,11 @@ inline void defineBindings(py::module_& m)
 
     m_edge_cylinder_renderer.def(py::init<float>(), "radius"_a)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
-        .def_readwrite("material", &atcg::EdgeCylinderRenderComponent::material);
+        .def("material", &atcg::EdgeCylinderRenderComponent::material);
 
     m_instance_renderer.def(py::init<>())
         .def_readwrite("visible", &atcg::InstanceRenderComponent::visible)
-        .def_readwrite("material", &atcg::InstanceRenderComponent::material)
+        .def("material", &atcg::InstanceRenderComponent::material)
         .def_readwrite("instances", &atcg::InstanceRenderComponent::instance_vbos);
 
     m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def("name", &atcg::NameComponent::name);
