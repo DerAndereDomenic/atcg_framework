@@ -56,9 +56,9 @@ void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_pt
                 scene,
                 entity);
             auto& geometry = entity.getComponent<atcg::GeometryComponent>();
-            auto graph     = geometry.graph->copy();
+            auto graph     = geometry.graph()->copy();
             applyTransform(graph, transform);
-            geometry.graph = graph;
+            geometry.setGraph(graph);
             atcg::RevisionStack::endRecording();
         }
 
@@ -69,9 +69,9 @@ void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_pt
                 scene,
                 entity);
             auto& geometry = entity.getComponent<atcg::GeometryComponent>();
-            auto graph     = geometry.graph->copy();
+            auto graph     = geometry.graph()->copy();
             normalize(graph, transform);
-            geometry.graph = graph;
+            geometry.setGraph(graph);
             atcg::RevisionStack::endRecording();
         }
     }
@@ -347,8 +347,8 @@ void ComponentGUIRenderer<GeometryComponent>::draw_component(const atcg::ref_ptr
         if(!files.empty())
         {
             RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
-            auto mesh       = IO::read_any(files[0]);
-            component.graph = mesh;
+            auto mesh = IO::read_any(files[0]);
+            component.setGraph(mesh);
             atcg::RevisionStack::endRecording();
         }
     }

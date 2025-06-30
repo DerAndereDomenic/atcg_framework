@@ -21,6 +21,11 @@ atcg::ref_ptr<Asset> AssetImporter::importAsset(const AssetMetaData& metadata)
             // TODO
         }
         break;
+        case AssetType::Graph:
+        {
+            // TODO
+        }
+        break;
     }
 
     return asset;

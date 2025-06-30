@@ -1132,7 +1132,7 @@ inline void defineBindings(py::module_& m)
 
     m_geometry.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Graph>&>(), "graph"_a)
-        .def_readwrite("graph", &atcg::GeometryComponent::graph);
+        .def("graph", &atcg::GeometryComponent::graph);
 
     m_mesh_renderer.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&>(), "shader"_a)

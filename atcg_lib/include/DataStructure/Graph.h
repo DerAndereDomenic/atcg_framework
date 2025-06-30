@@ -11,6 +11,7 @@
 #include <DataStructure/TorchUtils.h>
 #include <DataStructure/GraphDefinitions.h>
 #include <DataStructure/GraphLoader.h>
+#include <Asset/Asset.h>
 
 namespace atcg
 {
@@ -28,7 +29,7 @@ enum class GraphType
 /**
  * @brief A structure to model different geometries
  */
-class Graph
+class Graph : public Asset
 {
 public:
     /**
@@ -688,6 +689,10 @@ public:
      * @return The deep copy
      */
     atcg::ref_ptr<atcg::Graph> copy() const;
+
+    ATCG_INLINE static AssetType getStaticType() { return AssetType::Graph; }
+
+    ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
 
 private:
     class Impl;

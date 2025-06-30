@@ -344,7 +344,7 @@ void ComponentSerializer<GeometryComponent>::serialize_component(const std::stri
                                                                  GeometryComponent& component,
                                                                  nlohmann::json& j) const
 {
-    atcg::ref_ptr<Graph> graph = component.graph;
+    atcg::ref_ptr<Graph> graph = component.graph();
 
     j[GEOMETRY_KEY][TYPE_KEY] = (int)graph->type();
 
@@ -620,7 +620,7 @@ void ComponentSerializer<GeometryComponent>::deserialize_component(const std::st
             auto faces = atcg::createHostTensorFromPointer((int32_t*)faces_raw.data(),
                                                            {(int)(faces_raw.size() / sizeof(glm::u32vec3)), 3});
 
-            geometry.graph = Graph::createTriangleMesh(vertices, faces);
+            geometry.graph() = Graph::createTriangleMesh(vertices, faces);
         }
         break;
         case atcg::GraphType::ATCG_GRAPH_TYPE_POINTCLOUD:
@@ -632,7 +632,7 @@ void ComponentSerializer<GeometryComponent>::deserialize_component(const std::st
                 (float*)vertices_raw.data(),
                 {(int)(vertices_raw.size() / sizeof(Vertex)), atcg::VertexSpecification::VERTEX_SIZE});
 
-            geometry.graph = Graph::createPointCloud(vertices);
+            geometry.graph() = Graph::createPointCloud(vertices);
         }
         break;
         case atcg::GraphType::ATCG_GRAPH_TYPE_GRAPH:
@@ -650,7 +650,7 @@ void ComponentSerializer<GeometryComponent>::deserialize_component(const std::st
                 (float*)edges_raw.data(),
                 {(int)(edges_raw.size() / sizeof(Edge)), atcg::EdgeSpecification::EDGE_SIZE});
 
-            geometry.graph = Graph::createGraph(vertices, edges);
+            geometry.graph() = Graph::createGraph(vertices, edges);
         }
         break;
         default:

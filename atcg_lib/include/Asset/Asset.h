@@ -17,8 +17,8 @@ enum class AssetType : uint16_t
     // Scene, TODO
     Texture2D,
     Material,
+    Graph
     // Shader, TODO
-    // Graph TODO
 };
 
 class Asset

@@ -180,9 +180,19 @@ private:
 struct GeometryComponent
 {
     GeometryComponent() = default;
-    GeometryComponent(const atcg::ref_ptr<Graph>& graph) : graph(graph) {}
+    GeometryComponent(const atcg::ref_ptr<Graph>& graph)
+    {
+        graph_handle = AssetManager::registerAsset(graph, "graph.graph");
+    }
 
-    atcg::ref_ptr<Graph> graph;
+    ATCG_INLINE atcg::ref_ptr<Graph> graph() const { return AssetManager::getAsset<Graph>(graph_handle); }
+
+    ATCG_INLINE void setGraph(const atcg::ref_ptr<Graph>& graph)
+    {
+        graph_handle = AssetManager::registerAsset(graph, "graph.graph");
+    }
+
+    AssetHandle graph_handle;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Geometry"; }
 };
