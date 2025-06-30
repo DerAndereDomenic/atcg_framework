@@ -24,9 +24,6 @@ uniform sampler2D texture_diffuse;
 uniform sampler2D texture_normal;
 uniform sampler2D texture_roughness;
 uniform sampler2D texture_metallic;
-uniform sampler2D texture_emissive;
-uniform float emission_scale;
-uniform int emissive = 0;
 
 // Light data
 uniform vec3 light_colors[MAX_LIGHTS];
@@ -97,9 +94,7 @@ void main()
     // IBL
     vec3 ambient = image_based_lighting(base_color, metallic, roughness, normal, view_dir);
 
-    // Emission
-    vec3 emission = emissive * texture(texture_emissive, frag_uv).rgb * emission_scale;
-    vec3 color = (1.0 - float(use_ibl)) * view_light + (float(use_ibl)) * ambient + point_light_contribution + emission;
+    vec3 color = (1.0 - float(use_ibl)) * view_light + (float(use_ibl)) * ambient + point_light_contribution;
 
     float frag_dist = length(camera_pos - frag_pos);
     outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0 / 2.4)), diffuse_lookup.w * (1.0 - pow(1.01, frag_dist - 1000)));
