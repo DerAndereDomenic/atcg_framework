@@ -18,6 +18,7 @@ void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
 {
     if(!_shape) return;
     _shape->ensureInitialized(pipeline, sbt);
+    if(_emitter) _emitter->ensureInitialized(pipeline, sbt);
 
     ShapeInstanceData data;
     data.shape     = _shape->_shape_data;
