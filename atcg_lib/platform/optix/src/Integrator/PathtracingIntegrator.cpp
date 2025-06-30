@@ -392,7 +392,7 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         atcg::Dictionary point_light_data;
         point_light_data.setValue("position", transform.getPosition());
         point_light_data.setValue("color", point_light_component.color);
-        point_light_data.setValue("intensiry", point_light_component.intensity);
+        point_light_data.setValue("intensity", point_light_component.intensity);
         auto point_light = atcg::make_ref<atcg::PointEmitter>(point_light_data);
         point_light->initializePipeline(pipeline, sbt);
         _emitter.push_back(point_light);

@@ -79,15 +79,21 @@ extern "C" __global__ void __raygen__rg()
             if(si.bsdf)
             {
                 // Next-event estimation
-                for(uint32_t i = 0; i < params.num_emitters; ++i)
+                do
                 {
-                    const atcg::EmitterVPtrTable* emitter = params.emitters[i];
+                    uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+
+                    float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+
+                    const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
                     if(si.emitter == emitter) continue;
 
                     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
 
                     if(emitter_sampling.sampling_pdf == 0) continue;
+
+                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
 
                     bool occluded = traceOcclusion(params.handle,
                                                    si.position,
@@ -111,7 +117,7 @@ extern "C" __global__ void __raygen__rg()
                     radiance += mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
                                 bsdf_result.bsdf_value *
                                 glm::max(0.0f, glm::dot(si.normal, emitter_sampling.direction_to_light));
-                }
+                } while(false);
 
                 auto result = si.bsdf->sampleBSDF(si, rng);
 
@@ -137,9 +143,11 @@ extern "C" __global__ void __raygen__rg()
         {
             if(params.environment_emitter)
             {
-                bool mis_valid = last_si.valid;
+                bool mis_valid              = last_si.valid;
+                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
-                    mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
+                    mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
+                              : 0.0f;
                 float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
                 radiance += mis_weight * throughput * params.environment_emitter->evalLight(si);
             }
