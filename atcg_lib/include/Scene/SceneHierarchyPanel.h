@@ -10,12 +10,11 @@ namespace atcg
 class Scene;
 class Framebuffer;
 
+namespace GUI
+{
 /**
  * @brief A Scene hierarchy panel
- *
- * @tparam GUIHandler The class that handles gui drawing. Default = atcg::ComponentGUIHandler
  */
-template<typename GUIHandler = ComponentGUIHandler>
 class SceneHierarchyPanel
 {
 public:
@@ -56,13 +55,6 @@ public:
      */
     ATCG_INLINE Entity getSelectedEntity() const { return _selected_entity; }
 
-    /**
-     * @brief Set a custom gui handler
-     *
-     * @param gui_handler The gui handler instance
-     */
-    ATCG_INLINE void setGuiHandler(const atcg::ref_ptr<GUIHandler>& gui_handler) { _gui_handler = gui_handler; }
-
 private:
     void drawEntityNode(Entity entity);
 
@@ -72,10 +64,10 @@ private:
     void drawSceneProperties();
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
-    atcg::ref_ptr<GUIHandler> _gui_handler;
 
     bool _focues_components = false;
 };
+}    // namespace GUI
 }    // namespace atcg
 
 #ifndef ATCG_HEADLESS

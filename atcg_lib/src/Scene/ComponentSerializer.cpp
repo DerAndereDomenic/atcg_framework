@@ -9,6 +9,8 @@
 namespace atcg
 {
 
+namespace Serialization
+{
 #define ID_KEY                     "ID"
 #define NAME_KEY                   "Name"
 #define TRANSFORM_KEY              "Transform"
@@ -66,14 +68,14 @@ namespace atcg
 #define EMISSIVE_COLOR_KEY         "EmissiveColor"
 #define EMISSIVE_TEXTURE_KEY       "EmissiveTexture"
 
-void ComponentSerializer::serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
+void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
     std::ofstream summary_file(file_name, std::ios::out | std::ios::binary);
     summary_file.write(data, byte_size);
     summary_file.close();
 }
 
-std::vector<uint8_t> ComponentSerializer::deserializeBuffer(const std::string& file_name)
+std::vector<uint8_t> deserializeBuffer(const std::string& file_name)
 {
     std::ifstream summary_file(file_name, std::ios::in | std::ios::binary);
     std::vector<uint8_t> buffer_char(std::istreambuf_iterator<char>(summary_file), {});
@@ -82,7 +84,7 @@ std::vector<uint8_t> ComponentSerializer::deserializeBuffer(const std::string& f
     return buffer_char;
 }
 
-void ComponentSerializer::serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path, float gamma)
+void serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path, float gamma)
 {
     torch::Tensor texture_data = texture->getData(atcg::CPU);
 
@@ -99,10 +101,7 @@ void ComponentSerializer::serializeTexture(const atcg::ref_ptr<Texture2D>& textu
     img.store(path);
 }
 
-void ComponentSerializer::serializeMaterial(nlohmann::json& j,
-                                            Entity entity,
-                                            const Material& material,
-                                            const std::string& file_path)
+void serializeMaterial(nlohmann::json& j, Entity entity, const Material& material, const std::string& file_path)
 {
     auto diffuse_texture   = material.getDiffuseTexture();
     auto normal_texture    = material.getNormalTexture();
@@ -210,7 +209,7 @@ void ComponentSerializer::serializeMaterial(nlohmann::json& j,
     }
 }
 
-Material ComponentSerializer::deserialize_material(const nlohmann::json& material_node)
+Material deserialize_material(const nlohmann::json& material_node)
 {
     Material material;
 
@@ -286,7 +285,7 @@ Material ComponentSerializer::deserialize_material(const nlohmann::json& materia
     return material;
 }
 
-nlohmann::json ComponentSerializer::serializeLayout(const atcg::BufferLayout& layout)
+nlohmann::json serializeLayout(const atcg::BufferLayout& layout)
 {
     nlohmann::json::array_t json_layout;
     for(auto element: layout)
@@ -301,7 +300,7 @@ nlohmann::json ComponentSerializer::serializeLayout(const atcg::BufferLayout& la
     return json_layout;
 }
 
-atcg::BufferLayout ComponentSerializer::deserializeLayout(nlohmann::json& layout_node)
+atcg::BufferLayout deserializeLayout(nlohmann::json& layout_node)
 {
     std::vector<atcg::BufferElement> elements;
     for(nlohmann::json::array_t element: layout_node)
@@ -313,37 +312,32 @@ atcg::BufferLayout ComponentSerializer::deserializeLayout(nlohmann::json& layout
     return atcg::BufferLayout(elements);
 }
 
-template<typename T>
-void ComponentSerializer::serialize_component(const std::string& file_path,
-                                              Entity entity,
-                                              T& component,
-                                              nlohmann::json& j)
-{
-}
 
-template<>
-void ComponentSerializer::serialize_component<IDComponent>(const std::string& file_path,
+void ComponentSerializer<IDComponent>::serialize_component(const std::string& file_path,
+                                                           const atcg::ref_ptr<Scene>& scene,
                                                            Entity entity,
                                                            IDComponent& component,
-                                                           nlohmann::json& j)
+                                                           nlohmann::json& j) const
 {
     j[ID_KEY] = (uint64_t)entity.getComponent<IDComponent>().ID();
 }
 
-template<>
-void ComponentSerializer::serialize_component<NameComponent>(const std::string& file_path,
+
+void ComponentSerializer<NameComponent>::serialize_component(const std::string& file_path,
+                                                             const atcg::ref_ptr<Scene>& scene,
                                                              Entity entity,
                                                              NameComponent& component,
-                                                             nlohmann::json& j)
+                                                             nlohmann::json& j) const
 {
     j[NAME_KEY] = entity.getComponent<NameComponent>().name();
 }
 
-template<>
-void ComponentSerializer::serialize_component<TransformComponent>(const std::string& file_path,
+
+void ComponentSerializer<TransformComponent>::serialize_component(const std::string& file_path,
+                                                                  const atcg::ref_ptr<Scene>& scene,
                                                                   Entity entity,
                                                                   TransformComponent& component,
-                                                                  nlohmann::json& j)
+                                                                  nlohmann::json& j) const
 {
     glm::vec3 position                 = component.getPosition();
     glm::vec3 scale                    = component.getScale();
@@ -353,11 +347,12 @@ void ComponentSerializer::serialize_component<TransformComponent>(const std::str
     j[TRANSFORM_KEY][EULER_ANGLES_KEY] = nlohmann::json::array({rotation.x, rotation.y, rotation.z});
 }
 
-template<>
-void ComponentSerializer::serialize_component<CameraComponent>(const std::string& file_path,
+
+void ComponentSerializer<CameraComponent>::serialize_component(const std::string& file_path,
+                                                               const atcg::ref_ptr<Scene>& scene,
                                                                Entity entity,
                                                                CameraComponent& component,
-                                                               nlohmann::json& j)
+                                                               nlohmann::json& j) const
 {
     atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(component.camera);
 
@@ -390,11 +385,12 @@ void ComponentSerializer::serialize_component<CameraComponent>(const std::string
     }
 }
 
-template<>
-void ComponentSerializer::serialize_component<GeometryComponent>(const std::string& file_path,
+
+void ComponentSerializer<GeometryComponent>::serialize_component(const std::string& file_path,
+                                                                 const atcg::ref_ptr<Scene>& scene,
                                                                  Entity entity,
                                                                  GeometryComponent& component,
-                                                                 nlohmann::json& j)
+                                                                 nlohmann::json& j) const
 {
     atcg::ref_ptr<Graph> graph = component.graph;
 
@@ -430,11 +426,12 @@ void ComponentSerializer::serialize_component<GeometryComponent>(const std::stri
     }
 }
 
-template<>
-void ComponentSerializer::serialize_component<MeshRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<MeshRenderComponent>::serialize_component(const std::string& file_path,
+                                                                   const atcg::ref_ptr<Scene>& scene,
                                                                    Entity entity,
                                                                    MeshRenderComponent& component,
-                                                                   nlohmann::json& j)
+                                                                   nlohmann::json& j) const
 {
     j[MESH_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = component.shader->getVertexPath();
     j[MESH_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = component.shader->getFragmentPath();
@@ -444,11 +441,12 @@ void ComponentSerializer::serialize_component<MeshRenderComponent>(const std::st
     serializeMaterial(j[MESH_RENDERER_KEY], entity, component.material, file_path);
 }
 
-template<>
-void ComponentSerializer::serialize_component<PointRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<PointRenderComponent>::serialize_component(const std::string& file_path,
+                                                                    const atcg::ref_ptr<Scene>& scene,
                                                                     Entity entity,
                                                                     PointRenderComponent& component,
-                                                                    nlohmann::json& j)
+                                                                    nlohmann::json& j) const
 {
     j[POINT_RENDERER_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
     j[POINT_RENDERER_KEY][POINT_SIZE_KEY]           = component.point_size;
@@ -457,11 +455,12 @@ void ComponentSerializer::serialize_component<PointRenderComponent>(const std::s
     j[POINT_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
 }
 
-template<>
-void ComponentSerializer::serialize_component<PointSphereRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<PointSphereRenderComponent>::serialize_component(const std::string& file_path,
+                                                                          const atcg::ref_ptr<Scene>& scene,
                                                                           Entity entity,
                                                                           PointSphereRenderComponent& component,
-                                                                          nlohmann::json& j)
+                                                                          nlohmann::json& j) const
 {
     j[POINT_SPHERE_RENDERER_KEY][POINT_SIZE_KEY]           = component.point_size;
     j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = component.shader->getVertexPath();
@@ -471,31 +470,34 @@ void ComponentSerializer::serialize_component<PointSphereRenderComponent>(const 
     serializeMaterial(j[POINT_SPHERE_RENDERER_KEY], entity, component.material, file_path);
 }
 
-template<>
-void ComponentSerializer::serialize_component<EdgeRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<EdgeRenderComponent>::serialize_component(const std::string& file_path,
+                                                                   const atcg::ref_ptr<Scene>& scene,
                                                                    Entity entity,
                                                                    EdgeRenderComponent& component,
-                                                                   nlohmann::json& j)
+                                                                   nlohmann::json& j) const
 {
     j[EDGE_RENDERER_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
 }
 
-template<>
-void ComponentSerializer::serialize_component<EdgeCylinderRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<EdgeCylinderRenderComponent>::serialize_component(const std::string& file_path,
+                                                                           const atcg::ref_ptr<Scene>& scene,
                                                                            Entity entity,
                                                                            EdgeCylinderRenderComponent& component,
-                                                                           nlohmann::json& j)
+                                                                           nlohmann::json& j) const
 {
     j[EDGE_CYLINDER_RENDERER_KEY][RADIUS_KEY] = component.radius;
 
     serializeMaterial(j[EDGE_CYLINDER_RENDERER_KEY], entity, component.material, file_path);
 }
 
-template<>
-void ComponentSerializer::serialize_component<InstanceRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<InstanceRenderComponent>::serialize_component(const std::string& file_path,
+                                                                       const atcg::ref_ptr<Scene>& scene,
                                                                        Entity entity,
                                                                        InstanceRenderComponent& component,
-                                                                       nlohmann::json& j)
+                                                                       nlohmann::json& j) const
 {
     auto shader = component.shader ? component.shader : atcg::ShaderManager::getShader("instanced");
     j[INSTANCE_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = shader->getVertexPath();
@@ -521,22 +523,23 @@ void ComponentSerializer::serialize_component<InstanceRenderComponent>(const std
 }
 
 
-template<>
-void ComponentSerializer::serialize_component<PointLightComponent>(const std::string& file_path,
+void ComponentSerializer<PointLightComponent>::serialize_component(const std::string& file_path,
+                                                                   const atcg::ref_ptr<Scene>& scene,
                                                                    Entity entity,
                                                                    PointLightComponent& component,
-                                                                   nlohmann::json& j)
+                                                                   nlohmann::json& j) const
 {
     j[POINT_LIGHT_KEY][INTENSITY_KEY] = component.intensity;
     j[POINT_LIGHT_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
     j[POINT_LIGHT_KEY][CAST_SHADOWS_KEY] = component.cast_shadow;
 }
 
-template<>
-void ComponentSerializer::serialize_component<ScriptComponent>(const std::string& file_path,
+
+void ComponentSerializer<ScriptComponent>::serialize_component(const std::string& file_path,
+                                                               const atcg::ref_ptr<Scene>& scene,
                                                                Entity entity,
                                                                ScriptComponent& component,
-                                                               nlohmann::json& j)
+                                                               nlohmann::json& j) const
 {
     std::string path = "";
     if(component.script)
@@ -547,15 +550,11 @@ void ComponentSerializer::serialize_component<ScriptComponent>(const std::string
     j[SCRIPT_KEY] = path;
 }
 
-template<typename T>
-void ComponentSerializer::deserialize_component(const std::string& file_path, Entity entity, nlohmann::json& j)
-{
-}
 
-template<>
-void ComponentSerializer::deserialize_component<IDComponent>(const std::string& file_path,
+void ComponentSerializer<IDComponent>::deserialize_component(const std::string& file_path,
+                                                             const atcg::ref_ptr<Scene>& scene,
                                                              Entity entity,
-                                                             nlohmann::json& j)
+                                                             nlohmann::json& j) const
 {
     if(!j.contains(ID_KEY))
     {
@@ -565,10 +564,11 @@ void ComponentSerializer::deserialize_component<IDComponent>(const std::string& 
     entity.addOrReplaceComponent<IDComponent>((uint64_t)j[ID_KEY]);
 }
 
-template<>
-void ComponentSerializer::deserialize_component<NameComponent>(const std::string& file_path,
+
+void ComponentSerializer<NameComponent>::deserialize_component(const std::string& file_path,
+                                                               const atcg::ref_ptr<Scene>& scene,
                                                                Entity entity,
-                                                               nlohmann::json& j)
+                                                               nlohmann::json& j) const
 {
     if(!j.contains(NAME_KEY))
     {
@@ -578,10 +578,11 @@ void ComponentSerializer::deserialize_component<NameComponent>(const std::string
     entity.addOrReplaceComponent<NameComponent>(j[NAME_KEY]);
 }
 
-template<>
-void ComponentSerializer::deserialize_component<TransformComponent>(const std::string& file_path,
+
+void ComponentSerializer<TransformComponent>::deserialize_component(const std::string& file_path,
+                                                                    const atcg::ref_ptr<Scene>& scene,
                                                                     Entity entity,
-                                                                    nlohmann::json& j)
+                                                                    nlohmann::json& j) const
 {
     if(!j.contains(TRANSFORM_KEY))
     {
@@ -597,10 +598,11 @@ void ComponentSerializer::deserialize_component<TransformComponent>(const std::s
                                                   glm::make_vec3(rotation.data()));
 }
 
-template<>
-void ComponentSerializer::deserialize_component<CameraComponent>(const std::string& file_path,
+
+void ComponentSerializer<CameraComponent>::deserialize_component(const std::string& file_path,
+                                                                 const atcg::ref_ptr<Scene>& scene,
                                                                  Entity entity,
-                                                                 nlohmann::json& j)
+                                                                 nlohmann::json& j) const
 {
     if(!j.contains(PERSPECTIVE_CAMERA_KEY))
     {
@@ -637,10 +639,10 @@ void ComponentSerializer::deserialize_component<CameraComponent>(const std::stri
 }
 
 
-template<>
-void ComponentSerializer::deserialize_component<GeometryComponent>(const std::string& file_path,
+void ComponentSerializer<GeometryComponent>::deserialize_component(const std::string& file_path,
+                                                                   const atcg::ref_ptr<Scene>& scene,
                                                                    Entity entity,
-                                                                   nlohmann::json& j)
+                                                                   nlohmann::json& j) const
 {
     if(!j.contains(GEOMETRY_KEY))
     {
@@ -707,10 +709,11 @@ void ComponentSerializer::deserialize_component<GeometryComponent>(const std::st
     }
 }
 
-template<>
-void ComponentSerializer::deserialize_component<MeshRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<MeshRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                     const atcg::ref_ptr<Scene>& scene,
                                                                      Entity entity,
-                                                                     nlohmann::json& j)
+                                                                     nlohmann::json& j) const
 {
     if(!j.contains(MESH_RENDERER_KEY))
     {
@@ -750,10 +753,11 @@ void ComponentSerializer::deserialize_component<MeshRenderComponent>(const std::
     renderComponent.receive_shadow = renderer.value(RECEIVE_SHADOWS_KEY, true);
 }
 
-template<>
-void ComponentSerializer::deserialize_component<PointRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<PointRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                      const atcg::ref_ptr<Scene>& scene,
                                                                       Entity entity,
-                                                                      nlohmann::json& j)
+                                                                      nlohmann::json& j) const
 {
     if(!j.contains(POINT_RENDERER_KEY))
     {
@@ -787,10 +791,11 @@ void ComponentSerializer::deserialize_component<PointRenderComponent>(const std:
     }
 }
 
-template<>
-void ComponentSerializer::deserialize_component<PointSphereRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<PointSphereRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                            const atcg::ref_ptr<Scene>& scene,
                                                                             Entity entity,
-                                                                            nlohmann::json& j)
+                                                                            nlohmann::json& j) const
 {
     if(!j.contains(POINT_SPHERE_RENDERER_KEY))
     {
@@ -830,10 +835,11 @@ void ComponentSerializer::deserialize_component<PointSphereRenderComponent>(cons
     }
 }
 
-template<>
-void ComponentSerializer::deserialize_component<EdgeRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<EdgeRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                     const atcg::ref_ptr<Scene>& scene,
                                                                      Entity entity,
-                                                                     nlohmann::json& j)
+                                                                     nlohmann::json& j) const
 {
     if(!j.contains(EDGE_RENDERER_KEY))
     {
@@ -846,10 +852,11 @@ void ComponentSerializer::deserialize_component<EdgeRenderComponent>(const std::
     renderComponent.color    = glm::make_vec3(color.data());
 }
 
-template<>
-void ComponentSerializer::deserialize_component<EdgeCylinderRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<EdgeCylinderRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                             const atcg::ref_ptr<Scene>& scene,
                                                                              Entity entity,
-                                                                             nlohmann::json& j)
+                                                                             nlohmann::json& j) const
 {
     if(!j.contains(EDGE_CYLINDER_RENDERER_KEY))
     {
@@ -869,10 +876,11 @@ void ComponentSerializer::deserialize_component<EdgeCylinderRenderComponent>(con
     }
 }
 
-template<>
-void ComponentSerializer::deserialize_component<InstanceRenderComponent>(const std::string& file_path,
+
+void ComponentSerializer<InstanceRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                         const atcg::ref_ptr<Scene>& scene,
                                                                          Entity entity,
-                                                                         nlohmann::json& j)
+                                                                         nlohmann::json& j) const
 {
     if(!j.contains(INSTANCE_RENDERER_KEY))
     {
@@ -927,10 +935,11 @@ void ComponentSerializer::deserialize_component<InstanceRenderComponent>(const s
     }
 }
 
-template<>
-void ComponentSerializer::deserialize_component<PointLightComponent>(const std::string& file_path,
+
+void ComponentSerializer<PointLightComponent>::deserialize_component(const std::string& file_path,
+                                                                     const atcg::ref_ptr<Scene>& scene,
                                                                      Entity entity,
-                                                                     nlohmann::json& j)
+                                                                     nlohmann::json& j) const
 {
     if(!j.contains(POINT_LIGHT_KEY))
     {
@@ -945,10 +954,11 @@ void ComponentSerializer::deserialize_component<PointLightComponent>(const std::
     renderComponent.cast_shadow = point_light.value(CAST_SHADOWS_KEY, true);
 }
 
-template<>
-void ComponentSerializer::deserialize_component<ScriptComponent>(const std::string& file_path,
+
+void ComponentSerializer<ScriptComponent>::deserialize_component(const std::string& file_path,
+                                                                 const atcg::ref_ptr<Scene>& scene,
                                                                  Entity entity,
-                                                                 nlohmann::json& j)
+                                                                 nlohmann::json& j) const
 {
     if(!j.contains(SCRIPT_KEY))
     {
@@ -961,8 +971,9 @@ void ComponentSerializer::deserialize_component<ScriptComponent>(const std::stri
     if(path != "")
     {
         script.script = atcg::make_ref<PythonScript>(path);
-        script.script->init(_scene, entity);
+        script.script->init(scene, entity);
         script.script->onAttach();
     }
 }
+}    // namespace Serialization
 }    // namespace atcg

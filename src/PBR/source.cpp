@@ -72,7 +72,7 @@ public:
             script.script->onAttach();
         }
 
-        panel = atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>(scene);
+        panel = atcg::GUI::SceneHierarchyPanel(scene);
 
         if(atcg::VR::isVRAvailable())
         {
@@ -261,7 +261,7 @@ public:
         {
             if(ImGui::MenuItem("Save"))
             {
-                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
+                atcg::Serialization::SceneSerializer serializer(scene);
 
                 serializer.serialize("../Scene/Scene.json");
             }
@@ -269,7 +269,7 @@ public:
             if(ImGui::MenuItem("Load"))
             {
                 scene->removeAllEntites();
-                atcg::Serializer<atcg::ComponentSerializer> serializer(scene);
+                atcg::Serialization::SceneSerializer serializer(scene);
 
                 serializer.deserialize("../Scene/Scene.json");
 
@@ -428,8 +428,8 @@ private:
 
     atcg::ref_ptr<atcg::Graph> plane;
 
-    atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler> panel;
-    atcg::PerformancePanel performance_panel;
+    atcg::GUI::SceneHierarchyPanel panel;
+    atcg::GUI::PerformancePanel performance_panel;
     bool show_performance = false;
 
     float time       = 0.0f;

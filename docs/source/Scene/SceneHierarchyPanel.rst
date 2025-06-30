@@ -1,9 +1,11 @@
 Scene Hierarchy Panel
 =====================
 
-.. doxygenclass:: atcg::SceneHierarchyPanel
+.. doxygenclass:: atcg::GUI::SceneHierarchyPanel
    :members:
    :undoc-members:
-.. doxygenclass:: atcg::ComponentGUIHandler
+.. doxygenstruct:: atcg::GUI::ComponentGUIRenderer
    :members:
    :undoc-members:
+.. doxygenfunction:: atcg::GUI::displayMaterial
+   :project: ATCGLIB

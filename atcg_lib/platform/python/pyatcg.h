@@ -127,7 +127,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_vertex_specification  = py::class_<atcg::VertexSpecification>(m, "VertexSpecification");                             \
     auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");                                 \
     auto m_graph                 = py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph");                             \
-    auto m_serializer            = py::class_<atcg::Serializer<atcg::ComponentSerializer>>(m, "Serializer");                    \
+    auto m_serializer            = py::class_<atcg::Serialization::SceneSerializer>(m, "SceneSerializer");                      \
     auto m_renderer              = m.def_submodule("Renderer");                                                                 \
     auto m_renderer_system =                                                                                                    \
         py::class_<atcg::RendererSystem, atcg::ref_ptr<atcg::RendererSystem>>(m, "RendererSystem");                             \
@@ -154,23 +154,22 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_edge_renderer          = py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent");                            \
     auto m_edge_cylinder_renderer = py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent");            \
     auto m_instance_renderer      = py::class_<atcg::InstanceRenderComponent>(m, "InstanceRenderComponent");                    \
-    auto m_vertex_buffer    = py::class_<atcg::VertexBuffer, atcg::ref_ptr<atcg::VertexBuffer>>(m, "VertexBuffer");             \
-    auto m_buffer_layout    = py::class_<atcg::BufferLayout>(m, "BufferLayout");                                                \
-    auto m_buffer_element   = py::class_<atcg::BufferElement>(m, "BufferElement");                                              \
-    auto m_shader_data_type = py::enum_<atcg::ShaderDataType>(m, "ShaderDataType");                                             \
-    auto m_name             = py::class_<atcg::NameComponent>(m, "NameComponent");                                              \
-    auto m_point_light      = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                                  \
-    auto m_script_component = py::class_<atcg::ScriptComponent>(m, "ScriptComponent");                                          \
-    auto m_scene_hierarchy_panel =                                                                                              \
-        py::class_<atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>>(m, "SceneHierarchyPanel");                             \
-    auto m_hit_info          = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                                \
-    auto m_utils             = m.def_submodule("Utils");                                                                        \
-    auto m_draw_mode         = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                        \
-    auto m_cull_mode         = py::enum_<atcg::CullMode>(m, "CullMode");                                                        \
-    auto m_network           = m.def_submodule("Network");                                                                      \
-    auto m_tcp_server        = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                             \
-    auto m_tcp_client        = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                             \
-    auto m_performance_panel = py::class_<atcg::PerformancePanel>(m, "PerformancePanel");                                       \
+    auto m_vertex_buffer         = py::class_<atcg::VertexBuffer, atcg::ref_ptr<atcg::VertexBuffer>>(m, "VertexBuffer");        \
+    auto m_buffer_layout         = py::class_<atcg::BufferLayout>(m, "BufferLayout");                                           \
+    auto m_buffer_element        = py::class_<atcg::BufferElement>(m, "BufferElement");                                         \
+    auto m_shader_data_type      = py::enum_<atcg::ShaderDataType>(m, "ShaderDataType");                                        \
+    auto m_name                  = py::class_<atcg::NameComponent>(m, "NameComponent");                                         \
+    auto m_point_light           = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                             \
+    auto m_script_component      = py::class_<atcg::ScriptComponent>(m, "ScriptComponent");                                     \
+    auto m_scene_hierarchy_panel = py::class_<atcg::GUI::SceneHierarchyPanel>(m, "SceneHierarchyPanel");                        \
+    auto m_hit_info              = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                            \
+    auto m_utils                 = m.def_submodule("Utils");                                                                    \
+    auto m_draw_mode             = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                    \
+    auto m_cull_mode             = py::enum_<atcg::CullMode>(m, "CullMode");                                                    \
+    auto m_network               = m.def_submodule("Network");                                                                  \
+    auto m_tcp_server            = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                         \
+    auto m_tcp_client            = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                         \
+    auto m_performance_panel     = py::class_<atcg::GUI::PerformancePanel>(m, "PerformancePanel");                              \
     auto m_scriptengine =                                                                                                       \
         py::class_<atcg::PythonScriptEngine, atcg::ref_ptr<atcg::PythonScriptEngine>>(m, "ScriptEngine");                       \
     auto m_script = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");
@@ -631,19 +630,19 @@ inline void defineBindings(py::module_& m)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
 
     m_serializer.def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
-        .def("serialize", &atcg::Serializer<atcg::ComponentSerializer>::serialize<>, "file_path"_a)
-        .def("deserialize", &atcg::Serializer<atcg::ComponentSerializer>::deserialize<>, "file_path"_a);
+        .def("serialize", &atcg::Serialization::SceneSerializer::serialize<>, "file_path"_a)
+        .def("deserialize", &atcg::Serialization::SceneSerializer::deserialize<>, "file_path"_a);
 
     m_performance_panel.def(py::init<>())
         .def(
             "renderPanel",
-            [](atcg::PerformancePanel& panel, bool show_window)
+            [](atcg::GUI::PerformancePanel& panel, bool show_window)
             {
                 panel.renderPanel(show_window);
                 return show_window;
             },
             "show_window"_a)
-        .def("registerFrameTime", &atcg::PerformancePanel::registerFrameTime);
+        .def("registerFrameTime", &atcg::GUI::PerformancePanel::registerFrameTime);
 
     // ------------------- RENDERER ---------------------------------
     m_draw_mode.value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
@@ -1379,9 +1378,9 @@ inline void defineBindings(py::module_& m)
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
-        .def("renderPanel", &atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>::renderPanel<>)
-        .def("selectEntity", &atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>::selectEntity, "entity"_a)
-        .def("getSelectedEntity", &atcg::SceneHierarchyPanel<atcg::ComponentGUIHandler>::getSelectedEntity);
+        .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel<>)
+        .def("selectEntity", &atcg::GUI::SceneHierarchyPanel::selectEntity, "entity"_a)
+        .def("getSelectedEntity", &atcg::GUI::SceneHierarchyPanel::getSelectedEntity);
 
     m_hit_info.def_readonly("hit", &atcg::Tracing::HitInfo::hit)
         .def_readonly("position", &atcg::Tracing::HitInfo::p)
