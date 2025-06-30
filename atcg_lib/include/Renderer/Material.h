@@ -22,13 +22,6 @@ struct Material
     ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getDiffuseTexture() const { return _diffuse_texture; }
 
     /**
-     * @brief Get the emissive texture.
-     *
-     * @return The emissive texture
-     */
-    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getEmissiveTexture() const { return _emissive_texture; }
-
-    /**
      * @brief Get the normal texture.
      *
      * @return The normal texture
@@ -55,13 +48,6 @@ struct Material
      * @param texture The diffuse texture
      */
     ATCG_INLINE void setDiffuseTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _diffuse_texture = texture; }
-
-    /**
-     * @brief Set the diffuse texture.
-     *
-     * @param texture The diffuse texture
-     */
-    ATCG_INLINE void setEmissiveTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _emissive_texture = texture; }
 
     /**
      * @brief Set the normal texture.
@@ -102,13 +88,6 @@ struct Material
     void setDiffuseColor(const glm::vec3& color);
 
     /**
-     * @brief Set the emissive color.
-     *
-     * @param color The color
-     */
-    void setEmissiveColor(const glm::vec3& color);
-
-    /**
      * @brief Set the roughness value.
      *
      * @param roughness The roughness
@@ -127,15 +106,10 @@ struct Material
      */
     void removeNormalMap();
 
-    bool emissive = false;
-
-    float emission_scale = 1.0f;
-
 private:
     atcg::ref_ptr<atcg::Texture2D> _diffuse_texture;
     atcg::ref_ptr<atcg::Texture2D> _normal_texture;
     atcg::ref_ptr<atcg::Texture2D> _roughness_texture;
     atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
-    atcg::ref_ptr<atcg::Texture2D> _emissive_texture;
 };
 }    // namespace atcg

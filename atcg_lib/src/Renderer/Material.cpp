@@ -29,11 +29,6 @@ Material::Material()
     spec_metallic.format = TextureFormat::RFLOAT;
     float metallic       = 0.0f;
     _metallic_texture    = atcg::Texture2D::create(&metallic, spec_metallic);
-
-    TextureSpecification spec_emissive;
-    spec_emissive.width  = 1;
-    spec_emissive.height = 1;
-    _emissive_texture    = atcg::Texture2D::create(&white, spec_emissive);
 }
 
 void Material::setDiffuseColor(const glm::vec4& color)
@@ -46,18 +41,6 @@ void Material::setDiffuseColor(const glm::vec4& color)
                             (uint8_t)(color[2] * 255.0f),
                             (uint8_t)(color[3] * 255.0f));
     _diffuse_texture = atcg::Texture2D::create(&color_quant, spec_diffuse);
-}
-
-void Material::setEmissiveColor(const glm::vec3& color)
-{
-    TextureSpecification spec_emissive;
-    spec_emissive.width  = 1;
-    spec_emissive.height = 1;
-    glm::u8vec4 color_quant((uint8_t)(color[0] * 255.0f),
-                            (uint8_t)(color[1] * 255.0f),
-                            (uint8_t)(color[2] * 255.0f),
-                            (uint8_t)(255.0f));
-    _emissive_texture = atcg::Texture2D::create(&color_quant, spec_emissive);
 }
 
 void Material::setDiffuseColor(const glm::vec3& color)
