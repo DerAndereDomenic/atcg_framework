@@ -13,6 +13,8 @@ public:
 
     ~Impl();
 
+    void initBuffers();
+
     void updateVertexBuffer(const torch::Tensor& vertices);
     void updateEdgeBuffer(const torch::Tensor& edges);
     void updateFaceBuffer(const torch::Tensor& indices);
@@ -33,6 +35,13 @@ public:
 };
 
 Graph::Impl::Impl()
+{
+    initBuffers();
+}
+
+Graph::Impl::~Impl() {}
+
+void Graph::Impl::initBuffers()
 {
     // Create necessary buffers always on init
     this->vertices = atcg::make_ref<VertexBuffer>();
@@ -55,10 +64,7 @@ Graph::Impl::Impl()
     edges_array->pushVertexBuffer(this->edges);
 
     indices = atcg::make_ref<IndexBuffer>();
-    // vertices_array->setIndexBuffer(indices);
 }
-
-Graph::Impl::~Impl() {}
 
 void Graph::Impl::updateVertexBuffer(const torch::Tensor& pvertices)
 {
@@ -701,6 +707,37 @@ atcg::ref_ptr<Graph> Graph::copy() const
     impl->indices->unmapDevicePointers();
 
     return result;
+}
+
+void Graph::copy(const atcg::ref_ptr<Graph>& other)
+{
+    unmapAllPointers();
+    impl->type = other->impl->type;
+    impl->initBuffers();
+
+    switch(impl->type)
+    {
+        case GraphType::ATCG_GRAPH_TYPE_GRAPH:
+        {
+            updateVertices(atcg::getVertexBufferAsDeviceTensor(other->getVerticesBuffer()));
+            updateEdges(other->getDeviceEdges());
+        }
+        break;
+        case GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH:
+        {
+            updateVertices(atcg::getVertexBufferAsDeviceTensor(other->getVerticesBuffer()));
+            updateFaces(other->getDeviceFaces());
+            impl->vertices_array->setIndexBuffer(impl->indices);
+        }
+        break;
+        case GraphType::ATCG_GRAPH_TYPE_POINTCLOUD:
+        {
+            updateVertices(atcg::getVertexBufferAsDeviceTensor(other->getVerticesBuffer()));
+        }
+        break;
+    }
+
+    other->unmapAllPointers();
 }
 
 }    // namespace atcg

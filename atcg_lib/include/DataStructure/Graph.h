@@ -690,6 +690,13 @@ public:
      */
     atcg::ref_ptr<atcg::Graph> copy() const;
 
+    /**
+     * @brief Copies another graph into this one
+     *
+     * @param other The other graph
+     */
+    void copy(const atcg::ref_ptr<Graph>& other);
+
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Graph; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
