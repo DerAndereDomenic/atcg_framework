@@ -714,6 +714,7 @@ void Graph::copy(const atcg::ref_ptr<Graph>& other)
     unmapAllPointers();
     impl->type = other->impl->type;
     impl->initBuffers();
+    handle = other->handle;
 
     switch(impl->type)
     {
