@@ -86,7 +86,9 @@ void AssetPanel::renderPanel()
                 if(!files.empty())
                 {
                     // RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
-                    auto mesh = IO::read_any(files[0]);
+                    auto mesh        = IO::read_any(files[0]);
+                    auto graph_asset = AssetManager::getAsset<Graph>(_selected_handle);
+                    graph_asset->copy(mesh);
                     // component.setGraph(mesh);
                     // atcg::RevisionStack::endRecording();
                 }
