@@ -36,4 +36,21 @@ struct AssetMetaData
 
     operator bool() const { return type != AssetType::None; }
 };
+
+ATCG_INLINE const char* assetTypeToString(AssetType type)
+{
+    switch(type)
+    {
+        case AssetType::None:
+            return "AssetType::None";
+        case AssetType::Material:
+            return "AssetType::Material";
+        case AssetType::Texture2D:
+            return "AssetType::Texture2D";
+        case AssetType::Graph:
+            return "AssetType::Graph";
+    }
+
+    return "AssetType::<Invalid>";
+}
 }    // namespace atcg
