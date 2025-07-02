@@ -394,11 +394,7 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             material->setNormalTexture(texture);
         }
 
-        AssetMetaData data;
-        data.type      = AssetType::Material;
-        data.name      = mat_obj.name;
-        data.file_path = data.name + ".mat";
-        materials[i]   = AssetManager::registerAsset(material, data);
+        materials[i] = AssetManager::registerAsset(material, mat_obj.name + ".mat");
     }
 
     for(const auto& shape: shapes)
@@ -412,7 +408,8 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
 
             auto entity = scene->createEntity(shape.name);
             entity.addComponent<atcg::TransformComponent>();
-            entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createGraph(vertices, edges));
+            auto geometry = atcg::Graph::createGraph(vertices, edges);
+            entity.addComponent<atcg::GeometryComponent>(AssetManager::registerAsset(geometry, shape.name + ".graph"));
             entity.addComponent<atcg::EdgeCylinderRenderComponent>();
         }
         else if(shape.points.indices.size() != 0)
@@ -423,7 +420,8 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
 
             auto entity = scene->createEntity(shape.name);
             entity.addComponent<atcg::TransformComponent>();
-            entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createPointCloud(vertices));
+            auto geometry = atcg::Graph::createPointCloud(vertices);
+            entity.addComponent<atcg::GeometryComponent>(AssetManager::registerAsset(geometry, shape.name + ".graph"));
             entity.addComponent<atcg::PointSphereRenderComponent>();
         }
         else
@@ -435,7 +433,8 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
 
             auto entity = scene->createEntity(shape.name);
             entity.addComponent<atcg::TransformComponent>();
-            entity.addComponent<atcg::GeometryComponent>(atcg::Graph::createTriangleMesh(vertices, faces));
+            auto geometry = atcg::Graph::createTriangleMesh(vertices, faces);
+            entity.addComponent<atcg::GeometryComponent>(AssetManager::registerAsset(geometry, shape.name + ".graph"));
             auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
             if(shape.mesh.material_ids[0] != -1)
             {
