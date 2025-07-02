@@ -363,9 +363,12 @@ void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_p
     bool updated                       = ImGui::Checkbox("Visible##visiblemesh", &component_copy.visible);
 
     // Material
-    auto material = component_copy.material();
+    auto material_handle = component_copy.material_handle;
 
-    updated = displayMaterial("mesh", material) || updated;
+    auto new_handle                = displayMaterialSelection("mesh", material_handle);
+    updated                        = (new_handle != material_handle) || updated;
+    component_copy.material_handle = new_handle;
+
     updated = ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component_copy.receive_shadow) || updated;
 
     if(updated)
@@ -432,9 +435,11 @@ void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg
     }
 
     // Material
-    auto material = component.material();
+    auto material_handle = component.material_handle;
 
-    updated = displayMaterial("pointsphere", material) || updated;
+    auto new_handle           = displayMaterialSelection("pointsphere", material_handle);
+    updated                   = (new_handle != material_handle) || updated;
+    component.material_handle = new_handle;
 
     if(updated)
     {
@@ -490,9 +495,11 @@ void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atc
     }
 
     // Material
-    auto material = component.material();
+    auto material_handle = component.material_handle;
 
-    updated = displayMaterial("edgecylinder", material) || updated;
+    auto new_handle           = displayMaterialSelection("edgecylinder", material_handle);
+    updated                   = (new_handle != material_handle) || updated;
+    component.material_handle = new_handle;
 
     if(updated)
     {
@@ -511,9 +518,11 @@ void ComponentGUIRenderer<InstanceRenderComponent>::draw_component(const atcg::r
     bool updated                      = ImGui::Checkbox("Visible##visibleinstance", &component.visible);
 
     // Material
-    auto material = component.material();
+    auto material_handle = component.material_handle;
 
-    updated = displayMaterial("instance", material) || updated;
+    auto new_handle           = displayMaterialSelection("instance", material_handle);
+    updated                   = (new_handle != material_handle) || updated;
+    component.material_handle = new_handle;
     updated = ImGui::Checkbox("Receive Shadows##InstanceRenderComponent", &component.receive_shadow) || updated;
 
     if(updated)
@@ -840,5 +849,41 @@ bool displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& mate
 
     return updated;
 }
+
+AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle)
+{
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Material";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Material##" + key).c_str(), tag.c_str()))
+    {
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Material) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+}
+
 }    // namespace GUI
 }    // namespace atcg
