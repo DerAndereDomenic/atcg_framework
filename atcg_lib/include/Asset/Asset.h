@@ -33,6 +33,7 @@ struct AssetMetaData
 {
     AssetType type = AssetType::None;
     std::filesystem::path file_path;
+    std::string name = "Asset";
 
     operator bool() const { return type != AssetType::None; }
 };

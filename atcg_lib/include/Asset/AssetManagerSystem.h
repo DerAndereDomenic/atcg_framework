@@ -27,6 +27,8 @@ public:
 
     AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::filesystem::path& path);
 
+    AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data);
+
     AssetHandle importAsset(const std::filesystem::path& path);
 
 protected:
@@ -76,6 +78,11 @@ ATCG_INLINE AssetHandle registerAsset(const std::filesystem::path& path)
 ATCG_INLINE AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::filesystem::path& path)
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(asset, path);
+}
+
+ATCG_INLINE AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data)
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(asset, data);
 }
 
 ATCG_INLINE AssetHandle importAsset(const std::filesystem::path& path)
