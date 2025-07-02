@@ -346,13 +346,12 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
     const auto& shapes        = reader.GetShapes();
     const auto& materials_obj = reader.GetMaterials();
 
-    std::vector<atcg::ref_ptr<Material>> materials(materials_obj.size());
+    std::vector<AssetHandle> materials(materials_obj.size());
 
     for(uint32_t i = 0; i < materials_obj.size(); ++i)
     {
         const tinyobj::material_t& mat_obj = materials_obj[i];
-        auto& material                     = materials[i];
-        material                           = atcg::make_ref<atcg::Material>();
+        auto material                      = atcg::make_ref<atcg::Material>();
 
         if(mat_obj.diffuse_texname != "")
         {
@@ -394,6 +393,12 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             auto texture = atcg::Texture2D::create(img);
             material->setNormalTexture(texture);
         }
+
+        AssetMetaData data;
+        data.type      = AssetType::Material;
+        data.name      = mat_obj.name;
+        data.file_path = data.name + ".mat";
+        materials[i]   = AssetManager::registerAsset(material, data);
     }
 
     for(const auto& shape: shapes)
@@ -434,7 +439,7 @@ atcg::ref_ptr<Scene> IO::read_scene(const std::string& path)
             auto& renderer = entity.addComponent<atcg::MeshRenderComponent>();
             if(shape.mesh.material_ids[0] != -1)
             {
-                renderer.setMaterial(materials[shape.mesh.material_ids[0]]);
+                renderer.material_handle = materials[shape.mesh.material_ids[0]];
             }
         }
     }
