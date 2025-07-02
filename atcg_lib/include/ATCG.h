@@ -19,10 +19,11 @@
 #include <Core/Path.h>
 #include <Core/CommandLine.h>
 
-//-------- CORE ---------
+//-------- ASSET ---------
 #include <Asset/Asset.h>
 #include <Asset/AssetImporter.h>
 #include <Asset/AssetManagerSystem.h>
+#include <Asset/AssetPanel.h>
 
 //-------- EVENTS -------
 #include <Events/Event.h>
