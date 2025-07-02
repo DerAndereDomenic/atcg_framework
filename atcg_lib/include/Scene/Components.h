@@ -243,10 +243,12 @@ struct EditorCameraComponent : public CameraComponent
 
 struct RenderComponent
 {
-    RenderComponent(atcg::DrawMode draw_mode) : draw_mode(draw_mode) {}
+    RenderComponent(atcg::DrawMode draw_mode) : draw_mode(draw_mode) { default_material = atcg::make_ref<Material>(); }
 
     atcg::DrawMode draw_mode;
     bool visible = true;
+
+    atcg::ref_ptr<Material> default_material;
 };
 
 struct MeshRenderComponent : public RenderComponent
@@ -255,15 +257,12 @@ struct MeshRenderComponent : public RenderComponent
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE),
           shader(shader)
     {
-        atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
-        material_handle                  = AssetManager::registerAsset(material, "material.mat");
     }
 
-    ATCG_INLINE atcg::ref_ptr<Material> material() const { return AssetManager::getAsset<Material>(material_handle); }
-
-    ATCG_INLINE void setMaterial(const atcg::ref_ptr<Material>& mat)
+    ATCG_INLINE atcg::ref_ptr<Material> material() const
     {
-        material_handle = AssetManager::registerAsset(mat, "material.mat");
+        auto mat = AssetManager::getAsset<Material>(material_handle);
+        return mat ? mat : default_material;
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Mesh Renderer"; }
@@ -271,7 +270,7 @@ struct MeshRenderComponent : public RenderComponent
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     bool receive_shadow          = true;
 
-    AssetHandle material_handle;
+    AssetHandle material_handle = 0;
 };
 
 struct PointRenderComponent : public RenderComponent
@@ -301,15 +300,12 @@ struct PointSphereRenderComponent : public RenderComponent
           shader(shader),
           point_size(point_size)
     {
-        atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
-        material_handle                  = AssetManager::registerAsset(material, "material.mat");
     }
 
-    ATCG_INLINE atcg::ref_ptr<Material> material() const { return AssetManager::getAsset<Material>(material_handle); }
-
-    ATCG_INLINE void setMaterial(const atcg::ref_ptr<Material>& mat)
+    ATCG_INLINE atcg::ref_ptr<Material> material() const
     {
-        material_handle = AssetManager::registerAsset(mat, "material.mat");
+        auto mat = AssetManager::getAsset<Material>(material_handle);
+        return mat ? mat : default_material;
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Sphere Renderer"; }
@@ -317,7 +313,7 @@ struct PointSphereRenderComponent : public RenderComponent
     atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
     float point_size             = 0.1f;
 
-    AssetHandle material_handle;
+    AssetHandle material_handle = 0;
 };
 
 struct EdgeRenderComponent : public RenderComponent
@@ -339,44 +335,31 @@ struct EdgeCylinderRenderComponent : public RenderComponent
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER),
           radius(radius)
     {
-        atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
-        material_handle                  = AssetManager::registerAsset(material, "material.mat");
     }
 
-    ATCG_INLINE atcg::ref_ptr<Material> material() const { return AssetManager::getAsset<Material>(material_handle); }
-
-    ATCG_INLINE void setMaterial(const atcg::ref_ptr<Material>& mat)
+    ATCG_INLINE atcg::ref_ptr<Material> material() const
     {
-        material_handle = AssetManager::registerAsset(mat, "material.mat");
+        auto mat = AssetManager::getAsset<Material>(material_handle);
+        return mat ? mat : default_material;
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Edge Cylinder Renderer"; }
 
     float radius = 0.001f;
 
-    AssetHandle material_handle;
+    AssetHandle material_handle = 0;
 };
 
 struct InstanceRenderComponent : public RenderComponent
 {
-    InstanceRenderComponent() : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED)
-    {
-        atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
-        material_handle                  = AssetManager::registerAsset(material, "material.mat");
-    }
+    InstanceRenderComponent() : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED) {}
 
-    void addInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& instance_vbo)
-    {
-        instance_vbos.push_back(instance_vbo);
-        atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
-        material_handle                  = AssetManager::registerAsset(material, "material.mat");
-    }
+    void addInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& instance_vbo) { instance_vbos.push_back(instance_vbo); }
 
-    ATCG_INLINE atcg::ref_ptr<Material> material() const { return AssetManager::getAsset<Material>(material_handle); }
-
-    ATCG_INLINE void setMaterial(const atcg::ref_ptr<Material>& mat)
+    ATCG_INLINE atcg::ref_ptr<Material> material() const
     {
-        material_handle = AssetManager::registerAsset(mat, "material.mat");
+        auto mat = AssetManager::getAsset<Material>(material_handle);
+        return mat ? mat : default_material;
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Instance Renderer"; }
@@ -385,7 +368,7 @@ struct InstanceRenderComponent : public RenderComponent
     atcg::ref_ptr<atcg::Shader> shader = nullptr;
     bool receive_shadow                = true;
 
-    AssetHandle material_handle;
+    AssetHandle material_handle = 0;
 };
 
 struct CustomRenderComponent : public RenderComponent
