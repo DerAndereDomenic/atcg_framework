@@ -16,6 +16,8 @@ public:
 private:
     void drawAssetList();
 
+    void drawAdd();
+
     AssetHandle _selected_handle = 0;
 };
 }    // namespace GUI

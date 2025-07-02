@@ -49,6 +49,27 @@ ATCG_INLINE void AssetPanel::drawAssetList()
     ImGui::EndChild();
 }
 
+void AssetPanel::drawAdd()
+{
+    if(ImGui::Button("Add..."))
+    {
+        ImGui::OpenPopup("AddPopup");
+    }
+
+    if(ImGui::BeginPopup("AddPopup"))
+    {
+        if(ImGui::MenuItem("Graph"))
+        {
+            AssetManager::registerAsset("graph.graph");
+        }
+        if(ImGui::MenuItem("Material"))
+        {
+            AssetManager::registerAsset(atcg::make_ref<Material>(), "material.mat");
+        }
+        ImGui::EndPopup();
+    }
+}
+
 void AssetPanel::renderPanel()
 {
 #ifndef ATCG_HEADLESS
@@ -61,6 +82,7 @@ void AssetPanel::renderPanel()
     }
 
     drawAssetList();
+    drawAdd();
 
     ImGui::End();
 
@@ -86,9 +108,17 @@ void AssetPanel::renderPanel()
                 if(!files.empty())
                 {
                     // RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
-                    auto mesh        = IO::read_any(files[0]);
-                    auto graph_asset = AssetManager::getAsset<Graph>(_selected_handle);
-                    graph_asset->copy(mesh);
+                    auto mesh    = IO::read_any(files[0]);
+                    mesh->handle = _selected_handle;
+                    AssetManager::registerAsset(mesh, AssetManager::getMetaData(mesh->handle));
+                    // auto graph_asset = AssetManager::getAsset<Graph>(_selected_handle);
+                    // if(graph_asset)
+                    // {
+                    //     graph_asset->copy(mesh);
+                    // }
+                    // else
+                    // {
+                    // }
                     // component.setGraph(mesh);
                     // atcg::RevisionStack::endRecording();
                 }
