@@ -180,17 +180,21 @@ private:
 struct GeometryComponent
 {
     GeometryComponent() = default;
+    GeometryComponent(AssetHandle handle) : graph_handle(handle) {}
     GeometryComponent(const atcg::ref_ptr<Graph>& graph)
     {
-        graph_handle = AssetManager::registerAsset(graph, "graph.graph");
+        std::filesystem::path path = "graph.graph";
+        if(AssetManager::isAssetHandleValid(graph->handle))
+        {
+            graph_handle = graph->handle;
+        }
+        else
+        {
+            graph_handle = AssetManager::registerAsset(graph, "graph.graph");
+        }
     }
 
     ATCG_INLINE atcg::ref_ptr<Graph> graph() const { return AssetManager::getAsset<Graph>(graph_handle); }
-
-    ATCG_INLINE void setGraph(const atcg::ref_ptr<Graph>& graph)
-    {
-        graph_handle = AssetManager::registerAsset(graph, "graph.graph");
-    }
 
     AssetHandle graph_handle;
 
