@@ -9,7 +9,9 @@ namespace detail
 {
 static std::map<std::filesystem::path, AssetType> s_asset_extension_map = {{".png", AssetType::Texture2D},
                                                                            {".jpg", AssetType::Texture2D},
-                                                                           {".jpeg", AssetType::Texture2D}};
+                                                                           {".jpeg", AssetType::Texture2D},
+                                                                           {".graph", AssetType::Graph},
+                                                                           {".mat", AssetType::Material}};
 
 static AssetType getAssetTypeFromFileExtension(const std::filesystem::path& extension)
 {
