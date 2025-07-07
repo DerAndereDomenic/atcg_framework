@@ -123,4 +123,27 @@ AssetHandle AssetManagerSystem::importAsset(const std::filesystem::path& path)
     return handle;
 }
 
+void AssetManagerSystem::unloadAsset(AssetHandle handle)
+{
+    if(!isAssetHandleValid(handle)) return;
+
+    if(isAssetLoaded(handle))
+    {
+        _loaded_assets.erase(handle);
+    }
+}
+
+void AssetManagerSystem::removeAsset(AssetHandle handle)
+{
+    if(!isAssetHandleValid(handle)) return;
+
+    if(isAssetLoaded(handle))
+    {
+        unloadAsset(handle);
+    }
+
+    // Remove from registry
+    _asset_registry.erase(handle);
+}
+
 }    // namespace atcg

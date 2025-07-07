@@ -33,6 +33,10 @@ public:
 
     AssetHandle importAsset(const std::filesystem::path& path);
 
+    void unloadAsset(AssetHandle handle);
+
+    void removeAsset(AssetHandle handle);
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
@@ -95,6 +99,16 @@ ATCG_INLINE AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const A
 ATCG_INLINE AssetHandle importAsset(const std::filesystem::path& path)
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->importAsset(path);
+}
+
+ATCG_INLINE void unloadAsset(AssetHandle handle)
+{
+    SystemRegistry::instance()->getSystem<AssetManagerSystem>()->unloadAsset(handle);
+}
+
+ATCG_INLINE void removeAsset(AssetHandle handle)
+{
+    SystemRegistry::instance()->getSystem<AssetManagerSystem>()->removeAsset(handle);
 }
 }    // namespace AssetManager
 
