@@ -81,8 +81,8 @@ void AssetPanel::renderPanel()
         selectAsset(0);
     }
 
-    drawAssetList();
     drawAdd();
+    drawAssetList();
 
     ImGui::End();
 
