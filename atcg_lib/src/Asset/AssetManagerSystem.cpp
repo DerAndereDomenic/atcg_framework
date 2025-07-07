@@ -71,6 +71,14 @@ bool AssetManagerSystem::isAssetLoaded(AssetHandle handle) const
     return _loaded_assets.find(handle) != _loaded_assets.end();
 }
 
+void AssetManagerSystem::updateName(AssetHandle handle, const std::string& name)
+{
+    if(!isAssetHandleValid(handle)) return;
+    auto& data     = _asset_registry[handle];
+    data.name      = name;
+    data.file_path = name + data.file_path.extension().string();
+}
+
 AssetHandle AssetManagerSystem::registerAsset(const std::filesystem::path& path)
 {
     AssetHandle handle;

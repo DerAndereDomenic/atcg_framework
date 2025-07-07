@@ -23,6 +23,8 @@ public:
 
     bool isAssetLoaded(AssetHandle handle) const;
 
+    void updateName(AssetHandle handle, const std::string& name);
+
     AssetHandle registerAsset(const std::filesystem::path& path);
 
     AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::filesystem::path& path);
@@ -63,6 +65,11 @@ ATCG_INLINE const AssetRegistry& getAssetRegistry()
 ATCG_INLINE bool isAssetHandleValid(AssetHandle handle)
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->isAssetHandleValid(handle);
+}
+
+ATCG_INLINE void updateName(AssetHandle handle, const std::string& name)
+{
+    SystemRegistry::instance()->getSystem<AssetManagerSystem>()->updateName(handle, name);
 }
 
 ATCG_INLINE bool isAssetLoaded(AssetHandle handle)
