@@ -92,6 +92,16 @@ void AssetPanel::renderPanel()
     {
         const auto& data = AssetManager::getMetaData(_selected_handle);
 
+        const std::string& tag = data.name;
+        char buffer[256];
+        memset(buffer, 0, sizeof(buffer));
+        // ? strncpy_s not available in gcc. Is this unsafe?
+        memcpy(buffer, tag.c_str(), sizeof(buffer));
+        if(ImGui::InputText("Name##asset", buffer, sizeof(buffer)))
+        {
+            AssetManager::updateName(_selected_handle, std::string(buffer));
+        }
+
         if(data.type == AssetType::Material)
         {
             displayMaterial("asset", atcg::AssetManager::getAsset<Material>(_selected_handle));
