@@ -134,6 +134,15 @@ void AssetPanel::renderPanel()
                 }
             }
         }
+
+        ImGui::Separator();
+
+        if(ImGui::Button("Delete"))
+        {
+            AssetManager::removeAsset(_selected_handle);
+
+            selectAsset(0);
+        }
     }
 
     ImGui::End();
