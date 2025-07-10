@@ -202,6 +202,11 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
             std::filesystem::create_directories(texture_path);
             serialize_texture_ver1(std::dynamic_pointer_cast<atcg::Texture2D>(asset), texture_path / data.file_path);
         }
+        case AssetType::Scene:
+        {
+            // TODO
+        }
+        break;
     }
 }
 }    // namespace detail

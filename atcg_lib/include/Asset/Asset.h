@@ -14,7 +14,7 @@ using AssetHandle = UUID;
 enum class AssetType : uint16_t
 {
     None = 0,
-    // Scene, TODO
+    Scene,
     Texture2D,
     Material,
     Graph
@@ -50,6 +50,8 @@ ATCG_INLINE const char* assetTypeToString(AssetType type)
             return "AssetType::Texture2D";
         case AssetType::Graph:
             return "AssetType::Graph";
+        case AssetType::Scene:
+            return "AssetType::Scene";
     }
 
     return "AssetType::<Invalid>";
