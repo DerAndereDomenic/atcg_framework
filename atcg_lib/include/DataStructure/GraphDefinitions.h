@@ -8,6 +8,66 @@ namespace atcg
 {
 
 /**
+ * @brief An enum to distinguish between different graph types
+ */
+enum class GraphType
+{
+    None = 0,
+    ATCG_GRAPH_TYPE_POINTCLOUD,
+    ATCG_GRAPH_TYPE_TRIANGLEMESH,
+    ATCG_GRAPH_TYPE_GRAPH
+};
+
+/**
+ * @brief Convert a string to Graph Type
+ *
+ * @param string The string
+ *
+ * @return The type
+ */
+ATCG_INLINE GraphType stringToGraphType(std::string_view string)
+{
+    if(string == "PointCloud")
+    {
+        return GraphType::ATCG_GRAPH_TYPE_POINTCLOUD;
+    }
+
+    if(string == "TriangleMesh")
+    {
+        return GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH;
+    }
+
+    if(string == "Graph")
+    {
+        return GraphType::ATCG_GRAPH_TYPE_GRAPH;
+    }
+
+    return GraphType::None;
+}
+
+/**
+ * @brief Convert the graph type to string
+ *
+ * @param type The type
+ *
+ * @return The string
+ */
+ATCG_INLINE std::string graphTypeToString(GraphType type)
+{
+    switch(type)
+    {
+        case GraphType::ATCG_GRAPH_TYPE_GRAPH:
+            return "Graph";
+        case GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH:
+            return "TriangleMesh";
+        case GraphType::ATCG_GRAPH_TYPE_POINTCLOUD:
+            return "PointCloud";
+        default:
+            return "";
+    }
+}
+
+/**
  * @brief A struct that specifies how vertices are represented as a raw float buffer.
  * This is useful for filling and defining vertex data as tensors.
  *

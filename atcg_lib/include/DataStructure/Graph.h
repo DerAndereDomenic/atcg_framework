@@ -17,16 +17,6 @@ namespace atcg
 {
 
 /**
- * @brief An enum to distinguish between different graph types
- */
-enum class GraphType
-{
-    ATCG_GRAPH_TYPE_POINTCLOUD,
-    ATCG_GRAPH_TYPE_TRIANGLEMESH,
-    ATCG_GRAPH_TYPE_GRAPH
-};
-
-/**
  * @brief A structure to model different geometries
  */
 class Graph : public Asset
