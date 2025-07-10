@@ -37,6 +37,10 @@ public:
 
     void removeAsset(AssetHandle handle);
 
+    void serializeRegistry(const std::filesystem::path& registry_path);
+
+    void serializeAssets(const std::filesystem::path& root_path);
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
@@ -109,6 +113,16 @@ ATCG_INLINE void unloadAsset(AssetHandle handle)
 ATCG_INLINE void removeAsset(AssetHandle handle)
 {
     SystemRegistry::instance()->getSystem<AssetManagerSystem>()->removeAsset(handle);
+}
+
+ATCG_INLINE void serializeRegistry(const std::filesystem::path& registry_path)
+{
+    SystemRegistry::instance()->getSystem<AssetManagerSystem>()->serializeRegistry(registry_path);
+}
+
+ATCG_INLINE void serializeAssets(const std::filesystem::path& root_path)
+{
+    SystemRegistry::instance()->getSystem<AssetManagerSystem>()->serializeAssets(root_path);
 }
 }    // namespace AssetManager
 

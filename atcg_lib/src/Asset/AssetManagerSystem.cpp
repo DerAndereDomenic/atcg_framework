@@ -1,6 +1,9 @@
 #include <Asset/AssetManagerSystem.h>
 
 #include <Asset/AssetImporter.h>
+#include <Asset/AssetExporter.h>
+
+#include <json.hpp>
 
 namespace atcg
 {
@@ -144,6 +147,50 @@ void AssetManagerSystem::removeAsset(AssetHandle handle)
 
     // Remove from registry
     _asset_registry.erase(handle);
+}
+
+namespace detail
+{
+ATCG_INLINE void serialize_registry_ver1(const AssetRegistry& registry, const std::filesystem::path& registry_path)
+{
+    nlohmann::json j;
+
+    j["Version"] = "1.0";
+
+    std::vector<nlohmann::json> serialized_registry;
+
+    for(auto entry: registry)
+    {
+        AssetHandle handle = entry.first;
+        AssetMetaData data = entry.second;
+
+        nlohmann::json asset_entry;
+        asset_entry["Handle"] = (uint64_t)handle;
+        asset_entry["Type"]   = assetTypeToString(data.type);
+        asset_entry["Path"]   = data.file_path.string();
+        asset_entry["Name"]   = data.name;
+
+        serialized_registry.push_back(asset_entry);
+    }
+
+    j["Registry"] = serialized_registry;
+
+    std::ofstream o(registry_path);
+    o << std::setw(4) << j << std::endl;
+}
+}    // namespace detail
+
+void AssetManagerSystem::serializeRegistry(const std::filesystem::path& registry_path)
+{
+    detail::serialize_registry_ver1(_asset_registry, registry_path);
+}
+
+void AssetManagerSystem::serializeAssets(const std::filesystem::path& root_path)
+{
+    for(auto entry: _asset_registry)
+    {
+        AssetExporter::exportAsset(root_path, getAsset(entry.first), getMetaData(entry.first));
+    }
 }
 
 }    // namespace atcg
