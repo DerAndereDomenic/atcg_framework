@@ -193,4 +193,10 @@ void AssetManagerSystem::serializeAssets(const std::filesystem::path& root_path)
     }
 }
 
+void AssetManagerSystem::destroy()
+{
+    _asset_registry.clear();
+    _loaded_assets.clear();
+}
+
 }    // namespace atcg

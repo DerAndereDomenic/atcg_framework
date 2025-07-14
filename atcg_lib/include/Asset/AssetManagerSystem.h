@@ -41,6 +41,8 @@ public:
 
     void serializeAssets(const std::filesystem::path& root_path);
 
+    void destroy();
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
