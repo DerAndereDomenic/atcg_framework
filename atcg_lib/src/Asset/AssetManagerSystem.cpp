@@ -77,18 +77,16 @@ bool AssetManagerSystem::isAssetLoaded(AssetHandle handle) const
 void AssetManagerSystem::updateName(AssetHandle handle, const std::string& name)
 {
     if(!isAssetHandleValid(handle)) return;
-    auto& data     = _asset_registry[handle];
-    data.name      = name;
-    data.file_path = name + data.file_path.extension().string();
+    auto& data = _asset_registry[handle];
+    data.name  = name;
 }
 
 AssetHandle AssetManagerSystem::registerAsset(const std::filesystem::path& path)
 {
     AssetHandle handle;
     AssetMetaData data;
-    data.file_path = path;
-    data.type      = detail::getAssetTypeFromFileExtension(path.extension());
-    data.name      = path.stem().string();
+    data.type = detail::getAssetTypeFromFileExtension(path.extension());
+    data.name = path.stem().string();
     _asset_registry.insert(std::make_pair(handle, data));
 
     return handle;
@@ -97,9 +95,8 @@ AssetHandle AssetManagerSystem::registerAsset(const std::filesystem::path& path)
 AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset, const std::filesystem::path& path)
 {
     AssetMetaData data;
-    data.file_path = path;
-    data.type      = asset->getType();
-    data.name      = path.stem().string();
+    data.type = asset->getType();
+    data.name = path.stem().string();
 
     _loaded_assets.insert(std::make_pair(asset->handle, asset));
 
@@ -167,7 +164,6 @@ ATCG_INLINE void serialize_registry_ver1(const AssetRegistry& registry, const st
         nlohmann::json asset_entry;
         asset_entry["Handle"] = (uint64_t)handle;
         asset_entry["Type"]   = assetTypeToString(data.type);
-        asset_entry["Path"]   = data.file_path.string();
         asset_entry["Name"]   = data.name;
 
         serialized_registry.push_back(asset_entry);

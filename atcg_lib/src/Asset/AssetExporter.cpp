@@ -179,7 +179,8 @@ ATCG_INLINE void serialize_graph_ver1(const atcg::ref_ptr<Graph>& graph, const s
 
 ATCG_INLINE void serialize_script_ver1(const atcg::ref_ptr<Script>& script, const std::filesystem::path& path)
 {
-    std::filesystem::copy(script->getFilePath(), path);
+    auto path_ = path;
+    std::filesystem::copy(script->getFilePath(), path_.replace_extension(".py"));
 }
 
 ATCG_INLINE void
@@ -191,21 +192,22 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
         {
             auto graph_path = path / "graphs" / std::to_string(asset->handle);
             std::filesystem::create_directories(graph_path);
-            serialize_graph_ver1(std::dynamic_pointer_cast<Graph>(asset), graph_path / data.file_path);
+            serialize_graph_ver1(std::dynamic_pointer_cast<Graph>(asset), graph_path / (data.name + ".graph"));
         }
         break;
         case AssetType::Material:
         {
             auto material_path = path / "materials" / std::to_string(asset->handle);
             std::filesystem::create_directories(material_path);
-            serialize_material_ver1(material_path / data.file_path, std::dynamic_pointer_cast<atcg::Material>(asset));
+            serialize_material_ver1(material_path / (data.name + ".mat"),
+                                    std::dynamic_pointer_cast<atcg::Material>(asset));
         }
         break;
         case AssetType::Texture2D:
         {
             auto texture_path = path / "textures" / std::to_string(asset->handle);
             std::filesystem::create_directories(texture_path);
-            serialize_texture_ver1(std::dynamic_pointer_cast<atcg::Texture2D>(asset), texture_path / data.file_path);
+            serialize_texture_ver1(std::dynamic_pointer_cast<atcg::Texture2D>(asset), texture_path / data.name);
         }
         case AssetType::Scene:
         {
@@ -216,7 +218,7 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
         {
             auto script_path = path / "scripts" / std::to_string(asset->handle);
             std::filesystem::create_directories(script_path);
-            serialize_script_ver1(std::dynamic_pointer_cast<Script>(asset), script_path / data.file_path);
+            serialize_script_ver1(std::dynamic_pointer_cast<Script>(asset), script_path / data.name);
         }
         break;
     }

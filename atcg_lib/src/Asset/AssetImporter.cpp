@@ -12,8 +12,7 @@ atcg::ref_ptr<Asset> AssetImporter::importAsset(const AssetMetaData& metadata)
     {
         case AssetType::Texture2D:
         {
-            auto img = atcg::IO::imread(metadata.file_path.string());
-            asset    = atcg::Texture2D::create(img);
+            // TODO
         }
         break;
         case AssetType::Material:
