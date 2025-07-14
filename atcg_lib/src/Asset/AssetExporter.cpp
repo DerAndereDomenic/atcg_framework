@@ -4,6 +4,7 @@
 #include <Renderer/Texture.h>
 #include <Renderer/Material.h>
 #include <DataStructure/Graph.h>
+#include <Scripting/Script.h>
 
 #include <json.hpp>
 
@@ -70,7 +71,6 @@ ATCG_INLINE void serialize_material_ver1(const std::filesystem::path& path, cons
         auto file_ending = serialize_texture_ver1(diffuse_texture, img_path, 1.0f / 2.2f);
 
         material_json[DIFFUSE_TEXTURE_KEY] = img_path.generic_string() + file_ending;
-        ATCG_DEBUG(std::string(material_json[DIFFUSE_TEXTURE_KEY]));
     }
     else
     {
@@ -177,6 +177,11 @@ ATCG_INLINE void serialize_graph_ver1(const atcg::ref_ptr<Graph>& graph, const s
     o << std::setw(4) << graph_json << std::endl;
 }
 
+ATCG_INLINE void serialize_script_ver1(const atcg::ref_ptr<Script>& script, const std::filesystem::path& path)
+{
+    std::filesystem::copy(script->getFilePath(), path);
+}
+
 ATCG_INLINE void
 export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data)
 {
@@ -205,6 +210,13 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
         case AssetType::Scene:
         {
             // TODO
+        }
+        break;
+        case AssetType::Script:
+        {
+            auto script_path = path / "scripts" / std::to_string(asset->handle);
+            std::filesystem::create_directories(script_path);
+            serialize_script_ver1(std::dynamic_pointer_cast<Script>(asset), script_path / data.file_path);
         }
         break;
     }

@@ -17,7 +17,8 @@ enum class AssetType : uint16_t
     Scene,
     Texture2D,
     Material,
-    Graph
+    Graph,
+    Script,
     // Shader, TODO
 };
 
@@ -52,6 +53,8 @@ ATCG_INLINE const char* assetTypeToString(AssetType type)
             return "AssetType::Graph";
         case AssetType::Scene:
             return "AssetType::Scene";
+        case AssetType::Script:
+            return "AssetType::Script";
     }
 
     return "AssetType::<Invalid>";

@@ -407,11 +407,25 @@ struct ScriptComponent
 {
     ScriptComponent() = default;
 
-    ScriptComponent(const atcg::ref_ptr<Script>& script) : script(script) {}
+    ScriptComponent(const atcg::ref_ptr<Script>& script)
+    {
+        std::filesystem::path path = "script.py";
+        if(AssetManager::isAssetHandleValid(script->handle))
+        {
+            script_handle = script->handle;
+        }
+        else
+        {
+            script_handle = AssetManager::registerAsset(script, "script.py");
+        }
+    }
 
-    atcg::ref_ptr<Script> script = nullptr;
+    ATCG_INLINE atcg::ref_ptr<Script> script() const { return AssetManager::getAsset<Script>(script_handle); }
+
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script"; }
+
+    AssetHandle script_handle = 0;
 };
 
 }    // namespace atcg

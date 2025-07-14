@@ -147,11 +147,11 @@ void Scripting::handleScriptReloads(const atcg::ref_ptr<atcg::Scene>& scene)
 
         auto& script = entity.getComponent<atcg::ScriptComponent>();
 
-        if(script.script != nullptr)
+        if(script.script() != nullptr)
         {
-            script.script->onDetach();
-            script.script->reload();
-            script.script->onAttach();
+            script.script()->onDetach();
+            script.script()->reload();
+            script.script()->onAttach();
         }
     }
 
@@ -168,9 +168,9 @@ void Scripting::handleScriptEvents(const atcg::ref_ptr<atcg::Scene>& scene, atcg
 
         auto& script = entity.getComponent<atcg::ScriptComponent>();
 
-        if(script.script != nullptr)
+        if(script.script() != nullptr)
         {
-            script.script->onEvent(event);
+            script.script()->onEvent(event);
         }
     }
 }
@@ -185,9 +185,9 @@ void Scripting::handleScriptUpdates(const atcg::ref_ptr<atcg::Scene>& scene, con
 
         auto& script = entity.getComponent<atcg::ScriptComponent>();
 
-        if(script.script != nullptr)
+        if(script.script() != nullptr)
         {
-            script.script->onUpdate(dt);
+            script.script()->onUpdate(dt);
         }
     }
 }

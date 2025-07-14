@@ -8,12 +8,14 @@
 
 #include <Scene/Entity.h>
 
+#include <Asset/Asset.h>
+
 namespace atcg
 {
 /**
  * @brief The interface to model a script
  */
-class Script
+class Script : public Asset
 {
 public:
     /**
@@ -71,6 +73,10 @@ public:
      * @return The file path
      */
     ATCG_INLINE const std::filesystem::path& getFilePath() const { return _file_path; }
+
+    static AssetType getStaticType() { return AssetType::Script; }
+
+    virtual AssetType getType() const override { return getStaticType(); }
 
 protected:
     std::filesystem::path _file_path;
