@@ -92,11 +92,11 @@ AssetHandle AssetManagerSystem::registerAsset(const std::filesystem::path& path)
     return handle;
 }
 
-AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset, const std::filesystem::path& path)
+AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name)
 {
     AssetMetaData data;
     data.type = asset->getType();
-    data.name = path.stem().string();
+    data.name = name;
 
     _loaded_assets.insert(std::make_pair(asset->handle, asset));
 

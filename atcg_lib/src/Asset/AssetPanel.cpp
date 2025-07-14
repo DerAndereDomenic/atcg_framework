@@ -60,11 +60,11 @@ void AssetPanel::drawAdd()
     {
         if(ImGui::MenuItem("Graph"))
         {
-            AssetManager::registerAsset("graph.graph");
+            AssetManager::registerAsset("graph");
         }
         if(ImGui::MenuItem("Material"))
         {
-            AssetManager::registerAsset(atcg::make_ref<Material>(), "material.mat");
+            AssetManager::registerAsset(atcg::make_ref<Material>(), "material");
         }
         ImGui::EndPopup();
     }

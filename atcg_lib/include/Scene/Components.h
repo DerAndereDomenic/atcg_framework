@@ -183,14 +183,13 @@ struct GeometryComponent
     GeometryComponent(AssetHandle handle) : graph_handle(handle) {}
     GeometryComponent(const atcg::ref_ptr<Graph>& graph)
     {
-        std::filesystem::path path = "graph.graph";
         if(AssetManager::isAssetHandleValid(graph->handle))
         {
             graph_handle = graph->handle;
         }
         else
         {
-            graph_handle = AssetManager::registerAsset(graph, "graph.graph");
+            graph_handle = AssetManager::registerAsset(graph, "graph");
         }
     }
 
@@ -409,14 +408,13 @@ struct ScriptComponent
 
     ScriptComponent(const atcg::ref_ptr<Script>& script)
     {
-        std::filesystem::path path = "script.py";
         if(AssetManager::isAssetHandleValid(script->handle))
         {
             script_handle = script->handle;
         }
         else
         {
-            script_handle = AssetManager::registerAsset(script, "script.py");
+            script_handle = AssetManager::registerAsset(script, "script");
         }
     }
 
