@@ -32,35 +32,42 @@ public:
 
     /**
      * @brief Initializes the script. This has to be called before any of the functions below.
-     *
-     * @param scene The scene in which the entity resides that is attached to this script
-     * @param entity The entity that is attached to this script
      */
-    virtual void init(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::Entity& entity) = 0;
+    virtual void init() = 0;
 
     /**
      * @brief The function that is called when the script gets attached
+     *
+     * @param scene The scene
+     * @param entity The entity
      */
-    virtual void onAttach() = 0;
+    virtual void onAttach(const atcg::ref_ptr<Scene>& scene, Entity entity) = 0;
 
     /**
      * @brief The function that is called in the update loop
      *
+     * @param scene The scene
+     * @param entity The entity
      * @param delta_time The time between consecutive frames in secodns.
      */
-    virtual void onUpdate(const float delta_time) = 0;
+    virtual void onUpdate(const atcg::ref_ptr<Scene>& scene, Entity entity, const float delta_time) = 0;
 
     /**
      * @brief The function that is called on events
      *
+     * @param scene The scene
+     * @param entity The entity
      * @param event The event to handle
      */
-    virtual void onEvent(atcg::Event* event) = 0;
+    virtual void onEvent(const atcg::ref_ptr<Scene>& scene, Entity entity, atcg::Event* event) = 0;
 
     /**
      * @brief The function that is called if the script is detached
+     *
+     * @param scene The scene
+     * @param entity The entity
      */
-    virtual void onDetach() = 0;
+    virtual void onDetach(const atcg::ref_ptr<Scene>& scene, Entity entity) = 0;
 
     /**
      * @brief Reloads the script
@@ -103,35 +110,42 @@ public:
 
     /**
      * @brief Initializes the script. This has to be called before any of the functions below.
-     *
-     * @param scene The scene in which the entity resides that is attached to this script
-     * @param entity The entity that is attached to this script
      */
-    virtual void init(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::Entity& entity) override;
+    virtual void init() override;
 
     /**
      * @brief The function that is called when the script gets attached
+     *
+     * @param scene The scene
+     * @param entity The entity
      */
-    virtual void onAttach() override;
+    virtual void onAttach(const atcg::ref_ptr<Scene>& scene, Entity entity) override;
 
     /**
      * @brief The function that is called in the update loop
      *
+     * @param scene The scene
+     * @param entity The entity
      * @param delta_time The time between consecutive frames in secodns.
      */
-    virtual void onUpdate(const float delta_time) override;
+    virtual void onUpdate(const atcg::ref_ptr<Scene>& scene, Entity entity, const float delta_time) override;
 
     /**
      * @brief The function that is called on events
      *
+     * @param scene The scene
+     * @param entity The entity
      * @param event The event to handle
      */
-    virtual void onEvent(atcg::Event* event) override;
+    virtual void onEvent(const atcg::ref_ptr<Scene>& scene, Entity entity, atcg::Event* event) override;
 
     /**
      * @brief The function that is called if the script is detached
+     *
+     * @param scene The scene
+     * @param entity The entity
      */
-    virtual void onDetach() override;
+    virtual void onDetach(const atcg::ref_ptr<Scene>& scene, Entity entity) override;
 
     /**
      * @brief Reloads the script
