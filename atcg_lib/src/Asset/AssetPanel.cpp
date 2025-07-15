@@ -26,24 +26,19 @@ ATCG_INLINE void AssetPanel::drawAssetList()
         auto handle      = entry.first;
         std::string tag  = data.name;
 
-        if(handle == _selected_handle)
-        {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.9f, 1.0f));    // Highlight color
-        }
+        bool isSelected = (handle == _selected_handle);
+        if(isSelected) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.9f, 1.0f));
 
         ImGui::PushID(handle);
         if(ImGui::Button(tag.c_str()))
         {
             selectAsset(handle);
         }
-        else if(handle == _selected_handle)
-        {
-            ImGui::PopStyleColor();
-        }
         ImGui::PopID();
 
+        if(isSelected) ImGui::PopStyleColor();    // always pop if you pushed
 
-        ImGui::SameLine();    // Place next item on the same row
+        ImGui::SameLine();
     }
 
     ImGui::EndChild();
