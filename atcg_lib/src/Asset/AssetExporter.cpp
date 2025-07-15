@@ -5,6 +5,7 @@
 #include <Renderer/Material.h>
 #include <DataStructure/Graph.h>
 #include <Scripting/Script.h>
+#include <Scene/Serializer.h>
 
 #include <json.hpp>
 
@@ -211,7 +212,11 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
         }
         case AssetType::Scene:
         {
-            // TODO
+            // TODO: Templates ?
+            auto scene_path = path / "scenes" / std::to_string(asset->handle);
+            std::filesystem::create_directories(scene_path);
+            atcg::Serialization::SceneSerializer serializer(std::dynamic_pointer_cast<atcg::Scene>(asset));
+            serializer.serialize((scene_path / data.name).replace_extension(".scene").string());
         }
         break;
         case AssetType::Script:

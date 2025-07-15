@@ -344,38 +344,7 @@ void ComponentSerializer<GeometryComponent>::serialize_component(const std::stri
                                                                  GeometryComponent& component,
                                                                  nlohmann::json& j) const
 {
-    atcg::ref_ptr<Graph> graph = component.graph();
-
-    j[GEOMETRY_KEY][TYPE_KEY] = (int)graph->type();
-
-    IDComponent& id = entity.getComponent<IDComponent>();
-
-    if(graph->n_vertices() != 0)
-    {
-        const char* buffer      = graph->getVerticesBuffer()->getHostPointer<char>();
-        std::string buffer_name = file_path + "." + std::to_string(id.ID()) + ".vertices";
-        serializeBuffer(buffer_name, buffer, graph->getVerticesBuffer()->size());
-        j[GEOMETRY_KEY][VERTICES_KEY] = buffer_name;
-        graph->getVerticesBuffer()->unmapHostPointers();
-    }
-
-    if(graph->n_faces() != 0)
-    {
-        const char* buffer      = graph->getFaceIndexBuffer()->getHostPointer<char>();
-        std::string buffer_name = file_path + "." + std::to_string(id.ID()) + ".faces";
-        serializeBuffer(buffer_name, buffer, graph->getFaceIndexBuffer()->size());
-        j[GEOMETRY_KEY][FACES_KEY] = buffer_name;
-        graph->getFaceIndexBuffer()->unmapHostPointers();
-    }
-
-    if(graph->n_edges() != 0)
-    {
-        const char* buffer      = graph->getEdgesBuffer()->getHostPointer<char>();
-        std::string buffer_name = file_path + "." + std::to_string(id.ID()) + ".edges";
-        serializeBuffer(buffer_name, buffer, graph->getEdgesBuffer()->size());
-        j[GEOMETRY_KEY][EDGES_KEY] = buffer_name;
-        graph->getEdgesBuffer()->unmapHostPointers();
-    }
+    j[GEOMETRY_KEY] = (uint64_t)component.graph_handle;
 }
 
 
@@ -390,7 +359,7 @@ void ComponentSerializer<MeshRenderComponent>::serialize_component(const std::st
     j[MESH_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
     j[MESH_RENDERER_KEY][RECEIVE_SHADOWS_KEY]      = component.receive_shadow;
 
-    serializeMaterial(j[MESH_RENDERER_KEY], entity, component.material(), file_path);
+    j[MESH_RENDERER_KEY][MATERIAL_KEY] = (uint64_t)component.material_handle;
 }
 
 
@@ -419,7 +388,7 @@ void ComponentSerializer<PointSphereRenderComponent>::serialize_component(const 
     j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = component.shader->getFragmentPath();
     j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = component.shader->getGeometryPath();
 
-    serializeMaterial(j[POINT_SPHERE_RENDERER_KEY], entity, component.material(), file_path);
+    j[POINT_SPHERE_RENDERER_KEY][MATERIAL_KEY] = (uint64_t)component.material_handle;
 }
 
 
@@ -441,7 +410,7 @@ void ComponentSerializer<EdgeCylinderRenderComponent>::serialize_component(const
 {
     j[EDGE_CYLINDER_RENDERER_KEY][RADIUS_KEY] = component.radius;
 
-    serializeMaterial(j[EDGE_CYLINDER_RENDERER_KEY], entity, component.material(), file_path);
+    j[EDGE_CYLINDER_RENDERER_KEY][MATERIAL_KEY] = (uint64_t)component.material_handle;
 }
 
 
@@ -455,7 +424,7 @@ void ComponentSerializer<InstanceRenderComponent>::serialize_component(const std
     j[INSTANCE_RENDERER_KEY][SHADER_KEY][VERTEX_KEY]   = shader->getVertexPath();
     j[INSTANCE_RENDERER_KEY][SHADER_KEY][FRAGMENT_KEY] = shader->getFragmentPath();
     j[INSTANCE_RENDERER_KEY][SHADER_KEY][GEOMETRY_KEY] = shader->getGeometryPath();
-    serializeMaterial(j[INSTANCE_RENDERER_KEY], entity, component.material(), file_path);
+    j[INSTANCE_RENDERER_KEY][MATERIAL_KEY]             = (uint64_t)component.material_handle;
 
     IDComponent& id = entity.getComponent<IDComponent>();
     nlohmann::json::array_t buffers;
@@ -493,13 +462,7 @@ void ComponentSerializer<ScriptComponent>::serialize_component(const std::string
                                                                ScriptComponent& component,
                                                                nlohmann::json& j) const
 {
-    std::string path = "";
-    if(component.script)
-    {
-        path = component.script->getFilePath().string();
-    }
-
-    j[SCRIPT_KEY] = path;
+    j[SCRIPT_KEY] = (uint64_t)component.script_handle;
 }
 
 
@@ -699,7 +662,7 @@ void ComponentSerializer<MeshRenderComponent>::deserialize_component(const std::
     {
         auto material_node               = renderer[MATERIAL_KEY];
         atcg::ref_ptr<Material> material = deserialize_material(material_node);
-        renderComponent.setMaterial(material);
+        // renderComponent.setMaterial(material);
     }
 
     renderComponent.receive_shadow = renderer.value(RECEIVE_SHADOWS_KEY, true);
@@ -783,7 +746,7 @@ void ComponentSerializer<PointSphereRenderComponent>::deserialize_component(cons
     {
         auto material_node               = renderer[MATERIAL_KEY];
         atcg::ref_ptr<Material> material = deserialize_material(material_node);
-        renderComponent.setMaterial(material);
+        // renderComponent.setMaterial(material);
     }
 }
 
@@ -824,7 +787,7 @@ void ComponentSerializer<EdgeCylinderRenderComponent>::deserialize_component(con
     {
         auto& material_node              = renderer[MATERIAL_KEY];
         atcg::ref_ptr<Material> material = deserialize_material(material_node);
-        renderComponent.setMaterial(material);
+        // renderComponent.setMaterial(material);
     }
 }
 
@@ -845,7 +808,7 @@ void ComponentSerializer<InstanceRenderComponent>::deserialize_component(const s
     {
         auto& material_node              = renderer[MATERIAL_KEY];
         atcg::ref_ptr<Material> material = deserialize_material(material_node);
-        renderComponent.setMaterial(material);
+        // renderComponent.setMaterial(material);
     }
 
     std::string vertex_path =
@@ -917,15 +880,16 @@ void ComponentSerializer<ScriptComponent>::deserialize_component(const std::stri
         return;
     }
 
-    auto& script = entity.addComponent<ScriptComponent>();
+    // TODO
+    // auto& script = entity.addComponent<ScriptComponent>();
 
-    std::string path = j[SCRIPT_KEY];
-    if(path != "")
-    {
-        script.script = atcg::make_ref<PythonScript>(path);
-        script.script->init(scene, entity);
-        script.script->onAttach();
-    }
+    // std::string path = j[SCRIPT_KEY];
+    // if(path != "")
+    // {
+    //     script.script = atcg::make_ref<PythonScript>(path);
+    //     script.script->init(scene, entity);
+    //     script.script->onAttach();
+    // }
 }
 }    // namespace Serialization
 }    // namespace atcg

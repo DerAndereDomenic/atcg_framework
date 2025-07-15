@@ -14,7 +14,8 @@ static std::map<std::filesystem::path, AssetType> s_asset_extension_map = {{".pn
                                                                            {".jpg", AssetType::Texture2D},
                                                                            {".jpeg", AssetType::Texture2D},
                                                                            {".graph", AssetType::Graph},
-                                                                           {".mat", AssetType::Material}};
+                                                                           {".mat", AssetType::Material},
+                                                                           {".scene", AssetType::Scene}};
 
 static AssetType getAssetTypeFromFileExtension(const std::filesystem::path& extension)
 {
