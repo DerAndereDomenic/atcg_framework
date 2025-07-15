@@ -27,6 +27,8 @@ public:
 
     AssetHandle registerAsset(const std::filesystem::path& path);
 
+    AssetHandle registerAsset(const AssetMetaData& data);
+
     AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name);
 
     AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data);
@@ -90,6 +92,11 @@ ATCG_INLINE bool isAssetLoaded(AssetHandle handle)
 ATCG_INLINE AssetHandle registerAsset(const std::filesystem::path& path)
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(path);
+}
+
+ATCG_INLINE AssetHandle registerAsset(const AssetMetaData& data)
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(data);
 }
 
 ATCG_INLINE AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name)

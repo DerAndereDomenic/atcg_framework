@@ -85,9 +85,17 @@ AssetHandle AssetManagerSystem::registerAsset(const std::filesystem::path& path)
 {
     AssetHandle handle;
     AssetMetaData data;
-    data.type = detail::getAssetTypeFromFileExtension(path.extension());
-    data.name = path.stem().string();
-    _asset_registry.insert(std::make_pair(handle, data));
+    data.type               = detail::getAssetTypeFromFileExtension(path.extension());
+    data.name               = path.stem().string();
+    _asset_registry[handle] = data;
+
+    return handle;
+}
+
+AssetHandle AssetManagerSystem::registerAsset(const AssetMetaData& data)
+{
+    AssetHandle handle;
+    _asset_registry[handle] = data;
 
     return handle;
 }
@@ -98,18 +106,18 @@ AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset,
     data.type = asset->getType();
     data.name = name;
 
-    _loaded_assets.insert(std::make_pair(asset->handle, asset));
+    _loaded_assets[asset->handle] = asset;
 
-    _asset_registry.insert(std::make_pair(asset->handle, data));
+    _asset_registry[asset->handle] = data;
 
     return asset->handle;
 }
 
 AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data)
 {
-    _loaded_assets.insert(std::make_pair(asset->handle, asset));
+    _loaded_assets[asset->handle] = asset;
 
-    _asset_registry.insert(std::make_pair(asset->handle, data));
+    _asset_registry[asset->handle] = data;
 
     return asset->handle;
 }
