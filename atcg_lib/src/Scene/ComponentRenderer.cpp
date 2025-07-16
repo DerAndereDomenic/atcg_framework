@@ -105,7 +105,7 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
     auto scene = entity.scene();
 
     atcg::ref_ptr<atcg::Shader> shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader);
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader());
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
@@ -179,7 +179,7 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
     auto scene = entity.scene();
 
     atcg::ref_ptr<atcg::Shader> shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader);
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader());
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
@@ -253,7 +253,7 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
     auto scene = entity.scene();
 
     atcg::ref_ptr<atcg::Shader> shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader);
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader());
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
@@ -473,7 +473,8 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
     // Actual rendering of component
     InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
 
-    auto override_shader = renderer.shader ? renderer.shader : _renderer->getShaderManager()->getShader("instanced");
+    auto override_shader =
+        renderer.shader() ? renderer.shader() : _renderer->getShaderManager()->getShader("instanced");
 
     atcg::ref_ptr<atcg::Shader> shader =
         auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", override_shader);
