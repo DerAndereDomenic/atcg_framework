@@ -7,6 +7,8 @@
 #include <Scripting/Script.h>
 #include <Scene/Serializer.h>
 
+#include <fstream>
+
 #include <json.hpp>
 
 namespace atcg
@@ -192,6 +194,39 @@ ATCG_INLINE VOID serialize_scene_ver1(const atcg::ref_ptr<Scene>& scene, const s
     serializer.serialize(path_.replace_extension(".scene").string());
 }
 
+ATCG_INLINE VOID serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, const std::filesystem::path& path)
+{
+    auto path_ = path;
+
+    if(shader->isComputeShader())
+    {
+        path_ = path_.replace_extension(".glsl");
+        std::ofstream stream(path_);
+        stream << shader->getSource(ShaderType::COMPUTE);
+    }
+    else
+    {
+        if(shader->hasGeometryShader())
+        {
+            path_ = path_.replace_extension(".gs");
+            std::ofstream stream(path_);
+            stream << shader->getSource(ShaderType::GEOMETRY);
+        }
+
+        {
+            path_ = path_.replace_extension(".vs");
+            std::ofstream stream(path_);
+            stream << shader->getSource(ShaderType::VERTEX);
+        }
+
+        {
+            path_ = path_.replace_extension(".fs");
+            std::ofstream stream(path_);
+            stream << shader->getSource(ShaderType::FRAGMENT);
+        }
+    }
+}
+
 ATCG_INLINE void
 export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data)
 {
@@ -230,6 +265,13 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
             auto script_path = path / "scripts" / std::to_string(asset->handle);
             std::filesystem::create_directories(script_path);
             serialize_script_ver1(std::dynamic_pointer_cast<Script>(asset), script_path / data.name);
+        }
+        break;
+        case AssetType::Shader:
+        {
+            auto shader_path = path / "shader" / std::to_string(asset->handle);
+            std::filesystem::create_directories(shader_path);
+            serialize_shader_ver1(std::dynamic_pointer_cast<Shader>(asset), shader_path / data.name);
         }
         break;
     }
