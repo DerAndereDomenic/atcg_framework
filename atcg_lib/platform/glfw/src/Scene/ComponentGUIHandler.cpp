@@ -766,6 +766,9 @@ AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
         {
             if(it->second.type != AssetType::Shader) continue;
 
+            auto shader = AssetManager::getAsset<Shader>(it->first);
+            if(shader->isComputeShader()) continue;
+
             bool is_selected = it->first == current_item;
 
             if(ImGui::Selectable(it->second.name.c_str(), is_selected))
