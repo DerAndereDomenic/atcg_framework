@@ -81,6 +81,20 @@ public:
      */
     ATCG_INLINE const std::filesystem::path& getFilePath() const { return _file_path; }
 
+    /**
+     * @brief Get the source code of the script
+     *
+     * @return The code
+     */
+    ATCG_INLINE std::string getSource() const
+    {
+        std::ifstream stream(_file_path);
+        std::ostringstream buffer;
+        buffer << stream.rdbuf();
+
+        return buffer.str();
+    }
+
     static AssetType getStaticType() { return AssetType::Script; }
 
     virtual AssetType getType() const override { return getStaticType(); }
