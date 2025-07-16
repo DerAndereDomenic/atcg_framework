@@ -182,8 +182,11 @@ ATCG_INLINE void serialize_graph_ver1(const atcg::ref_ptr<Graph>& graph, const s
 
 ATCG_INLINE void serialize_script_ver1(const atcg::ref_ptr<Script>& script, const std::filesystem::path& path)
 {
-    auto path_ = path;
-    std::filesystem::copy(script->getFilePath(), path_.replace_extension(".py"));
+    auto path_  = path;
+    auto source = script->getSource();
+    std::ofstream stream(path_.replace_extension(".py"));
+    stream << source;
+    stream.close();
 }
 
 ATCG_INLINE VOID serialize_scene_ver1(const atcg::ref_ptr<Scene>& scene, const std::filesystem::path& path)
@@ -203,6 +206,7 @@ ATCG_INLINE VOID serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, cons
         path_ = path_.replace_extension(".glsl");
         std::ofstream stream(path_);
         stream << shader->getSource(ShaderType::COMPUTE);
+        stream.close();
     }
     else
     {
@@ -211,18 +215,21 @@ ATCG_INLINE VOID serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, cons
             path_ = path_.replace_extension(".gs");
             std::ofstream stream(path_);
             stream << shader->getSource(ShaderType::GEOMETRY);
+            stream.close();
         }
 
         {
             path_ = path_.replace_extension(".vs");
             std::ofstream stream(path_);
             stream << shader->getSource(ShaderType::VERTEX);
+            stream.close();
         }
 
         {
             path_ = path_.replace_extension(".fs");
             std::ofstream stream(path_);
             stream << shader->getSource(ShaderType::FRAGMENT);
+            stream.close();
         }
     }
 }
