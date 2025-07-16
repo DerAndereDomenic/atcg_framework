@@ -19,7 +19,7 @@ enum class AssetType : uint16_t
     Material,
     Graph,
     Script,
-    // Shader, TODO
+    Shader
 };
 
 class Asset

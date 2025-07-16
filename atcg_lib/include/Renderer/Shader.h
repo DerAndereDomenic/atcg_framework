@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Asset/Asset.h>
 #include <Core/glm.h>
 #include <Renderer/Buffer.h>
 #include <Renderer/ShaderType.h>
@@ -13,7 +14,7 @@ namespace atcg
 /**
  * @brief This class models a shader
  */
-class Shader
+class Shader : public Asset
 {
 public:
     /**
@@ -190,6 +191,10 @@ public:
     ATCG_INLINE const std::string& getFragmentPath() const { return _fragment_path; }
 
     ATCG_INLINE const std::string& getComputePath() const { return _compute_path; }
+
+    static AssetType getStaticType() { return AssetType::Shader; }
+
+    virtual AssetType getType() const override { return getStaticType(); }
 
 private:
     struct Uniform
