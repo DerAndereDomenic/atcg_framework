@@ -7,14 +7,13 @@
 #include <Core/Application.h>
 #include <Asset/AssetManagerSystem.h>
 #include <portable-file-dialogs.h>
-#include <Renderer/Material.h>
 
 namespace atcg
 {
 namespace GUI
 {
 
-bool displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& material)
+bool AssetPanel::displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& material)
 {
     bool updated = false;
 
@@ -263,6 +262,168 @@ bool displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& mate
     return updated;
 }
 
+void AssetPanel::displayGraph(AssetHandle handle)
+{
+    auto graph     = atcg::AssetManager::getAsset<Graph>(handle);
+    int n_vertices = graph ? graph->n_vertices() : 0;
+    int n_faces    = graph ? graph->n_faces() : 0;
+    ImGui::Text(("Vertices: " + std::to_string(n_vertices)).c_str());
+    ImGui::Text(("Faces: " + std::to_string(n_faces)).c_str());
+    if(ImGui::Button("Import Mesh##GeometryComponent"))
+    {
+        auto f =
+            pfd::open_file("Choose files to read", pfd::path::home(), {"Obj Files (.obj)", "*.obj"}, pfd::opt::none);
+        auto files = f.result();
+        if(!files.empty())
+        {
+            auto mesh    = IO::read_any(files[0]);
+            mesh->handle = handle;
+            AssetManager::registerAsset(mesh, AssetManager::getMetaData(mesh->handle));
+        }
+    }
+}
+
+void AssetPanel::displayScript(AssetHandle handle)
+{
+    if(ImGui::Button("Load Script"))
+    {
+        auto f =
+            pfd::open_file("Choose files to read", pfd::path::home(), {"Python Files (.py)", "*.py"}, pfd::opt::none);
+        auto files = f.result();
+        if(!files.empty())
+        {
+            auto script = atcg::make_ref<atcg::PythonScript>(files[0]);
+            script->init();
+            script->handle = handle;
+            AssetManager::registerAsset(script, AssetManager::getMetaData(script->handle));
+        }
+    }
+}
+
+void AssetPanel::displayShader(AssetHandle handle)
+{
+    auto shader = AssetManager::getAsset<Shader>(handle);
+
+    if(shader)
+    {
+        if(shader->isComputeShader())
+        {
+            _current_compute_path = shader->getComputePath();
+        }
+        else
+        {
+            if(shader->hasGeometryShader())
+            {
+                _current_geometry_path = shader->getComputePath();
+            }
+
+            _current_vertex_path   = shader->getVertexPath();
+            _current_fragment_path = shader->getFragmentPath();
+        }
+    }
+
+    if(ImGui::Button("Load Vertex Shader"))
+    {
+        auto f =
+            pfd::open_file("Choose files to read", pfd::path::home(), {"Vertex Shader (.vs)", "*.vs"}, pfd::opt::none);
+        auto files = f.result();
+        if(!files.empty())
+        {
+            _current_vertex_path = files[0];
+        }
+    }
+    if(_current_vertex_path != "")
+    {
+        ImGui::Text(_current_vertex_path.c_str());
+    }
+
+    if(ImGui::Button("Load Fragment Shader"))
+    {
+        auto f     = pfd::open_file("Choose files to read",
+                                pfd::path::home(),
+                                    {"Fragment Shader (.fs)", "*.fs"},
+                                pfd::opt::none);
+        auto files = f.result();
+        if(!files.empty())
+        {
+            _current_fragment_path = files[0];
+        }
+    }
+    if(_current_fragment_path != "")
+    {
+        ImGui::Text(_current_fragment_path.c_str());
+    }
+
+    if(ImGui::Button("Load Geometry Shader"))
+    {
+        auto f     = pfd::open_file("Choose files to read",
+                                pfd::path::home(),
+                                    {"Geometry Shader (.gs)", "*.gs"},
+                                pfd::opt::none);
+        auto files = f.result();
+        if(!files.empty())
+        {
+            _current_geometry_path = files[0];
+        }
+    }
+    if(_current_geometry_path != "")
+    {
+        ImGui::Text(_current_geometry_path.c_str());
+    }
+
+    if(ImGui::Button("Load Compute Shader"))
+    {
+        auto f     = pfd::open_file("Choose files to read",
+                                pfd::path::home(),
+                                    {"Compute Shader (.glsl)", "*.glsl"},
+                                pfd::opt::none);
+        auto files = f.result();
+        if(!files.empty())
+        {
+            _current_compute_path = files[0];
+        }
+    }
+    if(_current_compute_path != "")
+    {
+        ImGui::Text(_current_compute_path.c_str());
+    }
+
+    if(ImGui::Button("Compile"))
+    {
+        if(_current_compute_path != "")
+        {
+            shader = atcg::make_ref<Shader>(_current_compute_path);
+        }
+        else if(_current_vertex_path != "" && _current_fragment_path != "")
+        {
+            if(_current_geometry_path != "")
+            {
+                shader = atcg::make_ref<Shader>(_current_vertex_path, _current_fragment_path, _current_geometry_path);
+            }
+            shader = atcg::make_ref<Shader>(_current_vertex_path, _current_fragment_path);
+        }
+        else
+        {
+            shader = nullptr;
+        }
+
+        if(shader)
+        {
+            shader->handle = handle;
+            AssetManager::registerAsset(shader, AssetManager::getMetaData(shader->handle));
+        }
+    }
+
+    if(shader)
+    {
+        ImGui::Text("Valid Shader");
+    }
+    else
+    {
+        ImGui::Text("Invalid Shader");
+    }
+}
+
 void AssetPanel::drawAssetList()
 {
     // Begin a scrollable horizontal region
@@ -321,6 +482,13 @@ void AssetPanel::drawAdd()
             data.name = "script";
             AssetManager::registerAsset(data);
         }
+        if(ImGui::MenuItem("Shader"))
+        {
+            AssetMetaData data;
+            data.type = AssetType::Shader;
+            data.name = "shader";
+            AssetManager::registerAsset(data);
+        }
         ImGui::EndPopup();
     }
 }
@@ -363,45 +531,15 @@ void AssetPanel::renderPanel()
         }
         else if(data.type == AssetType::Graph)
         {
-            auto graph     = atcg::AssetManager::getAsset<Graph>(_selected_handle);
-            int n_vertices = graph ? graph->n_vertices() : 0;
-            int n_faces    = graph ? graph->n_faces() : 0;
-            ImGui::Text(("Vertices: " + std::to_string(n_vertices)).c_str());
-            ImGui::Text(("Faces: " + std::to_string(n_faces)).c_str());
-            if(ImGui::Button("Import Mesh##GeometryComponent"))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"Obj Files (.obj)", "*.obj"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto mesh    = IO::read_any(files[0]);
-                    mesh->handle = _selected_handle;
-                    AssetManager::registerAsset(mesh, AssetManager::getMetaData(mesh->handle));
-                }
-            }
+            displayGraph(_selected_handle);
         }
         else if(data.type == AssetType::Script)
         {
-            if(ImGui::Button("Load Script"))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"Python Files (.py)", "*.py"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto script = atcg::make_ref<atcg::PythonScript>(files[0]);
-                    // TODO
-                    script->init();
-                    // component.script->onAttach();
-                    script->handle = _selected_handle;
-                    AssetManager::registerAsset(script, AssetManager::getMetaData(script->handle));
-                }
-            }
+            displayScript(_selected_handle);
+        }
+        else if(data.type == AssetType::Shader)
+        {
+            displayShader(_selected_handle);
         }
 
         ImGui::Separator();
@@ -422,6 +560,12 @@ void AssetPanel::renderPanel()
 void AssetPanel::selectAsset(AssetHandle handle)
 {
     _selected_handle = handle;
+
+    // Clean up
+    _current_vertex_path   = "";
+    _current_fragment_path = "";
+    _current_geometry_path = "";
+    _current_compute_path  = "";
 }
 
 }    // namespace GUI
