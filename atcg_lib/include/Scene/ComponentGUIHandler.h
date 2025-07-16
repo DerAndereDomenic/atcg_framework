@@ -62,16 +62,12 @@ ATCG_DECLARE_COMPONENT_GUI_RENDERER(InstanceRenderComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(PointLightComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(ScriptComponent);
 
-/**
- * @brief Display a material
- *
- * @param key The imgui key
- * @param material The material
- *
- * @return true if the material has been updated this frame
- */
-bool displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& material);
-
 AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle);
+
+AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
+
+AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
+
+AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
 }    // namespace GUI
 }    // namespace atcg

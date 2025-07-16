@@ -49,31 +49,30 @@ void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_pt
 
     if(entity.hasComponent<atcg::GeometryComponent>())
     {
-        if(ImGui::Button("Apply Transform"))
-        {
-            RevisionStack::startRecording<
-                UnionRevision<ComponentEditedRevision<TransformComponent>, ComponentEditedRevision<GeometryComponent>>>(
-                scene,
-                entity);
-            auto& geometry = entity.getComponent<atcg::GeometryComponent>();
-            auto graph     = geometry.graph()->copy();
-            applyTransform(graph, transform);
-            geometry.setGraph(graph);
-            atcg::RevisionStack::endRecording();
-        }
+        // TODO
+        // if(ImGui::Button("Apply Transform"))
+        // {
+        //     RevisionStack::startRecording<
+        //         UnionRevision<ComponentEditedRevision<TransformComponent>,
+        //         ComponentEditedRevision<GeometryComponent>>>( scene, entity);
+        //     auto& geometry = entity.getComponent<atcg::GeometryComponent>();
+        //     auto graph     = geometry.graph()->copy();
+        //     applyTransform(graph, transform);
+        //     geometry.setGraph(graph);
+        //     atcg::RevisionStack::endRecording();
+        // }
 
-        if(ImGui::Button("Normalize"))
-        {
-            RevisionStack::startRecording<
-                UnionRevision<ComponentEditedRevision<TransformComponent>, ComponentEditedRevision<GeometryComponent>>>(
-                scene,
-                entity);
-            auto& geometry = entity.getComponent<atcg::GeometryComponent>();
-            auto graph     = geometry.graph()->copy();
-            normalize(graph, transform);
-            geometry.setGraph(graph);
-            atcg::RevisionStack::endRecording();
-        }
+        // if(ImGui::Button("Normalize"))
+        // {
+        //     RevisionStack::startRecording<
+        //         UnionRevision<ComponentEditedRevision<TransformComponent>,
+        //         ComponentEditedRevision<GeometryComponent>>>( scene, entity);
+        //     auto& geometry = entity.getComponent<atcg::GeometryComponent>();
+        //     auto graph     = geometry.graph()->copy();
+        //     normalize(graph, transform);
+        //     geometry.setGraph(graph);
+        //     atcg::RevisionStack::endRecording();
+        // }
     }
 }
 
@@ -339,18 +338,15 @@ void ComponentGUIRenderer<GeometryComponent>::draw_component(const atcg::ref_ptr
                                                              Entity entity,
                                                              GeometryComponent& component) const
 {
-    if(ImGui::Button("Import Mesh##GeometryComponent"))
+    auto new_handle = displayGraphSelection("geometry", component.graph_handle);
+    bool updated    = (new_handle != component.graph_handle);
+
+    if(updated)
     {
-        auto f =
-            pfd::open_file("Choose files to read", pfd::path::home(), {"Obj Files (.obj)", "*.obj"}, pfd::opt::none);
-        auto files = f.result();
-        if(!files.empty())
-        {
-            RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
-            auto mesh = IO::read_any(files[0]);
-            component.setGraph(mesh);
-            atcg::RevisionStack::endRecording();
-        }
+        // TODO: Revision
+        //  RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
+        component.graph_handle = new_handle;
+        // atcg::RevisionStack::endRecording();
     }
 }
 
@@ -364,10 +360,15 @@ void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_p
 
     // Material
     auto material_handle = component_copy.material_handle;
+    auto shader_handle   = component_copy.shader_handle;
 
     auto new_handle                = displayMaterialSelection("mesh", material_handle);
     updated                        = (new_handle != material_handle) || updated;
     component_copy.material_handle = new_handle;
+
+    new_handle                   = displayShaderSelection("mesh", shader_handle);
+    updated                      = (new_handle != shader_handle) || updated;
+    component_copy.shader_handle = new_handle;
 
     updated = ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component_copy.receive_shadow) || updated;
 
@@ -407,6 +408,11 @@ void ComponentGUIRenderer<PointRenderComponent>::draw_component(const atcg::ref_
         updated              = true;
     }
 
+    auto shader_handle      = component.shader_handle;
+    auto new_handle         = displayShaderSelection("point", shader_handle);
+    updated                 = (new_handle != shader_handle) || updated;
+    component.shader_handle = new_handle;
+
     if(updated)
     {
         atcg::RevisionStack::startRecording<ComponentEditedRevision<PointRenderComponent>>(scene, entity);
@@ -440,6 +446,11 @@ void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg
     auto new_handle           = displayMaterialSelection("pointsphere", material_handle);
     updated                   = (new_handle != material_handle) || updated;
     component.material_handle = new_handle;
+
+    auto shader_handle      = component.shader_handle;
+    new_handle              = displayShaderSelection("pointsphere", shader_handle);
+    updated                 = (new_handle != shader_handle) || updated;
+    component.shader_handle = new_handle;
 
     if(updated)
     {
@@ -525,6 +536,11 @@ void ComponentGUIRenderer<InstanceRenderComponent>::draw_component(const atcg::r
     component.material_handle = new_handle;
     updated = ImGui::Checkbox("Receive Shadows##InstanceRenderComponent", &component.receive_shadow) || updated;
 
+    auto shader_handle      = component.shader_handle;
+    new_handle              = displayShaderSelection("instance", shader_handle);
+    updated                 = (new_handle != shader_handle) || updated;
+    component.shader_handle = new_handle;
+
     if(updated)
     {
         atcg::RevisionStack::startRecording<ComponentEditedRevision<InstanceRenderComponent>>(scene, entity);
@@ -556,305 +572,24 @@ void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<S
                                                            Entity entity,
                                                            ScriptComponent& _component) const
 {
-    ScriptComponent component = _component;
-    bool updated              = false;
-
-    if(component.script == nullptr)
-    {
-        if(ImGui::Button("Load Script"))
-        {
-            updated = true;
-
-            auto f     = pfd::open_file("Choose files to read",
-                                    pfd::path::home(),
-                                        {"Python Files (.py)", "*.py"},
-                                    pfd::opt::none);
-            auto files = f.result();
-            if(!files.empty())
-            {
-                component.script = atcg::make_ref<atcg::PythonScript>(files[0]);
-                component.script->init(scene, entity);
-                component.script->onAttach();
-            }
-        }
-    }
-    else
-    {
-        if(ImGui::Button("X"))
-        {
-            component.script->onDetach();
-            component.script = nullptr;
-            updated          = true;
-        }
-        else
-        {
-            ImGui::SameLine();
-            ImGui::Text(component.script->getFilePath().string().c_str());
-        }
-    }
+    auto new_handle = displayScriptSelection("script", _component.script_handle);
+    bool updated    = (new_handle != _component.script_handle);
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<ScriptComponent>>(scene, entity);
-        _component = component;
-        atcg::RevisionStack::endRecording();
+        // RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
+        if(_component.script()) _component.script()->onDetach(scene, entity);
+        _component.script_handle = new_handle;
+        if(_component.script()) _component.script()->onAttach(scene, entity);
+        // atcg::RevisionStack::endRecording();
     }
-}
-
-bool displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& material)
-{
-    bool updated = false;
-
-    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
-    ImGui::Separator();
-
-    ImGui::Text("Material");
-
-    {
-        auto spec        = material->getDiffuseTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
-
-        if(!useTextures)
-        {
-            auto diffuse = material->getDiffuseTexture()->getData(atcg::CPU);
-
-            float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
-                              diffuse.index({0, 0, 1}).item<float>() / 255.0f,
-                              diffuse.index({0, 0, 2}).item<float>() / 255.0f,
-                              diffuse.index({0, 0, 3}).item<float>() / 255.0f};
-
-            if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
-            {
-                glm::vec4 new_color = glm::make_vec4(color);
-                material->setDiffuseColor(new_color);
-                updated = true;
-            }
-
-            ImGui::SameLine();
-
-            if(ImGui::Button(("...##diffuse" + key).c_str()))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0], 2.2f);
-                    auto texture = atcg::Texture2D::create(img);
-                    material->setDiffuseTexture(texture);
-                    updated = true;
-                }
-            }
-        }
-        else
-        {
-            ImGui::Text("Diffuse Texture");
-            ImGui::SameLine();
-
-            if(ImGui::Button(("X##diffuse" + key).c_str()))
-            {
-                material->setDiffuseColor(glm::vec4(1));
-                updated = true;
-            }
-            else
-                ImGui::Image((ImTextureID)material->getDiffuseTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-        }
-    }
-
-    {
-        auto spec        = material->getNormalTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
-
-        if(!useTextures)
-        {
-            ImGui::Text("Normals");
-            ImGui::SameLine();
-            if(ImGui::Button(("...##normals" + key).c_str()))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0]);
-                    auto texture = atcg::Texture2D::create(img);
-                    material->setNormalTexture(texture);
-                    updated = true;
-                }
-            }
-        }
-        else
-        {
-            ImGui::Text("Normal Texture");
-            ImGui::SameLine();
-
-            if(ImGui::Button(("X##normal" + key).c_str()))
-            {
-                material->removeNormalMap();
-                updated = true;
-            }
-            else
-                ImGui::Image((ImTextureID)material->getNormalTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-        }
-    }
-
-    {
-        auto spec        = material->getRoughnessTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
-
-        if(!useTextures)
-        {
-            auto data       = material->getRoughnessTexture()->getData(atcg::CPU);
-            float roughness = data.item<float>();
-
-            if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
-            {
-                material->setRoughness(roughness);
-                updated = true;
-            }
-
-            ImGui::SameLine();
-
-            if(ImGui::Button(("...##roughness" + key).c_str()))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0]);
-                    auto texture = atcg::Texture2D::create(img);
-                    material->setRoughnessTexture(texture);
-                    updated = true;
-                }
-            }
-        }
-        else
-        {
-            ImGui::Text("Roughness Texture");
-            ImGui::SameLine();
-
-            if(ImGui::Button(("X##roughness" + key).c_str()))
-            {
-                material->setRoughness(1.0f);
-                updated = true;
-            }
-            else
-                ImGui::Image((ImTextureID)material->getRoughnessTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-        }
-    }
-
-
-    {
-        auto spec        = material->getMetallicTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
-
-        if(!useTextures)
-        {
-            auto data      = material->getMetallicTexture()->getData(atcg::CPU);
-            float metallic = data.item<float>();
-
-            if(ImGui::DragFloat(("Metallic##" + key).c_str(), &metallic, 0.005f, 0.0f, 1.0f))
-            {
-                material->setMetallic(metallic);
-                updated = true;
-            }
-
-            ImGui::SameLine();
-
-            if(ImGui::Button(("...##metallic" + key).c_str()))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0]);
-                    auto texture = atcg::Texture2D::create(img);
-                    material->setMetallicTexture(texture);
-                    updated = true;
-                }
-            }
-        }
-        else
-        {
-            ImGui::Text("Metallic Texture");
-            ImGui::SameLine();
-
-            if(ImGui::Button(("X##metallic" + key).c_str()))
-            {
-                material->setMetallic(0.0f);
-                updated = true;
-            }
-            else
-                ImGui::Image((ImTextureID)material->getMetallicTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-        }
-    }
-
-    return updated;
 }
 
 AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle)
 {
     const auto& data = AssetManager::getMetaData(handle);
 
-    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Material";
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "Default Material";
 
     const auto& registry = AssetManager::getAssetRegistry();
 
@@ -862,9 +597,174 @@ AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle)
 
     if(ImGui::BeginCombo(("Select Material##" + key).c_str(), tag.c_str()))
     {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("Default Material", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
         for(auto it = registry.begin(); it != registry.end(); ++it)
         {
             if(it->second.type != AssetType::Material) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+}
+
+AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle)
+{
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Graph";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Graph##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("No Graph", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Graph) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+}
+
+AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle)
+{
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Script";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Script##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("No Script", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Script) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+}
+
+AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
+{
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "Default Shader";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Shader##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("Default Shader", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Shader) continue;
 
             bool is_selected = it->first == current_item;
 
