@@ -135,35 +135,6 @@ void serializeBuffer(const std::string& file_name, const char* data, const uint3
 std::vector<uint8_t> deserializeBuffer(const std::string& file_name);
 
 /**
- * @brief Serialize a material.
- * Images are serialized into: file_path + "_" + std::to_string(entity_id) + "_<texture_type>"
- *
- * @param out The json node where the material should be serialized
- * @param entity The entity which this material belongs to
- * @param material The material
- * @param file_path The file path
- */
-void serializeMaterial(nlohmann::json& out, Entity entity, const atcg::ref_ptr<Material>& material, const std::string& file_path);
-
-/**
- * @brief Deserialize the material
- *
- * @param material_node The node containing the material
- *
- * @return The material
- */
-atcg::ref_ptr<Material> deserialize_material(const nlohmann::json& material_node);
-
-/**
- * @brief Serialize a texture
- *
- * @param texture The texture to serialize
- * @param path The file path
- * @param gamma A gamma value that should be applied
- */
-void serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path, float gamma = 1.0f);
-
-/**
  * @brief Serialize a layout
  *
  * @param layout The buffer layout
