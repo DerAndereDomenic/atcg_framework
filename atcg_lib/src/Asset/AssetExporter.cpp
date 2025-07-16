@@ -184,6 +184,14 @@ ATCG_INLINE void serialize_script_ver1(const atcg::ref_ptr<Script>& script, cons
     std::filesystem::copy(script->getFilePath(), path_.replace_extension(".py"));
 }
 
+ATCG_INLINE VOID serialize_scene_ver1(const atcg::ref_ptr<Scene>& scene, const std::filesystem::path& path)
+{
+    // TODO: Templates ?
+    auto path_ = path;
+    atcg::Serialization::SceneSerializer serializer(scene);
+    serializer.serialize(path_.replace_extension(".scene").string());
+}
+
 ATCG_INLINE void
 export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data)
 {
@@ -212,11 +220,9 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
         }
         case AssetType::Scene:
         {
-            // TODO: Templates ?
             auto scene_path = path / "scenes" / std::to_string(asset->handle);
             std::filesystem::create_directories(scene_path);
-            atcg::Serialization::SceneSerializer serializer(std::dynamic_pointer_cast<atcg::Scene>(asset));
-            serializer.serialize((scene_path / data.name).replace_extension(".scene").string());
+            serialize_scene_ver1(std::dynamic_pointer_cast<Scene>(asset), scene_path / data.name);
         }
         break;
         case AssetType::Script:
