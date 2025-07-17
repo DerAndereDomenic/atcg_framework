@@ -49,7 +49,7 @@ serialize_texture_ver1(const atcg::ref_ptr<Texture2D>& texture, const std::files
     return file_ending;
 }
 
-ATCG_INLINE void serialize_material_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Material>& material)
+ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)
 {
     nlohmann::json material_json;
 
@@ -73,7 +73,7 @@ ATCG_INLINE void serialize_material_ver1(const std::filesystem::path& path, cons
 
         auto file_ending = serialize_texture_ver1(diffuse_texture, img_path, 1.0f / 2.2f);
 
-        material_json[DIFFUSE_TEXTURE_KEY] = img_path.generic_string() + file_ending;
+        material_json[DIFFUSE_TEXTURE_KEY] = "diffuse" + file_ending;
     }
     else
     {
@@ -94,7 +94,7 @@ ATCG_INLINE void serialize_material_ver1(const std::filesystem::path& path, cons
 
         auto file_ending = serialize_texture_ver1(normal_texture, img_path);
 
-        material_json[NORMAL_TEXTURE_KEY] = img_path.generic_string() + file_ending;
+        material_json[NORMAL_TEXTURE_KEY] = "normals" + file_ending;
     }
 
     if(use_metallic_texture)
@@ -103,7 +103,7 @@ ATCG_INLINE void serialize_material_ver1(const std::filesystem::path& path, cons
 
         auto file_ending = serialize_texture_ver1(metallic_texture, img_path);
 
-        material_json[METALLIC_TEXTURE_KEY] = img_path.generic_string() + file_ending;
+        material_json[METALLIC_TEXTURE_KEY] = "metallic" + file_ending;
     }
     else
     {
@@ -119,7 +119,7 @@ ATCG_INLINE void serialize_material_ver1(const std::filesystem::path& path, cons
 
         auto file_ending = serialize_texture_ver1(roughness_texture, img_path);
 
-        material_json[ROUGHNESS_TEXTURE_KEY] = img_path.generic_string() + file_ending;
+        material_json[ROUGHNESS_TEXTURE_KEY] = "roughness" + file_ending;
     }
     else
     {
@@ -154,7 +154,7 @@ ATCG_INLINE void serialize_graph_ver1(const atcg::ref_ptr<Graph>& graph, const s
         const char* buffer = graph->getVerticesBuffer()->getHostPointer<char>();
         auto buffer_name   = path.parent_path() / "vertices.bin";
         serialize_buffer_ver1(buffer_name, buffer, graph->getVerticesBuffer()->size());
-        graph_json[VERTICES_KEY] = buffer_name;
+        graph_json[VERTICES_KEY] = "vertices.bin";
         graph->getVerticesBuffer()->unmapHostPointers();
     }
 
@@ -163,7 +163,7 @@ ATCG_INLINE void serialize_graph_ver1(const atcg::ref_ptr<Graph>& graph, const s
         const char* buffer = graph->getFaceIndexBuffer()->getHostPointer<char>();
         auto buffer_name   = path.parent_path() / "faces.bin";
         serialize_buffer_ver1(buffer_name, buffer, graph->getFaceIndexBuffer()->size());
-        graph_json[FACES_KEY] = buffer_name;
+        graph_json[FACES_KEY] = "faces.bin";
         graph->getFaceIndexBuffer()->unmapHostPointers();
     }
 
@@ -172,7 +172,7 @@ ATCG_INLINE void serialize_graph_ver1(const atcg::ref_ptr<Graph>& graph, const s
         const char* buffer = graph->getEdgesBuffer()->getHostPointer<char>();
         auto buffer_name   = path.parent_path() / "edges.bin";
         serialize_buffer_ver1(buffer_name, buffer, graph->getEdgesBuffer()->size());
-        graph_json[EDGES_KEY] = buffer_name;
+        graph_json[EDGES_KEY] = "edges.bin";
         graph->getEdgesBuffer()->unmapHostPointers();
     }
 
@@ -250,8 +250,8 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
         {
             auto material_path = path / "materials" / std::to_string(asset->handle);
             std::filesystem::create_directories(material_path);
-            serialize_material_ver1(material_path / (data.name + ".mat"),
-                                    std::dynamic_pointer_cast<atcg::Material>(asset));
+            serialize_material_ver1(std::dynamic_pointer_cast<atcg::Material>(asset),
+                                    material_path / (data.name + ".mat"));
         }
         break;
         case AssetType::Texture2D:
