@@ -43,6 +43,8 @@ public:
 
     void serializeAssets(const std::filesystem::path& root_path);
 
+    void clear();
+
     void destroy();
 
 protected:
@@ -132,6 +134,11 @@ ATCG_INLINE void serializeRegistry(const std::filesystem::path& registry_path)
 ATCG_INLINE void serializeAssets(const std::filesystem::path& root_path)
 {
     SystemRegistry::instance()->getSystem<AssetManagerSystem>()->serializeAssets(root_path);
+}
+
+ATCG_INLINE void clear()
+{
+    SystemRegistry::instance()->getSystem<AssetManagerSystem>()->clear();
 }
 }    // namespace AssetManager
 
