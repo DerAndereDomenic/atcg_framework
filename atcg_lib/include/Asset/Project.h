@@ -21,6 +21,9 @@ public:
     static void saveActive();
 
 private:
+    void serializeProjectInformation();
+
+private:
     std::filesystem::path _project_path;
 
     inline static atcg::ref_ptr<Project> s_active_project = nullptr;
