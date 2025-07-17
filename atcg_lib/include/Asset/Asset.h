@@ -60,4 +60,18 @@ ATCG_INLINE const char* assetTypeToString(AssetType type)
 
     return "AssetType::<Invalid>";
 }
+
+ATCG_INLINE AssetType stringToAssetType(std::string_view str)
+{
+    if(str == "AssetType::None") return AssetType::None;
+    if(str == "AssetType::Material") return AssetType::Material;
+    if(str == "AssetType::Texture2D") return AssetType::Texture2D;
+    if(str == "AssetType::Graph") return AssetType::Graph;
+    if(str == "AssetType::Scene") return AssetType::Scene;
+    if(str == "AssetType::Script") return AssetType::Script;
+    if(str == "AssetType::Shader") return AssetType::Shader;
+
+    // Unknown string:
+    return AssetType::None;    // or AssetType::<Invalid> if you have it
+}
 }    // namespace atcg
