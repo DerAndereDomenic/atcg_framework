@@ -23,8 +23,11 @@ public:
 private:
     void serializeProjectInformation();
 
+    void deserializeProjectInformation();
+
 private:
     std::filesystem::path _project_path;
+    std::filesystem::path _asset_pack_directory;
 
     inline static atcg::ref_ptr<Project> s_active_project = nullptr;
 };

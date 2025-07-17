@@ -7,15 +7,27 @@ namespace atcg
 {
 atcg::ref_ptr<Project> Project::create(const std::filesystem::path& path)
 {
-    s_active_project                = atcg::make_ref<Project>();
-    s_active_project->_project_path = path;
+    s_active_project                        = atcg::make_ref<Project>();
+    s_active_project->_project_path         = path;
+    s_active_project->_asset_pack_directory = path / "AssetPack.json";
 
     return s_active_project;
 }
 
 atcg::ref_ptr<Project> Project::load(const std::filesystem::path& path)
 {
-    // TODO: load
+    s_active_project                = atcg::make_ref<Project>();
+    s_active_project->_project_path = path.parent_path();
+
+    // 1. Load project information
+    s_active_project->deserializeProjectInformation();
+
+    // 2. Load Asset registry
+    AssetManager::clear();    // Clear current assets
+    AssetManager::deserializeRegistry(s_active_project->_asset_pack_directory);
+
+    //? 3. Import assets (this is done lazily?)
+
     return s_active_project;
 }
 
@@ -30,7 +42,7 @@ void Project::save()
     std::filesystem::create_directories(_project_path / "assets" / "shader");
 
     // 2. Serialize Asset Registry
-    AssetManager::serializeRegistry(_project_path / "AssetPack.json");
+    AssetManager::serializeRegistry(_asset_pack_directory);
 
     // 3. Serialize Assets
     AssetManager::serializeAssets(_project_path / "assets");
@@ -55,9 +67,39 @@ void Project::serializeProjectInformation()
 
     j["Version"] = "1.0";
 
-    j["Assets"] = "AssetPack.json";
+    j["Assets"] = _asset_pack_directory.filename();
 
     std::ofstream o(_project_path / "Project.json");
     o << std::setw(4) << j << std::endl;
+}
+
+namespace detail
+{
+ATCG_INLINE std::string deserializeProjectInformation_ver1(const nlohmann::json& j)
+{
+    std::string asset_pack_file = j["Assets"];
+    return asset_pack_file;
+}
+}    // namespace detail
+
+void Project::deserializeProjectInformation()
+{
+    std::ifstream i(_project_path / "Project.json");
+    nlohmann::json j;
+    i >> j;
+
+    if(!j.contains("Version"))
+    {
+        ATCG_WARN("Got invalid Project file with unrecognized version. Abort...");
+        return;
+    }
+
+    std::string version = j["Version"];
+
+    if(version == "1.0")
+    {
+        auto asset_path       = detail::deserializeProjectInformation_ver1(j);
+        _asset_pack_directory = _project_path / asset_path;
+    }
 }
 }    // namespace atcg
