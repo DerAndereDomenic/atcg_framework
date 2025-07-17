@@ -260,6 +260,7 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
             std::filesystem::create_directories(texture_path);
             serialize_texture_ver1(std::dynamic_pointer_cast<atcg::Texture2D>(asset), texture_path / data.name);
         }
+        break;
         case AssetType::Scene:
         {
             auto scene_path = path / "scenes" / std::to_string(asset->handle);
@@ -289,6 +290,6 @@ void AssetExporter::exportAsset(const std::filesystem::path& path,
                                 const atcg::ref_ptr<Asset>& asset,
                                 const AssetMetaData& data)
 {
-    detail::export_asset_ver1(path, asset, data);
+    if(asset) detail::export_asset_ver1(path, asset, data);
 }
 }    // namespace atcg

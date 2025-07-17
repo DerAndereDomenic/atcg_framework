@@ -224,6 +224,12 @@ struct CameraComponent
         }
     }
 
+    ATCG_INLINE atcg::ref_ptr<Texture2D> image() const
+    {
+        auto image = AssetManager::getAsset<Texture2D>(image_handle);
+        return image;
+    }
+
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Camera"; }
 
     atcg::ref_ptr<Camera> camera;
@@ -234,7 +240,7 @@ struct CameraComponent
     float render_scale = 1.0f;
 
     atcg::ref_ptr<atcg::Framebuffer> preview;
-    atcg::ref_ptr<atcg::Texture2D> image;
+    AssetHandle image_handle;
     bool render_preview = false;
 };
 

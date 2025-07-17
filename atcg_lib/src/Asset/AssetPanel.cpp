@@ -424,6 +424,47 @@ void AssetPanel::displayShader(AssetHandle handle)
     }
 }
 
+void AssetPanel::displayTexture2D(AssetHandle handle)
+{
+    if(ImGui::Button(("Load Image##tex2dasset")))
+    {
+        auto f     = pfd::open_file("Choose files to read",
+                                pfd::path::home(),
+                                    {"All Files",
+                                     "*",
+                                     "PNG Files (.png)",
+                                     "*.png",
+                                     "JPG Files (.jpg, .jpeg)",
+                                     "*jpg, *jpeg",
+                                     "BMP Files (.bmp)",
+                                     "*.bmp",
+                                     "HDR Files (.hdr)",
+                                     "*.hdr"},
+                                pfd::opt::none);
+        auto files = f.result();
+        if(!files.empty())
+        {
+            auto img     = IO::imread(files[0]);
+            auto texture = atcg::Texture2D::create(img);
+
+            texture->handle = handle;
+            AssetManager::registerAsset(texture, AssetManager::getMetaData(texture->handle));
+        }
+    }
+
+    auto texture = AssetManager::getAsset<Texture2D>(handle);
+
+    if(texture)
+    {
+        float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+        float aspect_ratio  = (float)texture->width() / (float)texture->height();
+        ImGui::Image((ImTextureID)texture->getID(),
+                     ImVec2(content_scale * 128, content_scale * 128 / aspect_ratio),
+                     ImVec2 {0, 1},
+                     ImVec2 {1, 0});
+    }
+}
+
 void AssetPanel::drawAssetList()
 {
     // Begin a scrollable horizontal region
@@ -489,6 +530,13 @@ void AssetPanel::drawAdd()
             data.name = "shader";
             AssetManager::registerAsset(data);
         }
+        if(ImGui::MenuItem("Texture"))
+        {
+            AssetMetaData data;
+            data.type = AssetType::Texture2D;
+            data.name = "texture";
+            AssetManager::registerAsset(data);
+        }
         ImGui::EndPopup();
     }
 }
@@ -540,6 +588,10 @@ void AssetPanel::renderPanel()
         else if(data.type == AssetType::Shader)
         {
             displayShader(_selected_handle);
+        }
+        else if(data.type == AssetType::Texture2D)
+        {
+            displayTexture2D(_selected_handle);
         }
 
         ImGui::Separator();

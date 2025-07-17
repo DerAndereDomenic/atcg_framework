@@ -230,56 +230,10 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 
     ImGui::Separator();
 
-    if(!component.image)
-    {
-        ImGui::Text("Image");
-        ImGui::SameLine();
-        if(ImGui::Button("...##imageload"))
-        {
-            auto f     = pfd::open_file("Choose files to read",
-                                    pfd::path::home(),
-                                        {"All Files",
-                                         "*",
-                                         "PNG Files (.png)",
-                                         "*.png",
-                                         "JPG Files (.jpg, .jpeg)",
-                                         "*jpg, *jpeg",
-                                         "BMP Files (.bmp)",
-                                         "*.bmp",
-                                         "HDR Files (.hdr)",
-                                         "*.hdr"},
-                                    pfd::opt::none);
-            auto files = f.result();
-            if(!files.empty())
-            {
-                auto img        = IO::imread(files[0]);
-                component.image = atcg::Texture2D::create(img);
-                updated         = true;
-            }
-        }
-    }
-    else
-    {
-        ImGui::Text("Image");
-        ImGui::SameLine();
+    auto new_handle = displayTexture2DSelection("camera", component.image_handle);
 
-        if(ImGui::Button("X##imagedelete"))
-        {
-            component.image = nullptr;
-            updated         = true;
-        }
-        else
-        {
-            float aspect             = float(component.image->width()) / float(component.image->height());
-            uint32_t preview_height_ = 128;
-            uint32_t preview_width_  = glm::clamp((uint32_t)(aspect * 128.0f), uint32_t(1), uint32_t(4096));
-            ImGui::SetCursorPos(ImVec2((window_size.x - preview_width_) * 0.5f, ImGui::GetCursorPosY()));
-            ImGui::Image((ImTextureID)component.image->getID(),
-                         ImVec2(content_scale * preview_width_, content_scale * preview_height_),
-                         ImVec2 {0, 1},
-                         ImVec2 {1, 0});
-        }
-    }
+    updated                = (new_handle != component.image_handle) || updated;
+    component.image_handle = new_handle;
 
     ImGui::Separator();
 
@@ -768,6 +722,56 @@ AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
 
             auto shader = AssetManager::getAsset<Shader>(it->first);
             if(shader->isComputeShader()) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+}
+
+AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle)
+{
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Image";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Image##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("No Image", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Texture2D) continue;
 
             bool is_selected = it->first == current_item;
 

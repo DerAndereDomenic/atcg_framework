@@ -67,23 +67,6 @@ std::vector<uint8_t> deserializeBuffer(const std::string& file_name)
     return buffer_char;
 }
 
-// void serializeTexture(const atcg::ref_ptr<Texture2D>& texture, std::string& path, float gamma)
-// {
-//     torch::Tensor texture_data = texture->getData(atcg::CPU);
-
-//     Image img(texture_data);
-
-//     std::string file_ending = ".png";
-//     if(img.isHDR())
-//     {
-//         file_ending = ".hdr";
-//     }
-
-//     path = path + file_ending;
-//     img.applyGamma(gamma);
-//     img.store(path);
-// }
-
 // atcg::ref_ptr<Material> deserialize_material(const nlohmann::json& material_node)
 // {
 //     atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
@@ -231,16 +214,10 @@ void ComponentSerializer<CameraComponent>::serialize_component(const std::string
     j[PERSPECTIVE_CAMERA_KEY][OPTICAL_CENTER_KEY] = nlohmann::json::array({offset.x, offset.y});
     j[PERSPECTIVE_CAMERA_KEY][RENDER_SCALE_KEY]   = component.render_scale;
 
-    // TODO
-    // if(component.image)
-    // {
-    //     auto entity_id       = entity.getComponent<IDComponent>().ID();
-    //     std::string img_path = file_path + "_" + std::to_string(entity_id) + "_cam_image";
-
-    //     serializeTexture(component.image, img_path, 1.0f);
-
-    //     j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY] = img_path;
-    // }
+    if(component.image())
+    {
+        j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY] = (uint64_t)component.image_handle;
+    }
 }
 
 
@@ -457,9 +434,7 @@ void ComponentSerializer<CameraComponent>::deserialize_component(const std::stri
 
     if(j[PERSPECTIVE_CAMERA_KEY].contains(CAMERA_IMAGE_KEY))
     {
-        std::string diffuse_path = j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY];
-        auto img                 = IO::imread(diffuse_path);
-        component.image          = atcg::Texture2D::create(img);
+        component.image_handle = (AssetHandle)j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY];
     }
 }
 

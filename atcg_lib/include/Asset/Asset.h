@@ -54,6 +54,8 @@ ATCG_INLINE const char* assetTypeToString(AssetType type)
             return "AssetType::Scene";
         case AssetType::Script:
             return "AssetType::Script";
+        case AssetType::Shader:
+            return "AssetType::Shader";
     }
 
     return "AssetType::<Invalid>";

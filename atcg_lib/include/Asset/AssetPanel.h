@@ -27,6 +27,8 @@ private:
 
     void displayShader(AssetHandle handle);
 
+    void displayTexture2D(AssetHandle handle);
+
 private:
     AssetHandle _selected_handle = 0;
 

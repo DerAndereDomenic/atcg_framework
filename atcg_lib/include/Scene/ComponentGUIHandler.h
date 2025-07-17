@@ -69,5 +69,7 @@ AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
 AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
 
 AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
+
+AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle);
 }    // namespace GUI
 }    // namespace atcg

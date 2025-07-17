@@ -1003,7 +1003,7 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
              atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
 
 
-        if(comp.image)
+        if(comp.image())
         {
             uint32_t id          = popTextureID();
             bool culling_enabled = impl->culling_enabled;
@@ -1011,7 +1011,7 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
             model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
             impl->shader_manager->getShader("image_display")->setInt("screen_texture", id);
             impl->shader_manager->getShader("image_display")->setInt("entityID", entity_id);
-            comp.image->use(id);
+            comp.image()->use(id);
             impl->drawVAO(impl->quad_vao,
                           camera,
                           comp.color,
