@@ -13,8 +13,13 @@ namespace atcg
 namespace GUI
 {
 
-bool AssetPanel::displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& material)
+bool AssetPanel::displayMaterial(AssetHandle handle)
 {
+    const std::string key = "material";
+    auto material         = AssetManager::getAsset<Material>(handle);
+
+    if(!material) return false;
+
     bool updated = false;
 
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
@@ -575,7 +580,7 @@ void AssetPanel::renderPanel()
 
         if(data.type == AssetType::Material)
         {
-            displayMaterial("asset", atcg::AssetManager::getAsset<Material>(_selected_handle));
+            displayMaterial(_selected_handle);
         }
         else if(data.type == AssetType::Graph)
         {

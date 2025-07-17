@@ -19,7 +19,7 @@ private:
 
     void drawAdd();
 
-    bool displayMaterial(const std::string& key, const atcg::ref_ptr<Material>& material);
+    bool displayMaterial(AssetHandle handle);
 
     void displayGraph(AssetHandle handle);
 
