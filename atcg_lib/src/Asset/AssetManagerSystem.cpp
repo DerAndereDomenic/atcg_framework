@@ -190,6 +190,46 @@ void AssetManagerSystem::serializeRegistry(const std::filesystem::path& registry
     detail::serialize_registry_ver1(_asset_registry, registry_path);
 }
 
+namespace detail
+{
+ATCG_INLINE void deserialize_registry_ver1(AssetRegistry& registry, const nlohmann::json& j)
+{
+    auto json_registry = j["Registry"];
+
+    for(auto entry: json_registry)
+    {
+        AssetHandle handle = (AssetHandle)entry["Handle"];
+        std::string name   = entry["Name"];
+        AssetType type     = stringToAssetType(entry["Type"]);
+
+        AssetMetaData data;
+        data.name        = name;
+        data.type        = type;
+        registry[handle] = data;
+    }
+}
+}    // namespace detail
+
+void AssetManagerSystem::deserializeRegistry(const std::filesystem::path& registry_path)
+{
+    std::ifstream i(registry_path);
+    nlohmann::json j;
+    i >> j;
+
+    if(!j.contains("Version"))
+    {
+        ATCG_WARN("Got invalid Project file with unrecognized version. Abort...");
+        return;
+    }
+
+    std::string version = j["Version"];
+
+    if(version == "1.0")
+    {
+        detail::deserialize_registry_ver1(_asset_registry, j);
+    }
+}
+
 void AssetManagerSystem::serializeAssets(const std::filesystem::path& root_path)
 {
     for(auto entry: _asset_registry)

@@ -41,6 +41,8 @@ public:
 
     void serializeRegistry(const std::filesystem::path& registry_path);
 
+    void deserializeRegistry(const std::filesystem::path& registry_path);
+
     void serializeAssets(const std::filesystem::path& root_path);
 
     void clear();
@@ -130,6 +132,12 @@ ATCG_INLINE void serializeRegistry(const std::filesystem::path& registry_path)
 {
     SystemRegistry::instance()->getSystem<AssetManagerSystem>()->serializeRegistry(registry_path);
 }
+
+ATCG_INLINE void deserializeRegistry(const std::filesystem::path& registry_path)
+{
+    SystemRegistry::instance()->getSystem<AssetManagerSystem>()->deserializeRegistry(registry_path);
+}
+
 
 ATCG_INLINE void serializeAssets(const std::filesystem::path& root_path)
 {
