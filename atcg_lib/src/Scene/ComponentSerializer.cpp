@@ -508,7 +508,7 @@ void ComponentSerializer<EdgeCylinderRenderComponent>::deserialize_component(con
 
     if(renderer.contains(MATERIAL_KEY))
     {
-        renderComponent.material_handle = (AssetHandle)renderer[EDGE_CYLINDER_RENDERER_KEY];
+        renderComponent.material_handle = (AssetHandle)renderer[MATERIAL_KEY];
     }
 }
 
