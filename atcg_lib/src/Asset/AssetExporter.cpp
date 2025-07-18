@@ -199,6 +199,10 @@ ATCG_INLINE VOID serialize_scene_ver1(const atcg::ref_ptr<Scene>& scene, const s
 
 ATCG_INLINE VOID serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, const std::filesystem::path& path)
 {
+    nlohmann::json shader_json;
+
+    shader_json["Version"] = "1.0";
+
     auto path_ = path;
 
     if(shader->isComputeShader())
@@ -207,6 +211,7 @@ ATCG_INLINE VOID serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, cons
         std::ofstream stream(path_);
         stream << shader->getSource(ShaderType::COMPUTE);
         stream.close();
+        shader_json["Compute"] = path_.filename();
     }
     else
     {
@@ -216,6 +221,8 @@ ATCG_INLINE VOID serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, cons
             std::ofstream stream(path_);
             stream << shader->getSource(ShaderType::GEOMETRY);
             stream.close();
+
+            shader_json["Geometry"] = path_.filename();
         }
 
         {
@@ -223,6 +230,7 @@ ATCG_INLINE VOID serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, cons
             std::ofstream stream(path_);
             stream << shader->getSource(ShaderType::VERTEX);
             stream.close();
+            shader_json["Vertex"] = path_.filename();
         }
 
         {
@@ -230,8 +238,12 @@ ATCG_INLINE VOID serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, cons
             std::ofstream stream(path_);
             stream << shader->getSource(ShaderType::FRAGMENT);
             stream.close();
+            shader_json["Fragment"] = path_.filename();
         }
     }
+
+    std::ofstream o(path_.replace_extension(".json"));
+    o << std::setw(4) << shader_json << std::endl;
 }
 
 ATCG_INLINE void
