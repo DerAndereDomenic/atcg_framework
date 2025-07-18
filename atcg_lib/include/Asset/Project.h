@@ -20,6 +20,8 @@ public:
 
     static void saveActive();
 
+    ATCG_INLINE const std::filesystem::path& getFilePath() const { return _project_path; }
+
 private:
     void serializeProjectInformation();
 
