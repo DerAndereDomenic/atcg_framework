@@ -1,8 +1,6 @@
 #include <Asset/Project.h>
 #include <Asset/AssetManagerSystem.h>
 
-#include <json.hpp>
-
 namespace atcg
 {
 atcg::ref_ptr<Project> Project::create(const std::filesystem::path& path)
@@ -83,26 +81,30 @@ void Project::saveActive()
     if(s_active_project) s_active_project->save();
 }
 
-void Project::serializeProjectInformation()
+void Project::serializeProjectInformation_ver1()
 {
     nlohmann::json j;
 
     j["Version"] = "1.0";
 
     j["Assets"] = _asset_pack_directory.filename();
+    j["Scene"]  = (uint64_t)_active_scene;
 
     std::ofstream o(_project_path / "Project.json");
     o << std::setw(4) << j << std::endl;
 }
 
-namespace detail
+void Project::serializeProjectInformation()
 {
-ATCG_INLINE std::string deserializeProjectInformation_ver1(const nlohmann::json& j)
-{
-    std::string asset_pack_file = j["Assets"];
-    return asset_pack_file;
+    serializeProjectInformation_ver1();
 }
-}    // namespace detail
+
+void Project::deserializeProjectInformation_ver1(const nlohmann::json& j)
+{
+    auto asset_path       = j["Assets"];
+    _asset_pack_directory = _project_path / asset_path;
+    _active_scene         = (AssetHandle)j["Scene"];
+}
 
 void Project::deserializeProjectInformation()
 {
@@ -120,8 +122,7 @@ void Project::deserializeProjectInformation()
 
     if(version == "1.0")
     {
-        auto asset_path       = detail::deserializeProjectInformation_ver1(j);
-        _asset_pack_directory = _project_path / asset_path;
+        deserializeProjectInformation_ver1(j);
     }
 }
 }    // namespace atcg
