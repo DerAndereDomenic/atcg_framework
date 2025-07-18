@@ -2,6 +2,7 @@
 
 #include <Asset/AssetImporter.h>
 #include <Asset/AssetExporter.h>
+#include <Asset/Project.h>
 
 #include <json.hpp>
 
@@ -44,7 +45,8 @@ atcg::ref_ptr<Asset> AssetManagerSystem::getAsset(AssetHandle handle)
     else
     {
         const AssetMetaData& meta_data = getMetaData(handle);
-        asset                          = AssetImporter::importAsset(meta_data);
+        asset = AssetImporter::importAsset(Project::getActive()->getFilePath() / "assets" / std::to_string(handle),
+                                           meta_data);
         _loaded_assets.insert(std::make_pair(handle, asset));
     }
 

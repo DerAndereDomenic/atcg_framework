@@ -67,64 +67,6 @@ std::vector<uint8_t> deserializeBuffer(const std::string& file_name)
     return buffer_char;
 }
 
-// atcg::ref_ptr<Material> deserialize_material(const nlohmann::json& material_node)
-// {
-//     atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
-
-//     // Diffuse
-//     if(material_node.contains(DIFFUSE_KEY))
-//     {
-//         std::vector<float> diffuse_color = material_node[DIFFUSE_KEY];
-//         material->setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
-//     }
-//     else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
-//     {
-//         std::string diffuse_path = material_node[DIFFUSE_TEXTURE_KEY];
-//         auto img                 = IO::imread(diffuse_path, 2.2f);
-//         auto diffuse_texture     = atcg::Texture2D::create(img);
-//         material->setDiffuseTexture(diffuse_texture);
-//     }
-
-//     // Normals
-//     if(material_node.contains(NORMAL_TEXTURE_KEY))
-//     {
-//         std::string normal_path = material_node[NORMAL_TEXTURE_KEY];
-//         auto img                = IO::imread(normal_path);
-//         auto normal_texture     = atcg::Texture2D::create(img);
-//         material->setNormalTexture(normal_texture);
-//     }
-
-//     // Roughness
-//     if(material_node.contains(ROUGHNESS_KEY))
-//     {
-//         float roughness = material_node[ROUGHNESS_KEY];
-//         material->setRoughness(roughness);
-//     }
-//     else if(material_node.contains(ROUGHNESS_TEXTURE_KEY))
-//     {
-//         std::string roughness_path = material_node[ROUGHNESS_TEXTURE_KEY];
-//         auto img                   = IO::imread(roughness_path);
-//         auto roughness_texture     = atcg::Texture2D::create(img);
-//         material->setRoughnessTexture(roughness_texture);
-//     }
-
-//     // Metallic
-//     if(material_node.contains(METALLIC_KEY))
-//     {
-//         float metallic = material_node[METALLIC_KEY];
-//         material->setMetallic(metallic);
-//     }
-//     else if(material_node.contains(METALLIC_TEXTURE_KEY))
-//     {
-//         std::string metallic_path = material_node[METALLIC_TEXTURE_KEY];
-//         auto img                  = IO::imread(metallic_path);
-//         auto metallic_texture     = atcg::Texture2D::create(img);
-//         material->setMetallicTexture(metallic_texture);
-//     }
-
-//     return material;
-// }
-
 nlohmann::json serializeLayout(const atcg::BufferLayout& layout)
 {
     nlohmann::json::array_t json_layout;

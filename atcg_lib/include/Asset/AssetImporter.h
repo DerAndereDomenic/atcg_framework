@@ -9,6 +9,6 @@ namespace atcg
 class AssetImporter
 {
 public:
-    static atcg::ref_ptr<Asset> importAsset(const AssetMetaData& metadata);
+    static atcg::ref_ptr<Asset> importAsset(const std::filesystem::path& path, const AssetMetaData& metadata);
 };
 }    // namespace atcg
