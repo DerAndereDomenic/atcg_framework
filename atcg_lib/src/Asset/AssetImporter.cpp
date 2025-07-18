@@ -4,6 +4,7 @@
 #include <Renderer/Texture.h>
 #include <Renderer/Material.h>
 #include <DataStructure/Graph.h>
+#include <Scripting/Script.h>
 
 #include <json.hpp>
 
@@ -157,6 +158,14 @@ atcg::ref_ptr<Asset> deserializeGraph_ver1(const std::filesystem::path& path, co
 
     return asset;
 }
+
+atcg::ref_ptr<Asset> deserializeScript_ver1(const std::filesystem::path& path)
+{
+    auto script = atcg::make_ref<PythonScript>(path);
+    script->init();
+
+    return script;
+}
 }    // namespace detail
 
 atcg::ref_ptr<Asset>
@@ -207,7 +216,8 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
         break;
         case AssetType::Script:
         {
-            // TODO
+            auto script_path = path / "scripts" / std::to_string(handle) / (metadata.name + ".py");
+            asset            = detail::deserializeScript_ver1(script_path);
         }
         break;
         case AssetType::Shader:
