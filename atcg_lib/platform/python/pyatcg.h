@@ -1137,18 +1137,18 @@ inline void defineBindings(py::module_& m)
     m_mesh_renderer.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&>(), "shader"_a)
         .def_readwrite("visible", &atcg::MeshRenderComponent::visible)
-        .def_readwrite("shader", &atcg::MeshRenderComponent::shader)
+        .def("shader", &atcg::MeshRenderComponent::shader)
         .def("material", &atcg::MeshRenderComponent::material);
 
     m_point_renderer
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointRenderComponent::visible)
         .def_readwrite("color", &atcg::PointRenderComponent::color)
-        .def_readwrite("shader", &atcg::PointRenderComponent::shader);
+        .def("shader", &atcg::PointRenderComponent::shader);
 
     m_point_sphere_renderer.def(py::init<const atcg::ref_ptr<atcg::Shader>&, float>(), "shader"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointSphereRenderComponent::visible)
-        .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader)
+        .def("shader", &atcg::PointSphereRenderComponent::shader)
         .def("material", &atcg::PointSphereRenderComponent::material);
 
     m_edge_renderer.def(py::init<glm::vec3>(), "color"_a)
@@ -1173,7 +1173,7 @@ inline void defineBindings(py::module_& m)
 
     m_script_component.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::PythonScript>&>())
-        .def_readwrite("script", &atcg::ScriptComponent::script);
+        .def("script", &atcg::ScriptComponent::script);
 
     m_entity.def(py::init<>())
         .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)

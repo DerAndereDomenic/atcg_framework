@@ -21,6 +21,8 @@ public:
         atcg::Application::get()->enableDockSpace(true);
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
+        auto project = atcg::Project::create("../New Project");
+
         auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
         ATCG_DEBUG("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
 
@@ -31,8 +33,8 @@ public:
             auto sphere  = scene->getEntitiesByName("Icosphere").front();
             auto& script = sphere.addComponent<atcg::ScriptComponent>(atcg::make_ref<atcg::PythonScript>("./src/PBR/"
                                                                                                          "bounce.py"));
-            script.script->init(scene, sphere);
-            script.script->onAttach();
+            script.script()->init();
+            script.script()->onAttach(scene, sphere);
         }
 
         panel = atcg::GUI::SceneHierarchyPanel(scene);
@@ -66,7 +68,8 @@ public:
 
         // Instance Buffer Test
         {
-            auto sphere     = atcg::IO::read_mesh((atcg::resource_directory() / "armadillo.obj").string());
+            auto sphere = atcg::IO::read_mesh((atcg::resource_directory() / "armadillo.obj").string());
+            atcg::AssetManager::registerAsset(sphere, "sphere");
             int n_instances = 100;
 
             std::random_device rd;
@@ -103,6 +106,12 @@ public:
             instances.addInstanceBuffer(vbo_transforms);
             instances.addInstanceBuffer(vbo_colors);
         }
+
+        atcg::AssetManager::registerAsset(scene, "scene");
+
+        atcg::AssetManager::registerAsset(atcg::ShaderManager::getShader("base"), "base");
+
+        // project->save();
     }
 
     // This gets called each frame
@@ -187,17 +196,20 @@ public:
         {
             if(ImGui::MenuItem("Save"))
             {
-                atcg::Serialization::SceneSerializer serializer(scene);
+                // atcg::Serialization::SceneSerializer serializer(scene);
 
-                serializer.serialize("../Scene/Scene.json");
+                // serializer.serialize("../Scene/Scene.json");
+                atcg::Project::saveActive();
             }
 
             if(ImGui::MenuItem("Load"))
             {
-                scene->removeAllEntites();
-                atcg::Serialization::SceneSerializer serializer(scene);
+                // scene->removeAllEntites();
+                // atcg::Serialization::SceneSerializer serializer(scene);
 
-                serializer.deserialize("../Scene/Scene.json");
+                // serializer.deserialize("../Scene/Scene.json");
+
+                atcg::Project::load("../New Project/Project.json");
 
                 hovered_entity = atcg::Entity();
                 panel.selectEntity(hovered_entity);
@@ -258,6 +270,8 @@ public:
         performance_panel.renderPanel(show_performance);
         panel.renderPanel();
         hovered_entity = panel.getSelectedEntity();
+
+        asset_panel.renderPanel();
 
         atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());
     }
@@ -348,6 +362,7 @@ private:
 
     atcg::GUI::SceneHierarchyPanel panel;
     atcg::GUI::PerformancePanel performance_panel;
+    atcg::GUI::AssetPanel asset_panel;
     bool show_performance = false;
 
     float time       = 0.0f;
