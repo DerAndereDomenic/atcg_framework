@@ -3,6 +3,7 @@
 #include <DataStructure/Image.h>
 #include <Renderer/Texture.h>
 #include <Renderer/Material.h>
+#include <DataStructure/Graph.h>
 
 #include <json.hpp>
 
@@ -25,7 +26,7 @@ namespace detail
 #define EDGES_KEY             "Edges"
 #define GEOMETRY_KEY          "Geometry"
 
-atcg::ref_ptr<Asset> deserializeMaterial_ver1(const nlohmann::json& material_node)
+atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path, const nlohmann::json& material_node)
 {
     atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
 
@@ -37,18 +38,18 @@ atcg::ref_ptr<Asset> deserializeMaterial_ver1(const nlohmann::json& material_nod
     }
     else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
     {
-        std::string diffuse_path = material_node[DIFFUSE_TEXTURE_KEY];
-        auto img                 = IO::imread(diffuse_path, 2.2f);
-        auto diffuse_texture     = atcg::Texture2D::create(img);
+        std::filesystem::path diffuse_path = path.parent_path() / material_node[DIFFUSE_TEXTURE_KEY];
+        auto img                           = IO::imread(diffuse_path.generic_string(), 2.2f);
+        auto diffuse_texture               = atcg::Texture2D::create(img);
         material->setDiffuseTexture(diffuse_texture);
     }
 
     // Normals
     if(material_node.contains(NORMAL_TEXTURE_KEY))
     {
-        std::string normal_path = material_node[NORMAL_TEXTURE_KEY];
-        auto img                = IO::imread(normal_path);
-        auto normal_texture     = atcg::Texture2D::create(img);
+        std::filesystem::path normal_path = path.parent_path() / material_node[NORMAL_TEXTURE_KEY];
+        auto img                          = IO::imread(normal_path.generic_string());
+        auto normal_texture               = atcg::Texture2D::create(img);
         material->setNormalTexture(normal_texture);
     }
 
@@ -60,9 +61,9 @@ atcg::ref_ptr<Asset> deserializeMaterial_ver1(const nlohmann::json& material_nod
     }
     else if(material_node.contains(ROUGHNESS_TEXTURE_KEY))
     {
-        std::string roughness_path = material_node[ROUGHNESS_TEXTURE_KEY];
-        auto img                   = IO::imread(roughness_path);
-        auto roughness_texture     = atcg::Texture2D::create(img);
+        std::filesystem::path roughness_path = path.parent_path() / material_node[ROUGHNESS_TEXTURE_KEY];
+        auto img                             = IO::imread(roughness_path.generic_string());
+        auto roughness_texture               = atcg::Texture2D::create(img);
         material->setRoughnessTexture(roughness_texture);
     }
 
@@ -74,13 +75,87 @@ atcg::ref_ptr<Asset> deserializeMaterial_ver1(const nlohmann::json& material_nod
     }
     else if(material_node.contains(METALLIC_TEXTURE_KEY))
     {
-        std::string metallic_path = material_node[METALLIC_TEXTURE_KEY];
-        auto img                  = IO::imread(metallic_path);
-        auto metallic_texture     = atcg::Texture2D::create(img);
+        std::filesystem::path metallic_path = path.parent_path() / material_node[METALLIC_TEXTURE_KEY];
+        auto img                            = IO::imread(metallic_path.generic_string());
+        auto metallic_texture               = atcg::Texture2D::create(img);
         material->setMetallicTexture(metallic_texture);
     }
 
     return material;
+}
+
+std::vector<uint8_t> deserializeBuffer_ver1(const std::filesystem::path& file_name)
+{
+    std::ifstream summary_file(file_name, std::ios::in | std::ios::binary);
+    std::vector<uint8_t> buffer_char(std::istreambuf_iterator<char>(summary_file), {});
+    summary_file.close();
+
+    return buffer_char;
+}
+
+atcg::ref_ptr<Asset> deserializeGraph_ver1(const std::filesystem::path& path, const nlohmann::json& j)
+{
+    atcg::ref_ptr<Asset> asset = nullptr;
+
+    atcg::GraphType type = stringToGraphType(j[TYPE_KEY]);
+
+    switch(type)
+    {
+        case atcg::GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH:
+        {
+            std::filesystem::path vertex_path = path.parent_path() / j[VERTICES_KEY];
+            std::filesystem::path faces_path  = path.parent_path() / j[FACES_KEY];
+            std::vector<uint8_t> vertices_raw = deserializeBuffer_ver1(vertex_path);
+            std::vector<uint8_t> faces_raw    = deserializeBuffer_ver1(faces_path);
+
+            auto vertices = atcg::createHostTensorFromPointer(
+                (float*)vertices_raw.data(),
+                {(int)(vertices_raw.size() / sizeof(Vertex)), atcg::VertexSpecification::VERTEX_SIZE});
+
+            auto faces = atcg::createHostTensorFromPointer((int32_t*)faces_raw.data(),
+                                                           {(int)(faces_raw.size() / sizeof(glm::u32vec3)), 3});
+
+            asset = Graph::createTriangleMesh(vertices, faces);
+        }
+        break;
+        case atcg::GraphType::ATCG_GRAPH_TYPE_POINTCLOUD:
+        {
+            std::filesystem::path vertex_path = path.parent_path() / j[VERTICES_KEY];
+            std::vector<uint8_t> vertices_raw = deserializeBuffer_ver1(vertex_path);
+
+            auto vertices = atcg::createHostTensorFromPointer(
+                (float*)vertices_raw.data(),
+                {(int)(vertices_raw.size() / sizeof(Vertex)), atcg::VertexSpecification::VERTEX_SIZE});
+
+            asset = Graph::createPointCloud(vertices);
+        }
+        break;
+        case atcg::GraphType::ATCG_GRAPH_TYPE_GRAPH:
+        {
+            std::filesystem::path vertex_path = path.parent_path() / j[VERTICES_KEY];
+            std::filesystem::path edges_path  = path.parent_path() / j[EDGES_KEY];
+            std::vector<uint8_t> vertices_raw = deserializeBuffer_ver1(vertex_path);
+            std::vector<uint8_t> edges_raw    = deserializeBuffer_ver1(edges_path);
+
+            auto vertices = atcg::createHostTensorFromPointer(
+                (float*)vertices_raw.data(),
+                {(int)(vertices_raw.size() / sizeof(Vertex)), atcg::VertexSpecification::VERTEX_SIZE});
+
+            auto edges = atcg::createHostTensorFromPointer(
+                (float*)edges_raw.data(),
+                {(int)(edges_raw.size() / sizeof(Edge)), atcg::EdgeSpecification::EDGE_SIZE});
+
+            asset = Graph::createGraph(vertices, edges);
+        }
+        break;
+        default:
+        {
+            ATCG_ERROR("Unknown graph type: {0}", (int)type);
+        }
+        break;
+    }
+
+    return asset;
 }
 }    // namespace detail
 
@@ -111,13 +186,23 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
 
             if(version == "1.0")
             {
-                asset = detail::deserializeMaterial_ver1(j);
+                asset = detail::deserializeMaterial_ver1(material_path, j);
             }
         }
         break;
         case AssetType::Graph:
         {
-            // TODO
+            auto graph_path = path / "graphs" / std::to_string(handle) / (metadata.name + ".graph");
+            std::ifstream i(graph_path);
+            nlohmann::json j;
+            i >> j;
+
+            std::string version = j["Version"];
+
+            if(version == "1.0")
+            {
+                asset = detail::deserializeGraph_ver1(graph_path, j);
+            }
         }
         break;
         case AssetType::Script:
