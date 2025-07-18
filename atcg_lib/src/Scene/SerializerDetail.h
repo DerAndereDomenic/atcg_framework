@@ -83,6 +83,7 @@ ATCG_INLINE void SceneSerializer::serialize(const std::string& file_path)
     }
 
     j["Entities"] = entity_array;
+    j["Version"]  = "1.0";
 
     std::ofstream o(file_path);
     o << std::setw(4) << j << std::endl;
