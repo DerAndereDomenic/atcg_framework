@@ -5,6 +5,7 @@
 #include <Renderer/Material.h>
 #include <DataStructure/Graph.h>
 #include <Scripting/Script.h>
+#include <Renderer/Shader.h>
 
 #include <json.hpp>
 
@@ -166,6 +167,36 @@ atcg::ref_ptr<Asset> deserializeScript_ver1(const std::filesystem::path& path)
 
     return script;
 }
+
+atcg::ref_ptr<Asset> deserializeShader_ver1(const std::filesystem::path& path, const nlohmann::json& j)
+{
+    atcg::ref_ptr<Asset> asset = nullptr;
+    if(j.contains("Compute"))
+    {
+        auto compute_path = path.parent_path() / j["Compute"];
+
+        asset = atcg::make_ref<Shader>(compute_path.generic_string());
+    }
+    else
+    {
+        auto vertex_path   = path.parent_path() / j["Vertex"];
+        auto fragment_path = path.parent_path() / j["Fragment"];
+
+        if(j.contains("Geometry"))
+        {
+            auto geometry_path = path.parent_path() / j["Geometry"];
+            asset              = atcg::make_ref<Shader>(vertex_path.generic_string(),
+                                           fragment_path.generic_string(),
+                                           geometry_path.generic_string());
+        }
+        else
+        {
+            asset = atcg::make_ref<Shader>(vertex_path.generic_string(), fragment_path.generic_string());
+        }
+    }
+
+    return asset;
+}
 }    // namespace detail
 
 atcg::ref_ptr<Asset>
@@ -222,7 +253,17 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
         break;
         case AssetType::Shader:
         {
-            // TODO
+            auto shader_path = path / "shader" / std::to_string(handle) / (metadata.name + ".json");
+            std::ifstream i(shader_path);
+            nlohmann::json j;
+            i >> j;
+
+            std::string version = j["Version"];
+
+            if(version == "1.0")
+            {
+                asset = detail::deserializeShader_ver1(shader_path, j);
+            }
         }
         break;
     }
