@@ -197,6 +197,13 @@ atcg::ref_ptr<Asset> deserializeShader_ver1(const std::filesystem::path& path, c
 
     return asset;
 }
+
+atcg::ref_ptr<Asset> deserializeTexture2D_ver1(const std::filesystem::path& path)
+{
+    auto img = atcg::IO::imread(path.generic_string());
+
+    return atcg::Texture2D::create(img);
+}
 }    // namespace detail
 
 atcg::ref_ptr<Asset>
@@ -212,7 +219,21 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
         break;
         case AssetType::Texture2D:
         {
-            // TODO
+            auto img_path = path / "textures" / std::to_string(handle);
+
+            for(const auto& entry: std::filesystem::directory_iterator(img_path))
+            {
+                if(entry.is_regular_file())
+                {
+                    if(entry.path().stem() == metadata.name)
+                    {
+                        img_path = img_path / entry.path().filename();
+                        break;
+                    }
+                }
+            }
+
+            asset = detail::deserializeTexture2D_ver1(img_path);
         }
         break;
         case AssetType::Material:
