@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Memory.h>
+#include <Scene/Scene.h>
 
 #include <filesystem>
 
@@ -16,6 +17,12 @@ public:
 
     void save();
 
+    void setActiveScene(const atcg::ref_ptr<Scene>& scene);
+
+    void setActiveScene(AssetHandle handle);
+
+    atcg::ref_ptr<Scene> getActiveScene() const;
+
     static const atcg::ref_ptr<Project>& getActive();
 
     static void saveActive();
@@ -30,6 +37,7 @@ private:
 private:
     std::filesystem::path _project_path;
     std::filesystem::path _asset_pack_directory;
+    AssetHandle _active_scene;
 
     inline static atcg::ref_ptr<Project> s_active_project = nullptr;
 };

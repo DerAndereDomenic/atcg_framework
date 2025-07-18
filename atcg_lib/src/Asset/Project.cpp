@@ -51,6 +51,28 @@ void Project::save()
     serializeProjectInformation();
 }
 
+void Project::setActiveScene(const atcg::ref_ptr<Scene>& scene)
+{
+    AssetHandle handle = scene->handle;
+
+    if(!AssetManager::isAssetHandleValid(handle))
+    {
+        AssetManager::registerAsset(scene, "scene");
+    }
+
+    setActiveScene(handle);
+}
+
+void Project::setActiveScene(AssetHandle handle)
+{
+    _active_scene = handle;
+}
+
+atcg::ref_ptr<Scene> Project::getActiveScene() const
+{
+    return AssetManager::getAsset<Scene>(_active_scene);
+}
+
 const atcg::ref_ptr<Project>& Project::getActive()
 {
     return s_active_project;
