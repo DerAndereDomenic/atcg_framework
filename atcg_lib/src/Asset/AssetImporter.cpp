@@ -221,6 +221,8 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
         {
             auto img_path = path / "textures" / std::to_string(handle);
 
+            if(!std::filesystem::exists(img_path)) break;
+
             for(const auto& entry: std::filesystem::directory_iterator(img_path))
             {
                 if(entry.is_regular_file())
@@ -233,12 +235,14 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
                 }
             }
 
-            asset = detail::deserializeTexture2D_ver1(img_path);
+            if(std::filesystem::exists(img_path)) asset = detail::deserializeTexture2D_ver1(img_path);
         }
         break;
         case AssetType::Material:
         {
             auto material_path = path / "materials" / std::to_string(handle) / (metadata.name + ".mat");
+            if(!std::filesystem::exists(material_path)) break;
+
             std::ifstream i(material_path);
             nlohmann::json j;
             i >> j;
@@ -254,6 +258,8 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
         case AssetType::Graph:
         {
             auto graph_path = path / "graphs" / std::to_string(handle) / (metadata.name + ".graph");
+            if(!std::filesystem::exists(graph_path)) break;
+
             std::ifstream i(graph_path);
             nlohmann::json j;
             i >> j;
@@ -269,12 +275,14 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
         case AssetType::Script:
         {
             auto script_path = path / "scripts" / std::to_string(handle) / (metadata.name + ".py");
-            asset            = detail::deserializeScript_ver1(script_path);
+            if(std::filesystem::exists(script_path)) asset = detail::deserializeScript_ver1(script_path);
         }
         break;
         case AssetType::Shader:
         {
             auto shader_path = path / "shader" / std::to_string(handle) / (metadata.name + ".json");
+            if(!std::filesystem::exists(shader_path)) break;
+
             std::ifstream i(shader_path);
             nlohmann::json j;
             i >> j;

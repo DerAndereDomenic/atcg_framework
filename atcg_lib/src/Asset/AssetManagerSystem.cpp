@@ -46,7 +46,7 @@ atcg::ref_ptr<Asset> AssetManagerSystem::getAsset(AssetHandle handle)
     {
         const AssetMetaData& meta_data = getMetaData(handle);
         asset = AssetImporter::importAsset(Project::getActive()->getFilePath() / "assets", handle, meta_data);
-        _loaded_assets.insert(std::make_pair(handle, asset));
+        if(asset) _loaded_assets.insert(std::make_pair(handle, asset));
     }
 
     return asset;
