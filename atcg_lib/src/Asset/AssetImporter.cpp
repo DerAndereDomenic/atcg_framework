@@ -6,6 +6,7 @@
 #include <DataStructure/Graph.h>
 #include <Scripting/Script.h>
 #include <Renderer/Shader.h>
+#include <Scene/Serializer.h>
 
 #include <json.hpp>
 
@@ -204,6 +205,15 @@ atcg::ref_ptr<Asset> deserializeTexture2D_ver1(const std::filesystem::path& path
 
     return atcg::Texture2D::create(img);
 }
+
+atcg::ref_ptr<Asset> deserializeScene_ver1(const std::filesystem::path& path)
+{
+    auto scene = atcg::make_ref<Scene>();
+    atcg::Serialization::SceneSerializer serializer(scene);
+    serializer.deserialize(path.generic_string());
+
+    return scene;
+}
 }    // namespace detail
 
 atcg::ref_ptr<Asset>
@@ -214,7 +224,20 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
     {
         case AssetType::Scene:
         {
-            // TODO
+            auto scene_path = path / "scenes" / std::to_string(handle) / (metadata.name + ".scene");
+
+            if(!std::filesystem::exists(scene_path)) break;
+
+            std::ifstream i(scene_path);
+            nlohmann::json j;
+            i >> j;
+
+            std::string version = j["Version"];
+
+            if(version == "1.0")
+            {
+                asset = detail::deserializeScene_ver1(scene_path);
+            }
         }
         break;
         case AssetType::Texture2D:
