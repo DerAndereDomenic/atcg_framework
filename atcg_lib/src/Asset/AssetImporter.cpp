@@ -84,7 +84,8 @@ atcg::ref_ptr<Asset> deserializeMaterial_ver1(const nlohmann::json& material_nod
 }
 }    // namespace detail
 
-atcg::ref_ptr<Asset> AssetImporter::importAsset(const std::filesystem::path& path, const AssetMetaData& metadata)
+atcg::ref_ptr<Asset>
+AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle, const AssetMetaData& metadata)
 {
     atcg::ref_ptr<Asset> asset = nullptr;
     switch(metadata.type)
@@ -101,14 +102,14 @@ atcg::ref_ptr<Asset> AssetImporter::importAsset(const std::filesystem::path& pat
         break;
         case AssetType::Material:
         {
-            auto material_path = path / "materials" / (metadata.name + ".mat");
+            auto material_path = path / "materials" / std::to_string(handle) / (metadata.name + ".mat");
             std::ifstream i(material_path);
             nlohmann::json j;
             i >> j;
 
             std::string version = j["Version"];
 
-            if(version == "1.0f")
+            if(version == "1.0")
             {
                 asset = detail::deserializeMaterial_ver1(j);
             }
