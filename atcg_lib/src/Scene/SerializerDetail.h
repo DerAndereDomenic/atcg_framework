@@ -85,6 +85,11 @@ ATCG_INLINE void SceneSerializer::serialize(const std::string& file_path)
     j["Entities"] = entity_array;
     j["Version"]  = "1.0";
 
+    if(_scene->hasSkybox())
+    {
+        j["Skybox"] = (uint64_t)_scene->getSkyboxTexture()->handle;
+    }
+
     std::ofstream o(file_path);
     o << std::setw(4) << j << std::endl;
 }
@@ -102,6 +107,16 @@ ATCG_INLINE void SceneSerializer::deserialize(const std::string& file_path)
     }
 
     auto entities = j["Entities"];
+
+    if(j.contains("Skybox"))
+    {
+        AssetHandle skybox_handle = (AssetHandle)j["Skybox"];
+        if(AssetManager::isAssetHandleValid(skybox_handle))
+        {
+            auto skybox_texture = AssetManager::getAsset<Texture2D>(skybox_handle);
+            _scene->setSkybox(skybox_texture);
+        }
+    }
 
     for(auto entity_object: entities)
     {

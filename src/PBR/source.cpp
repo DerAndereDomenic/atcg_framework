@@ -214,6 +214,8 @@ public:
 
                 panel = atcg::GUI::SceneHierarchyPanel(project->getActiveScene());
 
+                project->getActiveScene()->setCamera(camera_controller->getCamera());
+
                 hovered_entity = atcg::Entity();
                 panel.selectEntity(hovered_entity);
             }
