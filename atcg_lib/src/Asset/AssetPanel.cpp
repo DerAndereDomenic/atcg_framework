@@ -7,6 +7,7 @@
 #include <Core/Application.h>
 #include <Asset/AssetManagerSystem.h>
 #include <portable-file-dialogs.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -476,46 +477,27 @@ void AssetPanel::displayScene(AssetHandle handle)
 
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
 
+    AssetHandle skybox_handle = 0;
+
     if(scene->hasSkybox())
     {
-        ImGui::Image((ImTextureID)scene->getSkyboxTexture()->getID(),
-                     ImVec2(content_scale * 128, content_scale * 64),
-                     ImVec2 {0, 1},
-                     ImVec2 {1, 0});
-        if(ImGui::Button("Remove skybox##skybox"))
+        skybox_handle = scene->getSkyboxTexture()->handle;
+    }
+
+    ImGui::Text("Skybox:");
+    auto new_handle = displayTexture2DSelection("skybox", skybox_handle);
+    bool updated    = (new_handle != skybox_handle);
+
+    if(updated)
+    {
+        if(AssetManager::isAssetHandleValid(new_handle))
+        {
+            auto skybox_texture = AssetManager::getAsset<Texture2D>(new_handle);
+            scene->setSkybox(skybox_texture);
+        }
+        else
         {
             scene->removeSkybox();
-        }
-    }
-    else
-    {
-        glm::vec4 clear_color = Renderer::getClearColor();
-        if(ImGui::ColorEdit4("Background color#skybox", glm::value_ptr(clear_color)))
-        {
-            Renderer::setClearColor(clear_color);
-        }
-
-        if(ImGui::Button("Add Skybox..."))
-        {
-            auto f     = pfd::open_file("Choose files to read",
-                                    pfd::path::home(),
-                                        {"All Files",
-                                         "*",
-                                         "PNG Files (.png)",
-                                         "*.png",
-                                         "JPG Files (.jpg, .jpeg)",
-                                         "*jpg, *jpeg",
-                                         "BMP Files (.bmp)",
-                                         "*.bmp",
-                                         "HDR Files (.hdr)",
-                                         "*.hdr"},
-                                    pfd::opt::none);
-            auto files = f.result();
-            if(!files.empty())
-            {
-                auto img = IO::imread(files[0]);
-                scene->setSkybox(img);
-            }
         }
     }
 

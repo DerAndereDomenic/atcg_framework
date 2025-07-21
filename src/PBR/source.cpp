@@ -23,12 +23,13 @@ public:
 
         project = atcg::Project::create("../New Project");
 
-        auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
-        ATCG_DEBUG("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
+        auto skybox         = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
+        auto skybox_texture = atcg::Texture2D::create(skybox);
+        atcg::AssetManager::registerAsset(skybox_texture, "skybox");
 
         auto scene = atcg::IO::read_scene((atcg::resource_directory() / "test_scene.obj").string());
         project->setActiveScene(scene);
-        project->getActiveScene()->setSkybox(skybox);
+        project->getActiveScene()->setSkybox(skybox_texture);
 
         {
             auto sphere  = project->getActiveScene()->getEntitiesByName("Icosphere").front();
