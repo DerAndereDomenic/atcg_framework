@@ -61,7 +61,6 @@ private:
     template<typename... Components>
     void drawComponents(Entity entity);
 
-    void drawSceneProperties();
     Entity _selected_entity;
     atcg::ref_ptr<Scene> _scene;
 

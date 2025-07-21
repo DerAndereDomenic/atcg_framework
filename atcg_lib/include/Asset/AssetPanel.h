@@ -29,6 +29,8 @@ private:
 
     void displayTexture2D(AssetHandle handle);
 
+    void displayScene(AssetHandle handle);
+
 private:
     AssetHandle _selected_handle = 0;
 
