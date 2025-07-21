@@ -320,6 +320,8 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
         break;
     }
 
+    if(asset) asset->handle = handle;
+
     return asset;
 }
 }    // namespace atcg
