@@ -297,10 +297,9 @@ void ComponentGUIRenderer<GeometryComponent>::draw_component(const atcg::ref_ptr
 
     if(updated)
     {
-        // TODO: Revision
-        //  RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
+        RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
         component.graph_handle = new_handle;
-        // atcg::RevisionStack::endRecording();
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -531,11 +530,11 @@ void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<S
 
     if(updated)
     {
-        // RevisionStack::startRecording<ComponentEditedRevision<GeometryComponent>>(scene, entity);
+        RevisionStack::startRecording<ComponentEditedRevision<ScriptComponent>>(scene, entity);
         if(_component.script()) _component.script()->onDetach(scene, entity);
         _component.script_handle = new_handle;
         if(_component.script()) _component.script()->onAttach(scene, entity);
-        // atcg::RevisionStack::endRecording();
+        atcg::RevisionStack::endRecording();
     }
 }
 
