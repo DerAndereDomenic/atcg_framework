@@ -13,24 +13,9 @@
 namespace atcg
 {
 
-/**
- * @brief This class models a revision of a scene element
- */
 class Revision
 {
 public:
-    /**
-     * @brief Constructor
-     *
-     * @param scene The scene
-     * @param entity The entity
-     */
-    Revision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
-        : _scene(scene),
-          _entity_handle(entity.entity_handle())
-    {
-    }
-
     /**
      * @brief Callback that is called on a rollback
      */
@@ -52,6 +37,25 @@ public:
      * scene element was changed.
      */
     virtual void record_end_state() = 0;
+};
+
+/**
+ * @brief This class models a revision of a scene element
+ */
+class EntityRevision : public Revision
+{
+public:
+    /**
+     * @brief Constructor
+     *
+     * @param scene The scene
+     * @param entity The entity
+     */
+    EntityRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
+        : _scene(scene),
+          _entity_handle(entity.entity_handle())
+    {
+    }
 
 protected:
     atcg::ref_ptr<Scene> _scene;
@@ -199,7 +203,7 @@ private:
 /**
  * @brief Revision if an entity was added to the scene
  */
-class EntityAddedRevision : public Revision
+class EntityAddedRevision : public EntityRevision
 {
 public:
     /**
@@ -208,7 +212,7 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    EntityAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    EntityAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity) {}
 
     /**
      * @brief Callback that is called on a redo
@@ -245,7 +249,7 @@ private:
 /**
  * @brief Revision if an entity was removed from the scene
  */
-class EntityRemovedRevision : public Revision
+class EntityRemovedRevision : public EntityRevision
 {
 public:
     /**
@@ -254,7 +258,9 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    EntityRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    EntityRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity)
+    {
+    }
 
     /**
      * @brief Callback that is called on a redo
@@ -363,7 +369,7 @@ private:
  * @tparam Component The type of the component that was added
  */
 template<typename Component>
-class ComponentAddedRevision : public Revision
+class ComponentAddedRevision : public EntityRevision
 {
 public:
     /**
@@ -372,7 +378,9 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    ComponentAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    ComponentAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity)
+    {
+    }
 
     /**
      * @brief Callback that is called on a redo
@@ -417,7 +425,7 @@ private:
  * @tparam Component The type of the component that was removed
  */
 template<typename Component>
-class ComponentRemovedRevision : public Revision
+class ComponentRemovedRevision : public EntityRevision
 {
 public:
     /**
@@ -426,7 +434,10 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    ComponentRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    ComponentRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
+        : EntityRevision(scene, entity)
+    {
+    }
 
     /**
      * @brief Callback that is called on a redo
@@ -471,7 +482,7 @@ private:
  * @tparam Component The type of the component that was edited
  */
 template<typename Component>
-class ComponentEditedRevision : public Revision
+class ComponentEditedRevision : public EntityRevision
 {
 public:
     /**
@@ -480,7 +491,10 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    ComponentEditedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    ComponentEditedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
+        : EntityRevision(scene, entity)
+    {
+    }
 
     /**
      * @brief Callback that is called on a redo
@@ -536,7 +550,7 @@ private:
  * @tparam RevisionType2 The revision type of the second revision
  */
 template<typename RevisionType1, typename RevisionType2>
-class UnionRevision : public Revision
+class UnionRevision : public EntityRevision
 {
 public:
     /**
@@ -545,7 +559,7 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    UnionRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity)
+    UnionRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity)
     {
         _revision1 = atcg::make_ref<RevisionType1>(scene, entity);
         _revision2 = atcg::make_ref<RevisionType2>(scene, entity);
