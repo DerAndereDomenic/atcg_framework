@@ -590,6 +590,13 @@ void AssetPanel::displayScene(AssetHandle handle)
 
         if(updated) scene_camera->setIntrinsics(intrinsics);
     }
+
+    ImGui::Separator();
+
+    if(ImGui::Button("Make active"))
+    {
+        Project::getActive()->setActiveScene(handle);
+    }
 }
 
 void AssetPanel::drawAssetList()
@@ -663,6 +670,10 @@ void AssetPanel::drawAdd()
             data.type = AssetType::Texture2D;
             data.name = "texture";
             AssetManager::registerAsset(data);
+        }
+        if(ImGui::MenuItem("Scene"))
+        {
+            AssetManager::registerAsset(atcg::make_ref<Scene>(), "scene");
         }
         ImGui::EndPopup();
     }
