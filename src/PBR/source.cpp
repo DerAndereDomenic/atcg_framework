@@ -39,8 +39,6 @@ public:
             script.script()->onAttach(project->getActiveScene(), sphere);
         }
 
-        panel = atcg::GUI::SceneHierarchyPanel(project->getActiveScene());
-
         if(atcg::VR::isVRAvailable())
         {
             float vr_aspect = (float)atcg::VR::width() / (float)atcg::VR::height();
@@ -108,11 +106,6 @@ public:
             instances.addInstanceBuffer(vbo_transforms);
             instances.addInstanceBuffer(vbo_colors);
         }
-
-
-        atcg::AssetManager::registerAsset(atcg::ShaderManager::getShader("base"), "base");
-
-        // project->save();
     }
 
     // This gets called each frame
@@ -212,8 +205,6 @@ public:
 
                 project = atcg::Project::load("../New Project/Project.json");
 
-                panel = atcg::GUI::SceneHierarchyPanel(project->getActiveScene());
-
                 project->getActiveScene()->setCamera(camera_controller->getCamera());
 
                 hovered_entity = atcg::Entity();
@@ -273,7 +264,7 @@ public:
         }
 
         performance_panel.renderPanel(show_performance);
-        panel.renderPanel();
+        panel.renderPanel(atcg::Project::getActive()->getActiveScene());
         hovered_entity = panel.getSelectedEntity();
 
         asset_panel.renderPanel();

@@ -1377,7 +1377,7 @@ inline void defineBindings(py::module_& m)
             "camera"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
-        .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
+        .def(py::init<>())
         .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel<>)
         .def("selectEntity", &atcg::GUI::SceneHierarchyPanel::selectEntity, "entity"_a)
         .def("getSelectedEntity", &atcg::GUI::SceneHierarchyPanel::getSelectedEntity);

@@ -91,9 +91,7 @@ ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<a
 
 }    // namespace detail
 
-ATCG_INLINE SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
-
-ATCG_INLINE void SceneHierarchyPanel::drawEntityNode(Entity entity)
+ATCG_INLINE void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
     auto& tag = entity.getComponent<NameComponent>().name();
 
@@ -124,15 +122,15 @@ ATCG_INLINE void SceneHierarchyPanel::drawEntityNode(Entity entity)
 
     if(entityDeleted)
     {
-        atcg::RevisionStack::startRecording<EntityRemovedRevision>(_scene, entity);
+        atcg::RevisionStack::startRecording<EntityRemovedRevision>(scene, entity);
         if(_selected_entity == entity) selectEntity({});
-        _scene->removeEntity(entity);
+        scene->removeEntity(entity);
         atcg::RevisionStack::endRecording();
     }
 }
 
 template<typename... Components>
-ATCG_INLINE void SceneHierarchyPanel::drawComponents(Entity entity)
+ATCG_INLINE void SceneHierarchyPanel::drawComponents(const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
     std::stringstream label;
@@ -148,7 +146,7 @@ ATCG_INLINE void SceneHierarchyPanel::drawComponents(Entity entity)
     label << "##" << id;
     if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer)))
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<NameComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<NameComponent>>(scene, entity);
         entity.addOrReplaceComponent<NameComponent>(std::string(buffer));
         atcg::RevisionStack::endRecording();
     }
@@ -163,14 +161,14 @@ ATCG_INLINE void SceneHierarchyPanel::drawComponents(Entity entity)
 
     if(ImGui::BeginPopup("AddComponent"))
     {
-        (detail::displayAddComponentEntry<Components>(_scene, entity), ...);
+        (detail::displayAddComponentEntry<Components>(scene, entity), ...);
 
         ImGui::EndPopup();
     }
 
     ImGui::PopItemWidth();
 
-    (detail::drawComponent<Components>(_scene, entity), ...);
+    (detail::drawComponent<Components>(scene, entity), ...);
 }
 
 ATCG_INLINE void SceneHierarchyPanel::selectEntity(Entity entity)
@@ -180,8 +178,13 @@ ATCG_INLINE void SceneHierarchyPanel::selectEntity(Entity entity)
 }
 
 template<typename... CustomComponents>
-ATCG_INLINE void SceneHierarchyPanel::renderPanel()
+ATCG_INLINE void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
 {
+    if(_selected_entity.scene() != scene.get())
+    {
+        _selected_entity = {};
+    }
+
     ImGui::Begin("Scene Hierarchy");
 
     if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
@@ -189,11 +192,11 @@ ATCG_INLINE void SceneHierarchyPanel::renderPanel()
         selectEntity({});
     }
 
-    for(auto e: _scene->getAllEntitiesWith<NameComponent>())
+    for(auto e: scene->getAllEntitiesWith<NameComponent>())
     {
-        Entity entity(e, _scene.get());
+        Entity entity(e, scene.get());
         if(entity.getComponent<NameComponent>().name() == "EditorCamera") continue;
-        drawEntityNode(entity);
+        drawEntityNode(scene, entity);
     }
 
 
@@ -201,8 +204,8 @@ ATCG_INLINE void SceneHierarchyPanel::renderPanel()
     {
         if(ImGui::MenuItem("Create Empty Entity"))
         {
-            Entity entity = _scene->createEntity("Empty Entity");
-            atcg::RevisionStack::startRecording<EntityAddedRevision>(_scene, entity);
+            Entity entity = scene->createEntity("Empty Entity");
+            atcg::RevisionStack::startRecording<EntityAddedRevision>(scene, entity);
             atcg::RevisionStack::endRecording();
             selectEntity(entity);
         }
@@ -237,7 +240,7 @@ ATCG_INLINE void SceneHierarchyPanel::renderPanel()
                                InstanceRenderComponent,
                                PointLightComponent,
                                ScriptComponent,
-                               CustomComponents...>(_selected_entity);
+                               CustomComponents...>(scene, _selected_entity);
             }
             ImGui::EndTabItem();
         }
