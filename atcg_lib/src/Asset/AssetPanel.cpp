@@ -8,6 +8,7 @@
 #include <Asset/AssetManagerSystem.h>
 #include <portable-file-dialogs.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Asset/Project.h>
 
 namespace atcg
 {
@@ -726,12 +727,25 @@ void AssetPanel::renderPanel()
 
         ImGui::Separator();
 
+        bool disabled = false;
+        auto metadata = AssetManager::getMetaData(_selected_handle);
+        if(metadata.type == AssetType::Scene)
+        {
+            if(Project::getActive()->getActiveScene()->handle == _selected_handle)
+            {
+                disabled = true;
+                ImGui::Text("Can't delete active scene");
+            }
+        }
+
+        ImGui::BeginDisabled(disabled);
         if(ImGui::Button("Delete"))
         {
             AssetManager::removeAsset(_selected_handle);
 
             selectAsset(0);
         }
+        ImGui::EndDisabled();
     }
 
     ImGui::End();
