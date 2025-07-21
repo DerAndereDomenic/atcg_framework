@@ -705,6 +705,7 @@ atcg::ref_ptr<Graph> Graph::copy() const
     impl->vertices->unmapDevicePointers();
     impl->edges->unmapDevicePointers();
     impl->indices->unmapDevicePointers();
+    result->handle = handle;
 
     return result;
 }
