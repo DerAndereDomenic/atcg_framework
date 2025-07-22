@@ -19,7 +19,7 @@ private:
 
     void drawAdd();
 
-    bool displayMaterial(AssetHandle handle);
+    void displayMaterial(AssetHandle handle);
 
     void displayGraph(AssetHandle handle);
 

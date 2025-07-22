@@ -9,18 +9,21 @@
 #include <portable-file-dialogs.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Asset/Project.h>
+#include <Scene/Scene.h>
 
 namespace atcg
 {
 namespace GUI
 {
 
-bool AssetPanel::displayMaterial(AssetHandle handle)
+void AssetPanel::displayMaterial(AssetHandle handle)
 {
     const std::string key = "material";
-    auto material         = AssetManager::getAsset<Material>(handle);
+    auto material_        = AssetManager::getAsset<Material>(handle);
 
-    if(!material) return false;
+    if(!material_) return;
+
+    atcg::Material material = *material_.get();
 
     bool updated = false;
 
@@ -30,12 +33,12 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
     ImGui::Text("Material");
 
     {
-        auto spec        = material->getDiffuseTexture()->getSpecification();
+        auto spec        = material.getDiffuseTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
 
         if(!useTextures)
         {
-            auto diffuse = material->getDiffuseTexture()->getData(atcg::CPU);
+            auto diffuse = material.getDiffuseTexture()->getData(atcg::CPU);
 
             float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
                               diffuse.index({0, 0, 1}).item<float>() / 255.0f,
@@ -45,7 +48,7 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
             if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
             {
                 glm::vec4 new_color = glm::make_vec4(color);
-                material->setDiffuseColor(new_color);
+                material.setDiffuseColor(new_color);
                 updated = true;
             }
 
@@ -71,7 +74,7 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
                 {
                     auto img     = IO::imread(files[0], 2.2f);
                     auto texture = atcg::Texture2D::create(img);
-                    material->setDiffuseTexture(texture);
+                    material.setDiffuseTexture(texture);
                     updated = true;
                 }
             }
@@ -83,11 +86,11 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
 
             if(ImGui::Button(("X##diffuse" + key).c_str()))
             {
-                material->setDiffuseColor(glm::vec4(1));
+                material.setDiffuseColor(glm::vec4(1));
                 updated = true;
             }
             else
-                ImGui::Image((ImTextureID)material->getDiffuseTexture()->getID(),
+                ImGui::Image((ImTextureID)material.getDiffuseTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
@@ -95,7 +98,7 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
     }
 
     {
-        auto spec        = material->getNormalTexture()->getSpecification();
+        auto spec        = material.getNormalTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
 
         if(!useTextures)
@@ -122,7 +125,7 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
                 {
                     auto img     = IO::imread(files[0]);
                     auto texture = atcg::Texture2D::create(img);
-                    material->setNormalTexture(texture);
+                    material.setNormalTexture(texture);
                     updated = true;
                 }
             }
@@ -134,11 +137,11 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
 
             if(ImGui::Button(("X##normal" + key).c_str()))
             {
-                material->removeNormalMap();
+                material.removeNormalMap();
                 updated = true;
             }
             else
-                ImGui::Image((ImTextureID)material->getNormalTexture()->getID(),
+                ImGui::Image((ImTextureID)material.getNormalTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
@@ -146,17 +149,17 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
     }
 
     {
-        auto spec        = material->getRoughnessTexture()->getSpecification();
+        auto spec        = material.getRoughnessTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
 
         if(!useTextures)
         {
-            auto data       = material->getRoughnessTexture()->getData(atcg::CPU);
+            auto data       = material.getRoughnessTexture()->getData(atcg::CPU);
             float roughness = data.item<float>();
 
             if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
             {
-                material->setRoughness(roughness);
+                material.setRoughness(roughness);
                 updated = true;
             }
 
@@ -182,7 +185,7 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
                 {
                     auto img     = IO::imread(files[0]);
                     auto texture = atcg::Texture2D::create(img);
-                    material->setRoughnessTexture(texture);
+                    material.setRoughnessTexture(texture);
                     updated = true;
                 }
             }
@@ -194,11 +197,11 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
 
             if(ImGui::Button(("X##roughness" + key).c_str()))
             {
-                material->setRoughness(1.0f);
+                material.setRoughness(1.0f);
                 updated = true;
             }
             else
-                ImGui::Image((ImTextureID)material->getRoughnessTexture()->getID(),
+                ImGui::Image((ImTextureID)material.getRoughnessTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
@@ -207,17 +210,17 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
 
 
     {
-        auto spec        = material->getMetallicTexture()->getSpecification();
+        auto spec        = material.getMetallicTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
 
         if(!useTextures)
         {
-            auto data      = material->getMetallicTexture()->getData(atcg::CPU);
+            auto data      = material.getMetallicTexture()->getData(atcg::CPU);
             float metallic = data.item<float>();
 
             if(ImGui::DragFloat(("Metallic##" + key).c_str(), &metallic, 0.005f, 0.0f, 1.0f))
             {
-                material->setMetallic(metallic);
+                material.setMetallic(metallic);
                 updated = true;
             }
 
@@ -243,7 +246,7 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
                 {
                     auto img     = IO::imread(files[0]);
                     auto texture = atcg::Texture2D::create(img);
-                    material->setMetallicTexture(texture);
+                    material.setMetallicTexture(texture);
                     updated = true;
                 }
             }
@@ -255,18 +258,24 @@ bool AssetPanel::displayMaterial(AssetHandle handle)
 
             if(ImGui::Button(("X##metallic" + key).c_str()))
             {
-                material->setMetallic(0.0f);
+                material.setMetallic(0.0f);
                 updated = true;
             }
             else
-                ImGui::Image((ImTextureID)material->getMetallicTexture()->getID(),
+                ImGui::Image((ImTextureID)material.getMetallicTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
         }
     }
 
-    return updated;
+    if(updated)
+    {
+        atcg::RevisionStack::startRecording<AssetEditedRevision>(material_->handle);
+        atcg::ref_ptr<Material> new_material = atcg::make_ref<Material>(material);
+        AssetManager::registerAsset(new_material, AssetManager::getMetaData(new_material->handle));
+        atcg::RevisionStack::endRecording();
+    }
 }
 
 void AssetPanel::displayGraph(AssetHandle handle)
@@ -285,7 +294,10 @@ void AssetPanel::displayGraph(AssetHandle handle)
         {
             auto mesh    = IO::read_any(files[0]);
             mesh->handle = handle;
+
+            atcg::RevisionStack::startRecording<AssetEditedRevision>(mesh->handle);
             AssetManager::registerAsset(mesh, AssetManager::getMetaData(mesh->handle));
+            atcg::RevisionStack::endRecording();
         }
     }
 }
@@ -299,10 +311,13 @@ void AssetPanel::displayScript(AssetHandle handle)
         auto files = f.result();
         if(!files.empty())
         {
-            auto script = atcg::make_ref<atcg::PythonScript>(files[0]);
-            script->init();
+            auto script    = atcg::make_ref<atcg::PythonScript>(files[0]);
             script->handle = handle;
+
+            atcg::RevisionStack::startRecording<AssetEditedRevision>(script->handle);
+            script->init();
             AssetManager::registerAsset(script, AssetManager::getMetaData(script->handle));
+            atcg::RevisionStack::endRecording();
         }
     }
 }
@@ -311,23 +326,23 @@ void AssetPanel::displayShader(AssetHandle handle)
 {
     auto shader = AssetManager::getAsset<Shader>(handle);
 
-    if(shader)
-    {
-        if(shader->isComputeShader())
-        {
-            _current_compute_path = shader->getComputePath();
-        }
-        else
-        {
-            if(shader->hasGeometryShader())
-            {
-                _current_geometry_path = shader->getComputePath();
-            }
+    // if(shader)
+    // {
+    //     if(shader->isComputeShader())
+    //     {
+    //         _current_compute_path = shader->getComputePath();
+    //     }
+    //     else
+    //     {
+    //         if(shader->hasGeometryShader())
+    //         {
+    //             _current_geometry_path = shader->getComputePath();
+    //         }
 
-            _current_vertex_path   = shader->getVertexPath();
-            _current_fragment_path = shader->getFragmentPath();
-        }
-    }
+    //         _current_vertex_path   = shader->getVertexPath();
+    //         _current_fragment_path = shader->getFragmentPath();
+    //     }
+    // }
 
     if(ImGui::Button("Load Vertex Shader"))
     {
@@ -417,7 +432,10 @@ void AssetPanel::displayShader(AssetHandle handle)
         if(shader)
         {
             shader->handle = handle;
+
+            atcg::RevisionStack::startRecording<AssetEditedRevision>(shader->handle);
             AssetManager::registerAsset(shader, AssetManager::getMetaData(shader->handle));
+            atcg::RevisionStack::endRecording();
         }
     }
 
@@ -455,7 +473,10 @@ void AssetPanel::displayTexture2D(AssetHandle handle)
             auto texture = atcg::Texture2D::create(img);
 
             texture->handle = handle;
+
+            atcg::RevisionStack::startRecording<AssetEditedRevision>(texture->handle);
             AssetManager::registerAsset(texture, AssetManager::getMetaData(texture->handle));
+            atcg::RevisionStack::endRecording();
         }
     }
 
@@ -639,42 +660,50 @@ void AssetPanel::drawAdd()
 
     if(ImGui::BeginPopup("AddPopup"))
     {
+        AssetHandle new_asset = 0;
         if(ImGui::MenuItem("Graph"))
         {
             AssetMetaData data;
             data.type = AssetType::Graph;
             data.name = "graph";
-            AssetManager::registerAsset(data);
+            new_asset = AssetManager::registerAsset(data);
         }
         if(ImGui::MenuItem("Material"))
         {
-            AssetManager::registerAsset(atcg::make_ref<Material>(), "material");
+            new_asset = AssetManager::registerAsset(atcg::make_ref<Material>(), "material");
         }
         if(ImGui::MenuItem("Script"))
         {
             AssetMetaData data;
             data.type = AssetType::Script;
             data.name = "script";
-            AssetManager::registerAsset(data);
+            new_asset = AssetManager::registerAsset(data);
         }
         if(ImGui::MenuItem("Shader"))
         {
             AssetMetaData data;
             data.type = AssetType::Shader;
             data.name = "shader";
-            AssetManager::registerAsset(data);
+            new_asset = AssetManager::registerAsset(data);
         }
         if(ImGui::MenuItem("Texture"))
         {
             AssetMetaData data;
             data.type = AssetType::Texture2D;
             data.name = "texture";
-            AssetManager::registerAsset(data);
+            new_asset = AssetManager::registerAsset(data);
         }
         if(ImGui::MenuItem("Scene"))
         {
-            AssetManager::registerAsset(atcg::make_ref<Scene>(), "scene");
+            new_asset = AssetManager::registerAsset(atcg::make_ref<Scene>(), "scene");
         }
+
+        if(AssetManager::isAssetHandleValid(new_asset))
+        {
+            atcg::RevisionStack::startRecording<AssetAddedRevision>(new_asset);
+            atcg::RevisionStack::endRecording();
+        }
+
         ImGui::EndPopup();
     }
 }
@@ -708,7 +737,9 @@ void AssetPanel::renderPanel()
         memcpy(buffer, tag.c_str(), sizeof(buffer));
         if(ImGui::InputText("Name##asset", buffer, sizeof(buffer)))
         {
+            atcg::RevisionStack::startRecording<AssetEditedRevision>(_selected_handle);
             AssetManager::updateName(_selected_handle, std::string(buffer));
+            atcg::RevisionStack::endRecording();
         }
 
         if(data.type == AssetType::Material)
@@ -752,7 +783,9 @@ void AssetPanel::renderPanel()
         ImGui::BeginDisabled(disabled);
         if(ImGui::Button("Delete"))
         {
+            atcg::RevisionStack::startRecording<AssetRemovedRevision>(_selected_handle);
             AssetManager::removeAsset(_selected_handle);
+            atcg::RevisionStack::endRecording();
 
             selectAsset(0);
         }

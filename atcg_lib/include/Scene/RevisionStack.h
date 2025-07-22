@@ -7,6 +7,7 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
+#include <Asset/AssetManagerSystem.h>
 
 #include <stack>
 
@@ -135,6 +136,23 @@ public:
         ATCG_ASSERT(_current_revision == nullptr, "Can only have one revision at a time");
 
         _current_revision = atcg::make_ref<RevisionType>(scene, entity);
+        _current_revision->record_start_state();
+    }
+
+    /**
+     * @brief Start recording a revision.
+     * Each revision that should be handled by the system has to be recorded. There can always be only one recording at
+     * a time. The recording has to be stopped using RevisionSystem::endRecording before a new recording can be started.
+     *
+     * @tparam RevisionType The type of the revision that should be recorded
+     * @param asset The asset
+     */
+    template<typename RevisionType>
+    ATCG_INLINE void startRecording(AssetHandle asset)
+    {
+        ATCG_ASSERT(_current_revision == nullptr, "Can only have one revision at a time");
+
+        _current_revision = atcg::make_ref<RevisionType>(asset);
         _current_revision->record_start_state();
     }
 
@@ -607,6 +625,135 @@ private:
     atcg::ref_ptr<RevisionType2> _revision2;
 };
 
+class AssetRevision : public Revision
+{
+public:
+    AssetRevision(AssetHandle asset) : _asset(asset) {}
+
+protected:
+    AssetHandle _asset;
+};
+
+class AssetAddedRevision : public AssetRevision
+{
+public:
+    AssetAddedRevision(AssetHandle asset) : AssetRevision(asset) {}
+
+    /**
+     * @brief Callback that is called on a redo
+     */
+    virtual void apply() override { AssetManager::registerAsset(_new_asset, _new_data); }
+
+    /**
+     * @brief Callback that is called on a rollback
+     */
+    virtual void rollback() override { AssetManager::removeAsset(_asset); }
+
+    /**
+     * @brief Function that is called at the start of a capture. This should store all relevant information before any
+     * changes to the scene elements were made.
+     */
+    virtual void record_start_state() override {}
+
+    /**
+     * @brief Function that is called at the end of a capture. This should store all relevant information after the
+     * scene element was changed.
+     */
+    virtual void record_end_state() override
+    {
+        _new_asset = AssetManager::getAsset(_asset);
+        _new_data  = AssetManager::getMetaData(_asset);
+    }
+
+private:
+    atcg::ref_ptr<Asset> _new_asset;
+    AssetMetaData _new_data;
+};
+
+class AssetRemovedRevision : public AssetRevision
+{
+public:
+    AssetRemovedRevision(AssetHandle asset) : AssetRevision(asset) {}
+
+    /**
+     * @brief Callback that is called on a redo
+     */
+    virtual void apply() override { AssetManager::removeAsset(_asset); }
+
+    /**
+     * @brief Callback that is called on a rollback
+     */
+    virtual void rollback() override { AssetManager::registerAsset(_old_asset, _old_data); }
+
+    /**
+     * @brief Function that is called at the start of a capture. This should store all relevant information before any
+     * changes to the scene elements were made.
+     */
+    virtual void record_start_state() override
+    {
+        _old_asset = AssetManager::getAsset(_asset);
+        _old_data  = AssetManager::getMetaData(_asset);
+    }
+
+    /**
+     * @brief Function that is called at the end of a capture. This should store all relevant information after the
+     * scene element was changed.
+     */
+    virtual void record_end_state() override {}
+
+private:
+    atcg::ref_ptr<Asset> _old_asset;
+    AssetMetaData _old_data;
+};
+
+class AssetEditedRevision : public AssetRevision
+{
+public:
+    AssetEditedRevision(AssetHandle asset) : AssetRevision(asset) {}
+
+    /**
+     * @brief Callback that is called on a redo
+     */
+    virtual void apply() override
+    {
+        if(_new_asset) AssetManager::registerAsset(_new_asset, _new_data);
+    }
+
+    /**
+     * @brief Callback that is called on a rollback
+     */
+    virtual void rollback() override
+    {
+        if(_old_asset) AssetManager::registerAsset(_old_asset, _old_data);
+    }
+
+    /**
+     * @brief Function that is called at the start of a capture. This should store all relevant information before any
+     * changes to the scene elements were made.
+     */
+    virtual void record_start_state() override
+    {
+        _old_asset = AssetManager::getAsset(_asset);
+        _old_data  = AssetManager::getMetaData(_asset);
+    }
+
+    /**
+     * @brief Function that is called at the end of a capture. This should store all relevant information after the
+     * scene element was changed.
+     */
+    virtual void record_end_state() override
+    {
+        _new_asset = AssetManager::getAsset(_asset);
+        _new_data  = AssetManager::getMetaData(_asset);
+    }
+
+private:
+    atcg::ref_ptr<Asset> _old_asset;
+    AssetMetaData _old_data;
+    atcg::ref_ptr<Asset> _new_asset;
+    AssetMetaData _new_data;
+};
+
 namespace RevisionStack
 {
 /**
@@ -623,6 +770,21 @@ ATCG_INLINE void startRecording(const atcg::ref_ptr<atcg::Scene>& scene, atcg::E
 {
     RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
     system->startRecording<RevisionType>(scene, entity);
+}
+
+/**
+ * @brief Start recording a revision.
+ * Each revision that should be handled by the system has to be recorded. There can always be only one recording at
+ * a time. The recording has to be stopped using RevisionSystem::endRecording before a new recording can be started.
+ *
+ * @tparam RevisionType The type of the revision that should be recorded
+ * @param asset The asset
+ */
+template<typename RevisionType>
+ATCG_INLINE void startRecording(AssetHandle asset)
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    system->startRecording<RevisionType>(asset);
 }
 
 /**
