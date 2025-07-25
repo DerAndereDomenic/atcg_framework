@@ -702,6 +702,9 @@ void AssetPanel::drawAdd()
         {
             atcg::RevisionStack::startRecording<AssetAddedRevision>(new_asset);
             atcg::RevisionStack::endRecording();
+
+            // Directly select created asset
+            selectAsset(new_asset);
         }
 
         ImGui::EndPopup();
