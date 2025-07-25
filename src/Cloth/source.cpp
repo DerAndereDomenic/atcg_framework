@@ -89,8 +89,6 @@ public:
 
         atcg::Entity camera_entity = scene->createEntity("EditorCamera");
         camera_entity.addComponent<atcg::EditorCameraComponent>(camera_controller->getCamera());
-
-        panel = atcg::GUI::SceneHierarchyPanel(scene);
     }
 
     // This gets called each frame
@@ -111,12 +109,12 @@ public:
         {
             atcg::Entity entity   = {e, scene.get()};
             auto& geometry        = entity.getComponent<atcg::GeometryComponent>();
-            atcg::Vertex* dev_ptr = geometry.graph->getVerticesBuffer()->getDevicePointer<atcg::Vertex>();
+            atcg::Vertex* dev_ptr = geometry.graph()->getVerticesBuffer()->getDevicePointer<atcg::Vertex>();
             atcg::BufferView<glm::vec3> positions((uint8_t*)dev_ptr,
-                                                  sizeof(atcg::Vertex) * geometry.graph->n_vertices(),
+                                                  sizeof(atcg::Vertex) * geometry.graph()->n_vertices(),
                                                   sizeof(atcg::Vertex));
             simulate(positions, grid_size * grid_size, time);
-            geometry.graph->getVerticesBuffer()->unmapPointers();
+            geometry.graph()->getVerticesBuffer()->unmapPointers();
         }
 
         atcg::Dictionary context;
@@ -153,10 +151,10 @@ public:
 
                 entities   = scene->getEntitiesByName("Plane");
                 auto& comp = entities[0].getComponent<atcg::MeshRenderComponent>();
-                comp.shader->setFloat("checker_size", 0.1f);
+                comp.shader()->setFloat("checker_size", 0.1f);
 
                 hovered_entity = {entt::null, scene.get()};
-                panel          = atcg::GUI::SceneHierarchyPanel(scene);
+                panel          = atcg::GUI::SceneHierarchyPanel();
                 panel.selectEntity(hovered_entity);
             }
 
@@ -179,7 +177,7 @@ public:
             ImGui::End();
         }
 
-        panel.renderPanel();
+        panel.renderPanel(scene);
         hovered_entity = panel.getSelectedEntity();
 
         atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());

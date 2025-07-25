@@ -335,7 +335,7 @@ public:
         light.intensity  = 10.0f;
         point_light.addComponent<atcg::TransformComponent>(glm::vec3(0, 5, 0));
 
-        panel = atcg::GUI::SceneHierarchyPanel(scene);
+        panel = atcg::GUI::SceneHierarchyPanel();
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -406,7 +406,7 @@ public:
             ImGui::End();
         }
 
-        panel.renderPanel();
+        panel.renderPanel(scene);
         hovered_entity = panel.getSelectedEntity();
 
         atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());
