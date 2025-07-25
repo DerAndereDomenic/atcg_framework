@@ -7,6 +7,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/ContextManager.h>
 #include <Scene/RevisionStack.h>
+#include <Asset/AssetManagerSystem.h>
 
 // Define a custom test environment class
 class ATCGTestEnvironment : public ::testing::Environment
@@ -22,6 +23,10 @@ public:
         _logger->set_level(spdlog::level::trace);
         atcg::SystemRegistry::init();
         atcg::SystemRegistry::instance()->registerSystem(_logger.get());
+
+        _asset_manager = atcg::make_ref<atcg::AssetManagerSystem>();
+        atcg::SystemRegistry::instance()->registerSystem(_asset_manager.get());
+
 
         _context_manager = atcg::make_ref<atcg::ContextManagerSystem>();
         atcg::SystemRegistry::instance()->registerSystem(_context_manager.get());
@@ -55,6 +60,7 @@ private:
     atcg::ref_ptr<atcg::RendererSystem> _renderer;
     atcg::ref_ptr<atcg::Window> _window;
     atcg::ref_ptr<atcg::RevisionSystem> _revision_system;
+    atcg::ref_ptr<atcg::AssetManagerSystem> _asset_manager;
 };
 
 int main(int argc, char **argv)
