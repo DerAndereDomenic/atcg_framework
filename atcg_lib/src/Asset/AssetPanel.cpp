@@ -730,10 +730,9 @@ void AssetPanel::drawAdd()
 #endif
 }
 
-void AssetPanel::renderPanel()
+void AssetPanel::drawAssetPanel()
 {
 #ifndef ATCG_HEADLESS
-
     ImGui::Begin("Assets");
 
     if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
@@ -745,7 +744,11 @@ void AssetPanel::renderPanel()
     drawAssetList();
 
     ImGui::End();
+#endif
+}
 
+void AssetPanel::drawAssetEditor()
+{
     ImGui::Begin("Asset Editor");
 
     if(_selected_handle != 0)
@@ -815,6 +818,15 @@ void AssetPanel::renderPanel()
     }
 
     ImGui::End();
+}
+
+void AssetPanel::renderPanel()
+{
+#ifndef ATCG_HEADLESS
+
+    drawAssetPanel();
+
+    drawAssetEditor();
 
 #endif
 }

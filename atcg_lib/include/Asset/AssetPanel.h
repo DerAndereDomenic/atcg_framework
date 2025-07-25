@@ -20,12 +20,16 @@ public:
 
     /**
      * @brief Select an asset
-     * 
+     *
      * @param handle The handle
      */
     void selectAsset(AssetHandle handle);
 
 private:
+    void drawAssetPanel();
+
+    void drawAssetEditor();
+
     void drawAssetList();
 
     void drawAdd();
