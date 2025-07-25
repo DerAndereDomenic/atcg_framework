@@ -83,17 +83,6 @@ void AssetManagerSystem::updateName(AssetHandle handle, const std::string& name)
     data.name  = name;
 }
 
-AssetHandle AssetManagerSystem::registerAsset(const std::filesystem::path& path)
-{
-    AssetHandle handle;
-    AssetMetaData data;
-    data.type               = detail::getAssetTypeFromFileExtension(path.extension());
-    data.name               = path.stem().string();
-    _asset_registry[handle] = data;
-
-    return handle;
-}
-
 AssetHandle AssetManagerSystem::registerAsset(const AssetMetaData& data)
 {
     AssetHandle handle;
@@ -113,24 +102,6 @@ AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset,
     _asset_registry[asset->handle] = data;
 
     return asset->handle;
-}
-
-AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data)
-{
-    _loaded_assets[asset->handle] = asset;
-
-    _asset_registry[asset->handle] = data;
-
-    return asset->handle;
-}
-
-AssetHandle AssetManagerSystem::importAsset(const std::filesystem::path& path)
-{
-    auto handle = registerAsset(path);
-
-    getAsset(handle);
-
-    return handle;
 }
 
 void AssetManagerSystem::unloadAsset(AssetHandle handle)

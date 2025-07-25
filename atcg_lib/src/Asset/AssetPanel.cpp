@@ -274,7 +274,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
     {
         atcg::RevisionStack::startRecording<AssetEditedRevision>(material_->handle);
         atcg::ref_ptr<Material> new_material = atcg::make_ref<Material>(material);
-        AssetManager::registerAsset(new_material, AssetManager::getMetaData(new_material->handle));
+        AssetManager::registerAsset(new_material, AssetManager::getMetaData(new_material->handle).name);
         atcg::RevisionStack::endRecording();
     }
 #endif
@@ -299,7 +299,7 @@ void AssetPanel::displayGraph(AssetHandle handle)
             mesh->handle = handle;
 
             atcg::RevisionStack::startRecording<AssetEditedRevision>(mesh->handle);
-            AssetManager::registerAsset(mesh, AssetManager::getMetaData(mesh->handle));
+            AssetManager::registerAsset(mesh, AssetManager::getMetaData(mesh->handle).name);
             atcg::RevisionStack::endRecording();
         }
     }
@@ -321,7 +321,7 @@ void AssetPanel::displayScript(AssetHandle handle)
 
             atcg::RevisionStack::startRecording<AssetEditedRevision>(script->handle);
             script->init();
-            AssetManager::registerAsset(script, AssetManager::getMetaData(script->handle));
+            AssetManager::registerAsset(script, AssetManager::getMetaData(script->handle).name);
             atcg::RevisionStack::endRecording();
         }
     }
@@ -441,7 +441,7 @@ void AssetPanel::displayShader(AssetHandle handle)
             shader->handle = handle;
 
             atcg::RevisionStack::startRecording<AssetEditedRevision>(shader->handle);
-            AssetManager::registerAsset(shader, AssetManager::getMetaData(shader->handle));
+            AssetManager::registerAsset(shader, AssetManager::getMetaData(shader->handle).name);
             atcg::RevisionStack::endRecording();
         }
     }
@@ -485,7 +485,7 @@ void AssetPanel::displayTexture2D(AssetHandle handle)
             texture->handle = handle;
 
             atcg::RevisionStack::startRecording<AssetEditedRevision>(texture->handle);
-            AssetManager::registerAsset(texture, AssetManager::getMetaData(texture->handle));
+            AssetManager::registerAsset(texture, AssetManager::getMetaData(texture->handle).name);
             atcg::RevisionStack::endRecording();
         }
     }

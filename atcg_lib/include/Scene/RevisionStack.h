@@ -642,7 +642,7 @@ public:
     /**
      * @brief Callback that is called on a redo
      */
-    virtual void apply() override { AssetManager::registerAsset(_new_asset, _new_data); }
+    virtual void apply() override { AssetManager::registerAsset(_new_asset, _new_data.name); }
 
     /**
      * @brief Callback that is called on a rollback
@@ -683,7 +683,7 @@ public:
     /**
      * @brief Callback that is called on a rollback
      */
-    virtual void rollback() override { AssetManager::registerAsset(_old_asset, _old_data); }
+    virtual void rollback() override { AssetManager::registerAsset(_old_asset, _old_data.name); }
 
     /**
      * @brief Function that is called at the start of a capture. This should store all relevant information before any
@@ -716,7 +716,7 @@ public:
      */
     virtual void apply() override
     {
-        if(_new_asset) AssetManager::registerAsset(_new_asset, _new_data);
+        if(_new_asset) AssetManager::registerAsset(_new_asset, _new_data.name);
     }
 
     /**
@@ -724,7 +724,7 @@ public:
      */
     virtual void rollback() override
     {
-        if(_old_asset) AssetManager::registerAsset(_old_asset, _old_data);
+        if(_old_asset) AssetManager::registerAsset(_old_asset, _old_data.name);
     }
 
     /**

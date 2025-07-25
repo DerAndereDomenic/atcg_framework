@@ -24,14 +24,25 @@ enum class AssetType : uint16_t
     Shader
 };
 
+/**
+ * @brief A class to model an asset
+ */
 class Asset
 {
 public:
     AssetHandle handle;
 
+    /**
+     * @brief Get the type of the asset
+     *
+     * @return The asset type
+     */
     virtual AssetType getType() const = 0;
 };
 
+/**
+ * @brief A class to model asset meta data
+ */
 struct AssetMetaData
 {
     AssetType type   = AssetType::None;
@@ -40,6 +51,13 @@ struct AssetMetaData
     operator bool() const { return type != AssetType::None; }
 };
 
+/**
+ * @brief Convert Asset Type to string
+ *
+ * @param type The type
+ *
+ * @return The type as string
+ */
 ATCG_INLINE const char* assetTypeToString(AssetType type)
 {
     switch(type)
@@ -63,6 +81,13 @@ ATCG_INLINE const char* assetTypeToString(AssetType type)
     return "AssetType::<Invalid>";
 }
 
+/**
+ * @brief Convert a string to the asset type
+ *
+ * @param str The string
+ *
+ * @return The type
+ */
 ATCG_INLINE AssetType stringToAssetType(std::string_view str)
 {
     if(str == "AssetType::None") return AssetType::None;

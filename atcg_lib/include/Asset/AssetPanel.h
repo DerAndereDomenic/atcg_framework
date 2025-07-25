@@ -7,11 +7,22 @@ namespace atcg
 {
 namespace GUI
 {
+/**
+ * @brief Class to model an asset panel
+ */
 class AssetPanel
 {
 public:
+    /**
+     * @brief Render the panel
+     */
     void renderPanel();
 
+    /**
+     * @brief Select an asset
+     * 
+     * @param handle The handle
+     */
     void selectAsset(AssetHandle handle);
 
 private:

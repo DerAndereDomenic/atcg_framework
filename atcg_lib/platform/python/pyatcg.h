@@ -523,18 +523,11 @@ inline void defineBindings(py::module_& m)
         .def("isAssetLoaded", &atcg::AssetManagerSystem::isAssetLoaded)
         .def("updateName", &atcg::AssetManagerSystem::updateName)
         .def("registerAsset",
-             static_cast<atcg::AssetHandle (atcg::AssetManagerSystem::*)(const std::filesystem::path& path)>(
-                 &atcg::AssetManagerSystem::registerAsset))
-        .def("registerAsset",
              static_cast<atcg::AssetHandle (atcg::AssetManagerSystem::*)(const atcg::AssetMetaData& data)>(
                  &atcg::AssetManagerSystem::registerAsset))
         .def("registerAsset",
              static_cast<atcg::AssetHandle (atcg::AssetManagerSystem::*)(const atcg::ref_ptr<atcg::Asset>& asset,
                                                                          const std::string& name)>(
-                 &atcg::AssetManagerSystem::registerAsset))
-        .def("registerAsset",
-             static_cast<atcg::AssetHandle (atcg::AssetManagerSystem::*)(const atcg::ref_ptr<atcg::Asset>& asset,
-                                                                         const atcg::AssetMetaData& data)>(
                  &atcg::AssetManagerSystem::registerAsset))
         .def("unloadAsset", &atcg::AssetManagerSystem::unloadAsset)
         .def("removeAsset", &atcg::AssetManagerSystem::removeAsset)
@@ -549,14 +542,10 @@ inline void defineBindings(py::module_& m)
         .def("isAssetHandleValid", &atcg::AssetManager::isAssetHandleValid)
         .def("isAssetLoaded", &atcg::AssetManager::isAssetLoaded)
         .def("updateName", &atcg::AssetManager::updateName)
-        .def("registerAsset", [](const std::filesystem::path& path) { return atcg::AssetManager::registerAsset(path); })
         .def("registerAsset", [](const atcg::AssetMetaData& data) { return atcg::AssetManager::registerAsset(data); })
         .def("registerAsset",
              [](const atcg::ref_ptr<atcg::Asset>& asset, const std::string& name)
              { return atcg::AssetManager::registerAsset(asset, name); })
-        .def("registerAsset",
-             [](const atcg::ref_ptr<atcg::Asset>& asset, const atcg::AssetMetaData& data)
-             { return atcg::AssetManager::registerAsset(asset, data); })
         .def("unloadAsset", &atcg::AssetManager::unloadAsset)
         .def("removeAsset", &atcg::AssetManager::removeAsset)
         .def("serializeRegistry", &atcg::AssetManager::serializeRegistry)
