@@ -571,7 +571,7 @@ AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle)
 
             bool is_selected = it->first == current_item;
 
-            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
             {
                 current_item = it->first;
             }
@@ -621,7 +621,7 @@ AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle)
 
             bool is_selected = it->first == current_item;
 
-            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
             {
                 current_item = it->first;
             }
@@ -671,7 +671,7 @@ AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle)
 
             bool is_selected = it->first == current_item;
 
-            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
             {
                 current_item = it->first;
             }
@@ -724,7 +724,7 @@ AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
 
             bool is_selected = it->first == current_item;
 
-            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
             {
                 current_item = it->first;
             }
@@ -774,7 +774,7 @@ AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle
 
             bool is_selected = it->first == current_item;
 
-            if(ImGui::Selectable(it->second.name.c_str(), is_selected))
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
             {
                 current_item = it->first;
             }
