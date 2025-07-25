@@ -6,7 +6,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/ShaderManager.h>
-
+#include <Asset/Project.h>
 
 namespace atcg
 {
@@ -62,6 +62,9 @@ void Application::init(const WindowProps& props)
     SystemRegistry::instance()->registerSystem(_script_engine.get());
 
     Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
+
+    // Create an active project
+    atcg::Project::create("./DefaultProject");
 
     s_instance = this;
 
