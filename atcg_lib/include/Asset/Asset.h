@@ -2,6 +2,8 @@
 
 #include <Core/UUID.h>
 
+#include <Core/Platform.h>
+
 #include <filesystem>
 
 namespace atcg
