@@ -55,8 +55,6 @@ ATCG_INLINE void SceneSerializer::serialize(const std::string& file_path)
 {
     nlohmann::json j;
 
-    j["Scene"] = "Untitled";
-
     auto entity_array = nlohmann::json::array();
 
     auto entity_view = _scene->getAllEntitiesWith<IDComponent>();
