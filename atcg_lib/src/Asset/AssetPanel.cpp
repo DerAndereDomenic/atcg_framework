@@ -639,29 +639,78 @@ void AssetPanel::drawAssetList()
 {
 #ifndef ATCG_HEADLESS
     // Begin a scrollable horizontal region
-    ImGui::BeginChild("AssetListHorizontal", ImVec2(0, 80), false, ImGuiWindowFlags_HorizontalScrollbar);
+    ImGui::BeginChild("AssetListHorizontal", ImVec2(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
     const auto& registry = AssetManager::getAssetRegistry();
+
+    if(_panel_state == AssetType::None)
+    {
+        if(ImGui::Button("Scenes"))
+        {
+            _panel_state = AssetType::Scene;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Textures"))
+        {
+            _panel_state = AssetType::Texture2D;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Materials"))
+        {
+            _panel_state = AssetType::Material;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Models"))
+        {
+            _panel_state = AssetType::Graph;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Scripts"))
+        {
+            _panel_state = AssetType::Script;
+        }
+        ImGui::SameLine();
+        if(ImGui::Button("Shader"))
+        {
+            _panel_state = AssetType::Shader;
+        }
+        ImGui::SameLine();
+    }
+    else
+    {
+        if(ImGui::Button("Back"))
+        {
+            _panel_state = AssetType::None;
+        }
+
+        ImGui::SameLine();
+
+        drawAdd();
+    }
 
     for(auto entry: registry)
     {
         const auto& data = entry.second;
-        auto handle      = entry.first;
-        std::string tag  = data.name;
 
-        bool isSelected = (handle == _selected_handle);
-        if(isSelected) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.9f, 1.0f));
-
-        ImGui::PushID(handle);
-        if(ImGui::Button(tag.c_str()))
+        if(_panel_state == data.type)
         {
-            selectAsset(handle);
+            auto handle     = entry.first;
+            std::string tag = data.name;
+
+            bool isSelected = (handle == _selected_handle);
+            if(isSelected) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.9f, 1.0f));
+
+            ImGui::PushID(handle);
+            if(ImGui::Button(tag.c_str()))
+            {
+                selectAsset(handle);
+            }
+            ImGui::PopID();
+
+            if(isSelected) ImGui::PopStyleColor();    // always pop if you pushed
+
+            ImGui::SameLine();
         }
-        ImGui::PopID();
-
-        if(isSelected) ImGui::PopStyleColor();    // always pop if you pushed
-
-        ImGui::SameLine();
     }
 
     ImGui::EndChild();
@@ -671,47 +720,43 @@ void AssetPanel::drawAssetList()
 void AssetPanel::drawAdd()
 {
 #ifndef ATCG_HEADLESS
-    if(ImGui::Button("Add..."))
-    {
-        ImGui::OpenPopup("AddPopup");
-    }
 
-    if(ImGui::BeginPopup("AddPopup"))
+    if(ImGui::Button("Create new Asset"))
     {
         AssetHandle new_asset = 0;
-        if(ImGui::MenuItem("Graph"))
+        if(_panel_state == AssetType::Graph)
         {
             AssetMetaData data;
             data.type = AssetType::Graph;
             data.name = "graph";
             new_asset = AssetManager::registerAsset(data);
         }
-        if(ImGui::MenuItem("Material"))
+        if(_panel_state == AssetType::Material)
         {
             new_asset = AssetManager::registerAsset(atcg::make_ref<Material>(), "material");
         }
-        if(ImGui::MenuItem("Script"))
+        if(_panel_state == AssetType::Script)
         {
             AssetMetaData data;
             data.type = AssetType::Script;
             data.name = "script";
             new_asset = AssetManager::registerAsset(data);
         }
-        if(ImGui::MenuItem("Shader"))
+        if(_panel_state == AssetType::Shader)
         {
             AssetMetaData data;
             data.type = AssetType::Shader;
             data.name = "shader";
             new_asset = AssetManager::registerAsset(data);
         }
-        if(ImGui::MenuItem("Texture"))
+        if(_panel_state == AssetType::Texture2D)
         {
             AssetMetaData data;
             data.type = AssetType::Texture2D;
             data.name = "texture";
             new_asset = AssetManager::registerAsset(data);
         }
-        if(ImGui::MenuItem("Scene"))
+        if(_panel_state == AssetType::Scene)
         {
             new_asset = AssetManager::registerAsset(atcg::make_ref<Scene>(), "scene");
         }
@@ -724,8 +769,6 @@ void AssetPanel::drawAdd()
             // Directly select created asset
             selectAsset(new_asset);
         }
-
-        ImGui::EndPopup();
     }
 #endif
 }
@@ -740,7 +783,6 @@ void AssetPanel::drawAssetPanel()
         selectAsset(0);
     }
 
-    drawAdd();
     drawAssetList();
 
     ImGui::End();

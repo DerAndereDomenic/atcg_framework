@@ -53,6 +53,8 @@ private:
     std::string _current_fragment_path = "";
     std::string _current_geometry_path = "";
     std::string _current_compute_path  = "";
+
+    AssetType _panel_state = AssetType::None;
 };
 }    // namespace GUI
 }    // namespace atcg
