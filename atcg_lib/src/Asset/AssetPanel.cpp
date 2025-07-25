@@ -18,6 +18,7 @@ namespace GUI
 
 void AssetPanel::displayMaterial(AssetHandle handle)
 {
+#ifndef ATCG_HEADLESS
     const std::string key = "material";
     auto material_        = AssetManager::getAsset<Material>(handle);
 
@@ -276,10 +277,12 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         AssetManager::registerAsset(new_material, AssetManager::getMetaData(new_material->handle));
         atcg::RevisionStack::endRecording();
     }
+#endif
 }
 
 void AssetPanel::displayGraph(AssetHandle handle)
 {
+#ifndef ATCG_HEADLESS
     auto graph     = atcg::AssetManager::getAsset<Graph>(handle);
     int n_vertices = graph ? graph->n_vertices() : 0;
     int n_faces    = graph ? graph->n_faces() : 0;
@@ -300,10 +303,12 @@ void AssetPanel::displayGraph(AssetHandle handle)
             atcg::RevisionStack::endRecording();
         }
     }
+#endif
 }
 
 void AssetPanel::displayScript(AssetHandle handle)
 {
+#ifndef ATCG_HEADLESS
     if(ImGui::Button("Load Script"))
     {
         auto f =
@@ -320,10 +325,12 @@ void AssetPanel::displayScript(AssetHandle handle)
             atcg::RevisionStack::endRecording();
         }
     }
+#endif
 }
 
 void AssetPanel::displayShader(AssetHandle handle)
 {
+#ifndef ATCG_HEADLESS
     auto shader = AssetManager::getAsset<Shader>(handle);
 
     // if(shader)
@@ -447,10 +454,13 @@ void AssetPanel::displayShader(AssetHandle handle)
     {
         ImGui::Text("Invalid Shader");
     }
+
+#endif
 }
 
 void AssetPanel::displayTexture2D(AssetHandle handle)
 {
+#ifndef ATCG_HEADLESS
     if(ImGui::Button(("Load Image##tex2dasset")))
     {
         auto f     = pfd::open_file("Choose files to read",
@@ -491,10 +501,13 @@ void AssetPanel::displayTexture2D(AssetHandle handle)
                      ImVec2 {0, 1},
                      ImVec2 {1, 0});
     }
+
+#endif
 }
 
 void AssetPanel::displayScene(AssetHandle handle)
 {
+#ifndef ATCG_HEADLESS
     auto scene = AssetManager::getAsset<Scene>(handle);
 
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
@@ -618,10 +631,13 @@ void AssetPanel::displayScene(AssetHandle handle)
     {
         Project::getActive()->setActiveScene(handle);
     }
+
+#endif
 }
 
 void AssetPanel::drawAssetList()
 {
+#ifndef ATCG_HEADLESS
     // Begin a scrollable horizontal region
     ImGui::BeginChild("AssetListHorizontal", ImVec2(0, 80), false, ImGuiWindowFlags_HorizontalScrollbar);
 
@@ -649,10 +665,12 @@ void AssetPanel::drawAssetList()
     }
 
     ImGui::EndChild();
+#endif
 }
 
 void AssetPanel::drawAdd()
 {
+#ifndef ATCG_HEADLESS
     if(ImGui::Button("Add..."))
     {
         ImGui::OpenPopup("AddPopup");
@@ -709,6 +727,7 @@ void AssetPanel::drawAdd()
 
         ImGui::EndPopup();
     }
+#endif
 }
 
 void AssetPanel::renderPanel()
