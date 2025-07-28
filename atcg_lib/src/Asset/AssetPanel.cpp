@@ -315,6 +315,7 @@ void AssetPanel::displayGraph(AssetHandle handle)
     auto graph     = atcg::AssetManager::getAsset<Graph>(handle);
     int n_vertices = graph ? graph->n_vertices() : 0;
     int n_faces    = graph ? graph->n_faces() : 0;
+    ImGui::Text(("Type: " + graphTypeToString(graph->type())).c_str());
     ImGui::Text(("Vertices: " + std::to_string(n_vertices)).c_str());
     ImGui::Text(("Faces: " + std::to_string(n_faces)).c_str());
     if(ImGui::Button("Import Mesh##GeometryComponent"))
@@ -338,6 +339,9 @@ void AssetPanel::displayGraph(AssetHandle handle)
 void AssetPanel::displayScript(AssetHandle handle)
 {
 #ifndef ATCG_HEADLESS
+
+    auto current_script = AssetManager::getAsset<PythonScript>(handle);
+
     if(ImGui::Button("Load Script"))
     {
         auto f =
@@ -353,6 +357,12 @@ void AssetPanel::displayScript(AssetHandle handle)
             AssetManager::registerAsset(script, AssetManager::getMetaData(script->handle).name);
             atcg::RevisionStack::endRecording();
         }
+    }
+
+    if(current_script)
+    {
+        std::string source = current_script->getSource();
+        ImGui::TextUnformatted(source.c_str());
     }
 #endif
 }
@@ -458,7 +468,10 @@ void AssetPanel::displayShader(AssetHandle handle)
             {
                 shader = atcg::make_ref<Shader>(_current_vertex_path, _current_fragment_path, _current_geometry_path);
             }
-            shader = atcg::make_ref<Shader>(_current_vertex_path, _current_fragment_path);
+            else
+            {
+                shader = atcg::make_ref<Shader>(_current_vertex_path, _current_fragment_path);
+            }
         }
         else
         {
@@ -477,7 +490,40 @@ void AssetPanel::displayShader(AssetHandle handle)
 
     if(shader)
     {
-        ImGui::Text("Valid Shader");
+        if(shader->isComputeShader())
+        {
+            auto cs_source = shader->getSource(atcg::ShaderType::COMPUTE);
+
+            ImGui::Text("Compute Shader:");
+            ImGui::TextUnformatted(cs_source.c_str());
+            ImGui::Separator();
+        }
+        else
+        {
+            {
+                auto vs_source = shader->getSource(atcg::ShaderType::VERTEX);
+
+                ImGui::Text("Vertex Shader:");
+                ImGui::TextUnformatted(vs_source.c_str());
+                ImGui::Separator();
+            }
+
+            {
+                auto fs_source = shader->getSource(atcg::ShaderType::FRAGMENT);
+
+                ImGui::Text("Fragment Shader:");
+                ImGui::TextUnformatted(fs_source.c_str());
+                ImGui::Separator();
+            }
+
+            if(shader->hasGeometryShader())
+            {
+                auto gs_source = shader->getSource(atcg::ShaderType::GEOMETRY);
+
+                ImGui::Text("Geometry Shader:");
+                ImGui::TextUnformatted(gs_source.c_str());
+            }
+        }
     }
     else
     {
@@ -526,7 +572,7 @@ void AssetPanel::displayTexture2D(AssetHandle handle)
         float content_scale = atcg::Application::get()->getWindow()->getContentScale();
         float aspect_ratio  = (float)texture->width() / (float)texture->height();
         ImGui::Image((ImTextureID)texture->getID(),
-                     ImVec2(content_scale * 128, content_scale * 128 / aspect_ratio),
+                     ImVec2(content_scale * 256, content_scale * 256 / aspect_ratio),
                      ImVec2 {0, 1},
                      ImVec2 {1, 0});
     }
