@@ -10,11 +10,40 @@
 #include <Scene/ComponentGUIHandler.h>
 #include <Asset/Project.h>
 #include <Scene/Scene.h>
+#include <Core/Path.h>
 
 namespace atcg
 {
 namespace GUI
 {
+
+AssetPanel::AssetPanel()
+{
+    {
+        auto img     = atcg::IO::imread((atcg::resource_directory() / "folder_icon.png").string());
+        _folder_icon = atcg::Texture2D::create(img);
+    }
+
+    {
+        auto img     = atcg::IO::imread((atcg::resource_directory() / "script_icon.png").string());
+        _script_icon = atcg::Texture2D::create(img);
+    }
+
+    {
+        auto img       = atcg::IO::imread((atcg::resource_directory() / "material_icon.png").string());
+        _material_icon = atcg::Texture2D::create(img);
+    }
+
+    {
+        auto img   = atcg::IO::imread((atcg::resource_directory() / "mesh_icon.png").string());
+        _mesh_icon = atcg::Texture2D::create(img);
+    }
+
+    {
+        auto img    = atcg::IO::imread((atcg::resource_directory() / "image_icon.png").string());
+        _image_icon = atcg::Texture2D::create(img);
+    }
+}
 
 void AssetPanel::displayMaterial(AssetHandle handle)
 {
@@ -635,6 +664,56 @@ void AssetPanel::displayScene(AssetHandle handle)
 #endif
 }
 
+bool ImageTextButton(ImTextureID textureID,
+                     const char* label,
+                     ImVec2 imageSize,
+                     float spacing  = 4.0f,
+                     ImVec2 padding = ImVec2(4, 4))
+{
+    ImDrawList* drawList = ImGui::GetWindowDrawList();
+    ImVec2 textSize      = ImGui::CalcTextSize(label);
+
+    // compute button size
+    float buttonWidth  = std::max(imageSize.x, textSize.x) + padding.x * 2.0f;
+    float buttonHeight = imageSize.y + spacing + textSize.y + padding.y * 2.0f;
+    ImVec2 buttonSize(buttonWidth, buttonHeight);
+
+    // position
+    ImVec2 pos = ImGui::GetCursorScreenPos();
+
+    // handle button interaction
+    bool clicked = ImGui::InvisibleButton(label, buttonSize);
+
+    // Draw background highlight based on state
+    ImU32 col = 0;
+    if(ImGui::IsItemActive())
+        col = ImGui::GetColorU32(ImGuiCol_ButtonActive);
+    else if(ImGui::IsItemHovered())
+        col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
+
+    if(col != 0)
+    {
+        drawList->AddRectFilled(pos,
+                                ImVec2(pos.x + buttonSize.x, pos.y + buttonSize.y),
+                                col,
+                                ImGui::GetStyle().FrameRounding);
+    }
+
+    // draw image
+    ImVec2 imagePos = ImVec2(pos.x + (buttonWidth - imageSize.x) * 0.5f, pos.y + padding.y);
+    drawList->AddImage(textureID,
+                       imagePos,
+                       ImVec2(imagePos.x + imageSize.x, imagePos.y + imageSize.y),
+                       ImVec2 {0, 1},
+                       ImVec2 {1, 0});
+
+    // draw text
+    ImVec2 textPos = ImVec2(pos.x + (buttonWidth - textSize.x) * 0.5f, imagePos.y + imageSize.y + spacing);
+    drawList->AddText(textPos, ImGui::GetColorU32(ImGuiCol_Text), label);
+
+    return clicked;
+}
+
 void AssetPanel::drawAssetList()
 {
 #ifndef ATCG_HEADLESS
@@ -643,34 +722,47 @@ void AssetPanel::drawAssetList()
 
     const auto& registry = AssetManager::getAssetRegistry();
 
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     if(_panel_state == AssetType::None)
     {
-        if(ImGui::Button("Scenes"))
+        if(ImageTextButton((ImTextureID)_folder_icon->getID(),
+                           "Scenes",
+                           ImVec2(content_scale * 64, content_scale * 64)))
         {
             _panel_state = AssetType::Scene;
         }
         ImGui::SameLine();
-        if(ImGui::Button("Textures"))
+        if(ImageTextButton((ImTextureID)_folder_icon->getID(),
+                           "Textures",
+                           ImVec2(content_scale * 64, content_scale * 64)))
         {
             _panel_state = AssetType::Texture2D;
         }
         ImGui::SameLine();
-        if(ImGui::Button("Materials"))
+        if(ImageTextButton((ImTextureID)_folder_icon->getID(),
+                           "Materials",
+                           ImVec2(content_scale * 64, content_scale * 64)))
         {
             _panel_state = AssetType::Material;
         }
         ImGui::SameLine();
-        if(ImGui::Button("Models"))
+        if(ImageTextButton((ImTextureID)_folder_icon->getID(),
+                           "Models",
+                           ImVec2(content_scale * 64, content_scale * 64)))
         {
             _panel_state = AssetType::Graph;
         }
         ImGui::SameLine();
-        if(ImGui::Button("Scripts"))
+        if(ImageTextButton((ImTextureID)_folder_icon->getID(),
+                           "Scripts",
+                           ImVec2(content_scale * 64, content_scale * 64)))
         {
             _panel_state = AssetType::Script;
         }
         ImGui::SameLine();
-        if(ImGui::Button("Shader"))
+        if(ImageTextButton((ImTextureID)_folder_icon->getID(),
+                           "Shader",
+                           ImVec2(content_scale * 64, content_scale * 64)))
         {
             _panel_state = AssetType::Shader;
         }
@@ -700,8 +792,23 @@ void AssetPanel::drawAssetList()
             bool isSelected = (handle == _selected_handle);
             if(isSelected) ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f, 0.5f, 0.9f, 1.0f));
 
+            auto icon = _script_icon;
+
+            if(data.type == AssetType::Material)
+            {
+                icon = _material_icon;
+            }
+            else if(data.type == AssetType::Graph)
+            {
+                icon = _mesh_icon;
+            }
+            else if(data.type == AssetType::Texture2D)
+            {
+                icon = _image_icon;
+            }
+
             ImGui::PushID(handle);
-            if(ImGui::Button(tag.c_str()))
+            if(ImageTextButton((ImTextureID)icon->getID(), tag.c_str(), ImVec2(content_scale * 96, content_scale * 96)))
             {
                 selectAsset(handle);
             }

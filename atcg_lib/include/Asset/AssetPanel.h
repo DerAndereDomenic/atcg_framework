@@ -14,6 +14,11 @@ class AssetPanel
 {
 public:
     /**
+     * @brief Constructor
+     */
+    AssetPanel();
+
+    /**
      * @brief Render the panel
      */
     void renderPanel();
@@ -55,6 +60,12 @@ private:
     std::string _current_compute_path  = "";
 
     AssetType _panel_state = AssetType::None;
+
+    atcg::ref_ptr<Texture2D> _folder_icon;
+    atcg::ref_ptr<Texture2D> _script_icon;
+    atcg::ref_ptr<Texture2D> _material_icon;
+    atcg::ref_ptr<Texture2D> _mesh_icon;
+    atcg::ref_ptr<Texture2D> _image_icon;
 };
 }    // namespace GUI
 }    // namespace atcg
