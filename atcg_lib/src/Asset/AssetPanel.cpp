@@ -315,7 +315,7 @@ void AssetPanel::displayGraph(AssetHandle handle)
     auto graph     = atcg::AssetManager::getAsset<Graph>(handle);
     int n_vertices = graph ? graph->n_vertices() : 0;
     int n_faces    = graph ? graph->n_faces() : 0;
-    ImGui::Text(("Type: " + graphTypeToString(graph->type())).c_str());
+    if(graph) ImGui::Text(("Type: " + graphTypeToString(graph->type())).c_str());
     ImGui::Text(("Vertices: " + std::to_string(n_vertices)).c_str());
     ImGui::Text(("Faces: " + std::to_string(n_faces)).c_str());
     if(ImGui::Button("Import Mesh##GeometryComponent"))
