@@ -21,22 +21,20 @@ public:
         atcg::Application::get()->enableDockSpace(true);
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
-        project = atcg::Project::create("../New Project");
-
         auto skybox         = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
         auto skybox_texture = atcg::Texture2D::create(skybox);
         atcg::AssetManager::registerAsset(skybox_texture, "skybox");
 
         auto scene = atcg::IO::read_scene((atcg::resource_directory() / "test_scene.obj").string());
-        project->setActiveScene(scene);
-        project->getActiveScene()->setSkybox(skybox_texture);
+        atcg::Project::getActive()->setActiveScene(scene);
+        atcg::Project::getActive()->getActiveScene()->setSkybox(skybox_texture);
 
         {
-            auto sphere  = project->getActiveScene()->getEntitiesByName("Icosphere").front();
+            auto sphere  = atcg::Project::getActive()->getActiveScene()->getEntitiesByName("Icosphere").front();
             auto& script = sphere.addComponent<atcg::ScriptComponent>(atcg::make_ref<atcg::PythonScript>("./src/PBR/"
                                                                                                          "bounce.py"));
             script.script()->init();
-            script.script()->onAttach(project->getActiveScene(), sphere);
+            script.script()->onAttach(atcg::Project::getActive()->getActiveScene(), sphere);
         }
 
         if(atcg::VR::isVRAvailable())
@@ -52,7 +50,7 @@ public:
             camera_controller = atcg::make_ref<atcg::VRController>(
                 atcg::make_ref<atcg::PerspectiveCamera>(extrinsics_left, instrinsics_left),
                 atcg::make_ref<atcg::PerspectiveCamera>(extrinsics_right, instrinsics_right));
-            atcg::VR::initControllerMeshes(project->getActiveScene());
+            atcg::VR::initControllerMeshes(atcg::Project::getActive()->getActiveScene());
         }
         else
         {
@@ -64,7 +62,7 @@ public:
                 atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
         }
 
-        project->getActiveScene()->setCamera(camera_controller->getCamera());
+        atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
 
         // Instance Buffer Test
         {
@@ -99,7 +97,7 @@ public:
                 atcg::make_ref<atcg::VertexBuffer>(colors.data(), colors.size() * sizeof(glm::vec4));
             vbo_colors->setLayout({{atcg::ShaderDataType::Float4, "color"}});
 
-            auto entity = project->getActiveScene()->createEntity("Instances");
+            auto entity = atcg::Project::getActive()->getActiveScene()->createEntity("Instances");
             entity.addComponent<atcg::TransformComponent>();
             entity.addComponent<atcg::GeometryComponent>(sphere);
             auto& instances = entity.addComponent<atcg::InstanceRenderComponent>();
@@ -114,7 +112,7 @@ public:
         performance_panel.registerFrameTime(delta_time);
         camera_controller->onUpdate(delta_time);
 
-        atcg::Scripting::handleScriptUpdates(project->getActiveScene(), delta_time);
+        atcg::Scripting::handleScriptUpdates(atcg::Project::getActive()->getActiveScene(), delta_time);
 
         atcg::Renderer::clear();
 
@@ -135,10 +133,10 @@ public:
 
             atcg::Renderer::clear();
 
-            project->getActiveScene()->draw(controller->getCameraLeft());
+            atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraLeft());
 
-            atcg::Renderer::drawCameras(project->getActiveScene(), controller->getCameraLeft());
-            atcg::Renderer::drawLights(project->getActiveScene(), controller->getCameraLeft());
+            atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), controller->getCameraLeft());
+            atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), controller->getCameraLeft());
 
             atcg::Renderer::drawCADGrid(controller->getCameraLeft());
 
@@ -151,10 +149,10 @@ public:
 
             atcg::Renderer::clear();
 
-            project->getActiveScene()->draw(controller->getCameraRight());
+            atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraRight());
 
-            atcg::Renderer::drawCameras(project->getActiveScene(), controller->getCameraRight());
-            atcg::Renderer::drawLights(project->getActiveScene(), controller->getCameraRight());
+            atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), controller->getCameraRight());
+            atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), controller->getCameraRight());
 
             atcg::Renderer::drawCADGrid(controller->getCameraRight());
 
@@ -172,10 +170,10 @@ public:
         {
             atcg::Renderer::clear();
 
-            project->getActiveScene()->draw(camera_controller->getCamera());
+            atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera());
 
-            atcg::Renderer::drawCameras(project->getActiveScene(), camera_controller->getCamera());
-            atcg::Renderer::drawLights(project->getActiveScene(), camera_controller->getCamera());
+            atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
+            atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
 
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
         }
@@ -188,27 +186,56 @@ public:
 
         if(ImGui::BeginMenu("File"))
         {
-            if(ImGui::MenuItem("Save"))
+            if(ImGui::MenuItem("New"))
             {
-                // atcg::Serialization::SceneSerializer serializer(scene);
+                atcg::Project::create("DefaultProject");
+                atcg::AssetManager::clear();
+                atcg::RevisionStack::clearChache();
 
-                // serializer.serialize("../Scene/Scene.json");
-                atcg::Project::saveActive();
+                atcg::Project::getActive()->setActiveScene(atcg::make_ref<atcg::Scene>());
+                saved = false;
+            }
+
+            if(ImGui::MenuItem("Save", (const char*)0, false, saved))
+            {
+                atcg::Project::getActive()->save();
+            }
+
+            if(ImGui::MenuItem("Save as..."))
+            {
+                auto f     = pfd::save_file("Choose project location", pfd::path::home(), {}, true);
+                auto files = f.result();
+
+                if(!files.empty())
+                {
+                    auto path = std::filesystem::path(files);
+                    atcg::Project::saveActive(path);
+
+                    saved = true;
+                }
             }
 
             if(ImGui::MenuItem("Load"))
             {
-                // scene->removeAllEntites();
-                // atcg::Serialization::SceneSerializer serializer(scene);
+                auto f     = pfd::open_file("Choose project file",
+                                        pfd::path::home(),
+                                            {"Project file (.json)", "*.json"},
+                                        pfd::opt::none);
+                auto files = f.result();
 
-                // serializer.deserialize("../Scene/Scene.json");
+                if(!files.empty())
+                {
+                    atcg::Project::load(files[0]);
 
-                project = atcg::Project::load("../New Project/Project.json");
+                    if(atcg::Project::getActive()->getActiveScene())
+                    {
+                        atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
+                    }
+                    atcg::RevisionStack::clearChache();
 
-                project->getActiveScene()->setCamera(camera_controller->getCamera());
-
-                hovered_entity = atcg::Entity();
-                panel.selectEntity(hovered_entity);
+                    hovered_entity = atcg::Entity();
+                    saved          = true;
+                }
             }
 
             ImGui::EndMenu();
@@ -269,7 +296,10 @@ public:
 
         asset_panel.renderPanel();
 
-        atcg::drawGuizmo(project->getActiveScene(), hovered_entity, current_operation, camera_controller->getCamera());
+        atcg::drawGuizmo(atcg::Project::getActive()->getActiveScene(),
+                         hovered_entity,
+                         current_operation,
+                         camera_controller->getCamera());
     }
 #endif
 
@@ -278,7 +308,7 @@ public:
     {
         camera_controller->onEvent(event);
 
-        atcg::Scripting::handleScriptEvents(project->getActiveScene(), event);
+        atcg::Scripting::handleScriptEvents(atcg::Project::getActive()->getActiveScene(), event);
 
         atcg::EventDispatcher dispatcher(event);
 #ifndef ATCG_HEADLESS
@@ -307,7 +337,7 @@ public:
         {
             if(atcg::Input::isKeyPressed(ATCG_KEY_LEFT_CONTROL))
             {
-                atcg::Scripting::handleScriptReloads(project->getActiveScene());
+                atcg::Scripting::handleScriptReloads(atcg::Project::getActive()->getActiveScene());
             }
             else
             {
@@ -327,9 +357,10 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
         {
-            int id = atcg::Renderer::getEntityIndex(mouse_pos);
-            hovered_entity =
-                id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, project->getActiveScene().get());
+            int id         = atcg::Renderer::getEntityIndex(mouse_pos);
+            hovered_entity = id == -1
+                                 ? atcg::Entity()
+                                 : atcg::Entity((entt::entity)id, atcg::Project::getActive()->getActiveScene().get());
             panel.selectEntity(hovered_entity);
         }
         return true;
@@ -350,7 +381,8 @@ public:
 #endif
 
 private:
-    atcg::ref_ptr<atcg::Project> project;
+    bool saved = false;
+
     atcg::Entity hovered_entity;
 
     atcg::ref_ptr<atcg::CameraController> camera_controller;
