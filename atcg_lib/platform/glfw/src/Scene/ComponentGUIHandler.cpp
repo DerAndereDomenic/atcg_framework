@@ -190,7 +190,9 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
         component.preview->attachColor();
         component.preview->attachDepth();
         component.preview->complete();
-        updated = true;
+
+        _component.preview = component.preview;    // This should not count as an update, this is just a lazy init
+        // updated = true;
     }
 
     component.preview->use();
@@ -265,6 +267,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 
     if(updated)
     {
+        ATCG_DEBUG("Updated");
         atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(scene, entity);
         _component = component;
         camera->setIntrinsics(intrinsics);
