@@ -177,7 +177,7 @@ ATCG_INLINE void deserialize_registry_ver1(AssetRegistry& registry, const nlohma
     {
         AssetHandle handle = (AssetHandle)entry["Handle"];
         std::string name   = entry["Name"];
-        AssetType type     = stringToAssetType(entry["Type"]);
+        AssetType type     = stringToAssetType(std::string(entry["Type"]));
 
         AssetMetaData data;
         data.name        = name;

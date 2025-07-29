@@ -100,7 +100,7 @@ atcg::ref_ptr<Asset> deserializeGraph_ver1(const std::filesystem::path& path, co
 {
     atcg::ref_ptr<Asset> asset = nullptr;
 
-    atcg::GraphType type = stringToGraphType(j[TYPE_KEY]);
+    atcg::GraphType type = stringToGraphType(std::string(j[TYPE_KEY]));
 
     switch(type)
     {

@@ -189,7 +189,7 @@ ATCG_INLINE void serialize_script_ver1(const atcg::ref_ptr<Script>& script, cons
     stream.close();
 }
 
-ATCG_INLINE VOID serialize_scene_ver1(const atcg::ref_ptr<Scene>& scene, const std::filesystem::path& path)
+ATCG_INLINE void serialize_scene_ver1(const atcg::ref_ptr<Scene>& scene, const std::filesystem::path& path)
 {
     // TODO: Templates ?
     auto path_ = path;
@@ -197,7 +197,7 @@ ATCG_INLINE VOID serialize_scene_ver1(const atcg::ref_ptr<Scene>& scene, const s
     serializer.serialize(path_.replace_extension(".scene").string());
 }
 
-ATCG_INLINE VOID serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, const std::filesystem::path& path)
+ATCG_INLINE void serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, const std::filesystem::path& path)
 {
     nlohmann::json shader_json;
 

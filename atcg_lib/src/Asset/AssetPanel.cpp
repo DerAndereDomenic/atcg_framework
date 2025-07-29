@@ -710,11 +710,12 @@ void AssetPanel::displayScene(AssetHandle handle)
 #endif
 }
 
-bool ImageTextButton(ImTextureID textureID,
-                     const char* label,
-                     ImVec2 imageSize,
-                     float spacing  = 4.0f,
-                     ImVec2 padding = ImVec2(4, 4))
+#ifndef ATCG_HEADLESS
+ATCG_INLINE static bool ImageTextButton(ImTextureID textureID,
+                                        const char* label,
+                                        ImVec2 imageSize,
+                                        float spacing  = 4.0f,
+                                        ImVec2 padding = ImVec2(4, 4))
 {
     ImDrawList* drawList = ImGui::GetWindowDrawList();
     ImVec2 textSize      = ImGui::CalcTextSize(label);
@@ -759,6 +760,7 @@ bool ImageTextButton(ImTextureID textureID,
 
     return clicked;
 }
+#endif
 
 void AssetPanel::drawAssetList()
 {
@@ -944,6 +946,7 @@ void AssetPanel::drawAssetPanel()
 
 void AssetPanel::drawAssetEditor()
 {
+#ifndef ATCG_HEADLESS
     ImGui::Begin("Asset Editor");
 
     if(_selected_handle != 0)
@@ -1013,6 +1016,7 @@ void AssetPanel::drawAssetEditor()
     }
 
     ImGui::End();
+#endif
 }
 
 void AssetPanel::renderPanel()
