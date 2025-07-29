@@ -83,6 +83,18 @@ public:
 
     /**
      * @brief Register an asset.
+     * This function only puts the metadata into the registry with the specified handle.
+     * Handle is not allowed to already be in-use
+     *
+     * @param handle The handle
+     * @param data The data
+     *
+     * @return The handle to the newly registered asset- Should be the same as handle
+     */
+    AssetHandle registerAsset(AssetHandle handle, const AssetMetaData& data);
+
+    /**
+     * @brief Register an asset.
      *
      * @param asset The asset to register
      * @param name The name of the asset
@@ -259,6 +271,21 @@ ATCG_INLINE AssetHandle registerAsset(const AssetMetaData& data)
 ATCG_INLINE AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name)
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(asset, name);
+}
+
+/**
+ * @brief Register an asset.
+ * This function only puts the metadata into the registry with the specified handle.
+ * Handle is not allowed to already be in-use
+ *
+ * @param handle The handle
+ * @param data The data
+ *
+ * @return The handle to the newly registered asset- Should be the same as handle
+ */
+ATCG_INLINE AssetHandle registerAsset(AssetHandle handle, const AssetMetaData& data)
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(handle, data);
 }
 
 /**

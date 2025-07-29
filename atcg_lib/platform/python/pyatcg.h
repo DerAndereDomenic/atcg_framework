@@ -561,12 +561,14 @@ inline void defineBindings(py::module_& m)
 
     m_project.def_static("create", &atcg::Project::create)
         .def_static("load", &atcg::Project::load)
-        .def("save", &atcg::Project::save)
+        .def("save", py::overload_cast<>(&atcg::Project::save))
+        .def("save", py::overload_cast<const std::filesystem::path&>(&atcg::Project::save))
         .def("setActiveScene", py::overload_cast<const atcg::ref_ptr<atcg::Scene>&>(&atcg::Project::setActiveScene))
         .def("setActiveScene", py::overload_cast<atcg::AssetHandle>(&atcg::Project::setActiveScene))
         .def("getActiveScene", &atcg::Project::getActiveScene)
         .def_static("getActive", &atcg::Project::getActive)
-        .def_static("saveActive", &atcg::Project::saveActive)
+        .def_static("saveActive", py::overload_cast<>(&atcg::Project::saveActive))
+        .def_static("saveActive", py::overload_cast<const std::filesystem::path&>(&atcg::Project::saveActive))
         .def("getFilePath", &atcg::Project::getFilePath);
 
     // ------------------- Datastructure ---------------------------------

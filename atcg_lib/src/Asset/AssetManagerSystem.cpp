@@ -86,6 +86,11 @@ void AssetManagerSystem::updateName(AssetHandle handle, const std::string& name)
 AssetHandle AssetManagerSystem::registerAsset(const AssetMetaData& data)
 {
     AssetHandle handle;
+    return registerAsset(handle, data);
+}
+
+AssetHandle AssetManagerSystem::registerAsset(AssetHandle handle, const AssetMetaData& data)
+{
     _asset_registry[handle] = data;
 
     return handle;
