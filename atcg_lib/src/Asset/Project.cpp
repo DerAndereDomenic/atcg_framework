@@ -49,6 +49,14 @@ void Project::save()
     serializeProjectInformation();
 }
 
+void Project::save(const std::filesystem::path& path)
+{
+    _project_path         = path;
+    _asset_pack_directory = path / "AssetPack.json";
+
+    save();
+}
+
 void Project::setActiveScene(const atcg::ref_ptr<Scene>& scene)
 {
     AssetHandle handle = scene->handle;
@@ -79,6 +87,11 @@ const atcg::ref_ptr<Project>& Project::getActive()
 void Project::saveActive()
 {
     if(s_active_project) s_active_project->save();
+}
+
+void Project::saveActive(const std::filesystem::path& path)
+{
+    if(s_active_project) s_active_project->save(path);
 }
 
 void Project::serializeProjectInformation_ver1()

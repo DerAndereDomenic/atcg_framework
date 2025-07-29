@@ -44,6 +44,14 @@ public:
     void save();
 
     /**
+     * @brief Save theproject at a specific path
+     * This changes the file path of the project
+     *
+     * @param path The new path of the project
+     */
+    void save(const std::filesystem::path& path);
+
+    /**
      * @brief Set the active scene.
      * If the scene is not already an registered asset, it will be registered
      *
@@ -60,14 +68,14 @@ public:
 
     /**
      * @brief Get the active scene
-     * 
+     *
      * @return The active scene
      */
     atcg::ref_ptr<Scene> getActiveScene() const;
 
     /**
      * @brief Get the currently active project
-     * 
+     *
      * @return The project
      */
     static const atcg::ref_ptr<Project>& getActive();
@@ -78,8 +86,16 @@ public:
     static void saveActive();
 
     /**
+     * @brief Save the currently active project at a specific path
+     * This changes the file path of the project
+     *
+     * @param path The new path of the project
+     */
+    static void saveActive(const std::filesystem::path& path);
+
+    /**
      * @brief Get the path to the project
-     * 
+     *
      * @return The path
      */
     ATCG_INLINE const std::filesystem::path& getFilePath() const { return _project_path; }
