@@ -71,6 +71,7 @@ void Shader::recompile(const std::string& compute_path)
     _has_geometry = false;
     _is_compute   = true;
     _compute_path = compute_path;
+    _compute_code = compiler.getSource(ShaderType::COMPUTE);
 
     // Update uniform locations
     for(auto it = _uniforms.begin(); it != _uniforms.end(); ++it)
@@ -94,6 +95,8 @@ void Shader::recompile(const std::string& vertex_path, const std::string& fragme
     _is_compute    = false;
     _vertex_path   = vertex_path;
     _fragment_path = fragment_path;
+    _vertex_code   = compiler.getSource(ShaderType::VERTEX);
+    _fragment_code = compiler.getSource(ShaderType::FRAGMENT);
 
     // Update uniform locations
     for(auto it = _uniforms.begin(); it != _uniforms.end(); ++it)
@@ -139,6 +142,9 @@ void Shader::recompile(const std::string& vertex_path,
     _vertex_path   = vertex_path;
     _geometry_path = geometry_path;
     _fragment_path = fragment_path;
+    _vertex_code   = compiler.getSource(ShaderType::VERTEX);
+    _fragment_code = compiler.getSource(ShaderType::FRAGMENT);
+    _geometry_code = compiler.getSource(ShaderType::GEOMETRY);
 
     // Update uniform locations
     for(auto it = _uniforms.begin(); it != _uniforms.end(); ++it)
@@ -362,6 +368,23 @@ void Shader::dispatch(const glm::ivec3& work_groups) const
     use();
     glDispatchCompute(work_groups.x, work_groups.y, work_groups.z);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
+}
+
+std::string Shader::getSource(const ShaderType& type) const
+{
+    switch(type)
+    {
+        case ShaderType::VERTEX:
+            return _vertex_code;
+        case ShaderType::FRAGMENT:
+            return _fragment_code;
+        case ShaderType::GEOMETRY:
+            return _geometry_code;
+        case ShaderType::COMPUTE:
+            return _compute_code;
+    }
+
+    return "";
 }
 
 }    // namespace atcg

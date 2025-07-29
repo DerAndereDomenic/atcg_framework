@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added possibility to attach multiple vbos to a InstanceRenderComponent
 - Added python bindings for vertex buffers and related structures
 - Added a TextureBuilder class to improve texture instantiation
+- Added basic assets for shader/graph/texture2d/materials/scenes
+- Added AssetManager
+- Added AssetPanel
+- Added AssetImporter/Exporter
+- Added Projects to streamline serialization of assets and scenes
 
 ### Changed
 
@@ -24,11 +29,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Instead of having one class that handles serialization of all components, the design was changed to have individual ComponentSerializer structs that can be implemented via template specialization.
 - The same thing is done for the GUI rendering of components
 - Moved SceneHierarchyPanel and PerformancePanel to GUI namespace
+- A proper asset management system was introduced. Previously, all components have their own copy of geometry/shader/etc. Now, there is one global asset registry where all components store handles for the corresponding assets. This changes the API for some components but simplifies reusing assets.
+- Components now hold pointer to materials
+- GeometryComponent::graph was changed to an asset
+- CameraComponent::iamge was changed to an asset
+- MeshRenderComponent::shader was changed to an asset
+- MeshRenderComponent::material was changed to an asset
+- PointRenderComponent::shader was changed to an asset
+- PointSphereRenderComponent::material was changed to an asset
+- PointSphereRenderComponent::shader was changed to an asset
+- EdgeCylinderRenderComponent::material was changed to an asset
+- InstanceRenderComponent::material was changed to an asset
+- InstanceRenderComponent::shader was changed to an asset
+- ScriptComponent::script was changed to an asset
+- Removed normalization of meshes
 
 ### Fixed
 
 - Fixed crash when a Script is held inside the revision system and the app is closed
 - Fixed rendering of InstanceRenderComponent
+- Fixed Revision of Camera Components
 
 ## [0.2.1-beta]
 

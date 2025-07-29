@@ -58,6 +58,15 @@ public:
     uint32_t
     compileShader(const std::string& vertex_path, const std::string& geometry_path, const std::string& fragment_path);
 
+    /**
+     * @brief Get the (parsed) source code of a shader
+     *
+     * @param type The shader type
+     *
+     * @return The parsed source code
+     */
+    std::string getSource(const ShaderType& type) const;
+
 private:
     friend class Shader;
 
@@ -75,5 +84,10 @@ private:
     std::unordered_map<std::string, std::string> _vertex_subroutines;
     std::unordered_map<std::string, std::string> _fragment_subroutines;
     std::unordered_map<std::string, std::string> _geometry_subroutines;
+
+    std::string _vertex_code   = "";
+    std::string _fragment_code = "";
+    std::string _geometry_code = "";
+    std::string _compute_code  = "";
 };
 }    // namespace atcg

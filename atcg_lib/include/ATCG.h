@@ -19,6 +19,14 @@
 #include <Core/Path.h>
 #include <Core/CommandLine.h>
 
+//-------- ASSET ---------
+#include <Asset/Asset.h>
+#include <Asset/AssetImporter.h>
+#include <Asset/AssetExporter.h>
+#include <Asset/AssetManagerSystem.h>
+#include <Asset/AssetPanel.h>
+#include <Asset/Project.h>
+
 //-------- EVENTS -------
 #include <Events/Event.h>
 #include <Events/MouseEvent.h>

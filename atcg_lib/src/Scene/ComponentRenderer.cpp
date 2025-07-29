@@ -91,13 +91,13 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
 
-    if(!geometry.graph)
+    if(!geometry.graph())
     {
         ATCG_WARN("Entity does have geometry component but mesh is empty");
         return;
     }
 
-    geometry.graph->unmapAllPointers();
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
@@ -105,7 +105,7 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
     auto scene = entity.scene();
 
     atcg::ref_ptr<atcg::Shader> shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader);
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader());
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
@@ -119,13 +119,13 @@ void ComponentRenderer::renderComponent<MeshRenderComponent>(Entity entity,
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
-        _renderer->draw(geometry.graph,
+        _renderer->draw(geometry.graph(),
                         camera,
                         transform.getModel(),
                         glm::vec3(1),
                         shader,
                         atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE,
-                        renderer.material,
+                        renderer.material(),
                         entity.entity_handle());
         if(id != -1)
         {
@@ -165,13 +165,13 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
 
-    if(!geometry.graph)
+    if(!geometry.graph())
     {
         ATCG_WARN("Entity does have geometry component but mesh is empty");
         return;
     }
 
-    geometry.graph->unmapAllPointers();
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
@@ -179,7 +179,7 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
     auto scene = entity.scene();
 
     atcg::ref_ptr<atcg::Shader> shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader);
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader());
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
@@ -193,7 +193,7 @@ void ComponentRenderer::renderComponent<PointRenderComponent>(Entity entity,
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         _renderer->setPointSize(renderer.point_size);
-        _renderer->draw(geometry.graph,
+        _renderer->draw(geometry.graph(),
                         camera,
                         transform.getModel(),
                         renderer.color,
@@ -239,13 +239,13 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
 
-    if(!geometry.graph)
+    if(!geometry.graph())
     {
         ATCG_WARN("Entity does have geometry component but mesh is empty");
         return;
     }
 
-    geometry.graph->unmapAllPointers();
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     PointSphereRenderComponent renderer = entity.getComponent<PointSphereRenderComponent>();
@@ -253,7 +253,7 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
     auto scene = entity.scene();
 
     atcg::ref_ptr<atcg::Shader> shader =
-        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader);
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", renderer.shader());
 
     auto point_light_depth_maps =
         auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
@@ -267,13 +267,13 @@ void ComponentRenderer::renderComponent<PointSphereRenderComponent>(Entity entit
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         _renderer->setPointSize(renderer.point_size);
-        _renderer->draw(geometry.graph,
+        _renderer->draw(geometry.graph(),
                         camera,
                         transform.getModel(),
                         glm::vec3(1),
                         shader,
                         atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE,
-                        renderer.material,
+                        renderer.material(),
                         entity.entity_handle());
         if(id != -1)
         {
@@ -313,13 +313,13 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
 
-    if(!geometry.graph)
+    if(!geometry.graph())
     {
         ATCG_WARN("Entity does have geometry component but mesh is empty");
         return;
     }
 
-    geometry.graph->unmapAllPointers();
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     EdgeRenderComponent renderer = entity.getComponent<EdgeRenderComponent>();
@@ -341,7 +341,7 @@ void ComponentRenderer::renderComponent<EdgeRenderComponent>(Entity entity,
         uint32_t id          = _setLights(scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
-        _renderer->draw(geometry.graph,
+        _renderer->draw(geometry.graph(),
                         camera,
                         transform.getModel(),
                         renderer.color,
@@ -387,13 +387,13 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
 
-    if(!geometry.graph)
+    if(!geometry.graph())
     {
         ATCG_WARN("Entity does have geometry component but mesh is empty");
         return;
     }
 
-    geometry.graph->unmapAllPointers();
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
@@ -416,13 +416,13 @@ void ComponentRenderer::renderComponent<EdgeCylinderRenderComponent>(Entity enti
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setFloat("edge_radius", renderer.radius);
-        _renderer->draw(geometry.graph,
+        _renderer->draw(geometry.graph(),
                         camera,
                         transform.getModel(),
                         glm::vec3(1),
                         shader,
                         atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER,
-                        renderer.material,
+                        renderer.material(),
                         entity.entity_handle());
         if(id != -1)
         {
@@ -462,18 +462,19 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
 
-    if(!geometry.graph)
+    if(!geometry.graph())
     {
         ATCG_WARN("Entity does have geometry component but mesh is empty");
         return;
     }
 
-    geometry.graph->unmapAllPointers();
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();
 
-    auto override_shader = renderer.shader ? renderer.shader : _renderer->getShaderManager()->getShader("instanced");
+    auto override_shader =
+        renderer.shader() ? renderer.shader() : _renderer->getShaderManager()->getShader("instanced");
 
     atcg::ref_ptr<atcg::Shader> shader =
         auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader", override_shader);
@@ -488,7 +489,7 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
 
     if(renderer.visible)
     {
-        auto vao = geometry.graph->getVerticesArray();
+        auto vao = geometry.graph()->getVerticesArray();
         for(int i = 0; i < renderer.instance_vbos.size(); ++i)
         {
             renderer.instance_vbos[i]->unmapPointers();
@@ -499,13 +500,13 @@ void ComponentRenderer::renderComponent<InstanceRenderComponent>(Entity entity,
         auto [ir_id, pre_id] = _setSkyLight(shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
-        _renderer->draw(geometry.graph,
+        _renderer->draw(geometry.graph(),
                         camera,
                         transform.getModel(),
                         glm::vec3(1),
                         shader,
                         atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED,
-                        renderer.material,
+                        renderer.material(),
                         entity.entity_handle());
         if(id != -1)
         {

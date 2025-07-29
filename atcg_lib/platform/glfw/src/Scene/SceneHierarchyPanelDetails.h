@@ -91,9 +91,7 @@ ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<a
 
 }    // namespace detail
 
-ATCG_INLINE SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
-
-ATCG_INLINE void SceneHierarchyPanel::drawEntityNode(Entity entity)
+ATCG_INLINE void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
     auto& tag = entity.getComponent<NameComponent>().name();
 
@@ -124,171 +122,15 @@ ATCG_INLINE void SceneHierarchyPanel::drawEntityNode(Entity entity)
 
     if(entityDeleted)
     {
-        atcg::RevisionStack::startRecording<EntityRemovedRevision>(_scene, entity);
+        atcg::RevisionStack::startRecording<EntityRemovedRevision>(scene, entity);
         if(_selected_entity == entity) selectEntity({});
-        _scene->removeEntity(entity);
+        scene->removeEntity(entity);
         atcg::RevisionStack::endRecording();
     }
 }
 
-ATCG_INLINE void SceneHierarchyPanel::drawSceneProperties()
-{
-    float content_scale                    = atcg::Application::get()->getWindow()->getContentScale();
-    const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
-                                             ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
-                                             ImGuiTreeNodeFlags_FramePadding;
-
-    bool open = ImGui::TreeNodeEx((void*)typeid(atcg::Scene).hash_code(), treeNodeFlags, "Skybox");
-
-    ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
-
-    if(open)
-    {
-        if(_scene->hasSkybox())
-        {
-            ImGui::Image((ImTextureID)_scene->getSkyboxTexture()->getID(),
-                         ImVec2(content_scale * 128, content_scale * 64),
-                         ImVec2 {0, 1},
-                         ImVec2 {1, 0});
-            if(ImGui::Button("Remove skybox##skybox"))
-            {
-                _scene->removeSkybox();
-            }
-        }
-        else
-        {
-            glm::vec4 clear_color = Renderer::getClearColor();
-            if(ImGui::ColorEdit4("Background color#skybox", glm::value_ptr(clear_color)))
-            {
-                Renderer::setClearColor(clear_color);
-            }
-
-            if(ImGui::Button("Add Skybox..."))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img = IO::imread(files[0]);
-                    _scene->setSkybox(img);
-                }
-            }
-        }
-        ImGui::TreePop();
-    }
-
-    auto scene_camera = _scene->getCamera();
-    if(scene_camera)
-    {
-        open = ImGui::TreeNodeEx((void*)typeid(atcg::Camera).hash_code(), treeNodeFlags, "Camera");
-
-        contentRegionAvailable = ImGui::GetContentRegionAvail();
-
-        if(open)
-        {
-            uint32_t width                    = atcg::Renderer::getFramebuffer()->width();
-            uint32_t height                   = atcg::Renderer::getFramebuffer()->height();
-            atcg::CameraIntrinsics intrinsics = scene_camera->getIntrinsics();
-            glm::mat3 K                       = atcg::CameraUtils::convert_to_opencv(intrinsics, width, height);
-            uint32_t id                       = (uint32_t)typeid(atcg::Camera).hash_code();
-            bool updated                      = false;
-
-            float fx = K[0][0];
-            float fy = K[1][1];
-            float cx = K[0][2];
-            float cy = K[1][2];
-
-            float f[2]      = {fx, fy};
-            float c[2]      = {cx, cy};
-            float offset[2] = {intrinsics.opticalCenter().x, intrinsics.opticalCenter().y};
-
-            float aspect_ratio = intrinsics.aspectRatio();
-            float fov          = intrinsics.FOV();
-
-            std::stringstream label;
-            label << "Aspect##" << id;
-            if(ImGui::DragFloat(label.str().c_str(), &aspect_ratio, 0.05f, 0.1f, 5.0f))
-            {
-                intrinsics.setAspectRatio(aspect_ratio);
-                updated = true;
-            }
-
-            ImGui::SameLine();
-            if(ImGui::Button("Reset"))
-            {
-                intrinsics.setAspectRatio(float(width) / float(height));
-                updated = true;
-            }
-
-            label.str(std::string());
-            label << "FOV##" << id;
-            if(ImGui::DragFloat(label.str().c_str(), &fov, 0.5f, 10.0f, 120.0f))
-            {
-                intrinsics.setFOV(fov);
-                updated = true;
-            }
-
-            label.str(std::string());
-            label << "Optical Center##" << id;
-            if(ImGui::DragFloat2(label.str().c_str(), offset, 0.01f, -1.0f, 1.0f))
-            {
-                intrinsics.setOpticalCenter(glm::make_vec2(offset));
-                updated = true;
-            }
-
-            ImGui::Separator();
-
-            label.str(std::string());
-            label << "Focal Length##" << id;
-            if(ImGui::DragFloat2(label.str().c_str(), f, 0.5f, 1.0f, 4096.0f))
-            {
-                intrinsics = atcg::CameraUtils::convert_from_opencv(f[0],
-                                                                    f[1],
-                                                                    c[0],
-                                                                    c[1],
-                                                                    intrinsics.zNear(),
-                                                                    intrinsics.zFar(),
-                                                                    width,
-                                                                    height);
-                updated    = true;
-            }
-
-            label.str(std::string());
-            label << "Principal Point##" << id;
-            if(ImGui::DragFloat2(label.str().c_str(), c, 0.5f, 1.0f, 4096.0f))
-            {
-                intrinsics = atcg::CameraUtils::convert_from_opencv(f[0],
-                                                                    f[1],
-                                                                    c[0],
-                                                                    c[1],
-                                                                    intrinsics.zNear(),
-                                                                    intrinsics.zFar(),
-                                                                    width,
-                                                                    height);
-                updated    = true;
-            }
-
-            if(updated) scene_camera->setIntrinsics(intrinsics);
-
-            ImGui::TreePop();
-        }
-    }
-}
-
 template<typename... Components>
-ATCG_INLINE void SceneHierarchyPanel::drawComponents(Entity entity)
+ATCG_INLINE void SceneHierarchyPanel::drawComponents(const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
     std::stringstream label;
@@ -304,7 +146,7 @@ ATCG_INLINE void SceneHierarchyPanel::drawComponents(Entity entity)
     label << "##" << id;
     if(ImGui::InputText(label.str().c_str(), buffer, sizeof(buffer)))
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<NameComponent>>(_scene, entity);
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<NameComponent>>(scene, entity);
         entity.addOrReplaceComponent<NameComponent>(std::string(buffer));
         atcg::RevisionStack::endRecording();
     }
@@ -319,14 +161,14 @@ ATCG_INLINE void SceneHierarchyPanel::drawComponents(Entity entity)
 
     if(ImGui::BeginPopup("AddComponent"))
     {
-        (detail::displayAddComponentEntry<Components>(_scene, entity), ...);
+        (detail::displayAddComponentEntry<Components>(scene, entity), ...);
 
         ImGui::EndPopup();
     }
 
     ImGui::PopItemWidth();
 
-    (detail::drawComponent<Components>(_scene, entity), ...);
+    (detail::drawComponent<Components>(scene, entity), ...);
 }
 
 ATCG_INLINE void SceneHierarchyPanel::selectEntity(Entity entity)
@@ -336,8 +178,13 @@ ATCG_INLINE void SceneHierarchyPanel::selectEntity(Entity entity)
 }
 
 template<typename... CustomComponents>
-ATCG_INLINE void SceneHierarchyPanel::renderPanel()
+ATCG_INLINE void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
 {
+    if(_selected_entity.scene() != scene.get())
+    {
+        _selected_entity = {};
+    }
+
     ImGui::Begin("Scene Hierarchy");
 
     if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
@@ -345,11 +192,11 @@ ATCG_INLINE void SceneHierarchyPanel::renderPanel()
         selectEntity({});
     }
 
-    for(auto e: _scene->getAllEntitiesWith<NameComponent>())
+    for(auto e: scene->getAllEntitiesWith<NameComponent>())
     {
-        Entity entity(e, _scene.get());
+        Entity entity(e, scene.get());
         if(entity.getComponent<NameComponent>().name() == "EditorCamera") continue;
-        drawEntityNode(entity);
+        drawEntityNode(scene, entity);
     }
 
 
@@ -357,8 +204,8 @@ ATCG_INLINE void SceneHierarchyPanel::renderPanel()
     {
         if(ImGui::MenuItem("Create Empty Entity"))
         {
-            Entity entity = _scene->createEntity("Empty Entity");
-            atcg::RevisionStack::startRecording<EntityAddedRevision>(_scene, entity);
+            Entity entity = scene->createEntity("Empty Entity");
+            atcg::RevisionStack::startRecording<EntityAddedRevision>(scene, entity);
             atcg::RevisionStack::endRecording();
             selectEntity(entity);
         }
@@ -393,15 +240,8 @@ ATCG_INLINE void SceneHierarchyPanel::renderPanel()
                                InstanceRenderComponent,
                                PointLightComponent,
                                ScriptComponent,
-                               CustomComponents...>(_selected_entity);
+                               CustomComponents...>(scene, _selected_entity);
             }
-            ImGui::EndTabItem();
-        }
-
-
-        if(ImGui::BeginTabItem("Scene"))
-        {
-            drawSceneProperties();
             ImGui::EndTabItem();
         }
 

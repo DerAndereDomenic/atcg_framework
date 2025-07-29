@@ -12,6 +12,7 @@
 #include <Renderer/VRSystem.h>
 #include <Renderer/ContextManager.h>
 #include <Scripting/ScriptEngine.h>
+#include <Asset/AssetManagerSystem.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
@@ -145,6 +146,7 @@ private:
     LayerStack _layer_stack;
 
     // Systems
+    atcg::ref_ptr<AssetManagerSystem> _asset_manager;
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;

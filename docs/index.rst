@@ -8,6 +8,7 @@
    :caption: Contents:
    :hidden:
 
+   source/Asset/AssetIndex
    source/Core/CoreIndex
    source/Events/EventIndex
    source/DataStructure/DataStructureIndex

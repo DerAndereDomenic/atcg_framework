@@ -4,14 +4,10 @@ namespace atcg
 {
 namespace GUI
 {
-ATCG_INLINE SceneHierarchyPanel::SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}
-
-ATCG_INLINE void SceneHierarchyPanel::drawEntityNode(Entity entity) {}
-
-ATCG_INLINE void SceneHierarchyPanel::drawSceneProperties() {}
+ATCG_INLINE void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Entity entity) {}
 
 template<typename... Components>
-ATCG_INLINE void SceneHierarchyPanel::drawComponents(Entity entity)
+ATCG_INLINE void SceneHierarchyPanel::drawComponents(const atcg::ref_ptr<Scene>& scene, Entity entity)
 {
 }
 
@@ -22,7 +18,7 @@ ATCG_INLINE void SceneHierarchyPanel::selectEntity(Entity entity)
 }
 
 template<typename... CustomComponents>
-ATCG_INLINE void SceneHierarchyPanel::renderPanel()
+ATCG_INLINE void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
 {
 }
 }    // namespace GUI

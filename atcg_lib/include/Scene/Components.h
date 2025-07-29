@@ -10,6 +10,7 @@
 #include <DataStructure/Graph.h>
 #include <nanort.h>
 #include <Scripting/Script.h>
+#include <Asset/AssetManagerSystem.h>
 
 #include <vector>
 
@@ -179,9 +180,22 @@ private:
 struct GeometryComponent
 {
     GeometryComponent() = default;
-    GeometryComponent(const atcg::ref_ptr<Graph>& graph) : graph(graph) {}
+    GeometryComponent(AssetHandle handle) : graph_handle(handle) {}
+    GeometryComponent(const atcg::ref_ptr<Graph>& graph)
+    {
+        if(AssetManager::isAssetHandleValid(graph->handle))
+        {
+            graph_handle = graph->handle;
+        }
+        else
+        {
+            graph_handle = AssetManager::registerAsset(graph, "graph");
+        }
+    }
 
-    atcg::ref_ptr<Graph> graph;
+    ATCG_INLINE atcg::ref_ptr<Graph> graph() const { return AssetManager::getAsset<Graph>(graph_handle); }
+
+    AssetHandle graph_handle;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Geometry"; }
 };
@@ -210,6 +224,12 @@ struct CameraComponent
         }
     }
 
+    ATCG_INLINE atcg::ref_ptr<Texture2D> image() const
+    {
+        auto image = AssetManager::getAsset<Texture2D>(image_handle);
+        return image;
+    }
+
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Camera"; }
 
     atcg::ref_ptr<Camera> camera;
@@ -220,7 +240,7 @@ struct CameraComponent
     float render_scale = 1.0f;
 
     atcg::ref_ptr<atcg::Framebuffer> preview;
-    atcg::ref_ptr<atcg::Texture2D> image;
+    AssetHandle image_handle;
     bool render_preview = false;
 };
 
@@ -232,61 +252,131 @@ struct EditorCameraComponent : public CameraComponent
 
 struct RenderComponent
 {
-    RenderComponent(atcg::DrawMode draw_mode) : draw_mode(draw_mode) {}
+    RenderComponent(atcg::DrawMode draw_mode) : draw_mode(draw_mode) { default_material = atcg::make_ref<Material>(); }
 
     atcg::DrawMode draw_mode;
     bool visible = true;
+
+    atcg::ref_ptr<Material> default_material;
 };
 
 struct MeshRenderComponent : public RenderComponent
 {
-    MeshRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"))
-        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE),
-          shader(shader)
+    MeshRenderComponent() : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE) {}
+    MeshRenderComponent(const atcg::ref_ptr<Shader>& shader) : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
     {
+        if(AssetManager::isAssetHandleValid(shader->handle))
+        {
+            shader_handle = shader->handle;
+        }
+        else
+        {
+            shader_handle = AssetManager::registerAsset(shader, "shader");
+        }
+    }
+
+    ATCG_INLINE atcg::ref_ptr<Material> material() const
+    {
+        auto mat = AssetManager::getAsset<Material>(material_handle);
+        return mat ? mat : default_material;
+    }
+
+    ATCG_INLINE atcg::ref_ptr<Shader> shader() const
+    {
+        auto shader = AssetManager::getAsset<Shader>(shader_handle);
+        return shader ? shader : default_shader;
     }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Mesh Renderer"; }
 
-    atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
-    Material material;
-    bool receive_shadow = true;
+    atcg::ref_ptr<Shader> default_shader = atcg::ShaderManager::getShader("base");
+    bool receive_shadow                  = true;
+
+    AssetHandle material_handle = 0;
+    AssetHandle shader_handle   = 0;
 };
 
 struct PointRenderComponent : public RenderComponent
 {
-    PointRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                         const glm::vec3& color              = glm::vec3(1),
-                         const float& point_size             = 1.0f)
+    PointRenderComponent(const glm::vec3& color = glm::vec3(1), const float& point_size = 1.0f)
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS),
-          shader(shader),
           color(color),
           point_size(point_size)
     {
     }
+    PointRenderComponent(const atcg::ref_ptr<Shader>& shader,
+                         const glm::vec3& color  = glm::vec3(1),
+                         const float& point_size = 1.0f)
+        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS),
+          color(color),
+          point_size(point_size)
+    {
+        if(AssetManager::isAssetHandleValid(shader->handle))
+        {
+            shader_handle = shader->handle;
+        }
+        else
+        {
+            shader_handle = AssetManager::registerAsset(shader, "shader");
+        }
+    }
+
+    ATCG_INLINE atcg::ref_ptr<Shader> shader() const
+    {
+        auto shader = AssetManager::getAsset<Shader>(shader_handle);
+        return shader ? shader : default_shader;
+    }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Renderer"; }
 
-    atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
-    glm::vec3 color              = glm::vec3(1);
-    float point_size             = 1.0f;
+    atcg::ref_ptr<Shader> default_shader = atcg::ShaderManager::getShader("base");
+    glm::vec3 color                      = glm::vec3(1);
+    float point_size                     = 1.0f;
+
+    AssetHandle shader_handle = 0;
 };
 
 struct PointSphereRenderComponent : public RenderComponent
 {
-    PointSphereRenderComponent(const atcg::ref_ptr<Shader>& shader = atcg::ShaderManager::getShader("base"),
-                               const float& point_size             = 0.1f)
+    PointSphereRenderComponent(const float& point_size = 0.1f)
         : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE),
-          shader(shader),
           point_size(point_size)
     {
     }
 
+    PointSphereRenderComponent(const atcg::ref_ptr<Shader>& shader, const float& point_size = 0.1f)
+        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE),
+          point_size(point_size)
+    {
+        if(AssetManager::isAssetHandleValid(shader->handle))
+        {
+            shader_handle = shader->handle;
+        }
+        else
+        {
+            shader_handle = AssetManager::registerAsset(shader, "shader");
+        }
+    }
+
+    ATCG_INLINE atcg::ref_ptr<Material> material() const
+    {
+        auto mat = AssetManager::getAsset<Material>(material_handle);
+        return mat ? mat : default_material;
+    }
+
+    ATCG_INLINE atcg::ref_ptr<Shader> shader() const
+    {
+        auto shader = AssetManager::getAsset<Shader>(shader_handle);
+        return shader ? shader : default_shader;
+    }
+
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Sphere Renderer"; }
 
-    atcg::ref_ptr<Shader> shader = atcg::ShaderManager::getShader("base");
-    float point_size             = 0.1f;
-    Material material;
+    atcg::ref_ptr<Shader> default_shader = atcg::ShaderManager::getShader("base");
+    float point_size                     = 0.1f;
+
+    AssetHandle material_handle = 0;
+    AssetHandle shader_handle   = 0;
 };
 
 struct EdgeRenderComponent : public RenderComponent
@@ -310,10 +400,17 @@ struct EdgeCylinderRenderComponent : public RenderComponent
     {
     }
 
+    ATCG_INLINE atcg::ref_ptr<Material> material() const
+    {
+        auto mat = AssetManager::getAsset<Material>(material_handle);
+        return mat ? mat : default_material;
+    }
+
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Edge Cylinder Renderer"; }
 
     float radius = 0.001f;
-    Material material;
+
+    AssetHandle material_handle = 0;
 };
 
 struct InstanceRenderComponent : public RenderComponent
@@ -322,12 +419,26 @@ struct InstanceRenderComponent : public RenderComponent
 
     void addInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& instance_vbo) { instance_vbos.push_back(instance_vbo); }
 
+    ATCG_INLINE atcg::ref_ptr<Material> material() const
+    {
+        auto mat = AssetManager::getAsset<Material>(material_handle);
+        return mat ? mat : default_material;
+    }
+
+    ATCG_INLINE atcg::ref_ptr<Shader> shader() const
+    {
+        auto shader = AssetManager::getAsset<Shader>(shader_handle);
+        return shader ? shader : default_shader;
+    }
+
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Instance Renderer"; }
 
     std::vector<atcg::ref_ptr<VertexBuffer>> instance_vbos;
-    atcg::ref_ptr<atcg::Shader> shader = nullptr;
-    Material material;
-    bool receive_shadow = true;
+    atcg::ref_ptr<atcg::Shader> default_shader = nullptr;
+    bool receive_shadow                        = true;
+
+    AssetHandle material_handle = 0;
+    AssetHandle shader_handle;
 };
 
 struct CustomRenderComponent : public RenderComponent
@@ -362,11 +473,24 @@ struct ScriptComponent
 {
     ScriptComponent() = default;
 
-    ScriptComponent(const atcg::ref_ptr<Script>& script) : script(script) {}
+    ScriptComponent(const atcg::ref_ptr<Script>& script)
+    {
+        if(AssetManager::isAssetHandleValid(script->handle))
+        {
+            script_handle = script->handle;
+        }
+        else
+        {
+            script_handle = AssetManager::registerAsset(script, "script");
+        }
+    }
 
-    atcg::ref_ptr<Script> script = nullptr;
+    ATCG_INLINE atcg::ref_ptr<Script> script() const { return AssetManager::getAsset<Script>(script_handle); }
+
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script"; }
+
+    AssetHandle script_handle = 0;
 };
 
 }    // namespace atcg

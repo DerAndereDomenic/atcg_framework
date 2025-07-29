@@ -82,9 +82,29 @@ void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<S
 {
 }
 
-bool displayMaterial(const std::string& key, Material& material)
+AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle)
 {
-    return false;
+    return 0;
+}
+
+AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle)
+{
+    return 0;
+}
+
+AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle)
+{
+    return 0;
+}
+
+AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
+{
+    return 0;
+}
+
+AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle)
+{
+    return 0;
 }
 
 }    // namespace GUI

@@ -258,13 +258,13 @@ public:
      * @param entity_id The entity id
      */
     void draw(const atcg::ref_ptr<Graph>& mesh,
-              const atcg::ref_ptr<Camera>& camera     = {},
-              const glm::mat4& model                  = glm::mat4(1),
-              const glm::vec3& color                  = glm::vec3(1),
-              const atcg::ref_ptr<Shader>& shader     = atcg::ShaderManager::getShader("base"),
-              DrawMode draw_mode                      = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
-              const std::optional<Material>& material = {},
-              const uint32_t entity_id                = -1);
+              const atcg::ref_ptr<Camera>& camera                    = {},
+              const glm::mat4& model                                 = glm::mat4(1),
+              const glm::vec3& color                                 = glm::vec3(1),
+              const atcg::ref_ptr<Shader>& shader                    = atcg::ShaderManager::getShader("base"),
+              DrawMode draw_mode                                     = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+              const std::optional<atcg::ref_ptr<Material>>& material = {},
+              const uint32_t entity_id                               = -1);
 
     /**
      * @brief Draw Circle
@@ -669,7 +669,7 @@ ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
                       const glm::vec3& color                  = glm::vec3(1),
                       const atcg::ref_ptr<Shader>& shader     = atcg::ShaderManager::getShader("base"),
                       DrawMode draw_mode                      = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
-                      const std::optional<Material>& material = {},
+                      const std::optional<atcg::ref_ptr<Material>>& material = {},
                       const uint32_t entity_id                = -1)
 {
     SystemRegistry::instance()
