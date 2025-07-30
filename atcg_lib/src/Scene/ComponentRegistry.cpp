@@ -60,4 +60,15 @@ void ComponentRegistrySystem::restoreAddAllComponents(Entity entity,
         if(entry.restore) entry.restore(entity, id, component);
     }
 }
+
+void ComponentRegistrySystem::renderAllComponents(RendererSystem* renderer,
+                                                  Entity entity,
+                                                  const atcg::ref_ptr<Camera>& camera,
+                                                  atcg::Dictionary& auxiliary) const
+{
+    for(const auto& entry: getRenderEntries())
+    {
+        if(entry.render) entry.render(renderer, entity, camera, auxiliary);
+    }
+}
 }    // namespace atcg

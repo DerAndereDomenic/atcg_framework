@@ -4,6 +4,7 @@
 #include <Scene/Entity.h>
 #include <Scene/ComponentSerializer.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentRenderer.h>
 
 #include <json.hpp>
 #include <vector>
@@ -17,23 +18,41 @@ using draw_fn        = std::function<void(const atcg::ref_ptr<Scene>&, Entity)>;
 using display_add_fn = std::function<void(const atcg::ref_ptr<Scene>&, Entity)>;
 using store_fn       = std::function<void(Entity, std::unordered_map<entt::id_type, std::shared_ptr<void>>&)>;
 using restore_fn     = std::function<void(Entity, const entt::id_type, const std::shared_ptr<void>&)>;
+using render_fn      = std::function<void(RendererSystem*, Entity, const atcg::ref_ptr<Camera>&, atcg::Dictionary&)>;
 
 struct ComponentSerializationEntry
 {
+    ComponentSerializationEntry(const serialize_fn& serialize, const deserialize_fn& deserialize)
+        : serialize(serialize),
+          deserialize(deserialize)
+    {
+    }
+
     serialize_fn serialize;
     deserialize_fn deserialize;
 };
 
 struct ComponentDrawEntry
 {
+    ComponentDrawEntry(const draw_fn& draw, const display_add_fn& display_add) : draw(draw), display_add(display_add) {}
+
     draw_fn draw;
     display_add_fn display_add;
 };
 
 struct ComponentStoreEntry
 {
+    ComponentStoreEntry(const store_fn& store, const restore_fn& restore) : store(store), restore(restore) {}
+
     store_fn store;
     restore_fn restore;
+};
+
+struct ComponentRenderEntry
+{
+    ComponentRenderEntry(const render_fn& render) : render(render) {}
+
+    render_fn render;
 };
 
 ATCG_INLINE std::vector<ComponentSerializationEntry>& getSerializationEntries()
@@ -51,6 +70,12 @@ ATCG_INLINE std::vector<ComponentDrawEntry>& getDrawEntries()
 ATCG_INLINE std::vector<ComponentStoreEntry>& getStoreEntries()
 {
     static std::vector<ComponentStoreEntry> entries;
+    return entries;
+}
+
+ATCG_INLINE std::vector<ComponentRenderEntry>& getRenderEntries()
+{
+    static std::vector<ComponentRenderEntry> entries;
     return entries;
 }
 
@@ -108,6 +133,18 @@ ATCG_INLINE std::vector<ComponentStoreEntry>& getStoreEntries()
  *             component.x = value;
  *             atcg::RevisionStack::endRecording();
  *         }
+ *     }
+ * };
+ *
+ * template<>
+ * struct atcg::ComponentRenderer<CustomComponent>
+ * {
+ *     void renderComponent(atcg::RendererSystem* renderer,
+ *                          Entity entity,
+ *                          const atcg::ref_ptr<Camera>& camera,
+ *                          atcg::Dictionary& auxiliary) const
+ *     {
+ *         renderer->drawCircle(glm::vec3(0), 1.0f, 0.2f, glm::vec3(1), camera);
  *     }
  * };
  *
@@ -178,6 +215,19 @@ public:
      * @param component The component as generic pointer
      */
     void restoreAddAllComponents(Entity entity, const entt::id_type id, const std::shared_ptr<void>& component) const;
+
+    /**
+     * @brief Render all components
+     *
+     * @param renderer The renderer
+     * @param entity The entity
+     * @param camera The camera
+     * @param auxiliary Dictionary with auxiliary information
+     */
+    void renderAllComponents(RendererSystem* renderer,
+                             Entity entity,
+                             const atcg::ref_ptr<Camera>& camera,
+                             atcg::Dictionary& auxiliary) const;
 
 private:
 };
@@ -266,6 +316,25 @@ ATCG_INLINE void restoreAddAllComponents(Entity entity, const entt::id_type id, 
 {
     SystemRegistry::instance()->getSystem<ComponentRegistrySystem>()->restoreAddAllComponents(entity, id, component);
 }
+
+/**
+ * @brief Render all components
+ *
+ * @param renderer The renderer
+ * @param entity The entity
+ * @param camera The camera
+ * @param auxiliary Dictionary with auxiliary information
+ */
+ATCG_INLINE void renderAllComponents(RendererSystem* renderer,
+                                     Entity entity,
+                                     const atcg::ref_ptr<Camera>& camera,
+                                     atcg::Dictionary& auxiliary)
+{
+    SystemRegistry::instance()->getSystem<ComponentRegistrySystem>()->renderAllComponents(renderer,
+                                                                                          entity,
+                                                                                          camera,
+                                                                                          auxiliary);
+}
 };    // namespace ComponentRegistry
 
 #define ATCG_REGISTER_COMPONENT_SERIALIZATION(ComponentType)                                                           \
@@ -273,8 +342,8 @@ ATCG_INLINE void restoreAddAllComponents(Entity entity, const entt::id_type id, 
     {                                                                                                                  \
         SerializationFactory_##ComponentType()                                                                         \
         {                                                                                                              \
-            getSerializationEntries().push_back({&Serialization::serializeComponent<ComponentType>,                    \
-                                                 &Serialization::deserializeComponent<ComponentType>});                \
+            getSerializationEntries().emplace_back(&Serialization::serializeComponent<ComponentType>,                  \
+                                                   &Serialization::deserializeComponent<ComponentType>);               \
         }                                                                                                              \
         static SerializationFactory_##ComponentType instance;                                                          \
     };                                                                                                                 \
@@ -285,10 +354,8 @@ ATCG_INLINE void restoreAddAllComponents(Entity entity, const entt::id_type id, 
     {                                                                                                                  \
         DrawFactory_##ComponentType()                                                                                  \
         {                                                                                                              \
-            getDrawEntries().push_back({                                                                               \
-                &GUI::drawComponent<ComponentType>,                                                                    \
-                &GUI::displayAddComponentEntry<ComponentType>,                                                         \
-            });                                                                                                        \
+            getDrawEntries().emplace_back(&GUI::drawComponent<ComponentType>,                                          \
+                                          &GUI::displayAddComponentEntry<ComponentType>);                              \
         }                                                                                                              \
         static DrawFactory_##ComponentType instance;                                                                   \
     };                                                                                                                 \
@@ -299,16 +366,28 @@ ATCG_INLINE void restoreAddAllComponents(Entity entity, const entt::id_type id, 
     {                                                                                                                  \
         StoreFactory_##ComponentType()                                                                                 \
         {                                                                                                              \
-            getStoreEntries().push_back({&storeComponent<ComponentType>, &restoreComponent<ComponentType>});           \
+            getStoreEntries().emplace_back(&storeComponent<ComponentType>, &restoreComponent<ComponentType>);          \
         }                                                                                                              \
         static StoreFactory_##ComponentType instance;                                                                  \
     };                                                                                                                 \
     StoreFactory_##ComponentType StoreFactory_##ComponentType::instance
 
+#define ATCG_REGISTER_COMPONENT_RENDER(ComponentType)                                                                  \
+    struct RenderFactory_##ComponentType                                                                               \
+    {                                                                                                                  \
+        RenderFactory_##ComponentType()                                                                                \
+        {                                                                                                              \
+            getRenderEntries().emplace_back(&renderComponent<ComponentType>);                                          \
+        }                                                                                                              \
+        static RenderFactory_##ComponentType instance;                                                                 \
+    };                                                                                                                 \
+    RenderFactory_##ComponentType RenderFactory_##ComponentType::instance
+
 
 #define ATCG_REGISTER_COMPONENT(ComponentType)                                                                         \
     ATCG_REGISTER_COMPONENT_SERIALIZATION(ComponentType);                                                              \
     ATCG_REGISTER_COMPONENT_DRAW(ComponentType);                                                                       \
-    ATCG_REGISTER_COMPONENT_STORE(ComponentType)
+    ATCG_REGISTER_COMPONENT_STORE(ComponentType);                                                                      \
+    ATCG_REGISTER_COMPONENT_RENDER(ComponentType)
 
 }    // namespace atcg
