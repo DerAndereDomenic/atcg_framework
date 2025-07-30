@@ -18,19 +18,39 @@ using display_add_fn = std::function<void(const atcg::ref_ptr<Scene>&, Entity)>;
 using store_fn       = std::function<void(Entity, std::unordered_map<entt::id_type, std::shared_ptr<void>>&)>;
 using restore_fn     = std::function<void(Entity, const entt::id_type, const std::shared_ptr<void>&)>;
 
-struct ComponentRegistryEntry
+struct ComponentSerializationEntry
 {
     serialize_fn serialize;
     deserialize_fn deserialize;
+};
+
+struct ComponentDrawEntry
+{
     draw_fn draw;
     display_add_fn display_add;
+};
+
+struct ComponentStoreEntry
+{
     store_fn store;
     restore_fn restore;
 };
 
-ATCG_INLINE std::vector<ComponentRegistryEntry>& getRegistryEntries()
+ATCG_INLINE std::vector<ComponentSerializationEntry>& getSerializationEntries()
 {
-    static std::vector<ComponentRegistryEntry> entries;
+    static std::vector<ComponentSerializationEntry> entries;
+    return entries;
+}
+
+ATCG_INLINE std::vector<ComponentDrawEntry>& getDrawEntries()
+{
+    static std::vector<ComponentDrawEntry> entries;
+    return entries;
+}
+
+ATCG_INLINE std::vector<ComponentStoreEntry>& getStoreEntries()
+{
+    static std::vector<ComponentStoreEntry> entries;
     return entries;
 }
 
@@ -248,36 +268,47 @@ ATCG_INLINE void restoreAddAllComponents(Entity entity, const entt::id_type id, 
 }
 };    // namespace ComponentRegistry
 
-#define ATCG_REGISTER_COMPONENT(ComponentType)                                                                         \
-    struct RegistryFactory_##ComponentType                                                                             \
+#define ATCG_REGISTER_COMPONENT_SERIALIZATION(ComponentType)                                                           \
+    struct SerializationFactory_##ComponentType                                                                        \
     {                                                                                                                  \
-        RegistryFactory_##ComponentType()                                                                              \
+        SerializationFactory_##ComponentType()                                                                         \
         {                                                                                                              \
-            getRegistryEntries().push_back({&Serialization::serializeComponent<ComponentType>,                         \
-                                            &Serialization::deserializeComponent<ComponentType>,                       \
-                                            &GUI::drawComponent<ComponentType>,                                        \
-                                            &GUI::displayAddComponentEntry<ComponentType>,                             \
-                                            &storeComponent<ComponentType>,                                            \
-                                            &restoreComponent<ComponentType>});                                        \
+            getSerializationEntries().push_back({&Serialization::serializeComponent<ComponentType>,                    \
+                                                 &Serialization::deserializeComponent<ComponentType>});                \
         }                                                                                                              \
-        static RegistryFactory_##ComponentType instance;                                                               \
+        static SerializationFactory_##ComponentType instance;                                                          \
     };                                                                                                                 \
-    RegistryFactory_##ComponentType RegistryFactory_##ComponentType::instance
+    SerializationFactory_##ComponentType SerializationFactory_##ComponentType::instance
 
-#define ATCG_REGISTER_COMPONENT_SERIALIZATION_ONLY(ComponentType)                                                      \
-    struct RegistryFactory_##ComponentType                                                                             \
+#define ATCG_REGISTER_COMPONENT_DRAW(ComponentType)                                                                    \
+    struct DrawFactory_##ComponentType                                                                                 \
     {                                                                                                                  \
-        RegistryFactory_##ComponentType()                                                                              \
+        DrawFactory_##ComponentType()                                                                                  \
         {                                                                                                              \
-            getRegistryEntries().push_back({&Serialization::serializeComponent<ComponentType>,                         \
-                                            &Serialization::deserializeComponent<ComponentType>,                       \
-                                            {},                                                                        \
-                                            {},                                                                        \
-                                            {},                                                                        \
-                                            {}});                                                                      \
+            getDrawEntries().push_back({                                                                               \
+                &GUI::drawComponent<ComponentType>,                                                                    \
+                &GUI::displayAddComponentEntry<ComponentType>,                                                         \
+            });                                                                                                        \
         }                                                                                                              \
-        static RegistryFactory_##ComponentType instance;                                                               \
+        static DrawFactory_##ComponentType instance;                                                                   \
     };                                                                                                                 \
-    RegistryFactory_##ComponentType RegistryFactory_##ComponentType::instance
+    DrawFactory_##ComponentType DrawFactory_##ComponentType::instance
+
+#define ATCG_REGISTER_COMPONENT_STORE(ComponentType)                                                                   \
+    struct StoreFactory_##ComponentType                                                                                \
+    {                                                                                                                  \
+        StoreFactory_##ComponentType()                                                                                 \
+        {                                                                                                              \
+            getStoreEntries().push_back({&storeComponent<ComponentType>, &restoreComponent<ComponentType>});           \
+        }                                                                                                              \
+        static StoreFactory_##ComponentType instance;                                                                  \
+    };                                                                                                                 \
+    StoreFactory_##ComponentType StoreFactory_##ComponentType::instance
+
+
+#define ATCG_REGISTER_COMPONENT(ComponentType)                                                                         \
+    ATCG_REGISTER_COMPONENT_SERIALIZATION(ComponentType);                                                              \
+    ATCG_REGISTER_COMPONENT_DRAW(ComponentType);                                                                       \
+    ATCG_REGISTER_COMPONENT_STORE(ComponentType)
 
 }    // namespace atcg

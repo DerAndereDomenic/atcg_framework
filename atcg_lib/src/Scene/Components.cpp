@@ -23,8 +23,8 @@ void TransformComponent::decomposeModelMatrix()
     glm::extractEulerAngleXYZ(glm::mat4(RS * glm::scale(1.0f / _scale)), _rotation.x, _rotation.y, _rotation.z);
 }
 
-ATCG_REGISTER_COMPONENT_SERIALIZATION_ONLY(IDComponent);
-ATCG_REGISTER_COMPONENT_SERIALIZATION_ONLY(NameComponent);
+ATCG_REGISTER_COMPONENT_SERIALIZATION(IDComponent);
+ATCG_REGISTER_COMPONENT_SERIALIZATION(NameComponent);
 ATCG_REGISTER_COMPONENT(TransformComponent);
 ATCG_REGISTER_COMPONENT(CameraComponent);
 ATCG_REGISTER_COMPONENT(GeometryComponent);
