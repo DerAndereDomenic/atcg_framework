@@ -3,6 +3,7 @@
 #include <DataStructure/Image.h>
 #include <Renderer/Texture.h>
 #include <Renderer/Material.h>
+#include <Renderer/Shader.h>
 #include <DataStructure/Graph.h>
 #include <Scripting/Script.h>
 #include <Scene/Serializer.h>
