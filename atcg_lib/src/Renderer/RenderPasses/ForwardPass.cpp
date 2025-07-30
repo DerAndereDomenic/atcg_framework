@@ -2,6 +2,7 @@
 
 #include <Renderer/Renderer.h>
 #include <Scene/Components.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -56,12 +57,7 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
                     renderer.callback(entity, camera);
                 }
 
-                renderComponent<MeshRenderComponent>(renderer, entity, camera, auxiliary);
-                renderComponent<PointRenderComponent>(renderer, entity, camera, auxiliary);
-                renderComponent<PointSphereRenderComponent>(renderer, entity, camera, auxiliary);
-                renderComponent<EdgeRenderComponent>(renderer, entity, camera, auxiliary);
-                renderComponent<EdgeCylinderRenderComponent>(renderer, entity, camera, auxiliary);
-                renderComponent<InstanceRenderComponent>(renderer, entity, camera, auxiliary);
+                ComponentRegistry::renderAllComponents(renderer, entity, camera, auxiliary);
             }
         });
 }
