@@ -1,4 +1,5 @@
 #include <Scene/Components.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -21,4 +22,18 @@ void TransformComponent::decomposeModelMatrix()
     _scale        = glm::vec3(scale_x, scale_y, scale_z);
     glm::extractEulerAngleXYZ(glm::mat4(RS * glm::scale(1.0f / _scale)), _rotation.x, _rotation.y, _rotation.z);
 }
+
+ATCG_REGISTER_COMPONENT_SERIALIZATION(IDComponent);
+ATCG_REGISTER_COMPONENT_SERIALIZATION(NameComponent);
+ATCG_REGISTER_COMPONENT(TransformComponent);
+ATCG_REGISTER_COMPONENT(CameraComponent);
+ATCG_REGISTER_COMPONENT(GeometryComponent);
+ATCG_REGISTER_COMPONENT(MeshRenderComponent);
+ATCG_REGISTER_COMPONENT(PointRenderComponent);
+ATCG_REGISTER_COMPONENT(PointSphereRenderComponent);
+ATCG_REGISTER_COMPONENT(EdgeRenderComponent);
+ATCG_REGISTER_COMPONENT(EdgeCylinderRenderComponent);
+ATCG_REGISTER_COMPONENT(InstanceRenderComponent);
+ATCG_REGISTER_COMPONENT(PointLightComponent);
+ATCG_REGISTER_COMPONENT(ScriptComponent);
 }    // namespace atcg

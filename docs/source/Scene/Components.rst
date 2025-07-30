@@ -46,3 +46,9 @@ Components
 .. doxygenstruct:: atcg::CustomRenderComponent
    :members:
    :undoc-members:
+.. doxygenstruct:: atcg::PointLightComponent
+   :members:
+   :undoc-members:
+.. doxygenstruct:: atcg::ScriptComponent
+   :members:
+   :undoc-members:

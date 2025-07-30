@@ -706,8 +706,8 @@ inline void defineBindings(py::module_& m)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
 
     m_serializer.def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
-        .def("serialize", &atcg::Serialization::SceneSerializer::serialize<>, "file_path"_a)
-        .def("deserialize", &atcg::Serialization::SceneSerializer::deserialize<>, "file_path"_a);
+        .def("serialize", &atcg::Serialization::SceneSerializer::serialize, "file_path"_a)
+        .def("deserialize", &atcg::Serialization::SceneSerializer::deserialize, "file_path"_a);
 
     m_performance_panel.def(py::init<>())
         .def(
@@ -1464,7 +1464,7 @@ inline void defineBindings(py::module_& m)
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())
-        .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel<>)
+        .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel)
         .def("selectEntity", &atcg::GUI::SceneHierarchyPanel::selectEntity, "entity"_a)
         .def("getSelectedEntity", &atcg::GUI::SceneHierarchyPanel::getSelectedEntity);
 

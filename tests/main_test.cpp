@@ -8,6 +8,7 @@
 #include <Renderer/ContextManager.h>
 #include <Scene/RevisionStack.h>
 #include <Asset/AssetManagerSystem.h>
+#include <Scene/ComponentRegistry.h>
 
 // Define a custom test environment class
 class ATCGTestEnvironment : public ::testing::Environment
@@ -33,6 +34,9 @@ public:
 
         _shader_manager = atcg::make_ref<atcg::ShaderManagerSystem>();
         atcg::SystemRegistry::instance()->registerSystem(_shader_manager.get());
+
+        _component_registry = atcg::make_ref<atcg::ComponentRegistrySystem>();
+        atcg::SystemRegistry::instance()->registerSystem(_component_registry.get());
 
         atcg::WindowProps props;
         props.hidden = true;
@@ -61,6 +65,7 @@ private:
     atcg::ref_ptr<atcg::Window> _window;
     atcg::ref_ptr<atcg::RevisionSystem> _revision_system;
     atcg::ref_ptr<atcg::AssetManagerSystem> _asset_manager;
+    atcg::ref_ptr<atcg::ComponentRegistrySystem> _component_registry;
 };
 
 int main(int argc, char **argv)

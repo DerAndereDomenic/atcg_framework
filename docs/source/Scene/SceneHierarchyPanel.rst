@@ -7,5 +7,3 @@ Scene Hierarchy Panel
 .. doxygenstruct:: atcg::GUI::ComponentGUIRenderer
    :members:
    :undoc-members:
-.. doxygenfunction:: atcg::GUI::displayMaterial
-   :project: ATCGLIB

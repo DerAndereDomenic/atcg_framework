@@ -26,12 +26,7 @@ public:
     /**
      * @brief Should be called in onImGuiRender.
      * Renders the panel
-     *
-     * @tparam CustomComponents... optional custom components that should be rendered.
-     *
-     * To support custom component rendering, a custom GUIHandler has to be provided.
      */
-    template<typename... CustomComponents>
     void renderPanel(const atcg::ref_ptr<Scene>& scene);
 
     /**
@@ -51,7 +46,6 @@ public:
 private:
     void drawEntityNode(const atcg::ref_ptr<Scene>& scene, Entity entity);
 
-    template<typename... Components>
     void drawComponents(const atcg::ref_ptr<Scene>& scene, Entity entity);
 
     Entity _selected_entity;
@@ -60,9 +54,3 @@ private:
 };
 }    // namespace GUI
 }    // namespace atcg
-
-#ifndef ATCG_HEADLESS
-    #include "../../platform/glfw/src/Scene/SceneHierarchyPanelDetails.h"
-#else
-    #include "../../platform/headless/src/Scene/SceneHierarchyPanelDetails.h"
-#endif

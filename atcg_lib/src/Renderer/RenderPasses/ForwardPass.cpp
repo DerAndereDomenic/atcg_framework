@@ -2,6 +2,7 @@
 
 #include <Renderer/Renderer.h>
 #include <Scene/Components.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
@@ -19,8 +20,6 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
             data.setValue("skybox", _skybox);
-            auto component_renderer = atcg::make_ref<atcg::ComponentRenderer>(renderer);
-            data.setValue("component_renderer", std::move(component_renderer));
         });
 
 
@@ -43,8 +42,6 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
                                                                                                                 "maps");
             }
 
-            auto component_renderer = data.getValue<atcg::ref_ptr<ComponentRenderer>>("component_renderer");
-
             Dictionary auxiliary;
             auxiliary.setValue("point_light_depth_maps", point_light_depth_maps);
             auxiliary.setValue("skybox", data.getValue<atcg::ref_ptr<Skybox>>("skybox"));
@@ -60,12 +57,7 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
                     renderer.callback(entity, camera);
                 }
 
-                component_renderer->renderComponent<MeshRenderComponent>(entity, camera, auxiliary);
-                component_renderer->renderComponent<PointRenderComponent>(entity, camera, auxiliary);
-                component_renderer->renderComponent<PointSphereRenderComponent>(entity, camera, auxiliary);
-                component_renderer->renderComponent<EdgeRenderComponent>(entity, camera, auxiliary);
-                component_renderer->renderComponent<EdgeCylinderRenderComponent>(entity, camera, auxiliary);
-                component_renderer->renderComponent<InstanceRenderComponent>(entity, camera, auxiliary);
+                ComponentRegistry::renderAllComponents(renderer, entity, camera, auxiliary);
             }
         });
 }

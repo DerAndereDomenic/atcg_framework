@@ -9,6 +9,7 @@
 
 #include <random>
 #include <stb_image.h>
+#include <portable-file-dialogs.h>
 
 class PBRLayer : public atcg::Layer
 {

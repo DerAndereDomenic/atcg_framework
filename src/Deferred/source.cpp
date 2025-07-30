@@ -87,7 +87,6 @@ public:
                                                                  atcg::GeometryComponent,
                                                                  atcg::MeshRenderComponent>();
 
-                    atcg::ComponentRenderer component_renderer;
                     auto camera = context.getValue<atcg::ref_ptr<atcg::Camera>>("camera");
 
                     auto geometry_pass_shader = data.getValue<atcg::ref_ptr<atcg::Shader>>("geometry_pass_shader");
@@ -97,7 +96,11 @@ public:
                     {
                         atcg::Entity entity(e, scene);
 
-                        component_renderer.renderComponent<atcg::MeshRenderComponent>(entity, camera, auxiliary);
+                        atcg::renderComponent<atcg::MeshRenderComponent>(
+                            atcg::SystemRegistry::instance()->getSystem<atcg::RendererSystem>(),
+                            entity,
+                            camera,
+                            auxiliary);
                     }
                 });
 
