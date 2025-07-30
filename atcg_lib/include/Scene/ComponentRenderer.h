@@ -59,4 +59,37 @@ ATCG_DECLARE_COMPONENT_RENDERER(PointSphereRenderComponent);
 ATCG_DECLARE_COMPONENT_RENDERER(EdgeRenderComponent);
 ATCG_DECLARE_COMPONENT_RENDERER(EdgeCylinderRenderComponent);
 ATCG_DECLARE_COMPONENT_RENDERER(InstanceRenderComponent);
+
+template<typename T>
+void renderComponent(atcg::RendererSystem* renderer,
+                     Entity entity,
+                     const atcg::ref_ptr<Camera>& camera,
+                     atcg::Dictionary& auxiliary)
+{
+    if(!entity.hasComponent<T>()) return;
+
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
+    GeometryComponent geometry = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
+
+    ComponentRenderer<T>().renderComponent(renderer, entity, camera, auxiliary);
+}
 }    // namespace atcg

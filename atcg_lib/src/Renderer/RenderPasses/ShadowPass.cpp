@@ -119,7 +119,7 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
                 {
                     atcg::Entity entity(e, scene);
 
-                    ComponentRenderer<MeshRenderComponent>().renderComponent(renderer, entity, camera, auxiliary);
+                    renderComponent<MeshRenderComponent>(renderer, entity, camera, auxiliary);
                 }
 
                 ++light_idx;

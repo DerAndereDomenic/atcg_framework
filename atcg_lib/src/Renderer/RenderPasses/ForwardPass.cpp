@@ -56,12 +56,12 @@ ForwardPass::ForwardPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("Forw
                     renderer.callback(entity, camera);
                 }
 
-                ComponentRenderer<MeshRenderComponent>().renderComponent(renderer, entity, camera, auxiliary);
-                ComponentRenderer<PointRenderComponent>().renderComponent(renderer, entity, camera, auxiliary);
-                ComponentRenderer<PointSphereRenderComponent>().renderComponent(renderer, entity, camera, auxiliary);
-                ComponentRenderer<EdgeRenderComponent>().renderComponent(renderer, entity, camera, auxiliary);
-                ComponentRenderer<EdgeCylinderRenderComponent>().renderComponent(renderer, entity, camera, auxiliary);
-                ComponentRenderer<InstanceRenderComponent>().renderComponent(renderer, entity, camera, auxiliary);
+                renderComponent<MeshRenderComponent>(renderer, entity, camera, auxiliary);
+                renderComponent<PointRenderComponent>(renderer, entity, camera, auxiliary);
+                renderComponent<PointSphereRenderComponent>(renderer, entity, camera, auxiliary);
+                renderComponent<EdgeRenderComponent>(renderer, entity, camera, auxiliary);
+                renderComponent<EdgeCylinderRenderComponent>(renderer, entity, camera, auxiliary);
+                renderComponent<InstanceRenderComponent>(renderer, entity, camera, auxiliary);
             }
         });
 }
