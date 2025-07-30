@@ -14,10 +14,10 @@ ATCG_INLINE atcg::ref_ptr<Skybox> getDummySkybox()
     return skybox;
 }
 
-ATCG_INLINE uint32_t _setLights(atcg::RendererSystem* renderer,
-                                Scene* scene,
-                                const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                                const atcg::ref_ptr<Shader>& shader)
+ATCG_INLINE uint32_t setLights(atcg::RendererSystem* renderer,
+                               Scene* scene,
+                               const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
+                               const atcg::ref_ptr<Shader>& shader)
 {
     auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
 
@@ -60,7 +60,7 @@ ATCG_INLINE uint32_t _setLights(atcg::RendererSystem* renderer,
 }
 
 ATCG_INLINE std::pair<uint32_t, uint32_t>
-_setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const atcg::ref_ptr<Skybox>& skybox)
+setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const atcg::ref_ptr<Skybox>& skybox)
 {
     uint32_t irradiance_id = renderer->popTextureID();
     skybox->getIrradianceMap()->use(irradiance_id);
@@ -121,8 +121,8 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
 
     if(renderer.visible)
     {
-        uint32_t id          = detail::_setLights(_renderer, scene, point_light_depth_maps, shader);
-        auto [ir_id, pre_id] = detail::_setSkyLight(_renderer, shader, skybox);
+        uint32_t id          = detail::setLights(_renderer, scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
         _renderer->draw(geometry.graph(),
@@ -195,8 +195,8 @@ void ComponentRenderer<PointRenderComponent>::renderComponent(atcg::RendererSyst
 
     if(renderer.visible)
     {
-        uint32_t id          = detail::_setLights(_renderer, scene, point_light_depth_maps, shader);
-        auto [ir_id, pre_id] = detail::_setSkyLight(_renderer, shader, skybox);
+        uint32_t id          = detail::setLights(_renderer, scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         _renderer->setPointSize(renderer.point_size);
         _renderer->draw(geometry.graph(),
@@ -269,8 +269,8 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
 
     if(renderer.visible)
     {
-        uint32_t id          = detail::_setLights(_renderer, scene, point_light_depth_maps, shader);
-        auto [ir_id, pre_id] = detail::_setSkyLight(_renderer, shader, skybox);
+        uint32_t id          = detail::setLights(_renderer, scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         _renderer->setPointSize(renderer.point_size);
         _renderer->draw(geometry.graph(),
@@ -344,8 +344,8 @@ void ComponentRenderer<EdgeRenderComponent>::renderComponent(atcg::RendererSyste
 
     if(renderer.visible)
     {
-        uint32_t id          = detail::_setLights(_renderer, scene, point_light_depth_maps, shader);
-        auto [ir_id, pre_id] = detail::_setSkyLight(_renderer, shader, skybox);
+        uint32_t id          = detail::setLights(_renderer, scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         _renderer->draw(geometry.graph(),
                         camera,
@@ -418,8 +418,8 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
 
     if(renderer.visible)
     {
-        uint32_t id          = detail::_setLights(_renderer, scene, point_light_depth_maps, shader);
-        auto [ir_id, pre_id] = detail::_setSkyLight(_renderer, shader, skybox);
+        uint32_t id          = detail::setLights(_renderer, scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setFloat("edge_radius", renderer.radius);
         _renderer->draw(geometry.graph(),
@@ -502,8 +502,8 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
             vao->pushInstanceBuffer(renderer.instance_vbos[i]);
         }
 
-        uint32_t id          = detail::_setLights(_renderer, scene, point_light_depth_maps, shader);
-        auto [ir_id, pre_id] = detail::_setSkyLight(_renderer, shader, skybox);
+        uint32_t id          = detail::setLights(_renderer, scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
         _renderer->draw(geometry.graph(),
