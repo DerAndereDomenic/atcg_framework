@@ -1,6 +1,6 @@
 ComponentRenderer
 =================
 
-.. doxygenclass:: atcg::ComponentRenderer
+.. doxygenstruct:: atcg::ComponentRenderer
    :members:
    :undoc-members:

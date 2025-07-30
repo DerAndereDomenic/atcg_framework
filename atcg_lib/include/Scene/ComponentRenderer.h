@@ -11,6 +11,23 @@ namespace atcg
 /**
  * @brief A Template struct to manage rendering of different components.
  * @tparam T The component type
+ *
+ * To add custom rendering code, create a class that specializes this class and add the rendering code for the custom
+ * component.
+ *
+ * @code{.cpp}
+ * template<>
+ * struct atcg::ComponentRenderer<CustomComponent>
+ * {
+ *     void renderComponent(atcg::RendererSystem* renderer,
+ *                          Entity entity,
+ *                          const atcg::ref_ptr<Camera>& camera,
+ *                          atcg::Dictionary& auxiliary) const
+ *     {
+ *         // Render Code
+ *     }
+ * };
+ * @endcode
  */
 template<typename T>
 struct ComponentRenderer
