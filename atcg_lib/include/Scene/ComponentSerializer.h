@@ -116,6 +116,24 @@ ATCG_DECLARE_COMPONENT_SERIALIZER(InstanceRenderComponent);
 ATCG_DECLARE_COMPONENT_SERIALIZER(PointLightComponent);
 ATCG_DECLARE_COMPONENT_SERIALIZER(ScriptComponent);
 
+template<typename ComponentType>
+ATCG_INLINE void
+serializeComponent(const std::string& file_name, const atcg::ref_ptr<Scene>& scene, Entity entity, nlohmann::json& j)
+{
+    if(entity.hasComponent<ComponentType>())
+    {
+        ComponentType& component = entity.getComponent<ComponentType>();
+        ComponentSerializer<ComponentType>().serialize_component(file_name, scene, entity, component, j);
+    }
+}
+
+template<typename ComponentType>
+ATCG_INLINE void
+deserializeComponent(const std::string& file_name, const atcg::ref_ptr<Scene>& scene, Entity entity, nlohmann::json& j)
+{
+    ComponentSerializer<ComponentType>().deserialize_component(file_name, scene, entity, j);
+}
+
 /**
  * @brief Serialize a buffer
  *
