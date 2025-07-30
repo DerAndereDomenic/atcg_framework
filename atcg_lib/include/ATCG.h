@@ -108,6 +108,7 @@
 #include <Scene/ComponentSerializer.h>
 #include <Scene/RevisionStack.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentRegistry.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>

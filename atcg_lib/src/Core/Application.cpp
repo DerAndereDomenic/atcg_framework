@@ -57,6 +57,9 @@ void Application::init(const WindowProps& props)
     _revision_system = atcg::make_ref<RevisionSystem>();
     SystemRegistry::instance()->registerSystem(_revision_system.get());
 
+    _component_registry = atcg::make_ref<ComponentRegistrySystem>();
+    SystemRegistry::instance()->registerSystem(_component_registry.get());
+
     _script_engine = atcg::make_ref<PythonScriptEngine>();
     _script_engine->init();
     SystemRegistry::instance()->registerSystem(_script_engine.get());
