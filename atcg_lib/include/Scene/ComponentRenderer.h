@@ -39,7 +39,6 @@ struct ComponentRenderer
                          const atcg::ref_ptr<Camera>& camera,
                          atcg::Dictionary& auxiliary) const
     {
-        throw std::logic_error("No ComponentRenderer specialization available for this component type");
     }
 };
 

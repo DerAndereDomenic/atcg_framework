@@ -42,10 +42,7 @@ struct ComponentGUIRenderer
      * @param entity The entity that holds the component
      * @param component The component to render
      */
-    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, T& component) const
-    {
-        throw std::logic_error("No ComponentGUIRenderer specialization available for this component type");
-    }
+    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, T& component) const {}
 };
 
 #define ATCG_DECLARE_COMPONENT_GUI_RENDERER(ComponentType)                                                             \

@@ -65,7 +65,6 @@ struct ComponentSerializer
                              T& component,
                              nlohmann::json& j) const
     {
-        throw std::logic_error("No ComponentSerializer specialization available for this component type");
     }
 
     /**
@@ -82,7 +81,6 @@ struct ComponentSerializer
                                Entity entity,
                                nlohmann::json& j) const
     {
-        throw std::logic_error("No ComponentSerializer specialization available for this component type");
     }
 };
 
