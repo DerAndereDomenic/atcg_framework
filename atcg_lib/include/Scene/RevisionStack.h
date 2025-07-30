@@ -295,19 +295,7 @@ public:
     virtual void rollback() override
     {
         auto entity = _scene->createEntity((entt::entity)_entity_handle, _uuid, _name);
-        restoreComponents<TransformComponent,
-                          CameraComponent,
-                          GeometryComponent,
-                          AccelerationStructureComponent,
-                          MeshRenderComponent,
-                          PointRenderComponent,
-                          PointSphereRenderComponent,
-                          EdgeRenderComponent,
-                          EdgeCylinderRenderComponent,
-                          InstanceRenderComponent,
-                          CustomRenderComponent,
-                          PointLightComponent,
-                          ScriptComponent>(entity);
+        restoreComponents(entity);
     }
 
     /**
@@ -320,19 +308,7 @@ public:
         _uuid = entity.getComponent<IDComponent>().ID();
         _name = entity.getComponent<NameComponent>().name();
 
-        storeComponents<TransformComponent,
-                        CameraComponent,
-                        GeometryComponent,
-                        AccelerationStructureComponent,
-                        MeshRenderComponent,
-                        PointRenderComponent,
-                        PointSphereRenderComponent,
-                        EdgeRenderComponent,
-                        EdgeCylinderRenderComponent,
-                        InstanceRenderComponent,
-                        CustomRenderComponent,
-                        PointLightComponent,
-                        ScriptComponent>(entity);
+        storeComponents(entity);
     }
 
     /**
@@ -342,39 +318,10 @@ public:
     virtual void record_end_state() override {}
 
 private:
-    template<typename... Components>
-    void storeComponents(atcg::Entity entity)
-    {
-        // Capture all components
-        (
-            [&]
-            {
-                if(entity.hasAnyComponent<Components>())
-                {
-                    _components[entt::type_hash<Components>::value()] =
-                        std::make_shared<Components>(entity.getComponent<Components>());
-                }
-            }(),
-            ...);
-    }
-
-    template<typename... Components>
-    void restoreComponents(atcg::Entity entity)
-    {
-        // Restore components
-        for(auto& [id, component]: _components)
-        {
-            (
-                [&]
-                {
-                    if(id == entt::type_hash<Components>::value())
-                    {
-                        entity.addOrReplaceComponent<Components>(*std::static_pointer_cast<Components>(component));
-                    }
-                }(),
-                ...);
-        }
-    }
+    // These functions are implemented in a cpp unit because they rely on the ComponentRegistry which also relies on the
+    // RevisionStack and therefore, we get a circular dependency.
+    void storeComponents(atcg::Entity entity);
+    void restoreComponents(atcg::Entity entity);
 
 private:
     UUID _uuid;
