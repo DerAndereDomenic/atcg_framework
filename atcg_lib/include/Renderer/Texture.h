@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Memory.h>
+#include <Asset/Asset.h>
 #include <DataStructure/Image.h>
 #include <DataStructure/TorchUtils.h>
 
@@ -303,7 +304,7 @@ protected:
 /**
  * @brief A class to model a texture
  */
-class Texture2D : public Texture
+class Texture2D : public Texture, public Asset
 {
 public:
     /**
@@ -420,6 +421,10 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+    ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture2D; }
+
+    ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
 };
 
 /**

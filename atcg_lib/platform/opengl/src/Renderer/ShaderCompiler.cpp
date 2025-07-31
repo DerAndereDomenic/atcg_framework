@@ -12,8 +12,8 @@ ShaderCompiler::~ShaderCompiler() {}
 
 uint32_t ShaderCompiler::compileShader(const std::string& compute_path)
 {
-    std::string compute_buffer = readShaderCode(compute_path, ShaderType::COMPUTE);
-    const char* cShaderCode    = compute_buffer.c_str();
+    _compute_code           = readShaderCode(compute_path, ShaderType::COMPUTE);
+    const char* cShaderCode = _compute_code.c_str();
 
     // Compiling
     uint32_t compute;
@@ -32,11 +32,11 @@ uint32_t ShaderCompiler::compileShader(const std::string& compute_path)
 uint32_t ShaderCompiler::compileShader(const std::string& vertex_path, const std::string& fragment_path)
 {
     // File reading
-    std::string vertex_buffer = readShaderCode(vertex_path, ShaderType::VERTEX);
-    const char* vShaderCode   = vertex_buffer.c_str();
+    _vertex_code            = readShaderCode(vertex_path, ShaderType::VERTEX);
+    const char* vShaderCode = _vertex_code.c_str();
 
-    std::string fragment_buffer = readShaderCode(fragment_path, ShaderType::FRAGMENT);
-    const char* fShaderCode     = fragment_buffer.c_str();
+    _fragment_code          = readShaderCode(fragment_path, ShaderType::FRAGMENT);
+    const char* fShaderCode = _fragment_code.c_str();
 
     // Compiling
     uint32_t vertex, fragment;
@@ -59,14 +59,14 @@ uint32_t ShaderCompiler::compileShader(const std::string& vertex_path,
                                        const std::string& fragment_path)
 {
     // File reading
-    std::string vertex_buffer = readShaderCode(vertex_path, ShaderType::VERTEX);
-    const char* vShaderCode   = vertex_buffer.c_str();
+    _vertex_code            = readShaderCode(vertex_path, ShaderType::VERTEX);
+    const char* vShaderCode = _vertex_code.c_str();
 
-    std::string fragment_buffer = readShaderCode(fragment_path, ShaderType::FRAGMENT);
-    const char* fShaderCode     = fragment_buffer.c_str();
+    _fragment_code          = readShaderCode(fragment_path, ShaderType::FRAGMENT);
+    const char* fShaderCode = _fragment_code.c_str();
 
-    std::string geometry_buffer = readShaderCode(geometry_path, ShaderType::GEOMETRY);
-    const char* gShaderCode     = geometry_buffer.c_str();
+    _geometry_code          = readShaderCode(geometry_path, ShaderType::GEOMETRY);
+    const char* gShaderCode = _geometry_code.c_str();
 
     // Compiling
     uint32_t vertex, geometry, fragment;
@@ -84,6 +84,23 @@ uint32_t ShaderCompiler::compileShader(const std::string& vertex_path,
     glDeleteShader(geometry);
 
     return ID;
+}
+
+std::string ShaderCompiler::getSource(const ShaderType& type) const
+{
+    switch(type)
+    {
+        case ShaderType::VERTEX:
+            return _vertex_code;
+        case ShaderType::FRAGMENT:
+            return _fragment_code;
+        case ShaderType::GEOMETRY:
+            return _geometry_code;
+        case ShaderType::COMPUTE:
+            return _compute_code;
+    }
+
+    return "";
 }
 
 std::pair<bool, std::string> ShaderCompiler::parseIncludeLine(const std::string& line)

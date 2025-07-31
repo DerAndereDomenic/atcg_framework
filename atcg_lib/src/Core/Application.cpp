@@ -6,7 +6,7 @@
 #include <Renderer/Renderer.h>
 #include <Renderer/VRSystem.h>
 #include <Renderer/ShaderManager.h>
-
+#include <Asset/Project.h>
 
 namespace atcg
 {
@@ -25,6 +25,7 @@ Application::Application(const WindowProps& props)
 Application::~Application()
 {
     _revision_system->clearChache();
+    if(_asset_manager) _asset_manager->destroy();
     if(_script_engine) _script_engine->destroy();
 }
 
@@ -32,6 +33,9 @@ void Application::init(const WindowProps& props)
 {
     ATCG_ASSERT(!s_instance, "There can only be one application instance at a time.");
     ATCG_ASSERT(SystemRegistry::instance(), "SystemRegistry must be initialized before initializing the Application");
+
+    _asset_manager = atcg::make_ref<AssetManagerSystem>();
+    SystemRegistry::instance()->registerSystem(_asset_manager.get());
 
     _context_manager = atcg::make_ref<ContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_context_manager.get());
@@ -58,11 +62,17 @@ void Application::init(const WindowProps& props)
     _revision_system = atcg::make_ref<RevisionSystem>();
     SystemRegistry::instance()->registerSystem(_revision_system.get());
 
+    _component_registry = atcg::make_ref<ComponentRegistrySystem>();
+    SystemRegistry::instance()->registerSystem(_component_registry.get());
+
     _script_engine = atcg::make_ref<PythonScriptEngine>();
     _script_engine->init();
     SystemRegistry::instance()->registerSystem(_script_engine.get());
 
     Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
+
+    // Create an active project
+    atcg::Project::create("./DefaultProject");
 
     s_instance = this;
 

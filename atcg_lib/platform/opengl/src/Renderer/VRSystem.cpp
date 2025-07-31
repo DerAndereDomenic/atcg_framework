@@ -162,10 +162,10 @@ void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
                                                            "er");
         impl->left_controller_entity.addComponent<atcg::TransformComponent>();
         auto& renderer = impl->left_controller_entity.addComponent<atcg::MeshRenderComponent>();
-        renderer.material.setDiffuseTexture(atcg::Texture2D::create(base_color));
-        renderer.material.setNormalTexture(atcg::Texture2D::create(normal));
-        renderer.material.setRoughnessTexture(atcg::Texture2D::create(roughness));
-        renderer.material.setMetallicTexture(atcg::Texture2D::create(metallic));
+        renderer.material()->setDiffuseTexture(atcg::Texture2D::create(base_color));
+        renderer.material()->setNormalTexture(atcg::Texture2D::create(normal));
+        renderer.material()->setRoughnessTexture(atcg::Texture2D::create(roughness));
+        renderer.material()->setMetallicTexture(atcg::Texture2D::create(metallic));
 
         impl->left_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
     }
@@ -190,10 +190,10 @@ void VRSystem::initControllerMeshes(const atcg::ref_ptr<atcg::Scene>& scene)
                                                             "ler");
         impl->right_controller_entity.addComponent<atcg::TransformComponent>();
         auto& renderer = impl->right_controller_entity.addComponent<atcg::MeshRenderComponent>();
-        renderer.material.setDiffuseTexture(atcg::Texture2D::create(base_color));
-        renderer.material.setNormalTexture(atcg::Texture2D::create(normal));
-        renderer.material.setRoughnessTexture(atcg::Texture2D::create(roughness));
-        renderer.material.setMetallicTexture(atcg::Texture2D::create(metallic));
+        renderer.material()->setDiffuseTexture(atcg::Texture2D::create(base_color));
+        renderer.material()->setNormalTexture(atcg::Texture2D::create(normal));
+        renderer.material()->setRoughnessTexture(atcg::Texture2D::create(roughness));
+        renderer.material()->setMetallicTexture(atcg::Texture2D::create(metallic));
         impl->right_controller_entity.addComponent<atcg::GeometryComponent>(mesh);
     }
 

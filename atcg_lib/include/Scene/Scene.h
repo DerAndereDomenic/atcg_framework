@@ -1,9 +1,9 @@
 #pragma once
 
 
+#include <Asset/Asset.h>
 #include <Core/UUID.h>
 #include <Core/Memory.h>
-
 #include <Renderer/Camera.h>
 #include <Renderer/Texture.h>
 #include <Renderer/RenderGraph.h>
@@ -24,7 +24,7 @@ class Entity;
 /**
  * @brief A class to model a scene.
  */
-class Scene
+class Scene : public Asset
 {
 public:
     /**
@@ -207,6 +207,10 @@ public:
      * @return The render graph
      */
     atcg::ref_ptr<RenderGraph> getRenderGraph() const;
+
+    static AssetType getStaticType() { return AssetType::Scene; }
+
+    virtual AssetType getType() const override { return getStaticType(); }
 
 private:
     void _updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id);

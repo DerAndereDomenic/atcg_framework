@@ -87,7 +87,6 @@ public:
                                                                  atcg::GeometryComponent,
                                                                  atcg::MeshRenderComponent>();
 
-                    atcg::ComponentRenderer component_renderer;
                     auto camera = context.getValue<atcg::ref_ptr<atcg::Camera>>("camera");
 
                     auto geometry_pass_shader = data.getValue<atcg::ref_ptr<atcg::Shader>>("geometry_pass_shader");
@@ -97,7 +96,11 @@ public:
                     {
                         atcg::Entity entity(e, scene);
 
-                        component_renderer.renderComponent<atcg::MeshRenderComponent>(entity, camera, auxiliary);
+                        atcg::renderComponent<atcg::MeshRenderComponent>(
+                            atcg::SystemRegistry::instance()->getSystem<atcg::RendererSystem>(),
+                            entity,
+                            camera,
+                            auxiliary);
                     }
                 });
 
@@ -335,7 +338,7 @@ public:
         light.intensity  = 10.0f;
         point_light.addComponent<atcg::TransformComponent>(glm::vec3(0, 5, 0));
 
-        panel = atcg::GUI::SceneHierarchyPanel(scene);
+        panel = atcg::GUI::SceneHierarchyPanel();
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -406,7 +409,7 @@ public:
             ImGui::End();
         }
 
-        panel.renderPanel();
+        panel.renderPanel(scene);
         hovered_entity = panel.getSelectedEntity();
 
         atcg::drawGuizmo(scene, hovered_entity, current_operation, camera_controller->getCamera());

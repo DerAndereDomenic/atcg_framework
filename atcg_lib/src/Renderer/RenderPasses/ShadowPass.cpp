@@ -15,8 +15,6 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
             data.setValue("point_light_framebuffer", atcg::make_ref<atcg::Framebuffer>(1024, 1024));
-            auto component_renderer = atcg::make_ref<atcg::ComponentRenderer>(renderer);
-            data.setValue("component_renderer", std::move(component_renderer));
         });
     setRenderFunction(
         [](Dictionary& context, const Dictionary&, Dictionary& data, Dictionary& output_data)
@@ -110,9 +108,7 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
                                                                     lightPos + glm::vec3(0.0, 0.0, -1.0),
                                                                     glm::vec3(0.0, -1.0, 0.0)));
                 depth_pass_shader->setInt("light_idx", light_idx);
-
-                auto component_renderer = data.getValue<atcg::ref_ptr<ComponentRenderer>>("component_renderer");
-                auto camera             = context.getValue<atcg::ref_ptr<Camera>>("camera");
+                auto camera = context.getValue<atcg::ref_ptr<Camera>>("camera");
 
                 const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
@@ -123,7 +119,7 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
                 {
                     atcg::Entity entity(e, scene);
 
-                    component_renderer->renderComponent<MeshRenderComponent>(entity, camera, auxiliary);
+                    renderComponent<MeshRenderComponent>(renderer, entity, camera, auxiliary);
                 }
 
                 ++light_idx;

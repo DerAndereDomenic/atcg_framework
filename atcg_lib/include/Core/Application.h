@@ -12,6 +12,8 @@
 #include <Renderer/VRSystem.h>
 #include <Renderer/ContextManager.h>
 #include <Scripting/ScriptEngine.h>
+#include <Asset/AssetManagerSystem.h>
+#include <Scene/ComponentRegistry.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
@@ -151,11 +153,13 @@ private:
     LayerStack _layer_stack;
 
     // Systems
+    atcg::ref_ptr<AssetManagerSystem> _asset_manager;
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
     atcg::ref_ptr<ScriptEngine> _script_engine;
     atcg::ref_ptr<RevisionSystem> _revision_system;
+    atcg::ref_ptr<ComponentRegistrySystem> _component_registry;
 
     friend int atcg::atcg_main();
     static Application* s_instance;

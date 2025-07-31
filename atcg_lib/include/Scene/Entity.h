@@ -206,4 +206,22 @@ private:
     Scene* _scene               = nullptr;
     entt::entity _entity_handle = entt::null;
 };
+
+template<typename T>
+void storeComponent(Entity entity, std::unordered_map<entt::id_type, std::shared_ptr<void>>& components)
+{
+    if(entity.hasAnyComponent<T>())
+    {
+        components[entt::type_hash<T>::value()] = std::make_shared<T>(entity.getComponent<T>());
+    }
+}
+
+template<typename T>
+void restoreComponent(Entity entity, const entt::id_type id, const std::shared_ptr<void>& component)
+{
+    if(id == entt::type_hash<T>::value())
+    {
+        entity.addOrReplaceComponent<T>(*std::static_pointer_cast<T>(component));
+    }
+}
 }    // namespace atcg

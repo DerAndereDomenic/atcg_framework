@@ -43,9 +43,9 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
     if(!component.visible) return;
 
     auto& transform = entity.getComponent<TransformComponent>();
-    auto& material  = component.material;
+    auto& material  = component.material();
 
-    auto graph = entity.getComponent<GeometryComponent>().graph;
+    auto graph = entity.getComponent<GeometryComponent>().graph();
     atcg::Dictionary shape_dict;
     shape_dict.setValue("mesh", graph);
     atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
@@ -99,7 +99,7 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
-    auto& material             = component.material;
+    auto& material             = component.material();
 
     auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
     atcg::Dictionary shape_dict;
@@ -113,7 +113,7 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
     atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
     bsdf->initializePipeline(pipeline, sbt);
 
-    auto mesh            = entity.getComponent<GeometryComponent>().graph;
+    auto mesh            = entity.getComponent<GeometryComponent>().graph();
     uint32_t n_instances = mesh->n_vertices();
 
     torch::Tensor offsets = mesh->getHostPositions();
@@ -198,7 +198,7 @@ void PathtracingIntegrator::prepareComponent<EdgeCylinderRenderComponent>(
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
-    auto& material             = component.material;
+    auto& material             = component.material();
 
     auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
     atcg::Dictionary shape_dict;
@@ -212,7 +212,7 @@ void PathtracingIntegrator::prepareComponent<EdgeCylinderRenderComponent>(
     atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
     bsdf->initializePipeline(pipeline, sbt);
 
-    auto mesh            = entity.getComponent<GeometryComponent>().graph;
+    auto mesh            = entity.getComponent<GeometryComponent>().graph();
     uint32_t n_instances = mesh->n_edges();
 
     torch::Tensor positions = mesh->getHostPositions();
@@ -307,9 +307,9 @@ void PathtracingIntegrator::prepareComponent<InstanceRenderComponent>(Entity ent
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
-    auto& material             = component.material;
+    auto& material             = component.material();
 
-    auto graph = entity.getComponent<GeometryComponent>().graph;
+    auto graph = entity.getComponent<GeometryComponent>().graph();
     atcg::Dictionary shape_dict;
     shape_dict.setValue("mesh", graph);
     atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);

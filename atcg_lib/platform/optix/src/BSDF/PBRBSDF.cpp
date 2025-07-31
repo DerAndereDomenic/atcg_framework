@@ -7,11 +7,11 @@ namespace atcg
 
 PBRBSDF::PBRBSDF(const Dictionary& dict)
 {
-    atcg::Material material = dict.getValue<atcg::Material>("material");
+    atcg::ref_ptr<Material> material = dict.getValue<atcg::ref_ptr<Material>>("material");
 
-    auto diffuse_texture   = material.getDiffuseTexture()->getData(atcg::GPU);
-    auto metallic_texture  = material.getMetallicTexture()->getData(atcg::GPU);
-    auto roughness_texture = material.getRoughnessTexture()->getData(atcg::GPU);
+    auto diffuse_texture   = material->getDiffuseTexture()->getData(atcg::GPU);
+    auto metallic_texture  = material->getMetallicTexture()->getData(atcg::GPU);
+    auto roughness_texture = material->getRoughnessTexture()->getData(atcg::GPU);
 
     PBRBSDFData data;
 

@@ -13,3 +13,4 @@ Scene
    Serializer
    RevisionSystem
    ComponentRenderer
+   ComponentRegistry

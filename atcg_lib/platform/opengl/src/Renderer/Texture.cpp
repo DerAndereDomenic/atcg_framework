@@ -912,7 +912,7 @@ atcg::ref_ptr<Texture> Texture2D::clone() const
                            height,
                            1);
     }
-
+    result->handle = handle;
 
     return result;
 }

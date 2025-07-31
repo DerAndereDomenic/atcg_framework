@@ -20,7 +20,7 @@ void Tracing::prepareAccelerationStructure(Entity entity)
     auto& acc_component = entity.getComponent<AccelerationStructureComponent>();
 
     auto& geometry_component  = entity.getComponent<GeometryComponent>();
-    atcg::ref_ptr<Graph> mesh = geometry_component.graph;
+    atcg::ref_ptr<Graph> mesh = geometry_component.graph();
     if(mesh->type() != GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH)
     {
         ATCG_WARN("Can only create BVH for triangles. Aborting...");

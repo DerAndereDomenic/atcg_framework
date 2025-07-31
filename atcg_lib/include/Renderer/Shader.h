@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Asset/Asset.h>
 #include <Core/glm.h>
 #include <Renderer/Buffer.h>
 #include <Renderer/ShaderType.h>
@@ -13,7 +14,7 @@ namespace atcg
 /**
  * @brief This class models a shader
  */
-class Shader
+class Shader : public Asset
 {
 public:
     /**
@@ -179,6 +180,15 @@ public:
      */
     void dispatch(const glm::ivec3& work_groups) const;
 
+    /**
+     * @brief Get the (parsed) source code of a shader
+     *
+     * @param type The shader type
+     *
+     * @return The parsed source code
+     */
+    std::string getSource(const ShaderType& type) const;
+
     ATCG_INLINE bool hasGeometryShader() const { return _has_geometry; }
 
     ATCG_INLINE bool isComputeShader() const { return _is_compute; }
@@ -190,6 +200,10 @@ public:
     ATCG_INLINE const std::string& getFragmentPath() const { return _fragment_path; }
 
     ATCG_INLINE const std::string& getComputePath() const { return _compute_path; }
+
+    static AssetType getStaticType() { return AssetType::Shader; }
+
+    virtual AssetType getType() const override { return getStaticType(); }
 
 private:
     struct Uniform
@@ -219,5 +233,10 @@ private:
     std::vector<unsigned int> _vertex_subroutines;
     std::vector<unsigned int> _fragment_subroutines;
     std::vector<unsigned int> _geometry_subroutines;
+
+    std::string _vertex_code   = "";
+    std::string _fragment_code = "";
+    std::string _geometry_code = "";
+    std::string _compute_code  = "";
 };
 }    // namespace atcg

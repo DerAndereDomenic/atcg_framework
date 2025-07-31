@@ -4,6 +4,11 @@
 #include <Scene/Components.h>
 
 #include <Renderer/Framebuffer.h>
+#include <Scene/RevisionStack.h>
+
+#ifndef ATCG_HEADLESS
+    #include <imgui.h>
+#endif
 
 namespace atcg
 {
@@ -37,10 +42,7 @@ struct ComponentGUIRenderer
      * @param entity The entity that holds the component
      * @param component The component to render
      */
-    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, T& component) const
-    {
-        throw std::logic_error("No ComponentGUIRenderer specialization available for this component type");
-    }
+    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, T& component) const {}
 };
 
 #define ATCG_DECLARE_COMPONENT_GUI_RENDERER(ComponentType)                                                             \
@@ -63,14 +65,98 @@ ATCG_DECLARE_COMPONENT_GUI_RENDERER(PointLightComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(MeshLightComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(ScriptComponent);
 
-/**
- * @brief Display a material
- *
- * @param key The imgui key
- * @param material The material
- *
- * @return true if the material has been updated this frame
- */
-bool displayMaterial(const std::string& key, Material& material);
+template<typename T>
+ATCG_INLINE void drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity)
+{
+#ifndef ATCG_HEADLESS
+    const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_Framed |
+                                             ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_AllowItemOverlap |
+                                             ImGuiTreeNodeFlags_FramePadding;
+
+    if(entity.hasComponent<T>())
+    {
+        auto& component = entity.getComponent<T>();
+        bool open       = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), treeNodeFlags, T::toString());
+
+        ImVec2 contentRegionAvailable = ImGui::GetContentRegionAvail();
+        ImGui::SameLine(contentRegionAvailable.x);
+        if(ImGui::Button("+"))
+        {
+            ImGui::OpenPopup("ComponentSettings");
+        }
+
+        bool removeComponent = false;
+        if(ImGui::BeginPopup("ComponentSettings"))
+        {
+            if(ImGui::MenuItem("Remove component")) removeComponent = true;
+
+            ImGui::EndPopup();
+        }
+
+        if(open)
+        {
+            ComponentGUIRenderer<T>().draw_component(scene, entity, component);
+            ImGui::TreePop();
+        }
+
+        if(removeComponent)
+        {
+            atcg::RevisionStack::startRecording<ComponentRemovedRevision<T>>(scene, entity);
+            entity.removeComponent<T>();
+            atcg::RevisionStack::endRecording();
+        }
+    }
+#endif
+}
+
+template<typename T>
+ATCG_INLINE void displayAddComponentEntry(const atcg::ref_ptr<atcg::Scene>& scene, Entity entity)
+{
+#ifndef ATCG_HEADLESS
+    if(!entity.hasComponent<T>())
+    {
+        if(ImGui::MenuItem(T::toString()))
+        {
+            atcg::RevisionStack::startRecording<ComponentAddedRevision<T>>(scene, entity);
+            entity.addComponent<T>();
+            ImGui::CloseCurrentPopup();
+            atcg::RevisionStack::endRecording();
+        }
+    }
+#endif
+}
+
+template<>
+ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<atcg::Scene>& scene, Entity entity)
+{
+#ifndef ATCG_HEADLESS
+    if(!entity.hasComponent<CameraComponent>())
+    {
+        if(ImGui::MenuItem(CameraComponent::toString()))
+        {
+            atcg::RevisionStack::startRecording<ComponentAddedRevision<CameraComponent>>(scene, entity);
+            auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>());
+            if(entity.hasComponent<TransformComponent>())
+            {
+                atcg::ref_ptr<PerspectiveCamera> cam =
+                    std::dynamic_pointer_cast<PerspectiveCamera>(camera_component.camera);
+                cam->setView(glm::inverse(entity.getComponent<TransformComponent>().getModel()));
+            }
+            ImGui::CloseCurrentPopup();
+            atcg::RevisionStack::endRecording();
+        }
+    }
+#endif
+}
+
+AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle);
+
+AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
+
+AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
+
+AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
+
+AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle);
 }    // namespace GUI
 }    // namespace atcg

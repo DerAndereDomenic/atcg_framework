@@ -3,6 +3,9 @@
 import torch
 import numpy as np
 
+import os
+
+os.environ["ATCG_BUILD_TYPE"] = "Debug"
 
 import pyatcg as atcg
 
@@ -59,7 +62,7 @@ class PythonLayer(atcg.Layer):
         vbo_colors = atcg.VertexBuffer(colors)
         vbo_colors.setLayout(layout_colors)
 
-        entity = self.scene.createEntity("Instances")
+        entity = atcg.Project.getActive().getActiveScene().createEntity("Instances")
         entity.addTransformComponent(atcg.vec3(0), atcg.vec3(1), atcg.vec3(0))
         entity.addGeometryComponent(mesh)
         instances = entity.addInstanceRenderComponent()
@@ -79,11 +82,12 @@ class PythonLayer(atcg.Layer):
         camera = atcg.PerspectiveCamera(extrinsics, intrinsics)
         self.camera_controller = atcg.FirstPersonController(camera)
 
-        self.scene = atcg.Scene()
+        atcg.Project.getActive().setActiveScene(atcg.Scene())
 
-        self.panel = atcg.SceneHierarchyPanel(self.scene)
+        self.panel = atcg.SceneHierarchyPanel()
+        self.asset_panel = atcg.AssetPanel()
         self.performance_panel = atcg.PerformancePanel()
-        entity = self.scene.createEntity("Cylinder")
+        entity = atcg.Project.getActive().getActiveScene().createEntity("Cylinder")
         self.graph = atcg.read_mesh(f"{atcg.resource_directory()}/cylinder.obj")
         entity.addGeometryComponent(self.graph)
         entity.addTransformComponent(atcg.vec3(0), atcg.vec3(1), atcg.vec3(0))
@@ -101,10 +105,10 @@ class PythonLayer(atcg.Layer):
         roughness_texture = atcg.Texture2D.create(roughness_img)
         metallic_texture = atcg.Texture2D.create(metallic_img)
 
-        renderer.material.setDiffuseTexture(diffuse_texture)
-        renderer.material.setNormalTexture(normal_texture)
-        renderer.material.setRoughnessTexture(roughness_texture)
-        renderer.material.setMetallicTexture(metallic_texture)
+        renderer.material().setDiffuseTexture(diffuse_texture)
+        renderer.material().setNormalTexture(normal_texture)
+        renderer.material().setRoughnessTexture(roughness_texture)
+        renderer.material().setMetallicTexture(metallic_texture)
         entity.replaceMeshRenderComponent(renderer)
 
         self.create_instance()
@@ -115,25 +119,32 @@ class PythonLayer(atcg.Layer):
         self.performance_panel.registerFrameTime(dt)
         self.camera_controller.onUpdate(dt)
 
-        atcg.handleScriptUpdates(self.scene, dt)
+        atcg.handleScriptUpdates(atcg.Project.getActive().getActiveScene(), dt)
 
         atcg.Renderer.clear()
 
-        self.scene.draw(self.camera_controller.getCamera())
+        atcg.Project.getActive().getActiveScene().draw(
+            self.camera_controller.getCamera()
+        )
 
-        atcg.Renderer.drawCameras(self.scene, self.camera_controller.getCamera())
+        atcg.Renderer.drawCameras(
+            atcg.Project.getActive().getActiveScene(),
+            self.camera_controller.getCamera(),
+        )
 
         atcg.Renderer.drawCADGrid(self.camera_controller.getCamera())
 
     def onImGuiRender(self):
-        self.panel.renderPanel()
+        self.panel.renderPanel(atcg.Project.getActive().getActiveScene())
+
+        self.asset_panel.renderPanel()
 
         selected_entity = self.panel.getSelectedEntity()
 
         self.performance_panel.renderPanel(True)
 
         atcg.ImGui.drawGuizmo(
-            self.scene,
+            atcg.Project.getActive().getActiveScene(),
             selected_entity,
             self.current_operation,
             self.camera_controller.getCamera(),
@@ -142,7 +153,7 @@ class PythonLayer(atcg.Layer):
     def onEvent(self, event):
         self.camera_controller.onEvent(event)
 
-        atcg.handleScriptEvents(self.scene, event)
+        atcg.handleScriptEvents(atcg.Project.getActive().getActiveScene(), event)
 
         if event.getName() == "ViewportResize":
             resize_event = atcg.WindowResizeEvent(event.getWidth(), event.getHeight())

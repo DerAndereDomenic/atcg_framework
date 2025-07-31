@@ -24,22 +24,10 @@ public:
     SceneHierarchyPanel() = default;
 
     /**
-     * @brief Constructor
-     *
-     * @param scene The scene
-     */
-    SceneHierarchyPanel(const atcg::ref_ptr<Scene>& scene);
-
-    /**
      * @brief Should be called in onImGuiRender.
      * Renders the panel
-     *
-     * @tparam CustomComponents... optional custom components that should be rendered.
-     *
-     * To support custom component rendering, a custom GUIHandler has to be provided.
      */
-    template<typename... CustomComponents>
-    void renderPanel();
+    void renderPanel(const atcg::ref_ptr<Scene>& scene);
 
     /**
      * @brief Set an entity as selected
@@ -56,22 +44,13 @@ public:
     ATCG_INLINE Entity getSelectedEntity() const { return _selected_entity; }
 
 private:
-    void drawEntityNode(Entity entity);
+    void drawEntityNode(const atcg::ref_ptr<Scene>& scene, Entity entity);
 
-    template<typename... Components>
-    void drawComponents(Entity entity);
+    void drawComponents(const atcg::ref_ptr<Scene>& scene, Entity entity);
 
-    void drawSceneProperties();
     Entity _selected_entity;
-    atcg::ref_ptr<Scene> _scene;
 
     bool _focues_components = false;
 };
 }    // namespace GUI
 }    // namespace atcg
-
-#ifndef ATCG_HEADLESS
-    #include "../../platform/glfw/src/Scene/SceneHierarchyPanelDetails.h"
-#else
-    #include "../../platform/headless/src/Scene/SceneHierarchyPanelDetails.h"
-#endif

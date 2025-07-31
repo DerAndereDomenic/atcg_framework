@@ -97,8 +97,9 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
                                                                                                             "FirstPer" \
                                                                                                                      "sonContr" \
                                                                                                                      "oller");  \
+    auto m_asset               = py::class_<atcg::Asset, atcg::ref_ptr<atcg::Asset>>(m, "Asset");                               \
     auto m_entity              = py::class_<atcg::Entity>(m, "Entity");                                                         \
-    auto m_scene               = py::class_<atcg::Scene, atcg::ref_ptr<atcg::Scene>>(m, "Scene");                               \
+    auto m_scene               = py::class_<atcg::Scene, atcg::Asset, atcg::ref_ptr<atcg::Scene>>(m, "Scene");                  \
     auto m_vec2                = py::class_<glm::vec2>(m, "vec2", py::buffer_protocol());                                       \
     auto m_ivec2               = py::class_<glm::ivec2>(m, "ivec2", py::buffer_protocol());                                     \
     auto m_vec3                = py::class_<glm::vec3>(m, "vec3", py::buffer_protocol());                                       \
@@ -126,12 +127,12 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");                                                         \
     auto m_vertex_specification  = py::class_<atcg::VertexSpecification>(m, "VertexSpecification");                             \
     auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");                                 \
-    auto m_graph                 = py::class_<atcg::Graph, atcg::ref_ptr<atcg::Graph>>(m, "Graph");                             \
+    auto m_graph                 = py::class_<atcg::Graph, atcg::Asset, atcg::ref_ptr<atcg::Graph>>(m, "Graph");                \
     auto m_serializer            = py::class_<atcg::Serialization::SceneSerializer>(m, "SceneSerializer");                      \
     auto m_renderer              = m.def_submodule("Renderer");                                                                 \
     auto m_renderer_system =                                                                                                    \
         py::class_<atcg::RendererSystem, atcg::ref_ptr<atcg::RendererSystem>>(m, "RendererSystem");                             \
-    auto m_shader         = py::class_<atcg::Shader, atcg::ref_ptr<atcg::Shader>>(m, "Shader");                                 \
+    auto m_shader         = py::class_<atcg::Shader, atcg::Asset, atcg::ref_ptr<atcg::Shader>>(m, "Shader");                    \
     auto m_shader_manager = m.def_submodule("ShaderManager");                                                                   \
     auto m_shader_manager_system =                                                                                              \
         py::class_<atcg::ShaderManagerSystem, atcg::ref_ptr<atcg::ShaderManagerSystem>>(m, "ShaderManagerSystem");              \
@@ -141,11 +142,11 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_texture_sampler       = py::class_<atcg::TextureSampler>(m, "TextureSampler");                                       \
     auto m_texture_specification = py::class_<atcg::TextureSpecification>(m, "TextureSpecification");                           \
     auto m_image          = py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image", py::buffer_protocol());             \
-    auto m_texture2d      = py::class_<atcg::Texture2D, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D");                        \
+    auto m_texture2d      = py::class_<atcg::Texture2D, atcg::Asset, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D");           \
     auto m_texture_cube   = py::class_<atcg::TextureCube, atcg::ref_ptr<atcg::TextureCube>>(m, "TextureCube");                  \
     auto m_framebuffer    = py::class_<atcg::Framebuffer, atcg::ref_ptr<atcg::Framebuffer>>(m, "Framebuffer");                  \
     auto m_entity_handle  = py::class_<entt::entity>(m, "EntityHandle");                                                        \
-    auto m_material       = py::class_<atcg::Material>(m, "Material");                                                          \
+    auto m_material       = py::class_<atcg::Material, atcg::Asset, atcg::ref_ptr<atcg::Material>>(m, "Material");              \
     auto m_transform      = py::class_<atcg::TransformComponent>(m, "TransformComponent");                                      \
     auto m_geometry       = py::class_<atcg::GeometryComponent>(m, "GeometryComponent");                                        \
     auto m_mesh_renderer  = py::class_<atcg::MeshRenderComponent>(m, "MeshRenderComponent");                                    \
@@ -172,7 +173,15 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_performance_panel     = py::class_<atcg::GUI::PerformancePanel>(m, "PerformancePanel");                              \
     auto m_scriptengine =                                                                                                       \
         py::class_<atcg::PythonScriptEngine, atcg::ref_ptr<atcg::PythonScriptEngine>>(m, "ScriptEngine");                       \
-    auto m_script = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");
+    auto m_script      = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");                        \
+    auto m_assethandle = py::class_<atcg::AssetHandle>(m, "AssetHandle");                                                       \
+    auto m_asset_type  = py::enum_<atcg::AssetType>(m, "AssetType");                                                            \
+    auto m_asset_data  = py::class_<atcg::AssetMetaData>(m, "AssetMetaData");                                                   \
+    auto m_asset_manager_system =                                                                                               \
+        py::class_<atcg::AssetManagerSystem, atcg::ref_ptr<atcg::AssetManagerSystem>>(m, "AssetManagerSystem");                 \
+    auto m_asset_manager = m.def_submodule("AssetManager");                                                                     \
+    auto m_asset_panel   = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");            \
+    auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project");
 
 inline void defineBindings(py::module_& m)
 {
@@ -495,6 +504,73 @@ inline void defineBindings(py::module_& m)
                  return py::array_t<float>({4, 4}, {sizeof(float) * 4, sizeof(float)}, (const float*)data);
              });
 
+    // ------------------- Asset ---------------------------------
+    m_asset.def_readwrite("handle", &atcg::Asset::handle).def("getType", &atcg::Asset::getType);
+    m_asset_type.value("None", atcg::AssetType::None)
+        .value("Scene", atcg::AssetType::Scene)
+        .value("Texture2D", atcg::AssetType::Texture2D)
+        .value("Material", atcg::AssetType::Material)
+        .value("Graph", atcg::AssetType::Graph)
+        .value("Script", atcg::AssetType::Script)
+        .value("Shader", atcg::AssetType::Shader);
+
+    m_asset_data.def_readwrite("type", &atcg::AssetMetaData::type).def_readwrite("name", &atcg::AssetMetaData::name);
+
+    m_asset_manager_system.def(py::init<>())
+        .def("getAsset", &atcg::AssetManagerSystem::getAsset)
+        .def("getMetaData", &atcg::AssetManagerSystem::getMetaData)
+        .def("isAssetHandleValid", &atcg::AssetManagerSystem::isAssetHandleValid)
+        .def("isAssetLoaded", &atcg::AssetManagerSystem::isAssetLoaded)
+        .def("updateName", &atcg::AssetManagerSystem::updateName)
+        .def("registerAsset",
+             static_cast<atcg::AssetHandle (atcg::AssetManagerSystem::*)(const atcg::AssetMetaData& data)>(
+                 &atcg::AssetManagerSystem::registerAsset))
+        .def("registerAsset",
+             static_cast<atcg::AssetHandle (atcg::AssetManagerSystem::*)(const atcg::ref_ptr<atcg::Asset>& asset,
+                                                                         const std::string& name)>(
+                 &atcg::AssetManagerSystem::registerAsset))
+        .def("unloadAsset", &atcg::AssetManagerSystem::unloadAsset)
+        .def("removeAsset", &atcg::AssetManagerSystem::removeAsset)
+        .def("serializeRegistry", &atcg::AssetManagerSystem::serializeRegistry)
+        .def("deserializeRegistry", &atcg::AssetManagerSystem::deserializeRegistry)
+        .def("serializeAssets", &atcg::AssetManagerSystem::serializeAssets)
+        .def("clear", &atcg::AssetManagerSystem::clear)
+        .def("destroy", &atcg::AssetManagerSystem::destroy);
+
+    m_asset_manager.def("getAsset", [](atcg::AssetHandle handle) { return atcg::AssetManager::getAsset(handle); })
+        .def("getMetaData", &atcg::AssetManager::getMetaData)
+        .def("isAssetHandleValid", &atcg::AssetManager::isAssetHandleValid)
+        .def("isAssetLoaded", &atcg::AssetManager::isAssetLoaded)
+        .def("updateName", &atcg::AssetManager::updateName)
+        .def("registerAsset", [](const atcg::AssetMetaData& data) { return atcg::AssetManager::registerAsset(data); })
+        .def("registerAsset",
+             [](const atcg::ref_ptr<atcg::Asset>& asset, const std::string& name)
+             { return atcg::AssetManager::registerAsset(asset, name); })
+        .def("unloadAsset", &atcg::AssetManager::unloadAsset)
+        .def("removeAsset", &atcg::AssetManager::removeAsset)
+        .def("serializeRegistry", &atcg::AssetManager::serializeRegistry)
+        .def("deserializeRegistry", &atcg::AssetManager::deserializeRegistry)
+        .def("serializeAssets", &atcg::AssetManager::serializeAssets)
+        .def("clear", &atcg::AssetManager::clear)
+        .def("assetTypeToString", &atcg::assetTypeToString)
+        .def("stringToAssetType", &atcg::stringToAssetType);
+
+    m_asset_panel.def(py::init<>())
+        .def("renderPanel", &atcg::GUI::AssetPanel::renderPanel)
+        .def("selectAsset", &atcg::GUI::AssetPanel::selectAsset);
+
+    m_project.def_static("create", &atcg::Project::create)
+        .def_static("load", &atcg::Project::load)
+        .def("save", py::overload_cast<>(&atcg::Project::save))
+        .def("save", py::overload_cast<const std::filesystem::path&>(&atcg::Project::save))
+        .def("setActiveScene", py::overload_cast<const atcg::ref_ptr<atcg::Scene>&>(&atcg::Project::setActiveScene))
+        .def("setActiveScene", py::overload_cast<atcg::AssetHandle>(&atcg::Project::setActiveScene))
+        .def("getActiveScene", &atcg::Project::getActiveScene)
+        .def_static("getActive", &atcg::Project::getActive)
+        .def_static("saveActive", py::overload_cast<>(&atcg::Project::saveActive))
+        .def_static("saveActive", py::overload_cast<const std::filesystem::path&>(&atcg::Project::saveActive))
+        .def("getFilePath", &atcg::Project::getFilePath);
+
     // ------------------- Datastructure ---------------------------------
 
     m_timer.def(py::init<>())
@@ -630,8 +706,8 @@ inline void defineBindings(py::module_& m)
         .def("getCamera", &atcg::FirstPersonController::getCamera);
 
     m_serializer.def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
-        .def("serialize", &atcg::Serialization::SceneSerializer::serialize<>, "file_path"_a)
-        .def("deserialize", &atcg::Serialization::SceneSerializer::deserialize<>, "file_path"_a);
+        .def("serialize", &atcg::Serialization::SceneSerializer::serialize, "file_path"_a)
+        .def("deserialize", &atcg::Serialization::SceneSerializer::deserialize, "file_path"_a);
 
     m_performance_panel.def(py::init<>())
         .def(
@@ -1132,24 +1208,31 @@ inline void defineBindings(py::module_& m)
 
     m_geometry.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Graph>&>(), "graph"_a)
-        .def_readwrite("graph", &atcg::GeometryComponent::graph);
+        .def(py::init<atcg::AssetHandle>(), "graph"_a)
+        .def("graph", &atcg::GeometryComponent::graph)
+        .def_readwrite("graph_handle", &atcg::GeometryComponent::graph_handle);
 
     m_mesh_renderer.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&>(), "shader"_a)
         .def_readwrite("visible", &atcg::MeshRenderComponent::visible)
-        .def_readwrite("shader", &atcg::MeshRenderComponent::shader)
-        .def_readwrite("material", &atcg::MeshRenderComponent::material);
+        .def("shader", &atcg::MeshRenderComponent::shader)
+        .def("material", &atcg::MeshRenderComponent::material)
+        .def_readwrite("material_handle", &atcg::MeshRenderComponent::material_handle)
+        .def_readwrite("shader_handle", &atcg::MeshRenderComponent::shader_handle);
 
     m_point_renderer
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointRenderComponent::visible)
         .def_readwrite("color", &atcg::PointRenderComponent::color)
-        .def_readwrite("shader", &atcg::PointRenderComponent::shader);
+        .def("shader", &atcg::PointRenderComponent::shader)
+        .def_readwrite("shader_handle", &atcg::PointRenderComponent::shader_handle);
 
     m_point_sphere_renderer.def(py::init<const atcg::ref_ptr<atcg::Shader>&, float>(), "shader"_a, "point_size"_a)
         .def_readwrite("visible", &atcg::PointSphereRenderComponent::visible)
-        .def_readwrite("shader", &atcg::PointSphereRenderComponent::shader)
-        .def_readwrite("material", &atcg::PointSphereRenderComponent::material);
+        .def("shader", &atcg::PointSphereRenderComponent::shader)
+        .def("material", &atcg::PointSphereRenderComponent::material)
+        .def_readwrite("material_handle", &atcg::PointSphereRenderComponent::material_handle)
+        .def_readwrite("shader_handle", &atcg::PointSphereRenderComponent::shader_handle);
 
     m_edge_renderer.def(py::init<glm::vec3>(), "color"_a)
         .def_readwrite("visible", &atcg::EdgeRenderComponent::visible)
@@ -1157,12 +1240,14 @@ inline void defineBindings(py::module_& m)
 
     m_edge_cylinder_renderer.def(py::init<float>(), "radius"_a)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
-        .def_readwrite("material", &atcg::EdgeCylinderRenderComponent::material);
+        .def("material", &atcg::EdgeCylinderRenderComponent::material)
+        .def_readwrite("material_handle", &atcg::EdgeCylinderRenderComponent::material_handle);
 
     m_instance_renderer.def(py::init<>())
         .def_readwrite("visible", &atcg::InstanceRenderComponent::visible)
-        .def_readwrite("material", &atcg::InstanceRenderComponent::material)
-        .def_readwrite("instances", &atcg::InstanceRenderComponent::instance_vbos);
+        .def("material", &atcg::InstanceRenderComponent::material)
+        .def_readwrite("instances", &atcg::InstanceRenderComponent::instance_vbos)
+        .def_readwrite("material_handle", &atcg::InstanceRenderComponent::material_handle);
 
     m_name.def(py::init<>()).def(py::init<std::string>(), "name"_a).def("name", &atcg::NameComponent::name);
 
@@ -1173,7 +1258,8 @@ inline void defineBindings(py::module_& m)
 
     m_script_component.def(py::init<>())
         .def(py::init<const atcg::ref_ptr<atcg::PythonScript>&>())
-        .def_readwrite("script", &atcg::ScriptComponent::script);
+        .def("script", &atcg::ScriptComponent::script)
+        .def_readwrite("script_handle", &atcg::ScriptComponent::script_handle);
 
     m_entity.def(py::init<>())
         .def(py::init<entt::entity, atcg::Scene*>(), "handle"_a, "scene"_a)
@@ -1377,8 +1463,8 @@ inline void defineBindings(py::module_& m)
             "camera"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
-        .def(py::init<const atcg::ref_ptr<atcg::Scene>&>(), "scene"_a)
-        .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel<>)
+        .def(py::init<>())
+        .def("renderPanel", &atcg::GUI::SceneHierarchyPanel::renderPanel)
         .def("selectEntity", &atcg::GUI::SceneHierarchyPanel::selectEntity, "entity"_a)
         .def("getSelectedEntity", &atcg::GUI::SceneHierarchyPanel::getSelectedEntity);
 

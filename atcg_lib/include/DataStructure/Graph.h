@@ -11,24 +11,15 @@
 #include <DataStructure/TorchUtils.h>
 #include <DataStructure/GraphDefinitions.h>
 #include <DataStructure/GraphLoader.h>
+#include <Asset/Asset.h>
 
 namespace atcg
 {
 
 /**
- * @brief An enum to distinguish between different graph types
- */
-enum class GraphType
-{
-    ATCG_GRAPH_TYPE_POINTCLOUD,
-    ATCG_GRAPH_TYPE_TRIANGLEMESH,
-    ATCG_GRAPH_TYPE_GRAPH
-};
-
-/**
  * @brief A structure to model different geometries
  */
-class Graph
+class Graph : public Asset
 {
 public:
     /**
@@ -688,6 +679,17 @@ public:
      * @return The deep copy
      */
     atcg::ref_ptr<atcg::Graph> copy() const;
+
+    /**
+     * @brief Copies another graph into this one
+     *
+     * @param other The other graph
+     */
+    void copy(const atcg::ref_ptr<Graph>& other);
+
+    ATCG_INLINE static AssetType getStaticType() { return AssetType::Graph; }
+
+    ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
 
 private:
     class Impl;

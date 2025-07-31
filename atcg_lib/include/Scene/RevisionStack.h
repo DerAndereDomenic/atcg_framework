@@ -7,30 +7,16 @@
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
+#include <Asset/AssetManagerSystem.h>
 
 #include <stack>
 
 namespace atcg
 {
 
-/**
- * @brief This class models a revision of a scene element
- */
 class Revision
 {
 public:
-    /**
-     * @brief Constructor
-     *
-     * @param scene The scene
-     * @param entity The entity
-     */
-    Revision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
-        : _scene(scene),
-          _entity_handle(entity.entity_handle())
-    {
-    }
-
     /**
      * @brief Callback that is called on a rollback
      */
@@ -52,6 +38,25 @@ public:
      * scene element was changed.
      */
     virtual void record_end_state() = 0;
+};
+
+/**
+ * @brief This class models a revision of a scene element
+ */
+class EntityRevision : public Revision
+{
+public:
+    /**
+     * @brief Constructor
+     *
+     * @param scene The scene
+     * @param entity The entity
+     */
+    EntityRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
+        : _scene(scene),
+          _entity_handle(entity.entity_handle())
+    {
+    }
 
 protected:
     atcg::ref_ptr<Scene> _scene;
@@ -135,6 +140,23 @@ public:
     }
 
     /**
+     * @brief Start recording a revision.
+     * Each revision that should be handled by the system has to be recorded. There can always be only one recording at
+     * a time. The recording has to be stopped using RevisionSystem::endRecording before a new recording can be started.
+     *
+     * @tparam RevisionType The type of the revision that should be recorded
+     * @param asset The asset
+     */
+    template<typename RevisionType>
+    ATCG_INLINE void startRecording(AssetHandle asset)
+    {
+        ATCG_ASSERT(_current_revision == nullptr, "Can only have one revision at a time");
+
+        _current_revision = atcg::make_ref<RevisionType>(asset);
+        _current_revision->record_start_state();
+    }
+
+    /**
      * @brief End a recording.
      * This function should only be called after a recording was started using RevisionSystem::endRecording.
      */
@@ -199,7 +221,7 @@ private:
 /**
  * @brief Revision if an entity was added to the scene
  */
-class EntityAddedRevision : public Revision
+class EntityAddedRevision : public EntityRevision
 {
 public:
     /**
@@ -208,7 +230,7 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    EntityAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    EntityAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity) {}
 
     /**
      * @brief Callback that is called on a redo
@@ -245,7 +267,7 @@ private:
 /**
  * @brief Revision if an entity was removed from the scene
  */
-class EntityRemovedRevision : public Revision
+class EntityRemovedRevision : public EntityRevision
 {
 public:
     /**
@@ -254,7 +276,9 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    EntityRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    EntityRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity)
+    {
+    }
 
     /**
      * @brief Callback that is called on a redo
@@ -271,20 +295,7 @@ public:
     virtual void rollback() override
     {
         auto entity = _scene->createEntity((entt::entity)_entity_handle, _uuid, _name);
-        restoreComponents<TransformComponent,
-                          CameraComponent,
-                          GeometryComponent,
-                          AccelerationStructureComponent,
-                          MeshRenderComponent,
-                          PointRenderComponent,
-                          PointSphereRenderComponent,
-                          EdgeRenderComponent,
-                          EdgeCylinderRenderComponent,
-                          InstanceRenderComponent,
-                          CustomRenderComponent,
-                          PointLightComponent,
-                          MeshLightComponent,
-                          ScriptComponent>(entity);
+        restoreComponents(entity);
     }
 
     /**
@@ -297,20 +308,7 @@ public:
         _uuid = entity.getComponent<IDComponent>().ID();
         _name = entity.getComponent<NameComponent>().name();
 
-        storeComponents<TransformComponent,
-                        CameraComponent,
-                        GeometryComponent,
-                        AccelerationStructureComponent,
-                        MeshRenderComponent,
-                        PointRenderComponent,
-                        PointSphereRenderComponent,
-                        EdgeRenderComponent,
-                        EdgeCylinderRenderComponent,
-                        InstanceRenderComponent,
-                        CustomRenderComponent,
-                        PointLightComponent,
-                        MeshLightComponent,
-                        ScriptComponent>(entity);
+        storeComponents(entity);
     }
 
     /**
@@ -320,39 +318,10 @@ public:
     virtual void record_end_state() override {}
 
 private:
-    template<typename... Components>
-    void storeComponents(atcg::Entity entity)
-    {
-        // Capture all components
-        (
-            [&]
-            {
-                if(entity.hasAnyComponent<Components>())
-                {
-                    _components[entt::type_hash<Components>::value()] =
-                        std::make_shared<Components>(entity.getComponent<Components>());
-                }
-            }(),
-            ...);
-    }
-
-    template<typename... Components>
-    void restoreComponents(atcg::Entity entity)
-    {
-        // Restore components
-        for(auto& [id, component]: _components)
-        {
-            (
-                [&]
-                {
-                    if(id == entt::type_hash<Components>::value())
-                    {
-                        entity.addOrReplaceComponent<Components>(*std::static_pointer_cast<Components>(component));
-                    }
-                }(),
-                ...);
-        }
-    }
+    // These functions are implemented in a cpp unit because they rely on the ComponentRegistry which also relies on the
+    // RevisionStack and therefore, we get a circular dependency.
+    void storeComponents(atcg::Entity entity);
+    void restoreComponents(atcg::Entity entity);
 
 private:
     UUID _uuid;
@@ -365,7 +334,7 @@ private:
  * @tparam Component The type of the component that was added
  */
 template<typename Component>
-class ComponentAddedRevision : public Revision
+class ComponentAddedRevision : public EntityRevision
 {
 public:
     /**
@@ -374,7 +343,9 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    ComponentAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    ComponentAddedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity)
+    {
+    }
 
     /**
      * @brief Callback that is called on a redo
@@ -419,7 +390,7 @@ private:
  * @tparam Component The type of the component that was removed
  */
 template<typename Component>
-class ComponentRemovedRevision : public Revision
+class ComponentRemovedRevision : public EntityRevision
 {
 public:
     /**
@@ -428,7 +399,10 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    ComponentRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    ComponentRemovedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
+        : EntityRevision(scene, entity)
+    {
+    }
 
     /**
      * @brief Callback that is called on a redo
@@ -473,7 +447,7 @@ private:
  * @tparam Component The type of the component that was edited
  */
 template<typename Component>
-class ComponentEditedRevision : public Revision
+class ComponentEditedRevision : public EntityRevision
 {
 public:
     /**
@@ -482,7 +456,10 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    ComponentEditedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity) {}
+    ComponentEditedRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity)
+        : EntityRevision(scene, entity)
+    {
+    }
 
     /**
      * @brief Callback that is called on a redo
@@ -538,7 +515,7 @@ private:
  * @tparam RevisionType2 The revision type of the second revision
  */
 template<typename RevisionType1, typename RevisionType2>
-class UnionRevision : public Revision
+class UnionRevision : public EntityRevision
 {
 public:
     /**
@@ -547,7 +524,7 @@ public:
      * @param scene The scene
      * @param entity The entity
      */
-    UnionRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : Revision(scene, entity)
+    UnionRevision(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) : EntityRevision(scene, entity)
     {
         _revision1 = atcg::make_ref<RevisionType1>(scene, entity);
         _revision2 = atcg::make_ref<RevisionType2>(scene, entity);
@@ -595,6 +572,169 @@ private:
     atcg::ref_ptr<RevisionType2> _revision2;
 };
 
+class AssetRevision : public Revision
+{
+public:
+    AssetRevision(AssetHandle asset) : _asset(asset) {}
+
+protected:
+    AssetHandle _asset;
+};
+
+class AssetAddedRevision : public AssetRevision
+{
+public:
+    AssetAddedRevision(AssetHandle asset) : AssetRevision(asset) {}
+
+    /**
+     * @brief Callback that is called on a redo
+     */
+    virtual void apply() override
+    {
+        if(_new_asset)
+        {
+            AssetManager::registerAsset(_new_asset, _new_data.name);
+        }
+        else
+        {
+            AssetManager::registerAsset(_asset, _new_data);
+        }
+    }
+
+    /**
+     * @brief Callback that is called on a rollback
+     */
+    virtual void rollback() override { AssetManager::removeAsset(_asset); }
+
+    /**
+     * @brief Function that is called at the start of a capture. This should store all relevant information before any
+     * changes to the scene elements were made.
+     */
+    virtual void record_start_state() override {}
+
+    /**
+     * @brief Function that is called at the end of a capture. This should store all relevant information after the
+     * scene element was changed.
+     */
+    virtual void record_end_state() override
+    {
+        _new_asset = AssetManager::getAsset(_asset);
+        _new_data  = AssetManager::getMetaData(_asset);
+    }
+
+private:
+    atcg::ref_ptr<Asset> _new_asset;
+    AssetMetaData _new_data;
+};
+
+class AssetRemovedRevision : public AssetRevision
+{
+public:
+    AssetRemovedRevision(AssetHandle asset) : AssetRevision(asset) {}
+
+    /**
+     * @brief Callback that is called on a redo
+     */
+    virtual void apply() override { AssetManager::removeAsset(_asset); }
+
+    /**
+     * @brief Callback that is called on a rollback
+     */
+    virtual void rollback() override
+    {
+        if(_old_asset)
+        {
+            AssetManager::registerAsset(_old_asset, _old_data.name);
+        }
+        else
+        {
+            AssetManager::registerAsset(_asset, _old_data);
+        };
+    }
+
+    /**
+     * @brief Function that is called at the start of a capture. This should store all relevant information before any
+     * changes to the scene elements were made.
+     */
+    virtual void record_start_state() override
+    {
+        _old_asset = AssetManager::getAsset(_asset);
+        _old_data  = AssetManager::getMetaData(_asset);
+    }
+
+    /**
+     * @brief Function that is called at the end of a capture. This should store all relevant information after the
+     * scene element was changed.
+     */
+    virtual void record_end_state() override {}
+
+private:
+    atcg::ref_ptr<Asset> _old_asset;
+    AssetMetaData _old_data;
+};
+
+class AssetEditedRevision : public AssetRevision
+{
+public:
+    AssetEditedRevision(AssetHandle asset) : AssetRevision(asset) {}
+
+    /**
+     * @brief Callback that is called on a redo
+     */
+    virtual void apply() override
+    {
+        if(_new_asset)
+        {
+            AssetManager::registerAsset(_new_asset, _new_data.name);
+        }
+        else
+        {
+            AssetManager::registerAsset(_asset, _new_data);
+        }
+    }
+
+    /**
+     * @brief Callback that is called on a rollback
+     */
+    virtual void rollback() override
+    {
+        if(_old_asset)
+        {
+            AssetManager::registerAsset(_old_asset, _old_data.name);
+        }
+        else
+        {
+            AssetManager::registerAsset(_asset, _old_data);
+        }
+    }
+
+    /**
+     * @brief Function that is called at the start of a capture. This should store all relevant information before any
+     * changes to the scene elements were made.
+     */
+    virtual void record_start_state() override
+    {
+        _old_asset = AssetManager::getAsset(_asset);
+        _old_data  = AssetManager::getMetaData(_asset);
+    }
+
+    /**
+     * @brief Function that is called at the end of a capture. This should store all relevant information after the
+     * scene element was changed.
+     */
+    virtual void record_end_state() override
+    {
+        _new_asset = AssetManager::getAsset(_asset);
+        _new_data  = AssetManager::getMetaData(_asset);
+    }
+
+private:
+    atcg::ref_ptr<Asset> _old_asset;
+    AssetMetaData _old_data;
+    atcg::ref_ptr<Asset> _new_asset;
+    AssetMetaData _new_data;
+};
+
 namespace RevisionStack
 {
 /**
@@ -611,6 +751,21 @@ ATCG_INLINE void startRecording(const atcg::ref_ptr<atcg::Scene>& scene, atcg::E
 {
     RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
     system->startRecording<RevisionType>(scene, entity);
+}
+
+/**
+ * @brief Start recording a revision.
+ * Each revision that should be handled by the system has to be recorded. There can always be only one recording at
+ * a time. The recording has to be stopped using RevisionSystem::endRecording before a new recording can be started.
+ *
+ * @tparam RevisionType The type of the revision that should be recorded
+ * @param asset The asset
+ */
+template<typename RevisionType>
+ATCG_INLINE void startRecording(AssetHandle asset)
+{
+    RevisionSystem* system = atcg::SystemRegistry::instance()->getSystem<atcg::RevisionSystem>();
+    system->startRecording<RevisionType>(asset);
 }
 
 /**
