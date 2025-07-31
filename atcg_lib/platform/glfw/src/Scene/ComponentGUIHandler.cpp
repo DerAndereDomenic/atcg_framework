@@ -531,19 +531,19 @@ void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_pt
 
     float updated = false;
     {
-        auto spec        = component.getEmissiveTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
+        // auto spec        = component.getEmissiveTexture()->getSpecification();
+        // bool useTextures = spec.width != 1 || spec.height != 1;
 
         updated = ImGui::DragFloat("Scaling", &component.intensity, 0.005f, 0.0f, FLT_MAX) || updated;
 
-        if(!useTextures)
+        if(!AssetManager::isAssetHandleValid(component.emissive_handle))
         {
-            auto diffuse = component.getEmissiveTexture()->getData(atcg::CPU);
+            auto emissive = component.getEmissiveTexture()->getData(atcg::CPU);
 
-            float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
-                              diffuse.index({0, 0, 1}).item<float>() / 255.0f,
-                              diffuse.index({0, 0, 2}).item<float>() / 255.0f,
-                              diffuse.index({0, 0, 3}).item<float>() / 255.0f};
+            float color[4] = {emissive.index({0, 0, 0}).item<float>() / 255.0f,
+                              emissive.index({0, 0, 1}).item<float>() / 255.0f,
+                              emissive.index({0, 0, 2}).item<float>() / 255.0f,
+                              emissive.index({0, 0, 3}).item<float>() / 255.0f};
 
             if(ImGui::ColorEdit4("Emissive##mesh_light", color))
             {
@@ -551,53 +551,16 @@ void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_pt
                 component.setEmissiveColor(new_color);
                 updated = true;
             }
-
-            ImGui::SameLine();
-
-            if(ImGui::Button("...##emissive"))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0], 2.2f);
-                    auto texture = atcg::Texture2D::create(img);
-                    component.setEmissiveTexture(texture);
-                    updated = true;
-                }
-            }
         }
-        else
-        {
-            ImGui::Text("Emissive Texture");
-            ImGui::SameLine();
 
-            if(ImGui::Button("X##emissive"))
-            {
-                component.setEmissiveColor(glm::vec4(1));
-                updated = true;
-            }
-            else
-            {
-                float content_scale = atcg::Application::get()->getWindow()->getContentScale();
-                ImGui::Image((ImTextureID)component.getEmissiveTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-            }
-        }
+        ImGui::Separator();
+
+        auto new_handle = displayTexture2DSelection("meshlight", component.emissive_handle);
+
+        updated                   = (new_handle != component.emissive_handle) || updated;
+        component.emissive_handle = new_handle;
+
+        ImGui::Separator();
     }
 
     if(updated)

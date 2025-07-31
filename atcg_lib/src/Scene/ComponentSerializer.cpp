@@ -294,33 +294,24 @@ void ComponentSerializer<MeshLightComponent>::serialize_component(const std::str
                                                                   MeshLightComponent& component,
                                                                   nlohmann::json& j) const
 {
-    // auto entity_id = entity.getComponent<IDComponent>().ID();
+    j[MESH_LIGHT_KEY][EMISSIVE_SCALE_KEY] = component.intensity;
 
-    // auto emissive_texture     = component.getEmissiveTexture();
-    // bool use_emissive_texture = !(emissive_texture->width() == 1 && emissive_texture->height() == 1);
+    if(AssetManager::isAssetHandleValid(component.emissive_handle))
+    {
+        j[MESH_LIGHT_KEY][EMISSIVE_TEXTURE_KEY] = (uint64_t)component.emissive_handle;
+    }
+    else
+    {
+        auto data         = component.getEmissiveTexture()->getData(atcg::CPU);
+        glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
+                             data.index({0, 0, 1}).item<uint8_t>(),
+                             data.index({0, 0, 2}).item<uint8_t>()};
 
-    // j[MESH_LIGHT_KEY][EMISSIVE_SCALE_KEY] = component.intensity;
+        glm::vec3 c(color);
+        c = c / 255.0f;
 
-    // if(use_emissive_texture)
-    // {
-    //     std::string img_path = file_path + "_" + std::to_string(entity_id) + "_emissive";
-
-    //     serializeTexture(emissive_texture, img_path);
-
-    //     j[MESH_LIGHT_KEY][EMISSIVE_TEXTURE_KEY] = img_path;
-    // }
-    // else
-    // {
-    //     auto data         = emissive_texture->getData(atcg::CPU);
-    //     glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
-    //                          data.index({0, 0, 1}).item<uint8_t>(),
-    //                          data.index({0, 0, 2}).item<uint8_t>()};
-
-    //     glm::vec3 c(color);
-    //     c = c / 255.0f;
-
-    //     j[MESH_LIGHT_KEY][EMISSIVE_COLOR_KEY] = nlohmann::json::array({c.x, c.y, c.z});
-    // }
+        j[MESH_LIGHT_KEY][EMISSIVE_COLOR_KEY] = nlohmann::json::array({c.x, c.y, c.z});
+    }
 }
 
 
@@ -631,10 +622,8 @@ void ComponentSerializer<MeshLightComponent>::deserialize_component(const std::s
     }
     else if(j[MESH_LIGHT_KEY].contains(EMISSIVE_TEXTURE_KEY))
     {
-        std::string emissive_path = j[MESH_LIGHT_KEY][EMISSIVE_TEXTURE_KEY];
-        auto img                  = IO::imread(emissive_path);
-        auto emissive_texture     = atcg::Texture2D::create(img);
-        renderComponent.setEmissiveTexture(emissive_texture);
+        AssetHandle emissive_handle     = (AssetHandle)j[MESH_LIGHT_KEY][EMISSIVE_TEXTURE_KEY];
+        renderComponent.emissive_handle = emissive_handle;
     }
 }
 

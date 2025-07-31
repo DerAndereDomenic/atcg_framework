@@ -479,11 +479,15 @@ struct MeshLightComponent
         _emissive_texture = atcg::Texture2D::create(&color_quant, spec_emissive);
     }
 
-    ATCG_INLINE void setEmissiveTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _emissive_texture = texture; }
-
-    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getEmissiveTexture() const { return _emissive_texture; }
+    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getEmissiveTexture() const
+    {
+        auto texture = AssetManager::getAsset<Texture2D>(emissive_handle);
+        return texture ? texture : _emissive_texture;
+    }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Mesh Light"; }
+
+    AssetHandle emissive_handle;
 
 private:
     atcg::ref_ptr<atcg::Texture2D> _emissive_texture;
