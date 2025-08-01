@@ -559,6 +559,7 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("vrScreen");
     impl->shader_manager->addShaderFromName("depth_pass");
     impl->shader_manager->addShaderFromName("image_display");
+    impl->shader_manager->addShaderFromName("emissive");
 
     impl->renderer = this;
 }
