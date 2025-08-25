@@ -7,9 +7,9 @@ namespace atcg
 SkyboxPass::SkyboxPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass("SkyboxPass")
 {
     _data.setValue("skybox", skybox);
-    registerOutput("framebuffer", nullptr);
+    registerOutput("skybox", skybox);
     setRenderFunction(
-        [](Dictionary& context, const Dictionary&, Dictionary& data, Dictionary&)
+        [](Dictionary& context, const Dictionary&, Dictionary& data, Dictionary& outputs)
         {
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());

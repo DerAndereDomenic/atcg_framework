@@ -20,8 +20,7 @@ namespace atcg
  * * None
  *
  * outputs:
- * * outputs["framebuffer"] - nullptr - This RenderPass renders to the currently bound framebuffer. The "framebuffer"
- * port is only used to connect to other render passes.
+ * * outputs<atcg::ref_ptr<Skybox>>["skybox"] - The skybox used. Might be a dummy skybox
  *
  */
 class SkyboxPass : public RenderPass

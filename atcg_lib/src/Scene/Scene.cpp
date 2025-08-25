@@ -39,9 +39,9 @@ Scene::Impl::Impl()
 
     auto skybox_handle = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(skybox));
     auto shadow_handle = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
-    auto output_handle = _render_graph->addRenderPass(atcg::make_ref<ForwardPass>(skybox));
+    auto output_handle = _render_graph->addRenderPass(atcg::make_ref<ForwardPass>());
 
-    _render_graph->addDependency(skybox_handle, "framebuffer", output_handle, "framebuffer");
+    _render_graph->addDependency(skybox_handle, "skybox", output_handle, "skybox");
     _render_graph->addDependency(shadow_handle, "point_light_depth_maps", output_handle, "point_light_depth_maps");
 
     atcg::Dictionary context;    // TODO

@@ -37,13 +37,9 @@ class ForwardPass : public RenderPass
 public:
     /**
      * @brief Constructor.
-     * If a skybox is given, the data is used for ibl
-     *
-     * @param skybox The skybox
      */
-    ForwardPass(const atcg::ref_ptr<Skybox>& skybox = nullptr);
+    ForwardPass();
 
 private:
-    atcg::ref_ptr<atcg::Skybox> _skybox;
 };
 }    // namespace atcg
