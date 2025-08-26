@@ -26,13 +26,15 @@ public:
      * This functions returns a handle and a RenderPass. The handle can be used to access different render passes to add
      * dependencies between them (by using addDependency()).
      *
+     * @param desc The Render target description
      * @param name The name of the RenderPass
      *
      * @return A tuple with a RenderPassHandle and a RenderPass
      */
-    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPass>> addRenderPass(std::string_view name = "")
+    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPass>> addRenderPass(const RenderTargetDesc& desc,
+                                                                         std::string_view name = "")
     {
-        auto builder            = atcg::make_ref<RenderPass>(name);
+        auto builder            = atcg::make_ref<RenderPass>(desc, name);
         RenderPassHandle handle = (RenderPassHandle)_passes.size();
         _passes.push_back(builder);
         return std::make_pair(handle, builder);

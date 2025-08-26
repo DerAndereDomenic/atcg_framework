@@ -6,7 +6,12 @@
 
 namespace atcg
 {
-ShadowPass::ShadowPass() : RenderPass("ShadowPass")
+ShadowPass::ShadowPass() : RenderPass(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER), "ShadowPass")
+{
+    initRenderPass();
+}
+
+void ShadowPass::initRenderPass()
 {
     registerOutput("point_light_depth_maps", atcg::make_ref<atcg::ref_ptr<atcg::TextureCubeArray>>(nullptr));
     setSetupFunction(
@@ -129,4 +134,5 @@ ShadowPass::ShadowPass() : RenderPass("ShadowPass")
             atcg::Framebuffer::bindByID(active_fbo);
         });
 }
+
 }    // namespace atcg

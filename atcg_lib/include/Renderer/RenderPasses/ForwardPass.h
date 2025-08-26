@@ -38,7 +38,7 @@ public:
     /**
      * @brief Constructor.
      */
-    ForwardPass();
+    ForwardPass(const RenderTargetDesc& desc = {});
 
 private:
 };

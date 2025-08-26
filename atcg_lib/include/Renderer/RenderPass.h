@@ -3,11 +3,32 @@
 #include <Core/Platform.h>
 #include <Core/Memory.h>
 #include <DataStructure/Dictionary.h>
+#include <Renderer/Framebuffer.h>
 
 #include <any>
 
 namespace atcg
 {
+
+enum class RenderTargetMode
+{
+    RENDER_TARGET_BOUND_FRAMEBUFFER,
+    RENDER_TARGET_INPUT_FRAMEBUFFER,
+    RENDER_TARGET_OWN_FRAMEBUFFER
+};
+
+struct RenderTargetDesc
+{
+    RenderTargetDesc() = default;
+
+    RenderTargetDesc(RenderTargetMode mode) : mode(mode) {}
+
+    RenderTargetDesc(RenderTargetMode mode, const FramebufferSpecification& spec) : mode(mode), target_spec(spec) {}
+
+    RenderTargetMode mode = RenderTargetMode::RENDER_TARGET_BOUND_FRAMEBUFFER;
+
+    FramebufferSpecification target_spec = {};
+};
 
 /**
  * @brief A class to model a render pass
@@ -26,9 +47,10 @@ public:
     /**
      * @brief Default constructor
      *
+     * @param desc The render target description
      * @param name The name of the render pass
      */
-    RenderPass(std::string_view name = "RenderPass") : _name(name)
+    RenderPass(const RenderTargetDesc& desc, std::string_view name = "RenderPass") : _name(name), _render_target(desc)
     {
         _render_f = [](Dictionary&, const Dictionary&, Dictionary&, Dictionary&) {
         };
@@ -129,6 +151,8 @@ protected:
     Dictionary _data;
     Dictionary _output;
     std::string _name;
+
+    RenderTargetDesc _render_target;
 };
 
 }    // namespace atcg

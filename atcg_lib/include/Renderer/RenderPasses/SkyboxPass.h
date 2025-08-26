@@ -33,6 +33,15 @@ public:
      */
     SkyboxPass(const atcg::ref_ptr<Skybox>& skybox = nullptr);
 
+    /**
+     * @brief Constructor
+     *
+     * @param desc The render target description
+     * @param skybox The skybox that should be rendered
+     */
+    SkyboxPass(const RenderTargetDesc& desc, const atcg::ref_ptr<Skybox>& skybox = nullptr);
+
 private:
+    void initRenderPass(const atcg::ref_ptr<Skybox>& skybox);
 };
 }    // namespace atcg

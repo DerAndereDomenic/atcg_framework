@@ -32,5 +32,6 @@ public:
     ShadowPass();
 
 private:
+    void initRenderPass();
 };
 }    // namespace atcg
