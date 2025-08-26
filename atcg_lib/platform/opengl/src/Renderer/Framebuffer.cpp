@@ -13,6 +13,66 @@ Framebuffer::Framebuffer(uint32_t width, uint32_t height) : _width(width), _heig
     glGenFramebuffers(1, &_ID);
 }
 
+atcg::ref_ptr<Framebuffer> Framebuffer::create(const FramebufferSpecification& spec)
+{
+    auto result = atcg::make_ref<Framebuffer>(spec.width, spec.height);
+
+    for(auto attachement: spec.attachements)
+    {
+        atcg::ref_ptr<Texture> texture     = nullptr;
+        TextureSpecification texture_specs = attachement.spec;
+        texture_specs.width                = spec.width;
+        texture_specs.height               = spec.height;
+        texture_specs.depth                = spec.depth;
+
+        switch(attachement.format)
+        {
+            case FramebufferTextureFormat::TEXTURE_2D:
+            {
+                texture = Texture2D::create(texture_specs);
+            }
+            break;
+            case FramebufferTextureFormat::TEXTURE_3D:
+            {
+                texture = Texture3D::create(texture_specs);
+            }
+            break;
+            case FramebufferTextureFormat::TEXTURE_CUBE:
+            {
+                texture = TextureCube::create(texture_specs);
+            }
+            break;
+            case FramebufferTextureFormat::TEXTURE_ARRAY:
+            {
+                texture = TextureArray::create(texture_specs);
+            }
+            break;
+            case FramebufferTextureFormat::TEXTURE_CUBE_ARRAY:
+            {
+                texture = TextureCubeArray::create(texture_specs);
+            }
+            break;
+            case FramebufferTextureFormat::TEXTURE_2D_MULTISAMPLE:
+            {
+                texture = Texture2DMultiSample::create(spec.num_samples, texture_specs);
+            }
+            break;
+        }
+
+        if(attachement.is_depth)
+        {
+            result->attachDepth(texture);
+        }
+        else
+        {
+            result->attachTexture(texture);
+        }
+    }
+
+    result->complete();
+    return result;
+}
+
 Framebuffer::~Framebuffer()
 {
     glDeleteFramebuffers(1, &_ID);

@@ -6,6 +6,77 @@
 
 namespace atcg
 {
+
+enum class FramebufferTextureFormat
+{
+    TEXTURE_2D,
+    TEXTURE_3D,
+    TEXTURE_CUBE,
+    TEXTURE_ARRAY,
+    TEXTURE_CUBE_ARRAY,
+    TEXTURE_2D_MULTISAMPLE
+
+};
+
+struct FramebufferTextureSpecification
+{
+    FramebufferTextureSpecification() = default;
+    FramebufferTextureSpecification(TextureSpecification spec) : spec(spec) {}
+    FramebufferTextureSpecification(TextureSpecification spec, FramebufferTextureFormat format)
+        : spec(spec),
+          format(format)
+    {
+    }
+
+    FramebufferTextureSpecification(TextureSpecification spec, bool is_depth) : spec(spec), is_depth(is_depth) {}
+
+    FramebufferTextureSpecification(TextureSpecification spec, FramebufferTextureFormat format, bool is_depth)
+        : spec(spec),
+          format(format),
+          is_depth(is_depth)
+    {
+    }
+
+    TextureSpecification spec;
+    FramebufferTextureFormat format = FramebufferTextureFormat::TEXTURE_2D;
+    bool is_depth                   = false;
+};
+
+struct FramebufferSpecification
+{
+    FramebufferSpecification() = default;
+    FramebufferSpecification(uint32_t width,
+                             uint32_t height,
+                             uint32_t num_samples,
+                             std::initializer_list<FramebufferTextureSpecification> attachements)
+        : width(width),
+          height(height),
+          num_samples(num_samples),
+          attachements(attachements)
+    {
+    }
+
+    FramebufferSpecification(uint32_t width,
+                             uint32_t height,
+                             uint32_t depth,
+                             uint32_t num_samples,
+                             std::initializer_list<FramebufferTextureSpecification> attachements)
+        : width(width),
+          height(height),
+          depth(depth),
+          num_samples(num_samples),
+          attachements(attachements)
+    {
+    }
+
+    uint32_t width       = 0;
+    uint32_t height      = 0;
+    uint32_t depth       = 0;
+    uint32_t num_samples = 1;
+
+    std::vector<FramebufferTextureSpecification> attachements;
+};
+
 /**
  * @brief Class to model a framebuffer
  */
@@ -21,6 +92,13 @@ public:
      * @param height The height
      */
     Framebuffer(uint32_t width, uint32_t height);
+
+    /**
+     * @brief Create a framebuffer from specification
+     *
+     * @param spec The specification
+     */
+    static atcg::ref_ptr<Framebuffer> create(const FramebufferSpecification& spec);
 
     /**
      * @brief Destructor
