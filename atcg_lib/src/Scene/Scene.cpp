@@ -50,7 +50,7 @@ Scene::Impl::Impl()
                                                        });
     render_desc.clear       = true;
 
-    auto skybox_handle  = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(render_desc, skybox));
+    auto skybox_handle  = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(render_desc));
     auto shadow_handle  = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
     auto forward_handle = _render_graph->addRenderPass(
         atcg::make_ref<ForwardPass>(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER)));
@@ -61,7 +61,7 @@ Scene::Impl::Impl()
     _render_graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
     _render_graph->addDependency(forward_handle, "framebuffer", screen_handle, "framebuffer");
 
-    atcg::Dictionary context;    // TODO
+    atcg::Dictionary context;
     _render_graph->compile(context);
 }
 
@@ -186,6 +186,7 @@ void Scene::draw(Dictionary& context)
 
     context.setValue("scene", this);
     context.setValue("has_skybox", impl->has_skybox);
+    context.setValue("skybox", impl->skybox);
 
     impl->_render_graph->execute(context);
 }
@@ -195,6 +196,7 @@ void Scene::draw(const atcg::ref_ptr<Camera>& camera, const atcg::ref_ptr<Frameb
     Dictionary context;
     context.setValue("camera", camera);
     context.setValue("target", target);
+    context.setValue("skybox", impl->skybox);
     draw(context);
 }
 

@@ -39,7 +39,7 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
                                                                                                                 "maps");
             }
 
-            auto skybox     = inputs.getValueOr<atcg::ref_ptr<Skybox>>("skybox", nullptr);
+            auto skybox     = *inputs.getValueOr<atcg::ref_ptr<atcg::ref_ptr<Skybox>>>("skybox", nullptr);
             bool has_skybox = context.getValueOr("has_skybox", false) && (skybox != nullptr);
 
             Dictionary auxiliary;

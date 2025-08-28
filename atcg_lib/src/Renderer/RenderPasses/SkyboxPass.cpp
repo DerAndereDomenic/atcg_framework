@@ -4,22 +4,20 @@
 
 namespace atcg
 {
-SkyboxPass::SkyboxPass(const atcg::ref_ptr<Skybox>& skybox) : RenderPass(RenderTargetDesc(), "SkyboxPass")
+SkyboxPass::SkyboxPass() : RenderPass(RenderTargetDesc(), "SkyboxPass")
 {
-    initRenderPass(skybox);
+    initRenderPass();
 }
 
-SkyboxPass::SkyboxPass(const RenderTargetDesc& desc, const atcg::ref_ptr<Skybox>& skybox)
-    : RenderPass(desc, "SkyboxPass")
+SkyboxPass::SkyboxPass(const RenderTargetDesc& desc) : RenderPass(desc, "SkyboxPass")
 {
-    initRenderPass(skybox);
+    initRenderPass();
 }
 
-void SkyboxPass::initRenderPass(const atcg::ref_ptr<Skybox>& skybox)
+void SkyboxPass::initRenderPass()
 {
-    _data.setValue("skybox", skybox);
-    registerOutput("skybox", skybox);
     registerOutput("framebuffer", atcg::make_ref<atcg::ref_ptr<Framebuffer>>(nullptr));
+    registerOutput("skybox", atcg::make_ref<atcg::ref_ptr<Skybox>>(nullptr));
 
     setSetupFunction(
         [this](Dictionary& context, Dictionary& data, Dictionary& output_data)
@@ -36,12 +34,14 @@ void SkyboxPass::initRenderPass(const atcg::ref_ptr<Skybox>& skybox)
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
             bool has_skybox = context.getValueOr<bool>("has_skybox", false);
-            auto _skybox    = data.getValue<atcg::ref_ptr<atcg::Skybox>>("skybox");
+            auto _skybox    = context.getValueOr<atcg::ref_ptr<atcg::Skybox>>("skybox", nullptr);
 
             auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffe"
                                                                                                   "r");
+            auto output_skybox      = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Skybox>>>("skybox");
             auto target             = prepareFramebuffer(context, inputs, data, outputs);
             *output_framebuffer     = target;
+            *output_skybox          = _skybox;
             if(_render_target.clear)
             {
                 renderer->clear();
