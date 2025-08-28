@@ -7,6 +7,12 @@
 
 namespace atcg
 {
+
+std::pair<RenderGraph::RenderPassHandle, atcg::ref_ptr<RenderPass>> RenderGraph::addRenderPass(std::string_view name)
+{
+    return addRenderPass(RenderTargetDesc(), name);
+}
+
 std::pair<RenderGraph::RenderPassHandle, atcg::ref_ptr<RenderPass>>
 RenderGraph::addRenderPass(const RenderTargetDesc& desc, std::string_view name)
 {
