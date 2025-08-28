@@ -173,6 +173,13 @@ public:
     }
 
     /**
+     * @brief Get number of color attachements
+     *
+     * @return Number of color attachements
+     */
+    ATCG_INLINE uint32_t numColorAttachements() const { return _color_attachements.size(); }
+
+    /**
      * @brief Get the depth attachement
      *
      * @return The depth texture
