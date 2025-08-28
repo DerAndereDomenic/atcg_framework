@@ -1,5 +1,10 @@
 #include <Renderer/RenderGraph.h>
 
+#include <Renderer/RenderPasses/BlitPass.h>
+#include <Renderer/RenderPasses/SkyboxPass.h>
+#include <Renderer/RenderPasses/ForwardPass.h>
+#include <Renderer/RenderPasses/ShadowPass.h>
+
 namespace atcg
 {
 std::pair<RenderGraph::RenderPassHandle, atcg::ref_ptr<RenderPass>>
@@ -90,6 +95,8 @@ void RenderGraph::compile(Dictionary& ctx)
     {
         throw std::runtime_error("Graph has a cycle. Topological sorting is not possible.");
     }
+
+    _compiled = true;
 }
 
 void RenderGraph::execute(Dictionary& ctx)
@@ -119,4 +126,55 @@ void RenderGraph::exportToDOT(const std::string& path) const
 
     out << "}\n";
 }
+
+
+atcg::ref_ptr<RenderGraph> createStandardGraph()
+{
+    auto _render_graph = atcg::make_ref<atcg::RenderGraph>();
+
+    RenderTargetDesc render_desc;
+    render_desc.clear = true;
+
+    auto skybox_handle  = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(render_desc));
+    auto shadow_handle  = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
+    auto forward_handle = _render_graph->addRenderPass(atcg::make_ref<ForwardPass>());
+
+    _render_graph->addDependency(skybox_handle, "skybox", forward_handle, "skybox");
+    _render_graph->addDependency(skybox_handle, "framebuffer", forward_handle, "framebuffer");
+    _render_graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
+
+    return _render_graph;
+}
+
+atcg::ref_ptr<RenderGraph> createMSAAGraph(uint32_t num_samples)
+{
+    auto _render_graph = atcg::make_ref<atcg::RenderGraph>();
+
+    RenderTargetDesc render_desc;
+    render_desc.mode        = RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER;
+    render_desc.target_spec = FramebufferSpecification(
+        1,
+        1,
+        num_samples,
+        {
+            {TextureFormat::RGBA, FramebufferTextureFormat::TEXTURE_2D_MULTISAMPLE},          // Color
+            {TextureFormat::RINT, FramebufferTextureFormat::TEXTURE_2D_MULTISAMPLE},          // Entity ids
+            {TextureFormat::DEPTH, FramebufferTextureFormat::TEXTURE_2D_MULTISAMPLE, true}    // Depth
+        });
+    render_desc.clear = true;
+
+    auto skybox_handle  = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(render_desc));
+    auto shadow_handle  = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
+    auto forward_handle = _render_graph->addRenderPass(
+        atcg::make_ref<ForwardPass>(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER)));
+    auto screen_handle = _render_graph->addRenderPass(atcg::make_ref<BlitPass>());
+
+    _render_graph->addDependency(skybox_handle, "skybox", forward_handle, "skybox");
+    _render_graph->addDependency(skybox_handle, "framebuffer", forward_handle, "framebuffer");
+    _render_graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
+    _render_graph->addDependency(forward_handle, "framebuffer", screen_handle, "framebuffer");
+
+    return _render_graph;
+}
+
 }    // namespace atcg

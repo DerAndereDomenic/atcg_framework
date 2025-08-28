@@ -81,6 +81,22 @@ public:
      */
     void exportToDOT(const std::string& path) const;
 
+    /**
+     * @brief Check if the model is compiled
+     *
+     * @return If the graph is compiled
+     */
+    ATCG_INLINE bool isCompiled() const { return _compiled; }
+
+    /**
+     * @brief Compile the graph if it is not compiled, otherwise NOP
+     *
+     * @param ctx The compile context
+     */
+    ATCG_INLINE void ensureCompiled(Dictionary& ctx)
+    {
+        if(!_compiled) compile(ctx);
+    }
 
 private:
     struct PortEdge
@@ -95,5 +111,11 @@ private:
     std::vector<atcg::ref_ptr<RenderPass>> _passes;
     std::vector<atcg::ref_ptr<RenderPass>> _compiled_passes;    // Same data as _passes but topologically sorted
     std::vector<PortEdge> _edges;
+
+    bool _compiled = false;
 };
+
+atcg::ref_ptr<RenderGraph> createStandardGraph();
+
+atcg::ref_ptr<RenderGraph> createMSAAGraph(uint32_t num_samples);
 }    // namespace atcg
