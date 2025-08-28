@@ -9,6 +9,7 @@
 #include <Renderer/RenderPasses/ForwardPass.h>
 #include <Renderer/RenderPasses/SkyboxPass.h>
 #include <Renderer/RenderPasses/ShadowPass.h>
+#include <Renderer/RenderPasses/BlitPass.h>
 
 namespace atcg
 {
@@ -37,12 +38,28 @@ Scene::Impl::Impl()
 
     _render_graph = atcg::make_ref<atcg::RenderGraph>();
 
-    auto skybox_handle = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(skybox));
-    auto shadow_handle = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
-    auto output_handle = _render_graph->addRenderPass(atcg::make_ref<ForwardPass>());
+    RenderTargetDesc render_desc;
+    render_desc.mode        = RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER;
+    render_desc.target_spec = FramebufferSpecification(1,
+                                                       1,
+                                                       1,
+                                                       {
+                                                           {TextureFormat::RGBA},          // Color
+                                                           {TextureFormat::RINT},          // Entity ids
+                                                           {TextureFormat::DEPTH, true}    // Depth
+                                                       });
+    render_desc.clear       = true;
 
-    _render_graph->addDependency(skybox_handle, "skybox", output_handle, "skybox");
-    _render_graph->addDependency(shadow_handle, "point_light_depth_maps", output_handle, "point_light_depth_maps");
+    auto skybox_handle  = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(render_desc, skybox));
+    auto shadow_handle  = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
+    auto forward_handle = _render_graph->addRenderPass(
+        atcg::make_ref<ForwardPass>(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER)));
+    auto screen_handle = _render_graph->addRenderPass(atcg::make_ref<BlitPass>());
+
+    _render_graph->addDependency(skybox_handle, "skybox", forward_handle, "skybox");
+    _render_graph->addDependency(skybox_handle, "framebuffer", forward_handle, "framebuffer");
+    _render_graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
+    _render_graph->addDependency(forward_handle, "framebuffer", screen_handle, "framebuffer");
 
     atcg::Dictionary context;    // TODO
     _render_graph->compile(context);
@@ -161,16 +178,23 @@ void Scene::draw(Dictionary& context)
         return;
     }
 
+    if(!context.contains("target"))
+    {
+        ATCG_WARN("Scene render was issued without valid target");
+        return;
+    }
+
     context.setValue("scene", this);
     context.setValue("has_skybox", impl->has_skybox);
 
     impl->_render_graph->execute(context);
 }
 
-void Scene::draw(const atcg::ref_ptr<Camera>& camera)
+void Scene::draw(const atcg::ref_ptr<Camera>& camera, const atcg::ref_ptr<Framebuffer>& target)
 {
     Dictionary context;
     context.setValue("camera", camera);
+    context.setValue("target", target);
     draw(context);
 }
 

@@ -12,15 +12,10 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
     setSetupFunction(
         [this](Dictionary& context, Dictionary& data, Dictionary& output)
         {
-            auto renderer =
-                context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
             data.setValue("dummy_skybox", atcg::make_ref<Skybox>());
-
             if(_render_target.mode == RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER)
             {
-                auto framebuffer = output.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
-
-                *framebuffer = Framebuffer::create(_render_target.target_spec);    // TODO
+                data.setValue("target", atcg::make_ref<atcg::ref_ptr<Framebuffer>>(nullptr));
             }
         });
 
@@ -52,14 +47,22 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
             auxiliary.setValue("skybox", has_skybox ? skybox : data.getValue<atcg::ref_ptr<Skybox>>("dummy_skybox"));
             auxiliary.setValue("has_skybox", has_skybox);
 
-            if(_render_target.mode != RenderTargetMode::RENDER_TARGET_BOUND_FRAMEBUFFER)
-            {
-                const Dictionary& dict =
-                    _render_target.mode == RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER ? inputs : outputs;
-                auto framebuffer = *dict.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
-                framebuffer->use();
-            }
+            auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffe"
+                                                                                                  "r");
+            auto target             = prepareFramebuffer(context, inputs, data, outputs);
+            *output_framebuffer     = target;
 
+            if(_render_target.clear)
+            {
+                renderer->clear();
+                // We assume that this is an entity buffer, better solution?
+                if(target->numColorAttachements() > 1 &&
+                   target->getColorAttachement(1)->getSpecification().format == TextureFormat::RINT)
+                {
+                    int value = -1;
+                    target->getColorAttachement(1)->fill(&value);
+                }
+            }
             for(auto e: view)
             {
                 Entity entity(e, scene);

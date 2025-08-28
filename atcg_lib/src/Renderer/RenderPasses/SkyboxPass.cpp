@@ -24,14 +24,9 @@ void SkyboxPass::initRenderPass(const atcg::ref_ptr<Skybox>& skybox)
     setSetupFunction(
         [this](Dictionary& context, Dictionary& data, Dictionary& output_data)
         {
-            auto renderer =
-                context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
-
             if(_render_target.mode == RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER)
             {
-                auto framebuffer = output_data.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
-
-                *framebuffer = Framebuffer::create(_render_target.target_spec);    // TODO
+                data.setValue("target", atcg::make_ref<atcg::ref_ptr<Framebuffer>>(nullptr));
             }
         });
 
@@ -43,15 +38,25 @@ void SkyboxPass::initRenderPass(const atcg::ref_ptr<Skybox>& skybox)
             bool has_skybox = context.getValueOr<bool>("has_skybox", false);
             auto _skybox    = data.getValue<atcg::ref_ptr<atcg::Skybox>>("skybox");
 
+            auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffe"
+                                                                                                  "r");
+            auto target             = prepareFramebuffer(context, inputs, data, outputs);
+            *output_framebuffer     = target;
+            if(_render_target.clear)
+            {
+                renderer->clear();
+
+                // We assume that this is an entity buffer, better solution?
+                if(target->numColorAttachements() > 1 &&
+                   target->getColorAttachement(1)->getSpecification().format == TextureFormat::RINT)
+                {
+                    int value = -1;
+                    target->getColorAttachement(1)->fill(&value);
+                }
+            }
+
             if(has_skybox && _skybox)
             {
-                if(_render_target.mode != RenderTargetMode::RENDER_TARGET_BOUND_FRAMEBUFFER)
-                {
-                    const Dictionary& dict =
-                        _render_target.mode == RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER ? inputs : outputs;
-                    auto framebuffer = *dict.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
-                    framebuffer->use();
-                }
                 renderer->drawSkybox(_skybox->getSkyboxCubeMap(), context.getValue<atcg::ref_ptr<Camera>>("camera"));
             }
         });
