@@ -781,7 +781,6 @@ inline void defineBindings(py::module_& m)
         .def("getFramebuffer", &atcg::Renderer::getFramebuffer)
         .def("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
         .def("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
-        .def("toggleMSAA", &atcg::Renderer::toggleMSAA, "enabled"_a)
         .def("screenshot",
              [](const atcg::ref_ptr<atcg::Scene>& scene,
                 const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
@@ -815,10 +814,7 @@ inline void defineBindings(py::module_& m)
         .def("setCullFace", &atcg::Renderer::setCullFace, "mode"_a)
         .def("getFrameCounter", &atcg::Renderer::getFrameCounter)
         .def("popTextureID", &atcg::Renderer::popTextureID)
-        .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a)
-        .def("setMSAA", &atcg::Renderer::setMSAA, "num_samples"_a)
-        .def("getMSAA", &atcg::Renderer::getMSAA)
-        .def("getFramebufferMSAA", &atcg::Renderer::getFramebufferMSAA);
+        .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a);
 
     m_renderer_system.def(py::init<>())
         .def("setClearColor", &atcg::RendererSystem::setClearColor, "color"_a)
@@ -1454,13 +1450,17 @@ inline void defineBindings(py::module_& m)
         .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap)
         .def(
             "draw",
-            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+            [](const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+               const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
             {
                 atcg::Dictionary context;
                 context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera);
+                context.setValue("target", framebuffer);
                 scene->draw(context);
             },
-            "camera"_a);
+            "camera"_a,
+            "target"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())

@@ -134,7 +134,7 @@ public:
 
             atcg::Renderer::clear();
 
-            atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraLeft());
+            atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraLeft(), t_left);
 
             atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), controller->getCameraLeft());
             atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), controller->getCameraLeft());
@@ -150,7 +150,7 @@ public:
 
             atcg::Renderer::clear();
 
-            atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraRight());
+            atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraRight(), t_right);
 
             atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), controller->getCameraRight());
             atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), controller->getCameraRight());
@@ -171,7 +171,10 @@ public:
         {
             atcg::Renderer::clear();
 
-            atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera());
+            uint32_t width  = atcg::Renderer::getFramebuffer()->width();
+            uint32_t height = atcg::Renderer::getFramebuffer()->height();
+            atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera(),
+                                                               atcg::Renderer::getFramebuffer());
 
             atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
             atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
@@ -268,24 +271,30 @@ public:
 
             if(ImGui::Checkbox("Enable MSAA", &msaa_enabled))
             {
-                atcg::Renderer::toggleMSAA(msaa_enabled);
+                auto graph = msaa_enabled ? atcg::createMSAAGraph(msaa_samples[current_msaa_selection_index])
+                                          : atcg::createStandardGraph();
+                atcg::Project::getActive()->getActiveScene()->setRenderGraph(graph);
             }
 
-            if(ImGui::BeginCombo("MSAA Samples", combo_preview_value))
+            if(msaa_enabled)
             {
-                for(int n = 0; n < IM_ARRAYSIZE(msaa_samples); n++)
+                if(ImGui::BeginCombo("MSAA Samples", combo_preview_value))
                 {
-                    const bool is_selected = (current_msaa_selection_index == n);
-                    if(ImGui::Selectable(msaa_samples_str[n], is_selected))
+                    for(int n = 0; n < IM_ARRAYSIZE(msaa_samples); n++)
                     {
-                        current_msaa_selection_index = n;
-                        atcg::Renderer::setMSAA(msaa_samples[current_msaa_selection_index]);
-                    }
+                        const bool is_selected = (current_msaa_selection_index == n);
+                        if(ImGui::Selectable(msaa_samples_str[n], is_selected))
+                        {
+                            current_msaa_selection_index = n;
+                            atcg::Project::getActive()->getActiveScene()->setRenderGraph(
+                                atcg::createMSAAGraph(msaa_samples[current_msaa_selection_index]));
+                        }
 
-                    // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                    if(is_selected) ImGui::SetItemDefaultFocus();
+                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                        if(is_selected) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
                 }
-                ImGui::EndCombo();
             }
 
             ImGui::End();
@@ -405,7 +414,7 @@ private:
 
     uint32_t msaa_samples[6]              = {1, 2, 4, 8, 16, 32};
     const char* msaa_samples_str[6]       = {"1", "2", "4", "8", "16", "32"};
-    uint32_t current_msaa_selection_index = 3;
+    uint32_t current_msaa_selection_index = 4;
     bool msaa_enabled                     = true;
 #ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;

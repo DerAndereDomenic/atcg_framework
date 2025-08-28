@@ -158,6 +158,7 @@ public:
 
         atcg::Dictionary context;
         context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+        context.setValue<atcg::ref_ptr<atcg::Framebuffer>>("target", atcg::Renderer::getFramebuffer());
         scene->draw(context);
 
         dt = delta_time;

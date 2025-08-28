@@ -124,7 +124,7 @@ class PythonLayer(atcg.Layer):
         atcg.Renderer.clear()
 
         atcg.Project.getActive().getActiveScene().draw(
-            self.camera_controller.getCamera()
+            self.camera_controller.getCamera(), atcg.Renderer.getFramebuffer()
         )
 
         atcg.Renderer.drawCameras(
