@@ -60,9 +60,6 @@ Scene::Impl::Impl()
     _render_graph->addDependency(skybox_handle, "framebuffer", forward_handle, "framebuffer");
     _render_graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
     _render_graph->addDependency(forward_handle, "framebuffer", screen_handle, "framebuffer");
-
-    atcg::Dictionary context;
-    _render_graph->compile(context);
 }
 
 Scene::Scene()
@@ -188,6 +185,7 @@ void Scene::draw(Dictionary& context)
     context.setValue("has_skybox", impl->has_skybox);
     context.setValue("skybox", impl->skybox);
 
+    impl->_render_graph->ensureCompiled(context);
     impl->_render_graph->execute(context);
 }
 
