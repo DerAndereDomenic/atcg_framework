@@ -84,28 +84,6 @@ void renderComponent(atcg::RendererSystem* renderer,
 {
     if(!entity.hasComponent<T>()) return;
 
-    if(!entity.hasComponent<TransformComponent>())
-    {
-        ATCG_WARN("Entity does not have transform component!");
-        return;
-    }
-
-    if(!entity.hasComponent<GeometryComponent>())
-    {
-        ATCG_WARN("Entity does not have geometry component!");
-        return;
-    }
-
-    GeometryComponent geometry = entity.getComponent<GeometryComponent>();
-
-    if(!geometry.graph())
-    {
-        ATCG_WARN("Entity does have geometry component but mesh is empty");
-        return;
-    }
-
-    geometry.graph()->unmapAllPointers();
-
     ComponentRenderer<T>().renderComponent(renderer, entity, camera, auxiliary);
 }
 }    // namespace atcg
