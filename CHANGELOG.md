@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added AssetImporter/Exporter
 - Added Projects to streamline serialization of assets and scenes
 - Added ComponentRegistry and macros to register components for serialization, rendering, etc.
+- Added Framebuffer Specification struct to simplify Framebuffer allocation
+- Added Render Target Descriptions to Render passes
+- Added Resource Pools to handle Render Targets
+- Added Framebuffer::numColorAttachements
+- Added BlitPass
 
 ### Changed
 
@@ -46,6 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed normalization of meshes
 - SceneSerializer and SceneHierarchyPanel no longer take additional template arguments for custom components. This is now handled by the component registration system
 - Removed ComponentRenderer class. We now use a similar design as for the Serializer. We have multiple templated class specialized for the different components instead of one global class that implements all specializations
+- Removed MSAA settings from Renderer. This is now handled via the Render Passes
+- Changed how output variables are treated by a RenderPass
+- Check if geometry component is valid inside individual render component rendering code
+- In the SkyboxPass, the skybox is now a context variable
 
 ### Fixed
 

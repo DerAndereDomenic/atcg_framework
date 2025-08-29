@@ -18,3 +18,4 @@ DataStructure
    Dictionary
    Skybox
    TextureBuilder
+   ResourcePool

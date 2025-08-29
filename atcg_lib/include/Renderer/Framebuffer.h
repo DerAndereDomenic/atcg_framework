@@ -6,6 +6,93 @@
 
 namespace atcg
 {
+
+/**
+ * @brief The type of framebuffer texture
+ */
+enum class FramebufferTextureFormat
+{
+    TEXTURE_2D,
+    TEXTURE_3D,
+    TEXTURE_CUBE,
+    TEXTURE_ARRAY,
+    TEXTURE_CUBE_ARRAY,
+    TEXTURE_2D_MULTISAMPLE
+
+};
+
+/**
+ * @brief A framebuffer texture specification.
+ * This consists of
+ * * The definition of the texture
+ * * If the texture is a depth map
+ * * The format of the texture
+ */
+struct FramebufferTextureSpecification
+{
+    FramebufferTextureSpecification() = default;
+    FramebufferTextureSpecification(TextureSpecification spec) : spec(spec) {}
+    FramebufferTextureSpecification(TextureSpecification spec, FramebufferTextureFormat format)
+        : spec(spec),
+          format(format)
+    {
+    }
+
+    FramebufferTextureSpecification(TextureSpecification spec, bool is_depth) : spec(spec), is_depth(is_depth) {}
+
+    FramebufferTextureSpecification(TextureSpecification spec, FramebufferTextureFormat format, bool is_depth)
+        : spec(spec),
+          format(format),
+          is_depth(is_depth)
+    {
+    }
+
+    TextureSpecification spec;
+    FramebufferTextureFormat format = FramebufferTextureFormat::TEXTURE_2D;
+    bool is_depth                   = false;
+};
+
+/**
+ * @brief A framebuffer specification consisting of
+ * * The resolution of the framebuffer
+ * * number of samples if MSAA is enabled
+ * * The specifications of the attachements
+ */
+struct FramebufferSpecification
+{
+    FramebufferSpecification() = default;
+    FramebufferSpecification(uint32_t width,
+                             uint32_t height,
+                             uint32_t num_samples,
+                             std::initializer_list<FramebufferTextureSpecification> attachements)
+        : width(width),
+          height(height),
+          num_samples(num_samples),
+          attachements(attachements)
+    {
+    }
+
+    FramebufferSpecification(uint32_t width,
+                             uint32_t height,
+                             uint32_t depth,
+                             uint32_t num_samples,
+                             std::initializer_list<FramebufferTextureSpecification> attachements)
+        : width(width),
+          height(height),
+          depth(depth),
+          num_samples(num_samples),
+          attachements(attachements)
+    {
+    }
+
+    uint32_t width       = 0;
+    uint32_t height      = 0;
+    uint32_t depth       = 0;
+    uint32_t num_samples = 1;
+
+    std::vector<FramebufferTextureSpecification> attachements;
+};
+
 /**
  * @brief Class to model a framebuffer
  */
@@ -21,6 +108,13 @@ public:
      * @param height The height
      */
     Framebuffer(uint32_t width, uint32_t height);
+
+    /**
+     * @brief Create a framebuffer from specification
+     *
+     * @param spec The specification
+     */
+    static atcg::ref_ptr<Framebuffer> create(const FramebufferSpecification& spec);
 
     /**
      * @brief Destructor
@@ -93,6 +187,13 @@ public:
     {
         return _color_attachements[slot];
     }
+
+    /**
+     * @brief Get number of color attachements
+     *
+     * @return Number of color attachements
+     */
+    ATCG_INLINE uint32_t numColorAttachements() const { return _color_attachements.size(); }
 
     /**
      * @brief Get the depth attachement

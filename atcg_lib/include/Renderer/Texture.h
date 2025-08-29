@@ -74,6 +74,32 @@ struct TextureSampler
 
 struct TextureSpecification
 {
+    TextureSpecification() = default;
+    TextureSpecification(TextureFormat format) : format(format) {}
+
+    TextureSpecification(uint32_t width, uint32_t height, TextureFormat format)
+        : width(width),
+          height(height),
+          format(format)
+    {
+    }
+
+    TextureSpecification(uint32_t width, uint32_t height, uint32_t depth, TextureFormat format)
+        : width(width),
+          height(height),
+          depth(depth),
+          format(format)
+    {
+    }
+    TextureSpecification(uint32_t width, uint32_t height, uint32_t depth, TextureFormat format, TextureSampler sampler)
+        : format(format),
+          sampler(sampler),
+          width(width),
+          height(height),
+          depth(depth)
+    {
+    }
+
     TextureFormat format   = TextureFormat::RGBA;
     TextureSampler sampler = {};
     uint32_t width         = 0;
