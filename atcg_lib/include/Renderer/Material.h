@@ -5,6 +5,10 @@
 
 namespace atcg
 {
+
+class RendererSystem;
+class Shader;
+
 /**
  * @brief A class to model a material.
  */
@@ -107,6 +111,22 @@ struct Material : public Asset
      */
     void removeNormalMap();
 
+    /**
+     * @brief Upload the material to a shader
+     *
+     * @param renderer The renderer
+     * @param shader The shader
+     */
+    void uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader);
+
+    /**
+     * @brief Release used texture units after an upload.
+     * Should only be called after uploadMaterial was called
+     *
+     * @param renderer The renderer
+     */
+    void releaseTextureIDs(RendererSystem* renderer);
+
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Material; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
@@ -116,5 +136,8 @@ private:
     atcg::ref_ptr<atcg::Texture2D> _normal_texture;
     atcg::ref_ptr<atcg::Texture2D> _roughness_texture;
     atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
+
+    std::array<uint32_t, 4> _used_texture_ids;
+    bool _uploaded = false;
 };
 }    // namespace atcg
