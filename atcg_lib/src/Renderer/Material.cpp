@@ -103,6 +103,7 @@ void Material::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shad
     _used_texture_ids[3] = metallic_id;
 
     shader->selectSubroutine("sr_eval_brdf", "eval_brdf_pbr");
+    shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_pbr");
 
     _uploaded = true;
 }
