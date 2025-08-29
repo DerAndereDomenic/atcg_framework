@@ -7,6 +7,9 @@
 namespace atcg
 {
 
+/**
+ * @brief The type of framebuffer texture
+ */
 enum class FramebufferTextureFormat
 {
     TEXTURE_2D,
@@ -18,6 +21,13 @@ enum class FramebufferTextureFormat
 
 };
 
+/**
+ * @brief A framebuffer texture specification.
+ * This consists of
+ * * The definition of the texture
+ * * If the texture is a depth map
+ * * The format of the texture
+ */
 struct FramebufferTextureSpecification
 {
     FramebufferTextureSpecification() = default;
@@ -42,6 +52,12 @@ struct FramebufferTextureSpecification
     bool is_depth                   = false;
 };
 
+/**
+ * @brief A framebuffer specification consisting of
+ * * The resolution of the framebuffer
+ * * number of samples if MSAA is enabled
+ * * The specifications of the attachements
+ */
 struct FramebufferSpecification
 {
     FramebufferSpecification() = default;

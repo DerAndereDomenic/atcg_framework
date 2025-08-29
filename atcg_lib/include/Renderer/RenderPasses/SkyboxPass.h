@@ -12,16 +12,19 @@ namespace atcg
  * This pass reads the following variables from the context:
  * * context<RendererSystem*>["renderer"] - The renderer
  * * context<bool>["has_skybox"] - If the skybox is present
- * * context<atcg::ref_ptr<Skybox>>["skybox"] - The skybox used (only needed for compile call)
+ * * context<atcg::ref_ptr<Skybox>>["skybox"] - The skybox used
  *
  * data:
- * * data<atcg::ref_ptr<Skybox>>["skybox"] - The skybox data (set by constructor)
+ * * data<atcg::ref_ptr<ref_ptr<Framebuffer>>>["target"] - The target if RenderTargetMode is set to
+ * RENDER_TARGET_OWN_FRAMEBUFFER
  *
  * inputs:
- * * None
+ * * * data<atcg::ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The target if RenderTargetMode is set to
+ * RENDER_TARGET_INPUTFRAMEBUFFER
  *
  * outputs:
- * * outputs<atcg::ref_ptr<Skybox>>["skybox"] - The skybox used. Might be a dummy skybox
+ * * outputs<ref_ptr<ref_ptr<Skybox>>>["skybox"] - The skybox used. Might be a dummy skybox
+ * * outputs<ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The target framebuffer
  *
  */
 class SkyboxPass : public RenderPass

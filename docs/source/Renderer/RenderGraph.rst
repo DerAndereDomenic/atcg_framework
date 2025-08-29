@@ -20,3 +20,6 @@ Render Passes
 .. doxygenclass:: atcg::ForwardPass
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::BlitPass
+   :members:
+   :undoc-members:

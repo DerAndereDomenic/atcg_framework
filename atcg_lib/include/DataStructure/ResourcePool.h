@@ -8,6 +8,9 @@
 namespace atcg
 {
 
+/**
+ * @brief A struct modeling a resource description.
+ */
 struct ResourceDescription
 {
     std::string name;
@@ -42,13 +45,31 @@ struct ResourceDescriptionHash
     }
 };
 
+/**
+ * @brief A class to manage render target resources (framebuffer)
+ */
 class ResourcePool
 {
 public:
+    /**
+     * @brief Default constructor
+     */
     ResourcePool() = default;
 
+    /**
+     * @brief Acquire a framebuffer with the corresponding description.
+     * If a framebuffer with this description already exists, a cached version is returned. Otherwise, a new one is
+     * allocated.
+     *
+     * @param desc The Resource Description
+     */
     atcg::ref_ptr<Framebuffer> acquireFramebuffer(ResourceDescription desc);
 
+    /**
+     * @brief Advance the garbage collector.
+     * Each call increases the live time of the cached objects. If an object is updated 500 times without beeing
+     * acquired, the resource is freed.
+     */
     void garbageCollect();
 
 private:
