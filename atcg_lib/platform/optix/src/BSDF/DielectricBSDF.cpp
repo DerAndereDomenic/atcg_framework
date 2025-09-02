@@ -1,6 +1,7 @@
 #include <BSDF/DielectricBSDF.h>
 
 #include <Renderer/Texture.h>
+#include <Renderer/Material.h>
 
 #include <Core/Common.h>
 
@@ -9,18 +10,16 @@ namespace atcg
 
 DielectricBSDF::DielectricBSDF(const Dictionary& dict)
 {
-    auto transmittance_texture = dict.getValue<atcg::ref_ptr<Texture2D>>("transmittance");
-    auto reflectance_texture   = dict.getValue<atcg::ref_ptr<Texture2D>>("reflectance");
-    float ior                  = dict.getValue<float>("ior");
+    auto material = dict.getValue<atcg::ref_ptr<Material>>("material");
 
-    auto transmittance = transmittance_texture->getData(atcg::GPU);
-    auto reflectance   = reflectance_texture->getData(atcg::GPU);
+    auto diffuse   = material->getDiffuseTexture()->getData(atcg::GPU);
+    auto roughness = material->getRoughnessTexture()->getData(atcg::GPU);
 
     DielectricBSDFData data;
 
-    atcg::convertToTextureObject(reflectance, _reflectance_texture, data.reflectance_texture);
-    atcg::convertToTextureObject(transmittance, _transmittance_texture, data.transmittance_texture);
-    data.ior = ior;
+    atcg::convertToTextureObject(diffuse, _diffuse_texture, data.diffuse_texture);
+    atcg::convertToTextureObject(roughness, _roughness_texture, data.roughness_texture);
+    data.ior = material->ior;
 
     _flags = BSDFComponentType::IdealReflection | BSDFComponentType::IdealReflection;
 
@@ -33,11 +32,11 @@ DielectricBSDF::~DielectricBSDF()
 
     _bsdf_data_buffer.download(&data);
 
-    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.reflectance_texture));
-    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.transmittance_texture));
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.diffuse_texture));
+    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.roughness_texture));
 
-    CUDA_SAFE_CALL(cudaFreeArray(_reflectance_texture));
-    CUDA_SAFE_CALL(cudaFreeArray(_transmittance_texture));
+    CUDA_SAFE_CALL(cudaFreeArray(_diffuse_texture));
+    CUDA_SAFE_CALL(cudaFreeArray(_roughness_texture));
 }
 
 void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,

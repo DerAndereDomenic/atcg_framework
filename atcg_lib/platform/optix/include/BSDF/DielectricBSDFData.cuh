@@ -4,8 +4,8 @@ namespace atcg
 {
 struct DielectricBSDFData
 {
-    cudaTextureObject_t transmittance_texture;
-    cudaTextureObject_t reflectance_texture;
+    cudaTextureObject_t diffuse_texture;
+    cudaTextureObject_t roughness_texture;
     float ior;
 };
 }    // namespace atcg

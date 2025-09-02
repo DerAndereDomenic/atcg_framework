@@ -131,8 +131,7 @@ extern "C" __global__ void __raygen__rg()
                     last_si       = si;
                     last_bsdf_pdf = result.sample_probability;
 
-                    if((int)(si.bsdf->flags & atcg::BSDFComponentType::AnyDelta) != 0 ||
-                       (int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                    if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
                         last_si.valid = false;
                     }

@@ -10,6 +10,7 @@
 #include <Shape/ShapeInstance.h>
 #include <Shape/MeshShape.h>
 #include <BSDF/PBRBSDF.h>
+#include <BSDF/DielectricBSDF.h>
 #include <DataStructure/WorkerPool.h>
 #include <Emitter/MeshEmitter.h>
 
@@ -54,7 +55,20 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
 
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
+    atcg::ref_ptr<BSDF> bsdf;
+    switch(material->getMaterialType())
+    {
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+        {
+            bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
+        }
+        break;
+        case MaterialType::MATERIAL_TYPE_GLASS:
+        {
+            bsdf = atcg::make_ref<DielectricBSDF>(bsdf_dict);
+        }
+        break;
+    }
     bsdf->initializePipeline(pipeline, sbt);
 
     atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
@@ -110,7 +124,21 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
 
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
+    atcg::ref_ptr<BSDF> bsdf;
+    switch(material->getMaterialType())
+    {
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+        {
+            bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
+        }
+        break;
+        case MaterialType::MATERIAL_TYPE_GLASS:
+        {
+            bsdf = atcg::make_ref<DielectricBSDF>(bsdf_dict);
+        }
+        break;
+    }
+    bsdf->initializePipeline(pipeline, sbt);
     bsdf->initializePipeline(pipeline, sbt);
 
     auto mesh            = entity.getComponent<GeometryComponent>().graph();
@@ -209,7 +237,21 @@ void PathtracingIntegrator::prepareComponent<EdgeCylinderRenderComponent>(
 
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
+    atcg::ref_ptr<BSDF> bsdf;
+    switch(material->getMaterialType())
+    {
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+        {
+            bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
+        }
+        break;
+        case MaterialType::MATERIAL_TYPE_GLASS:
+        {
+            bsdf = atcg::make_ref<DielectricBSDF>(bsdf_dict);
+        }
+        break;
+    }
+    bsdf->initializePipeline(pipeline, sbt);
     bsdf->initializePipeline(pipeline, sbt);
 
     auto mesh            = entity.getComponent<GeometryComponent>().graph();
@@ -318,7 +360,21 @@ void PathtracingIntegrator::prepareComponent<InstanceRenderComponent>(Entity ent
 
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
+    atcg::ref_ptr<BSDF> bsdf;
+    switch(material->getMaterialType())
+    {
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+        {
+            bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
+        }
+        break;
+        case MaterialType::MATERIAL_TYPE_GLASS:
+        {
+            bsdf = atcg::make_ref<DielectricBSDF>(bsdf_dict);
+        }
+        break;
+    }
+    bsdf->initializePipeline(pipeline, sbt);
     bsdf->initializePipeline(pipeline, sbt);
 
     auto transform_vbo   = component.instance_vbos[0];

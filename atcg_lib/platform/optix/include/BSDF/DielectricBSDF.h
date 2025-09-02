@@ -34,8 +34,8 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    cudaArray_t _reflectance_texture;
-    cudaArray_t _transmittance_texture;
+    cudaArray_t _diffuse_texture;
+    cudaArray_t _roughness_texture;
 
     atcg::dref_ptr<DielectricBSDFData> _bsdf_data_buffer;
 };

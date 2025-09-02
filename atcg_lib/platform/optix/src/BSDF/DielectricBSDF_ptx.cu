@@ -51,7 +51,6 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 fresnel_schlick(const glm::vec3& F0
  */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult sampleRefractive(const atcg::SurfaceInteraction& si,
                                                                              const glm::vec3& reflectance_color,
-                                                                             const glm::vec3& transmittance_color,
                                                                              const float ior,
                                                                              atcg::PCG32& rng)
 {
@@ -98,10 +97,12 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult sampleRefractive(con
     {
         // Select the transmission event
         // We sample the BDSF exactly.
-        result.bsdf_weight        = transmittance_color;
+        result.bsdf_weight        = reflectance_color;
         result.out_dir            = transmitted_ray_dir;
         result.sample_probability = transmission_probability;
     }
+
+    result.flags = atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealReflection;
 
     return result;
 }
@@ -113,13 +114,10 @@ __direct_callable__sample_dielectricbsdf(const atcg::SurfaceInteraction& si, atc
     const atcg::DielectricBSDFData* sbt_data =
         *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
 
-    float4 reflectance_u        = tex2D<float4>(sbt_data->reflectance_texture, si.uv.x, si.uv.y);
+    float4 reflectance_u        = tex2D<float4>(sbt_data->diffuse_texture, si.uv.x, si.uv.y);
     glm::vec3 reflectance_color = glm::vec3(reflectance_u.x, reflectance_u.y, reflectance_u.z);
 
-    float4 transmittance_u        = tex2D<float4>(sbt_data->transmittance_texture, si.uv.x, si.uv.y);
-    glm::vec3 transmittance_color = glm::vec3(transmittance_u.x, transmittance_u.y, transmittance_u.z);
-
-    return detail::sampleRefractive(si, reflectance_color, transmittance_color, sbt_data->ior, rng);
+    return detail::sampleRefractive(si, reflectance_color, sbt_data->ior, rng);
 }
 
 extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
