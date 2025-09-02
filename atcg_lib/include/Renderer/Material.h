@@ -9,6 +9,41 @@ namespace atcg
 class RendererSystem;
 class Shader;
 
+enum class MaterialType
+{
+    MATERIAL_TYPE_OPAQUE,
+    MATERIAL_TYPE_GLASS
+};
+
+ATCG_INLINE const char* materialTypeToString(MaterialType type)
+{
+    switch(type)
+    {
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+            return "Opaque";
+        case MaterialType::MATERIAL_TYPE_GLASS:
+            return "Glass";
+        default:
+            return "Unknown";
+    }
+}
+
+ATCG_INLINE MaterialType stringToMaterialType(const char* str)
+{
+    if(strcmp(str, "Opaque") == 0)
+    {
+        return MaterialType::MATERIAL_TYPE_OPAQUE;
+    }
+    else if(strcmp(str, "Glass") == 0)
+    {
+        return MaterialType::MATERIAL_TYPE_GLASS;
+    }
+    else
+    {
+        return MaterialType::MATERIAL_TYPE_OPAQUE;
+    }
+}
+
 /**
  * @brief A class to model a material.
  */
@@ -17,7 +52,7 @@ struct Material : public Asset
     /**
      * @brief Constructor
      */
-    Material();
+    Material(MaterialType type = MaterialType::MATERIAL_TYPE_OPAQUE);
 
     /**
      * @brief Get the diffuse texture.
@@ -131,6 +166,12 @@ struct Material : public Asset
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
 
+    float ior = 1.5f;
+
+    ATCG_INLINE void setMaterialType(MaterialType type) { _material_type = type; }
+
+    ATCG_INLINE MaterialType getMaterialType() const { return _material_type; }
+
 private:
     atcg::ref_ptr<atcg::Texture2D> _diffuse_texture;
     atcg::ref_ptr<atcg::Texture2D> _normal_texture;
@@ -139,5 +180,7 @@ private:
 
     std::array<uint32_t, 4> _used_texture_ids;
     bool _uploaded = false;
+
+    MaterialType _material_type = MaterialType::MATERIAL_TYPE_OPAQUE;
 };
 }    // namespace atcg

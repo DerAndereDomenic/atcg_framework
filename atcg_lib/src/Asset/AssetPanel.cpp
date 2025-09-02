@@ -62,6 +62,28 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     ImGui::Text("Material");
 
+    updated = ImGui::DragFloat(("IOR##" + key).c_str(), &material.ior, 0.01f, 0.4f, 3.0f) || updated;
+
+    int currentIndex = static_cast<int>(material.getMaterialType());
+
+    constexpr const char* materialTypeLabels[] = {"Opaque", "Glass"};
+
+    if(ImGui::BeginCombo("Material Type", materialTypeToString(material.getMaterialType())))
+    {
+        for(int i = 0; i < IM_ARRAYSIZE(materialTypeLabels); ++i)
+        {
+            bool isSelected = (i == currentIndex);
+            if(ImGui::Selectable(materialTypeLabels[i], isSelected))
+            {
+                auto new_type = static_cast<MaterialType>(i);
+                material.setMaterialType(new_type);
+                updated = true;
+            }
+            if(isSelected) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
+
     {
         auto spec        = material.getDiffuseTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -239,6 +261,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
     }
 
 
+    if(material.getMaterialType() == MaterialType::MATERIAL_TYPE_OPAQUE)
     {
         auto spec        = material.getMetallicTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;

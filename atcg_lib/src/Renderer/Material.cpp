@@ -5,7 +5,7 @@
 
 namespace atcg
 {
-Material::Material()
+Material::Material(MaterialType type) : _material_type(type)
 {
     TextureSpecification spec_diffuse;
     spec_diffuse.width  = 1;
@@ -102,8 +102,23 @@ void Material::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shad
     shader->setInt("texture_metallic", metallic_id);
     _used_texture_ids[3] = metallic_id;
 
-    shader->selectSubroutine("sr_eval_brdf", "eval_brdf_pbr");
-    shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_pbr");
+    shader->setFloat("ior", ior);
+
+    switch(_material_type)
+    {
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+        {
+            shader->selectSubroutine("sr_eval_brdf", "eval_brdf_pbr");
+            shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_pbr");
+        }
+        break;
+        case MaterialType::MATERIAL_TYPE_GLASS:
+        {
+            shader->selectSubroutine("sr_eval_brdf", "eval_brdf_glass");
+            shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_glass");
+        }
+        break;
+    }
 
     _uploaded = true;
 }

@@ -12,7 +12,10 @@ subroutine(sr_eval_brdf) vec3
     float NdotL = max(dot(normal, light_dir), 0.0);
     float NdotV = max(dot(normal, view_dir), 0.0);
 
-    vec3 F0 = vec3(0.04);
+    float eta    = 1.0 / ior;
+    float F0_eta = (1 - eta) / (1 + eta);
+    F0_eta *= F0_eta;
+    vec3 F0 = vec3(F0_eta);
     F0      = mix(F0, base_color, metallic);
 
     float NDF = distributionGGX(NdotH, roughness);
@@ -29,6 +32,12 @@ subroutine(sr_eval_brdf) vec3
 
     vec3 brdf = specular + kD * color_diffuse / PI;
     return brdf;
+}
+
+subroutine(sr_eval_brdf) vec3
+    eval_brdf_glass(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 light_dir, vec3 view_dir)
+{
+    return vec3(0);
 }
 
 subroutine uniform sr_eval_brdf eval_brdf;
