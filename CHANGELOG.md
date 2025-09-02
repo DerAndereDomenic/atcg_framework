@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Resource Pools to handle Render Targets
 - Added Framebuffer::numColorAttachements
 - Added BlitPass
+- Added different material types and basic implementation for glass
 
 ### Changed
 
