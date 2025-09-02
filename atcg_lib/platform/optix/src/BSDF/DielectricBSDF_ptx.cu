@@ -14,32 +14,6 @@ namespace detail
 {
 
 /**
- * @brief Fresnel schlick approximation
- *
- * @param F0 The base reflectance at normal incidence
- * @param VdotH Angle between viewing direction and halfway vector
- *
- * @return Reflectance
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_HOST_DEVICE float fresnel_schlick(const float F0, const float VdotH)
-{
-    return F0 + (1.0f - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
-}
-
-/**
- * @brief Fresnel schlick approximation
- *
- * @param F0 The base reflectance at normal incidence
- * @param VdotH Angle between viewing direction and halfway vector
- *
- * @return Reflectance
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 fresnel_schlick(const glm::vec3& F0, const float VdotH)
-{
-    return F0 + (glm::vec3(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
-}
-
-/**
  * @brief Sample a refractive BSDF
  *
  * @param si The surface interaction
@@ -70,7 +44,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult sampleRefractive(con
     float NdotL = glm::abs(glm::dot(si.incoming_direction, interface_normal));
 
     // Reflection an transmission probabilities
-    float reflection_probability   = fresnel_schlick(F0, NdotL);
+    float reflection_probability   = atcg::fresnel_schlick(F0, NdotL);
     float transmission_probability = 1.0f - reflection_probability;
     if(glm::dot(transmitted_ray_dir, transmitted_ray_dir) < 1e-6f)
     {

@@ -11,137 +11,6 @@
 
 namespace detail
 {
-/**
- * @brief Normal distribution function of GGX microfacet model
- *
- * @param NdotH The angle between normal and half way vector
- * @param roughness
- *
- * @return The pdf value
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float D_GGX(const float NdotH, const float roughness)
-{
-    float a2 = roughness * roughness;
-    float d  = (NdotH * a2 - NdotH) * NdotH + 1.0f;
-    return a2 / (glm::pi<float>() * d * d + 1e-5f);
-}
-
-/**
- * @brief Sample a direction according to the GGX normal distribution function
- *
- * @param uv The random numbers used for sampling
- * @param roughness The surface roughness
- *
- * @return The sampled direction
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_ggx(const glm::vec2& uv, float roughness)
-{
-    // GGX NDF sampling
-    float cos_theta = glm::sqrt((1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x));
-    float sin_theta = glm::sqrt(glm::max(0.0f, 1.0f - cos_theta * cos_theta));
-    float phi       = 2.0f * glm::pi<float>() * uv.y;
-
-    float x = sin_theta * glm::cos(phi);
-    float y = sin_theta * glm::sin(phi);
-    float z = cos_theta;
-
-    return glm::vec3(x, y, z);
-}
-
-/**
- * @brief Evaluate the pdf of sampling a direction according to the GGX normal distribution function
- *
- * @param result The direction
- * @param roughness The surface roughness
- *
- * @return The pdf result
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_square_to_hemisphere_ggx_pdf(const glm::vec3& result, float roughness)
-{
-    return D_GGX(result.z, roughness) * glm::max(0.0f, result.z);
-}
-
-/**
- * @brief Sample a direction in the hemisphere using cosine weighted sampling
- *
- * @param uv The random numbers used for sampling
- *
- * @return The direction
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_cosine(const glm::vec2& uv)
-{
-    // Sample disk uniformly
-    float r   = glm::sqrt(uv.x);
-    float phi = 2.0f * glm::pi<float>() * uv.y;
-
-    // Project disk sample onto hemisphere
-    float x = r * glm::cos(phi);
-    float y = r * glm::sin(phi);
-    float z = glm::sqrt(glm::max(0.0f, 1 - uv.x));
-
-    return glm::vec3(x, y, z);
-}
-
-/**
- * @brief Evaluate the pdf of sampling a direction according to a cosine weighted distribution
- *
- * @param result The direction
- *
- * @return The pdf result
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_square_to_hemisphere_cosine_pdf(const glm::vec3& result)
-{
-    return glm::max(0.0f, result.z) / glm::pi<float>();
-}
-
-/**
- * @brief Jacobian of transforming a halfway direction to reflected direction
- *
- * @param reflected_dir The reflected direction
- * @param normal The surface normal
- *
- * @return The pdf
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_normal_to_reflected_direction_pdf(const glm::vec3& reflected_dir,
-                                                                                const glm::vec3& normal)
-{
-    return 1 / glm::abs(4 * glm::dot(reflected_dir, normal));
-}
-
-/**
- * @brief Fresnel schlick approximation
- *
- * @param F0 The base reflectance at normal incidence
- * @param VdotH Angle between viewing direction and halfway vector
- *
- * @return Reflectance
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_HOST_DEVICE float fresnel_schlick(const float F0, const float VdotH)
-{
-    return F0 + (1.0f - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
-}
-
-/**
- * @brief Fresnel schlick approximation
- *
- * @param F0 The base reflectance at normal incidence
- * @param VdotH Angle between viewing direction and halfway vector
- *
- * @return Reflectance
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 fresnel_schlick(const glm::vec3& F0, const float VdotH)
-{
-    return F0 + (glm::vec3(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
-}
-
-template<typename T>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE T V_SmithGGX(T NdotL, T NdotV, T alpha, T eps = 1e-8f)
-{
-    T a2      = alpha * alpha;
-    T lambdaV = NdotL * glm::sqrt(NdotV * NdotV * (T(1) - a2) + a2);
-    T lambdaL = NdotV * glm::sqrt(NdotL * NdotL * (T(1) - a2) + a2);
-    return T(0.5) / (lambdaV + lambdaL + eps);
-}
 
 /**
  * @brief Sample a pbr bdf
@@ -186,14 +55,14 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
     if(rng.next1d() < diffuse_probability)
     {
         // Sample light direction from diffuse bsdf
-        glm::vec3 local_outgoing_ray_dir = warp_square_to_hemisphere_cosine(rng.next2d());
+        glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
         result.out_dir = local_frame * local_outgoing_ray_dir;
     }
     else
     {
         // Sample light direction from specular bsdf
-        glm::vec3 local_halfway = warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+        glm::vec3 local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
         // Transform local halfway vector from tangent space to world space
         glm::vec3 halfway = local_frame * local_halfway;
         result.out_dir    = glm::reflect(si.incoming_direction, halfway);
@@ -222,13 +91,13 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         float NdotH       = glm::dot(halfway, normal);
 
         // Normal distribution
-        float NDF = D_GGX(NdotH, roughness);
+        float NDF = atcg::D_GGX(NdotH, roughness);
 
         // Visibility
-        float V = V_SmithGGX(NdotL, NdotV, roughness);
+        float V = atcg::V_SmithGGX(NdotL, NdotV, roughness);
 
         // Fresnel
-        glm::vec3 F = fresnel_schlick(specular_F0, HdotV);
+        glm::vec3 F = atcg::fresnel_schlick(specular_F0, HdotV);
 
         kD = (1.0f - F);
 
@@ -236,7 +105,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
 
         float halfway_pdf = NDF * NdotH;
         float halfway_to_outgoing_pdf =
-            warp_normal_to_reflected_direction_pdf(result.out_dir, halfway);    // 1 / (4*HdotV)
+            atcg::warp_normal_to_reflected_direction_pdf(result.out_dir, halfway);    // 1 / (4*HdotV)
         specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
     }
 
@@ -280,9 +149,9 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
 
     if(NdotL <= 0.0f || NdotV <= 0.0f) return result;
 
-    float NDF   = D_GGX(NdotH, roughness);
-    float V     = V_SmithGGX(NdotL, NdotV, roughness);
-    glm::vec3 F = fresnel_schlick(metallic_color, glm::max(glm::dot(H, view_dir), 0.0f));
+    float NDF   = atcg::D_GGX(NdotH, roughness);
+    float V     = atcg::V_SmithGGX(NdotL, NdotV, roughness);
+    glm::vec3 F = atcg::fresnel_schlick(metallic_color, glm::max(glm::dot(H, view_dir), 0.0f));
 
     glm::vec3 specular = NDF * V * F;
 
@@ -295,7 +164,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
     float specular_probability    = 1 - diffuse_probability;
     float diffuse_pdf             = NdotL / glm::pi<float>();
     float halfway_pdf             = NDF * NdotH;
-    float halfway_to_outgoing_pdf = warp_normal_to_reflected_direction_pdf(outgoing_dir, H);    // 1 / (4*HdotV)
+    float halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(outgoing_dir, H);    // 1 / (4*HdotV)
     float specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
 
     result.bsdf_value         = specular + kD * diffuse_color / glm::pi<float>();
