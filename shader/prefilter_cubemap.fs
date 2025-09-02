@@ -1,7 +1,7 @@
 #version 430 core
 
 #include "common/defines.glsl"
-#include "common/bsdf.glsl"
+#include "common/bsdf_functions.glsl"
 
 out vec4 FragColor;
 

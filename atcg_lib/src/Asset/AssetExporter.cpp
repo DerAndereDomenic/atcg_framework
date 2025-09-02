@@ -24,6 +24,7 @@ namespace detail
 #define ROUGHNESS_TEXTURE_KEY "RoughnessTexture"
 #define METALLIC_KEY          "Metallic"
 #define METALLIC_TEXTURE_KEY  "MetallicTexture"
+#define IOR_KEY               "IoR"
 #define TYPE_KEY              "Type"
 #define VERTICES_KEY          "Vertices"
 #define FACES_KEY             "Faces"
@@ -68,6 +69,7 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
     bool use_metallic_texture  = !(metallic_texture->width() == 1 && metallic_texture->height() == 1);
     bool use_roughness_texture = !(roughness_texture->width() == 1 && roughness_texture->height() == 1);
 
+    material_json[TYPE_KEY] = materialTypeToString(material->getMaterialType());
     if(use_diffuse_texture)
     {
         std::filesystem::path img_path = path.parent_path() / "diffuse";
@@ -129,6 +131,8 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
 
         material_json[ROUGHNESS_KEY] = color;
     }
+
+    material_json[IOR_KEY] = material->ior;
 
     std::ofstream o(path);
     o << std::setw(4) << material_json << std::endl;

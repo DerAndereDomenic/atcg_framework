@@ -23,6 +23,7 @@ namespace detail
 #define ROUGHNESS_TEXTURE_KEY "RoughnessTexture"
 #define METALLIC_KEY          "Metallic"
 #define METALLIC_TEXTURE_KEY  "MetallicTexture"
+#define IOR_KEY               "IoR"
 #define TYPE_KEY              "Type"
 #define VERTICES_KEY          "Vertices"
 #define FACES_KEY             "Faces"
@@ -31,7 +32,11 @@ namespace detail
 
 atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path, const nlohmann::json& material_node)
 {
-    atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
+    std::string material_type_string = material_node.value(TYPE_KEY, "Opaque");
+
+    atcg::ref_ptr<Material> material = atcg::make_ref<Material>(stringToMaterialType(material_type_string.c_str()));
+
+    material->ior = material_node.value(IOR_KEY, 1.5f);
 
     // Diffuse
     if(material_node.contains(DIFFUSE_KEY))

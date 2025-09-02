@@ -291,25 +291,7 @@ void RendererSystem::Impl::setMaterial(const atcg::ref_ptr<Material>& material, 
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
-    uint32_t diffuse_id = renderer->popTextureID();
-    material->getDiffuseTexture()->use(diffuse_id);
-    shader->setInt("texture_diffuse", diffuse_id);
-    used_texture_units.push_back(diffuse_id);
-
-    uint32_t normal_id = renderer->popTextureID();
-    material->getNormalTexture()->use(normal_id);
-    shader->setInt("texture_normal", normal_id);
-    used_texture_units.push_back(normal_id);
-
-    uint32_t roughness_id = renderer->popTextureID();
-    material->getRoughnessTexture()->use(roughness_id);
-    shader->setInt("texture_roughness", roughness_id);
-    used_texture_units.push_back(roughness_id);
-
-    uint32_t metallic_id = renderer->popTextureID();
-    material->getMetallicTexture()->use(metallic_id);
-    shader->setInt("texture_metallic", metallic_id);
-    used_texture_units.push_back(metallic_id);
+    material->uploadMaterial(renderer, shader);
 
     uint32_t lut_id = renderer->popTextureID();
     lut->use(lut_id);
@@ -488,6 +470,7 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
     }
 
+    material->releaseTextureIDs(renderer);
     freeTextureUnits();
 }
 
