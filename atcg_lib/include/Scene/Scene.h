@@ -143,8 +143,9 @@ public:
      * A shortcut if the only thing inside the context is the camera.
      *
      * @param camera The camera
+     * @param target The target framebuffer
      */
-    void draw(const atcg::ref_ptr<Camera>& camera);
+    void draw(const atcg::ref_ptr<Camera>& camera, const atcg::ref_ptr<Framebuffer>& target);
 
     /**
      * @brief Set a skybox

@@ -108,31 +108,6 @@ public:
     void setLineSize(const float& size);
 
     /**
-     * @brief Set the number of MSAA samples
-     *
-     * @param num_samples The number of MSAA samples
-     */
-    void setMSAA(uint32_t num_samples);
-
-    /**
-     * @brief Get the current number of MSAA samples
-     *
-     * @return The number of samples
-     */
-    uint32_t getMSAA() const;
-
-    /**
-     * @brief Toggle MSAA (on per default).
-     * This can be used to "disable" the internal msaa framebuffer. This can be useful if it is desired to directly draw
-     * into the final framebuffer of the renderer that can be accessed with getFramebuffer(). If MSAA is enabled, this
-     * framebuffer will be overwritten with the result of the msaa buffer by blitting. This will not be done if MSAA is
-     * toggled off.
-     *
-     * @param enable If MSAA should be enabled
-     */
-    void toggleMSAA(const bool enable = true);
-
-    /**
      * @brief Toggle depth testing
      *
      * @param enable If it should be enabled or disabled
@@ -343,28 +318,6 @@ public:
     atcg::ref_ptr<Framebuffer> getFramebuffer() const;
 
     /**
-     * @brief Get the framebuffer objects that is used by the renderer.
-     * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
-     * the current frame data, refer to getFramebufferMSAA().
-     * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
-     * operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using
-     * toggleMSAA.
-     *
-     * @return The framebuffer of last frame
-     */
-    atcg::ref_ptr<Framebuffer> getResolvedFramebuffer() const;
-
-    /**
-     * @brief Get the framebuffer object that is used by the renderer.
-     * This is a multi sample framebuffer that can only be used for drawing operations. If you want to read rendered
-     * data, either use getFramebufefr() which contains the render of the last frame. If you need the current
-     * state of the framebuffer for this frame, you have to manually blit it.
-     *
-     * @return The fbo
-     */
-    atcg::ref_ptr<Framebuffer> getFramebufferMSAA() const;
-
-    /**
      * @brief Get a buffer representing the color attachement of the screen frame buffer.
      * @note This copies memory between GPU and CPU if device = CPU
      *
@@ -537,40 +490,6 @@ ATCG_INLINE void setLineSize(const float& size)
 }
 
 /**
- * @brief Set the number of MSAA samples
- *
- * @param num_samples The number of MSAA samples
- */
-ATCG_INLINE void setMSAA(uint32_t num_samples)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setMSAA(num_samples);
-}
-
-/**
- * @brief Get the current number of MSAA samples
- *
- * @return The number of samples
- */
-ATCG_INLINE uint32_t getMSAA()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getMSAA();
-}
-
-/**
- * @brief Toggle MSAA (on per default).
- * This can be used to "disable" the internal msaa framebuffer. This can be useful if it is desired to directly draw
- * into the final framebuffer of the renderer that can be accessed with getFramebuffer(). If MSAA is enabled, this
- * framebuffer will be overwritten with the result of the msaa buffer by blitting. This will not be done if MSAA is
- * toggled off.
- *
- * @param enable If MSAA should be enabled
- */
-ATCG_INLINE void toggleMSAA(const bool enable = true)
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->toggleMSAA(enable);
-}
-
-/**
  * @brief Change the viewport of the renderer
  *
  * @param x The viewport x location
@@ -665,13 +584,13 @@ ATCG_INLINE void useScreenBuffer()
  * @param entity_id The entity id
  */
 ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
-                      const atcg::ref_ptr<Camera>& camera     = {},
-                      const glm::mat4& model                  = glm::mat4(1),
-                      const glm::vec3& color                  = glm::vec3(1),
-                      const atcg::ref_ptr<Shader>& shader     = atcg::ShaderManager::getShader("base"),
-                      DrawMode draw_mode                      = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+                      const atcg::ref_ptr<Camera>& camera                    = {},
+                      const glm::mat4& model                                 = glm::mat4(1),
+                      const glm::vec3& color                                 = glm::vec3(1),
+                      const atcg::ref_ptr<Shader>& shader                    = atcg::ShaderManager::getShader("base"),
+                      DrawMode draw_mode                                     = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
                       const std::optional<atcg::ref_ptr<Material>>& material = {},
-                      const uint32_t entity_id                = -1)
+                      const uint32_t entity_id                               = -1)
 {
     SystemRegistry::instance()
         ->getSystem<RendererSystem>()
@@ -779,34 +698,6 @@ ATCG_INLINE void drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::ref_
 ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebuffer()
 {
     return SystemRegistry::instance()->getSystem<RendererSystem>()->getFramebuffer();
-}
-
-/**
- * @brief Get the framebuffer objects that is used by the renderer.
- * This framebuffer does not represent the current frame but the last frame after finishFrame() was called. To get
- * the current frame data, refer to getFramebufferMSAA().
- * Any direct draw call done to this framebuffer will be overwritten at the end of the current frame by the blit
- * operation on the msaa buffer. If direct rendering to this framebuffer is desired, MSAA has to be toggle off using
- * toggleMSAA.
- *
- * @return The framebuffer of last frame
- */
-ATCG_INLINE atcg::ref_ptr<Framebuffer> getResolvedFramebuffer()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getResolvedFramebuffer();
-}
-
-/**
- * @brief Get the framebuffer object that is used by the renderer.
- * This is a multi sample framebuffer that can only be used for drawing operations. If you want to read rendered
- * data, either use getFramebuffer() which contains the render of the last frame. If you need the current state of
- * the framebuffer for this frame, you have to manually blit it.
- *
- * @return The fbo
- */
-ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebufferMSAA()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getFramebufferMSAA();
 }
 
 /**

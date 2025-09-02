@@ -1,26 +1,22 @@
-#include <Renderer/RenderPasses/SkyboxPass.h>
+#include <Renderer/RenderPasses/BlitPass.h>
 
 #include <Renderer/Renderer.h>
+#include <Scene/Components.h>
+#include <Scene/ComponentRegistry.h>
 
 namespace atcg
 {
-SkyboxPass::SkyboxPass() : RenderPass(RenderTargetDesc(), "SkyboxPass")
+
+BlitPass::BlitPass(const RenderTargetDesc& desc) : RenderPass(desc, "BlitPass")
 {
     initRenderPass();
 }
 
-SkyboxPass::SkyboxPass(const RenderTargetDesc& desc) : RenderPass(desc, "SkyboxPass")
-{
-    initRenderPass();
-}
-
-void SkyboxPass::initRenderPass()
+void BlitPass::initRenderPass()
 {
     registerOutput("framebuffer", atcg::make_ref<atcg::ref_ptr<Framebuffer>>(nullptr));
-    registerOutput("skybox", atcg::make_ref<atcg::ref_ptr<Skybox>>(nullptr));
-
     setSetupFunction(
-        [this](Dictionary& context, Dictionary& data, Dictionary& output_data)
+        [this](Dictionary& context, Dictionary& data, Dictionary& output)
         {
             if(_render_target.mode == RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER)
             {
@@ -28,20 +24,20 @@ void SkyboxPass::initRenderPass()
             }
         });
 
+
     setRenderFunction(
         [this](Dictionary& context, const Dictionary& inputs, Dictionary& data, Dictionary& outputs)
         {
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
-            bool has_skybox = context.getValueOr<bool>("has_skybox", false);
-            auto _skybox    = context.getValueOr<atcg::ref_ptr<atcg::Skybox>>("skybox", nullptr);
 
-            auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffe"
-                                                                                                  "r");
-            auto output_skybox      = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Skybox>>>("skybox");
-            auto target             = prepareFramebuffer(context, inputs, data, outputs);
+            auto input  = *inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
+            auto target = prepareFramebuffer(context, inputs, data, outputs);
+
+            auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
             *output_framebuffer     = target;
-            *output_skybox          = _skybox;
+
+            target->use();
             if(_render_target.clear)
             {
                 renderer->clear();
@@ -54,11 +50,7 @@ void SkyboxPass::initRenderPass()
                     target->getColorAttachement(1)->fill(&value);
                 }
             }
-
-            if(has_skybox && _skybox)
-            {
-                renderer->drawSkybox(_skybox->getSkyboxCubeMap(), context.getValue<atcg::ref_ptr<Camera>>("camera"));
-            }
+            target->blit(input);
         });
 }
 }    // namespace atcg

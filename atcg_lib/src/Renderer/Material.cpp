@@ -1,8 +1,11 @@
 #include <Renderer/Material.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/Shader.h>
+#include <Core/Assert.h>
 
 namespace atcg
 {
-Material::Material()
+Material::Material(MaterialType type) : _material_type(type)
 {
     TextureSpecification spec_diffuse;
     spec_diffuse.width  = 1;
@@ -73,6 +76,63 @@ void Material::removeNormalMap()
     spec_normal.height = 1;
     glm::u8vec4 normal(127, 127, 255, 255);
     _normal_texture = atcg::Texture2D::create(&normal, spec_normal);
+}
+
+void Material::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
+{
+    ATCG_ASSERT(!_uploaded, "Material was already uploaded");
+
+    uint32_t diffuse_id = renderer->popTextureID();
+    getDiffuseTexture()->use(diffuse_id);
+    shader->setInt("texture_diffuse", diffuse_id);
+    _used_texture_ids[0] = diffuse_id;
+
+    uint32_t normal_id = renderer->popTextureID();
+    getNormalTexture()->use(normal_id);
+    shader->setInt("texture_normal", normal_id);
+    _used_texture_ids[1] = normal_id;
+
+    uint32_t roughness_id = renderer->popTextureID();
+    getRoughnessTexture()->use(roughness_id);
+    shader->setInt("texture_roughness", roughness_id);
+    _used_texture_ids[2] = roughness_id;
+
+    uint32_t metallic_id = renderer->popTextureID();
+    getMetallicTexture()->use(metallic_id);
+    shader->setInt("texture_metallic", metallic_id);
+    _used_texture_ids[3] = metallic_id;
+
+    shader->setFloat("ior", ior);
+
+    switch(_material_type)
+    {
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+        {
+            shader->selectSubroutine("sr_eval_brdf", "eval_brdf_pbr");
+            shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_pbr");
+        }
+        break;
+        case MaterialType::MATERIAL_TYPE_GLASS:
+        {
+            shader->selectSubroutine("sr_eval_brdf", "eval_brdf_glass");
+            shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_glass");
+        }
+        break;
+    }
+
+    _uploaded = true;
+}
+
+void Material::releaseTextureIDs(RendererSystem* renderer)
+{
+    ATCG_ASSERT(_uploaded, "Tried freeing material ids without while material is not uploaded");
+
+    renderer->pushTextureID(_used_texture_ids[0]);
+    renderer->pushTextureID(_used_texture_ids[1]);
+    renderer->pushTextureID(_used_texture_ids[2]);
+    renderer->pushTextureID(_used_texture_ids[3]);
+
+    _uploaded = false;
 }
 
 }    // namespace atcg

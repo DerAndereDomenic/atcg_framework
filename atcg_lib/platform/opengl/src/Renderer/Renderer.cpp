@@ -42,16 +42,13 @@ public:
     void initCameraFrustrum();
     atcg::ref_ptr<Graph> camera_frustrum;
 
-    void initFramebuffer(uint32_t num_frames, uint32_t width, uint32_t height);
+    void initFramebuffer(uint32_t width, uint32_t height);
 
     atcg::ref_ptr<Material> standard_material = atcg::make_ref<Material>();
 
     atcg::ref_ptr<Texture2D> lut;
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
-    atcg::ref_ptr<Framebuffer> screen_fbo_msaa;
-    uint32_t msaa_num_samples = 8;
-    bool msaa_enabled         = true;
 
     atcg::ref_ptr<Graph> sphere_mesh;
     atcg::ref_ptr<Graph> cylinder_mesh;
@@ -160,7 +157,7 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
     spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     lut                        = atcg::Texture2D::create(img, spec_lut);
 
-    initFramebuffer(msaa_num_samples, width, height);
+    initFramebuffer(width, height);
 
     int total_units;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &total_units);
@@ -274,50 +271,27 @@ void RendererSystem::Impl::initCameraFrustrum()
     camera_frustrum = atcg::Graph::createGraph(points, edges);
 }
 
-void RendererSystem::Impl::initFramebuffer(uint32_t num_samples, uint32_t width, uint32_t height)
+void RendererSystem::Impl::initFramebuffer(uint32_t width, uint32_t height)
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
-    screen_fbo = atcg::make_ref<Framebuffer>(width, height);
-    screen_fbo->attachColor();
-    TextureSpecification spec_int;
-    spec_int.width  = width;
-    spec_int.height = height;
-    spec_int.format = TextureFormat::RINT;
-    screen_fbo->attachTexture(Texture2D::create(spec_int));
-    screen_fbo->attachDepth();
-    screen_fbo->complete();
+    FramebufferSpecification spec(width,
+                                  height,
+                                  1,
+                                  {
+                                      {TextureFormat::RGBA},          // Color
+                                      {TextureFormat::RINT},          // Entity ids
+                                      {TextureFormat::DEPTH, true}    // Depth
+                                  });
 
-    screen_fbo_msaa = atcg::make_ref<Framebuffer>(width, height);
-    screen_fbo_msaa->attachColorMultiSample(num_samples);
-    screen_fbo_msaa->attachTexture(Texture2DMultiSample::create(num_samples, spec_int));
-    screen_fbo_msaa->attachDepthMultiSample(num_samples);
-    screen_fbo_msaa->complete();
+    screen_fbo = Framebuffer::create(spec);
 }
 
 void RendererSystem::Impl::setMaterial(const atcg::ref_ptr<Material>& material, const atcg::ref_ptr<Shader>& shader)
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
-    uint32_t diffuse_id = renderer->popTextureID();
-    material->getDiffuseTexture()->use(diffuse_id);
-    shader->setInt("texture_diffuse", diffuse_id);
-    used_texture_units.push_back(diffuse_id);
-
-    uint32_t normal_id = renderer->popTextureID();
-    material->getNormalTexture()->use(normal_id);
-    shader->setInt("texture_normal", normal_id);
-    used_texture_units.push_back(normal_id);
-
-    uint32_t roughness_id = renderer->popTextureID();
-    material->getRoughnessTexture()->use(roughness_id);
-    shader->setInt("texture_roughness", roughness_id);
-    used_texture_units.push_back(roughness_id);
-
-    uint32_t metallic_id = renderer->popTextureID();
-    material->getMetallicTexture()->use(metallic_id);
-    shader->setInt("texture_metallic", metallic_id);
-    used_texture_units.push_back(metallic_id);
+    material->uploadMaterial(renderer, shader);
 
     uint32_t lut_id = renderer->popTextureID();
     lut->use(lut_id);
@@ -496,6 +470,7 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
         break;
     }
 
+    material->releaseTextureIDs(renderer);
     freeTextureUnits();
 }
 
@@ -581,7 +556,6 @@ void RendererSystem::finishFrame()
     shader->selectSubroutine("_getEntityID", "getDefaultID");
 
     shader->use();
-    if(impl->msaa_enabled) impl->screen_fbo->blit(impl->screen_fbo_msaa);
     impl->screen_fbo->getColorAttachement()->use();
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
@@ -634,22 +608,6 @@ void RendererSystem::setLineSize(const float& size)
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->line_size = size;
     glLineWidth(size);
-}
-
-void RendererSystem::setMSAA(uint32_t num_samples)
-{
-    impl->msaa_num_samples = num_samples;
-    impl->initFramebuffer(impl->msaa_num_samples, getFramebuffer()->width(), getFramebuffer()->height());
-}
-
-uint32_t RendererSystem::getMSAA() const
-{
-    return impl->msaa_num_samples;
-}
-
-void RendererSystem::toggleMSAA(const bool enable)
-{
-    impl->msaa_enabled = enable;
 }
 
 void RendererSystem::toggleDepthTesting(bool enable)
@@ -875,13 +833,13 @@ void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     setViewport(0, 0, width, height);
-    impl->initFramebuffer(impl->msaa_num_samples, width, height);
+    impl->initFramebuffer(width, height);
 }
 
 void RendererSystem::useScreenBuffer() const
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->msaa_enabled ? impl->screen_fbo_msaa->use() : impl->screen_fbo->use();
+    impl->screen_fbo->use();
 }
 
 uint32_t RendererSystem::getFrameCounter() const
@@ -906,12 +864,10 @@ void RendererSystem::clear() const
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     glClear(impl->clear_flag);
 
-    if(Framebuffer::currentFramebuffer() == impl->screen_fbo->getID() ||
-       Framebuffer::currentFramebuffer() == impl->screen_fbo_msaa->getID())
+    if(Framebuffer::currentFramebuffer() == impl->screen_fbo->getID())
     {
         int value = -1;
         impl->screen_fbo->getColorAttachement(1)->fill(&value);
-        impl->screen_fbo_msaa->getColorAttachement(1)->fill(&value);
     }
 }
 
@@ -1156,18 +1112,9 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
 
 atcg::ref_ptr<Framebuffer> RendererSystem::getFramebuffer() const
 {
-    return impl->msaa_enabled ? impl->screen_fbo_msaa : impl->screen_fbo;
-}
-
-atcg::ref_ptr<Framebuffer> RendererSystem::getResolvedFramebuffer() const
-{
     return impl->screen_fbo;
 }
 
-atcg::ref_ptr<Framebuffer> RendererSystem::getFramebufferMSAA() const
-{
-    return impl->screen_fbo_msaa;
-}
 
 torch::Tensor RendererSystem::getFrame(const torch::DeviceType& device) const
 {
@@ -1236,6 +1183,7 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
     setViewport(0, 0, width, height);
     atcg::Dictionary context;
     context.setValue("camera", camera);
+    context.setValue("target", screenshot_buffer);
     scene->draw(context);
     useScreenBuffer();
     setDefaultViewport();
@@ -1263,6 +1211,7 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     setViewport(0, 0, width, height);
     atcg::Dictionary context;
     context.setValue("camera", camera);
+    context.setValue("target", screenshot_buffer);
     scene->draw(context);
     useScreenBuffer();
     setDefaultViewport();

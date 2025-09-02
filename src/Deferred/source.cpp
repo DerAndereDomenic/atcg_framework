@@ -20,7 +20,7 @@ public:
         atcg::Dictionary context;
         graph = atcg::make_ref<atcg::RenderGraph>();
 
-        auto [geometry_handle, geometry_builder] = graph->addRenderPass("Geometry Pass");
+        auto [geometry_handle, geometry_builder] = graph->addRenderPass(atcg::RenderTargetDesc(), "Geometry Pass");
 
         geometry_builder
             ->setSetupFunction(
@@ -104,7 +104,7 @@ public:
                     }
                 });
 
-        auto [light_handle, light_builder] = graph->addRenderPass("Lighting Pass");
+        auto [light_handle, light_builder] = graph->addRenderPass(atcg::RenderTargetDesc(), "Lighting Pass");
 
         light_builder
             ->setSetupFunction(
@@ -323,7 +323,6 @@ public:
     virtual void onAttach() override
     {
         atcg::Application::get()->enableDockSpace(true);
-        atcg::Renderer::toggleMSAA(false);
         atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
         // auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
@@ -359,6 +358,7 @@ public:
 
         atcg::Dictionary context;
         context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+        context.setValue<atcg::ref_ptr<atcg::Framebuffer>>("target", atcg::Renderer::getFramebuffer());
         scene->draw(context);
 
         // atcg::Renderer::drawCameras(scene, camera_controller->getCamera());

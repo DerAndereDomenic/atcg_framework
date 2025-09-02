@@ -81,9 +81,29 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
                                                              const atcg::ref_ptr<Camera>& camera,
                                                              atcg::Dictionary& auxiliary) const
 {
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
     uint32_t entity_id           = entity.entity_handle();
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
@@ -133,9 +153,30 @@ void ComponentRenderer<PointRenderComponent>::renderComponent(atcg::RendererSyst
                                                               const atcg::ref_ptr<Camera>& camera,
                                                               atcg::Dictionary& auxiliary) const
 {
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
+
     uint32_t entity_id           = entity.entity_handle();
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
@@ -185,9 +226,30 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
                                                                     const atcg::ref_ptr<Camera>& camera,
                                                                     atcg::Dictionary& auxiliary) const
 {
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
+
     uint32_t entity_id           = entity.entity_handle();
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     PointSphereRenderComponent renderer = entity.getComponent<PointSphereRenderComponent>();
@@ -237,9 +299,30 @@ void ComponentRenderer<EdgeRenderComponent>::renderComponent(atcg::RendererSyste
                                                              const atcg::ref_ptr<Camera>& camera,
                                                              atcg::Dictionary& auxiliary) const
 {
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
+
     uint32_t entity_id           = entity.entity_handle();
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     EdgeRenderComponent renderer = entity.getComponent<EdgeRenderComponent>();
@@ -289,9 +372,30 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
                                                                      const atcg::ref_ptr<Camera>& camera,
                                                                      atcg::Dictionary& auxiliary) const
 {
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
+
     uint32_t entity_id           = entity.entity_handle();
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
@@ -342,9 +446,30 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
                                                                  const atcg::ref_ptr<Camera>& camera,
                                                                  atcg::Dictionary& auxiliary) const
 {
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
+
     uint32_t entity_id           = entity.entity_handle();
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
 
     // Actual rendering of component
     InstanceRenderComponent renderer = entity.getComponent<InstanceRenderComponent>();

@@ -6,9 +6,6 @@
 #include <Scene/Components.h>
 
 #include <Renderer/RenderGraph.h>
-#include <Renderer/RenderPasses/ForwardPass.h>
-#include <Renderer/RenderPasses/SkyboxPass.h>
-#include <Renderer/RenderPasses/ShadowPass.h>
 
 namespace atcg
 {
@@ -35,17 +32,7 @@ Scene::Impl::Impl()
     // Skybox
     skybox = atcg::make_ref<Skybox>();
 
-    _render_graph = atcg::make_ref<atcg::RenderGraph>();
-
-    auto skybox_handle = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(skybox));
-    auto shadow_handle = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
-    auto output_handle = _render_graph->addRenderPass(atcg::make_ref<ForwardPass>(skybox));
-
-    _render_graph->addDependency(skybox_handle, "framebuffer", output_handle, "framebuffer");
-    _render_graph->addDependency(shadow_handle, "point_light_depth_maps", output_handle, "point_light_depth_maps");
-
-    atcg::Dictionary context;    // TODO
-    _render_graph->compile(context);
+    _render_graph = createMSAAGraph(16);
 }
 
 Scene::Scene()
@@ -161,16 +148,26 @@ void Scene::draw(Dictionary& context)
         return;
     }
 
+    if(!context.contains("target"))
+    {
+        ATCG_WARN("Scene render was issued without valid target");
+        return;
+    }
+
     context.setValue("scene", this);
     context.setValue("has_skybox", impl->has_skybox);
+    context.setValue("skybox", impl->skybox);
 
+    impl->_render_graph->ensureCompiled(context);
     impl->_render_graph->execute(context);
 }
 
-void Scene::draw(const atcg::ref_ptr<Camera>& camera)
+void Scene::draw(const atcg::ref_ptr<Camera>& camera, const atcg::ref_ptr<Framebuffer>& target)
 {
     Dictionary context;
     context.setValue("camera", camera);
+    context.setValue("target", target);
+    context.setValue("skybox", impl->skybox);
     draw(context);
 }
 
