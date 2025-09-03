@@ -110,7 +110,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleMeshEmitter
 
 
     // Probability of sampling this direction via light source sampling
-    result.sampling_pdf = 1 / one_over_light_direction_pdf;
+    result.sampling_pdf = 1 / (one_over_light_direction_pdf + 1e-5f);
 
     return result;
 }
