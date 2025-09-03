@@ -133,6 +133,22 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_square_to_hemisphere_cosine_pdf(co
 /**
  * @brief Jacobian of transforming a halfway direction to reflected direction
  *
+ * @param HdotV Dot product between halfway and incoming direction
+ * @param HdotL Dot product between halfway and outgoing direction
+ * @param eta Index of refraction n1/n2
+ *
+ * @return The pdf
+ */
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float
+warp_normal_to_refracted_direction_pdf(const float HdotV, const float HdotL, const float eta)
+{
+    float denom = (HdotL + eta * HdotV);
+    return eta * eta * glm::abs(HdotV) / (denom * denom);
+}
+
+/**
+ * @brief Jacobian of transforming a halfway direction to reflected direction
+ *
  * @param reflected_dir The reflected direction
  * @param normal The surface normal
  *
@@ -178,4 +194,13 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE T V_SmithGGX(T NdotL, T NdotV, T alpha, T eps
     T lambdaL = NdotV * glm::sqrt(NdotL * NdotL * (T(1) - a2) + a2);
     return T(0.5) / (lambdaV + lambdaL + eps);
 }
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float G_SmithJointGGX(float NdotL, float NdotV, float roughness)
+{
+    float a2      = roughness * roughness;
+    float LambdaL = 0.5f * (-1 + glm::sqrt(1.0f + a2 * (1 - NdotL * NdotL) / (NdotL * NdotL)));
+    float LambdaV = 0.5f * (-1 + glm::sqrt(1.0f + a2 * (1 - NdotV * NdotV) / (NdotV * NdotV)));
+    return 1.0f / (1.0f + LambdaL + LambdaV);
+}
+
 }    // namespace atcg

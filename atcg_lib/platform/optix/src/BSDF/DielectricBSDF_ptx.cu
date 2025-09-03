@@ -25,26 +25,36 @@ namespace detail
  */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult sampleRefractive(const atcg::SurfaceInteraction& si,
                                                                              const glm::vec3& reflectance_color,
+                                                                             const float roughness,
                                                                              const float ior,
                                                                              atcg::PCG32& rng)
 {
+    glm::vec3 wi = -si.incoming_direction;
+
     // Determine surface parameters
-    bool outsidein             = glm::dot(si.incoming_direction, si.normal) < 0;
+    bool outsidein             = glm::dot(wi, si.normal) > 0;
     glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
     float eta                  = outsidein ? 1.0f / ior : ior;
 
+    glm::mat3 local_frame = atcg::Math::compute_local_frame(interface_normal);
+
+    glm::vec3 local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+    float halfway_pdf       = atcg::warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
+    // Transform local halfway vector from tangent space to world space
+    glm::vec3 halfway = local_frame * local_halfway;
+
     // Compute outgoing ray directions
-    glm::vec3 transmitted_ray_dir = glm::refract(si.incoming_direction, interface_normal, eta);
-    glm::vec3 reflected_ray_dir   = glm::reflect(si.incoming_direction, interface_normal);
+    glm::vec3 transmitted_ray_dir = glm::refract(-wi, halfway, eta);
+    glm::vec3 reflected_ray_dir   = glm::reflect(-wi, halfway);
 
     // Fresnel reflectance at normal incidence
-    float F0 = (eta - 1) / (eta + 1);
+    float F0 = (eta - 1.0f) / (eta + 1.0f);
     F0       = F0 * F0;
 
-    float NdotL = glm::abs(glm::dot(si.incoming_direction, interface_normal));
-
     // Reflection an transmission probabilities
-    float reflection_probability   = atcg::fresnel_schlick(F0, NdotL);
+    float HdotV                    = glm::dot(wi, halfway);
+    float F                        = atcg::fresnel_schlick(F0, HdotV);
+    float reflection_probability   = F;
     float transmission_probability = 1.0f - reflection_probability;
     if(glm::dot(transmitted_ray_dir, transmitted_ray_dir) < 1e-6f)
     {
@@ -53,33 +63,140 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult sampleRefractive(con
         reflection_probability   = 1.0f;
     }
 
-
     // Compute sampling result
     atcg::BSDFSamplingResult result;
     result.sample_probability = 0;
 
     // Stochastically select a reflection or transmission via russian roulette
+    glm::vec3 wo;
+    float NdotL;
+    float HdotL;
     if(rng.next1d() < reflection_probability)
     {
-        // Select the reflection event
-        // We sample the BDSF exactly.
-        result.bsdf_weight        = reflectance_color;
-        result.out_dir            = reflected_ray_dir;
-        result.sample_probability = reflection_probability;
+        wo = reflected_ray_dir;
+        float light_dir_pdf =
+            halfway_pdf * atcg::warp_normal_to_reflected_direction_pdf(wo, halfway) * reflection_probability;
+
+        result.sample_probability = light_dir_pdf;
+        NdotL                     = glm::dot(interface_normal, wo);
+        HdotL                     = glm::dot(halfway, wo);
     }
     else
     {
-        // Select the transmission event
-        // We sample the BDSF exactly.
-        result.bsdf_weight        = reflectance_color;
-        result.out_dir            = transmitted_ray_dir;
-        result.sample_probability = transmission_probability;
+        wo    = transmitted_ray_dir;
+        HdotL = glm::dot(halfway, wo);
+        float light_dir_pdf =
+            halfway_pdf * atcg::warp_normal_to_refracted_direction_pdf(HdotV, HdotL, eta) * transmission_probability;
+
+        result.sample_probability = light_dir_pdf;
+        NdotL                     = -glm::dot(interface_normal, wo);
     }
 
-    result.flags = atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealReflection;
+    if(NdotL <= 0)
+    {
+        result.sample_probability = 0;
+        return result;
+    }
+
+    float NdotV = glm::abs(glm::dot(interface_normal, wi));
+    float NdotH = glm::dot(halfway, interface_normal);
+
+    float G            = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
+    result.bsdf_weight = reflectance_color * G * glm::abs(HdotL) / (NdotV * NdotH);
+    result.out_dir     = wo;
+    result.flags       = roughness < 0.1f
+                             ? atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealReflection
+                             : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::GlossyTransmission;
 
     return result;
 }
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atcg::SurfaceInteraction& si,
+                                                                       const glm::vec3& outgoing_dir,
+                                                                       const glm::vec3& reflectance_color,
+                                                                       const float roughness,
+                                                                       const float ior)
+{
+    glm::vec3 wo = outgoing_dir;
+    glm::vec3 wi = -si.incoming_direction;
+
+    bool outsidein = glm::dot(wi, si.normal) > 0;
+    float eta      = outsidein ? 1.0f / ior : ior;
+
+    bool outsideout = glm::dot(wo, si.normal) > 0;
+
+    bool same_side = outsidein == outsideout;
+
+    glm::vec3 specular_bsdf = glm::vec3(0);
+
+    float F0 = (eta - 1) / (eta + 1);
+    F0       = F0 * F0;
+
+    glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
+    float light_dir_pdf        = 0.0f;
+    if(same_side)
+    {
+        glm::vec3 halfway = glm::normalize(wi + wo);
+        float NdotH       = glm::dot(halfway, interface_normal);
+        float LdotH       = glm::dot(halfway, wo);
+
+        float NdotL = glm::dot(interface_normal, wo);
+        float NdotV = glm::dot(interface_normal, wi);
+
+        float D = atcg::D_GGX(NdotH, roughness);
+        float G = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
+
+        glm::vec3 refracted = glm::refract(-wi, halfway, eta);
+        float F             = 1.0f;
+        if(glm::length2(refracted) > 1e-6f)
+        {
+            F = atcg::fresnel_schlick(F0, LdotH);
+        }
+        float reflection_probability = F;
+
+        light_dir_pdf = D * NdotH * reflection_probability * atcg::warp_normal_to_reflected_direction_pdf(wo, halfway);
+
+        specular_bsdf = reflectance_color * D * G * F / (4.0f * NdotV * NdotL + 1e-5f);
+    }
+    else
+    {
+        glm::vec3 halfway = -glm::normalize(eta * wi + wo);
+        // The halfway vector always points into the thinner medium
+        glm::vec3 thin_normal = ior > 1.0f ? si.normal : -si.normal;
+        float NdotH           = glm::dot(thin_normal, si.normal);
+
+        float LdotH = glm::dot(wo, halfway);
+        float VdotH = glm::dot(wi, halfway);
+
+        float NdotL = glm::abs(glm::dot(si.normal, wo));
+        float NdotV = glm::abs(glm::dot(si.normal, wi));
+
+        float D = atcg::D_GGX(NdotH, roughness);
+        float G = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
+
+        float F                = atcg::fresnel_schlick(F0, glm::abs(VdotH));
+        float T                = 1.0f - F;
+        float transmission_pdf = T;
+
+        float denom = (LdotH + eta * VdotH);
+        denom *= denom;
+
+        float numerator = eta * eta * T * D * G * glm::abs(LdotH) * glm::abs(VdotH);
+
+        light_dir_pdf = D * NdotH * transmission_pdf * atcg::warp_normal_to_refracted_direction_pdf(VdotH, LdotH, eta);
+
+        specular_bsdf = reflectance_color * numerator / (denom * NdotL * NdotV + 1e-5f);
+    }
+
+    atcg::BSDFEvalResult result;
+    result.bsdf_value         = specular_bsdf * glm::abs(glm::dot(si.normal, wo));
+    result.sample_probability = light_dir_pdf;
+    result.flags              = roughness < 0.1f
+                                    ? atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealTransmission
+                                    : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::GlossyTransmission;
+    return result;
+}
+
 }    // namespace detail
 
 extern "C" __device__ atcg::BSDFSamplingResult
@@ -91,11 +208,23 @@ __direct_callable__sample_dielectricbsdf(const atcg::SurfaceInteraction& si, atc
     float4 reflectance_u        = tex2D<float4>(sbt_data->diffuse_texture, si.uv.x, si.uv.y);
     glm::vec3 reflectance_color = glm::vec3(reflectance_u.x, reflectance_u.y, reflectance_u.z);
 
-    return detail::sampleRefractive(si, reflectance_color, sbt_data->ior, rng);
+    float roughness = tex2D<float>(sbt_data->roughness_texture, si.uv.x, si.uv.y);
+    roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+
+    return detail::sampleRefractive(si, reflectance_color, roughness, sbt_data->ior, rng);
 }
 
 extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
                                                                                   const glm::vec3& outgoing_dir)
 {
-    return atcg::BSDFEvalResult();
+    const atcg::DielectricBSDFData* sbt_data =
+        *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
+
+    float4 reflectance_u        = tex2D<float4>(sbt_data->diffuse_texture, si.uv.x, si.uv.y);
+    glm::vec3 reflectance_color = glm::vec3(reflectance_u.x, reflectance_u.y, reflectance_u.z);
+
+    float roughness = tex2D<float>(sbt_data->roughness_texture, si.uv.x, si.uv.y);
+    roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+
+    return detail::evalRefractive(si, outgoing_dir, reflectance_color, roughness, sbt_data->ior);
 }
