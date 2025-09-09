@@ -2,6 +2,7 @@
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out int outEntityID;
+layout(location = 2) out uint outStencil;
 
 in vec3 frag_color;
 in vec3 frag_pos;
@@ -19,4 +20,5 @@ void main()
     float fall_off = 1.0 - smoothstep(d * 0.3, d * 1.1, frag_dist);
     outColor = vec4(flat_color * frag_color, base_transparency * fall_off);
     outEntityID = entityID;
+    outStencil = uint(0);
 }

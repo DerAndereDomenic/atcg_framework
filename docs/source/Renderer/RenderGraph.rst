@@ -23,3 +23,6 @@ Render Passes
 .. doxygenclass:: atcg::BlitPass
    :members:
    :undoc-members:
+.. doxygenclass:: atcg::TonemapPass
+   :members:
+   :undoc-members:

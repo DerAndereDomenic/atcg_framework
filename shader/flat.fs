@@ -2,6 +2,7 @@
 
 layout(location = 0) out vec4 fragColor;
 layout(location = 1) out int outEntityID;
+layout(location = 2) out uint outStencil;
 
 in vec3 frag_color;
 in vec3 frag_pos;
@@ -18,4 +19,5 @@ void main()
     float frag_dist = length(camera_pos - frag_pos);
     fragColor = vec4(color_diffuse * frag_color * flat_color, 1.0 - pow(1.01, frag_dist - 1000));
     outEntityID = entityID;
+    outStencil = uint(0);
 }
