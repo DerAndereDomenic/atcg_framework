@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Framebuffer::numColorAttachements
 - Added BlitPass
 - Added different material types and basic implementation for glass
+- Added tonemapping render pass
 
 ### Changed
 
@@ -56,6 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed how output variables are treated by a RenderPass
 - Check if geometry component is valid inside individual render component rendering code
 - In the SkyboxPass, the skybox is now a context variable
+- All shader now output linear color that needs to be tonemapped
+- Changed internal format of TextureFormat::RINT8 to be an unsigned integer
 
 ### Fixed
 
