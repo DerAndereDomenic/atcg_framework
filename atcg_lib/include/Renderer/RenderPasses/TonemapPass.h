@@ -9,7 +9,7 @@ namespace atcg
 {
 
 /**
- * @brief A RenderPass that blits two framebuffer.
+ * @brief A RenderPass that applys tonemapping.
  *
  * This pass reads the following variables from the context:
  * * context<RendererSystem*>["renderer"] - The renderer
@@ -21,12 +21,13 @@ namespace atcg
  * inputs:
  * * inputs<atcg::ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The target if RenderTargetMode is set to
  * RENDER_TARGET_INPUTFRAMEBUFFER
+ * * inputs<atcg::ref_ptr<ref_ptr<Framebuffer>>>["hdr_buffer"] - The HDR buffer to apply tonemapping on
  *
  * outputs:
  * * outputs<ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The target framebuffer
  *
  */
-class BlitPass : public RenderPass
+class TonemapPass : public RenderPass
 {
 public:
     /**
@@ -34,7 +35,7 @@ public:
      *
      * @param desc The Render target description
      */
-    BlitPass(const RenderTargetDesc& desc = {});
+    TonemapPass(const RenderTargetDesc& desc = {});
 
 private:
     void initRenderPass();
