@@ -9,7 +9,10 @@
 class RadiosityRayGenerator : public atcg::Integrator
 {
 public:
-    RadiosityRayGenerator(const atcg::ref_ptr<atcg::RaytracingContext>& context) : atcg::Integrator(context) {}
+    RadiosityRayGenerator(const atcg::ref_ptr<atcg::RaytracingContext>& context)
+        : atcg::Integrator(context, atcg::Dictionary())
+    {
+    }
 
     virtual ~RadiosityRayGenerator() {}
 

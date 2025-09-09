@@ -7,7 +7,9 @@ void RadiosityRayGenerator::initializePipeline(const atcg::ref_ptr<atcg::RayTrac
                                                const atcg::ref_ptr<atcg::ShaderBindingTable>& sbt)
 {
     auto graph = atcg::Graph::createTriangleMesh(_mesh);
-    _shape     = atcg::make_ref<atcg::MeshShape>(graph);
+    atcg::Dictionary dict;
+    dict.setValue("mesh", graph);
+    _shape = atcg::make_ref<atcg::MeshShape>(dict);
 
     _shape->initializePipeline(pipeline, sbt);
     _shape->prepareAccelerationStructure(_context);
