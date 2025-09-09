@@ -47,7 +47,7 @@ GLint to2GLinternalFormat(TextureFormat format)
         }
         case TextureFormat::RINT8:
         {
-            return GL_RED;
+            return GL_R8UI;
         }
         case TextureFormat::RFLOAT:
         {
@@ -99,7 +99,7 @@ GLenum toGLformat(TextureFormat format)
         }
         case TextureFormat::RINT8:
         {
-            return GL_RED;
+            return GL_RED_INTEGER;
         }
         case TextureFormat::RFLOAT:
         {

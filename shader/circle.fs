@@ -2,6 +2,7 @@
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out int outEntityID;
+layout(location = 2) out uint outStencil;
 
 in vec3 frag_pos;
 
@@ -22,4 +23,5 @@ void main()
 
     outColor = vec4(flat_color, circle);
     outEntityID = entityID;
+    outStencil = uint(0);
 }

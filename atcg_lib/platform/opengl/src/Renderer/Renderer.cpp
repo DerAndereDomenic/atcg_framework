@@ -275,12 +275,17 @@ void RendererSystem::Impl::initFramebuffer(uint32_t width, uint32_t height)
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
+    TextureSpecification stencil;
+    stencil.format              = TextureFormat::RINT8;
+    stencil.sampler.filter_mode = TextureFilterMode::NEAREST;
+
     FramebufferSpecification spec(width,
                                   height,
                                   1,
                                   {
                                       {TextureFormat::RGBA},          // Color
                                       {TextureFormat::RINT},          // Entity ids
+                                      stencil,                        // Stencil mask
                                       {TextureFormat::DEPTH, true}    // Depth
                                   });
 
@@ -534,6 +539,7 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("vrScreen");
     impl->shader_manager->addShaderFromName("depth_pass");
     impl->shader_manager->addShaderFromName("image_display");
+    impl->shader_manager->addShaderFromName("tonemap");
 
     impl->renderer = this;
 }

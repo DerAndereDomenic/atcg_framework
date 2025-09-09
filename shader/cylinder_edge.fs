@@ -6,6 +6,7 @@
 
 layout(location = 0) out vec4 outColor;
 layout(location = 1) out int outEntityID;
+layout(location = 2) out uint outStencil;
 
 in vec3 frag_normal;
 in vec3 frag_pos;
@@ -97,6 +98,8 @@ void main()
     vec3 color = (1.0 - float(use_ibl)) * view_light + (float(use_ibl)) * ambient + point_light_contribution;
 
     float frag_dist = length(camera_pos - frag_pos);
-    outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0 / 2.4)), diffuse_lookup.w * (1.0 - pow(1.01, frag_dist - 1000)));
+    outColor = vec4(color, diffuse_lookup.w * (1.0 - pow(1.01, frag_dist - 1000)));
+    // outColor = vec4(pow(vec3(1) - exp(-color), vec3(1.0 / 2.4)), diffuse_lookup.w * (1.0 - pow(1.01, frag_dist - 1000)));
     outEntityID = entityID;
+    outStencil = uint(TONE_MAP_BIT);
 }

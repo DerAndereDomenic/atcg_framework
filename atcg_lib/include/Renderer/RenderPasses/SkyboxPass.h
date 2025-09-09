@@ -19,7 +19,7 @@ namespace atcg
  * RENDER_TARGET_OWN_FRAMEBUFFER
  *
  * inputs:
- * * * data<atcg::ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The target if RenderTargetMode is set to
+ * * inputs<atcg::ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The target if RenderTargetMode is set to
  * RENDER_TARGET_INPUTFRAMEBUFFER
  *
  * outputs:
