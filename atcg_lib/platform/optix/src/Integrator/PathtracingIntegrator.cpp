@@ -431,6 +431,53 @@ void PathtracingIntegrator::prepareComponent<InstanceRenderComponent>(Entity ent
     color_vbo->unmapHostPointers();
 }
 
+template<>
+void PathtracingIntegrator::prepareComponent<MeshLightComponent>(Entity entity,
+                                                                 const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                                                 const atcg::ref_ptr<ShaderBindingTable>& sbt)
+{
+    if(!entity.hasComponent<MeshLightComponent>()) return;
+    if(entity.hasComponent<MeshRenderComponent>()) return;    // Light source already added here
+    if(!entity.hasComponent<GeometryComponent>()) return;
+
+    MeshLightComponent& component = entity.getComponent<MeshLightComponent>();
+
+    auto& transform = entity.getComponent<TransformComponent>();
+
+    auto graph = entity.getComponent<GeometryComponent>().graph();
+    if(!graph) return;
+    atcg::Dictionary shape_dict;
+    shape_dict.setValue("mesh", graph);
+    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
+    shape->initializePipeline(pipeline, sbt);
+    shape->prepareAccelerationStructure(_context);
+
+    atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
+    auto& mesh_light_component          = entity.getComponent<MeshLightComponent>();
+    Dictionary emitter_data;
+    emitter_data.setValue<atcg::ref_ptr<MeshShape>>("shape", std::dynamic_pointer_cast<MeshShape>(shape));
+    emitter_data.setValue("transform", transform.getModel());
+    emitter_data.setValue("emission_scaling", mesh_light_component.intensity);
+    emitter_data.setValue("texture_emissive", mesh_light_component.getEmissiveTexture());
+
+    mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
+    mesh_emitter->initializePipeline(pipeline, sbt);
+
+    _emitter.push_back(mesh_emitter);
+
+
+    Dictionary shape_data;
+    shape_data.setValue("shape", shape);
+    shape_data.setValue("transform", transform.getModel());
+    shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
+    shape_data.setValue("emitter", mesh_emitter);
+    auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
+    shape_instance->initializePipeline(pipeline, sbt);
+
+    _shapes.push_back(shape_instance);
+}
+
+
 void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                                const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
@@ -474,6 +521,7 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
         prepareComponent<PointSphereRenderComponent>(entity, pipeline, sbt);
         prepareComponent<EdgeCylinderRenderComponent>(entity, pipeline, sbt);
         prepareComponent<InstanceRenderComponent>(entity, pipeline, sbt);
+        prepareComponent<MeshLightComponent>(entity, pipeline, sbt);
     }
 
     // No all the emitters are initialized
