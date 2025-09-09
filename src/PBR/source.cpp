@@ -309,6 +309,7 @@ public:
                     if(atcg::Project::getActive()->getActiveScene())
                     {
                         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
+                        initializePathtracer();
                     }
                     atcg::RevisionStack::clearChache();
 
