@@ -81,17 +81,19 @@ extern "C" __global__ void __raygen__rg()
                 // Next-event estimation
                 do
                 {
+                    if(params.num_emitters == 0) break;
+
                     uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
 
                     float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
 
                     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-                    if(si.emitter == emitter) continue;
+                    if(si.emitter == emitter) break;
 
                     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
 
-                    if(emitter_sampling.sampling_pdf == 0) continue;
+                    if(emitter_sampling.sampling_pdf == 0) break;
 
                     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
 
@@ -104,7 +106,7 @@ extern "C" __global__ void __raygen__rg()
 
                     if(occluded)
                     {
-                        continue;
+                        break;
                     }
 
                     atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);

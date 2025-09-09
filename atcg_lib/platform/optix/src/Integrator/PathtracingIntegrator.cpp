@@ -38,6 +38,7 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
                                                                   const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     if(!entity.hasComponent<MeshRenderComponent>()) return;
+    if(!entity.hasComponent<GeometryComponent>()) return;
 
     MeshRenderComponent& component = entity.getComponent<MeshRenderComponent>();
 
@@ -47,6 +48,7 @@ void PathtracingIntegrator::prepareComponent<MeshRenderComponent>(Entity entity,
     auto& material  = component.material();
 
     auto graph = entity.getComponent<GeometryComponent>().graph();
+    if(!graph) return;
     atcg::Dictionary shape_dict;
     shape_dict.setValue("mesh", graph);
     atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
@@ -106,6 +108,7 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
     const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     if(!entity.hasComponent<PointSphereRenderComponent>()) return;
+    if(!entity.hasComponent<GeometryComponent>()) return;
 
     PointSphereRenderComponent& component = entity.getComponent<PointSphereRenderComponent>();
 
@@ -141,7 +144,8 @@ void PathtracingIntegrator::prepareComponent<PointSphereRenderComponent>(
     bsdf->initializePipeline(pipeline, sbt);
     bsdf->initializePipeline(pipeline, sbt);
 
-    auto mesh            = entity.getComponent<GeometryComponent>().graph();
+    auto mesh = entity.getComponent<GeometryComponent>().graph();
+    if(!mesh) return;
     uint32_t n_instances = mesh->n_vertices();
 
     torch::Tensor offsets = mesh->getHostPositions();
@@ -219,6 +223,7 @@ void PathtracingIntegrator::prepareComponent<EdgeCylinderRenderComponent>(
     const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     if(!entity.hasComponent<EdgeCylinderRenderComponent>()) return;
+    if(!entity.hasComponent<GeometryComponent>()) return;
 
     EdgeCylinderRenderComponent& component = entity.getComponent<EdgeCylinderRenderComponent>();
 
@@ -254,7 +259,8 @@ void PathtracingIntegrator::prepareComponent<EdgeCylinderRenderComponent>(
     bsdf->initializePipeline(pipeline, sbt);
     bsdf->initializePipeline(pipeline, sbt);
 
-    auto mesh            = entity.getComponent<GeometryComponent>().graph();
+    auto mesh = entity.getComponent<GeometryComponent>().graph();
+    if(!mesh) return;
     uint32_t n_instances = mesh->n_edges();
 
     torch::Tensor positions = mesh->getHostPositions();
@@ -336,6 +342,7 @@ void PathtracingIntegrator::prepareComponent<InstanceRenderComponent>(Entity ent
                                                                       const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     if(!entity.hasComponent<InstanceRenderComponent>()) return;
+    if(!entity.hasComponent<GeometryComponent>()) return;
 
     InstanceRenderComponent& component = entity.getComponent<InstanceRenderComponent>();
 
@@ -352,6 +359,7 @@ void PathtracingIntegrator::prepareComponent<InstanceRenderComponent>(Entity ent
     auto& material             = component.material();
 
     auto graph = entity.getComponent<GeometryComponent>().graph();
+    if(!graph) return;
     atcg::Dictionary shape_dict;
     shape_dict.setValue("mesh", graph);
     atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
