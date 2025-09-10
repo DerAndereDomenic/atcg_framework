@@ -7,6 +7,7 @@ namespace atcg
 
 struct BSDFVPtrTable;
 struct EmitterVPtrTable;
+struct MediumVPtrTable;
 
 struct Interaction
 {
@@ -27,5 +28,11 @@ struct SurfaceInteraction : public Interaction
 
     const BSDFVPtrTable* bsdf;
     const EmitterVPtrTable* emitter;
+    const MediumVPtrTable* inside_medium;
+    const MediumVPtrTable* outside_medium;
+};
+
+struct MediumInteraction : public Interaction
+{
 };
 }    // namespace atcg

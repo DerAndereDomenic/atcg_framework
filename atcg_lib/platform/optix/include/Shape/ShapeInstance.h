@@ -6,6 +6,7 @@
 #include <Shape/Shape.h>
 #include <BSDF/BSDF.h>
 #include <Emitter/Emitter.h>
+#include <Medium/Medium.h>
 
 namespace atcg
 {
@@ -59,6 +60,8 @@ private:
     atcg::ref_ptr<Shape> _shape;
     atcg::ref_ptr<BSDF> _bsdf;
     atcg::ref_ptr<Emitter> _emitter;
+    atcg::ref_ptr<Medium> _inside_medium;
+    atcg::ref_ptr<Medium> _outside_medium;
     uint32_t _entity_id;
     glm::vec3 _color;
 };
