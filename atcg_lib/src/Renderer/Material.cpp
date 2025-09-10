@@ -118,6 +118,12 @@ void Material::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shad
             shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_glass");
         }
         break;
+        case MaterialType::MATERIAL_TYPE_NULL:
+        {
+            shader->selectSubroutine("sr_eval_brdf", "eval_brdf_null");
+            shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_null");
+        }
+        break;
     }
 
     _uploaded = true;

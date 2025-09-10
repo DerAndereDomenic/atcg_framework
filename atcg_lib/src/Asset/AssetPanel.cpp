@@ -66,7 +66,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     int currentIndex = static_cast<int>(material.getMaterialType());
 
-    constexpr const char* materialTypeLabels[] = {"Opaque", "Glass"};
+    constexpr const char* materialTypeLabels[] = {"Opaque", "Glass", "Null"};
 
     if(ImGui::BeginCombo("Material Type", materialTypeToString(material.getMaterialType())))
     {
@@ -84,6 +84,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         ImGui::EndCombo();
     }
 
+    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
     {
         auto spec        = material.getDiffuseTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -149,6 +150,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         }
     }
 
+    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
     {
         auto spec        = material.getNormalTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -200,6 +202,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         }
     }
 
+    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
     {
         auto spec        = material.getRoughnessTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;

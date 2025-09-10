@@ -40,4 +40,10 @@ subroutine(sr_eval_brdf) vec3
     return vec3(0);
 }
 
+subroutine(sr_eval_brdf) vec3
+    eval_brdf_null(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 light_dir, vec3 view_dir)
+{
+    return vec3(0);
+}
+
 subroutine uniform sr_eval_brdf eval_brdf;
