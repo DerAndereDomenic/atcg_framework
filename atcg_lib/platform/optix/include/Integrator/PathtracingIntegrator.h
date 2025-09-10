@@ -5,6 +5,7 @@
 #include <Integrator/PathtracingData.cuh>
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
+#include <Scene/OptixScene.h>
 
 namespace atcg
 {
@@ -54,23 +55,13 @@ public:
     virtual void reset() override;
 
 private:
-    template<typename T>
-    void prepareComponent(Entity entity,
-                          const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                          const atcg::ref_ptr<ShaderBindingTable>& sbt);
 
 private:
     uint32_t _raygen_index;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
 
-    std::vector<atcg::ref_ptr<ShapeInstance>> _shapes;
-
-    atcg::DeviceBuffer<const EmitterVPtrTable*> _emitters;
-    atcg::ref_ptr<EnvironmentEmitter> _environment_emitter = nullptr;
-    std::vector<atcg::ref_ptr<Emitter>> _emitter;
-
-    atcg::ref_ptr<InstanceAccelerationStructure> _ias;
+    atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<PathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
 
