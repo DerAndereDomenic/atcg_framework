@@ -26,20 +26,15 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
     if(!component.visible) return;
 
     auto& transform = entity.getComponent<TransformComponent>();
-    auto& material  = component.material();
 
-    auto graph = entity.getComponent<GeometryComponent>().graph();
-    if(!graph) return;
-    atcg::Dictionary shape_dict;
-    shape_dict.setValue("mesh", graph);
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
-    shape->initializePipeline(_pipeline, _sbt);
-    shape->prepareAccelerationStructure(_context);
+    auto geometry = entity.getComponent<GeometryComponent>();
+    auto shape_it = _shape_cache.find(geometry.graph_handle);
+    if(shape_it == _shape_cache.end()) return;
+    auto shape = shape_it->second;
 
-    atcg::Dictionary bsdf_dict;
-    bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
-    bsdf->initializePipeline(_pipeline, _sbt);
+    auto bsdf_it = _bsdf_cache.find(component.material_handle);
+    if(bsdf_it == _bsdf_cache.end()) return;
+    auto bsdf = bsdf_it->second;
 
     atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
     if(entity.hasComponent<MeshLightComponent>())
@@ -90,10 +85,9 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
     shape->initializePipeline(_pipeline, _sbt);
     shape->prepareAccelerationStructure(_context);
 
-    atcg::Dictionary bsdf_dict;
-    bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
-    bsdf->initializePipeline(_pipeline, _sbt);
+    auto bsdf_it = _bsdf_cache.find(component.material_handle);
+    if(bsdf_it == _bsdf_cache.end()) return;
+    auto bsdf = bsdf_it->second;
 
     auto mesh = entity.getComponent<GeometryComponent>().graph();
     if(!mesh) return;
@@ -188,10 +182,9 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
     shape->initializePipeline(_pipeline, _sbt);
     shape->prepareAccelerationStructure(_context);
 
-    atcg::Dictionary bsdf_dict;
-    bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
-    bsdf->initializePipeline(_pipeline, _sbt);
+    auto bsdf_it = _bsdf_cache.find(component.material_handle);
+    if(bsdf_it == _bsdf_cache.end()) return;
+    auto bsdf = bsdf_it->second;
 
     auto mesh = entity.getComponent<GeometryComponent>().graph();
     if(!mesh) return;
@@ -290,18 +283,15 @@ void SceneAdapter::prepareComponent<InstanceRenderComponent>(const atcg::ref_ptr
     glm::mat4 global_transform = transform.getModel();
     auto& material             = component.material();
 
-    auto graph = entity.getComponent<GeometryComponent>().graph();
-    if(!graph) return;
-    atcg::Dictionary shape_dict;
-    shape_dict.setValue("mesh", graph);
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
-    shape->initializePipeline(_pipeline, _sbt);
-    shape->prepareAccelerationStructure(_context);
+    auto geometry = entity.getComponent<GeometryComponent>();
+    auto shape_it = _shape_cache.find(geometry.graph_handle);
+    if(shape_it == _shape_cache.end()) return;
 
-    atcg::Dictionary bsdf_dict;
-    bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
-    bsdf->initializePipeline(_pipeline, _sbt);
+    auto shape = shape_it->second;
+
+    auto bsdf_it = _bsdf_cache.find(component.material_handle);
+    if(bsdf_it == _bsdf_cache.end()) return;
+    auto bsdf = bsdf_it->second;
 
     auto transform_vbo   = component.instance_vbos[0];
     auto color_vbo       = component.instance_vbos[1];
@@ -360,13 +350,11 @@ void SceneAdapter::prepareComponent<MeshLightComponent>(const atcg::ref_ptr<Opti
 
     auto& transform = entity.getComponent<TransformComponent>();
 
-    auto graph = entity.getComponent<GeometryComponent>().graph();
-    if(!graph) return;
-    atcg::Dictionary shape_dict;
-    shape_dict.setValue("mesh", graph);
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
-    shape->initializePipeline(_pipeline, _sbt);
-    shape->prepareAccelerationStructure(_context);
+    auto geometry = entity.getComponent<GeometryComponent>();
+    auto shape_it = _shape_cache.find(geometry.graph_handle);
+    if(shape_it == _shape_cache.end()) return;
+
+    auto shape = shape_it->second;
 
     atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
     auto& mesh_light_component          = entity.getComponent<MeshLightComponent>();
@@ -395,6 +383,48 @@ void SceneAdapter::prepareComponent<MeshLightComponent>(const atcg::ref_ptr<Opti
 
 atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
 {
+    // Cache shapes and materials
+    auto& registry = AssetManager::getAssetRegistry();
+    for(auto entry: registry)
+    {
+        if(entry.second.type == AssetType::Graph)
+        {
+            auto graph = AssetManager::getAsset<Graph>(entry.first);
+            if(graph && graph->type() == GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH)
+            {
+                atcg::Dictionary shape_dict;
+                shape_dict.setValue("mesh", graph);
+                atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
+                shape->initializePipeline(_pipeline, _sbt);
+                shape->prepareAccelerationStructure(_context);
+                _shape_cache.insert(std::make_pair(entry.first, shape));
+            }
+        }
+
+        if(entry.second.type == AssetType::Material)
+        {
+            auto material = AssetManager::getAsset<Material>(entry.first);
+            if(material)
+            {
+                atcg::Dictionary bsdf_dict;
+                bsdf_dict.setValue("material", material);
+                atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
+                bsdf->initializePipeline(_pipeline, _sbt);
+
+                _bsdf_cache.insert(std::make_pair(entry.first, bsdf));
+            }
+        }
+    }
+
+    // Insert default material
+    atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
+    atcg::Dictionary bsdf_dict;
+    bsdf_dict.setValue("material", material);
+    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
+    bsdf->initializePipeline(_pipeline, _sbt);
+
+    _bsdf_cache.insert(std::make_pair(0, bsdf));
+
     atcg::ref_ptr<OptixScene> result = atcg::make_ref<OptixScene>();
     std::vector<const EmitterVPtrTable*> tables;
     if(scene->hasSkybox())

@@ -47,5 +47,8 @@ private:
     atcg::ref_ptr<RaytracingContext> _context;
     atcg::ref_ptr<RayTracingPipeline> _pipeline;
     atcg::ref_ptr<ShaderBindingTable> _sbt;
+
+    std::unordered_map<AssetHandle, atcg::ref_ptr<Shape>> _shape_cache;
+    std::unordered_map<AssetHandle, atcg::ref_ptr<BSDF>> _bsdf_cache;
 };
 }    // namespace atcg
