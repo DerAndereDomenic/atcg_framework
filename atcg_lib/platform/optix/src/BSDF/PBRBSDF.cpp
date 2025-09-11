@@ -1,6 +1,7 @@
 #include <BSDF/PBRBSDF.h>
 
 #include <Core/Common.h>
+#include <BSDF/BSDFFactory.h>
 
 namespace atcg
 {
@@ -55,4 +56,6 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
 
     _vptr_table.upload(&table);
 }
+
+ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);
 }    // namespace atcg

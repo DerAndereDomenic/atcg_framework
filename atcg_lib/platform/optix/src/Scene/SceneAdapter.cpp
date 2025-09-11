@@ -2,12 +2,11 @@
 #include <Scene/Components.h>
 #include <Emitter/PointEmitter.h>
 #include <Emitter/MeshEmitter.h>
-#include <BSDF/DielectricBSDF.h>
-#include <BSDF/PBRBSDF.h>
 #include <DataStructure/WorkerPool.h>
 #include <Shape/MeshShape.h>
 #include <Core/Path.h>
 #include <Core/Assert.h>
+#include <BSDF/BSDFFactory.h>
 
 namespace atcg
 {
@@ -39,20 +38,7 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
 
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf;
-    switch(material->getMaterialType())
-    {
-        case MaterialType::MATERIAL_TYPE_OPAQUE:
-        {
-            bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
-        }
-        break;
-        case MaterialType::MATERIAL_TYPE_GLASS:
-        {
-            bsdf = atcg::make_ref<DielectricBSDF>(bsdf_dict);
-        }
-        break;
-    }
+    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
     bsdf->initializePipeline(_pipeline, _sbt);
 
     atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
@@ -106,20 +92,7 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
 
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf;
-    switch(material->getMaterialType())
-    {
-        case MaterialType::MATERIAL_TYPE_OPAQUE:
-        {
-            bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
-        }
-        break;
-        case MaterialType::MATERIAL_TYPE_GLASS:
-        {
-            bsdf = atcg::make_ref<DielectricBSDF>(bsdf_dict);
-        }
-        break;
-    }
+    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
     bsdf->initializePipeline(_pipeline, _sbt);
 
     auto mesh = entity.getComponent<GeometryComponent>().graph();
@@ -217,20 +190,7 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
 
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf;
-    switch(material->getMaterialType())
-    {
-        case MaterialType::MATERIAL_TYPE_OPAQUE:
-        {
-            bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
-        }
-        break;
-        case MaterialType::MATERIAL_TYPE_GLASS:
-        {
-            bsdf = atcg::make_ref<DielectricBSDF>(bsdf_dict);
-        }
-        break;
-    }
+    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
     bsdf->initializePipeline(_pipeline, _sbt);
 
     auto mesh = entity.getComponent<GeometryComponent>().graph();
@@ -340,20 +300,7 @@ void SceneAdapter::prepareComponent<InstanceRenderComponent>(const atcg::ref_ptr
 
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf;
-    switch(material->getMaterialType())
-    {
-        case MaterialType::MATERIAL_TYPE_OPAQUE:
-        {
-            bsdf = atcg::make_ref<PBRBSDF>(bsdf_dict);
-        }
-        break;
-        case MaterialType::MATERIAL_TYPE_GLASS:
-        {
-            bsdf = atcg::make_ref<DielectricBSDF>(bsdf_dict);
-        }
-        break;
-    }
+    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
     bsdf->initializePipeline(_pipeline, _sbt);
 
     auto transform_vbo   = component.instance_vbos[0];

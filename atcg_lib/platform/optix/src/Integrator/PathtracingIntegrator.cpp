@@ -9,8 +9,6 @@
 #include <Shape/Shape.h>
 #include <Shape/ShapeInstance.h>
 #include <Shape/MeshShape.h>
-#include <BSDF/PBRBSDF.h>
-#include <BSDF/DielectricBSDF.h>
 #include <DataStructure/WorkerPool.h>
 #include <Emitter/MeshEmitter.h>
 #include <Scene/SceneAdapter.h>

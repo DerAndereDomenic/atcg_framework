@@ -2,6 +2,7 @@
 
 #include <Renderer/Texture.h>
 #include <Renderer/Material.h>
+#include <BSDF/BSDFFactory.h>
 
 #include <Core/Common.h>
 
@@ -56,4 +57,6 @@ void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>&
 
     _vptr_table.upload(&table);
 }
+
+ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_GLASS, DielectricBSDF);
 }    // namespace atcg
