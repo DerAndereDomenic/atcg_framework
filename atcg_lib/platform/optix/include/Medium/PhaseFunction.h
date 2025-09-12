@@ -21,7 +21,7 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
 
-private:
+protected:
     atcg::dref_ptr<PhaseFunctionVPtrTable> _vptr_table;
 };
 }    // namespace atcg

@@ -9,6 +9,7 @@ struct MediumSamplingResult
 {
     MediumInteraction interaction;
     glm::vec3 transmittance_weight;
+    glm::vec3 radiance_weight;
 };
 
 struct MediumVPtrTable
