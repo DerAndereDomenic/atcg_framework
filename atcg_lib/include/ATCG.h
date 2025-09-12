@@ -118,6 +118,7 @@
     #include <Core/RaytracingPipeline.h>
     #include <Core/ShaderBindingTable.h>
     #include <Integrator/PathtracingIntegrator.h>
+    #include <Integrator/VolPathtracingIntegrator.h>
     #include <Core/RaytracingContextManager.h>
 #endif
 
