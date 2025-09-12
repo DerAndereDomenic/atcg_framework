@@ -8,6 +8,10 @@
 #include <Core/Assert.h>
 #include <BSDF/BSDFFactory.h>
 
+// !TEST
+#include <Medium/HenyeyGreensteinPhaseFunction.h>
+#include <Medium/HomogeneousMedium.h>
+
 namespace atcg
 {
 template<typename T>
@@ -53,6 +57,30 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
     }
 
     Dictionary shape_data;
+
+    if(entity.hasComponent<HomogeneousMediumComponent>())
+    {
+        auto& component = entity.getComponent<HomogeneousMediumComponent>();
+
+        Dictionary phase_dict;
+        phase_dict.setValue("g", component.g);
+        atcg::ref_ptr<PhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
+        phase->initializePipeline(_pipeline, _sbt);
+
+        glm::vec3 sigma_s = component.albedo * component.density;
+        glm::vec3 sigma_a = glm::vec3(component.density) - sigma_s;
+
+        Dictionary med_dict;
+        med_dict.setValue("sigma_s", sigma_s);
+        med_dict.setValue("sigma_a", sigma_a);
+        med_dict.setValue("phase_func", phase);
+        med_dict.setValue("Le", component.Le);
+        atcg::ref_ptr<Medium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
+        medium->initializePipeline(_pipeline, _sbt);
+
+        shape_data.setValue("inside_medium", medium);
+    }
+
     shape_data.setValue("shape", shape);
     shape_data.setValue("bsdf", bsdf);
     shape_data.setValue("transform", transform.getModel());
