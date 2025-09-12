@@ -42,7 +42,7 @@ public:
         pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
         sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
 
-        integrator = atcg::make_ref<atcg::PathtracingIntegrator>(optx_context, atcg::Dictionary());
+        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, atcg::Dictionary());
         integrator->setScene(atcg::Project::getActive()->getActiveScene());
         integrator->initializePipeline(pipeline, sbt);
 
@@ -510,7 +510,7 @@ private:
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
     atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
-    atcg::ref_ptr<atcg::PathtracingIntegrator> integrator;
+    atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator;
 #endif
 
     torch::Tensor output_tensor;
