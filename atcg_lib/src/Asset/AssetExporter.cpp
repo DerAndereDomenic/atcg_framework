@@ -32,7 +32,7 @@ namespace detail
 #define GEOMETRY_KEY          "Geometry"
 
 ATCG_INLINE std::string
-serialize_texture_ver1(const atcg::ref_ptr<Texture2D>& texture, const std::filesystem::path& path, float gamma = 1.0f)
+serialize_texture2d_ver1(const atcg::ref_ptr<Texture2D>& texture, const std::filesystem::path& path, float gamma = 1.0f)
 {
     torch::Tensor texture_data = texture->getData(atcg::CPU);
 
@@ -74,7 +74,7 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
     {
         std::filesystem::path img_path = path.parent_path() / "diffuse";
 
-        auto file_ending = serialize_texture_ver1(diffuse_texture, img_path, 1.0f / 2.2f);
+        auto file_ending = serialize_texture2d_ver1(diffuse_texture, img_path, 1.0f / 2.2f);
 
         material_json[DIFFUSE_TEXTURE_KEY] = "diffuse" + file_ending;
     }
@@ -95,7 +95,7 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
     {
         std::filesystem::path img_path = path.parent_path() / "normals";
 
-        auto file_ending = serialize_texture_ver1(normal_texture, img_path);
+        auto file_ending = serialize_texture2d_ver1(normal_texture, img_path);
 
         material_json[NORMAL_TEXTURE_KEY] = "normals" + file_ending;
     }
@@ -104,7 +104,7 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
     {
         std::filesystem::path img_path = path.parent_path() / "metallic";
 
-        auto file_ending = serialize_texture_ver1(metallic_texture, img_path);
+        auto file_ending = serialize_texture2d_ver1(metallic_texture, img_path);
 
         material_json[METALLIC_TEXTURE_KEY] = "metallic" + file_ending;
     }
@@ -120,7 +120,7 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
     {
         std::filesystem::path img_path = path.parent_path() / "roughness";
 
-        auto file_ending = serialize_texture_ver1(roughness_texture, img_path);
+        auto file_ending = serialize_texture2d_ver1(roughness_texture, img_path);
 
         material_json[ROUGHNESS_TEXTURE_KEY] = "roughness" + file_ending;
     }
@@ -251,6 +251,30 @@ ATCG_INLINE void serialize_shader_ver1(const atcg::ref_ptr<Shader>& shader, cons
     o << std::setw(4) << shader_json << std::endl;
 }
 
+ATCG_INLINE void serialize_texture3d_ver1(const atcg::ref_ptr<Texture3D>& texture, const std::filesystem::path& path)
+{
+    auto path_ = path;
+
+    torch::Tensor texture_data = texture->getData(atcg::CPU);
+
+    nlohmann::json texture_json;
+
+    texture_json["Version"] = "1.0";
+    path_                   = path_.replace_extension(".bin");
+    texture_json["Path"]    = path_.filename();
+    texture_json["Width"]   = texture->width();
+    texture_json["Height"]  = texture->height();
+    texture_json["Depth"]   = texture->depth();
+    texture_json["Format"]  = textureFormatToString(texture->getSpecification().format);
+
+    serialize_buffer_ver1(path_,
+                          (const char*)texture_data.data_ptr(),
+                          texture_data.numel() * texture_data.element_size());
+
+    std::ofstream o(path_.replace_extension(".json"));
+    o << std::setw(4) << texture_json << std::endl;
+}
+
 ATCG_INLINE void
 export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data)
 {
@@ -275,7 +299,14 @@ export_asset_ver1(const std::filesystem::path& path, const atcg::ref_ptr<Asset>&
         {
             auto texture_path = path / "textures" / std::to_string(asset->handle);
             std::filesystem::create_directories(texture_path);
-            serialize_texture_ver1(std::dynamic_pointer_cast<atcg::Texture2D>(asset), texture_path / data.name);
+            serialize_texture2d_ver1(std::dynamic_pointer_cast<atcg::Texture2D>(asset), texture_path / data.name);
+        }
+        break;
+        case AssetType::Texture3D:
+        {
+            auto texture_path = path / "textures" / std::to_string(asset->handle);
+            std::filesystem::create_directories(texture_path);
+            serialize_texture3d_ver1(std::dynamic_pointer_cast<atcg::Texture3D>(asset), texture_path / data.name);
         }
         break;
         case AssetType::Scene:

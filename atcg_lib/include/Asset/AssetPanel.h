@@ -49,6 +49,8 @@ private:
 
     void displayTexture2D(AssetHandle handle);
 
+    void displayTexture3D(AssetHandle handle);
+
     void displayScene(AssetHandle handle);
 
 private:
@@ -58,6 +60,11 @@ private:
     std::string _current_fragment_path = "";
     std::string _current_geometry_path = "";
     std::string _current_compute_path  = "";
+
+    TextureSpecification _spec_3d;
+    std::string _current_texture_3d_path = "";
+    uint32_t _slice                      = 0;
+    atcg::ref_ptr<Texture2D> _preview;
 
     AssetType _panel_state = AssetType::None;
 

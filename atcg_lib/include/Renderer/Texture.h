@@ -15,7 +15,7 @@ namespace atcg
 enum class TextureFormat
 {
     // RG unsigned byte color texture.
-    RG,
+    RG = 0,
     // RGB unsigned byte color texture.
     RGB,
     // RGBA unsigned byte color texture.
@@ -33,8 +33,13 @@ enum class TextureFormat
     // Red channel float 32 texture.
     RFLOAT,
     // Depth texture.
-    DEPTH
+    DEPTH,
+    _NUM_FORMATS
 };
+
+const char* textureFormatToString(TextureFormat format);
+
+TextureFormat stringToTextureFormat(const char* str);
 
 /**
  * @brief The texture wrap mode.
@@ -456,7 +461,7 @@ public:
 /**
  * @brief A class to model a texture
  */
-class Texture3D : public Texture
+class Texture3D : public Texture, public Asset
 {
 public:
     /**
@@ -554,6 +559,10 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+    ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture3D; }
+
+    ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
 };
 
 /**

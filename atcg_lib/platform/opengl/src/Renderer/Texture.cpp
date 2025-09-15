@@ -425,6 +425,54 @@ cudaTextureAddressMode toCUDAAddressMode(TextureWrapMode wrap_mode)
 
 }    // namespace detail
 
+const char* textureFormatToString(TextureFormat format)
+{
+    switch(format)
+    {
+        case TextureFormat::RG:
+            return "RG";
+        case TextureFormat::RGB:
+            return "RGB";
+        case TextureFormat::RGBA:
+            return "RGBA";
+        case TextureFormat::RGFLOAT:
+            return "RGFLOAT";
+        case TextureFormat::RGBFLOAT:
+            return "RGBFLOAT";
+        case TextureFormat::RGBAFLOAT:
+            return "RGBAFLOAT";
+        case TextureFormat::RINT:
+            return "RINT";
+        case TextureFormat::RINT8:
+            return "RINT8";
+        case TextureFormat::RFLOAT:
+            return "RFLOAT";
+        case TextureFormat::DEPTH:
+            return "DEPTH";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+TextureFormat stringToTextureFormat(const char* str)
+{
+    if(!str) return TextureFormat::DEPTH;    // fallback, could also throw
+
+    if(std::strcmp(str, "RG") == 0) return TextureFormat::RG;
+    if(std::strcmp(str, "RGB") == 0) return TextureFormat::RGB;
+    if(std::strcmp(str, "RGBA") == 0) return TextureFormat::RGBA;
+    if(std::strcmp(str, "RGFLOAT") == 0) return TextureFormat::RGFLOAT;
+    if(std::strcmp(str, "RGBFLOAT") == 0) return TextureFormat::RGBFLOAT;
+    if(std::strcmp(str, "RGBAFLOAT") == 0) return TextureFormat::RGBAFLOAT;
+    if(std::strcmp(str, "RINT") == 0) return TextureFormat::RINT;
+    if(std::strcmp(str, "RINT8") == 0) return TextureFormat::RINT8;
+    if(std::strcmp(str, "RFLOAT") == 0) return TextureFormat::RFLOAT;
+    if(std::strcmp(str, "DEPTH") == 0) return TextureFormat::DEPTH;
+
+    // fallback
+    return TextureFormat::RGB;    // or throw an exception if invalid input
+}
+
 class Texture::Impl
 {
 public:
