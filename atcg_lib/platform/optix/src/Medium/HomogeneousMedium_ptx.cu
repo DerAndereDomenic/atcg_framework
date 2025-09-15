@@ -92,7 +92,8 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
         glm::vec3 T                 = detail::transmittance(sampled_distance, sigma_t - sigma_t_scalar);
         result.transmittance_weight = sbt_data->sigma_s / sigma_t_scalar * T;
 
-        result.radiance_weight = (1.0f - sbt_data->sigma_s / sigma_t_scalar) * T * Le;
+        // ? Attenuate by absorption albedo?
+        result.radiance_weight = /*(1.0f - sbt_data->sigma_s / sigma_t_scalar) */ T * Le;
     }
     else
     {
