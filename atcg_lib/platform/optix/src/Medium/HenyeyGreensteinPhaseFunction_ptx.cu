@@ -11,16 +11,37 @@
 namespace detail
 {
 
-__device__ float henyey_greenstein_phase_function(float cos_theta, float g)
+ATCG_FORCE_INLINE ATCG_DEVICE glm::vec3 warp_square_to_sphere_uniform(const glm::vec2 uv)
 {
+    float z   = uv.x * 2 - 1;
+    float phi = uv.y * 2 * glm::pi<float>();
+
+    float r = glm::sqrt(glm::max(0.0f, 1 - z * z));
+    float x = r * glm::cos(phi);
+    float y = r * glm::sin(phi);
+
+    return glm::vec3(x, y, z);
+}
+
+ATCG_FORCE_INLINE ATCG_DEVICE float warp_square_to_sphere_uniform_pdf()
+{
+    return 1 / (4 * glm::pi<float>());
+}
+
+ATCG_FORCE_INLINE ATCG_DEVICE float henyey_greenstein_phase_function(float cos_theta, float g)
+{
+    if(g == 0.0f) return warp_square_to_sphere_uniform_pdf();
+
     float g2    = g * g;
     float area  = 4 * glm::pi<float>();    // area of sphere
     float phase = (1 - g2) / area * glm::pow((1 + g2 - 2 * g * cos_theta), -1.5f);
     return phase;
 }
 
-__device__ glm::vec3 warp_square_to_sphere_henyey_greenstein(const glm::vec2& uv, float g)
+ATCG_FORCE_INLINE ATCG_DEVICE glm::vec3 warp_square_to_sphere_henyey_greenstein(const glm::vec2& uv, float g)
 {
+    if(g == 0.0f) return warp_square_to_sphere_uniform(uv);
+
     float u1 = uv.x;
     float u2 = uv.y;
 
@@ -38,7 +59,7 @@ __device__ glm::vec3 warp_square_to_sphere_henyey_greenstein(const glm::vec2& uv
     return glm::vec3(x, y, z);
 }
 
-__device__ float warp_square_to_sphere_henyey_greenstein_pdf(const glm::vec3& result, float g)
+ATCG_FORCE_INLINE ATCG_DEVICE float warp_square_to_sphere_henyey_greenstein_pdf(const glm::vec3& result, float g)
 {
     return henyey_greenstein_phase_function(result.z, g);
 }
