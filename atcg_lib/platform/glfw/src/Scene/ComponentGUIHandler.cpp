@@ -12,67 +12,53 @@ namespace atcg
 namespace GUI
 {
 
-void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
-                                                              Entity entity,
-                                                              TransformComponent& transform) const
+bool GUI::displayTransform(const std::string& id, TransformComponent& transform)
 {
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
-
+    bool updated       = false;
     glm::vec3 position = transform.getPosition();
     std::stringstream label;
     label << "Position##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position), 0.05f))
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         transform.setPosition(position);
-        atcg::RevisionStack::endRecording();
+        updated = true;
     }
     glm::vec3 scale = transform.getScale();
     label.str(std::string());
     label << "Scale##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale), 0.05f, 1e-5f, FLT_MAX))
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         scale = glm::clamp(scale, 1e-5f, FLT_MAX);
         transform.setScale(scale);
-        atcg::RevisionStack::endRecording();
+        updated = true;
     }
     glm::vec3 rotation = glm::degrees(transform.getRotation());
     label.str(std::string());
     label << "Rotation##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation), 0.05f))
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         transform.setRotation(glm::radians(rotation));
-        atcg::RevisionStack::endRecording();
+        updated = true;
     }
 
-    if(entity.hasComponent<atcg::GeometryComponent>())
-    {
-        // TODO
-        // if(ImGui::Button("Apply Transform"))
-        // {
-        //     RevisionStack::startRecording<
-        //         UnionRevision<ComponentEditedRevision<TransformComponent>,
-        //         ComponentEditedRevision<GeometryComponent>>>( scene, entity);
-        //     auto& geometry = entity.getComponent<atcg::GeometryComponent>();
-        //     auto graph     = geometry.graph()->copy();
-        //     applyTransform(graph, transform);
-        //     geometry.setGraph(graph);
-        //     atcg::RevisionStack::endRecording();
-        // }
+    return updated;
+}
 
-        // if(ImGui::Button("Normalize"))
-        // {
-        //     RevisionStack::startRecording<
-        //         UnionRevision<ComponentEditedRevision<TransformComponent>,
-        //         ComponentEditedRevision<GeometryComponent>>>( scene, entity);
-        //     auto& geometry = entity.getComponent<atcg::GeometryComponent>();
-        //     auto graph     = geometry.graph()->copy();
-        //     normalize(graph, transform);
-        //     geometry.setGraph(graph);
-        //     atcg::RevisionStack::endRecording();
-        // }
+void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                              Entity entity,
+                                                              TransformComponent& transform) const
+{
+    std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
+
+    TransformComponent transform_ = transform;
+
+    bool updated = displayTransform(id, transform_);
+
+    if(updated)
+    {
+        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
+        transform = transform_;
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -823,6 +809,56 @@ AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle
         for(auto it = registry.begin(); it != registry.end(); ++it)
         {
             if(it->second.type != AssetType::Texture2D) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+}
+
+AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle)
+{
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Image";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Image##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("No Image", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Texture3D) continue;
 
             bool is_selected = it->first == current_item;
 
