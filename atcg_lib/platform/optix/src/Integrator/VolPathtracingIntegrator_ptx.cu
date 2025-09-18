@@ -67,7 +67,7 @@ extern "C" __global__ void __raygen__rg()
         atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
                                                              ray.origin,
                                                              ray.direction,
-                                                             0.001f,
+                                                             0.00001f,
                                                              1e16f,
                                                              &si,
                                                              params.surface_trace_params);
