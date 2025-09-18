@@ -11,6 +11,7 @@
 // !TEST
 #include <Medium/HenyeyGreensteinPhaseFunction.h>
 #include <Medium/HomogeneousMedium.h>
+#include <Medium/HeterogeneousMedium.h>
 
 namespace atcg
 {
@@ -79,6 +80,30 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
         medium->initializePipeline(_pipeline, _sbt);
 
         shape_data.setValue("inside_medium", medium);
+    }
+
+    if(entity.hasComponent<HeterogeneousMediumComponent>())
+    {
+        auto& component = entity.getComponent<HeterogeneousMediumComponent>();
+
+        if(AssetManager::isAssetHandleValid(component.density_grid.handle))
+        {
+            Dictionary med_dict;
+            med_dict.setValue("density_grid", component.density_grid);
+            med_dict.setValue("albedo_grid", component.albedo_grid);
+            med_dict.setValue("emission_grid", component.emission_grid);
+            med_dict.setValue("to_world", transform.getModel());
+            Dictionary phase_dict;
+            phase_dict.setValue("g", component.g);
+            atcg::ref_ptr<PhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
+            phase->initializePipeline(_pipeline, _sbt);
+            med_dict.setValue("phase_func", phase);
+
+            atcg::ref_ptr<Medium> medium = atcg::make_ref<HeterogeneousMedium>(med_dict);
+            medium->initializePipeline(_pipeline, _sbt);
+
+            shape_data.setValue("inside_medium", medium);
+        }
     }
 
     shape_data.setValue("shape", shape);
