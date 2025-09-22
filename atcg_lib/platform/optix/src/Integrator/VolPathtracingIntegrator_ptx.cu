@@ -63,6 +63,17 @@ extern "C" __global__ void __raygen__rg()
         if(!ray.valid) break;
         ray.valid = false;
 
+        float rr_prob = glm::max(ray.throughput.x, glm::max(ray.throughput.y, ray.throughput.z));
+        if(rng.nextFloat() < rr_prob)
+        {
+            ray.throughput /= rr_prob;
+        }
+        else
+        {
+            ray.valid = false;
+            break;
+        }
+
         atcg::SurfaceInteraction si;
         atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
                                                              ray.origin,
@@ -71,7 +82,7 @@ extern "C" __global__ void __raygen__rg()
                                                              1e16f,
                                                              &si,
                                                              params.surface_trace_params);
-        if(ray.medium)
+        if(si.valid && ray.medium)    // For now, we only allow media inside objects. So if si not valid, reject
         {
             float max_distance =
                 si.valid ? glm::length(si.position - ray.origin) : std::numeric_limits<float>::infinity();
