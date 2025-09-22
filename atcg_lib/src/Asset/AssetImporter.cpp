@@ -218,10 +218,13 @@ atcg::ref_ptr<Asset> deserializeTexture3D_ver1(const std::filesystem::path& path
     auto buffer = deserializeBuffer_ver1(buffer_path);
 
     TextureSpecification spec;
-    spec.width  = j["Width"];
-    spec.height = j["Height"];
-    spec.depth  = j["Depth"];
-    spec.format = stringToTextureFormat(std::string(j["Format"]).c_str());
+    spec.width               = j["Width"];
+    spec.height              = j["Height"];
+    spec.depth               = j["Depth"];
+    spec.format              = stringToTextureFormat(std::string(j.value("Format", "RGBA")).c_str());
+    spec.sampler.filter_mode = stringToTextureFilterMode(std::string(j.value("Filter", "LINEAR")).c_str());
+    spec.sampler.wrap_mode   = stringToTextureWrapMode(std::string(j.value("Wrap", "REPEAT")).c_str());
+    spec.sampler.mip_map     = j.value("MipMap", false);
 
     return atcg::Texture3D::create(buffer.data(), spec);
 }

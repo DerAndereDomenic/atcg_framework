@@ -473,6 +473,60 @@ TextureFormat stringToTextureFormat(const char* str)
     return TextureFormat::RGB;    // or throw an exception if invalid input
 }
 
+const char* textureWrapModeToString(TextureWrapMode mode)
+{
+    switch(mode)
+    {
+        case TextureWrapMode::CLAMP_TO_EDGE:
+            return "CLAMP_TO_EDGE";
+        case TextureWrapMode::REPEAT:
+            return "REPEAT";
+        case TextureWrapMode::BORDER:
+            return "BORDER";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+TextureWrapMode stringToTextureWrapMode(const char* str)
+{
+    if(std::strcmp(str, "CLAMP_TO_EDGE") == 0)
+        return TextureWrapMode::CLAMP_TO_EDGE;
+    else if(std::strcmp(str, "REPEAT") == 0)
+        return TextureWrapMode::REPEAT;
+    else if(std::strcmp(str, "BORDER") == 0)
+        return TextureWrapMode::BORDER;
+    else
+        throw std::invalid_argument("Invalid TextureWrapMode string");
+}
+
+const char* textureFilterModeToString(TextureFilterMode mode)
+{
+    switch(mode)
+    {
+        case TextureFilterMode::NEAREST:
+            return "NEAREST";
+        case TextureFilterMode::LINEAR:
+            return "LINEAR";
+        case TextureFilterMode::MIPMAP_LINEAR:
+            return "MIPMAP_LINEAR";
+        default:
+            return "UNKNOWN";
+    }
+}
+
+TextureFilterMode stringToTextureFilterMode(const char* str)
+{
+    if(std::strcmp(str, "NEAREST") == 0)
+        return TextureFilterMode::NEAREST;
+    else if(std::strcmp(str, "LINEAR") == 0)
+        return TextureFilterMode::LINEAR;
+    else if(std::strcmp(str, "MIPMAP_LINEAR") == 0)
+        return TextureFilterMode::MIPMAP_LINEAR;
+    else
+        throw std::invalid_argument("Invalid TextureFilterMode string");
+}
+
 class Texture::Impl
 {
 public:

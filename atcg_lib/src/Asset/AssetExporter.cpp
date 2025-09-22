@@ -266,6 +266,9 @@ ATCG_INLINE void serialize_texture3d_ver1(const atcg::ref_ptr<Texture3D>& textur
     texture_json["Height"]  = texture->height();
     texture_json["Depth"]   = texture->depth();
     texture_json["Format"]  = textureFormatToString(texture->getSpecification().format);
+    texture_json["Wrap"]    = textureWrapModeToString(texture->getSpecification().sampler.wrap_mode);
+    texture_json["Filter"]  = textureFilterModeToString(texture->getSpecification().sampler.filter_mode);
+    texture_json["MipMap"]  = texture->getSpecification().sampler.mip_map;
 
     serialize_buffer_ver1(path_,
                           (const char*)texture_data.data_ptr(),

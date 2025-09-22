@@ -54,6 +54,10 @@ enum class TextureWrapMode
     BORDER
 };
 
+const char* textureWrapModeToString(TextureWrapMode mode);
+
+TextureWrapMode stringToTextureWrapMode(const char* str);
+
 /**
  * @brief The texture filter mode.
  */
@@ -66,6 +70,10 @@ enum class TextureFilterMode
     // Trilinear interpolation using mipmaps (Needs to have a TextureSampler with mip_map = true)
     MIPMAP_LINEAR
 };
+
+const char* textureFilterModeToString(TextureFilterMode mode);
+
+TextureFilterMode stringToTextureFilterMode(const char* str);
 
 /**
  * @brief The texture sampler.
