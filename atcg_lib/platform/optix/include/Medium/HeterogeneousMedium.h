@@ -38,7 +38,6 @@ struct GridComponent
         glm::vec3 max = glm::vec3(1, 1, 1);
     };
 
-    TransformComponent transform;
     BBox bbox;
     AssetHandle handle = 0;
     float scale        = 1.0f;

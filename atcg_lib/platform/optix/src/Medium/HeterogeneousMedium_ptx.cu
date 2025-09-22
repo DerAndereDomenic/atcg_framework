@@ -131,11 +131,8 @@ __direct_callable__heterogeneousMedium_sampleMediumEvent(const glm::vec3& origin
     // If max_distance would be (close to) infinite, the loop below might not terminate.
     max_distance = glm::clamp(max_distance, 0.0f, 1e6f);
 
-    glm::vec3 local_origin    = glm::vec3(sbt_data->world_to_local * glm::vec4(origin, 1));
-    glm::vec3 local_direction = glm::normalize(glm::vec3(sbt_data->world_to_local * glm::vec4(direction, 0)));
-
     detail::DeltaTrackingWeights sample =
-        detail::sample_free_flight_distance_delta_tracking(local_origin, local_direction, max_distance, rng);
+        detail::sample_free_flight_distance_delta_tracking(origin, direction, max_distance, rng);
 
     atcg::MediumSamplingResult result;
     // Set incoming ray direction

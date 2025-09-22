@@ -81,7 +81,6 @@ namespace atcg
 
 struct HeterogeneousMediumData
 {
-    glm::mat4 world_to_local;
     GridData<glm::vec3> albedo_grid;
     float density_majorant;
     GridData<float> density_grid;

@@ -10,8 +10,8 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
 {
     HeterogeneousMediumData data;
 
-    glm::mat4 to_world  = dict.getValueOr<glm::mat4>("to_world", glm::mat4(1));
-    data.world_to_local = glm::inverse(to_world);
+    glm::mat4 to_world       = dict.getValueOr<glm::mat4>("to_world", glm::mat4(1));
+    glm::mat4 world_to_local = glm::inverse(to_world);
 
     auto density_grid     = dict.getValue<GridComponent>("density_grid");
     auto density_texture  = AssetManager::getAsset<Texture3D>(density_grid.handle)->clone();
@@ -27,13 +27,11 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
     data.density_grid.scale   = density_grid.scale;
     data.density_majorant     = _density_texture->getData(atcg::GPU).max().item<float>() * data.density_grid.scale;
     {
-        glm::mat4 to_uvw = glm::mat4(1);
-        glm::vec3 scale  = density_grid.bbox.max - density_grid.bbox.min + glm::vec3(1);
-        to_uvw           = glm::scale(to_uvw, 1.0f / scale);
-        to_uvw           = glm::translate(to_uvw, glm::vec3(0.5f));
-        to_uvw           = glm::translate(to_uvw, -density_grid.bbox.min);
-        to_uvw           = to_uvw * density_grid.transform.getModel();
-        ATCG_DEBUG(to_uvw);
+        glm::mat4 to_uvw         = glm::mat4(1);
+        glm::vec3 scale          = density_grid.bbox.max - density_grid.bbox.min;
+        to_uvw                   = to_uvw * glm::scale(1.0f / scale);
+        to_uvw                   = to_uvw * glm::translate(-density_grid.bbox.min);
+        to_uvw                   = to_uvw * world_to_local;
         data.density_grid.to_uvw = to_uvw;
     }
 
@@ -42,11 +40,10 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
     data.emission_grid.scale         = emission_grid.scale;
     {
         glm::mat4 to_uvw          = glm::mat4(1);
-        glm::vec3 scale           = emission_grid.bbox.max - emission_grid.bbox.min + glm::vec3(1);
-        to_uvw                    = glm::scale(to_uvw, 1.0f / scale);
-        to_uvw                    = glm::translate(to_uvw, glm::vec3(0.5f));
-        to_uvw                    = glm::translate(to_uvw, -emission_grid.bbox.min);
-        to_uvw                    = to_uvw * emission_grid.transform.getModel();
+        glm::vec3 scale           = emission_grid.bbox.max - emission_grid.bbox.min;
+        to_uvw                    = to_uvw * glm::scale(1.0f / scale);
+        to_uvw                    = to_uvw * glm::translate(-emission_grid.bbox.min);
+        to_uvw                    = to_uvw * world_to_local;
         data.emission_grid.to_uvw = to_uvw;
     }
 
@@ -54,18 +51,22 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
     data.albedo_grid.scale   = albedo_grid.scale;
     {
         glm::mat4 to_uvw        = glm::mat4(1);
-        glm::vec3 scale         = albedo_grid.bbox.max - albedo_grid.bbox.min + glm::vec3(1);
-        to_uvw                  = glm::scale(to_uvw, 1.0f / scale);
-        to_uvw                  = glm::translate(to_uvw, glm::vec3(0.5f));
-        to_uvw                  = glm::translate(to_uvw, -albedo_grid.bbox.min);
-        to_uvw                  = to_uvw * albedo_grid.transform.getModel();
+        glm::vec3 scale         = albedo_grid.bbox.max - albedo_grid.bbox.min;
+        to_uvw                  = to_uvw * glm::scale(1.0f / scale);
+        to_uvw                  = to_uvw * glm::translate(-albedo_grid.bbox.min);
+        to_uvw                  = to_uvw * world_to_local;
         data.albedo_grid.to_uvw = to_uvw;
     }
 
     _data_buffer.upload(&data);
 }
 
-HeterogeneousMedium::~HeterogeneousMedium() {}
+HeterogeneousMedium::~HeterogeneousMedium()
+{
+    _density_texture->unmapDevicePointers();
+    if(_albedo_texture) _albedo_texture->unmapDevicePointers();
+    if(_emission_texture) _emission_texture->unmapDevicePointers();
+}
 
 void HeterogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                              const atcg::ref_ptr<ShaderBindingTable>& sbt)
@@ -106,7 +107,6 @@ void ComponentGUIRenderer<HeterogeneousMediumComponent>::draw_component(const at
     _component.density_grid.handle = new_handle;
     updated =
         ImGui::DragFloat("Desity Scale##texture3d", &_component.density_grid.scale, 0.01f, 0.0f, 10.0f) || updated;
-    updated = displayTransform("density", _component.density_grid.transform) || updated;
     ImGui::Text("Bounding Box");
     updated = ImGui::DragFloat3("Min##density", glm::value_ptr(_component.density_grid.bbox.min), 0.05f) || updated;
     updated = ImGui::DragFloat3("Max##density", glm::value_ptr(_component.density_grid.bbox.max), 0.05f) || updated;
@@ -117,7 +117,6 @@ void ComponentGUIRenderer<HeterogeneousMediumComponent>::draw_component(const at
     updated                       = updated || (new_handle != _component.albedo_grid.handle);
     _component.albedo_grid.handle = new_handle;
     updated = ImGui::DragFloat("Albedo Scale##texture3d", &_component.albedo_grid.scale, 0.01f, 0.0f, 1.0f) || updated;
-    updated = displayTransform("albedo", _component.albedo_grid.transform) || updated;
     ImGui::Text("Bounding Box");
     updated = ImGui::DragFloat3("Min##albedo", glm::value_ptr(_component.albedo_grid.bbox.min), 0.05f) || updated;
     updated = ImGui::DragFloat3("Max##albedo", glm::value_ptr(_component.albedo_grid.bbox.max), 0.05f) || updated;
@@ -129,10 +128,10 @@ void ComponentGUIRenderer<HeterogeneousMediumComponent>::draw_component(const at
     _component.emission_grid.handle = new_handle;
     updated =
         ImGui::DragFloat("Emission Scale##texture3d", &_component.emission_grid.scale, 0.01f, 0.0f, 10.0f) || updated;
-    updated = displayTransform("emission", _component.emission_grid.transform) || updated;
     ImGui::Text("Bounding Box");
     updated = ImGui::DragFloat3("Min##emission", glm::value_ptr(_component.emission_grid.bbox.min), 0.05f) || updated;
     updated = ImGui::DragFloat3("Max##emission", glm::value_ptr(_component.emission_grid.bbox.max), 0.05f) || updated;
+    updated = ImGui::DragFloat("g##het", &_component.g, 0.01f, -1.0f, 1.0f) || updated;
 
     if(updated)
     {
@@ -164,11 +163,6 @@ void ComponentSerializer<HeterogeneousMediumComponent>::serialize_component(cons
     j_bbox_density["max"] = nlohmann::json::array(
         {component.density_grid.bbox.max.x, component.density_grid.bbox.max.y, component.density_grid.bbox.max.z});
     j_density_grid["bbox"] = j_bbox_density;
-    ComponentSerializer<TransformComponent>().serialize_component(file_path,
-                                                                  scene,
-                                                                  entity,
-                                                                  component.density_grid.transform,
-                                                                  j_density_grid);
 
     j_albedo_grid["grid"]  = (uint64_t)component.albedo_grid.handle;
     j_albedo_grid["scale"] = component.albedo_grid.scale;
@@ -178,11 +172,6 @@ void ComponentSerializer<HeterogeneousMediumComponent>::serialize_component(cons
     j_bbox_albedo["max"] = nlohmann::json::array(
         {component.albedo_grid.bbox.max.x, component.albedo_grid.bbox.max.y, component.albedo_grid.bbox.max.z});
     j_albedo_grid["bbox"] = j_bbox_albedo;
-    ComponentSerializer<TransformComponent>().serialize_component(file_path,
-                                                                  scene,
-                                                                  entity,
-                                                                  component.albedo_grid.transform,
-                                                                  j_albedo_grid);
 
     j_emission_grid["grid"]  = (uint64_t)component.emission_grid.handle;
     j_emission_grid["scale"] = component.emission_grid.scale;
@@ -192,11 +181,6 @@ void ComponentSerializer<HeterogeneousMediumComponent>::serialize_component(cons
     j_bbox_emission["max"] = nlohmann::json::array(
         {component.emission_grid.bbox.max.x, component.emission_grid.bbox.max.y, component.emission_grid.bbox.max.z});
     j_emission_grid["bbox"] = j_bbox_emission;
-    ComponentSerializer<TransformComponent>().serialize_component(file_path,
-                                                                  scene,
-                                                                  entity,
-                                                                  component.emission_grid.transform,
-                                                                  j_emission_grid);
 
     j["Heterogeneous Medium"]["density_grid"]  = j_density_grid;
     j["Heterogeneous Medium"]["albedo_grid"]   = j_albedo_grid;
@@ -230,17 +214,6 @@ void ComponentSerializer<HeterogeneousMediumComponent>::deserialize_component(co
                                                 j_bbox_density["max"][1].get<float>(),
                                                 j_bbox_density["max"][2].get<float>());
 
-    const auto& j_transform_density = j_density["Transform"];
-    component.density_grid.transform.setPosition(glm::vec3(j_transform_density["Position"][0].get<float>(),
-                                                           j_transform_density["Position"][1].get<float>(),
-                                                           j_transform_density["Position"][2].get<float>()));
-    component.density_grid.transform.setScale(glm::vec3(j_transform_density["Scale"][0].get<float>(),
-                                                        j_transform_density["Scale"][1].get<float>(),
-                                                        j_transform_density["Scale"][2].get<float>()));
-    component.density_grid.transform.setRotation(glm::vec3(j_transform_density["EulerAngles"][0].get<float>(),
-                                                           j_transform_density["EulerAngles"][1].get<float>(),
-                                                           j_transform_density["EulerAngles"][2].get<float>()));
-
     // --- Albedo grid ---
     const auto& j_albedo         = j["Heterogeneous Medium"]["albedo_grid"];
     component.albedo_grid.handle = (AssetHandle)j_albedo["grid"].get<uint64_t>();
@@ -254,17 +227,6 @@ void ComponentSerializer<HeterogeneousMediumComponent>::deserialize_component(co
                                                j_bbox_albedo["max"][1].get<float>(),
                                                j_bbox_albedo["max"][2].get<float>());
 
-    const auto& j_transform_albedo = j_albedo["Transform"];
-    component.albedo_grid.transform.setPosition(glm::vec3(j_transform_albedo["Position"][0].get<float>(),
-                                                          j_transform_albedo["Position"][1].get<float>(),
-                                                          j_transform_albedo["Position"][2].get<float>()));
-    component.albedo_grid.transform.setScale(glm::vec3(j_transform_albedo["Scale"][0].get<float>(),
-                                                       j_transform_albedo["Scale"][1].get<float>(),
-                                                       j_transform_albedo["Scale"][2].get<float>()));
-    component.albedo_grid.transform.setRotation(glm::vec3(j_transform_albedo["EulerAngles"][0].get<float>(),
-                                                          j_transform_albedo["EulerAngles"][1].get<float>(),
-                                                          j_transform_albedo["EulerAngles"][2].get<float>()));
-
     // --- Emission grid ---
     const auto& j_emission         = j["Heterogeneous Medium"]["emission_grid"];
     component.emission_grid.handle = (AssetHandle)j_emission["grid"].get<uint64_t>();
@@ -277,17 +239,6 @@ void ComponentSerializer<HeterogeneousMediumComponent>::deserialize_component(co
     component.emission_grid.bbox.max = glm::vec3(j_bbox_emission["max"][0].get<float>(),
                                                  j_bbox_emission["max"][1].get<float>(),
                                                  j_bbox_emission["max"][2].get<float>());
-
-    const auto& j_transform_emission = j_emission["Transform"];
-    component.emission_grid.transform.setPosition(glm::vec3(j_transform_emission["Position"][0].get<float>(),
-                                                            j_transform_emission["Position"][1].get<float>(),
-                                                            j_transform_emission["Position"][2].get<float>()));
-    component.emission_grid.transform.setScale(glm::vec3(j_transform_emission["Scale"][0].get<float>(),
-                                                         j_transform_emission["Scale"][1].get<float>(),
-                                                         j_transform_emission["Scale"][2].get<float>()));
-    component.emission_grid.transform.setRotation(glm::vec3(j_transform_emission["EulerAngles"][0].get<float>(),
-                                                            j_transform_emission["EulerAngles"][1].get<float>(),
-                                                            j_transform_emission["EulerAngles"][2].get<float>()));
 
     component.g = j["Heterogeneous Medium"]["g"].get<float>();
 }
