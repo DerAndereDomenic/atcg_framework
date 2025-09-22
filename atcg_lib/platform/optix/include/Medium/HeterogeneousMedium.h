@@ -4,6 +4,7 @@
 #include <Medium/Medium.h>
 #include <Medium/HeterogeneousMediumData.cuh>
 #include <DataStructure/Dictionary.h>
+#include <DataStructure/BoundingBox.h>
 #include <Renderer/Texture.h>
 #include <Asset/AssetManagerSystem.h>
 
@@ -30,19 +31,6 @@ private:
     atcg::dref_ptr<HeterogeneousMediumData> _data_buffer;
 };
 
-struct GridComponent
-{
-    struct BBox
-    {
-        glm::vec3 min = glm::vec3(-1, -1, -1);
-        glm::vec3 max = glm::vec3(1, 1, 1);
-    };
-
-    BBox bbox;
-    AssetHandle handle = 0;
-    float scale        = 1.0f;
-};
-
 struct HeterogeneousMediumComponent
 {
     HeterogeneousMediumComponent() = default;
@@ -59,6 +47,13 @@ struct HeterogeneousMediumComponent
     {
         return AssetManager::getAsset<Texture3D>(emission_grid.handle);
     }
+
+    struct GridComponent
+    {
+        BoundingBox bbox;
+        AssetHandle handle = 0;
+        float scale        = 1.0f;
+    };
 
     GridComponent density_grid;
     GridComponent albedo_grid;

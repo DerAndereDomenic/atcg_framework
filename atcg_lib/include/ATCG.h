@@ -74,6 +74,7 @@
 #include <DataStructure/Dictionary.h>
 #include <DataStructure/Skybox.h>
 #include <DataStructure/TextureBuilder.h>
+#include <DataStructure/BoundingBox.h>
 #ifdef ATCG_CUDA_BACKEND
     #include <DataStructure/JPEGDecoder.h>
     #include <DataStructure/JPEGEncoder.h>

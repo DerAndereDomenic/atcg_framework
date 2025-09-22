@@ -6,6 +6,9 @@
 
 namespace atcg
 {
+
+using GridComponent = HeterogeneousMediumComponent::GridComponent;
+
 HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
 {
     HeterogeneousMediumData data;

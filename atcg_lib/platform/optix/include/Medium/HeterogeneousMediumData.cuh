@@ -51,28 +51,6 @@ struct GridData
 
         return value;
     }
-
-    ATCG_DEVICE ATCG_INLINE glm::vec3 posToLocal(const glm::vec3& world_pos) const
-    {
-        glm::vec4 local_pos_hom = to_uvw * glm::vec4(world_pos, 1);
-        glm::vec3 local_pos     = glm::xyz(local_pos_hom);    // assert w = 1!
-        return local_pos;
-    }
-
-    ATCG_DEVICE ATCG_INLINE glm::vec3 dirToLocal(const glm::vec3& world_dir) const
-    {
-        glm::vec4 local_dir_hom = to_uvw * glm::vec4(world_dir, 0);
-        glm::vec3 local_dir     = glm::xyz(local_dir_hom);    // assert w=0?
-        return local_dir;
-    }
-
-    ATCG_DEVICE ATCG_INLINE T evalLocal(const glm::vec3& local_pos) const
-    {
-        if(!is_valid()) return default_value;
-
-        T value = tex3D<T>(texture, local_pos);
-        return value;
-    }
 #endif
 };
 
