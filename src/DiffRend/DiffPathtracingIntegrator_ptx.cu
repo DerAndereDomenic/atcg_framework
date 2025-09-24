@@ -14,6 +14,17 @@ extern "C"
     __constant__ atcg::DiffPathtracingParams params;
 }
 
+struct RayContext
+{
+    bool valid;
+    glm::vec3 origin;
+    glm::vec3 direction;
+    glm::vec3 throughput;
+    glm::vec3 radiance;
+
+    glm::vec3 delta_x;
+};
+
 extern "C" __global__ void __raygen__rg()
 {
     uint3 launch_idx = optixGetLaunchIndex();
@@ -31,29 +42,31 @@ extern "C" __global__ void __raygen__rg()
     glm::vec3 V       = glm::make_vec3(params.V);
     glm::vec3 W       = glm::make_vec3(params.W) / glm::tan(glm::radians(params.fov_y / 2.0f));
 
-    glm::vec3 ray_dir    = glm::normalize(u * U + v * V + W);
-    glm::vec3 ray_origin = cam_eye;
-    glm::vec3 radiance(0);
-    glm::vec3 throughput(1);
+    RayContext ray;
+
+    ray.direction     = glm::normalize(u * U + v * V + W);
+    ray.origin        = cam_eye;
+    ray.radiance      = glm::vec3(0);
+    ray.throughput    = glm::vec3(1);
+    ray.delta_x       = glm::vec3(0);
+    ray.valid         = true;
     int32_t entity_id = -1;
 
     glm::vec3 next_origin;
     glm::vec3 next_dir;
-
-    bool next_ray_valid = true;
 
     atcg::SurfaceInteraction last_si;
     float last_bsdf_pdf = 1.0f;
 
     for(int n = 0; n < 8; ++n)
     {
-        if(!next_ray_valid) break;
-        next_ray_valid = false;
+        if(!ray.valid) break;
+        ray.valid = false;
 
         atcg::SurfaceInteraction si;
         atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
-                                                             ray_origin,
-                                                             ray_dir,
+                                                             ray.origin,
+                                                             ray.direction,
                                                              0.001f,
                                                              1e16f,
                                                              &si,
@@ -66,68 +79,78 @@ extern "C" __global__ void __raygen__rg()
 
         if(si.valid)
         {
+            // TODO: No NEE for now
             // Check for light source
             if(si.emitter)
             {
-                bool mis_valid             = last_si.valid;
-                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                radiance += mis_weight * throughput * si.emitter->evalLight(si);
+                // bool mis_valid             = last_si.valid;
+                // float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
+                // float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                float mis_weight = 1.0f;
+                ray.radiance += mis_weight * ray.throughput * si.emitter->evalLight(si);
             }
 
             // PBR Sampling
             if(si.bsdf)
             {
                 // Next-event estimation
-                do
-                {
-                    if(params.num_emitters == 0) break;
+                // do
+                // {
+                //     if(params.num_emitters == 0) break;
 
-                    uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+                //     uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
 
-                    float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                //     float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
 
-                    const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+                //     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-                    if(si.emitter == emitter) break;
+                //     if(si.emitter == emitter) break;
 
-                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+                //     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
 
-                    if(emitter_sampling.sampling_pdf == 0) break;
+                //     if(emitter_sampling.sampling_pdf == 0) break;
 
-                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                //     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
 
-                    bool occluded = traceOcclusion(params.handle,
-                                                   si.position,
-                                                   emitter_sampling.direction_to_light,
-                                                   1e-3f,
-                                                   emitter_sampling.distance_to_light - 1e-3f,
-                                                   params.occlusion_trace_params);
+                //     bool occluded = traceOcclusion(params.handle,
+                //                                    si.position,
+                //                                    emitter_sampling.direction_to_light,
+                //                                    1e-3f,
+                //                                    emitter_sampling.distance_to_light - 1e-3f,
+                //                                    params.occlusion_trace_params);
 
-                    if(occluded)
-                    {
-                        break;
-                    }
+                //     if(occluded)
+                //     {
+                //         break;
+                //     }
 
-                    atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+                //     atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
 
-                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
-                                           ? 0.0f
-                                           : bsdf_result.sample_probability;
-                    float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
+                //     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                //                            ? 0.0f
+                //                            : bsdf_result.sample_probability;
+                //     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
-                    radiance +=
-                        mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value;
-                } while(false);
+                //     radiance +=
+                //         mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
+                //         bsdf_result.bsdf_value;
+                // } while(false);
 
-                auto result = si.bsdf->sampleBSDF(si, rng);
+                auto result        = si.bsdf->sampleBSDF(si, rng);
+                result.bsdf_weight = glm::vec3(params.albedo_x,
+                                               params.albedo_y,
+                                               params.albedo_z);    // TODO: Assume perfectly diffuse for now
 
                 if(result.sample_probability > 0.0f)
                 {
+                    // TODO: Update delta_x -> add interface for this
+
+                    ray.delta_x += glm::one_over_pi<float>() * ray.throughput;
+
                     next_origin = si.position;
                     next_dir    = result.out_dir;
-                    throughput *= result.bsdf_weight;
-                    next_ray_valid = true;
+                    ray.throughput *= result.bsdf_weight;
+                    ray.valid = true;
 
                     last_si       = si;
                     last_bsdf_pdf = result.sample_probability;
@@ -149,34 +172,24 @@ extern "C" __global__ void __raygen__rg()
                     mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
                               : 0.0f;
                 float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                radiance += mis_weight * throughput * params.environment_emitter->evalLight(si);
+                ray.radiance += mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
             }
         }
 
-        ray_origin = next_origin;
-        ray_dir    = next_dir;
+        ray.origin    = next_origin;
+        ray.direction = next_dir;
     }
 
-    if(params.frame_counter > 0)
-    {
-        // Mix with previous subframes if present!
-        const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
-        const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
-        radiance                             = glm::lerp(prev_output_radiance, radiance, a);
-    }
+    // if(params.frame_counter > 0)
+    // {
+    //     // Mix with previous subframes if present!
+    //     const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
+    //     const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
+    //     ray.radiance                         = glm::lerp(prev_output_radiance, ray.radiance, a);
+    // }
 
-    params.accumulation_buffer[pixel_index] = radiance;
-
-    glm::vec3 tone_mapped = glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.4f));
-
-    tone_mapped.x = glm::min(glm::max(tone_mapped.x, 0.0f), 1.0f);
-    tone_mapped.y = glm::min(glm::max(tone_mapped.y, 0.0f), 1.0f);
-    tone_mapped.z = glm::min(glm::max(tone_mapped.z, 0.0f), 1.0f);
-
-    params.output_image[pixel_index] = glm::u8vec4((uint8_t)(tone_mapped.x * 255.0f),
-                                                   (uint8_t)(tone_mapped.y * 255.0f),
-                                                   (uint8_t)(tone_mapped.z * 255.0f),
-                                                   255);
+    params.accumulation_buffer[pixel_index] = ray.radiance;
+    params.adjoint_x[pixel_index]           = ray.delta_x;
 
     if(params.entity_ids)
     {

@@ -21,8 +21,8 @@ public:
     void createOutputTexture(int width, int height)
     {
 #ifdef ATCG_ENABLE_OPTIX
-        output_tensor   = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
-        output_entities = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
+        output_img_tensor = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
+        output_entities   = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
 
         atcg::TextureSpecification spec;
         spec.width     = width;
@@ -108,10 +108,10 @@ public:
 #ifdef ATCG_ENABLE_OPTIX
             atcg::Dictionary dict;
             dict.setValue("camera", camera_controller->getCamera());
-            dict.setValue("output", output_tensor);
+            dict.setValue("output_img", output_img_tensor);
             dict.setValue("entity_ids", output_entities);
             integrator->generateRays(dict);
-            output_texture->setData(output_tensor);
+            output_texture->setData(output_img_tensor);
             output_entity_texture->setData(output_entities);
 
             atcg::Renderer::drawImage(output_texture, output_entity_texture);
@@ -263,6 +263,30 @@ public:
             ImGui::End();
         }
 
+        ImGui::Begin("Optimization");
+
+        if(ImGui::Button("Register target"))
+        {
+            integrator->registerTarget();
+        }
+
+        if(ImGui::Button("Toggle Optimization"))
+        {
+            integrator->toggleOptimization();
+        }
+
+        if(ImGui::ColorEdit3("Albedo", glm::value_ptr(current_albedo)))
+        {
+            integrator->setAlbedo(current_albedo);
+            integrator->reset();
+        }
+        else
+        {
+            current_albedo = integrator->getAlbedo();
+        }
+
+        ImGui::End();
+
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
         hovered_entity = panel.getSelectedEntity();
@@ -391,9 +415,10 @@ private:
     atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
     atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
     atcg::ref_ptr<atcg::DiffPathtracingIntegrator> integrator;
+    glm::vec3 current_albedo = glm::vec3(1);
 #endif
 
-    torch::Tensor output_tensor;
+    torch::Tensor output_img_tensor;
     atcg::ref_ptr<atcg::Texture2D> output_texture;
 
     torch::Tensor output_entities;

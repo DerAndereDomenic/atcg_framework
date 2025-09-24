@@ -10,8 +10,11 @@ namespace atcg
 {
 struct DiffPathtracingParams
 {
-    glm::u8vec4* output_image;
     glm::vec3* accumulation_buffer;
+    glm::vec3* adjoint_x;
+
+    // TODO
+    float albedo_x, albedo_y, albedo_z;    // glm not supported
     uint32_t image_width;
     uint32_t image_height;
 
@@ -37,4 +40,4 @@ struct DiffPathtracingParams
 
     const EmitterVPtrTable* environment_emitter;
 };
-}
+}    // namespace atcg
