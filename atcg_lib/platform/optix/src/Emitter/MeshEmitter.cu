@@ -78,7 +78,8 @@ MeshEmitter::MeshEmitter(const Dictionary& dict)
 
     MeshEmitterData data;
 
-    atcg::convertToTextureObject(texture_emissive->getData(atcg::GPU), _emissive_texture, data.emissive_texture);
+    _emissive_texture     = std::dynamic_pointer_cast<Texture2D>(texture_emissive->clone());
+    data.emissive_texture = _emissive_texture->getTextureObject();
 
     data.emitter_scaling = emission_scaling;
 
@@ -152,13 +153,7 @@ MeshEmitter::MeshEmitter(const Dictionary& dict)
 
 MeshEmitter::~MeshEmitter()
 {
-    MeshEmitterData data;
-
-    _mesh_emitter_data.download(&data);
-
-    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.emissive_texture));
-
-    CUDA_SAFE_CALL(cudaFreeArray(_emissive_texture));
+    _emissive_texture->unmapDevicePointers();
 }
 
 void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,

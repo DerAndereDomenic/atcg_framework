@@ -38,9 +38,9 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    cudaArray_t _diffuse_texture;
-    cudaArray_t _metallic_texture;
-    cudaArray_t _roughness_texture;
+    atcg::ref_ptr<Texture2D> _diffuse_texture;
+    atcg::ref_ptr<Texture2D> _metallic_texture;
+    atcg::ref_ptr<Texture2D> _roughness_texture;
 
     atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
 };
