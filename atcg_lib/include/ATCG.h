@@ -77,6 +77,7 @@
 #ifdef ATCG_CUDA_BACKEND
     #include <DataStructure/JPEGDecoder.h>
     #include <DataStructure/JPEGEncoder.h>
+    #include <DataStructure/CUDATexture.h>
 #endif
 
 //-------- Math -----------
