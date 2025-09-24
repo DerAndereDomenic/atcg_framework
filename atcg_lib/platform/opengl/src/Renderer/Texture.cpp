@@ -1194,14 +1194,14 @@ void Texture3D::generateMipmaps()
 
 atcg::ref_ptr<Texture> Texture3D::clone() const
 {
-    auto result = atcg::Texture2D::create(_spec);
+    auto result = atcg::Texture3D::create(_spec);
 
     use();
 
     int max_level = _spec.sampler.mip_map
                         ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
                         : 1;
-    for(int lvl = 0; lvl < max_level + 1; lvl++)
+    for(int lvl = 0; lvl < max_level; lvl++)
     {
         int width, height, depth;
         glGetTexLevelParameteriv(GL_TEXTURE_3D, lvl, GL_TEXTURE_WIDTH, &width);
