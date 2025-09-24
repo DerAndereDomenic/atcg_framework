@@ -37,7 +37,7 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    cudaArray_t _environment_texture;
+    atcg::ref_ptr<Texture2D> _environment_texture;
 
     atcg::dref_ptr<EnvironmentEmitterData> _environment_emitter_data;
 };

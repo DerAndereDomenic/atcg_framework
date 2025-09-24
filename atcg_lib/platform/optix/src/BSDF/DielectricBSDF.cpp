@@ -13,14 +13,14 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
 {
     auto material = dict.getValue<atcg::ref_ptr<Material>>("material");
 
-    auto diffuse   = material->getDiffuseTexture()->getData(atcg::GPU);
-    auto roughness = material->getRoughnessTexture()->getData(atcg::GPU);
+    _diffuse_texture   = std::dynamic_pointer_cast<Texture2D>(material->getDiffuseTexture()->clone());
+    _roughness_texture = std::dynamic_pointer_cast<Texture2D>(material->getRoughnessTexture()->clone());
 
     DielectricBSDFData data;
 
-    atcg::convertToTextureObject(diffuse, _diffuse_texture, data.diffuse_texture);
-    atcg::convertToTextureObject(roughness, _roughness_texture, data.roughness_texture);
-    data.ior = material->ior;
+    data.diffuse_texture   = _diffuse_texture->getTextureObject();
+    data.roughness_texture = _roughness_texture->getTextureObject();
+    data.ior               = material->ior;
 
     _flags = BSDFComponentType::IdealReflection | BSDFComponentType::IdealReflection;
 
@@ -29,15 +29,8 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
 
 DielectricBSDF::~DielectricBSDF()
 {
-    DielectricBSDFData data;
-
-    _bsdf_data_buffer.download(&data);
-
-    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.diffuse_texture));
-    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.roughness_texture));
-
-    CUDA_SAFE_CALL(cudaFreeArray(_diffuse_texture));
-    CUDA_SAFE_CALL(cudaFreeArray(_roughness_texture));
+    _diffuse_texture->unmapDevicePointers();
+    _roughness_texture->unmapDevicePointers();
 }
 
 void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,

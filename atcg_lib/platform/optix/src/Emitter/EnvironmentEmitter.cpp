@@ -9,25 +9,19 @@ EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
 {
     atcg::ref_ptr<atcg::Texture2D> texture = dict.getValue<atcg::ref_ptr<Texture2D>>("environment_texture");
 
-    _flags                   = EmitterFlags::DistantEmitter;
-    auto environment_texture = texture->getData(atcg::GPU);
+    _flags               = EmitterFlags::DistantEmitter;
+    _environment_texture = std::dynamic_pointer_cast<Texture2D>(texture->clone());
 
     EnvironmentEmitterData data;
 
-    atcg::convertToTextureObject(environment_texture, _environment_texture, data.environment_texture);
+    data.environment_texture = _environment_texture->getTextureObject();
 
     _environment_emitter_data.upload(&data);
 }
 
 EnvironmentEmitter::~EnvironmentEmitter()
 {
-    EnvironmentEmitterData data;
-
-    _environment_emitter_data.download(&data);
-
-    CUDA_SAFE_CALL(cudaDestroyTextureObject(data.environment_texture));
-
-    CUDA_SAFE_CALL(cudaFreeArray(_environment_texture));
+    _environment_texture->unmapDevicePointers();
 }
 
 void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,

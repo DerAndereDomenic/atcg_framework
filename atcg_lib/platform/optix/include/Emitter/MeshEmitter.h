@@ -42,7 +42,7 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    cudaArray_t _emissive_texture;
+    atcg::ref_ptr<Texture2D> _emissive_texture;
 
     torch::Tensor _mesh_cdf;
 

@@ -2,6 +2,7 @@
 
 #include <BSDF/BSDF.h>
 #include <BSDF/DielectricBSDFData.cuh>
+#include <Renderer/Texture.h>
 
 namespace atcg
 {
@@ -34,8 +35,8 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    cudaArray_t _diffuse_texture;
-    cudaArray_t _roughness_texture;
+    atcg::ref_ptr<Texture2D> _diffuse_texture;
+    atcg::ref_ptr<Texture2D> _roughness_texture;
 
     atcg::dref_ptr<DielectricBSDFData> _bsdf_data_buffer;
 };
