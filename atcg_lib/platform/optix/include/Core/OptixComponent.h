@@ -38,4 +38,9 @@ public:
 private:
     bool _initialized = false;
 };
+
+class Differentiable
+{
+    virtual void zero_grad() = 0;
+};
 }    // namespace atcg

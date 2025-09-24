@@ -15,6 +15,13 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
     _metallic_texture  = std::dynamic_pointer_cast<Texture2D>(material->getMetallicTexture()->clone());
     _roughness_texture = std::dynamic_pointer_cast<Texture2D>(material->getRoughnessTexture()->clone());
 
+    // Cheap way to create a tensor that exactly matches the texture format
+    _grad_diffuse   = _diffuse_texture->getData(atcg::GPU);
+    _grad_metallic  = _metallic_texture->getData(atcg::GPU);
+    _grad_roughness = _roughness_texture->getData(atcg::GPU);
+
+    zero_grad();
+
     PBRBSDFData data;
 
     data.diffuse_texture   = _diffuse_texture->getTextureObject();
@@ -48,6 +55,13 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
     table.flags           = _flags;
 
     _vptr_table.upload(&table);
+}
+
+void PBRBSDF::zero_grad()
+{
+    _grad_diffuse.zero_();
+    _grad_metallic.zero_();
+    _grad_roughness.zero_();
 }
 
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);
