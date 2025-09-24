@@ -12,9 +12,10 @@ struct DiffPathtracingParams
 {
     glm::vec3* accumulation_buffer;
     glm::vec3* adjoint_x;
+    glm::vec3* adjoint_y;
 
     // TODO
-    float albedo_x, albedo_y, albedo_z;    // glm not supported
+    float albedo[3];    // glm not supported
     uint32_t image_width;
     uint32_t image_height;
 

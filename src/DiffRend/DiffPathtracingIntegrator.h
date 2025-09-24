@@ -58,15 +58,21 @@ public:
 
     void setAlbedo(const glm::vec3& albedo) { _albedo = albedo; }
 
-    void toggleOptimization() { _optimize = !_optimize; }
+    void toggleOptimization()
+    {
+        _optimize = !_optimize;
+        reset();
+    }
 
     glm::vec3 getAlbedo() const { return _albedo; }
 
 private:
-    virtual void _generateSample(Dictionary& in_out_dictionary);
+    void forwardPass(Dictionary& in_out_dictionary);
+    void backwardPass(Dictionary& in_out_dictionary);
 
 private:
-    uint32_t _raygen_index;
+    uint32_t _raygen_index_forward;
+    uint32_t _raygen_index_backward;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
 
@@ -74,10 +80,10 @@ private:
     atcg::dref_ptr<DiffPathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
 
-    torch::Tensor _hdr;
     torch::Tensor _target;
     torch::Tensor _accumulation_buffer;
     torch::Tensor _adjoint_x;
+    torch::Tensor _adjoint_y;
     bool _optimize = false;
 
     // !TEMP
