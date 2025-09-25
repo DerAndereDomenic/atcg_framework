@@ -670,7 +670,7 @@ atcg::surfaceObject Texture::getSurfaceObject(const uint32_t mip_level, const ui
         resDesc.resType          = cudaResourceTypeArray;
         resDesc.res.array.array  = array;
 
-        CUDA_SAFE_CALL(cudaCreateSurfaceObject(&impl->texture_object, &resDesc));
+        CUDA_SAFE_CALL(cudaCreateSurfaceObject(&impl->surface_object, &resDesc));
     }
 #endif
     impl->surface_mapped = true;
