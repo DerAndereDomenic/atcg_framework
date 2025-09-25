@@ -25,7 +25,7 @@ struct CUDATexture
      * @return The data as normalized float
      */
     ATCG_DEVICE
-    glm::vec4 read(const glm::vec2& uv) const;
+    T read(const glm::vec2& uv) const;
 
     /**
      * @brief Write to the texture
@@ -43,7 +43,7 @@ struct CUDATexture
      * @return The data as normalized float
      */
     ATCG_DEVICE
-    glm::vec4 read(const glm::vec3& uvw) const;
+    T read(const glm::vec3& uvw) const;
 
     /**
      * @brief Write to the texture
@@ -65,20 +65,28 @@ struct CUDATexture
     TextureSpecification spec;
 
     // Default value to read
-    glm::vec4 default_value = glm::vec4(0);
+    T default_value = T(0);
 };
 
 // Implementation
 
 template<typename T>
-ATCG_DEVICE glm::vec4 CUDATexture<T>::read(const glm::vec2& uv) const
+ATCG_DEVICE T CUDATexture<T>::read(const glm::vec2& uv) const
 {
     if(texture_data.texture != 0)
     {
         // Read using cuda api
         if constexpr(std::is_same_v<T, float>)
         {
-            return glm::vec4(tex2D<float>(texture_data.texture, uv.x, uv.y));
+            return tex2D<float>(texture_data.texture, uv.x, uv.y);
+        }
+        else if constexpr(inv_cuda_type<decltype(glm2cuda(T()))>::dim == 2)
+        {
+            return glm::xy(cuda2glm(tex2D<float4>(texture_data.texture, uv.x, uv.y)));
+        }
+        else if constexpr(inv_cuda_type<decltype(glm2cuda(T()))>::dim == 3)
+        {
+            return glm::xyz(cuda2glm(tex2D<float4>(texture_data.texture, uv.x, uv.y)));
         }
         else
         {
@@ -116,14 +124,22 @@ ATCG_DEVICE void CUDATexture<T>::write(const T& val, const glm::ivec2& texel)
 }
 
 template<typename T>
-ATCG_DEVICE glm::vec4 CUDATexture<T>::read(const glm::vec3& uvw) const
+ATCG_DEVICE T CUDATexture<T>::read(const glm::vec3& uvw) const
 {
     if(texture_data.texture != 0)
     {
         // Read using cuda api
         if constexpr(std::is_same_v<T, float>)
         {
-            return glm::vec4(tex3D<float>(texture_data.texture, uvw.x, uvw.y, uvw.z));
+            return tex3D<float>(texture_data.texture, uvw.x, uvw.y, uvw.z);
+        }
+        else if constexpr(inv_cuda_type<decltype(glm2cuda(T()))>::dim == 2)
+        {
+            return glm::xy(cuda2glm(tex3D<float4>(texture_data.texture, uvw.x, uvw.y, uvw.z)));
+        }
+        else if constexpr(inv_cuda_type<decltype(glm2cuda(T()))>::dim == 3)
+        {
+            return glm::xyz(cuda2glm(tex3D<float4>(texture_data.texture, uvw.x, uvw.y, uvw.z)));
         }
         else
         {

@@ -182,8 +182,8 @@ extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_pbrbsdf
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
     glm::vec3 diffuse_color = sbt_data->diffuse_texture.read(si.uv);
-    float metallic          = sbt_data->metallic_texture.read(si.uv).r;
-    float roughness         = sbt_data->roughness_texture.read(si.uv).r;
+    float metallic          = sbt_data->metallic_texture.read(si.uv);
+    float roughness         = sbt_data->roughness_texture.read(si.uv);
     roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
     glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
@@ -199,8 +199,8 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
     atcg::BSDFEvalResult result;
 
     glm::vec3 diffuse_color = sbt_data->diffuse_texture.read(si.uv);
-    float metallic          = sbt_data->metallic_texture.read(si.uv).r;
-    float roughness         = sbt_data->roughness_texture.read(si.uv).r;
+    float metallic          = sbt_data->metallic_texture.read(si.uv);
+    float roughness         = sbt_data->roughness_texture.read(si.uv);
     roughness     = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
     diffuse_color = glm::lerp(diffuse_color, glm::vec3(0), metallic) * si.color;
 

@@ -206,7 +206,7 @@ __direct_callable__sample_dielectricbsdf(const atcg::SurfaceInteraction& si, atc
         *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
 
     glm::vec3 reflectance_color = sbt_data->diffuse_texture.read(si.uv);
-    float roughness             = sbt_data->roughness_texture.read(si.uv).r;
+    float roughness             = sbt_data->roughness_texture.read(si.uv);
     roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
     return detail::sampleRefractive(si, reflectance_color, roughness, sbt_data->ior, rng);
@@ -219,7 +219,7 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_dielectricbsd
         *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
 
     glm::vec3 reflectance_color = sbt_data->diffuse_texture.read(si.uv);
-    float roughness             = sbt_data->roughness_texture.read(si.uv).r;
+    float roughness             = sbt_data->roughness_texture.read(si.uv);
     roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
     return detail::evalRefractive(si, outgoing_dir, reflectance_color, roughness, sbt_data->ior);
