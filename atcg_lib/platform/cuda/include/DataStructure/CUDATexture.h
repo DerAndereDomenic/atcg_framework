@@ -25,7 +25,7 @@ struct CUDATexture
      * @return The data as normalized float
      */
     ATCG_DEVICE
-    glm::vec4 read(const glm::vec2& uv);
+    glm::vec4 read(const glm::vec2& uv) const;
 
     /**
      * @brief Write to the texture
@@ -43,7 +43,7 @@ struct CUDATexture
      * @return The data as normalized float
      */
     ATCG_DEVICE
-    glm::vec4 read(const glm::vec3& uvw);
+    glm::vec4 read(const glm::vec3& uvw) const;
 
     /**
      * @brief Write to the texture
@@ -71,9 +71,9 @@ struct CUDATexture
 // Implementation
 
 template<typename T>
-ATCG_DEVICE glm::vec4 CUDATexture<T>::read(const glm::vec2& uv)
+ATCG_DEVICE glm::vec4 CUDATexture<T>::read(const glm::vec2& uv) const
 {
-    if(texture_data.surface != 0)
+    if(texture_data.texture != 0)
     {
         // Read using cuda api
         if constexpr(std::is_same_v<T, float>)
@@ -116,9 +116,9 @@ ATCG_DEVICE void CUDATexture<T>::write(const T& val, const glm::ivec2& texel)
 }
 
 template<typename T>
-ATCG_DEVICE glm::vec4 CUDATexture<T>::read(const glm::vec3& uvw)
+ATCG_DEVICE glm::vec4 CUDATexture<T>::read(const glm::vec3& uvw) const
 {
-    if(texture_data.surface != 0)
+    if(texture_data.texture != 0)
     {
         // Read using cuda api
         if constexpr(std::is_same_v<T, float>)
