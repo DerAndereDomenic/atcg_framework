@@ -78,8 +78,9 @@ MeshEmitter::MeshEmitter(const Dictionary& dict)
 
     MeshEmitterData data;
 
-    _emissive_texture     = std::dynamic_pointer_cast<Texture2D>(texture_emissive->clone());
-    data.emissive_texture = _emissive_texture->getTextureObject();
+    _emissive_texture                          = std::dynamic_pointer_cast<Texture2D>(texture_emissive->clone());
+    data.emissive_texture.texture_data.texture = _emissive_texture->getTextureObject();
+    data.emissive_texture.spec                 = _emissive_texture->getSpecification();
 
     data.emitter_scaling = emission_scaling;
 
