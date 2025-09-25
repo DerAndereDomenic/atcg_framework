@@ -1,11 +1,13 @@
 #pragma once
 
+#include <DataStructure/CUDATexture.h>
+
 namespace atcg
 {
 struct DielectricBSDFData
 {
-    cudaTextureObject_t diffuse_texture;
-    cudaTextureObject_t roughness_texture;
+    CUDATexture<glm::vec3> diffuse_texture;
+    CUDATexture<float> roughness_texture;
     float ior;
 };
 }    // namespace atcg

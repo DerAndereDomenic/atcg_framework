@@ -1,11 +1,13 @@
 #pragma once
 
+#include <DataStructure/CUDATexture.h>
+
 namespace atcg
 {
 struct PBRBSDFData
 {
-    cudaTextureObject_t diffuse_texture;
-    cudaTextureObject_t metallic_texture;
-    cudaTextureObject_t roughness_texture;
+    CUDATexture<glm::vec3> diffuse_texture;
+    CUDATexture<float> metallic_texture;
+    CUDATexture<float> roughness_texture;
 };
 }    // namespace atcg

@@ -160,8 +160,7 @@ __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::
                                                                    sbt_data->world_to_local,
                                                                    rng);
 
-    float4 color_u           = tex2D<float4>(sbt_data->emissive_texture, result.uvs.x, result.uvs.y);
-    glm::vec3 emissive_color = glm::vec3(color_u.x, color_u.y, color_u.z);
+    glm::vec3 emissive_color = sbt_data->emissive_texture.read(si.uv);
 
     result.radiance_weight_at_receiver = sbt_data->emitter_scaling * emissive_color / result.sampling_pdf;
 
@@ -172,8 +171,7 @@ extern "C" __device__ glm::vec3 __direct_callable__eval_meshemitter(const atcg::
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
 
-    float4 color_u           = tex2D<float4>(sbt_data->emissive_texture, si.uv.x, si.uv.y);
-    glm::vec3 emissive_color = glm::vec3(color_u.x, color_u.y, color_u.z);
+    glm::vec3 emissive_color = sbt_data->emissive_texture.read(si.uv);
 
     return detail::evalMeshEmitter(emissive_color, sbt_data->emitter_scaling);
 }

@@ -120,11 +120,11 @@ __direct_callable__sample_environmentemitter(const atcg::SurfaceInteraction& si,
 
     atcg::EmitterSamplingResult result = detail::sampleEnvironmentEmitter(si, rng);
 
-    float4 color = tex2D<float4>(sbt_data->environment_texture, result.uvs.x, 1.0f - result.uvs.y);
+    glm::vec3 color = sbt_data->environment_texture.read(glm::vec2(result.uvs.x, 1.0f - result.uvs.y));
 
     result.distance_to_light           = std::numeric_limits<float>::infinity();
     result.sampling_pdf                = result.sampling_pdf;
-    result.radiance_weight_at_receiver = glm::vec3(color.x, color.y, color.z) / result.sampling_pdf;
+    result.radiance_weight_at_receiver = color / result.sampling_pdf;
 
     return result;
 }
@@ -136,9 +136,7 @@ extern "C" __device__ glm::vec3 __direct_callable__eval_environmentemitter(const
 
     glm::vec2 uv = detail::evalEnvironmentEmitter(si);
 
-    float4 color = tex2D<float4>(sbt_data->environment_texture, uv.x, 1.0f - uv.y);
-
-    return glm::vec3(color.x, color.y, color.z);
+    return sbt_data->environment_texture.read(glm::vec2(uv.x, 1.0f - uv.y));
 }
 
 extern "C" __device__ float __direct_callable__evalpdf_environmentemitter(const atcg::SurfaceInteraction& last_si,

@@ -14,7 +14,8 @@ EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
 
     EnvironmentEmitterData data;
 
-    data.environment_texture = _environment_texture->getTextureObject();
+    data.environment_texture.texture_data.texture = _environment_texture->getTextureObject();
+    data.environment_texture.spec                 = _environment_texture->getSpecification();
 
     _environment_emitter_data.upload(&data);
 }

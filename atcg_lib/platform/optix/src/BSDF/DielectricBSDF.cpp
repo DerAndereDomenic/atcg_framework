@@ -18,9 +18,11 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
 
     DielectricBSDFData data;
 
-    data.diffuse_texture   = _diffuse_texture->getTextureObject();
-    data.roughness_texture = _roughness_texture->getTextureObject();
-    data.ior               = material->ior;
+    data.diffuse_texture.texture_data.texture   = _diffuse_texture->getTextureObject();
+    data.diffuse_texture.spec                   = _diffuse_texture->getSpecification();
+    data.roughness_texture.texture_data.texture = _roughness_texture->getTextureObject();
+    data.roughness_texture.spec                 = _roughness_texture->getSpecification();
+    data.ior                                    = material->ior;
 
     _flags = BSDFComponentType::IdealReflection | BSDFComponentType::IdealReflection;
 
