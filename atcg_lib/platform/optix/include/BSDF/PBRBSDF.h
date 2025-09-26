@@ -39,6 +39,8 @@ public:
 
     virtual void zero_grad() override;
 
+    virtual void update(float lr) override;
+
 private:
     atcg::ref_ptr<Texture2D> _diffuse_texture;
     atcg::ref_ptr<Texture2D> _metallic_texture;

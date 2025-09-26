@@ -208,3 +208,23 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
 
     return detail::evalPBR(si, outgoing_dir, diffuse_color, metallic_color, roughness, metallic);
 }
+
+extern "C" __device__ void __direct_callable__grad_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                                           const glm::vec3& outgoing_dir,
+                                                           const glm::vec3& out_grad)
+{
+    const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
+
+    glm::vec3 grad = glm::one_over_pi<float>() * out_grad;
+
+    // TODO: Interpolation
+    uint32_t x = (uint32_t)(si.uv.x * sbt_data->diffuse_texture.spec.width);
+    uint32_t y = (uint32_t)(si.uv.y * sbt_data->diffuse_texture.spec.height);
+
+    uint32_t pixel_idx = x + sbt_data->diffuse_texture.spec.width * y;
+
+    float* adr = (float*)&(sbt_data->grad_diffuse[pixel_idx]);
+    atomicAdd(adr + 0, grad.x);
+    atomicAdd(adr + 1, grad.x);
+    atomicAdd(adr + 2, grad.x);
+}

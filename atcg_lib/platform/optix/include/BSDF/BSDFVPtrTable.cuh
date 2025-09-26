@@ -27,6 +27,7 @@ struct BSDFVPtrTable
 {
     uint32_t sampleCallIndex;
     uint32_t evalCallIndex;
+    uint32_t evalBackwardIndex;
 
     BSDFComponentType flags;
 
@@ -42,6 +43,15 @@ struct BSDFVPtrTable
         return optixDirectCall<BSDFEvalResult, const SurfaceInteraction&, const glm::vec3&>(evalCallIndex,
                                                                                             si,
                                                                                             outgoing_dir);
+    }
+
+    __device__ void
+    backwardGrad(const SurfaceInteraction& si, const glm::vec3& outgoing_dir, const glm::vec3& out_grad) const
+    {
+        optixDirectCall<void, const SurfaceInteraction&, const glm::vec3&, const glm::vec3&>(evalBackwardIndex,
+                                                                                             si,
+                                                                                             outgoing_dir,
+                                                                                             out_grad);
     }
 
 #endif
