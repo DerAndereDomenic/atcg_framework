@@ -48,6 +48,14 @@ public:
      */
     ATCG_INLINE atcg::ref_ptr<Shape> getShape() const { return _shape; }
 
+    ATCG_INLINE atcg::ref_ptr<BSDF> getBSDF() const { return _bsdf; }
+
+    ATCG_INLINE atcg::ref_ptr<Emitter> getEmitter() const { return _emitter; }
+
+    ATCG_INLINE atcg::ref_ptr<Medium> getInsideMedium() const { return _inside_medium; }
+
+    ATCG_INLINE atcg::ref_ptr<Medium> getOutsideMedium() const { return _outside_medium; }
+
     /**
      * @brief Get the transform
      *
