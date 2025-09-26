@@ -41,6 +41,9 @@ private:
 
 class Differentiable
 {
+public:
     virtual void zero_grad() = 0;
+
+    virtual void update(float lr) = 0;
 };
 }    // namespace atcg

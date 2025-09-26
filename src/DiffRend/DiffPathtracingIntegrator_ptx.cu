@@ -137,8 +137,7 @@ extern "C" __global__ void __raygen__forward()
                 //         bsdf_result.bsdf_value;
                 // } while(false);
 
-                auto result        = si.bsdf->sampleBSDF(si, rng);
-                result.bsdf_weight = glm::make_vec3(params.albedo);    // TODO: Assume perfectly diffuse for now
+                auto result = si.bsdf->sampleBSDF(si, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
@@ -304,14 +303,16 @@ extern "C" __global__ void __raygen__backward()
                 //         bsdf_result.bsdf_value;
                 // } while(false);
 
-                auto result        = si.bsdf->sampleBSDF(si, rng);
-                result.bsdf_weight = glm::make_vec3(params.albedo);    // TODO: Assume perfectly diffuse for now
+                auto result = si.bsdf->sampleBSDF(si, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
                     // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
                     // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
-                    ray.delta_x += (ray.delta_y * (ray.radiance + 1e-4f)) / (glm::make_vec3(params.albedo) + 1e-4f);
+                    glm::vec3 grad_out = (ray.delta_y * (ray.radiance + 1e-4f)) /
+                                         (result.bsdf_weight * result.sample_probability +
+                                          1e-4f);    // bsdf_weight = bsdf_value / p - so this should work?
+                    si.bsdf->backwardGrad(si, result.out_dir, grad_out);
 
                     next_origin = si.position;
                     next_dir    = result.out_dir;
@@ -345,21 +346,6 @@ extern "C" __global__ void __raygen__backward()
 
         ray.origin    = next_origin;
         ray.direction = next_dir;
-    }
-
-    if(params.frame_counter > 0)
-    {
-        // Mix with previous subframes if present!
-        const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
-        const glm::vec3 prev_output_radiance = params.adjoint_x[pixel_index];
-        ray.delta_x                          = glm::lerp(prev_output_radiance, ray.delta_x, a);
-    }
-
-    params.adjoint_x[pixel_index] = ray.delta_x;
-
-    if(params.entity_ids)
-    {
-        params.entity_ids[pixel_index] = entity_id;
     }
 }
 

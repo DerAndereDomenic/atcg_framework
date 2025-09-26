@@ -54,17 +54,13 @@ public:
      */
     virtual void reset() override;
 
-    void registerTarget();
-
-    void setAlbedo(const glm::vec3& albedo) { _albedo = albedo; }
+    torch::Tensor getHDR() const;
 
     void toggleOptimization()
     {
         _optimize = !_optimize;
         reset();
     }
-
-    glm::vec3 getAlbedo() const { return _albedo; }
 
 private:
     void forwardPass(Dictionary& in_out_dictionary);
@@ -80,13 +76,11 @@ private:
     atcg::dref_ptr<DiffPathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
 
-    torch::Tensor _target;
     torch::Tensor _accumulation_buffer;
     torch::Tensor _adjoint_x;
     torch::Tensor _adjoint_y;
     bool _optimize = false;
 
-    // !TEMP
-    glm::vec3 _albedo = glm::vec3(1);
+    std::vector<Differentiable*> _differentiable_components;
 };
 }    // namespace atcg

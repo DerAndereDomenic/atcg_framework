@@ -44,6 +44,18 @@ void DiffPathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracin
     _sbt      = sbt;
 
     _optix_scene = SceneAdapter(_context, pipeline, sbt).apply(_scene);
+
+    _differentiable_components.clear();
+    for(auto shape: _optix_scene->getShapes())
+    {
+        auto diff = std::dynamic_pointer_cast<Differentiable>(shape->getBSDF());
+        if(diff)
+        {
+            _differentiable_components.push_back(diff.get());
+        }
+    }
+
+    ATCG_TRACE("Number differentiable objects: {}", _differentiable_components.size());
 }
 
 void DiffPathtracingIntegrator::reset()
@@ -51,9 +63,9 @@ void DiffPathtracingIntegrator::reset()
     _frame_counter = 0;
 }
 
-void DiffPathtracingIntegrator::registerTarget()
+torch::Tensor DiffPathtracingIntegrator::getHDR() const
 {
-    _target = _accumulation_buffer.clone();
+    return _accumulation_buffer.clone();
 }
 
 void DiffPathtracingIntegrator::forwardPass(Dictionary& in_out_dictionary)
@@ -91,7 +103,6 @@ void DiffPathtracingIntegrator::forwardPass(Dictionary& in_out_dictionary)
     params.entity_ids = entity_ids.numel() > 0 ? (int32_t*)entity_ids.data_ptr() : nullptr;
 
     params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
-    memcpy(params.albedo, glm::value_ptr(_albedo), sizeof(glm::vec3));
 
     params.frame_counter = _frame_counter++;
 
@@ -162,8 +173,6 @@ void DiffPathtracingIntegrator::backwardPass(Dictionary& in_out_dictionary)
 
     params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();    // Input L
     params.adjoint_y           = (glm::vec3*)_adjoint_y.data_ptr();              // Input 𝛿L
-    params.adjoint_x           = (glm::vec3*)_adjoint_x.data_ptr();              // Output 𝛿x
-    memcpy(params.albedo, glm::value_ptr(_albedo), sizeof(glm::vec3));
 
     params.frame_counter = _frame_counter++;
 
@@ -213,6 +222,7 @@ void DiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
     }
     else
     {
+        torch::Tensor target       = in_out_dictionary.getValue<torch::Tensor>("target");
         const uint32_t num_samples = 16;
 
         // Forward Pass
@@ -222,24 +232,38 @@ void DiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
         }
 
         // Backward pass
-        _adjoint_y = 2.0f * (_accumulation_buffer - _target);    // W is delta peak in our case
+        _adjoint_y = 2.0f * (_accumulation_buffer - target);    // W is delta peak in our case
 
         reset();    // Use same random numbers
+
+        for(auto diff: _differentiable_components)
+        {
+            diff->zero_grad();
+        }
+
         for(int i = 0; i < num_samples; ++i)
         {
             backwardPass(in_out_dictionary);
         }
 
-        torch::Tensor _grad = torch::mean(_adjoint_x, at::IntArrayRef {0, 1}).cpu();    // Just reduce mean?
+        // TODO: Update
 
-        glm::vec3 grad = glm::vec3(_grad[0].item<float>(), _grad[1].item<float>(), _grad[2].item<float>());
+        float lr = 0.1f;
+        for(auto diff: _differentiable_components)
+        {
+            diff->update(lr);
+        }
 
-        const float lr = 1e0f;
+        // torch::Tensor _grad = torch::mean(_adjoint_x, at::IntArrayRef {0, 1}).cpu();    // Just reduce mean?
 
-        ATCG_DEBUG(grad);
+        // glm::vec3 grad = glm::vec3(_grad[0].item<float>(), _grad[1].item<float>(), _grad[2].item<float>());
 
-        _albedo -= lr * grad;
-        _albedo = glm::clamp(_albedo, glm::vec3(0), glm::vec3(1));
+        // const float lr = 1e0f;
+
+        // ATCG_DEBUG(grad);
+
+        // _albedo -= lr * grad;
+        // _albedo = glm::clamp(_albedo, glm::vec3(0), glm::vec3(1));
 
         torch::Tensor tonemapped = torch::pow(1.0f - torch::exp(-torch::abs(_accumulation_buffer)), 1.0 / 2.4f);
 
