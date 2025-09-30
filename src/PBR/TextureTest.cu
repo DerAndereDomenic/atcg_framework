@@ -3,36 +3,37 @@
 #include <Core/CUDA.h>
 #include <Core/glm.h>
 #include <DataStructure/CUDATexture.h>
+#include <DataStructure/TextureSampler.h>
 
-__global__ void fillSurf(atcg::CUDATexture<glm::u8vec3> tex)
+__global__ void fillSurf(atcg::TextureSampler<glm::vec2> tex)
 {
     size_t tid = atcg::threadIndex();
-    if(tid >= tex.spec.width * tex.spec.height) return;
+    if(tid >= tex.getSpecification().width * tex.getSpecification().height) return;
 
-    uint32_t x = tid % tex.spec.width;
-    uint32_t y = tid / tex.spec.width;
+    uint32_t x = tid % tex.getSpecification().width;
+    uint32_t y = tid / tex.getSpecification().width;
 
-    uint8_t u = uint8_t((float)x / (float)tex.spec.width * 255.0f);
-    uint8_t v = uint8_t((float)y / (float)tex.spec.height * 255.0f);
+    float u = (float)x / (float)tex.getSpecification().width;
+    float v = (float)y / (float)tex.getSpecification().height;
 
-    tex.write(glm::u8vec3(u, v, 0), glm::ivec2(x, y));
+    tex.write(glm::vec2(u, v), glm::ivec2(x, y));
 }
 
-__global__ void read(atcg::CUDATexture<glm::u8vec3> tex)
+__global__ void read(atcg::TextureSampler<glm::vec2> tex)
 {
     size_t tid = atcg::threadIndex();
-    if(tid >= tex.spec.width * tex.spec.height) return;
+    if(tid >= tex.getSpecification().width * tex.getSpecification().height) return;
 
-    uint32_t x = tid % tex.spec.width;
-    uint32_t y = tid / tex.spec.width;
+    uint32_t x = tid % tex.getSpecification().width;
+    uint32_t y = tid / tex.getSpecification().width;
 
     if(x == 512 && y == 512)
     {
-        float u       = (float)x / (float)tex.spec.width;
-        float v       = (float)y / (float)tex.spec.height;
-        glm::vec4 val = tex.read(glm::vec2(u, v));
+        float u       = (float)x / (float)tex.getSpecification().width;
+        float v       = (float)y / (float)tex.getSpecification().height;
+        glm::vec2 val = tex.read(glm::vec2(u, v));
 
-        printf("val: %f %f %f\n", val.x, val.y, val.z);
+        printf("val: %f %f\n", val.x, val.y);
     }
 }
 
@@ -48,12 +49,16 @@ void test()
 
     auto blocks = atcg::configure(spec.width * spec.height, 128);
 
-    atcg::CUDATexture<glm::u8vec3> tex = {};
-    tex.spec                           = spec;
-    // tex.texture_data.raw.data          = texture_data.data_ptr();
-    tex.texture_data.texture = texture->getTextureObject();
-    tex.texture_data.surface = texture->getSurfaceObject();
-    tex.default_value        = glm::vec4(1);
+    auto data = texture->getData(atcg::GPU);
+
+    atcg::TextureSampler<glm::vec2> tex(data.data_ptr(), spec);
+
+    // atcg::CUDATexture<glm::u8vec3> tex = {};
+    // tex.spec                           = spec;
+    // // tex.texture_data.raw.data          = texture_data.data_ptr();
+    // tex.texture_data.texture = texture->getTextureObject();
+    // tex.texture_data.surface = texture->getSurfaceObject();
+    // tex.default_value        = glm::vec4(1);
 
     fillSurf<<<blocks, 128>>>(tex);
     SYNCHRONIZE_DEFAULT_STREAM();
@@ -61,7 +66,7 @@ void test()
     read<<<blocks, 128>>>(tex);
     SYNCHRONIZE_DEFAULT_STREAM();
 
-
+    texture->setData(data);
     // texture->setData(texture_data);
     texture->unmapDevicePointers();
 
