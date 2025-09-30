@@ -34,7 +34,6 @@ std::unique_ptr<BSDFFactory_T> BSDFFactory_T::_instance;
 
 void BSDFFactory::registerBSDF(MaterialType type, BSDFBuilder builder)
 {
-    printf("Registered: %i\n", (int)type);
     auto instance = BSDFFactory_T::getInstance();
     instance->registerBuilder(type, builder);
 }

@@ -37,7 +37,7 @@ public:
      *
      * @return *this
      */
-    ATCG_INLINE TextureBuilder setSampler(atcg::TextureSampler sampler)
+    ATCG_INLINE TextureBuilder setSampler(atcg::TextureSamplerSpecification sampler)
     {
         _spec.sampler = sampler;
         return *this;

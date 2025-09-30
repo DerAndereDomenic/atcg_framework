@@ -169,162 +169,6 @@ GLenum toGLtype(TextureFormat format)
     }
 }
 
-uint32_t num_channels(TextureFormat format)
-{
-    switch(format)
-    {
-        case TextureFormat::RG:
-        {
-            return 2;
-        }
-        case TextureFormat::RGB:
-        {
-            return 3;
-        }
-        case TextureFormat::RGBA:
-        {
-            return 4;
-        }
-        case TextureFormat::RGFLOAT:
-        {
-            return 2;
-        }
-        case TextureFormat::RGBFLOAT:
-        {
-            return 3;
-        }
-        case TextureFormat::RGBAFLOAT:
-        {
-            return 4;
-        }
-        case TextureFormat::RINT:
-        {
-            return 1;
-        }
-        case TextureFormat::RINT8:
-        {
-            return 1;
-        }
-        case TextureFormat::RFLOAT:
-        {
-            return 1;
-        }
-        case TextureFormat::DEPTH:
-        {
-            return 1;
-        }
-        default:
-        {
-            ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
-            return -1;
-        }
-    }
-}
-
-std::size_t toSize(TextureFormat format)
-{
-    switch(format)
-    {
-        case TextureFormat::RG:
-        {
-            return 2 * sizeof(uint8_t);
-        }
-        case TextureFormat::RGB:
-        {
-            return 3 * sizeof(uint8_t);
-        }
-        case TextureFormat::RGBA:
-        {
-            return 4 * sizeof(uint8_t);
-        }
-        case TextureFormat::RGFLOAT:
-        {
-            return 2 * sizeof(float);
-        }
-        case TextureFormat::RGBFLOAT:
-        {
-            return 3 * sizeof(float);
-        }
-        case TextureFormat::RGBAFLOAT:
-        {
-            return 4 * sizeof(float);
-        }
-        case TextureFormat::RINT:
-        {
-            return sizeof(uint32_t);
-        }
-        case TextureFormat::RINT8:
-        {
-            return sizeof(uint8_t);
-        }
-        case TextureFormat::RFLOAT:
-        {
-            return sizeof(float);
-        }
-        case TextureFormat::DEPTH:
-        {
-            return sizeof(float);
-        }
-        default:
-        {
-            ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
-            return -1;
-        }
-    }
-}
-
-std::size_t toChannelSize(TextureFormat format)
-{
-    switch(format)
-    {
-        case TextureFormat::RG:
-        {
-            return sizeof(uint8_t);
-        }
-        case TextureFormat::RGB:
-        {
-            return sizeof(uint8_t);
-        }
-        case TextureFormat::RGBA:
-        {
-            return sizeof(uint8_t);
-        }
-        case TextureFormat::RGFLOAT:
-        {
-            return sizeof(float);
-        }
-        case TextureFormat::RGBFLOAT:
-        {
-            return sizeof(float);
-        }
-        case TextureFormat::RGBAFLOAT:
-        {
-            return sizeof(float);
-        }
-        case TextureFormat::RINT:
-        {
-            return sizeof(uint32_t);
-        }
-        case TextureFormat::RINT8:
-        {
-            return sizeof(uint8_t);
-        }
-        case TextureFormat::RFLOAT:
-        {
-            return sizeof(float);
-        }
-        case TextureFormat::DEPTH:
-        {
-            return sizeof(float);
-        }
-        default:
-        {
-            ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
-            return -1;
-        }
-    }
-}
-
 GLint toGLWrapMode(TextureWrapMode wrap_mode)
 {
     switch(wrap_mode)
@@ -615,7 +459,7 @@ void Texture::useForCompute(const uint32_t& slot) const
 
 uint32_t Texture::channels() const
 {
-    return detail::num_channels(_spec.format);
+    return _spec.numChannels();
 }
 
 bool Texture::isHDR() const
@@ -735,9 +579,9 @@ void Texture2D::setData(const torch::Tensor& data)
 
     TORCH_CHECK_EQ(data.size(0), _spec.height);
     TORCH_CHECK_EQ(data.size(1), _spec.width);
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     TORCH_CHECK_EQ(data.size(2), num_channels);
-    TORCH_CHECK_EQ(data.numel() * data.element_size(), _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.numel() * data.element_size(), _spec.width * _spec.height * _spec.pixelSize());
 
     torch::Tensor pixel_data = data;
     bool cuda_copy_possible  = num_channels == 1 || num_channels == 4;
@@ -782,9 +626,7 @@ void Texture2D::setData(const torch::Tensor& data)
 
 void Texture2D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 {
-    TORCH_CHECK_EQ(data->size(),
-                   _spec.width * _spec.height * detail::toChannelSize(_spec.format) *
-                       detail::num_channels(_spec.format));
+    TORCH_CHECK_EQ(data->size(), _spec.width * _spec.height * _spec.channelSize() * _spec.numChannels());
 
     data->use();
     use(0);
@@ -808,9 +650,9 @@ void Texture2D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 
 torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip_level) const
 {
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     bool hdr         = isHDR();
-    int channel_size = detail::toChannelSize(_spec.format);
+    int channel_size = _spec.channelSize();
 
     torch::Tensor result;
     int height = glm::floor(_spec.height / (1 << mip_level));
@@ -1026,10 +868,9 @@ void Texture3D::setData(const torch::Tensor& data)
     TORCH_CHECK_EQ(data.size(0), _spec.depth);
     TORCH_CHECK_EQ(data.size(1), _spec.height);
     TORCH_CHECK_EQ(data.size(2), _spec.width);
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     TORCH_CHECK_EQ(data.size(3), num_channels);
-    TORCH_CHECK_EQ(data.numel() * data.element_size(),
-                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.numel() * data.element_size(), _spec.depth * _spec.width * _spec.height * _spec.pixelSize());
 
     torch::Tensor pixel_data = data;
     bool cuda_copy_possible  = num_channels == 1 || num_channels == 4;
@@ -1083,9 +924,7 @@ void Texture3D::setData(const torch::Tensor& data)
 
 void Texture3D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 {
-    TORCH_CHECK_EQ(data->size(),
-                   _spec.width * _spec.height * _spec.depth * detail::toChannelSize(_spec.format) *
-                       detail::num_channels(_spec.format));
+    TORCH_CHECK_EQ(data->size(), _spec.width * _spec.height * _spec.depth * _spec.channelSize() * _spec.numChannels());
 
     data->use();
     use(0);
@@ -1110,9 +949,9 @@ void Texture3D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 
 torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip_level) const
 {
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     bool hdr         = isHDR();
-    int channel_size = detail::toChannelSize(_spec.format);
+    int channel_size = _spec.channelSize();
 
     torch::Tensor result;
     int depth  = glm::floor(_spec.depth / (1 << mip_level));
@@ -1317,11 +1156,11 @@ void TextureCube::use(const uint32_t& slot) const
 
 void TextureCube::setData(const torch::Tensor& data)
 {
-    TORCH_CHECK_EQ(data.numel() * data.element_size(), 6 * _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.numel() * data.element_size(), 6 * _spec.width * _spec.height * _spec.pixelSize());
     TORCH_CHECK_EQ(data.size(0), 6);
     TORCH_CHECK_EQ(data.size(1), _spec.height);
     TORCH_CHECK_EQ(data.size(2), _spec.width);
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     TORCH_CHECK_EQ(data.size(3), num_channels);
     TORCH_CHECK_EQ(_spec.width, _spec.height);
 
@@ -1346,8 +1185,7 @@ void TextureCube::setData(const torch::Tensor& data)
 
 void TextureCube::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 {
-    size_t faceSize =
-        _spec.width * _spec.height * detail::toChannelSize(_spec.format) * detail::num_channels(_spec.format);
+    size_t faceSize = _spec.width * _spec.height * _spec.channelSize() * _spec.numChannels();
 
     TORCH_CHECK_EQ(data->size(), faceSize * 6);
 
@@ -1375,9 +1213,9 @@ void TextureCube::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 
 torch::Tensor TextureCube::getData(const torch::Device& device, const uint32_t mip_level) const
 {
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     bool hdr         = isHDR();
-    int channel_size = detail::toChannelSize(_spec.format);
+    int channel_size = _spec.channelSize();
 
     auto options = hdr ? atcg::TensorOptions::floatHostOptions()
                        : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32HostOptions()
@@ -1558,10 +1396,9 @@ void TextureArray::setData(const torch::Tensor& data)
     TORCH_CHECK_EQ(data.size(0), _spec.depth);
     TORCH_CHECK_EQ(data.size(1), _spec.height);
     TORCH_CHECK_EQ(data.size(2), _spec.width);
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     TORCH_CHECK_EQ(data.size(3), num_channels);
-    TORCH_CHECK_EQ(data.numel() * data.element_size(),
-                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
+    TORCH_CHECK_EQ(data.numel() * data.element_size(), _spec.depth * _spec.width * _spec.height * _spec.pixelSize());
 
     torch::Tensor pixel_data = data;
     bool cuda_copy_possible  = num_channels == 1 || num_channels == 4;
@@ -1612,9 +1449,7 @@ void TextureArray::setData(const torch::Tensor& data)
 
 void TextureArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 {
-    TORCH_CHECK_EQ(data->size(),
-                   _spec.width * _spec.height * _spec.depth * detail::toChannelSize(_spec.format) *
-                       detail::num_channels(_spec.format));
+    TORCH_CHECK_EQ(data->size(), _spec.width * _spec.height * _spec.depth * _spec.channelSize() * _spec.numChannels());
 
     data->use();
     use(0);
@@ -1639,9 +1474,9 @@ void TextureArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 
 torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t mip_level) const
 {
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     bool hdr         = isHDR();
-    int channel_size = detail::toChannelSize(_spec.format);
+    int channel_size = _spec.channelSize();
 
     torch::Tensor result;
     int depth  = glm::floor(_spec.depth / (1 << mip_level));
@@ -1840,11 +1675,11 @@ void TextureCubeArray::use(const uint32_t& slot) const
 void TextureCubeArray::setData(const torch::Tensor& data)
 {
     TORCH_CHECK_EQ(data.numel() * data.element_size() / 6,
-                   _spec.depth * _spec.width * _spec.height * detail::toSize(_spec.format));
+                   _spec.depth * _spec.width * _spec.height * _spec.pixelSize());
     TORCH_CHECK_EQ(data.size(1), 6);
     TORCH_CHECK_EQ(data.size(2), _spec.height);
     TORCH_CHECK_EQ(data.size(3), _spec.width);
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     TORCH_CHECK_EQ(data.size(4), num_channels);
     TORCH_CHECK_EQ(_spec.width, _spec.height);
 
@@ -1875,8 +1710,7 @@ void TextureCubeArray::setData(const torch::Tensor& data)
 void TextureCubeArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 {
     TORCH_CHECK_EQ(data->size(),
-                   _spec.width * _spec.height * _spec.depth * 6 * detail::toChannelSize(_spec.format) *
-                       detail::num_channels(_spec.format));
+                   _spec.width * _spec.height * _spec.depth * 6 * _spec.channelSize() * _spec.numChannels());
 
     data->use();
     use(0);
@@ -1897,9 +1731,9 @@ void TextureCubeArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
 
 torch::Tensor TextureCubeArray::getData(const torch::Device& device, const uint32_t mip_level) const
 {
-    int num_channels = detail::num_channels(_spec.format);
+    int num_channels = _spec.numChannels();
     bool hdr         = isHDR();
-    int channel_size = detail::toChannelSize(_spec.format);
+    int channel_size = _spec.channelSize();
 
     auto options = hdr ? atcg::TensorOptions::floatHostOptions()
                        : (_spec.format == atcg::TextureFormat::RINT ? atcg::TensorOptions::int32HostOptions()

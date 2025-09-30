@@ -139,7 +139,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_texture_format        = py::enum_<atcg::TextureFormat>(m, "TextureFormat");                                          \
     auto m_texture_wrap_mode     = py::enum_<atcg::TextureWrapMode>(m, "TextureWrapMode");                                      \
     auto m_texture_filter_mode   = py::enum_<atcg::TextureFilterMode>(m, "TextureFilterMode");                                  \
-    auto m_texture_sampler       = py::class_<atcg::TextureSampler>(m, "TextureSampler");                                       \
+    auto m_texture_sampler       = py::class_<atcg::TextureSamplerSpecification>(m, "TextureSampler");                          \
     auto m_texture_specification = py::class_<atcg::TextureSpecification>(m, "TextureSpecification");                           \
     auto m_image          = py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image", py::buffer_protocol());             \
     auto m_texture2d      = py::class_<atcg::Texture2D, atcg::Asset, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D");           \
@@ -987,22 +987,22 @@ inline void defineBindings(py::module_& m)
         .def(py::init<>(
                  [](atcg::TextureFilterMode filter_mode, atcg::TextureWrapMode wrap_mode)
                  {
-                     atcg::TextureSampler sampler;
+                     atcg::TextureSamplerSpecification sampler;
                      sampler.filter_mode = filter_mode;
                      sampler.wrap_mode   = wrap_mode;
                      return sampler;
                  }),
              py::arg_v("filter_mode", atcg::TextureFilterMode::LINEAR, "linear"),
              py::arg_v("wrap_mode", atcg::TextureWrapMode::REPEAT, "size"))
-        .def_readwrite("wrap_mode", &atcg::TextureSampler::wrap_mode)
-        .def_readwrite("filter_mode", &atcg::TextureSampler::filter_mode);
+        .def_readwrite("wrap_mode", &atcg::TextureSamplerSpecification::wrap_mode)
+        .def_readwrite("filter_mode", &atcg::TextureSamplerSpecification::filter_mode);
 
     m_texture_specification.def(py::init<>())
         .def(py::init<>(
                  [](uint32_t width,
                     uint32_t height,
                     uint32_t depth,
-                    atcg::TextureSampler sampler,
+                    atcg::TextureSamplerSpecification sampler,
                     atcg::TextureFormat format)
                  {
                      atcg::TextureSpecification spec;
