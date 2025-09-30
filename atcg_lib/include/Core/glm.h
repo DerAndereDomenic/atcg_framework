@@ -19,6 +19,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/ext/scalar_constants.hpp>
 
+#include <type_traits>
+
 //
 #ifndef __CUDACC__
 
@@ -112,6 +114,368 @@ ATCG_INLINE std::ostream& operator<<(std::ostream& os, const glm::mat<N, M, T>& 
 
     #include <Core/Platform.h>
     #include "cuda_runtime.h"
+
+    #pragma region is_glm_vec
+
+template<typename T>
+struct is_glm_vec : std::false_type
+{
+};
+
+template<int N, typename Q, glm::qualifier P>
+struct is_glm_vec<glm::vec<N, Q, P>> : std::true_type
+{
+};
+
+    #pragma endregion is_glm_vec
+
+    #pragma region vec_traits
+
+template<typename T>
+struct vec_traits
+{
+    static_assert(true, "Not a vector type");
+};
+
+template<int N, typename Q, glm::qualifier P>
+struct vec_traits<glm::vec<N, Q, P>>
+{
+    using vector_type        = glm::vec<N, Q, P>;
+    using scalar_type        = Q;
+    static constexpr int dim = N;
+};
+
+// ---- char ----
+template<>
+struct vec_traits<char1>
+{
+    using vector_type        = char1;
+    using scalar_type        = signed char;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<char2>
+{
+    using vector_type        = char2;
+    using scalar_type        = signed char;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<char3>
+{
+    using vector_type        = char3;
+    using scalar_type        = signed char;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<char4>
+{
+    using vector_type        = char4;
+    using scalar_type        = signed char;
+    static constexpr int dim = 4;
+};
+
+// ---- unsigned char ----
+template<>
+struct vec_traits<uchar1>
+{
+    using vector_type        = uchar1;
+    using scalar_type        = unsigned char;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<uchar2>
+{
+    using vector_type        = uchar2;
+    using scalar_type        = unsigned char;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<uchar3>
+{
+    using vector_type        = uchar3;
+    using scalar_type        = unsigned char;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<uchar4>
+{
+    using vector_type        = uchar4;
+    using scalar_type        = unsigned char;
+    static constexpr int dim = 4;
+};
+
+// ---- short ----
+template<>
+struct vec_traits<short1>
+{
+    using vector_type        = short1;
+    using scalar_type        = short;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<short2>
+{
+    using vector_type        = short2;
+    using scalar_type        = short;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<short3>
+{
+    using vector_type        = short3;
+    using scalar_type        = short;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<short4>
+{
+    using vector_type        = short4;
+    using scalar_type        = short;
+    static constexpr int dim = 4;
+};
+
+// ---- unsigned short ----
+template<>
+struct vec_traits<ushort1>
+{
+    using vector_type        = ushort1;
+    using scalar_type        = unsigned short;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<ushort2>
+{
+    using vector_type        = ushort2;
+    using scalar_type        = unsigned short;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<ushort3>
+{
+    using vector_type        = ushort3;
+    using scalar_type        = unsigned short;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<ushort4>
+{
+    using vector_type        = ushort4;
+    using scalar_type        = unsigned short;
+    static constexpr int dim = 4;
+};
+
+// ---- int ----
+template<>
+struct vec_traits<int1>
+{
+    using vector_type        = int1;
+    using scalar_type        = int;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<int2>
+{
+    using vector_type        = int2;
+    using scalar_type        = int;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<int3>
+{
+    using vector_type        = int3;
+    using scalar_type        = int;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<int4>
+{
+    using vector_type        = int4;
+    using scalar_type        = int;
+    static constexpr int dim = 4;
+};
+
+// ---- unsigned int ----
+template<>
+struct vec_traits<uint1>
+{
+    using vector_type        = uint1;
+    using scalar_type        = unsigned int;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<uint2>
+{
+    using vector_type        = uint2;
+    using scalar_type        = unsigned int;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<uint3>
+{
+    using vector_type        = uint3;
+    using scalar_type        = unsigned int;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<uint4>
+{
+    using vector_type        = uint4;
+    using scalar_type        = unsigned int;
+    static constexpr int dim = 4;
+};
+
+// ---- long long ----
+template<>
+struct vec_traits<longlong1>
+{
+    using vector_type        = longlong1;
+    using scalar_type        = long long;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<longlong2>
+{
+    using vector_type        = longlong2;
+    using scalar_type        = long long;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<longlong3>
+{
+    using vector_type        = longlong3;
+    using scalar_type        = long long;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<longlong4>
+{
+    using vector_type        = longlong4;
+    using scalar_type        = long long;
+    static constexpr int dim = 4;
+};
+
+// ---- unsigned long long ----
+template<>
+struct vec_traits<ulonglong1>
+{
+    using vector_type        = ulonglong1;
+    using scalar_type        = unsigned long long;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<ulonglong2>
+{
+    using vector_type        = ulonglong2;
+    using scalar_type        = unsigned long long;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<ulonglong3>
+{
+    using vector_type        = ulonglong3;
+    using scalar_type        = unsigned long long;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<ulonglong4>
+{
+    using vector_type        = ulonglong4;
+    using scalar_type        = unsigned long long;
+    static constexpr int dim = 4;
+};
+
+// ---- float ----
+template<>
+struct vec_traits<float1>
+{
+    using vector_type        = float1;
+    using scalar_type        = float;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<float2>
+{
+    using vector_type        = float2;
+    using scalar_type        = float;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<float3>
+{
+    using vector_type        = float3;
+    using scalar_type        = float;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<float4>
+{
+    using vector_type        = float4;
+    using scalar_type        = float;
+    static constexpr int dim = 4;
+};
+
+// ---- double ----
+template<>
+struct vec_traits<double1>
+{
+    using vector_type        = double1;
+    using scalar_type        = double;
+    static constexpr int dim = 1;
+};
+
+template<>
+struct vec_traits<double2>
+{
+    using vector_type        = double2;
+    using scalar_type        = double;
+    static constexpr int dim = 2;
+};
+
+template<>
+struct vec_traits<double3>
+{
+    using vector_type        = double3;
+    using scalar_type        = double;
+    static constexpr int dim = 3;
+};
+
+template<>
+struct vec_traits<double4>
+{
+    using vector_type        = double4;
+    using scalar_type        = double;
+    static constexpr int dim = 4;
+};
+    #pragma endregion vec_traits
+
 /**
  * @author Tom Kneiphof
  */
@@ -705,264 +1069,6 @@ __host__ __device__ ATCG_INLINE typename cuda_type<N, T>::vector_type glm2cuda(c
 
     #pragma endregion glm2cuda
 
-    #pragma region inv_cuda_type
-
-template<typename VecType>
-struct inv_cuda_type
-{
-    static_assert(sizeof(VecType) == 0, "Not a cuda type!");
-};
-
-template<>
-struct inv_cuda_type<char1>
-{
-    static constexpr int dim = 1;
-    typedef glm::i8 scalar_type;
-};
-template<>
-struct inv_cuda_type<char2>
-{
-    static constexpr int dim = 2;
-    typedef glm::i8 scalar_type;
-};
-template<>
-struct inv_cuda_type<char3>
-{
-    static constexpr int dim = 3;
-    typedef glm::i8 scalar_type;
-};
-template<>
-struct inv_cuda_type<char4>
-{
-    static constexpr int dim = 4;
-    typedef glm::i8 scalar_type;
-};
-template<>
-struct inv_cuda_type<uchar1>
-{
-    static constexpr int dim = 1;
-    typedef glm::u8 scalar_type;
-};
-template<>
-struct inv_cuda_type<uchar2>
-{
-    static constexpr int dim = 2;
-    typedef glm::u8 scalar_type;
-};
-template<>
-struct inv_cuda_type<uchar3>
-{
-    static constexpr int dim = 3;
-    typedef glm::u8 scalar_type;
-};
-template<>
-struct inv_cuda_type<uchar4>
-{
-    static constexpr int dim = 4;
-    typedef glm::u8 scalar_type;
-};
-template<>
-struct inv_cuda_type<short1>
-{
-    static constexpr int dim = 1;
-    typedef glm::i16 scalar_type;
-};
-template<>
-struct inv_cuda_type<short2>
-{
-    static constexpr int dim = 2;
-    typedef glm::i16 scalar_type;
-};
-template<>
-struct inv_cuda_type<short3>
-{
-    static constexpr int dim = 3;
-    typedef glm::i16 scalar_type;
-};
-template<>
-struct inv_cuda_type<short4>
-{
-    static constexpr int dim = 4;
-    typedef glm::i16 scalar_type;
-};
-template<>
-struct inv_cuda_type<ushort1>
-{
-    static constexpr int dim = 1;
-    typedef glm::u16 scalar_type;
-};
-template<>
-struct inv_cuda_type<ushort2>
-{
-    static constexpr int dim = 2;
-    typedef glm::u16 scalar_type;
-};
-template<>
-struct inv_cuda_type<ushort3>
-{
-    static constexpr int dim = 3;
-    typedef glm::u16 scalar_type;
-};
-template<>
-struct inv_cuda_type<ushort4>
-{
-    static constexpr int dim = 4;
-    typedef glm::u16 scalar_type;
-};
-template<>
-struct inv_cuda_type<int1>
-{
-    static constexpr int dim = 1;
-    typedef glm::i32 scalar_type;
-};
-template<>
-struct inv_cuda_type<int2>
-{
-    static constexpr int dim = 2;
-    typedef glm::i32 scalar_type;
-};
-template<>
-struct inv_cuda_type<int3>
-{
-    static constexpr int dim = 3;
-    typedef glm::i32 scalar_type;
-};
-template<>
-struct inv_cuda_type<int4>
-{
-    static constexpr int dim = 4;
-    typedef glm::i32 scalar_type;
-};
-template<>
-struct inv_cuda_type<uint1>
-{
-    static constexpr int dim = 1;
-    typedef glm::u32 scalar_type;
-};
-template<>
-struct inv_cuda_type<uint2>
-{
-    static constexpr int dim = 2;
-    typedef glm::u32 scalar_type;
-};
-template<>
-struct inv_cuda_type<uint3>
-{
-    static constexpr int dim = 3;
-    typedef glm::u32 scalar_type;
-};
-template<>
-struct inv_cuda_type<uint4>
-{
-    static constexpr int dim = 4;
-    typedef glm::u32 scalar_type;
-};
-template<>
-struct inv_cuda_type<longlong1>
-{
-    static constexpr int dim = 1;
-    typedef glm::i64 scalar_type;
-};
-template<>
-struct inv_cuda_type<longlong2>
-{
-    static constexpr int dim = 2;
-    typedef glm::i64 scalar_type;
-};
-template<>
-struct inv_cuda_type<longlong3>
-{
-    static constexpr int dim = 3;
-    typedef glm::i64 scalar_type;
-};
-template<>
-struct inv_cuda_type<longlong4>
-{
-    static constexpr int dim = 4;
-    typedef glm::i64 scalar_type;
-};
-template<>
-struct inv_cuda_type<ulonglong1>
-{
-    static constexpr int dim = 1;
-    typedef glm::u64 scalar_type;
-};
-template<>
-struct inv_cuda_type<ulonglong2>
-{
-    static constexpr int dim = 2;
-    typedef glm::u64 scalar_type;
-};
-template<>
-struct inv_cuda_type<ulonglong3>
-{
-    static constexpr int dim = 3;
-    typedef glm::u64 scalar_type;
-};
-template<>
-struct inv_cuda_type<ulonglong4>
-{
-    static constexpr int dim = 4;
-    typedef glm::u64 scalar_type;
-};
-template<>
-struct inv_cuda_type<float1>
-{
-    static constexpr int dim = 1;
-    typedef glm::f32 scalar_type;
-};
-template<>
-struct inv_cuda_type<float2>
-{
-    static constexpr int dim = 2;
-    typedef glm::f32 scalar_type;
-};
-template<>
-struct inv_cuda_type<float3>
-{
-    static constexpr int dim = 3;
-    typedef glm::f32 scalar_type;
-};
-template<>
-struct inv_cuda_type<float4>
-{
-    static constexpr int dim = 4;
-    typedef glm::f32 scalar_type;
-};
-template<>
-struct inv_cuda_type<double1>
-{
-    static constexpr int dim = 1;
-    typedef glm::f64 scalar_type;
-};
-template<>
-struct inv_cuda_type<double2>
-{
-    static constexpr int dim = 2;
-    typedef glm::f64 scalar_type;
-};
-template<>
-struct inv_cuda_type<double3>
-{
-    static constexpr int dim = 3;
-    typedef glm::f64 scalar_type;
-};
-template<>
-struct inv_cuda_type<double4>
-{
-    static constexpr int dim = 4;
-    typedef glm::f64 scalar_type;
-};
-
-template<>
-struct inv_cuda_type<dim3>
-{
-    static constexpr int dim = 3;
-    typedef glm::u32 scalar_type;
-};
-
-    #pragma endregion inv_cuda_type
-
     #pragma region cuda2glm
 
 template<int N, typename T, glm::qualifier Q>
@@ -1012,13 +1118,13 @@ struct cuda2glm_detail<4, T, Q>
 };
 
 template<typename CudaVectorType, glm::qualifier Q = glm::defaultp>
-__host__ __device__ ATCG_INLINE typename cuda2glm_detail<inv_cuda_type<CudaVectorType>::dim,
-                                                         typename inv_cuda_type<CudaVectorType>::scalar_type,
+__host__ __device__ ATCG_INLINE typename cuda2glm_detail<vec_traits<CudaVectorType>::dim,
+                                                         typename vec_traits<CudaVectorType>::scalar_type,
                                                          Q>::result_type
 cuda2glm(const CudaVectorType& v)
 {
-    return cuda2glm_detail<inv_cuda_type<CudaVectorType>::dim, typename inv_cuda_type<CudaVectorType>::scalar_type, Q>::
-        apply(v);
+    return cuda2glm_detail<vec_traits<CudaVectorType>::dim, typename vec_traits<CudaVectorType>::scalar_type, Q>::apply(
+        v);
 };
 
 #endif
