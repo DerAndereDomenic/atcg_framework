@@ -11,42 +11,25 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
 {
     atcg::ref_ptr<Material> material = dict.getValue<atcg::ref_ptr<Material>>("material");
 
-    _diffuse_texture   = std::dynamic_pointer_cast<Texture2D>(material->getDiffuseTexture()->clone());
-    _metallic_texture  = std::dynamic_pointer_cast<Texture2D>(material->getMetallicTexture()->clone());
-    _roughness_texture = std::dynamic_pointer_cast<Texture2D>(material->getRoughnessTexture()->clone());
-
-    // Cheap way to create a tensor that exactly matches the texture format
-    _grad_diffuse =
-        torch::zeros({_diffuse_texture->height(), _diffuse_texture->width(), 3}, TensorOptions::floatDeviceOptions());
-    _grad_metallic =
-        torch::zeros({_metallic_texture->height(), _metallic_texture->width()}, TensorOptions::floatDeviceOptions());
-    _grad_roughness =
-        torch::zeros({_roughness_texture->height(), _roughness_texture->width()}, TensorOptions::floatDeviceOptions());
+    _diffuse_texture   = material->getDiffuseTexture()->getData(atcg::GPU);
+    _metallic_texture  = material->getMetallicTexture()->getData(atcg::GPU);
+    _roughness_texture = material->getRoughnessTexture()->getData(atcg::GPU);
 
     PBRBSDFData data;
 
-    data.diffuse_texture.texture_data.texture   = _diffuse_texture->getTextureObject();
-    data.diffuse_texture.spec                   = _diffuse_texture->getSpecification();
-    data.metallic_texture.texture_data.texture  = _metallic_texture->getTextureObject();
-    data.metallic_texture.spec                  = _metallic_texture->getSpecification();
-    data.roughness_texture.texture_data.texture = _roughness_texture->getTextureObject();
-    data.roughness_texture.spec                 = _roughness_texture->getSpecification();
-
-    data.grad_diffuse   = (glm::vec3*)_grad_diffuse.data_ptr();
-    data.grad_roughness = (float*)_grad_roughness.data_ptr();
-    data.grad_metallic  = (float*)_grad_metallic.data_ptr();
+    data.diffuse_texture =
+        TextureSampler<glm::vec3>(_diffuse_texture.data_ptr(), material->getDiffuseTexture()->getSpecification());
+    data.metallic_texture =
+        TextureSampler<float>(_metallic_texture.data_ptr(), material->getMetallicTexture()->getSpecification());
+    data.roughness_texture =
+        TextureSampler<float>(_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
 
     _flags = BSDFComponentType::GlossyReflection | BSDFComponentType::DiffuseReflection;
 
     _bsdf_data_buffer.upload(&data);
 }
 
-PBRBSDF::~PBRBSDF()
-{
-    _diffuse_texture->unmapDevicePointers();
-    _metallic_texture->unmapDevicePointers();
-    _roughness_texture->unmapDevicePointers();
-}
+PBRBSDF::~PBRBSDF() {}
 
 void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                  const atcg::ref_ptr<ShaderBindingTable>& sbt)
@@ -68,36 +51,45 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
     _vptr_table.upload(&table);
 }
 
-void PBRBSDF::zero_grad()
+std::vector<torch::Tensor> PBRBSDF::getParameters() const
 {
-    _grad_diffuse.zero_();
-    _grad_metallic.zero_();
-    _grad_roughness.zero_();
+    return {_diffuse_texture};    //, _metallic_texture, _roughness_texture};
 }
 
-void PBRBSDF::update(float lr)
+void PBRBSDF::markOptimizable()
 {
-    auto data           = _diffuse_texture->getData(atcg::GPU);
-    auto orig_type      = data.scalar_type();
-    bool transform_back = false;
-    if(!data.is_floating_point())
-    {
-        data           = data.to(torch::kFloat32) / 255.0f;
-        transform_back = true;
-    }
+    atcg::TextureSpecification spec_diffuse;
+    spec_diffuse.width  = 512;
+    spec_diffuse.height = 512;
+    spec_diffuse.format = TextureFormat::RGBAFLOAT;
 
-    std::cout << _grad_diffuse << "\n";
+    atcg::TextureSpecification spec_float;
+    spec_float.width  = 1;
+    spec_float.height = 1;
+    spec_float.format = TextureFormat::RFLOAT;
 
-    // data.index_put_({torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice(0, 3)},
-    //                 data.index({torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice(0, 3)}) -
-    //                     lr * _grad_diffuse);
+    _diffuse_texture   = torch::zeros({spec_diffuse.height, spec_diffuse.width, 3},
+                                    TensorOptions::floatDeviceOptions().requires_grad(true));
+    _metallic_texture  = torch::zeros({spec_float.height, spec_float.height, 1},
+                                     TensorOptions::floatDeviceOptions().requires_grad(true));
+    _roughness_texture = torch::ones({spec_float.height, spec_float.height, 1},
+                                     TensorOptions::floatDeviceOptions().requires_grad(true));    // TODO
 
-    if(transform_back)
-    {
-        data = (data * 255.0f).to(orig_type);
-    }
+    _diffuse_texture.mutable_grad()   = torch::zeros_like(_diffuse_texture);
+    _metallic_texture.mutable_grad()  = torch::zeros_like(_metallic_texture);
+    _roughness_texture.mutable_grad() = torch::zeros_like(_roughness_texture);
 
-    _diffuse_texture->setData(data);
+    PBRBSDFData data;
+
+    data.diffuse_texture   = TextureSampler<glm::vec3>(_diffuse_texture.data_ptr(), spec_diffuse);
+    data.metallic_texture  = TextureSampler<float>(_metallic_texture.data_ptr(), spec_float);
+    data.roughness_texture = TextureSampler<float>(_roughness_texture.data_ptr(), spec_float);
+
+    data.diffuse_grad   = TextureSampler<glm::vec3>(_diffuse_texture.grad().data_ptr(), spec_diffuse);
+    data.metallic_grad  = TextureSampler<float>(_metallic_texture.grad().data_ptr(), spec_float);
+    data.roughness_grad = TextureSampler<float>(_roughness_texture.grad().data_ptr(), spec_float);
+
+    _bsdf_data_buffer.upload(&data);
 }
 
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);

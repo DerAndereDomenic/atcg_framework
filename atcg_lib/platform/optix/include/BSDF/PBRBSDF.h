@@ -37,18 +37,14 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
-    virtual void zero_grad() override;
+    virtual std::vector<torch::Tensor> getParameters() const override;
 
-    virtual void update(float lr) override;
+    virtual void markOptimizable() override;
 
 private:
-    atcg::ref_ptr<Texture2D> _diffuse_texture;
-    atcg::ref_ptr<Texture2D> _metallic_texture;
-    atcg::ref_ptr<Texture2D> _roughness_texture;
-
-    torch::Tensor _grad_diffuse;
-    torch::Tensor _grad_metallic;
-    torch::Tensor _grad_roughness;
+    torch::Tensor _diffuse_texture;
+    torch::Tensor _metallic_texture;
+    torch::Tensor _roughness_texture;
 
     atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
 };

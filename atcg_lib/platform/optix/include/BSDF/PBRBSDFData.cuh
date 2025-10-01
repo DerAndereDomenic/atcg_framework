@@ -1,17 +1,17 @@
 #pragma once
 
-#include <DataStructure/CUDATexture.h>
+#include <DataStructure/TextureSampler.h>
 
 namespace atcg
 {
 struct PBRBSDFData
 {
-    CUDATexture<glm::vec3> diffuse_texture;
-    CUDATexture<float> metallic_texture;
-    CUDATexture<float> roughness_texture;
+    TextureSampler<glm::vec3> diffuse_texture;
+    TextureSampler<float> metallic_texture;
+    TextureSampler<float> roughness_texture;
 
-    glm::vec3* grad_diffuse;
-    float* grad_metallic;
-    float* grad_roughness;
+    TextureSampler<glm::vec3> diffuse_grad;
+    TextureSampler<float> metallic_grad;
+    TextureSampler<float> roughness_grad;
 };
 }    // namespace atcg
