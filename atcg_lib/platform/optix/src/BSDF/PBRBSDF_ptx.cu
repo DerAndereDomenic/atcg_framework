@@ -217,15 +217,41 @@ extern "C" __device__ void __direct_callable__grad_pbrbsdf(const atcg::SurfaceIn
 
     glm::vec3 grad = glm::one_over_pi<float>() * out_grad;
 
-    // TODO: Interpolation
-    uint32_t x = (uint32_t)(si.uv.x * sbt_data->diffuse_texture.getSpecification().width);
-    uint32_t y = (uint32_t)(si.uv.y * sbt_data->diffuse_texture.getSpecification().height);
+    glm::vec2 uv = sbt_data->diffuse_grad.clamp_uv(si.uv);
+    float fx     = uv.x * (sbt_data->diffuse_grad.getSpecification().width - 1);
+    float fy     = uv.y * (sbt_data->diffuse_grad.getSpecification().height - 1);
 
-    x = glm::clamp(x, 0u, sbt_data->diffuse_texture.getSpecification().width - 1u);
-    y = glm::clamp(y, 0u, sbt_data->diffuse_texture.getSpecification().height - 1u);
+    int x0 = static_cast<int>(glm::floor(fx));
+    int y0 = static_cast<int>(glm::floor(fy));
+    int x1 = glm::min(x0 + 1, (int)sbt_data->diffuse_grad.getSpecification().width - 1);    // TODO: wrap
+    int y1 = glm::min(y0 + 1, (int)sbt_data->diffuse_grad.getSpecification().height - 1);
 
-    float* adr = (float*)sbt_data->diffuse_grad.getTexelPtr(glm::ivec2(x, y));
-    atomicAdd(adr + 0, grad.x);
-    atomicAdd(adr + 1, grad.y);
-    atomicAdd(adr + 2, grad.z);
+    float tx = fx - x0;
+    float ty = fy - y0;
+
+    glm::vec3 grad_c00 = grad * (1.0f - ty) * (1.0f - tx);
+    glm::vec3 grad_c10 = grad * (1.0f - ty) * (tx);
+    glm::vec3 grad_c01 = grad * (ty) * (1.0f - tx);
+    glm::vec3 grad_c11 = grad * (ty) * (tx);
+
+    float* c00_p = (float*)sbt_data->diffuse_grad.getTexelPtr(glm::ivec2(x0, y0));
+    float* c10_p = (float*)sbt_data->diffuse_grad.getTexelPtr(glm::ivec2(x1, y0));
+    float* c01_p = (float*)sbt_data->diffuse_grad.getTexelPtr(glm::ivec2(x0, y1));
+    float* c11_p = (float*)sbt_data->diffuse_grad.getTexelPtr(glm::ivec2(x1, y1));
+
+    atomicAdd(c00_p + 0, grad_c00.x);
+    atomicAdd(c00_p + 1, grad_c00.y);
+    atomicAdd(c00_p + 2, grad_c00.z);
+
+    atomicAdd(c10_p + 0, grad_c10.x);
+    atomicAdd(c10_p + 1, grad_c10.y);
+    atomicAdd(c10_p + 2, grad_c10.z);
+
+    atomicAdd(c01_p + 0, grad_c01.x);
+    atomicAdd(c01_p + 1, grad_c01.y);
+    atomicAdd(c01_p + 2, grad_c01.z);
+
+    atomicAdd(c11_p + 0, grad_c11.x);
+    atomicAdd(c11_p + 1, grad_c11.y);
+    atomicAdd(c11_p + 2, grad_c11.z);
 }
