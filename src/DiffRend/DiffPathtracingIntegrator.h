@@ -56,11 +56,7 @@ public:
 
     torch::Tensor getHDR() const;
 
-    void toggleOptimization()
-    {
-        _optimize = !_optimize;
-        reset();
-    }
+    void toggleOptimization();
 
 private:
     void forwardPass(Dictionary& in_out_dictionary);

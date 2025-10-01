@@ -68,6 +68,20 @@ torch::Tensor DiffPathtracingIntegrator::getHDR() const
     return _accumulation_buffer.clone();
 }
 
+void DiffPathtracingIntegrator::toggleOptimization()
+{
+    _optimize = !_optimize;
+    reset();
+
+    if(_optimize)
+    {
+        for(auto obj: _differentiable_components)
+        {
+            obj->markOptimizable();
+        }
+    }
+}
+
 void DiffPathtracingIntegrator::forwardPass(Dictionary& in_out_dictionary)
 {
     auto camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
@@ -238,7 +252,11 @@ void DiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 
         for(auto diff: _differentiable_components)
         {
-            diff->zero_grad();
+            auto& parameters = diff->getParameters();
+            for(auto p: parameters)
+            {
+                p.mutable_grad().zero_();
+            }
         }
 
         for(int i = 0; i < num_samples; ++i)
@@ -246,12 +264,24 @@ void DiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
             backwardPass(in_out_dictionary);
         }
 
-        // TODO: Update
+        // // TODO: Update
 
-        float lr = 0.1f;
-        for(auto diff: _differentiable_components)
         {
-            diff->update(lr);
+            torch::NoGradGuard no_grad;
+
+            float lr = 0.002f;
+            for(auto diff: _differentiable_components)
+            {
+                auto& parameters = diff->getParameters();
+                for(auto p: parameters)
+                {
+                    // std::cout << p << "\n";
+                    // std::cout << p.grad() << "\n";
+                    // std::cout << lr * p.grad() / (float)num_samples << "\n";
+                    p.sub_(lr * p.grad() / (float)num_samples);
+                    p.clamp_(0.0f, 1.0f);
+                }
+            }
         }
 
         // torch::Tensor _grad = torch::mean(_adjoint_x, at::IntArrayRef {0, 1}).cpu();    // Just reduce mean?

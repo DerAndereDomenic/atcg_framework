@@ -3,6 +3,7 @@
 #include <Core/Platform.h>
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
+#include <DataStructure/TorchUtils.h>
 
 namespace atcg
 {
@@ -42,8 +43,8 @@ private:
 class Differentiable
 {
 public:
-    virtual void zero_grad() = 0;
+    virtual std::vector<torch::Tensor> getParameters() const = 0;
 
-    virtual void update(float lr) = 0;
+    virtual void markOptimizable() = 0;
 };
 }    // namespace atcg
