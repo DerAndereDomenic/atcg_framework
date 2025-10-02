@@ -12,7 +12,7 @@ namespace atcg
 /**
  * @brief A simple path tracer
  */
-class DiffPathtracingIntegrator : public Integrator
+class DiffPathtracingIntegrator : public Integrator, public Differentiable
 {
 public:
     /**
@@ -56,11 +56,17 @@ public:
 
     torch::Tensor getHDR() const;
 
-    void toggleOptimization();
+    void forwardPass(Dictionary& in_out_dictionary);
+
+    void backwardPass(const torch::Tensor& adjoint_y);
+
+    virtual std::vector<torch::Tensor> getParameters() const override;
+
+    virtual void markOptimizable() override;
 
 private:
-    void forwardPass(Dictionary& in_out_dictionary);
-    void backwardPass(Dictionary& in_out_dictionary);
+    void _forwardTrace(Dictionary& in_out_dictionary);
+    void _backwardTrace(Dictionary& in_out_dictionary);
 
 private:
     uint32_t _raygen_index_forward;
@@ -73,10 +79,15 @@ private:
     uint32_t _frame_counter = 0;
 
     torch::Tensor _accumulation_buffer;
-    torch::Tensor _adjoint_x;
-    torch::Tensor _adjoint_y;
-    bool _optimize = false;
 
     std::vector<Differentiable*> _differentiable_components;
+
+    Dictionary _state;
 };
+
+struct DiffPathtracingFunction
+{
+    static torch::Tensor apply(const atcg::ref_ptr<DiffPathtracingIntegrator>& integrator, Dictionary& dict);
+};
+
 }    // namespace atcg

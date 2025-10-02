@@ -12,6 +12,7 @@
 #include <portable-file-dialogs.h>
 
 #include <Core/Common.h>
+#include <torch/optim.h>
 
 #include "DiffPathtracingIntegrator.h"
 
@@ -100,9 +101,6 @@ public:
 
         atcg::Renderer::clear();
 
-
-        atcg::Renderer::clear();
-
         if(enable_pathtracing)
         {
 #ifdef ATCG_ENABLE_OPTIX
@@ -110,9 +108,35 @@ public:
             dict.setValue("camera", camera_controller->getCamera());
             dict.setValue("output_img", output_img_tensor);
             dict.setValue("entity_ids", output_entities);
+            dict.setValue("target", target);
+            dict.setValue("num_samples", 512);
             integrator->generateRays(dict);
             output_texture->setData(output_img_tensor);
             output_entity_texture->setData(output_entities);
+
+
+            if(optimize)
+            {
+                optimizer->zero_grad(false);
+                auto result = atcg::DiffPathtracingFunction::apply(integrator, dict);
+
+                auto L = torch::sum((result - target) * (result - target));
+
+                L.backward();
+                optimizer->step();
+
+                {
+                    torch::NoGradGuard no_grad;
+
+                    auto& parameters = integrator->getParameters();
+                    for(auto p: parameters)
+                    {
+                        p.clamp_(0.0f, 1.0f);
+                    }
+
+                    // optimized_texture->setData(p);
+                }
+            }
 
             atcg::Renderer::drawImage(output_texture, output_entity_texture);
 #endif
@@ -267,22 +291,29 @@ public:
 
         if(ImGui::Button("Register target"))
         {
-            integrator->registerTarget();
+            target = integrator->getHDR();
         }
 
         if(ImGui::Button("Toggle Optimization"))
         {
-            integrator->toggleOptimization();
+            optimize = !optimize;
+            if(optimize)
+            {
+                integrator->markOptimizable();
+                optimizer =
+                    atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions());
+
+                atcg::TextureSpecification spec_diffuse;
+                spec_diffuse.width  = 512;
+                spec_diffuse.height = 512;
+                spec_diffuse.format = atcg::TextureFormat::RGBFLOAT;
+                optimized_texture   = atcg::Texture2D::create(spec_diffuse);
+            }
         }
 
-        if(ImGui::ColorEdit3("Albedo", glm::value_ptr(current_albedo)))
+        if(optimized_texture)
         {
-            integrator->setAlbedo(current_albedo);
-            integrator->reset();
-        }
-        else
-        {
-            current_albedo = integrator->getAlbedo();
+            ImGui::Image((ImTextureID)optimized_texture->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
         }
 
         ImGui::End();
@@ -415,7 +446,10 @@ private:
     atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
     atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
     atcg::ref_ptr<atcg::DiffPathtracingIntegrator> integrator;
-    glm::vec3 current_albedo = glm::vec3(1);
+    torch::Tensor target;
+    bool optimize = false;
+    atcg::ref_ptr<torch::optim::Adam> optimizer;
+    atcg::ref_ptr<atcg::Texture2D> optimized_texture;
 #endif
 
     torch::Tensor output_img_tensor;
