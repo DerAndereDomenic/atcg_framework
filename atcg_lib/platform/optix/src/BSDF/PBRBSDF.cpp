@@ -61,7 +61,7 @@ void PBRBSDF::markOptimizable()
     atcg::TextureSpecification spec_diffuse;
     spec_diffuse.width  = 512;
     spec_diffuse.height = 512;
-    spec_diffuse.format = TextureFormat::RGBAFLOAT;
+    spec_diffuse.format = TextureFormat::RGBFLOAT;
 
     atcg::TextureSpecification spec_float;
     spec_float.width  = 1;
