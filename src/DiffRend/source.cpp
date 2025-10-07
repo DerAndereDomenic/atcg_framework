@@ -109,7 +109,7 @@ public:
             dict.setValue("output_img", output_img_tensor);
             dict.setValue("entity_ids", output_entities);
             dict.setValue("target", target);
-            dict.setValue("num_samples", 512);
+            dict.setValue("num_samples", 64u);
             integrator->generateRays(dict);
             output_texture->setData(output_img_tensor);
             output_entity_texture->setData(output_entities);
@@ -134,7 +134,8 @@ public:
                     {
                         p.clamp_(0.0f, 1.0f);
                     }
-                    difference_texture->setData(difference);
+                    difference_texture->setData(torch::abs(difference));
+                    result_texture->setData(result);
                 }
             }
 
@@ -294,6 +295,7 @@ public:
             target             = integrator->getHDR();
             target_texture     = atcg::Texture2D::create(target);
             difference_texture = atcg::Texture2D::create(torch::zeros_like(target));
+            result_texture     = atcg::Texture2D::create(torch::zeros_like(target));
         }
 
         if(ImGui::Button("Toggle Optimization"))
@@ -303,7 +305,7 @@ public:
             {
                 integrator->markOptimizable();
                 optimizer =
-                    atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions());
+                    atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions(0.005));
             }
         }
 
@@ -316,6 +318,13 @@ public:
         {
             ImGui::Begin("Target Texture");
             ImGui::Image((ImTextureID)target_texture->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+            ImGui::End();
+        }
+
+        if(result_texture)
+        {
+            ImGui::Begin("Result Texture");
+            ImGui::Image((ImTextureID)result_texture->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
             ImGui::End();
         }
 
@@ -461,6 +470,7 @@ private:
     atcg::ref_ptr<torch::optim::Adam> optimizer;
     atcg::ref_ptr<atcg::Texture2D> target_texture;
     atcg::ref_ptr<atcg::Texture2D> difference_texture;
+    atcg::ref_ptr<atcg::Texture2D> result_texture;
 #endif
 
     torch::Tensor output_img_tensor;

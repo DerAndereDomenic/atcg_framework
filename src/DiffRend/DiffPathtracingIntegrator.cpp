@@ -81,6 +81,7 @@ void DiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
        _accumulation_buffer.size(1) != width)
     {
         _accumulation_buffer = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
+        _current_sample      = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
     }
 
     DiffPathtracingParams params;
@@ -99,6 +100,7 @@ void DiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
     params.entity_ids = entity_ids.numel() > 0 ? (int32_t*)entity_ids.data_ptr() : nullptr;
 
     params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
+    params.current_sample      = (glm::vec3*)_current_sample.data_ptr();
 
     params.rng_index     = _iteration_counter + _frame_counter;
     params.frame_counter = _frame_counter++;
@@ -139,6 +141,7 @@ void DiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
     uint32_t height = in_out_dictionary.getValue<uint32_t>("height");
     auto entity_ids = in_out_dictionary.getValueOr<torch::Tensor>("entity_ids", torch::empty({0}));
     auto adjoint_y  = in_out_dictionary.getValue<torch::Tensor>("adjoint_y");
+    uint32_t step   = in_out_dictionary.getValue<uint32_t>("step");
 
     DiffPathtracingParams params;
 
@@ -155,8 +158,8 @@ void DiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 
     params.entity_ids = entity_ids.numel() > 0 ? (int32_t*)entity_ids.data_ptr() : nullptr;
 
-    params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();    // Input L
-    params.adjoint_y           = (glm::vec3*)adjoint_y.data_ptr();               // Input 𝛿L
+    params.accumulation_buffer = (glm::vec3*)_samples[step].data_ptr();    // Input L
+    params.adjoint_y           = (glm::vec3*)adjoint_y.data_ptr();         // Input 𝛿L
 
     params.rng_index     = _iteration_counter + _frame_counter;
     params.frame_counter = _frame_counter++;
@@ -211,9 +214,11 @@ void DiffPathtracingIntegrator::forwardPass(Dictionary& in_out_dictionary)
     const uint32_t num_samples = in_out_dictionary.getValueOr<uint32_t>("num_samples", 16);
 
     reset();
+    _samples.clear();
     for(int i = 0; i < num_samples; ++i)
     {
         _forwardTrace(in_out_dictionary);
+        _samples.push_back(_current_sample.clone());
     }
     _state = std::move(in_out_dictionary);    // Store for backward pass (cant be stored in ctx directly)
 }
@@ -224,8 +229,9 @@ void DiffPathtracingIntegrator::backwardPass(const torch::Tensor& adjoint_y)
     _state.setValue("adjoint_y", adjoint_y);
 
     reset();
-    for(int i = 0; i < num_samples; ++i)
+    for(uint32_t i = 0; i < num_samples; ++i)
     {
+        _state.setValue("step", i);
         _backwardTrace(_state);
     }
 

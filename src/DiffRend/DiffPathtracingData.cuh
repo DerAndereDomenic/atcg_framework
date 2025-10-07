@@ -11,6 +11,7 @@ namespace atcg
 struct DiffPathtracingParams
 {
     glm::vec3* accumulation_buffer;
+    glm::vec3* current_sample;
     glm::vec3* adjoint_y;
 
     uint32_t image_width;

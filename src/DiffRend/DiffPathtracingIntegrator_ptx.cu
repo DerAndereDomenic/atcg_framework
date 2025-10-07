@@ -175,6 +175,8 @@ extern "C" __global__ void __raygen__forward()
         ray.direction = next_dir;
     }
 
+    params.current_sample[pixel_index] = ray.radiance;
+
     if(params.frame_counter > 0)
     {
         // Mix with previous subframes if present!

@@ -84,6 +84,9 @@ private:
     uint32_t _frame_counter     = 0;
     uint32_t _iteration_counter = 0;
 
+    torch::Tensor _current_sample;
+    std::vector<torch::Tensor> _samples;
+
     torch::Tensor _accumulation_buffer;
 
     std::vector<Differentiable*> _differentiable_components;
