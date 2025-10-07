@@ -84,10 +84,10 @@ extern "C" __global__ void __raygen__forward()
             // Check for light source
             if(si.emitter)
             {
-                // bool mis_valid             = last_si.valid;
-                // float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                // float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                float mis_weight = 1.0f;
+                bool mis_valid             = last_si.valid;
+                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
+                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                // float mis_weight = 1.0f;
                 ray.radiance += mis_weight * ray.throughput * si.emitter->evalLight(si);
             }
 
@@ -95,47 +95,48 @@ extern "C" __global__ void __raygen__forward()
             if(si.bsdf)
             {
                 // Next-event estimation
-                // do
-                // {
-                //     if(params.num_emitters == 0) break;
+                do
+                {
+                    if(params.num_emitters == 0) break;
 
-                //     uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+                    uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
 
-                //     float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                    float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
 
-                //     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+                    const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-                //     if(si.emitter == emitter) break;
+                    if(si.emitter == emitter) break;
 
-                //     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
 
-                //     if(emitter_sampling.sampling_pdf == 0) break;
+                    if(emitter_sampling.sampling_pdf == 0) break;
 
-                //     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
 
-                //     bool occluded = traceOcclusion(params.handle,
-                //                                    si.position,
-                //                                    emitter_sampling.direction_to_light,
-                //                                    1e-3f,
-                //                                    emitter_sampling.distance_to_light - 1e-3f,
-                //                                    params.occlusion_trace_params);
+                    bool occluded = traceOcclusion(params.handle,
+                                                   si.position,
+                                                   emitter_sampling.direction_to_light,
+                                                   1e-3f,
+                                                   emitter_sampling.distance_to_light - 1e-3f,
+                                                   params.occlusion_trace_params);
 
-                //     if(occluded)
-                //     {
-                //         break;
-                //     }
+                    if(occluded)
+                    {
+                        break;
+                    }
 
-                //     atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+                    atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
 
-                //     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
-                //                            ? 0.0f
-                //                            : bsdf_result.sample_probability;
-                //     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                                           ? 0.0f
+                                           : bsdf_result.sample_probability;
+                    float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
-                //     radiance +=
-                //         mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
-                //         bsdf_result.bsdf_value;
-                // } while(false);
+                    glm::vec3 radiance_nee = mis_weight * ray.throughput *
+                                             emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value;
+
+                    ray.radiance += radiance_nee;
+                } while(false);
 
                 auto result = si.bsdf->sampleBSDF(si, rng);
 
@@ -166,7 +167,7 @@ extern "C" __global__ void __raygen__forward()
                     mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
                               : 0.0f;
                 float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                mis_weight       = 1.0f;
+                // mis_weight       = 1.0f;
                 ray.radiance += mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
             }
         }
@@ -252,10 +253,10 @@ extern "C" __global__ void __raygen__backward()
             // Check for light source
             if(si.emitter)
             {
-                // bool mis_valid             = last_si.valid;
-                // float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                // float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                float mis_weight = 1.0f;
+                bool mis_valid             = last_si.valid;
+                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
+                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                // float mis_weight = 1.0f;
                 ray.radiance -= mis_weight * ray.throughput * si.emitter->evalLight(si);
             }
 
@@ -263,47 +264,51 @@ extern "C" __global__ void __raygen__backward()
             if(si.bsdf)
             {
                 // Next-event estimation
-                // do
-                // {
-                //     if(params.num_emitters == 0) break;
+                do
+                {
+                    if(params.num_emitters == 0) break;
 
-                //     uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+                    uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
 
-                //     float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                    float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
 
-                //     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+                    const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-                //     if(si.emitter == emitter) break;
+                    if(si.emitter == emitter) break;
 
-                //     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
 
-                //     if(emitter_sampling.sampling_pdf == 0) break;
+                    if(emitter_sampling.sampling_pdf == 0) break;
 
-                //     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
 
-                //     bool occluded = traceOcclusion(params.handle,
-                //                                    si.position,
-                //                                    emitter_sampling.direction_to_light,
-                //                                    1e-3f,
-                //                                    emitter_sampling.distance_to_light - 1e-3f,
-                //                                    params.occlusion_trace_params);
+                    bool occluded = traceOcclusion(params.handle,
+                                                   si.position,
+                                                   emitter_sampling.direction_to_light,
+                                                   1e-3f,
+                                                   emitter_sampling.distance_to_light - 1e-3f,
+                                                   params.occlusion_trace_params);
 
-                //     if(occluded)
-                //     {
-                //         break;
-                //     }
+                    if(occluded)
+                    {
+                        break;
+                    }
 
-                //     atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+                    atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
 
-                //     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
-                //                            ? 0.0f
-                //                            : bsdf_result.sample_probability;
-                //     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                                           ? 0.0f
+                                           : bsdf_result.sample_probability;
+                    float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
-                //     radiance +=
-                //         mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
-                //         bsdf_result.bsdf_value;
-                // } while(false);
+                    glm::vec3 radiance_nee = mis_weight * ray.throughput *
+                                             emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value;
+
+                    glm::vec3 grad_out = (ray.delta_y * (radiance_nee + 1e-4f)) / (bsdf_result.bsdf_value + 1e-4f);
+                    si.bsdf->backwardGrad(si, emitter_sampling.direction_to_light, grad_out);
+
+                    ray.radiance -= radiance_nee;
+                } while(false);
 
                 auto result = si.bsdf->sampleBSDF(si, rng);
 
