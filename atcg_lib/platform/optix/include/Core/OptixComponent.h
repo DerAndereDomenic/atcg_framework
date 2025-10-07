@@ -27,7 +27,7 @@ public:
     /**
      * @brief A callback to display debug information in imgui
      */
-    virtual void onImGuiRender() {}
+    virtual void onImGuiRender() = 0;
 
     /**
      * @brief Ensure that the pipeline is initialized

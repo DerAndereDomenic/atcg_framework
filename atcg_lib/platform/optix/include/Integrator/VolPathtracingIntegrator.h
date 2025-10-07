@@ -26,7 +26,7 @@ public:
     /**
      * @brief Destructor
      */
-    ~VolPathtracingIntegrator();
+    virtual ~VolPathtracingIntegrator();
 
     /**
      * @brief Initialize a pipeline.

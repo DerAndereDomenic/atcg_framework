@@ -24,7 +24,7 @@ public:
     /**
      * @brief Destructor
      */
-    ~PBRBSDF();
+    virtual ~PBRBSDF();
 
     /**
      * @brief Initialize a pipeline.
@@ -40,6 +40,10 @@ public:
     virtual std::vector<torch::Tensor> getParameters() const override;
 
     virtual void markOptimizable() override;
+    /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() {};
 
 private:
     torch::Tensor _diffuse_texture;

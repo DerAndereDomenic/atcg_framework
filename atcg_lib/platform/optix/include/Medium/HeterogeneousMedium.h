@@ -23,6 +23,11 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
+    /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() override {}
+
 private:
     atcg::ref_ptr<Texture3D> _density_texture;
     atcg::ref_ptr<Texture3D> _albedo_texture;
