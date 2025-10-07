@@ -120,7 +120,8 @@ public:
                 optimizer->zero_grad(false);
                 auto result = atcg::DiffPathtracingFunction::apply(integrator, dict);
 
-                auto L = torch::sum((result - target) * (result - target));
+                auto difference = (result - target);
+                auto L          = torch::sum(difference * difference);
 
                 L.backward();
                 optimizer->step();
@@ -133,8 +134,7 @@ public:
                     {
                         p.clamp_(0.0f, 1.0f);
                     }
-
-                    // optimized_texture->setData(p);
+                    difference_texture->setData(difference);
                 }
             }
 
@@ -291,7 +291,9 @@ public:
 
         if(ImGui::Button("Register target"))
         {
-            target = integrator->getHDR();
+            target             = integrator->getHDR();
+            target_texture     = atcg::Texture2D::create(target);
+            difference_texture = atcg::Texture2D::create(torch::zeros_like(target));
         }
 
         if(ImGui::Button("Toggle Optimization"))
@@ -302,18 +304,26 @@ public:
                 integrator->markOptimizable();
                 optimizer =
                     atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions());
-
-                atcg::TextureSpecification spec_diffuse;
-                spec_diffuse.width  = 512;
-                spec_diffuse.height = 512;
-                spec_diffuse.format = atcg::TextureFormat::RGBFLOAT;
-                optimized_texture   = atcg::Texture2D::create(spec_diffuse);
             }
         }
 
-        if(optimized_texture)
+        if(integrator)
         {
-            ImGui::Image((ImTextureID)optimized_texture->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+            integrator->onImGuiRender();
+        }
+
+        if(target_texture)
+        {
+            ImGui::Begin("Target Texture");
+            ImGui::Image((ImTextureID)target_texture->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+            ImGui::End();
+        }
+
+        if(difference_texture)
+        {
+            ImGui::Begin("Difference Texture");
+            ImGui::Image((ImTextureID)difference_texture->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+            ImGui::End();
         }
 
         ImGui::End();
@@ -449,7 +459,8 @@ private:
     torch::Tensor target;
     bool optimize = false;
     atcg::ref_ptr<torch::optim::Adam> optimizer;
-    atcg::ref_ptr<atcg::Texture2D> optimized_texture;
+    atcg::ref_ptr<atcg::Texture2D> target_texture;
+    atcg::ref_ptr<atcg::Texture2D> difference_texture;
 #endif
 
     torch::Tensor output_img_tensor;

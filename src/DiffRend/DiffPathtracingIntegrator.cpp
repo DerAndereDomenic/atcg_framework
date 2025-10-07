@@ -58,6 +58,8 @@ void DiffPathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracin
     ATCG_TRACE("Number differentiable objects: {}", _differentiable_components.size());
 }
 
+void DiffPathtracingIntegrator::onImGuiRender() {}
+
 void DiffPathtracingIntegrator::reset()
 {
     _frame_counter = 0;
