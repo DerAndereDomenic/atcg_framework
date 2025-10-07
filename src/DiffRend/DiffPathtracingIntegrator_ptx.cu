@@ -34,7 +34,7 @@ extern "C" __global__ void __raygen__forward()
     uint64_t seed        = atcg::sampleTEA64(pixel_index, params.rng_index);
     atcg::PCG32 rng(seed);
 
-    glm::vec2 jitter = glm::vec2(0);    // rng.next2d();
+    glm::vec2 jitter = rng.next2d();
     float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
     float v          = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
 
@@ -203,7 +203,7 @@ extern "C" __global__ void __raygen__backward()
     uint64_t seed        = atcg::sampleTEA64(pixel_index, params.rng_index);
     atcg::PCG32 rng(seed);
 
-    glm::vec2 jitter = glm::vec2(0);    // rng.next2d();
+    glm::vec2 jitter = rng.next2d();
     float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
     float v          = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
 
