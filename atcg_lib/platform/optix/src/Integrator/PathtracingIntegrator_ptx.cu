@@ -116,8 +116,9 @@ extern "C" __global__ void __raygen__rg()
                                            : bsdf_result.sample_probability;
                     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
-                    radiance +=
-                        mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value;
+                    radiance += mis_weight * throughput * emitter_sampling.radiance_weight_at_receiver *
+                                bsdf_result.bsdf_value *
+                                glm::abs(glm::dot(si.normal, emitter_sampling.direction_to_light));
                 } while(false);
 
                 auto result = si.bsdf->sampleBSDF(si, rng);

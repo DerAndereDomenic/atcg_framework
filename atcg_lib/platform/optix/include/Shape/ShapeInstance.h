@@ -42,6 +42,11 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
     /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() override;
+
+    /**
      * @brief Get the shape
      *
      * @return The shape

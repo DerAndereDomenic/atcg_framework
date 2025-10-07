@@ -12,7 +12,7 @@ TextureSampler<T>::TextureSampler(void* data, const TextureSpecification& spec) 
 template<typename T>
 ATCG_INLINE ATCG_HOST_DEVICE T TextureSampler<T>::read(const glm::vec2& uv) const
 {
-    glm::vec2 _uv = _clamp_uv(uv);
+    glm::vec2 _uv = clamp_uv(uv);
     T x           = _read_interpolated(_uv);
     return x;
 }
@@ -105,7 +105,7 @@ ATCG_INLINE ATCG_HOST_DEVICE void TextureSampler<T>::write(const T& val, const g
 }
 
 template<typename T>
-ATCG_HOST_DEVICE void* TextureSampler<T>::getTexelPtr(const glm::ivec2& texel)
+ATCG_HOST_DEVICE void* TextureSampler<T>::getTexelPtr(const glm::ivec2& texel) const
 {
     size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
     if(_spec.isFloat() || _spec.isInt())
@@ -121,7 +121,7 @@ ATCG_HOST_DEVICE void* TextureSampler<T>::getTexelPtr(const glm::ivec2& texel)
 }
 
 template<typename T>
-ATCG_INLINE ATCG_HOST_DEVICE glm::vec2 TextureSampler<T>::_clamp_uv(const glm::vec2& uv) const
+ATCG_INLINE ATCG_HOST_DEVICE glm::vec2 TextureSampler<T>::clamp_uv(const glm::vec2& uv) const
 {
     switch(_spec.sampler.wrap_mode)
     {
