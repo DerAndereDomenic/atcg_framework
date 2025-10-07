@@ -109,8 +109,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
     }
 
-    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf + 1e-5f;
-    result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / result.sample_probability;
+    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.sample_probability + 1e-5f);
     result.flags =
         result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
 
@@ -167,8 +167,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
     float halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(outgoing_dir, H);    // 1 / (4*HdotV)
     float specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
 
-    result.bsdf_value         = specular + kD * diffuse_color / glm::pi<float>() * NdotL;
-    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf + 1e-5f;
+    result.bsdf_value         = specular + kD * diffuse_color / glm::pi<float>();
+    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.flags =
         result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
 
@@ -201,10 +201,10 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
     glm::vec3 diffuse_color = sbt_data->diffuse_texture.read(si.uv);
     float metallic          = sbt_data->metallic_texture.read(si.uv);
     float roughness         = sbt_data->roughness_texture.read(si.uv);
-    roughness     = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
-    diffuse_color = glm::lerp(diffuse_color, glm::vec3(0), metallic) * si.color;
-
+    roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
     glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
+    diffuse_color            = glm::lerp(diffuse_color, glm::vec3(0), metallic) * si.color;
+
 
     return detail::evalPBR(si, outgoing_dir, diffuse_color, metallic_color, roughness, metallic);
 }
