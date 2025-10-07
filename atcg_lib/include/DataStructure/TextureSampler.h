@@ -50,14 +50,14 @@ public:
 
     ATCG_HOST_DEVICE void write(const T& val, const glm::ivec2& texel);
 
-    ATCG_HOST_DEVICE void* getTexelPtr(const glm::ivec2& texel);
+    ATCG_HOST_DEVICE void* getTexelPtr(const glm::ivec2& texel) const;
 
     ATCG_INLINE ATCG_HOST_DEVICE T operator()(const glm::vec2& uv) const { return read(uv); }
 
     ATCG_INLINE ATCG_HOST_DEVICE const TextureSpecification getSpecification() const { return _spec; }
 
+    ATCG_HOST_DEVICE glm::vec2 clamp_uv(const glm::vec2& uv) const;
 private:
-    ATCG_HOST_DEVICE glm::vec2 _clamp_uv(const glm::vec2& uv) const;
 
     ATCG_HOST_DEVICE T _read_interpolated(const glm::vec2& uv) const;
 
