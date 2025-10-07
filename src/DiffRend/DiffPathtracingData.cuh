@@ -31,6 +31,7 @@ struct DiffPathtracingParams
     float fov_y;
 
     uint32_t frame_counter;
+    uint32_t rng_index;
 
     // Emitter
     uint32_t num_emitters;

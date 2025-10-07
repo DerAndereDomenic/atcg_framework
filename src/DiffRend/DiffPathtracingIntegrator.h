@@ -76,7 +76,8 @@ private:
 
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<DiffPathtracingParams> _launch_params;
-    uint32_t _frame_counter = 0;
+    uint32_t _frame_counter     = 0;
+    uint32_t _iteration_counter = 0;
 
     torch::Tensor _accumulation_buffer;
 

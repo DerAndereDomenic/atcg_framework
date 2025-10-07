@@ -98,6 +98,7 @@ void DiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
 
     params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
 
+    params.rng_index     = _iteration_counter + _frame_counter;
     params.frame_counter = _frame_counter++;
 
     params.num_emitters        = _optix_scene->getEmitterVPtrTables().size();
@@ -155,6 +156,7 @@ void DiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
     params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();    // Input L
     params.adjoint_y           = (glm::vec3*)adjoint_y.data_ptr();               // Input 𝛿L
 
+    params.rng_index     = _iteration_counter + _frame_counter;
     params.frame_counter = _frame_counter++;
 
     params.num_emitters        = _optix_scene->getEmitterVPtrTables().size();
@@ -224,6 +226,8 @@ void DiffPathtracingIntegrator::backwardPass(const torch::Tensor& adjoint_y)
     {
         _backwardTrace(_state);
     }
+
+    _iteration_counter += num_samples;
 }
 
 std::vector<torch::Tensor> DiffPathtracingIntegrator::getParameters() const

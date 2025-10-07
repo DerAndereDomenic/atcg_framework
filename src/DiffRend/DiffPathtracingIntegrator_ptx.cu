@@ -31,7 +31,7 @@ extern "C" __global__ void __raygen__forward()
     uint3 launch_idx = optixGetLaunchIndex();
 
     uint32_t pixel_index = launch_idx.x + params.image_width * launch_idx.y;
-    uint64_t seed        = atcg::sampleTEA64(pixel_index, params.frame_counter);
+    uint64_t seed        = atcg::sampleTEA64(pixel_index, params.rng_index);
     atcg::PCG32 rng(seed);
 
     glm::vec2 jitter = rng.next2d();
@@ -196,7 +196,7 @@ extern "C" __global__ void __raygen__backward()
     uint3 launch_idx = optixGetLaunchIndex();
 
     uint32_t pixel_index = launch_idx.x + params.image_width * launch_idx.y;
-    uint64_t seed        = atcg::sampleTEA64(pixel_index, params.frame_counter);
+    uint64_t seed        = atcg::sampleTEA64(pixel_index, params.rng_index);
     atcg::PCG32 rng(seed);
 
     glm::vec2 jitter = rng.next2d();
