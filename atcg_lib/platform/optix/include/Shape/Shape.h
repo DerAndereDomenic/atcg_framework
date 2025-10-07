@@ -46,6 +46,11 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
 
     /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() = 0;
+
+    /**
      * @brief Prepare the acceleration structure of the shape
      *
      * @param context The raytracing context

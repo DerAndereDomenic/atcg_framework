@@ -30,6 +30,8 @@ public:
      */
     ShapeInstance(const Dictionary& shape_data);
 
+    virtual ~ShapeInstance() = default;
+
     /**
      * @brief Initialize a pipeline.
      * This function should be overwritten by each child class and it should add its functions to the pipeline and the

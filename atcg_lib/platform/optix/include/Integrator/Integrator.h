@@ -32,7 +32,7 @@ public:
     /**
      * @brief Destructor
      */
-    virtual ~Integrator() {}
+    virtual ~Integrator() = default;
 
     /**
      * @brief Set the scene
@@ -51,6 +51,11 @@ public:
      */
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
+
+    /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() = 0;
 
     /**
      * @brief Generate the rays and write output

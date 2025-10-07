@@ -26,7 +26,7 @@ public:
     /**
      * @brief Destructor
      */
-    ~PathtracingIntegrator();
+    virtual ~PathtracingIntegrator();
 
     /**
      * @brief Initialize a pipeline.

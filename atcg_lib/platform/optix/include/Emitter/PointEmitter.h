@@ -26,7 +26,7 @@ public:
     /**
      * @brief Destructor
      */
-    ~PointEmitter();
+    virtual ~PointEmitter();
 
     /**
      * @brief Initialize a pipeline.
@@ -38,6 +38,11 @@ public:
      */
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
+    /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() override {}
 
 private:
     atcg::dref_ptr<PointEmitterData> _point_emitter_data;

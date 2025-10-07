@@ -38,6 +38,11 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
     /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() override {}
+
+    /**
      * @brief Prepare the geometry acceleration structor
      *
      * @param context The raytracing context
