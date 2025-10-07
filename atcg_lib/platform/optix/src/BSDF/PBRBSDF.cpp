@@ -53,14 +53,14 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
 
 std::vector<torch::Tensor> PBRBSDF::getParameters() const
 {
-    return {_diffuse_texture};    //, _metallic_texture, _roughness_texture};
+    return {_diffuse_texture, _metallic_texture, _roughness_texture};
 }
 
 void PBRBSDF::markOptimizable()
 {
     atcg::TextureSpecification spec_diffuse;
-    spec_diffuse.width  = 512;
-    spec_diffuse.height = 512;
+    spec_diffuse.width  = 1;
+    spec_diffuse.height = 1;
     spec_diffuse.format = TextureFormat::RGBFLOAT;
 
     atcg::TextureSpecification spec_float;
