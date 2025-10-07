@@ -40,6 +40,11 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
     /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() override;
+
+    /**
      * @brief Generate the rays and write to some output tensors
      * This integrator expects:
      * camera - atcg::ref_ptr<PerspectiveCamera>

@@ -15,6 +15,15 @@ ShapeInstance::ShapeInstance(const Dictionary& shape_data)
     _color          = shape_data.getValueOr<glm::vec3>("color", glm::vec3(1));
 }
 
+void ShapeInstance::onImGuiRender()
+{
+    if(_shape) _shape->onImGuiRender();
+    if(_bsdf) _bsdf->onImGuiRender();
+    if(_emitter) _emitter->onImGuiRender();
+    if(_inside_medium) _inside_medium->onImGuiRender();
+    if(_outside_medium) _outside_medium->onImGuiRender();
+}
+
 void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                        const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {

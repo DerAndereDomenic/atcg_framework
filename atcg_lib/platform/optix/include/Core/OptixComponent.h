@@ -24,6 +24,11 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
 
     /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() {}
+
+    /**
      * @brief Ensure that the pipeline is initialized
      *
      * @param pipeline The pipeline

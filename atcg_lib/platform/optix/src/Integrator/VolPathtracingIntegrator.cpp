@@ -15,6 +15,10 @@
 
 #include <optix_stubs.h>
 
+#ifndef ATCG_HEADLESS
+    #include <imgui.h>
+#endif
+
 namespace atcg
 {
 VolPathtracingIntegrator::VolPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context,
@@ -41,6 +45,18 @@ void VolPathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracing
     _sbt      = sbt;
 
     _optix_scene = SceneAdapter(_context, pipeline, sbt).apply(_scene);
+}
+
+void VolPathtracingIntegrator::onImGuiRender()
+{
+#ifndef ATCG_HEADLESS
+    ImGui::Begin("VolPathtracingIntegrator");
+    for(auto shape: _optix_scene->getShapes())
+    {
+        shape->onImGuiRender();
+    }
+    ImGui::End();
+#endif
 }
 
 void VolPathtracingIntegrator::reset()

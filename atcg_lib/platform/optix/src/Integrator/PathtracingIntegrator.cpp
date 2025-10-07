@@ -15,6 +15,10 @@
 
 #include <optix_stubs.h>
 
+#ifndef ATCG_HEADLESS
+    #include <imgui.h>
+#endif
+
 namespace atcg
 {
 PathtracingIntegrator::PathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const Dictionary& dict)
@@ -40,6 +44,18 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
     _sbt      = sbt;
 
     _optix_scene = SceneAdapter(_context, pipeline, sbt).apply(_scene);
+}
+
+void PathtracingIntegrator::onImGuiRender()
+{
+#ifndef ATCG_HEADLESS
+    ImGui::Begin("PathtracingIntegrator");
+    for(auto shape: _optix_scene->getShapes())
+    {
+        shape->onImGuiRender();
+    }
+    ImGui::End();
+#endif
 }
 
 void PathtracingIntegrator::reset()
