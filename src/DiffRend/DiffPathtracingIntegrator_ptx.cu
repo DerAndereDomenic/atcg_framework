@@ -22,7 +22,6 @@ struct RayContext
     glm::vec3 throughput;
     glm::vec3 radiance;
 
-    glm::vec3 delta_x;
     glm::vec3 delta_y;
 };
 
@@ -49,7 +48,6 @@ extern "C" __global__ void __raygen__forward()
     ray.origin        = cam_eye;
     ray.radiance      = glm::vec3(0);
     ray.throughput    = glm::vec3(1);
-    ray.delta_x       = glm::vec3(0);
     ray.valid         = true;
     int32_t entity_id = -1;
 
@@ -218,7 +216,6 @@ extern "C" __global__ void __raygen__backward()
     ray.origin        = cam_eye;
     ray.radiance      = params.accumulation_buffer[pixel_index];    // L from forward pass
     ray.throughput    = glm::vec3(1);
-    ray.delta_x       = glm::vec3(0);
     ray.delta_y       = params.adjoint_y[pixel_index];
     ray.valid         = true;
     int32_t entity_id = -1;
