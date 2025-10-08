@@ -346,7 +346,6 @@ extern "C" __global__ void __raygen__backward()
                     mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
                               : 0.0f;
                 float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                mis_weight       = 1.0f;
                 ray.radiance -= mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
             }
         }
