@@ -59,13 +59,13 @@ std::vector<torch::Tensor> PBRBSDF::getParameters() const
 void PBRBSDF::markOptimizable()
 {
     atcg::TextureSpecification spec_diffuse;
-    spec_diffuse.width  = 1;
-    spec_diffuse.height = 1;
+    spec_diffuse.width  = 512;
+    spec_diffuse.height = 512;
     spec_diffuse.format = TextureFormat::RGBFLOAT;
 
     atcg::TextureSpecification spec_float;
-    spec_float.width  = 1;
-    spec_float.height = 1;
+    spec_float.width  = 512;
+    spec_float.height = 512;
     spec_float.format = TextureFormat::RFLOAT;
 
     _diffuse_texture   = torch::zeros({spec_diffuse.height, spec_diffuse.width, 3},
