@@ -4,6 +4,7 @@
 #include <DataStructure/Dictionary.h>
 #include <Medium/PhaseFunction.h>
 #include <Medium/MediumVPtrTable.cuh>
+#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -45,20 +46,11 @@ public:
     ATCG_INLINE const atcg::ref_ptr<PhaseFunction>& getPhaseFunction() const { return _phase_function; }
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() = 0;
+
+    ATCG_INLINE atcg::dref_ptr<MediumVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
 
 protected:
     atcg::dref_ptr<MediumVPtrTable> _vptr_table;

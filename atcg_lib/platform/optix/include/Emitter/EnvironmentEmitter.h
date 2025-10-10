@@ -3,6 +3,7 @@
 #include <Renderer/Texture.h>
 #include <Emitter/Emitter.h>
 #include <Emitter/EnvironmentEmitterData.cuh>
+#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -26,24 +27,17 @@ public:
     virtual ~EnvironmentEmitter();
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() override {}
+
+    ATCG_INLINE atcg::dref_ptr<EnvironmentEmitterData> getDataBuffer() const { return _environment_emitter_data; }
 
 private:
     atcg::ref_ptr<Texture2D> _environment_texture;
 
     atcg::dref_ptr<EnvironmentEmitterData> _environment_emitter_data;
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(EnvironmentEmitter);
 }    // namespace atcg

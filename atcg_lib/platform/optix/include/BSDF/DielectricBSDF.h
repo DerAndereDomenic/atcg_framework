@@ -3,6 +3,7 @@
 #include <BSDF/BSDF.h>
 #include <BSDF/DielectricBSDFData.cuh>
 #include <Renderer/Texture.h>
+#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -24,20 +25,11 @@ public:
     virtual ~DielectricBSDF();
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() override {}
+
+    ATCG_INLINE atcg::dref_ptr<DielectricBSDFData> getDataBuffer() const { return _bsdf_data_buffer; }
 
 private:
     atcg::ref_ptr<Texture2D> _diffuse_texture;
@@ -45,4 +37,6 @@ private:
 
     atcg::dref_ptr<DielectricBSDFData> _bsdf_data_buffer;
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(DielectricBSDF);
 }    // namespace atcg

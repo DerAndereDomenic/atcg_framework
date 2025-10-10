@@ -31,17 +31,6 @@ public:
     virtual ~Emitter() {}
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() = 0;
@@ -52,6 +41,20 @@ public:
      * @return The VPtrTable
      */
     inline const EmitterVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
+
+    /**
+     * @brief Get the VPtrTable Holder
+     *
+     * @return The shared ptr that handles the memory of the VPtrTable
+     */
+    ATCG_INLINE atcg::dref_ptr<EmitterVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
+
+    /**
+     * @brief Get the bsdf flags
+     *
+     * @return The flags
+     */
+    ATCG_INLINE const EmitterFlags& flags() const { return _flags; }
 
 protected:
     atcg::dref_ptr<EmitterVPtrTable> _vptr_table;

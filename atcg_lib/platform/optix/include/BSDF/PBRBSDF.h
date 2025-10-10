@@ -3,6 +3,7 @@
 #include <BSDF/BSDF.h>
 #include <BSDF/PBRBSDFData.cuh>
 #include <Renderer/Material.h>
+#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -27,20 +28,11 @@ public:
     virtual ~PBRBSDF();
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() {};
+
+    ATCG_INLINE atcg::dref_ptr<PBRBSDFData> getDataBuffer() const { return _bsdf_data_buffer; }
 
 private:
     atcg::ref_ptr<Texture2D> _diffuse_texture;
@@ -49,4 +41,6 @@ private:
 
     atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(PBRBSDF);
 }    // namespace atcg

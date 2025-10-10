@@ -18,13 +18,12 @@ public:
 
     ATCG_INLINE const PhaseFunctionVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
 
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
-
     /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() = 0;
+
+    ATCG_INLINE atcg::dref_ptr<PhaseFunctionVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
 
 protected:
     atcg::dref_ptr<PhaseFunctionVPtrTable> _vptr_table;

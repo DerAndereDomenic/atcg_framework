@@ -4,6 +4,7 @@
 #include <Shape/MeshShapeData.cuh>
 #include <DataStructure/Graph.h>
 #include <DataStructure/TorchUtils.h>
+#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -25,17 +26,6 @@ public:
      * @brief Destructor
      */
     virtual ~MeshShape();
-
-    /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
     /**
      * @brief A callback to display debug information in imgui
@@ -71,4 +61,6 @@ private:
 
     atcg::dref_ptr<MeshShapeData> _data;
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(MeshShape);
 }    // namespace atcg

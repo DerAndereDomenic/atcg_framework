@@ -35,17 +35,6 @@ public:
     virtual ~Shape() {}
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() = 0;
@@ -70,6 +59,10 @@ public:
      * @return The hit group
      */
     ATCG_INLINE OptixProgramGroup getHitGroup() const { return _hit_group; }
+
+    ATCG_INLINE void setHitGroup(OptixProgramGroup hit_group) { _hit_group = hit_group; }
+
+    ATCG_INLINE ShapeData* getShapeData() const { return _shape_data; }
 
 protected:
     friend class ShapeInstance;

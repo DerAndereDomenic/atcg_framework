@@ -10,6 +10,7 @@
 
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
+#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -19,14 +20,12 @@ public:
     HeterogeneousMedium(const Dictionary& dict);
 
     virtual ~HeterogeneousMedium();
-
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
-
     /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() override {}
+
+    ATCG_INLINE atcg::dref_ptr<HeterogeneousMediumData> getDataBuffer() const { return _data_buffer; }
 
 private:
     atcg::ref_ptr<Texture3D> _density_texture;
@@ -35,6 +34,8 @@ private:
 
     atcg::dref_ptr<HeterogeneousMediumData> _data_buffer;
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(HeterogeneousMedium);
 
 struct HeterogeneousMediumComponent
 {

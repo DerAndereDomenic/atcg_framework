@@ -8,6 +8,8 @@
 #include <Emitter/Emitter.h>
 #include <Medium/Medium.h>
 
+#include <Core/PipelineInitializer.h>
+
 namespace atcg
 {
 /**
@@ -31,17 +33,6 @@ public:
     ShapeInstance(const Dictionary& shape_data);
 
     virtual ~ShapeInstance() = default;
-
-    /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
     /**
      * @brief A callback to display debug information in imgui
@@ -70,6 +61,10 @@ public:
      */
     ATCG_INLINE const glm::mat4& getTransform() const { return _transform; }
 
+    ATCG_INLINE uint32_t entity_id() const { return _entity_id; }
+
+    ATCG_INLINE glm::vec3 color() const { return _color; }
+
 private:
     glm::mat4 _transform;
     atcg::ref_ptr<Shape> _shape;
@@ -80,4 +75,6 @@ private:
     uint32_t _entity_id;
     glm::vec3 _color;
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(ShapeInstance);
 }    // namespace atcg

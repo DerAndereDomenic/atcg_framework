@@ -41,7 +41,7 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
     if(bsdf_it == _bsdf_cache.end()) return;
     auto bsdf = bsdf_it->second;
 
-    atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
+    atcg::ref_ptr<MeshEmitter> mesh_emitter = nullptr;
     if(entity.hasComponent<MeshLightComponent>())
     {
         auto& mesh_light_component = entity.getComponent<MeshLightComponent>();
@@ -52,7 +52,7 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
         emitter_data.setValue("texture_emissive", mesh_light_component.getEmissiveTexture());
 
         mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
-        mesh_emitter->initializePipeline(_pipeline, _sbt);
+        PipelineInitializer<MeshEmitter>(_pipeline, _sbt).apply(mesh_emitter);
 
         result->_emitter.push_back(mesh_emitter);
     }
@@ -65,8 +65,8 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
 
         Dictionary phase_dict;
         phase_dict.setValue("g", component.g);
-        atcg::ref_ptr<PhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
-        phase->initializePipeline(_pipeline, _sbt);
+        atcg::ref_ptr<HenyeyGreensteinPhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
+        PipelineInitializer<HenyeyGreensteinPhaseFunction>(_pipeline, _sbt).apply(phase);
 
         glm::vec3 sigma_s = component.albedo * component.density;
         glm::vec3 sigma_a = glm::vec3(component.density) - sigma_s;
@@ -74,12 +74,12 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
         Dictionary med_dict;
         med_dict.setValue("sigma_s", sigma_s);
         med_dict.setValue("sigma_a", sigma_a);
-        med_dict.setValue("phase_func", phase);
+        med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
         med_dict.setValue("Le", component.Le * component.Le_color);
-        atcg::ref_ptr<Medium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
-        medium->initializePipeline(_pipeline, _sbt);
+        atcg::ref_ptr<HomogeneousMedium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
+        PipelineInitializer<HomogeneousMedium>(_pipeline, _sbt).apply(medium);
 
-        shape_data.setValue("inside_medium", medium);
+        shape_data.setValue<atcg::ref_ptr<Medium>>("inside_medium", medium);
     }
 
     if(entity.hasComponent<HeterogeneousMediumComponent>())
@@ -95,14 +95,15 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
             med_dict.setValue("to_world", transform.getModel());
             Dictionary phase_dict;
             phase_dict.setValue("g", component.g);
-            atcg::ref_ptr<PhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
-            phase->initializePipeline(_pipeline, _sbt);
-            med_dict.setValue("phase_func", phase);
+            atcg::ref_ptr<HenyeyGreensteinPhaseFunction> phase =
+                atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
+            PipelineInitializer<HenyeyGreensteinPhaseFunction>(_pipeline, _sbt).apply(phase);
+            med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
 
-            atcg::ref_ptr<Medium> medium = atcg::make_ref<HeterogeneousMedium>(med_dict);
-            medium->initializePipeline(_pipeline, _sbt);
+            atcg::ref_ptr<HeterogeneousMedium> medium = atcg::make_ref<HeterogeneousMedium>(med_dict);
+            PipelineInitializer<HeterogeneousMedium>(_pipeline, _sbt).apply(medium);
 
-            shape_data.setValue("inside_medium", medium);
+            shape_data.setValue<atcg::ref_ptr<Medium>>("inside_medium", medium);
         }
     }
 
@@ -110,9 +111,9 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
     shape_data.setValue("bsdf", bsdf);
     shape_data.setValue("transform", transform.getModel());
     shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-    shape_data.setValue("emitter", mesh_emitter);
+    shape_data.setValue<atcg::ref_ptr<Emitter>>("emitter", mesh_emitter);
     auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
-    shape_instance->initializePipeline(_pipeline, _sbt);
+    PipelineInitializer<ShapeInstance>(_pipeline, _sbt).apply(shape_instance);
 
     result->_shapes.push_back(shape_instance);
 }
@@ -134,8 +135,8 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
     auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
     atcg::Dictionary shape_dict;
     shape_dict.setValue("mesh", graph);
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
-    shape->initializePipeline(_pipeline, _sbt);
+    atcg::ref_ptr<MeshShape> shape = atcg::make_ref<MeshShape>(shape_dict);
+    PipelineInitializer<MeshShape>(_pipeline, _sbt).apply(shape);
     shape->prepareAccelerationStructure(_context);
 
     auto bsdf_it = _bsdf_cache.find(component.material_handle);
@@ -190,7 +191,7 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
                                             global_transform * inv_scale_model * scale_primitive;
 
                 Dictionary shape_data;
-                shape_data.setValue("shape", shape);
+                shape_data.setValue<atcg::ref_ptr<Shape>>("shape", shape);
                 shape_data.setValue("bsdf", bsdf);
                 shape_data.setValue("transform", total_transform);
                 shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
@@ -206,7 +207,7 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
     // Not thread safe
     for(auto shape_instance: new_shapes)
     {
-        shape_instance->initializePipeline(_pipeline, _sbt);
+        PipelineInitializer<ShapeInstance>(_pipeline, _sbt).apply(shape_instance);
     }
 
     result->_shapes.insert(result->_shapes.end(), new_shapes.begin(), new_shapes.end());
@@ -231,8 +232,8 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
     auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
     atcg::Dictionary shape_dict;
     shape_dict.setValue("mesh", graph);
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
-    shape->initializePipeline(_pipeline, _sbt);
+    atcg::ref_ptr<MeshShape> shape = atcg::make_ref<MeshShape>(shape_dict);
+    PipelineInitializer<MeshShape>(_pipeline, _sbt).apply(shape);
     shape->prepareAccelerationStructure(_context);
 
     auto bsdf_it = _bsdf_cache.find(component.material_handle);
@@ -292,7 +293,7 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
                 glm::mat4 model_edge = model_translate * model_rotation * model_scale;
 
                 Dictionary shape_data;
-                shape_data.setValue("shape", shape);
+                shape_data.setValue<atcg::ref_ptr<Shape>>("shape", shape);
                 shape_data.setValue("bsdf", bsdf);
                 shape_data.setValue("transform", model_edge);
                 shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
@@ -308,7 +309,7 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
     // Not thread safe
     for(auto shape_instance: new_shapes)
     {
-        shape_instance->initializePipeline(_pipeline, _sbt);
+        PipelineInitializer<ShapeInstance>(_pipeline, _sbt).apply(shape_instance);
     }
 
     result->_shapes.insert(result->_shapes.end(), new_shapes.begin(), new_shapes.end());
@@ -383,7 +384,7 @@ void SceneAdapter::prepareComponent<InstanceRenderComponent>(const atcg::ref_ptr
     // Not thread safe
     for(auto shape_instance: new_shapes)
     {
-        shape_instance->initializePipeline(_pipeline, _sbt);
+        PipelineInitializer<ShapeInstance>(_pipeline, _sbt).apply(shape_instance);
     }
 
     result->_shapes.insert(result->_shapes.end(), new_shapes.begin(), new_shapes.end());
@@ -409,16 +410,16 @@ void SceneAdapter::prepareComponent<MeshLightComponent>(const atcg::ref_ptr<Opti
 
     auto shape = shape_it->second;
 
-    atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
-    auto& mesh_light_component          = entity.getComponent<MeshLightComponent>();
+
+    auto& mesh_light_component = entity.getComponent<MeshLightComponent>();
     Dictionary emitter_data;
     emitter_data.setValue<atcg::ref_ptr<MeshShape>>("shape", std::dynamic_pointer_cast<MeshShape>(shape));
     emitter_data.setValue("transform", transform.getModel());
     emitter_data.setValue("emission_scaling", mesh_light_component.intensity);
     emitter_data.setValue("texture_emissive", mesh_light_component.getEmissiveTexture());
 
-    mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
-    mesh_emitter->initializePipeline(_pipeline, _sbt);
+    atcg::ref_ptr<MeshEmitter> mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
+    PipelineInitializer<MeshEmitter>(_pipeline, _sbt).apply(mesh_emitter);
 
     result->_emitter.push_back(mesh_emitter);
 
@@ -427,10 +428,9 @@ void SceneAdapter::prepareComponent<MeshLightComponent>(const atcg::ref_ptr<Opti
     shape_data.setValue("shape", shape);
     shape_data.setValue("transform", transform.getModel());
     shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-    shape_data.setValue("emitter", mesh_emitter);
+    shape_data.setValue<atcg::ref_ptr<Emitter>>("emitter", mesh_emitter);
     auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
-    shape_instance->initializePipeline(_pipeline, _sbt);
-
+    PipelineInitializer<ShapeInstance>(_pipeline, _sbt).apply(shape_instance);
     result->_shapes.push_back(shape_instance);
 }
 
@@ -447,8 +447,8 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
             {
                 atcg::Dictionary shape_dict;
                 shape_dict.setValue("mesh", graph);
-                atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
-                shape->initializePipeline(_pipeline, _sbt);
+                atcg::ref_ptr<MeshShape> shape = atcg::make_ref<MeshShape>(shape_dict);
+                PipelineInitializer<MeshShape>(_pipeline, _sbt).apply(shape);
                 shape->prepareAccelerationStructure(_context);
                 _shape_cache.insert(std::make_pair(entry.first, shape));
             }
@@ -461,8 +461,8 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
             {
                 atcg::Dictionary bsdf_dict;
                 bsdf_dict.setValue("material", material);
-                atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
-                bsdf->initializePipeline(_pipeline, _sbt);
+                atcg::ref_ptr<BSDF> bsdf =
+                    BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
 
                 _bsdf_cache.insert(std::make_pair(entry.first, bsdf));
             }
@@ -473,8 +473,7 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
     atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
-    bsdf->initializePipeline(_pipeline, _sbt);
+    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
 
     _bsdf_cache.insert(std::make_pair(0, bsdf));
 
@@ -487,7 +486,7 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
         atcg::Dictionary emitter_dict;
         emitter_dict.setValue("environment_texture", skybox_texture);
         result->_environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(emitter_dict);
-        result->_environment_emitter->initializePipeline(_pipeline, _sbt);
+        PipelineInitializer<EnvironmentEmitter>(_pipeline, _sbt).apply(result->_environment_emitter);
         tables.push_back(result->_environment_emitter->getVPtrTable());
     }
 
@@ -504,7 +503,7 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
         point_light_data.setValue("color", point_light_component.color);
         point_light_data.setValue("intensity", point_light_component.intensity);
         auto point_light = atcg::make_ref<atcg::PointEmitter>(point_light_data);
-        point_light->initializePipeline(_pipeline, _sbt);
+        PipelineInitializer<PointEmitter>(_pipeline, _sbt).apply(point_light);
         result->_emitter.push_back(point_light);
     }
 
