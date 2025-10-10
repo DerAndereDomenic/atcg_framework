@@ -56,4 +56,11 @@ protected:
     atcg::dref_ptr<MediumVPtrTable> _vptr_table;
     atcg::ref_ptr<PhaseFunction> _phase_function;
 };
+
+struct MediumComponent
+{
+    MediumComponent(const atcg::ref_ptr<Medium>& medium) : medium(medium) {}
+
+    atcg::ref_ptr<Medium> medium;
+};
 }    // namespace atcg

@@ -60,4 +60,11 @@ protected:
     atcg::dref_ptr<EmitterVPtrTable> _vptr_table;
     EmitterFlags _flags;
 };
+
+struct EmitterComponent
+{
+    EmitterComponent(const atcg::ref_ptr<Emitter>& emitter) : emitter(emitter) {}
+
+    atcg::ref_ptr<Emitter> emitter;
+};
 }    // namespace atcg

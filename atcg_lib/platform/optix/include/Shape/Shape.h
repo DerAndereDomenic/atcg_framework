@@ -72,4 +72,11 @@ protected:
 
     ShapeData* _shape_data;
 };
+
+struct ShapeComponent
+{
+    ShapeComponent(const atcg::ref_ptr<Shape>& shape) : shape(shape) {}
+
+    atcg::ref_ptr<Shape> shape;
+};
 }    // namespace atcg

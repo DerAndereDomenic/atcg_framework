@@ -60,4 +60,11 @@ protected:
     atcg::dref_ptr<BSDFVPtrTable> _vptr_table;
     BSDFComponentType _flags;
 };
+
+struct BSDFComponent
+{
+    BSDFComponent(const atcg::ref_ptr<BSDF>& bsdf) : bsdf(bsdf) {}
+
+    atcg::ref_ptr<BSDF> bsdf;
+};
 }    // namespace atcg
