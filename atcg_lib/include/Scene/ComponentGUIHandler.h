@@ -64,6 +64,8 @@ ATCG_DECLARE_COMPONENT_GUI_RENDERER(InstanceRenderComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(PointLightComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(MeshLightComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(ScriptComponent);
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(HomogeneousMediumComponent);
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(HeterogeneousMediumComponent);
 
 template<typename T>
 ATCG_INLINE void drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity)
