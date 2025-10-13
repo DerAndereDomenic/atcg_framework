@@ -12,7 +12,8 @@ class Shader;
 enum class MaterialType
 {
     MATERIAL_TYPE_OPAQUE,
-    MATERIAL_TYPE_GLASS
+    MATERIAL_TYPE_GLASS,
+    MATERIAL_TYPE_NULL
 };
 
 ATCG_INLINE const char* materialTypeToString(MaterialType type)
@@ -23,6 +24,8 @@ ATCG_INLINE const char* materialTypeToString(MaterialType type)
             return "Opaque";
         case MaterialType::MATERIAL_TYPE_GLASS:
             return "Glass";
+        case MaterialType::MATERIAL_TYPE_NULL:
+            return "Null";
         default:
             return "Unknown";
     }
@@ -37,6 +40,10 @@ ATCG_INLINE MaterialType stringToMaterialType(const char* str)
     else if(strcmp(str, "Glass") == 0)
     {
         return MaterialType::MATERIAL_TYPE_GLASS;
+    }
+    else if(strcmp(str, "Null") == 0)
+    {
+        return MaterialType::MATERIAL_TYPE_NULL;
     }
     else
     {

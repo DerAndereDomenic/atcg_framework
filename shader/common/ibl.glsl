@@ -66,4 +66,12 @@ subroutine(sr_image_based_lighting) vec3
     return ambient;
 }
 
+subroutine(sr_image_based_lighting) vec3
+    image_based_lighting_null(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 view_dir)
+{
+    vec3 prefiltered_refracted = textureLod(prefilter_map, -view_dir, 0).rgb;
+
+    return prefiltered_refracted;
+}
+
 subroutine uniform sr_image_based_lighting image_based_lighting;

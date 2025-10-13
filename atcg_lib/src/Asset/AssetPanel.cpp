@@ -5,6 +5,7 @@
 #endif
 
 #include <Core/Application.h>
+#include <Core/glm.h>
 #include <Asset/AssetManagerSystem.h>
 #include <portable-file-dialogs.h>
 #include <Scene/ComponentGUIHandler.h>
@@ -66,7 +67,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     int currentIndex = static_cast<int>(material.getMaterialType());
 
-    constexpr const char* materialTypeLabels[] = {"Opaque", "Glass"};
+    constexpr const char* materialTypeLabels[] = {"Opaque", "Glass", "Null"};
 
     if(ImGui::BeginCombo("Material Type", materialTypeToString(material.getMaterialType())))
     {
@@ -84,6 +85,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         ImGui::EndCombo();
     }
 
+    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
     {
         auto spec        = material.getDiffuseTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -149,6 +151,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         }
     }
 
+    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
     {
         auto spec        = material.getNormalTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -200,6 +203,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         }
     }
 
+    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
     {
         auto spec        = material.getRoughnessTexture()->getSpecification();
         bool useTextures = spec.width != 1 || spec.height != 1;
@@ -603,6 +607,101 @@ void AssetPanel::displayTexture2D(AssetHandle handle)
 #endif
 }
 
+void AssetPanel::displayTexture3D(AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    auto texture = AssetManager::getAsset<Texture3D>(handle);
+
+
+    ImGui::InputInt("Width##Texture3D", (int*)&_spec_3d.width);
+    ImGui::InputInt("Height##Texture3D", (int*)&_spec_3d.height);
+    ImGui::InputInt("Depth##Texture3D", (int*)&_spec_3d.depth);
+
+    if(ImGui::BeginCombo("Select Format##Texture3D", textureFormatToString(_spec_3d.format)))
+    {
+        for(int i = 0; i < (int)TextureFormat::_NUM_FORMATS; ++i)
+        {
+            bool is_selected = (int)_spec_3d.format == i;
+
+            if(ImGui::Selectable((std::string(textureFormatToString((TextureFormat)i)) + "##Texture3D").c_str(),
+                                 is_selected))
+            {
+                _spec_3d.format = (TextureFormat)i;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    if(ImGui::Button("Path##Texture3D"))
+    {
+        auto f     = pfd::open_file("Choose files to read",
+                                pfd::path::home(),
+                                    {"Compute Shader (.bin)", "*.bin"},
+                                pfd::opt::none);
+        auto files = f.result();
+        if(!files.empty())
+        {
+            _current_texture_3d_path = files[0];
+        }
+    }
+
+    if(_current_texture_3d_path != "")
+    {
+        ImGui::Text(_current_texture_3d_path.c_str());
+    }
+
+    ImGui::BeginDisabled(_current_texture_3d_path == "");
+    if(ImGui::Button("Load##Texture3D"))
+    {
+        std::ifstream summary_file(_current_texture_3d_path, std::ios::in | std::ios::binary);
+        std::vector<uint8_t> buffer_char(std::istreambuf_iterator<char>(summary_file), {});
+        summary_file.close();
+
+        auto texture    = Texture3D::create((const char*)buffer_char.data(), _spec_3d);
+        texture->handle = handle;
+
+        atcg::RevisionStack::startRecording<AssetEditedRevision>(texture->handle);
+        AssetManager::registerAsset(texture, AssetManager::getMetaData(texture->handle).name);
+        atcg::RevisionStack::endRecording();
+
+        _spec_3d                 = TextureSpecification();
+        _current_texture_3d_path = "";
+    }
+    ImGui::EndDisabled();
+
+
+    if(texture)
+    {
+        auto spec = texture->getSpecification();
+
+        if(!_preview || _preview->width() != spec.width || _preview->height() != spec.height)
+        {
+            _preview = Texture2D::create(spec);
+        }
+
+        auto slice = texture->getData(atcg::GPU)[_slice];
+
+        if(ImGui::SliderInt("Slice##Texture3D", (int*)&_slice, 0, spec.depth - 1))
+        {
+            _preview->setData(slice);
+        }
+
+        float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+        float aspect_ratio  = (float)texture->width() / (float)texture->height();
+        ImGui::Image((ImTextureID)_preview->getID(),
+                     ImVec2(content_scale * 256, content_scale * 256 / aspect_ratio),
+                     ImVec2 {0, 1},
+                     ImVec2 {1, 0});
+    }
+#endif
+}
+
 void AssetPanel::displayScene(AssetHandle handle)
 {
 #ifndef ATCG_HEADLESS
@@ -811,6 +910,13 @@ void AssetPanel::drawAssetList()
         }
         ImGui::SameLine();
         if(ImageTextButton((ImTextureID)_folder_icon->getID(),
+                           "3D Textures",
+                           ImVec2(content_scale * 64, content_scale * 64)))
+        {
+            _panel_state = AssetType::Texture3D;
+        }
+        ImGui::SameLine();
+        if(ImageTextButton((ImTextureID)_folder_icon->getID(),
                            "Materials",
                            ImVec2(content_scale * 64, content_scale * 64)))
         {
@@ -873,7 +979,7 @@ void AssetPanel::drawAssetList()
             {
                 icon = _mesh_icon;
             }
-            else if(data.type == AssetType::Texture2D)
+            else if(data.type == AssetType::Texture2D || data.type == AssetType::Texture3D)
             {
                 icon = _image_icon;
             }
@@ -932,6 +1038,13 @@ void AssetPanel::drawAdd()
             AssetMetaData data;
             data.type = AssetType::Texture2D;
             data.name = "texture";
+            new_asset = AssetManager::registerAsset(data);
+        }
+        if(_panel_state == AssetType::Texture3D)
+        {
+            AssetMetaData data;
+            data.type = AssetType::Texture3D;
+            data.name = "texture3d";
             new_asset = AssetManager::registerAsset(data);
         }
         if(_panel_state == AssetType::Scene)
@@ -1008,6 +1121,10 @@ void AssetPanel::drawAssetEditor()
         {
             displayTexture2D(_selected_handle);
         }
+        else if(data.type == AssetType::Texture3D)
+        {
+            displayTexture3D(_selected_handle);
+        }
         else if(data.type == AssetType::Scene)
         {
             displayScene(_selected_handle);
@@ -1062,6 +1179,9 @@ void AssetPanel::selectAsset(AssetHandle handle)
     _current_fragment_path = "";
     _current_geometry_path = "";
     _current_compute_path  = "";
+
+    _spec_3d                 = TextureSpecification();
+    _current_texture_3d_path = "";
 }
 
 }    // namespace GUI

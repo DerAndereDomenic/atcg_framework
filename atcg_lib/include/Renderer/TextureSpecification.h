@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/CUDA.h>
+
 namespace atcg
 {
 /**
@@ -71,7 +73,7 @@ TextureFilterMode stringToTextureFilterMode(const char* str);
 /**
  * @brief The texture sampler.
  */
-struct TextureSampler
+struct TextureSamplerSpecification
 {
     TextureWrapMode wrap_mode     = TextureWrapMode::REPEAT;
     TextureFilterMode filter_mode = TextureFilterMode::LINEAR;
@@ -97,7 +99,11 @@ struct TextureSpecification
           format(format)
     {
     }
-    TextureSpecification(uint32_t width, uint32_t height, uint32_t depth, TextureFormat format, TextureSampler sampler)
+    TextureSpecification(uint32_t width,
+                         uint32_t height,
+                         uint32_t depth,
+                         TextureFormat format,
+                         TextureSamplerSpecification sampler)
         : format(format),
           sampler(sampler),
           width(width),
@@ -106,10 +112,185 @@ struct TextureSpecification
     {
     }
 
-    TextureFormat format   = TextureFormat::RGBA;
-    TextureSampler sampler = {};
-    uint32_t width         = 0;
-    uint32_t height        = 0;
-    uint32_t depth         = 0;
+    TextureFormat format                = TextureFormat::RGBA;
+    TextureSamplerSpecification sampler = {};
+    uint32_t width                      = 0;
+    uint32_t height                     = 0;
+    uint32_t depth                      = 0;
+
+    ATCG_INLINE ATCG_HOST_DEVICE std::size_t pixelSize() const
+    {
+        switch(format)
+        {
+            case TextureFormat::RG:
+            {
+                return 2 * sizeof(uint8_t);
+            }
+            case TextureFormat::RGB:
+            {
+                return 3 * sizeof(uint8_t);
+            }
+            case TextureFormat::RGBA:
+            {
+                return 4 * sizeof(uint8_t);
+            }
+            case TextureFormat::RGFLOAT:
+            {
+                return 2 * sizeof(float);
+            }
+            case TextureFormat::RGBFLOAT:
+            {
+                return 3 * sizeof(float);
+            }
+            case TextureFormat::RGBAFLOAT:
+            {
+                return 4 * sizeof(float);
+            }
+            case TextureFormat::RINT:
+            {
+                return sizeof(uint32_t);
+            }
+            case TextureFormat::RINT8:
+            {
+                return sizeof(uint8_t);
+            }
+            case TextureFormat::RFLOAT:
+            {
+                return sizeof(float);
+            }
+            case TextureFormat::DEPTH:
+            {
+                return sizeof(float);
+            }
+            default:
+            {
+                ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
+                return 0;
+            }
+        }
+    }
+
+    ATCG_INLINE ATCG_HOST_DEVICE std::size_t channelSize() const
+    {
+        switch(format)
+        {
+            case TextureFormat::RG:
+            {
+                return sizeof(uint8_t);
+            }
+            case TextureFormat::RGB:
+            {
+                return sizeof(uint8_t);
+            }
+            case TextureFormat::RGBA:
+            {
+                return sizeof(uint8_t);
+            }
+            case TextureFormat::RGFLOAT:
+            {
+                return sizeof(float);
+            }
+            case TextureFormat::RGBFLOAT:
+            {
+                return sizeof(float);
+            }
+            case TextureFormat::RGBAFLOAT:
+            {
+                return sizeof(float);
+            }
+            case TextureFormat::RINT:
+            {
+                return sizeof(uint32_t);
+            }
+            case TextureFormat::RINT8:
+            {
+                return sizeof(uint8_t);
+            }
+            case TextureFormat::RFLOAT:
+            {
+                return sizeof(float);
+            }
+            case TextureFormat::DEPTH:
+            {
+                return sizeof(float);
+            }
+            default:
+            {
+                ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
+                return 0;
+            }
+        }
+    }
+
+    ATCG_INLINE ATCG_HOST_DEVICE uint32_t numChannels() const
+    {
+        switch(format)
+        {
+            case TextureFormat::RG:
+            {
+                return 2;
+            }
+            case TextureFormat::RGB:
+            {
+                return 3;
+            }
+            case TextureFormat::RGBA:
+            {
+                return 4;
+            }
+            case TextureFormat::RGFLOAT:
+            {
+                return 2;
+            }
+            case TextureFormat::RGBFLOAT:
+            {
+                return 3;
+            }
+            case TextureFormat::RGBAFLOAT:
+            {
+                return 4;
+            }
+            case TextureFormat::RINT:
+            {
+                return 1;
+            }
+            case TextureFormat::RINT8:
+            {
+                return 1;
+            }
+            case TextureFormat::RFLOAT:
+            {
+                return 1;
+            }
+            case TextureFormat::DEPTH:
+            {
+                return 1;
+            }
+            default:
+            {
+                ATCG_ERROR("Unknown TextureFormat {0}", (int)format);
+                return 0;
+            }
+        }
+    }
+
+    ATCG_INLINE ATCG_HOST_DEVICE bool isFloat() const
+    {
+        switch(format)
+        {
+            case TextureFormat::RFLOAT:
+            case TextureFormat::RGFLOAT:
+            case TextureFormat::RGBFLOAT:
+            case TextureFormat::RGBAFLOAT:
+            case TextureFormat::DEPTH:
+                return true;
+            default:
+                return false;
+        }
+
+        return false;
+    }
+
+    ATCG_INLINE ATCG_HOST_DEVICE bool isInt() const { return format == TextureFormat::RINT; }
 };
 }    // namespace atcg

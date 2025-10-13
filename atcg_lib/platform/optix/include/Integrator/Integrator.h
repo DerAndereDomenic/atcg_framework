@@ -1,0 +1,79 @@
+#pragma once
+
+#include <optix.h>
+
+#include <Core/Platform.h>
+#include <Core/RaytracingPipeline.h>
+#include <Core/ShaderBindingTable.h>
+#include <Core/OptixComponent.h>
+#include <Core/RaytracingContext.h>
+#include <Scene/Scene.h>
+#include <Renderer/PerspectiveCamera.h>
+#include <DataStructure/TorchUtils.h>
+
+#include <vector>
+
+namespace atcg
+{
+/**
+ * @brief A class to model an integrator
+ */
+class Integrator : public OptixComponent
+{
+public:
+    /**
+     * @brief Constructor
+     *
+     * @param context The raytracing context
+     * @param dict Additional paramaters
+     */
+    Integrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict) : _context(context) {}
+
+    /**
+     * @brief Destructor
+     */
+    virtual ~Integrator() = default;
+
+    /**
+     * @brief Set the scene
+     *
+     * @param scene The scene
+     */
+    ATCG_INLINE void setScene(const atcg::ref_ptr<Scene>& scene) { _scene = scene; }
+
+    /**
+     * @brief Initialize a pipeline.
+     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
+     * sbt.
+     *
+     * @param pipeline The pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
+
+    /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() = 0;
+
+    /**
+     * @brief Generate the rays and write output
+     *
+     * @param in_out_dictionary The input and output data
+     */
+    virtual void generateRays(Dictionary& in_out_dictionary) = 0;
+
+    /**
+     * @brief Reset the internal structure of the integrator
+     */
+    virtual void reset() = 0;
+
+protected:
+    atcg::ref_ptr<RaytracingContext> _context;
+    atcg::ref_ptr<Scene> _scene;
+
+    atcg::ref_ptr<RayTracingPipeline> _pipeline;
+    atcg::ref_ptr<ShaderBindingTable> _sbt;
+};
+}    // namespace atcg

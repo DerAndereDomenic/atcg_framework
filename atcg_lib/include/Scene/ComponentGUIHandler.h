@@ -62,7 +62,10 @@ ATCG_DECLARE_COMPONENT_GUI_RENDERER(EdgeRenderComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(EdgeCylinderRenderComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(InstanceRenderComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(PointLightComponent);
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(MeshLightComponent);
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(ScriptComponent);
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(HomogeneousMediumComponent);
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(HeterogeneousMediumComponent);
 
 template<typename T>
 ATCG_INLINE void drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity)
@@ -148,6 +151,8 @@ ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<a
 #endif
 }
 
+bool displayTransform(const std::string& id, TransformComponent& component);
+
 AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle);
 
 AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
@@ -157,5 +162,7 @@ AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
 AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
 
 AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle);
+
+AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle);
 }    // namespace GUI
 }    // namespace atcg

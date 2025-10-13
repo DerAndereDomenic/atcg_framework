@@ -2,6 +2,8 @@
 
 #include <Core/Assert.h>
 
+#include <glad/glad.h>
+
 namespace atcg
 {
 
@@ -524,6 +526,43 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
         {
             vao->popVertexBuffer();
         }
+    }
+}
+
+void ComponentRenderer<MeshLightComponent>::renderComponent(atcg::RendererSystem* _renderer,
+                                                            Entity entity,
+                                                            const atcg::ref_ptr<Camera>& camera,
+                                                            atcg::Dictionary& auxiliary) const
+{
+    uint32_t entity_id           = entity.entity_handle();
+    TransformComponent transform = entity.getComponent<TransformComponent>();
+    GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    // Actual rendering of component
+    MeshLightComponent renderer = entity.getComponent<MeshLightComponent>();
+
+    auto scene = entity.scene();
+
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader",
+                                                    _renderer->getShaderManager()->getShader("emissive"));
+
+    // if(renderer.visible)
+    {
+        auto emissive_id = _renderer->popTextureID();
+        renderer.getEmissiveTexture()->use(emissive_id);
+        shader->setInt("texture_emissive", emissive_id);
+        shader->setFloat("emissive_scaling", renderer.intensity);
+        _renderer->draw(geometry.graph(),
+                        camera,
+                        transform.getModel(),
+                        glm::vec3(1),
+                        shader,
+                        atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE,
+                        {},
+                        entity.entity_handle());
+
+        _renderer->pushTextureID(emissive_id);
     }
 }
 }    // namespace atcg

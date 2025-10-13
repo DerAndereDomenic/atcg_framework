@@ -11,6 +11,7 @@
 #include <nanort.h>
 #include <Scripting/Script.h>
 #include <Asset/AssetManagerSystem.h>
+#include <DataStructure/BoundingBox.h>
 
 #include <vector>
 
@@ -450,6 +451,49 @@ struct PointLightComponent
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Light"; }
 };
 
+struct MeshLightComponent
+{
+    MeshLightComponent()
+    {
+        glm::vec3 color(1);
+        TextureSpecification spec_emissive;
+        spec_emissive.width  = 1;
+        spec_emissive.height = 1;
+        glm::u8vec4 color_quant((uint8_t)(color[0] * 255.0f),
+                                (uint8_t)(color[1] * 255.0f),
+                                (uint8_t)(color[2] * 255.0f),
+                                (uint8_t)(255.0f));
+        _emissive_texture = atcg::Texture2D::create(&color_quant, spec_emissive);
+    }
+
+    float intensity = 1.0f;
+
+    ATCG_INLINE void setEmissiveColor(const glm::vec3& color)
+    {
+        TextureSpecification spec_emissive;
+        spec_emissive.width  = 1;
+        spec_emissive.height = 1;
+        glm::u8vec4 color_quant((uint8_t)(color[0] * 255.0f),
+                                (uint8_t)(color[1] * 255.0f),
+                                (uint8_t)(color[2] * 255.0f),
+                                (uint8_t)(255.0f));
+        _emissive_texture = atcg::Texture2D::create(&color_quant, spec_emissive);
+    }
+
+    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getEmissiveTexture() const
+    {
+        auto texture = AssetManager::getAsset<Texture2D>(emissive_handle);
+        return texture ? texture : _emissive_texture;
+    }
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Mesh Light"; }
+
+    AssetHandle emissive_handle;
+
+private:
+    atcg::ref_ptr<atcg::Texture2D> _emissive_texture;
+};
+
 struct ScriptComponent
 {
     ScriptComponent() = default;
@@ -472,6 +516,52 @@ struct ScriptComponent
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script"; }
 
     AssetHandle script_handle = 0;
+};
+
+struct HomogeneousMediumComponent
+{
+    HomogeneousMediumComponent() = default;
+
+    glm::vec3 albedo   = glm::vec3(0);
+    float density      = 0;
+    float g            = 0.0f;
+    float Le           = 0.0f;
+    glm::vec3 Le_color = glm::vec3(1);
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Homogeneous Medium"; }
+};
+
+struct HeterogeneousMediumComponent
+{
+    HeterogeneousMediumComponent() = default;
+
+    ATCG_INLINE atcg::ref_ptr<Texture3D> density() const
+    {
+        return AssetManager::getAsset<Texture3D>(density_grid.handle);
+    }
+    ATCG_INLINE atcg::ref_ptr<Texture3D> albedo() const
+    {
+        return AssetManager::getAsset<Texture3D>(albedo_grid.handle);
+    }
+    ATCG_INLINE atcg::ref_ptr<Texture3D> emission() const
+    {
+        return AssetManager::getAsset<Texture3D>(emission_grid.handle);
+    }
+
+    struct GridComponent
+    {
+        BoundingBox bbox;
+        AssetHandle handle = 0;
+        float scale        = 1.0f;
+    };
+
+    GridComponent density_grid;
+    GridComponent albedo_grid;
+    GridComponent emission_grid;
+
+    float g = 0.0f;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Heterogeneous Medium"; }
 };
 
 }    // namespace atcg

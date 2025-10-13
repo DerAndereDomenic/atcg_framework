@@ -50,6 +50,10 @@ namespace Serialization
 #define RENDER_SCALE_KEY           "Scale"
 #define LAYOUT_KEY                 "Layout"
 #define PATH_KEY                   "Path"
+#define EMISSIVE_SCALE_KEY         "EmissiveScale"
+#define EMISSIVE_COLOR_KEY         "EmissiveColor"
+#define EMISSIVE_TEXTURE_KEY       "EmissiveTexture"
+#define MESH_LIGHT_KEY             "MeshLight"
 
 void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
@@ -282,6 +286,32 @@ void ComponentSerializer<PointLightComponent>::serialize_component(const std::st
     j[POINT_LIGHT_KEY][INTENSITY_KEY] = component.intensity;
     j[POINT_LIGHT_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
     j[POINT_LIGHT_KEY][CAST_SHADOWS_KEY] = component.cast_shadow;
+}
+
+void ComponentSerializer<MeshLightComponent>::serialize_component(const std::string& file_path,
+                                                                  const atcg::ref_ptr<Scene>& scene,
+                                                                  Entity entity,
+                                                                  MeshLightComponent& component,
+                                                                  nlohmann::json& j) const
+{
+    j[MESH_LIGHT_KEY][EMISSIVE_SCALE_KEY] = component.intensity;
+
+    if(AssetManager::isAssetHandleValid(component.emissive_handle))
+    {
+        j[MESH_LIGHT_KEY][EMISSIVE_TEXTURE_KEY] = (uint64_t)component.emissive_handle;
+    }
+    else
+    {
+        auto data         = component.getEmissiveTexture()->getData(atcg::CPU);
+        glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
+                             data.index({0, 0, 1}).item<uint8_t>(),
+                             data.index({0, 0, 2}).item<uint8_t>()};
+
+        glm::vec3 c(color);
+        c = c / 255.0f;
+
+        j[MESH_LIGHT_KEY][EMISSIVE_COLOR_KEY] = nlohmann::json::array({c.x, c.y, c.z});
+    }
 }
 
 
@@ -572,6 +602,31 @@ void ComponentSerializer<PointLightComponent>::deserialize_component(const std::
     renderComponent.cast_shadow = point_light.value(CAST_SHADOWS_KEY, true);
 }
 
+void ComponentSerializer<MeshLightComponent>::deserialize_component(const std::string& file_path,
+                                                                    const atcg::ref_ptr<Scene>& scene,
+                                                                    Entity entity,
+                                                                    nlohmann::json& j) const
+{
+    if(!j.contains(MESH_LIGHT_KEY))
+    {
+        return;
+    }
+
+    auto& renderComponent = entity.addComponent<MeshLightComponent>();
+
+    renderComponent.intensity = j[MESH_LIGHT_KEY].value(EMISSIVE_SCALE_KEY, 1.0f);
+    if(j[MESH_LIGHT_KEY].contains(EMISSIVE_COLOR_KEY))
+    {
+        std::vector<float> emissive_color = j[MESH_LIGHT_KEY][EMISSIVE_COLOR_KEY];
+        renderComponent.setEmissiveColor(glm::make_vec3(emissive_color.data()));
+    }
+    else if(j[MESH_LIGHT_KEY].contains(EMISSIVE_TEXTURE_KEY))
+    {
+        AssetHandle emissive_handle     = (AssetHandle)j[MESH_LIGHT_KEY][EMISSIVE_TEXTURE_KEY];
+        renderComponent.emissive_handle = emissive_handle;
+    }
+}
+
 
 void ComponentSerializer<ScriptComponent>::deserialize_component(const std::string& file_path,
                                                                  const atcg::ref_ptr<Scene>& scene,
@@ -588,6 +643,145 @@ void ComponentSerializer<ScriptComponent>::deserialize_component(const std::stri
     script.script_handle = (AssetHandle)j[SCRIPT_KEY];
 
     script.script()->onAttach(scene, entity);
+}
+
+void ComponentSerializer<HomogeneousMediumComponent>::serialize_component(const std::string& file_path,
+                                                                          const atcg::ref_ptr<Scene>& scene,
+                                                                          Entity entity,
+                                                                          HomogeneousMediumComponent& component,
+                                                                          nlohmann::json& j) const
+{
+    glm::vec3 albedo   = component.albedo;
+    float density      = component.density;
+    float g            = component.g;
+    float Le           = component.Le;
+    glm::vec3 Le_color = component.Le_color;
+
+    j["Homogeneous Medium"]["albedo"]   = nlohmann::json::array({albedo.x, albedo.y, albedo.z});
+    j["Homogeneous Medium"]["density"]  = density;
+    j["Homogeneous Medium"]["g"]        = g;
+    j["Homogeneous Medium"]["Le"]       = Le;
+    j["Homogeneous Medium"]["Le_color"] = nlohmann::json::array({Le_color.x, Le_color.y, Le_color.z});
+}
+
+
+void ComponentSerializer<HomogeneousMediumComponent>::deserialize_component(const std::string& file_path,
+                                                                            const atcg::ref_ptr<Scene>& scene,
+                                                                            Entity entity,
+                                                                            nlohmann::json& j) const
+{
+    if(!j.contains("Homogeneous Medium"))
+    {
+        return;
+    }
+
+    std::vector<float> albedo   = j["Homogeneous Medium"].value("albedo", std::vector<float> {1.0f, 1.0f, 1.0f});
+    std::vector<float> Le_color = j["Homogeneous Medium"].value("Le_color", std::vector<float> {1.0f, 1.0f, 1.0f});
+
+    auto& component    = entity.addComponent<HomogeneousMediumComponent>();
+    component.albedo   = glm::make_vec3(albedo.data());
+    component.g        = j["Homogeneous Medium"]["g"];
+    component.Le       = j["Homogeneous Medium"]["Le"];
+    component.Le_color = glm::make_vec3(Le_color.data());
+    component.density  = j["Homogeneous Medium"]["density"];
+}
+
+void ComponentSerializer<HeterogeneousMediumComponent>::serialize_component(const std::string& file_path,
+                                                                            const atcg::ref_ptr<Scene>& scene,
+                                                                            Entity entity,
+                                                                            HeterogeneousMediumComponent& component,
+                                                                            nlohmann::json& j) const
+{
+    nlohmann::json j_density_grid;
+    nlohmann::json j_albedo_grid;
+    nlohmann::json j_emission_grid;
+
+    j_density_grid["grid"]  = (uint64_t)component.density_grid.handle;
+    j_density_grid["scale"] = component.density_grid.scale;
+    nlohmann::json j_bbox_density;
+    j_bbox_density["min"] = nlohmann::json::array(
+        {component.density_grid.bbox.min.x, component.density_grid.bbox.min.y, component.density_grid.bbox.min.z});
+    j_bbox_density["max"] = nlohmann::json::array(
+        {component.density_grid.bbox.max.x, component.density_grid.bbox.max.y, component.density_grid.bbox.max.z});
+    j_density_grid["bbox"] = j_bbox_density;
+
+    j_albedo_grid["grid"]  = (uint64_t)component.albedo_grid.handle;
+    j_albedo_grid["scale"] = component.albedo_grid.scale;
+    nlohmann::json j_bbox_albedo;
+    j_bbox_albedo["min"] = nlohmann::json::array(
+        {component.albedo_grid.bbox.min.x, component.albedo_grid.bbox.min.y, component.albedo_grid.bbox.min.z});
+    j_bbox_albedo["max"] = nlohmann::json::array(
+        {component.albedo_grid.bbox.max.x, component.albedo_grid.bbox.max.y, component.albedo_grid.bbox.max.z});
+    j_albedo_grid["bbox"] = j_bbox_albedo;
+
+    j_emission_grid["grid"]  = (uint64_t)component.emission_grid.handle;
+    j_emission_grid["scale"] = component.emission_grid.scale;
+    nlohmann::json j_bbox_emission;
+    j_bbox_emission["min"] = nlohmann::json::array(
+        {component.emission_grid.bbox.min.x, component.emission_grid.bbox.min.y, component.emission_grid.bbox.min.z});
+    j_bbox_emission["max"] = nlohmann::json::array(
+        {component.emission_grid.bbox.max.x, component.emission_grid.bbox.max.y, component.emission_grid.bbox.max.z});
+    j_emission_grid["bbox"] = j_bbox_emission;
+
+    j["Heterogeneous Medium"]["density_grid"]  = j_density_grid;
+    j["Heterogeneous Medium"]["albedo_grid"]   = j_albedo_grid;
+    j["Heterogeneous Medium"]["emission_grid"] = j_emission_grid;
+    j["Heterogeneous Medium"]["g"]             = component.g;
+}
+
+
+void ComponentSerializer<HeterogeneousMediumComponent>::deserialize_component(const std::string& file_path,
+                                                                              const atcg::ref_ptr<Scene>& scene,
+                                                                              Entity entity,
+                                                                              nlohmann::json& j) const
+{
+    if(!j.contains("Heterogeneous Medium"))
+    {
+        return;
+    }
+
+    auto& component = entity.addComponent<HeterogeneousMediumComponent>();
+
+    // --- Density grid ---
+    const auto& j_density         = j["Heterogeneous Medium"]["density_grid"];
+    component.density_grid.handle = (AssetHandle)j_density["grid"].get<uint64_t>();
+    component.density_grid.scale  = j_density["scale"].get<float>();
+
+    const auto& j_bbox_density      = j_density["bbox"];
+    component.density_grid.bbox.min = glm::vec3(j_bbox_density["min"][0].get<float>(),
+                                                j_bbox_density["min"][1].get<float>(),
+                                                j_bbox_density["min"][2].get<float>());
+    component.density_grid.bbox.max = glm::vec3(j_bbox_density["max"][0].get<float>(),
+                                                j_bbox_density["max"][1].get<float>(),
+                                                j_bbox_density["max"][2].get<float>());
+
+    // --- Albedo grid ---
+    const auto& j_albedo         = j["Heterogeneous Medium"]["albedo_grid"];
+    component.albedo_grid.handle = (AssetHandle)j_albedo["grid"].get<uint64_t>();
+    component.albedo_grid.scale  = j_albedo["scale"].get<float>();
+
+    const auto& j_bbox_albedo      = j_albedo["bbox"];
+    component.albedo_grid.bbox.min = glm::vec3(j_bbox_albedo["min"][0].get<float>(),
+                                               j_bbox_albedo["min"][1].get<float>(),
+                                               j_bbox_albedo["min"][2].get<float>());
+    component.albedo_grid.bbox.max = glm::vec3(j_bbox_albedo["max"][0].get<float>(),
+                                               j_bbox_albedo["max"][1].get<float>(),
+                                               j_bbox_albedo["max"][2].get<float>());
+
+    // --- Emission grid ---
+    const auto& j_emission         = j["Heterogeneous Medium"]["emission_grid"];
+    component.emission_grid.handle = (AssetHandle)j_emission["grid"].get<uint64_t>();
+    component.emission_grid.scale  = j_emission["scale"].get<float>();
+
+    const auto& j_bbox_emission      = j_emission["bbox"];
+    component.emission_grid.bbox.min = glm::vec3(j_bbox_emission["min"][0].get<float>(),
+                                                 j_bbox_emission["min"][1].get<float>(),
+                                                 j_bbox_emission["min"][2].get<float>());
+    component.emission_grid.bbox.max = glm::vec3(j_bbox_emission["max"][0].get<float>(),
+                                                 j_bbox_emission["max"][1].get<float>(),
+                                                 j_bbox_emission["max"][2].get<float>());
+
+    component.g = j["Heterogeneous Medium"]["g"].get<float>();
 }
 }    // namespace Serialization
 }    // namespace atcg

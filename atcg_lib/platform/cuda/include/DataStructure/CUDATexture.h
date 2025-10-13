@@ -18,6 +18,7 @@ struct CUDATexture
      */
     CUDATexture() = default;
 
+#ifdef __CUDACC__
     /**
      * @brief Read the texture
      *
@@ -25,7 +26,7 @@ struct CUDATexture
      * @return The data as normalized float
      */
     ATCG_DEVICE
-    glm::vec4 read(const glm::vec2& uv);
+    T read(const glm::vec2& uv) const;
 
     /**
      * @brief Write to the texture
@@ -43,7 +44,7 @@ struct CUDATexture
      * @return The data as normalized float
      */
     ATCG_DEVICE
-    glm::vec4 read(const glm::vec3& uvw);
+    T read(const glm::vec3& uvw) const;
 
     /**
      * @brief Write to the texture
@@ -53,6 +54,8 @@ struct CUDATexture
      */
     ATCG_DEVICE
     void write(const T& val, const glm::ivec3& texel);
+
+#endif
 
     // Texture and Surface Object
     struct
@@ -65,20 +68,29 @@ struct CUDATexture
     TextureSpecification spec;
 
     // Default value to read
-    glm::vec4 default_value = glm::vec4(0);
+    T default_value = T(0);
 };
 
 // Implementation
 
+#ifdef __CUDACC__
 template<typename T>
-ATCG_DEVICE glm::vec4 CUDATexture<T>::read(const glm::vec2& uv)
+ATCG_DEVICE T CUDATexture<T>::read(const glm::vec2& uv) const
 {
-    if(texture_data.surface != 0)
+    if(texture_data.texture != 0)
     {
         // Read using cuda api
         if constexpr(std::is_same_v<T, float>)
         {
-            return glm::vec4(tex2D<float>(texture_data.texture, uv.x, uv.y));
+            return tex2D<float>(texture_data.texture, uv.x, uv.y);
+        }
+        else if constexpr(vec_traits<T>::dim == 2)
+        {
+            return glm::xy(cuda2glm(tex2D<float4>(texture_data.texture, uv.x, uv.y)));
+        }
+        else if constexpr(vec_traits<T>::dim == 3)
+        {
+            return glm::xyz(cuda2glm(tex2D<float4>(texture_data.texture, uv.x, uv.y)));
         }
         else
         {
@@ -102,7 +114,7 @@ ATCG_DEVICE void CUDATexture<T>::write(const T& val, const glm::ivec2& texel)
         {
             surf2Dwrite(cuda_val, texture_data.surface, texel.x * sizeof(float), texel.y);
         }
-        else if constexpr(inv_cuda_type<decltype(cuda_val)>::dim == 3)
+        else if constexpr(vec_traits<T>::dim == 3)
         {
             auto cuda_val_pad = make_cuda_type<4, typename T::value_type>::apply(val.x, val.y, val.z, 0);
             surf2Dwrite(cuda_val_pad, texture_data.surface, texel.x * sizeof(decltype(cuda_val_pad)), texel.y);
@@ -116,14 +128,22 @@ ATCG_DEVICE void CUDATexture<T>::write(const T& val, const glm::ivec2& texel)
 }
 
 template<typename T>
-ATCG_DEVICE glm::vec4 CUDATexture<T>::read(const glm::vec3& uvw)
+ATCG_DEVICE T CUDATexture<T>::read(const glm::vec3& uvw) const
 {
-    if(texture_data.surface != 0)
+    if(texture_data.texture != 0)
     {
         // Read using cuda api
         if constexpr(std::is_same_v<T, float>)
         {
-            return glm::vec4(tex3D<float>(texture_data.texture, uvw.x, uvw.y, uvw.z));
+            return tex3D<float>(texture_data.texture, uvw.x, uvw.y, uvw.z);
+        }
+        else if constexpr(vec_traits<T>::dim == 2)
+        {
+            return glm::xy(cuda2glm(tex3D<float4>(texture_data.texture, uvw.x, uvw.y, uvw.z)));
+        }
+        else if constexpr(vec_traits<T>::dim == 3)
+        {
+            return glm::xyz(cuda2glm(tex3D<float4>(texture_data.texture, uvw.x, uvw.y, uvw.z)));
         }
         else
         {
@@ -147,7 +167,7 @@ ATCG_DEVICE void CUDATexture<T>::write(const T& val, const glm::ivec3& texel)
         {
             surf3Dwrite(cuda_val, texture_data.surface, texel.x * sizeof(float), texel.y, texel.z);
         }
-        else if constexpr(inv_cuda_type<decltype(cuda_val)>::dim == 3)
+        else if constexpr(vec_traits<T>::dim == 3)
         {
             auto cuda_val_pad = make_cuda_type<4, typename T::value_type>::apply(val.x, val.y, val.z, 0);
             surf3Dwrite(cuda_val_pad, texture_data.surface, texel.x * sizeof(decltype(cuda_val_pad)), texel.y, texel.z);
@@ -160,4 +180,5 @@ ATCG_DEVICE void CUDATexture<T>::write(const T& val, const glm::ivec3& texel)
 
     // Else do nothing (no valid data)
 }
+#endif
 }    // namespace atcg

@@ -450,7 +450,7 @@ public:
      *
      * @param src The source pointer
      */
-    void copy(const DevicePointer<T, allocator>& src) { _container->copy(src.get(), src.size() * sizeof(T)); }
+    void copy(const DevicePointer<T, allocator>& src) { _container->copy(src.get(), sizeof(T)); }
 
     /**
      * @brief Reset this shared_ptr, i.e. decrement the ref counter of the underlying shared_ptr

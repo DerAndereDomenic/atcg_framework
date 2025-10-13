@@ -539,6 +539,7 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("vrScreen");
     impl->shader_manager->addShaderFromName("depth_pass");
     impl->shader_manager->addShaderFromName("image_display");
+    impl->shader_manager->addShaderFromName("emissive");
     impl->shader_manager->addShaderFromName("tonemap");
 
     impl->renderer = this;
@@ -558,6 +559,7 @@ void RendererSystem::finishFrame()
     impl->quad_vao->use();
     auto shader = impl->shader_manager->getShader("screen");
     shader->setInt("screen_texture", 0);
+    shader->selectSubroutine("_getEntityID", "getDefaultID");
 
     shader->use();
     impl->screen_fbo->getColorAttachement()->use();
@@ -902,16 +904,37 @@ void RendererSystem::drawCircle(const glm::vec3& position,
 
 void RendererSystem::drawImage(const atcg::ref_ptr<Framebuffer>& img)
 {
-    drawImage(std::static_pointer_cast<atcg::Texture2D>(img->getColorAttachement(0)));
+    auto color                          = std::static_pointer_cast<atcg::Texture2D>(img->getColorAttachement(0));
+    atcg::ref_ptr<Texture2D> entity_ids = nullptr;
+    if(img->getNumberAttachements() > 1)
+    {
+        auto ids = std::static_pointer_cast<atcg::Texture2D>(img->getColorAttachement(1));
+        if(ids->getSpecification().format == atcg::TextureFormat::RINT)
+        {
+            entity_ids = ids;
+        }
+    }
+    drawImage(color, entity_ids);
 }
 
-void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img)
+void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::ref_ptr<Texture2D>& entity_ids)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     impl->quad_vao->use();
     auto shader = impl->shader_manager->getShader("screen");
     shader->setInt("screen_texture", 0);
+
+    if(entity_ids)
+    {
+        shader->setInt("entity_ids", 1);
+        entity_ids->use(1);
+        shader->selectSubroutine("_getEntityID", "getFromTextureID");
+    }
+    else
+    {
+        shader->selectSubroutine("_getEntityID", "getDefaultID");
+    }
 
     shader->use();
     img->use();

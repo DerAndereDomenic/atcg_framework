@@ -1,5 +1,10 @@
 # Collect all source files in this directory
-file(GLOB_RECURSE source "**.h*" "**.c*")
+if(ATCG_CUDA_BACKEND)
+    set(source source.cpp kernels.h kernels.cu)
+else()
+    set(source source.cpp kernels.h kernels.cpp)
+endif()
+
 # Retrieve target name from current folder name
 get_filename_component(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 # Add target executable

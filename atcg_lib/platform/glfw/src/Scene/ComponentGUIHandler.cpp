@@ -12,67 +12,53 @@ namespace atcg
 namespace GUI
 {
 
-void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
-                                                              Entity entity,
-                                                              TransformComponent& transform) const
+bool displayTransform(const std::string& id, TransformComponent& transform)
 {
-    std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
-
+    bool updated       = false;
     glm::vec3 position = transform.getPosition();
     std::stringstream label;
     label << "Position##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(position), 0.05f))
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         transform.setPosition(position);
-        atcg::RevisionStack::endRecording();
+        updated = true;
     }
     glm::vec3 scale = transform.getScale();
     label.str(std::string());
     label << "Scale##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(scale), 0.05f, 1e-5f, FLT_MAX))
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         scale = glm::clamp(scale, 1e-5f, FLT_MAX);
         transform.setScale(scale);
-        atcg::RevisionStack::endRecording();
+        updated = true;
     }
     glm::vec3 rotation = glm::degrees(transform.getRotation());
     label.str(std::string());
     label << "Rotation##" << id;
     if(ImGui::DragFloat3(label.str().c_str(), glm::value_ptr(rotation), 0.05f))
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         transform.setRotation(glm::radians(rotation));
-        atcg::RevisionStack::endRecording();
+        updated = true;
     }
 
-    if(entity.hasComponent<atcg::GeometryComponent>())
-    {
-        // TODO
-        // if(ImGui::Button("Apply Transform"))
-        // {
-        //     RevisionStack::startRecording<
-        //         UnionRevision<ComponentEditedRevision<TransformComponent>,
-        //         ComponentEditedRevision<GeometryComponent>>>( scene, entity);
-        //     auto& geometry = entity.getComponent<atcg::GeometryComponent>();
-        //     auto graph     = geometry.graph()->copy();
-        //     applyTransform(graph, transform);
-        //     geometry.setGraph(graph);
-        //     atcg::RevisionStack::endRecording();
-        // }
+    return updated;
+}
 
-        // if(ImGui::Button("Normalize"))
-        // {
-        //     RevisionStack::startRecording<
-        //         UnionRevision<ComponentEditedRevision<TransformComponent>,
-        //         ComponentEditedRevision<GeometryComponent>>>( scene, entity);
-        //     auto& geometry = entity.getComponent<atcg::GeometryComponent>();
-        //     auto graph     = geometry.graph()->copy();
-        //     normalize(graph, transform);
-        //     geometry.setGraph(graph);
-        //     atcg::RevisionStack::endRecording();
-        // }
+void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                              Entity entity,
+                                                              TransformComponent& transform) const
+{
+    std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
+
+    TransformComponent transform_ = transform;
+
+    bool updated = displayTransform(id, transform_);
+
+    if(updated)
+    {
+        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
+        transform = transform_;
+        atcg::RevisionStack::endRecording();
     }
 }
 
@@ -524,6 +510,54 @@ void ComponentGUIRenderer<PointLightComponent>::draw_component(const atcg::ref_p
     }
 }
 
+void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                              Entity entity,
+                                                              MeshLightComponent& _component) const
+{
+    MeshLightComponent component = _component;
+
+    float updated = false;
+    {
+        // auto spec        = component.getEmissiveTexture()->getSpecification();
+        // bool useTextures = spec.width != 1 || spec.height != 1;
+
+        updated = ImGui::DragFloat("Scaling", &component.intensity, 0.005f, 0.0f, FLT_MAX) || updated;
+
+        if(!AssetManager::isAssetHandleValid(component.emissive_handle))
+        {
+            auto emissive = component.getEmissiveTexture()->getData(atcg::CPU);
+
+            float color[4] = {emissive.index({0, 0, 0}).item<float>() / 255.0f,
+                              emissive.index({0, 0, 1}).item<float>() / 255.0f,
+                              emissive.index({0, 0, 2}).item<float>() / 255.0f,
+                              emissive.index({0, 0, 3}).item<float>() / 255.0f};
+
+            if(ImGui::ColorEdit4("Emissive##mesh_light", color))
+            {
+                glm::vec4 new_color = glm::make_vec4(color);
+                component.setEmissiveColor(new_color);
+                updated = true;
+            }
+        }
+
+        ImGui::Separator();
+
+        auto new_handle = displayTexture2DSelection("meshlight", component.emissive_handle);
+
+        updated                   = (new_handle != component.emissive_handle) || updated;
+        component.emissive_handle = new_handle;
+
+        ImGui::Separator();
+    }
+
+    if(updated)
+    {
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<MeshLightComponent>>(scene, entity);
+        _component = component;
+        atcg::RevisionStack::endRecording();
+    }
+}
+
 
 void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
                                                            Entity entity,
@@ -793,6 +827,129 @@ AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle
     }
 
     return current_item;
+}
+
+AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle)
+{
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Image";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Image##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("No Image", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Texture3D) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+}
+
+void ComponentGUIRenderer<HomogeneousMediumComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                      Entity entity,
+                                                                      HomogeneousMediumComponent& component) const
+{
+#ifndef ATCG_HEADLESS
+    HomogeneousMediumComponent _component = component;
+
+    bool updated = false;
+    updated      = ImGui::DragFloat("Density##homogen", &_component.density, 0.05f, 0.0f, 50.0f) || updated;
+    updated      = ImGui::DragFloat("g##homogen", &_component.g, 0.01f, -1.0f, 1.0f) || updated;
+    updated      = ImGui::ColorEdit3("albedo##homogen", glm::value_ptr(_component.albedo)) || updated;
+    updated      = ImGui::DragFloat("Le##homogen", &_component.Le, 0.01f, 0.0f, 100.0f) || updated;
+    updated      = ImGui::ColorEdit3("LeColor##homogen", glm::value_ptr(_component.Le_color)) || updated;
+
+    if(updated)
+    {
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<HomogeneousMediumComponent>>(scene, entity);
+        component = _component;
+        atcg::RevisionStack::endRecording();
+    }
+#endif
+}
+
+void ComponentGUIRenderer<HeterogeneousMediumComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
+                                                                        Entity entity,
+                                                                        HeterogeneousMediumComponent& component) const
+{
+#ifndef ATCG_HEADLESS
+    HeterogeneousMediumComponent _component = component;
+
+    bool updated = false;
+
+    ImGui::Text("Density");
+    auto new_handle                = displayTexture3DSelection("densitytexture3d", _component.density_grid.handle);
+    updated                        = updated || (new_handle != _component.density_grid.handle);
+    _component.density_grid.handle = new_handle;
+    updated =
+        ImGui::DragFloat("Desity Scale##texture3d", &_component.density_grid.scale, 0.01f, 0.0f, 10.0f) || updated;
+    ImGui::Text("Bounding Box");
+    updated = ImGui::DragFloat3("Min##density", glm::value_ptr(_component.density_grid.bbox.min), 0.05f) || updated;
+    updated = ImGui::DragFloat3("Max##density", glm::value_ptr(_component.density_grid.bbox.max), 0.05f) || updated;
+
+    ImGui::Separator();
+    ImGui::Text("Albedo");
+    new_handle                    = displayTexture3DSelection("albedotexture3d", _component.albedo_grid.handle);
+    updated                       = updated || (new_handle != _component.albedo_grid.handle);
+    _component.albedo_grid.handle = new_handle;
+    updated = ImGui::DragFloat("Albedo Scale##texture3d", &_component.albedo_grid.scale, 0.01f, 0.0f, 1.0f) || updated;
+    ImGui::Text("Bounding Box");
+    updated = ImGui::DragFloat3("Min##albedo", glm::value_ptr(_component.albedo_grid.bbox.min), 0.05f) || updated;
+    updated = ImGui::DragFloat3("Max##albedo", glm::value_ptr(_component.albedo_grid.bbox.max), 0.05f) || updated;
+
+    ImGui::Separator();
+    ImGui::Text("Emission");
+    new_handle                      = displayTexture3DSelection("emissiontexture3d", _component.emission_grid.handle);
+    updated                         = updated || (new_handle != _component.emission_grid.handle);
+    _component.emission_grid.handle = new_handle;
+    updated =
+        ImGui::DragFloat("Emission Scale##texture3d", &_component.emission_grid.scale, 0.01f, 0.0f, 10.0f) || updated;
+    ImGui::Text("Bounding Box");
+    updated = ImGui::DragFloat3("Min##emission", glm::value_ptr(_component.emission_grid.bbox.min), 0.05f) || updated;
+    updated = ImGui::DragFloat3("Max##emission", glm::value_ptr(_component.emission_grid.bbox.max), 0.05f) || updated;
+    updated = ImGui::DragFloat("g##het", &_component.g, 0.01f, -1.0f, 1.0f) || updated;
+
+    if(updated)
+    {
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<HeterogeneousMediumComponent>>(scene, entity);
+        component = _component;
+        atcg::RevisionStack::endRecording();
+    }
+#endif
 }
 
 }    // namespace GUI

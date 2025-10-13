@@ -211,6 +211,24 @@ atcg::ref_ptr<Asset> deserializeTexture2D_ver1(const std::filesystem::path& path
     return atcg::Texture2D::create(img);
 }
 
+atcg::ref_ptr<Asset> deserializeTexture3D_ver1(const std::filesystem::path& path, const nlohmann::json& j)
+{
+    auto buffer_path = path.parent_path() / j["Path"];
+
+    auto buffer = deserializeBuffer_ver1(buffer_path);
+
+    TextureSpecification spec;
+    spec.width               = j["Width"];
+    spec.height              = j["Height"];
+    spec.depth               = j["Depth"];
+    spec.format              = stringToTextureFormat(std::string(j.value("Format", "RGBA")).c_str());
+    spec.sampler.filter_mode = stringToTextureFilterMode(std::string(j.value("Filter", "LINEAR")).c_str());
+    spec.sampler.wrap_mode   = stringToTextureWrapMode(std::string(j.value("Wrap", "REPEAT")).c_str());
+    spec.sampler.mip_map     = j.value("MipMap", false);
+
+    return atcg::Texture3D::create(buffer.data(), spec);
+}
+
 atcg::ref_ptr<Asset> deserializeScene_ver1(const std::filesystem::path& path)
 {
     auto scene = atcg::make_ref<Scene>();
@@ -264,6 +282,24 @@ AssetImporter::importAsset(const std::filesystem::path& path, AssetHandle handle
             }
 
             if(std::filesystem::exists(img_path)) asset = detail::deserializeTexture2D_ver1(img_path);
+        }
+        break;
+        case AssetType::Texture3D:
+        {
+            auto img_path = path / "textures" / std::to_string(handle) / (metadata.name + ".json");
+
+            if(!std::filesystem::exists(img_path)) break;
+
+            std::ifstream i(img_path);
+            nlohmann::json j;
+            i >> j;
+
+            std::string version = j["Version"];
+
+            if(version == "1.0")
+            {
+                if(std::filesystem::exists(img_path)) asset = detail::deserializeTexture3D_ver1(img_path, j);
+            }
         }
         break;
         case AssetType::Material:

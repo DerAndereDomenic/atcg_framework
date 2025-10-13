@@ -1,0 +1,66 @@
+#pragma once
+
+#include <Shape/Shape.h>
+#include <Shape/MeshShapeData.cuh>
+#include <DataStructure/Graph.h>
+#include <DataStructure/TorchUtils.h>
+#include <Core/PipelineInitializer.h>
+
+namespace atcg
+{
+/**
+ * @brief A class to model a triangle mesh
+ */
+class MeshShape : public Shape
+{
+public:
+    /**
+     * @brief Constructor
+     * -"mesh": atcg::ref_ptr<Graph>
+     *
+     * @param dict The parameters
+     */
+    MeshShape(const Dictionary& dict);
+
+    /**
+     * @brief Destructor
+     */
+    virtual ~MeshShape();
+
+    /**
+     * @brief A callback to display debug information in imgui
+     */
+    virtual void onImGuiRender() override {}
+
+    /**
+     * @brief Prepare the geometry acceleration structor
+     *
+     * @param context The raytracing context
+     */
+    virtual void prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context) override;
+
+    /**
+     * @brief Get the Mesh Shape data
+     *
+     * @return The data
+     */
+    ATCG_INLINE atcg::dref_ptr<MeshShapeData> getMeshShapeData() const { return _data; }
+
+    ATCG_INLINE torch::Tensor getPositions() const { return _positions; }
+    ATCG_INLINE torch::Tensor getNormals() const { return _normals; }
+    ATCG_INLINE torch::Tensor getColors() const { return _colors; }
+    ATCG_INLINE torch::Tensor getUVs() const { return _uvs; }
+    ATCG_INLINE torch::Tensor getFaces() const { return _faces; }
+
+private:
+    torch::Tensor _positions;
+    torch::Tensor _normals;
+    torch::Tensor _colors;
+    torch::Tensor _uvs;
+    torch::Tensor _faces;
+
+    atcg::dref_ptr<MeshShapeData> _data;
+};
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(MeshShape);
+}    // namespace atcg

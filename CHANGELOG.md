@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added BlitPass
 - Added different material types and basic implementation for glass
 - Added tonemapping render pass
+- Added pathtracing using OptiX
+- Added function to draw an Image with attached entities
+- Added MeshLight component
+- Added a class to sample textures from host/device code
+- Added vector traits for compile time glm checks
 
 ### Changed
 
@@ -65,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed crash when a Script is held inside the revision system and the app is closed
 - Fixed rendering of InstanceRenderComponent
 - Fixed Revision of Camera Components
+- Fixed mip level when copying texture3d
 
 ## [0.2.1-beta]
 

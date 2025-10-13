@@ -19,6 +19,9 @@
     #include <ImGui/ImGuiLayer.h>
 #endif
 
+#ifdef ATCG_ENABLE_OPTIX
+    #include <Core/RaytracingContextManager.h>
+#endif
 namespace atcg
 {
 class Application;
@@ -140,6 +143,9 @@ private:
 private:
     bool _running = false;
     atcg::ref_ptr<ContextManagerSystem> _context_manager;
+#ifdef ATCG_ENABLE_OPTIX
+    atcg::ref_ptr<RaytracingContextManagerSystem> _rt_context_manager;
+#endif
     atcg::scope_ptr<Window> _window;
 #ifndef ATCG_HEADLESS
     ImGuiLayer* _imgui_layer;

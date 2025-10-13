@@ -17,6 +17,12 @@ if(ATCG_CUDA_BACKEND)
     )
 
     target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+
+    if(ATCG_ENABLE_OPTIX)
+        target_include_directories(atcg_lib PUBLIC ${OptiX_INCLUDE})
+        target_compile_definitions(atcg_lib PUBLIC ATCG_ENABLE_OPTIX)
+    endif()
+
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
     target_link_libraries(atcg_lib PUBLIC CUDA::nvjpeg)
@@ -50,10 +56,25 @@ file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "${ATCG_PROJECT_RO
 file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.c*"
                                                             "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.h")
 
+if(ATCG_ENABLE_OPTIX)
+    list(APPEND CMAKE_MODULE_PATH "${ATCG_PROJECT_ROOT_DIR}/cmake")
+    include(FilterPTX)
+
+    file (GLOB_RECURSE atcg_optix_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/optix/**.c*"
+                                                               "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/optix/**.h")
+
+    filter_ptx_sources("${atcg_optix_files}" ptx_files)
+    list(REMOVE_ITEM atcg_optix_files ${ptx_files})
+    add_ptx_module(atcg "${ptx_files}")
+    set(ptx_target "atcg_ptxmodules")
+    add_dependencies(atcg_lib ${ptx_target} ${ptx_target}-copy)
+endif()
+
 target_sources(atcg_lib PRIVATE ${atcg_lib_files} 
                                 ${atcg_backend_files} 
                                 ${atcg_renderer_files} 
-                                ${atcg_window_files})
+                                ${atcg_window_files}
+                                ${atcg_optix_files})
 
 if (NOT ATCG_PYTHON_MODULE)
     file (GLOB_RECURSE atcg_lib_python_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python/**.h"
@@ -76,6 +97,7 @@ target_include_directories(atcg_lib PUBLIC "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/in
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_BACKEND}/include"
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/include"
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/opengl/include"
+                                           "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/optix/include"
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python"
 )
 

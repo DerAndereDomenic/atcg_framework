@@ -11,9 +11,46 @@
 #include <stb_image.h>
 #include <portable-file-dialogs.h>
 
+#include <Core/Common.h>
+
 class PBRLayer : public atcg::Layer
 {
 public:
+    void createOutputTexture(int width, int height)
+    {
+#ifdef ATCG_ENABLE_OPTIX
+        output_tensor   = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
+        output_entities = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
+
+        atcg::TextureSpecification spec;
+        spec.width     = width;
+        spec.height    = height;
+        spec.format    = atcg::TextureFormat::RGBA;
+        output_texture = atcg::Texture2D::create(spec);
+
+        atcg::TextureSpecification spec_int;
+        spec_int.width        = width;
+        spec_int.height       = height;
+        spec_int.format       = atcg::TextureFormat::RINT;
+        output_entity_texture = atcg::Texture2D::create(spec_int);
+#endif
+    }
+
+    void initializePathtracer()
+    {
+#ifdef ATCG_ENABLE_OPTIX
+        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
+        sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
+
+        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, atcg::Dictionary());
+        integrator->setScene(atcg::Project::getActive()->getActiveScene());
+        integrator->initializePipeline(pipeline, sbt);
+
+        pipeline->createPipeline();
+        sbt->createSBT();
+#endif
+    }
+
     PBRLayer(const std::string& name) : atcg::Layer(name) {}
 
     // This is run at the start of the program
@@ -105,13 +142,28 @@ public:
             instances.addInstanceBuffer(vbo_transforms);
             instances.addInstanceBuffer(vbo_colors);
         }
+
+#ifdef ATCG_ENABLE_OPTIX
+        optx_context = atcg::RaytracingContextManager::createContext();
+#endif
+
+        createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
+
+        scene->setCamera(camera_controller->getCamera());
     }
 
     // This gets called each frame
     virtual void onUpdate(float delta_time) override
     {
         performance_panel.registerFrameTime(delta_time);
-        camera_controller->onUpdate(delta_time);
+        bool updated = camera_controller->onUpdate(delta_time);
+
+#ifdef ATCG_ENABLE_OPTIX
+        if(enable_pathtracing && updated)
+        {
+            integrator->reset();
+        }
+#endif
 
         atcg::Scripting::handleScriptUpdates(atcg::Project::getActive()->getActiveScene(), delta_time);
 
@@ -171,15 +223,38 @@ public:
         {
             atcg::Renderer::clear();
 
-            uint32_t width  = atcg::Renderer::getFramebuffer()->width();
-            uint32_t height = atcg::Renderer::getFramebuffer()->height();
-            atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera(),
-                                                               atcg::Renderer::getFramebuffer());
+            if(enable_pathtracing)
+            {
+#ifdef ATCG_ENABLE_OPTIX
+                atcg::Dictionary dict;
+                dict.setValue("camera", camera_controller->getCamera());
+                dict.setValue("output", output_tensor);
+                dict.setValue("entity_ids", output_entities);
+                integrator->generateRays(dict);
+                output_texture->setData(output_tensor);
+                output_entity_texture->setData(output_entities);
+
+                atcg::Renderer::drawImage(output_texture, output_entity_texture);
+#endif
+            }
+            else
+            {
+                atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera(),
+                                                                   atcg::Renderer::getFramebuffer());
+            }
+
 
             atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
             atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
 
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+        }
+
+        uint32_t current_revision = atcg::RevisionStack::numUndos();
+        if(current_revision != last_revision)
+        {
+            last_revision = current_revision;
+            if(enable_pathtracing) initializePathtracer();
         }
     }
 
@@ -234,6 +309,7 @@ public:
                     if(atcg::Project::getActive()->getActiveScene())
                     {
                         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
+                        initializePathtracer();
                     }
                     atcg::RevisionStack::clearChache();
 
@@ -297,8 +373,19 @@ public:
                 }
             }
 
+    #ifdef ATCG_ENABLE_OPTIX
+            if(ImGui::Checkbox("Path Tracing", &enable_pathtracing))
+            {
+                if(enable_pathtracing) initializePathtracer();
+            }
+    #endif
+
             ImGui::End();
         }
+
+    #ifdef ATCG_ENABLE_OPTIX
+        if(enable_pathtracing) integrator->onImGuiRender();
+    #endif
 
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
@@ -333,6 +420,7 @@ public:
     {
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
+        createOutputTexture(event->getWidth(), event->getHeight());
         return false;
     }
 
@@ -412,6 +500,8 @@ private:
     bool show_render_settings = false;
     bool vsync                = true;
 
+    bool enable_pathtracing = false;
+
     uint32_t msaa_samples[6]              = {1, 2, 4, 8, 16, 32};
     const char* msaa_samples_str[6]       = {"1", "2", "4", "8", "16", "32"};
     uint32_t current_msaa_selection_index = 4;
@@ -419,6 +509,21 @@ private:
 #ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif
+
+#ifdef ATCG_ENABLE_OPTIX
+    atcg::ref_ptr<atcg::RaytracingContext> optx_context;
+    atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
+    atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
+    atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator;
+#endif
+
+    torch::Tensor output_tensor;
+    atcg::ref_ptr<atcg::Texture2D> output_texture;
+
+    torch::Tensor output_entities;
+    atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
+
+    uint32_t last_revision = 0;
 };
 
 class PBR : public atcg::Application

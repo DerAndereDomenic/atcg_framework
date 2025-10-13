@@ -8,6 +8,8 @@
 
 #include <Scene/ComponentRegistry.h>
 
+#define ATCG_CONCAT_ID(name, uuid) ((name + ("##" + uuid)).c_str())
+
 namespace atcg
 {
 namespace GUI
@@ -32,7 +34,7 @@ void SceneHierarchyPanel::drawEntityNode(const atcg::ref_ptr<Scene>& scene, Enti
     bool entityDeleted = false;
     if(ImGui::BeginPopupContextItem())
     {
-        if(ImGui::MenuItem("Delete Entity")) entityDeleted = true;
+        if(ImGui::MenuItem(ATCG_CONCAT_ID("Delete Entity", _uuid))) entityDeleted = true;
 
         ImGui::EndPopup();
     }
@@ -75,12 +77,12 @@ void SceneHierarchyPanel::drawComponents(const atcg::ref_ptr<Scene>& scene, Enti
     ImGui::SameLine();
     ImGui::PushItemWidth(-1);
 
-    if(ImGui::Button("Add Component"))
+    if(ImGui::Button(ATCG_CONCAT_ID("Add Component", _uuid)))
     {
-        ImGui::OpenPopup("AddComponent");
+        ImGui::OpenPopup(ATCG_CONCAT_ID("AddComponent", _uuid));
     }
 
-    if(ImGui::BeginPopup("AddComponent"))
+    if(ImGui::BeginPopup(ATCG_CONCAT_ID("AddComponent", _uuid)))
     {
         ComponentRegistry::displayAddAllComponents(scene, entity);
 
@@ -105,7 +107,7 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
         _selected_entity = {};
     }
 
-    ImGui::Begin("Scene Hierarchy");
+    ImGui::Begin(ATCG_CONCAT_ID("Scene Hierarchy", _uuid));
 
     if(ImGui::IsMouseDown(0) && ImGui::IsWindowHovered() && !ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive())
     {
@@ -122,9 +124,9 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
 
     if(ImGui::BeginPopupContextWindow(0, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverExistingPopup))
     {
-        if(ImGui::MenuItem("Create Empty Entity"))
+        if(ImGui::MenuItem(ATCG_CONCAT_ID("Create Empty Entity", _uuid)))
         {
-            Entity entity = scene->createEntity("Empty Entity");
+            Entity entity = scene->createEntity(ATCG_CONCAT_ID("Empty Entity", _uuid));
             atcg::RevisionStack::startRecording<EntityAddedRevision>(scene, entity);
             atcg::RevisionStack::endRecording();
             selectEntity(entity);
@@ -134,7 +136,7 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
 
     ImGui::End();
 
-    ImGui::Begin("Properties");
+    ImGui::Begin(ATCG_CONCAT_ID("Properties", _uuid));
     ImGuiTabItemFlags flags = 0;
     if(_focues_components)
     {
@@ -143,9 +145,9 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
         _focues_components = false;
     }
 
-    if(ImGui::BeginTabBar("TabBarComponents"))
+    if(ImGui::BeginTabBar(ATCG_CONCAT_ID("TabBarComponents", _uuid)))
     {
-        if(ImGui::BeginTabItem("Components", (bool*)0, flags))
+        if(ImGui::BeginTabItem(ATCG_CONCAT_ID("Components", _uuid), (bool*)0, flags))
         {
             if(_selected_entity)
             {
