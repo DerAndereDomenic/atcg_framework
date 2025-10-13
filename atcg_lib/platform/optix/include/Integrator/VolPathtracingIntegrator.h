@@ -6,6 +6,7 @@
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
+#include <Scene/SceneHierarchyPanel.h>
 
 namespace atcg
 {
@@ -60,7 +61,6 @@ public:
     virtual void reset() override;
 
 private:
-private:
     uint32_t _raygen_index;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
@@ -70,5 +70,7 @@ private:
     uint32_t _frame_counter = 0;
 
     torch::Tensor _accumulation_buffer;
+
+    GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("VolPath");
 };
 }    // namespace atcg

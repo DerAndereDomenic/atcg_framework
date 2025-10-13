@@ -4,6 +4,7 @@
 #include <DataStructure/Dictionary.h>
 #include <Core/OptixComponent.h>
 #include <BSDF/BSDFVPtrTable.cuh>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -63,8 +64,23 @@ protected:
 
 struct BSDFComponent
 {
+    BSDFComponent() = default;
     BSDFComponent(const atcg::ref_ptr<BSDF>& bsdf) : bsdf(bsdf) {}
 
     atcg::ref_ptr<BSDF> bsdf;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "BSDFComponent"; }
 };
+
+namespace GUI
+{
+template<>
+struct ComponentGUIRenderer<BSDFComponent>
+{
+    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, BSDFComponent& component) const
+    {
+        component.bsdf->onImGuiRender();
+    }
+};
+}    // namespace GUI
 }    // namespace atcg

@@ -50,12 +50,7 @@ void VolPathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracing
 void VolPathtracingIntegrator::onImGuiRender()
 {
 #ifndef ATCG_HEADLESS
-    ImGui::Begin("VolPathtracingIntegrator");
-    for(auto shape: _optix_scene->getShapes())
-    {
-        shape->onImGuiRender();
-    }
-    ImGui::End();
+    _panel.renderPanel(_optix_scene);
 #endif
 }
 

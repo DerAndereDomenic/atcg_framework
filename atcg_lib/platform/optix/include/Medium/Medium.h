@@ -5,6 +5,7 @@
 #include <Medium/PhaseFunction.h>
 #include <Medium/MediumVPtrTable.cuh>
 #include <Core/PipelineInitializer.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -59,8 +60,23 @@ protected:
 
 struct MediumComponent
 {
+    MediumComponent() = default;
     MediumComponent(const atcg::ref_ptr<Medium>& medium) : medium(medium) {}
 
     atcg::ref_ptr<Medium> medium;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "MediumComponent"; }
 };
+
+namespace GUI
+{
+template<>
+struct ComponentGUIRenderer<MediumComponent>
+{
+    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, MediumComponent& component) const
+    {
+        component.medium->onImGuiRender();
+    }
+};
+}    // namespace GUI
 }    // namespace atcg

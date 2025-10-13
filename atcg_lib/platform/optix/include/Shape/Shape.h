@@ -5,6 +5,7 @@
 #include <DataStructure/Dictionary.h>
 #include <Core/RaytracingContext.h>
 #include <Shape/ShapeData.cuh>
+#include <Scene/ComponentGUIHandler.h>
 
 #include <optix.h>
 
@@ -75,8 +76,23 @@ protected:
 
 struct ShapeComponent
 {
+    ShapeComponent() = default;
     ShapeComponent(const atcg::ref_ptr<Shape>& shape) : shape(shape) {}
 
     atcg::ref_ptr<Shape> shape;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "ShapeComponent"; }
 };
+
+namespace GUI
+{
+template<>
+struct ComponentGUIRenderer<ShapeComponent>
+{
+    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, ShapeComponent& component) const
+    {
+        component.shape->onImGuiRender();
+    }
+};
+}    // namespace GUI
 }    // namespace atcg

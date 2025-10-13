@@ -4,6 +4,7 @@
 #include <Core/OptixComponent.h>
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <DataStructure/Dictionary.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -63,8 +64,23 @@ protected:
 
 struct EmitterComponent
 {
+    EmitterComponent() = default;
     EmitterComponent(const atcg::ref_ptr<Emitter>& emitter) : emitter(emitter) {}
 
     atcg::ref_ptr<Emitter> emitter;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "EmitterComponent"; }
 };
+
+namespace GUI
+{
+template<>
+struct ComponentGUIRenderer<EmitterComponent>
+{
+    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, EmitterComponent& component) const
+    {
+        component.emitter->onImGuiRender();
+    }
+};
+}    // namespace GUI
 }    // namespace atcg
