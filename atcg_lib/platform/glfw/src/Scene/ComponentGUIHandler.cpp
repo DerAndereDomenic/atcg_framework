@@ -12,7 +12,7 @@ namespace atcg
 namespace GUI
 {
 
-bool GUI::displayTransform(const std::string& id, TransformComponent& transform)
+bool displayTransform(const std::string& id, TransformComponent& transform)
 {
     bool updated       = false;
     glm::vec3 position = transform.getPosition();
