@@ -21,7 +21,7 @@ public:
     /**
      * @brief Default constructor
      */
-    SceneHierarchyPanel() = default;
+    SceneHierarchyPanel(const std::string uuid = "Main") : _uuid(uuid) {};
 
     /**
      * @brief Should be called in onImGuiRender.
@@ -51,6 +51,8 @@ private:
     Entity _selected_entity;
 
     bool _focues_components = false;
+
+    std::string _uuid;
 };
 }    // namespace GUI
 }    // namespace atcg
