@@ -3,6 +3,7 @@
 #include <Core/glm.h>
 #include <Core/CUDA.h>
 
+#ifdef __CUDACC__
 template<typename T>
 ATCG_DEVICE ATCG_INLINE T tex3D(cudaTextureObject_t tex, glm::vec3 coord)
 {
@@ -26,6 +27,7 @@ ATCG_DEVICE ATCG_INLINE T tex3D(cudaTextureObject_t tex, glm::vec3 coord)
         return glm::vec4(v.x, v.y, v.z, v.w);
     }
 }
+#endif
 
 template<typename T>
 struct GridData
