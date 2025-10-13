@@ -5,7 +5,10 @@
 #include <DataStructure/Dictionary.h>
 #include <Core/RaytracingContext.h>
 #include <Shape/ShapeData.cuh>
-#include <Scene/ComponentGUIHandler.h>
+
+#ifndef __CUDACC__
+    #include <Scene/ComponentGUIHandler.h>
+#endif
 
 #include <optix.h>
 
@@ -84,15 +87,10 @@ struct ShapeComponent
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "ShapeComponent"; }
 };
 
+#ifndef __CUDACC__
 namespace GUI
 {
-template<>
-struct ComponentGUIRenderer<ShapeComponent>
-{
-    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, ShapeComponent& component) const
-    {
-        component.shape->onImGuiRender();
-    }
-};
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(ShapeComponent);
 }    // namespace GUI
+#endif
 }    // namespace atcg

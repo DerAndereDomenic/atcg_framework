@@ -30,7 +30,7 @@ public:
     /**
      * @brief A callback to display debug information in imgui
      */
-    virtual void onImGuiRender() {};
+    virtual void onImGuiRender() override {};
 
     ATCG_INLINE atcg::dref_ptr<PBRBSDFData> getDataBuffer() const { return _bsdf_data_buffer; }
 

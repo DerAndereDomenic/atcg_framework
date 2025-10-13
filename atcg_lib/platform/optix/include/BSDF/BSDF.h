@@ -4,7 +4,10 @@
 #include <DataStructure/Dictionary.h>
 #include <Core/OptixComponent.h>
 #include <BSDF/BSDFVPtrTable.cuh>
-#include <Scene/ComponentGUIHandler.h>
+
+#ifndef __CUDACC__
+    #include <Scene/ComponentGUIHandler.h>
+#endif
 
 namespace atcg
 {
@@ -72,15 +75,10 @@ struct BSDFComponent
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "BSDFComponent"; }
 };
 
+#ifndef __CUDACC__
 namespace GUI
 {
-template<>
-struct ComponentGUIRenderer<BSDFComponent>
-{
-    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, BSDFComponent& component) const
-    {
-        component.bsdf->onImGuiRender();
-    }
-};
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(BSDFComponent);
 }    // namespace GUI
+#endif
 }    // namespace atcg

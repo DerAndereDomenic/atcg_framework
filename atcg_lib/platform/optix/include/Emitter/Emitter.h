@@ -4,7 +4,10 @@
 #include <Core/OptixComponent.h>
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <DataStructure/Dictionary.h>
-#include <Scene/ComponentGUIHandler.h>
+
+#ifndef __CUDACC__
+    #include <Scene/ComponentGUIHandler.h>
+#endif
 
 namespace atcg
 {
@@ -72,15 +75,10 @@ struct EmitterComponent
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "EmitterComponent"; }
 };
 
+#ifndef __CUDACC__
 namespace GUI
 {
-template<>
-struct ComponentGUIRenderer<EmitterComponent>
-{
-    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, EmitterComponent& component) const
-    {
-        component.emitter->onImGuiRender();
-    }
-};
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(EmitterComponent);
 }    // namespace GUI
+#endif
 }    // namespace atcg

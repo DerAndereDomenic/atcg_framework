@@ -5,7 +5,10 @@
 #include <Medium/PhaseFunction.h>
 #include <Medium/MediumVPtrTable.cuh>
 #include <Core/PipelineInitializer.h>
-#include <Scene/ComponentGUIHandler.h>
+
+#ifndef __CUDACC__
+    #include <Scene/ComponentGUIHandler.h>
+#endif
 
 namespace atcg
 {
@@ -68,15 +71,10 @@ struct MediumComponent
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "MediumComponent"; }
 };
 
+#ifndef __CUDACC__
 namespace GUI
 {
-template<>
-struct ComponentGUIRenderer<MediumComponent>
-{
-    void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, MediumComponent& component) const
-    {
-        component.medium->onImGuiRender();
-    }
-};
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(MediumComponent);
 }    // namespace GUI
+#endif
 }    // namespace atcg
