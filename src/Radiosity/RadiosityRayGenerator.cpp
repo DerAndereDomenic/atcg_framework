@@ -3,6 +3,8 @@
 #include <Core/Common.h>
 #include <DataStructure/Graph.h>
 
+#include <optix_stubs.h>
+
 void RadiosityRayGenerator::initializePipeline(const atcg::ref_ptr<atcg::RayTracingPipeline>& pipeline,
                                                const atcg::ref_ptr<atcg::ShaderBindingTable>& sbt)
 {
