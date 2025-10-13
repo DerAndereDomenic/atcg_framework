@@ -126,7 +126,7 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
-    auto& material             = component.material();
+    auto material              = component.material();
 
     auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
     atcg::Dictionary shape_dict;
@@ -193,7 +193,7 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
-    auto& material             = component.material();
+    auto material              = component.material();
 
     auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
     atcg::Dictionary shape_dict;
@@ -281,7 +281,7 @@ void SceneAdapter::prepareComponent<InstanceRenderComponent>(const atcg::ref_ptr
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
-    auto& material             = component.material();
+    auto material              = component.material();
 
     auto geometry = entity.getComponent<GeometryComponent>();
     auto shape_it = _shape_cache.find(geometry.graph_handle);
