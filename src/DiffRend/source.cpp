@@ -109,7 +109,7 @@ public:
             dict.setValue("output_img", output_img_tensor);
             dict.setValue("entity_ids", output_entities);
             dict.setValue("target", target);
-            dict.setValue("num_samples", 64u);
+            dict.setValue("num_samples", 128u);
             integrator->generateRays(dict);
             output_texture->setData(output_img_tensor);
             output_entity_texture->setData(output_entities);
@@ -121,7 +121,7 @@ public:
                 auto result = atcg::DiffPathtracingFunction::apply(integrator, dict);
 
                 auto difference = (result - target);
-                auto L          = torch::sum(difference * difference);
+                auto L          = torch::sum(torch::abs(difference));
 
                 L.backward();
                 optimizer->step();
