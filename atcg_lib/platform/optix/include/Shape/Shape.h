@@ -6,6 +6,10 @@
 #include <Core/RaytracingContext.h>
 #include <Shape/ShapeData.cuh>
 
+#ifndef __CUDACC__
+    #include <Scene/ComponentGUIHandler.h>
+#endif
+
 #include <optix.h>
 
 namespace atcg
@@ -35,17 +39,6 @@ public:
     virtual ~Shape() {}
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() = 0;
@@ -71,6 +64,10 @@ public:
      */
     ATCG_INLINE OptixProgramGroup getHitGroup() const { return _hit_group; }
 
+    ATCG_INLINE void setHitGroup(OptixProgramGroup hit_group) { _hit_group = hit_group; }
+
+    ATCG_INLINE ShapeData* getShapeData() const { return _shape_data; }
+
 protected:
     friend class ShapeInstance;
     atcg::DeviceBuffer<uint8_t> _ast_buffer;
@@ -79,4 +76,21 @@ protected:
 
     ShapeData* _shape_data;
 };
+
+struct ShapeComponent
+{
+    ShapeComponent() = default;
+    ShapeComponent(const atcg::ref_ptr<Shape>& shape) : shape(shape) {}
+
+    atcg::ref_ptr<Shape> shape;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "ShapeComponent"; }
+};
+
+#ifndef __CUDACC__
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(ShapeComponent);
+}    // namespace GUI
+#endif
 }    // namespace atcg

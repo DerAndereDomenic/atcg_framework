@@ -5,6 +5,10 @@
 #include <Core/OptixComponent.h>
 #include <BSDF/BSDFVPtrTable.cuh>
 
+#ifndef __CUDACC__
+    #include <Scene/ComponentGUIHandler.h>
+#endif
+
 namespace atcg
 {
 /**
@@ -31,17 +35,6 @@ public:
     virtual ~BSDF() {}
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() = 0;
@@ -54,6 +47,13 @@ public:
     ATCG_INLINE const BSDFVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
 
     /**
+     * @brief Get the VPtrTable Holder
+     *
+     * @return The shared ptr that handles the memory of the VPtrTable
+     */
+    ATCG_INLINE atcg::dref_ptr<BSDFVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
+
+    /**
      * @brief Get the bsdf flags
      *
      * @return The flags
@@ -64,4 +64,21 @@ protected:
     atcg::dref_ptr<BSDFVPtrTable> _vptr_table;
     BSDFComponentType _flags;
 };
+
+struct BSDFComponent
+{
+    BSDFComponent() = default;
+    BSDFComponent(const atcg::ref_ptr<BSDF>& bsdf) : bsdf(bsdf) {}
+
+    atcg::ref_ptr<BSDF> bsdf;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "BSDFComponent"; }
+};
+
+#ifndef __CUDACC__
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(BSDFComponent);
+}    // namespace GUI
+#endif
 }    // namespace atcg

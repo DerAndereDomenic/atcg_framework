@@ -35,22 +35,23 @@ DielectricBSDF::~DielectricBSDF()
     _roughness_texture->unmapDevicePointers();
 }
 
-void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                        const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void PipelineInitializer<DielectricBSDF>::apply(const atcg::ref_ptr<DielectricBSDF>& component) const
 {
     const std::string ptx_bsdf_filename = "./bin/DielectricBSDF_ptx.ptx";
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_dielectricbsdf"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_dielectricbsdf"});
-    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, _bsdf_data_buffer.get());
-    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, _bsdf_data_buffer.get());
+    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, component->getDataBuffer().get());
+    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, component->getDataBuffer().get());
 
     BSDFVPtrTable table;
     table.sampleCallIndex = sample_idx;
     table.evalCallIndex   = eval_idx;
-    table.flags           = _flags;
+    table.flags           = component->flags();
 
-    _vptr_table.upload(&table);
+    component->getVPtrTableHolder().upload(&table);
+
+    component->markInitialized();
 }
 
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_GLASS, DielectricBSDF);

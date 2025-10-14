@@ -2,7 +2,6 @@
 #include <Scene/Components.h>
 #include <Emitter/PointEmitter.h>
 #include <Emitter/MeshEmitter.h>
-#include <DataStructure/WorkerPool.h>
 #include <Shape/MeshShape.h>
 #include <Core/Path.h>
 #include <Core/Assert.h>
@@ -26,6 +25,9 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
     if(!entity.hasComponent<MeshRenderComponent>()) return;
     if(!entity.hasComponent<GeometryComponent>()) return;
 
+    auto original_name = entity.getComponent<NameComponent>().name();
+    auto new_entity    = result->createEntity(original_name);
+
     MeshRenderComponent& component = entity.getComponent<MeshRenderComponent>();
 
     if(!component.visible) return;
@@ -41,7 +43,6 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
     if(bsdf_it == _bsdf_cache.end()) return;
     auto bsdf = bsdf_it->second;
 
-    atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
     if(entity.hasComponent<MeshLightComponent>())
     {
         auto& mesh_light_component = entity.getComponent<MeshLightComponent>();
@@ -51,13 +52,13 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
         emitter_data.setValue("emission_scaling", mesh_light_component.intensity);
         emitter_data.setValue("texture_emissive", mesh_light_component.getEmissiveTexture());
 
-        mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
-        mesh_emitter->initializePipeline(_pipeline, _sbt);
+        atcg::ref_ptr<MeshEmitter> mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
+        PipelineInitializer<MeshEmitter>(_pipeline, _sbt).apply(mesh_emitter);
 
-        result->_emitter.push_back(mesh_emitter);
+        new_entity.addComponent<EmitterComponent>(mesh_emitter);
     }
 
-    Dictionary shape_data;
+    // Dictionary shape_data;
 
     if(entity.hasComponent<HomogeneousMediumComponent>())
     {
@@ -65,8 +66,8 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
 
         Dictionary phase_dict;
         phase_dict.setValue("g", component.g);
-        atcg::ref_ptr<PhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
-        phase->initializePipeline(_pipeline, _sbt);
+        atcg::ref_ptr<HenyeyGreensteinPhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
+        PipelineInitializer<HenyeyGreensteinPhaseFunction>(_pipeline, _sbt).apply(phase);
 
         glm::vec3 sigma_s = component.albedo * component.density;
         glm::vec3 sigma_a = glm::vec3(component.density) - sigma_s;
@@ -74,12 +75,12 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
         Dictionary med_dict;
         med_dict.setValue("sigma_s", sigma_s);
         med_dict.setValue("sigma_a", sigma_a);
-        med_dict.setValue("phase_func", phase);
+        med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
         med_dict.setValue("Le", component.Le * component.Le_color);
-        atcg::ref_ptr<Medium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
-        medium->initializePipeline(_pipeline, _sbt);
+        atcg::ref_ptr<HomogeneousMedium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
+        PipelineInitializer<HomogeneousMedium>(_pipeline, _sbt).apply(medium);
 
-        shape_data.setValue("inside_medium", medium);
+        new_entity.addComponent<MediumComponent>(medium);
     }
 
     if(entity.hasComponent<HeterogeneousMediumComponent>())
@@ -95,26 +96,22 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
             med_dict.setValue("to_world", transform.getModel());
             Dictionary phase_dict;
             phase_dict.setValue("g", component.g);
-            atcg::ref_ptr<PhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
-            phase->initializePipeline(_pipeline, _sbt);
-            med_dict.setValue("phase_func", phase);
+            atcg::ref_ptr<HenyeyGreensteinPhaseFunction> phase =
+                atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
+            PipelineInitializer<HenyeyGreensteinPhaseFunction>(_pipeline, _sbt).apply(phase);
+            med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
 
-            atcg::ref_ptr<Medium> medium = atcg::make_ref<HeterogeneousMedium>(med_dict);
-            medium->initializePipeline(_pipeline, _sbt);
+            atcg::ref_ptr<HeterogeneousMedium> medium = atcg::make_ref<HeterogeneousMedium>(med_dict);
+            PipelineInitializer<HeterogeneousMedium>(_pipeline, _sbt).apply(medium);
 
-            shape_data.setValue("inside_medium", medium);
+            new_entity.addComponent<MediumComponent>(medium);
         }
     }
 
-    shape_data.setValue("shape", shape);
-    shape_data.setValue("bsdf", bsdf);
-    shape_data.setValue("transform", transform.getModel());
-    shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-    shape_data.setValue("emitter", mesh_emitter);
-    auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
-    shape_instance->initializePipeline(_pipeline, _sbt);
-
-    result->_shapes.push_back(shape_instance);
+    new_entity.addComponent<ShapeComponent>(shape);
+    new_entity.addComponent<BSDFComponent>(bsdf);
+    new_entity.addComponent<TransformComponent>(transform);
+    new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
 }
 
 template<>
@@ -129,13 +126,13 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
-    auto& material             = component.material();
+    auto material              = component.material();
 
     auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
     atcg::Dictionary shape_dict;
     shape_dict.setValue("mesh", graph);
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
-    shape->initializePipeline(_pipeline, _sbt);
+    atcg::ref_ptr<MeshShape> shape = atcg::make_ref<MeshShape>(shape_dict);
+    PipelineInitializer<MeshShape>(_pipeline, _sbt).apply(shape);
     shape->prepareAccelerationStructure(_context);
 
     auto bsdf_it = _bsdf_cache.find(component.material_handle);
@@ -163,53 +160,23 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
     scale_primitive[1][1]     = scale_point.y;
     scale_primitive[2][2]     = scale_point.z;
 
-    std::vector<atcg::ref_ptr<ShapeInstance>> new_shapes(n_instances);
-
-    atcg::WorkerPool pool(32);
-    pool.start();
-
+    auto original_name = entity.getComponent<NameComponent>().name();
     for(int i = 0; i < n_instances; ++i)
     {
-        pool.pushJob(
-            [offsets,
-             colors,
-             i,
-             &global_transform,
-             &inv_scale_model,
-             &scale_primitive,
-             shape,
-             bsdf,
-             entity,
-             &new_shapes]()
-            {
-                glm::vec3 offset =
-                    glm::vec3(offsets[i][0].item<float>(), offsets[i][1].item<float>(), offsets[i][2].item<float>());
-                glm::vec3 color =
-                    glm::vec3(colors[i][0].item<float>(), colors[i][1].item<float>(), colors[i][2].item<float>());
-                glm::mat4 total_transform = glm::translate(glm::vec3(global_transform * glm::vec4(offset, 0))) *
-                                            global_transform * inv_scale_model * scale_primitive;
+        auto new_entity = result->createEntity(original_name);
 
-                Dictionary shape_data;
-                shape_data.setValue("shape", shape);
-                shape_data.setValue("bsdf", bsdf);
-                shape_data.setValue("transform", total_transform);
-                shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-                shape_data.setValue("color", color);
-                auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
+        glm::vec3 offset =
+            glm::vec3(offsets[i][0].item<float>(), offsets[i][1].item<float>(), offsets[i][2].item<float>());
+        glm::vec3 color = glm::vec3(colors[i][0].item<float>(), colors[i][1].item<float>(), colors[i][2].item<float>());
+        glm::mat4 total_transform = glm::translate(glm::vec3(global_transform * glm::vec4(offset, 0))) *
+                                    global_transform * inv_scale_model * scale_primitive;
 
-                new_shapes[i] = shape_instance;
-            });
+        new_entity.addComponent<ShapeComponent>(shape);
+        new_entity.addComponent<BSDFComponent>(bsdf);
+        new_entity.addComponent<TransformComponent>(total_transform);
+        new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
+        new_entity.addComponent<glm::vec3>(color);
     }
-
-    pool.waitDone();
-
-    // Not thread safe
-    for(auto shape_instance: new_shapes)
-    {
-        shape_instance->initializePipeline(_pipeline, _sbt);
-    }
-
-    result->_shapes.insert(result->_shapes.end(), new_shapes.begin(), new_shapes.end());
 
     mesh->unmapAllHostPointers();
 }
@@ -226,13 +193,13 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
-    auto& material             = component.material();
+    auto material              = component.material();
 
     auto graph = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
     atcg::Dictionary shape_dict;
     shape_dict.setValue("mesh", graph);
-    atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
-    shape->initializePipeline(_pipeline, _sbt);
+    atcg::ref_ptr<MeshShape> shape = atcg::make_ref<MeshShape>(shape_dict);
+    PipelineInitializer<MeshShape>(_pipeline, _sbt).apply(shape);
     shape->prepareAccelerationStructure(_context);
 
     auto bsdf_it = _bsdf_cache.find(component.material_handle);
@@ -246,72 +213,52 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
     torch::Tensor positions = mesh->getHostPositions();
     torch::Tensor indices   = mesh->getHostEdges();
 
-    std::vector<atcg::ref_ptr<ShapeInstance>> new_shapes(n_instances);
-
-    atcg::WorkerPool pool(32);
-    pool.start();
-
+    auto original_name = entity.getComponent<NameComponent>().name();
     // Logic from cylinder_edge.vs
     for(int i = 0; i < n_instances; ++i)
     {
-        pool.pushJob(
-            [indices, positions, i, &global_transform, &component, shape, bsdf, entity, &new_shapes]()
-            {
-                int edge_x = int(indices[i][0].item<float>());
-                int edge_y = int(indices[i][1].item<float>());
-                glm::vec3 edge_color =
-                    glm::vec3(indices[i][2].item<float>(), indices[i][3].item<float>(), indices[i][4].item<float>());
-                float edge_radius        = indices[i][5].item<float>();
-                glm::vec3 aInstanceStart = glm::vec3(global_transform * glm::vec4(positions[edge_x][0].item<float>(),
-                                                                                  positions[edge_x][1].item<float>(),
-                                                                                  positions[edge_x][2].item<float>(),
-                                                                                  1));
+        auto new_entity = result->createEntity(original_name);
 
-                glm::vec3 aInstanceEnd = glm::vec3(global_transform * glm::vec4(positions[edge_y][0].item<float>(),
-                                                                                positions[edge_y][1].item<float>(),
-                                                                                positions[edge_y][2].item<float>(),
-                                                                                1));
+        int edge_x = int(indices[i][0].item<float>());
+        int edge_y = int(indices[i][1].item<float>());
+        glm::vec3 edge_color =
+            glm::vec3(indices[i][2].item<float>(), indices[i][3].item<float>(), indices[i][4].item<float>());
+        float edge_radius        = indices[i][5].item<float>();
+        glm::vec3 aInstanceStart = glm::vec3(global_transform * glm::vec4(positions[edge_x][0].item<float>(),
+                                                                          positions[edge_x][1].item<float>(),
+                                                                          positions[edge_x][2].item<float>(),
+                                                                          1));
 
-                glm::vec3 axis         = (aInstanceEnd - aInstanceStart);
-                glm::vec3 middle_point = aInstanceStart + axis / 2.0f;
+        glm::vec3 aInstanceEnd = glm::vec3(global_transform * glm::vec4(positions[edge_y][0].item<float>(),
+                                                                        positions[edge_y][1].item<float>(),
+                                                                        positions[edge_y][2].item<float>(),
+                                                                        1));
 
-                glm::mat4 model_scale = glm::mat4(edge_radius * component.radius);
-                model_scale[1].y      = length(axis) / 2.0;
-                model_scale[3].w      = 1;
+        glm::vec3 axis         = (aInstanceEnd - aInstanceStart);
+        glm::vec3 middle_point = aInstanceStart + axis / 2.0f;
 
-                glm::mat4 model_translate = glm::mat4(1);
-                model_translate[3]        = glm::vec4(middle_point, 1);
+        glm::mat4 model_scale = glm::mat4(edge_radius * component.radius);
+        model_scale[1].y      = length(axis) / 2.0;
+        model_scale[3].w      = 1;
 
-                axis        = glm::normalize(axis);
-                glm::vec3 x = glm::normalize(glm::cross(glm::vec3(0, axis.z, 1.0f - axis.z), axis));
-                glm::vec3 z = glm::normalize(glm::cross(x, axis));
+        glm::mat4 model_translate = glm::mat4(1);
+        model_translate[3]        = glm::vec4(middle_point, 1);
 
-                glm::mat4 model_rotation =
-                    glm::mat4(glm::vec4(x, 0), glm::vec4(axis, 0), glm::vec4(z, 0), glm::vec4(0, 0, 0, 1));
+        axis        = glm::normalize(axis);
+        glm::vec3 x = glm::normalize(glm::cross(glm::vec3(0, axis.z, 1.0f - axis.z), axis));
+        glm::vec3 z = glm::normalize(glm::cross(x, axis));
 
-                glm::mat4 model_edge = model_translate * model_rotation * model_scale;
+        glm::mat4 model_rotation =
+            glm::mat4(glm::vec4(x, 0), glm::vec4(axis, 0), glm::vec4(z, 0), glm::vec4(0, 0, 0, 1));
 
-                Dictionary shape_data;
-                shape_data.setValue("shape", shape);
-                shape_data.setValue("bsdf", bsdf);
-                shape_data.setValue("transform", model_edge);
-                shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-                shape_data.setValue("color", edge_color);
-                auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
+        glm::mat4 model_edge = model_translate * model_rotation * model_scale;
 
-                new_shapes[i] = shape_instance;
-            });
+        new_entity.addComponent<ShapeComponent>(shape);
+        new_entity.addComponent<BSDFComponent>(bsdf);
+        new_entity.addComponent<TransformComponent>(model_edge);
+        new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
+        new_entity.addComponent<glm::vec3>(edge_color);
     }
-
-    pool.waitDone();
-
-    // Not thread safe
-    for(auto shape_instance: new_shapes)
-    {
-        shape_instance->initializePipeline(_pipeline, _sbt);
-    }
-
-    result->_shapes.insert(result->_shapes.end(), new_shapes.begin(), new_shapes.end());
 
     mesh->unmapAllHostPointers();
 }
@@ -334,7 +281,7 @@ void SceneAdapter::prepareComponent<InstanceRenderComponent>(const atcg::ref_ptr
 
     auto& transform            = entity.getComponent<TransformComponent>();
     glm::mat4 global_transform = transform.getModel();
-    auto& material             = component.material();
+    auto material              = component.material();
 
     auto geometry = entity.getComponent<GeometryComponent>();
     auto shape_it = _shape_cache.find(geometry.graph_handle);
@@ -356,37 +303,16 @@ void SceneAdapter::prepareComponent<InstanceRenderComponent>(const atcg::ref_ptr
     glm::mat4* transforms = transform_vbo->getHostPointer<glm::mat4>();
     glm::vec4* colors     = color_vbo->getHostPointer<glm::vec4>();
 
-    std::vector<atcg::ref_ptr<ShapeInstance>> new_shapes(n_instances);
-
-    atcg::WorkerPool pool(32);
-    pool.start();
-
+    auto original_name = entity.getComponent<NameComponent>().name();
     for(int i = 0; i < n_instances; ++i)
     {
-        pool.pushJob(
-            [shape, bsdf, &global_transform, i, transforms, colors, &new_shapes, entity]()
-            {
-                Dictionary shape_data;
-                shape_data.setValue("shape", shape);
-                shape_data.setValue("bsdf", bsdf);
-                shape_data.setValue("transform", global_transform * transforms[i]);
-                shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-                shape_data.setValue<glm::vec3>("color", glm::vec3(colors[i]));
-                auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
-
-                new_shapes[i] = shape_instance;
-            });
+        auto new_entity = result->createEntity(original_name);
+        new_entity.addComponent<ShapeComponent>(shape);
+        new_entity.addComponent<BSDFComponent>(bsdf);
+        new_entity.addComponent<TransformComponent>(global_transform * transforms[i]);
+        new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
+        new_entity.addComponent<glm::vec3>(colors[i]);
     }
-
-    pool.waitDone();
-
-    // Not thread safe
-    for(auto shape_instance: new_shapes)
-    {
-        shape_instance->initializePipeline(_pipeline, _sbt);
-    }
-
-    result->_shapes.insert(result->_shapes.end(), new_shapes.begin(), new_shapes.end());
 
     transform_vbo->unmapHostPointers();
     color_vbo->unmapHostPointers();
@@ -409,29 +335,23 @@ void SceneAdapter::prepareComponent<MeshLightComponent>(const atcg::ref_ptr<Opti
 
     auto shape = shape_it->second;
 
-    atcg::ref_ptr<Emitter> mesh_emitter = nullptr;
-    auto& mesh_light_component          = entity.getComponent<MeshLightComponent>();
+    auto& mesh_light_component = entity.getComponent<MeshLightComponent>();
     Dictionary emitter_data;
     emitter_data.setValue<atcg::ref_ptr<MeshShape>>("shape", std::dynamic_pointer_cast<MeshShape>(shape));
     emitter_data.setValue("transform", transform.getModel());
     emitter_data.setValue("emission_scaling", mesh_light_component.intensity);
     emitter_data.setValue("texture_emissive", mesh_light_component.getEmissiveTexture());
 
-    mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
-    mesh_emitter->initializePipeline(_pipeline, _sbt);
+    atcg::ref_ptr<MeshEmitter> mesh_emitter = atcg::make_ref<MeshEmitter>(emitter_data);
+    PipelineInitializer<MeshEmitter>(_pipeline, _sbt).apply(mesh_emitter);
 
-    result->_emitter.push_back(mesh_emitter);
+    auto original_name = entity.getComponent<NameComponent>().name();
+    auto new_entity    = result->createEntity(original_name);
 
-
-    Dictionary shape_data;
-    shape_data.setValue("shape", shape);
-    shape_data.setValue("transform", transform.getModel());
-    shape_data.setValue<int32_t>("entity_id", (int32_t)entity.entity_handle());
-    shape_data.setValue("emitter", mesh_emitter);
-    auto shape_instance = atcg::make_ref<ShapeInstance>(shape_data);
-    shape_instance->initializePipeline(_pipeline, _sbt);
-
-    result->_shapes.push_back(shape_instance);
+    new_entity.addComponent<ShapeComponent>(shape);
+    new_entity.addComponent<TransformComponent>(transform);
+    new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
+    new_entity.addComponent<EmitterComponent>(mesh_emitter);
 }
 
 atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
@@ -447,8 +367,8 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
             {
                 atcg::Dictionary shape_dict;
                 shape_dict.setValue("mesh", graph);
-                atcg::ref_ptr<Shape> shape = atcg::make_ref<MeshShape>(shape_dict);
-                shape->initializePipeline(_pipeline, _sbt);
+                atcg::ref_ptr<MeshShape> shape = atcg::make_ref<MeshShape>(shape_dict);
+                PipelineInitializer<MeshShape>(_pipeline, _sbt).apply(shape);
                 shape->prepareAccelerationStructure(_context);
                 _shape_cache.insert(std::make_pair(entry.first, shape));
             }
@@ -461,8 +381,8 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
             {
                 atcg::Dictionary bsdf_dict;
                 bsdf_dict.setValue("material", material);
-                atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
-                bsdf->initializePipeline(_pipeline, _sbt);
+                atcg::ref_ptr<BSDF> bsdf =
+                    BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
 
                 _bsdf_cache.insert(std::make_pair(entry.first, bsdf));
             }
@@ -473,8 +393,7 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
     atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict);
-    bsdf->initializePipeline(_pipeline, _sbt);
+    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
 
     _bsdf_cache.insert(std::make_pair(0, bsdf));
 
@@ -487,7 +406,7 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
         atcg::Dictionary emitter_dict;
         emitter_dict.setValue("environment_texture", skybox_texture);
         result->_environment_emitter = atcg::make_ref<atcg::EnvironmentEmitter>(emitter_dict);
-        result->_environment_emitter->initializePipeline(_pipeline, _sbt);
+        PipelineInitializer<EnvironmentEmitter>(_pipeline, _sbt).apply(result->_environment_emitter);
         tables.push_back(result->_environment_emitter->getVPtrTable());
     }
 
@@ -495,6 +414,8 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
     for(auto e: light_view)
     {
         Entity entity(e, scene.get());
+
+        auto new_entity = result->createEntity();
 
         auto& point_light_component = entity.getComponent<PointLightComponent>();
         auto& transform             = entity.getComponent<TransformComponent>();
@@ -504,8 +425,8 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
         point_light_data.setValue("color", point_light_component.color);
         point_light_data.setValue("intensity", point_light_component.intensity);
         auto point_light = atcg::make_ref<atcg::PointEmitter>(point_light_data);
-        point_light->initializePipeline(_pipeline, _sbt);
-        result->_emitter.push_back(point_light);
+        PipelineInitializer<PointEmitter>(_pipeline, _sbt).apply(point_light);
+        new_entity.addComponent<EmitterComponent>(point_light);
     }
 
 
@@ -522,12 +443,64 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
         prepareComponent<MeshLightComponent>(result, entity);
     }
 
-    // Now all the emitters are initialized
-    for(auto emitter: result->_emitter)
+    auto emitter_view = result->getAllEntitiesWith<EmitterComponent>();
+    for(auto e: emitter_view)
     {
+        atcg::Entity entity(e, result.get());
+
+        auto emitter = entity.getComponent<EmitterComponent>().emitter;
+        result->_emitter.push_back(emitter);
         tables.push_back(emitter->getVPtrTable());
     }
     result->_emitter_vptr_tables.upload(tables.data(), tables.size());
+
+    auto shape_view = result->getAllEntitiesWith<int32_t>();
+    for(auto e: shape_view)
+    {
+        atcg::Entity entity(e, result.get());
+
+        Dictionary shape_data;
+        if(entity.hasComponent<ShapeComponent>())
+        {
+            shape_data.setValue("shape", entity.getComponent<ShapeComponent>().shape);
+        }
+
+        if(entity.hasComponent<BSDFComponent>())
+        {
+            shape_data.setValue("bsdf", entity.getComponent<BSDFComponent>().bsdf);
+        }
+
+        if(entity.hasComponent<TransformComponent>())
+        {
+            shape_data.setValue("transform", entity.getComponent<TransformComponent>().getModel());
+        }
+
+        if(entity.hasComponent<MediumComponent>())
+        {
+            shape_data.setValue("inside_medium", entity.getComponent<MediumComponent>().medium);
+        }
+
+        if(entity.hasComponent<EmitterComponent>())
+        {
+            shape_data.setValue("emitter", entity.getComponent<EmitterComponent>().emitter);
+        }
+
+        if(entity.hasComponent<glm::vec3>())
+        {
+            shape_data.setValue("color", entity.getComponent<glm::vec3>());
+        }
+
+        if(entity.hasComponent<int32_t>())
+        {
+            shape_data.setValue("entity_id", entity.getComponent<int32_t>());
+        }
+
+        auto shape = atcg::make_ref<ShapeInstance>(shape_data);
+        PipelineInitializer<ShapeInstance>(_pipeline, _sbt).apply(shape);
+
+        result->_shapes.push_back(shape);
+    }
+
 
     result->_ias = atcg::make_ref<InstanceAccelerationStructure>(_context, result->_shapes);
 

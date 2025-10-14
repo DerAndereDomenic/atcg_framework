@@ -25,6 +25,8 @@ public:
 
     void setMesh(const atcg::ref_ptr<atcg::TriMesh>& mesh);
 
+    virtual void onImGuiRender() override {}
+
 private:
     atcg::ref_ptr<atcg::TriMesh> _mesh;
     atcg::ref_ptr<atcg::Shape> _shape;

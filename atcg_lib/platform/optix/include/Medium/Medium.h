@@ -4,6 +4,11 @@
 #include <DataStructure/Dictionary.h>
 #include <Medium/PhaseFunction.h>
 #include <Medium/MediumVPtrTable.cuh>
+#include <Core/PipelineInitializer.h>
+
+#ifndef __CUDACC__
+    #include <Scene/ComponentGUIHandler.h>
+#endif
 
 namespace atcg
 {
@@ -45,23 +50,31 @@ public:
     ATCG_INLINE const atcg::ref_ptr<PhaseFunction>& getPhaseFunction() const { return _phase_function; }
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() = 0;
+
+    ATCG_INLINE atcg::dref_ptr<MediumVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
 
 protected:
     atcg::dref_ptr<MediumVPtrTable> _vptr_table;
     atcg::ref_ptr<PhaseFunction> _phase_function;
 };
+
+struct MediumComponent
+{
+    MediumComponent() = default;
+    MediumComponent(const atcg::ref_ptr<Medium>& medium) : medium(medium) {}
+
+    atcg::ref_ptr<Medium> medium;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "MediumComponent"; }
+};
+
+#ifndef __CUDACC__
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(MediumComponent);
+}    // namespace GUI
+#endif
 }    // namespace atcg

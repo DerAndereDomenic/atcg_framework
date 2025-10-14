@@ -30,11 +30,12 @@ MeshShape::MeshShape(const Dictionary& dict)
 
 MeshShape::~MeshShape() {}
 
-void MeshShape::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                   const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void PipelineInitializer<MeshShape>::apply(const atcg::ref_ptr<MeshShape>& component) const
 {
     const std::string ptx_raygen_filename = "./bin/MeshShape_ptx.ptx";
-    _hit_group = pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__mesh"}, {});
+    component->setHitGroup(pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__mesh"}, {}));
+
+    component->markInitialized();
 }
 
 void MeshShape::prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context)

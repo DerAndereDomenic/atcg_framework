@@ -13,8 +13,7 @@ NullBSDF::NullBSDF(const Dictionary& dict)
 
 NullBSDF::~NullBSDF() {}
 
-void NullBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                  const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void PipelineInitializer<NullBSDF>::apply(const atcg::ref_ptr<NullBSDF>& component) const
 {
     const std::string ptx_bsdf_filename = "./bin/NullBSDF_ptx.ptx";
     auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_nullbsdf"});
@@ -25,9 +24,11 @@ void NullBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipel
     BSDFVPtrTable table;
     table.sampleCallIndex = sample_idx;
     table.evalCallIndex   = eval_idx;
-    table.flags           = _flags;
+    table.flags           = component->flags();
 
-    _vptr_table.upload(&table);
+    component->getVPtrTableHolder().upload(&table);
+
+    component->markInitialized();
 }
 
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_NULL, NullBSDF);

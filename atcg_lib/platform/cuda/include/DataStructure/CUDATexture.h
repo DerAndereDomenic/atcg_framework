@@ -18,6 +18,7 @@ struct CUDATexture
      */
     CUDATexture() = default;
 
+#ifdef __CUDACC__
     /**
      * @brief Read the texture
      *
@@ -54,6 +55,8 @@ struct CUDATexture
     ATCG_DEVICE
     void write(const T& val, const glm::ivec3& texel);
 
+#endif
+
     // Texture and Surface Object
     struct
     {
@@ -70,6 +73,7 @@ struct CUDATexture
 
 // Implementation
 
+#ifdef __CUDACC__
 template<typename T>
 ATCG_DEVICE T CUDATexture<T>::read(const glm::vec2& uv) const
 {
@@ -176,4 +180,5 @@ ATCG_DEVICE void CUDATexture<T>::write(const T& val, const glm::ivec3& texel)
 
     // Else do nothing (no valid data)
 }
+#endif
 }    // namespace atcg

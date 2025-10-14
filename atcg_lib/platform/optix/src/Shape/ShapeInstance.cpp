@@ -24,23 +24,31 @@ void ShapeInstance::onImGuiRender()
     if(_outside_medium) _outside_medium->onImGuiRender();
 }
 
-void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                       const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void PipelineInitializer<ShapeInstance>::apply(const atcg::ref_ptr<ShapeInstance>& component) const
 {
-    if(!_shape) return;
-    _shape->ensureInitialized(pipeline, sbt);
-    if(_emitter) _emitter->ensureInitialized(pipeline, sbt);
-    if(_inside_medium) _inside_medium->ensureInitialized(pipeline, sbt);
-    if(_outside_medium) _outside_medium->ensureInitialized(pipeline, sbt);
+    auto shape          = component->getShape();
+    auto bsdf           = component->getBSDF();
+    auto emitter        = component->getEmitter();
+    auto inside_medium  = component->getInsideMedium();
+    auto outside_medium = component->getOutsideMedium();
+
+    if(!shape) return;
+    // TODO
+    // _shape->ensureInitialized(pipeline, sbt);
+    // if(emitter) _emitter->ensureInitialized(pipeline, sbt);
+    // if(inside_medium) _inside_medium->ensureInitialized(pipeline, sbt);
+    // if(outside_medium) _outside_medium->ensureInitialized(pipeline, sbt);
 
     ShapeInstanceData data;
-    data.shape          = _shape->_shape_data;
-    data.bsdf           = _bsdf ? _bsdf->getVPtrTable() : nullptr;
-    data.emitter        = _emitter ? _emitter->getVPtrTable() : nullptr;
-    data.inside_medium  = _inside_medium ? _inside_medium->getVPtrTable() : nullptr;
-    data.outside_medium = _outside_medium ? _outside_medium->getVPtrTable() : nullptr;
-    data.entity_id      = _entity_id;
-    data.color          = _color;
-    sbt->addHitEntry(_shape->getHitGroup(), data);
+    data.shape          = shape->getShapeData();
+    data.bsdf           = bsdf ? bsdf->getVPtrTable() : nullptr;
+    data.emitter        = emitter ? emitter->getVPtrTable() : nullptr;
+    data.inside_medium  = inside_medium ? inside_medium->getVPtrTable() : nullptr;
+    data.outside_medium = outside_medium ? outside_medium->getVPtrTable() : nullptr;
+    data.entity_id      = component->entity_id();
+    data.color          = component->color();
+    sbt->addHitEntry(shape->getHitGroup(), data);
+
+    component->markInitialized();
 }
 }    // namespace atcg

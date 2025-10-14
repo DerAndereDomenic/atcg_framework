@@ -2,6 +2,7 @@
 
 #include <BSDF/BSDF.h>
 #include <Renderer/Material.h>
+#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -24,21 +25,13 @@ public:
     virtual ~NullBSDF();
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() override {}
 
 private:
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(NullBSDF);
+
 }    // namespace atcg

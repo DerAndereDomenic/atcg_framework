@@ -867,7 +867,7 @@ ATCG_INLINE void pushTextureID(const uint32_t id)
  */
 ATCG_INLINE atcg::ref_ptr<ShaderManagerSystem> getShaderManager()
 {
-    SystemRegistry::instance()->getSystem<RendererSystem>()->getShaderManager();
+    return SystemRegistry::instance()->getSystem<RendererSystem>()->getShaderManager();
 }
 }    // namespace Renderer
 

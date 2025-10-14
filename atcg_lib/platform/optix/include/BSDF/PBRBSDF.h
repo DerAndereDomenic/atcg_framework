@@ -3,6 +3,7 @@
 #include <BSDF/BSDF.h>
 #include <BSDF/PBRBSDFData.cuh>
 #include <Renderer/Material.h>
+#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -26,24 +27,15 @@ public:
      */
     virtual ~PBRBSDF();
 
-    /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
-
     virtual std::vector<torch::Tensor> getParameters() const override;
 
     virtual void markOptimizable() override;
     /**
      * @brief A callback to display debug information in imgui
      */
-    virtual void onImGuiRender() {};
+    virtual void onImGuiRender() override {};
+
+    ATCG_INLINE atcg::dref_ptr<PBRBSDFData> getDataBuffer() const { return _bsdf_data_buffer; }
 
 private:
     torch::Tensor _diffuse_texture;
@@ -52,4 +44,6 @@ private:
 
     atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(PBRBSDF);
 }    // namespace atcg

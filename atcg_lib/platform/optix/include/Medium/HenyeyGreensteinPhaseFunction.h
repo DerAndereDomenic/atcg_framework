@@ -3,6 +3,8 @@
 #include <Medium/PhaseFunction.h>
 #include <Medium/HenyeyGreensteinPhaseFunctionData.cuh>
 
+#include <Core/PipelineInitializer.h>
+
 namespace atcg
 {
 /**
@@ -26,22 +28,15 @@ public:
     virtual ~HenyeyGreensteinPhaseFunction();
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() override {}
 
+    ATCG_INLINE atcg::dref_ptr<HenyeyGreensteinPhaseFunctionData> getDataBuffer() const { return _data_buffer; }
+
 private:
     atcg::dref_ptr<HenyeyGreensteinPhaseFunctionData> _data_buffer;
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(HenyeyGreensteinPhaseFunction);
 }    // namespace atcg

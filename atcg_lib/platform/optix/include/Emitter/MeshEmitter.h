@@ -4,6 +4,7 @@
 #include <Emitter/Emitter.h>
 #include <Emitter/MeshEmitterData.cuh>
 #include <DataStructure/Dictionary.h>
+#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -31,20 +32,11 @@ public:
     virtual ~MeshEmitter();
 
     /**
-     * @brief Initialize the optix pipeline.
-     * Each Optix component has to initialize its part of the raytracing pipeline by defining appropriate entry points
-     * and sbt entries.
-     *
-     * @param pipeline The raytracing pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() override {}
+
+    ATCG_INLINE atcg::dref_ptr<MeshEmitterData> getDataBuffer() const { return _mesh_emitter_data; }
 
 private:
     atcg::ref_ptr<Texture2D> _emissive_texture;
@@ -53,4 +45,6 @@ private:
 
     atcg::dref_ptr<MeshEmitterData> _mesh_emitter_data;
 };
+
+ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(MeshEmitter);
 }    // namespace atcg

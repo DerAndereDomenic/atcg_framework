@@ -15,8 +15,7 @@ PointEmitter::PointEmitter(const atcg::Dictionary& dict)
 
 PointEmitter::~PointEmitter() {}
 
-void PointEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                      const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void PipelineInitializer<PointEmitter>::apply(const atcg::ref_ptr<PointEmitter>& component) const
 {
     const std::string ptx_emitter_filename = "./bin/PointEmitter_ptx.ptx";
     auto sample_prog_group =
@@ -24,16 +23,18 @@ void PointEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& p
     auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_pointemitter"});
     auto evalpdf_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_pointemitter"});
-    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, _point_emitter_data.get());
-    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, _point_emitter_data.get());
-    uint32_t evalpdf_idx = sbt->addCallableEntry(evalpdf_prog_group, _point_emitter_data.get());
+    uint32_t sample_idx  = sbt->addCallableEntry(sample_prog_group, component->getDataBuffer().get());
+    uint32_t eval_idx    = sbt->addCallableEntry(eval_prog_group, component->getDataBuffer().get());
+    uint32_t evalpdf_idx = sbt->addCallableEntry(evalpdf_prog_group, component->getDataBuffer().get());
 
     EmitterVPtrTable table;
-    table.flags            = _flags;
+    table.flags            = component->flags();
     table.sampleCallIndex  = sample_idx;
     table.evalCallIndex    = eval_idx;
     table.evalPdfCallIndex = evalpdf_idx;
 
-    _vptr_table.upload(&table);
+    component->getVPtrTableHolder().upload(&table);
+
+    component->markInitialized();
 }
 }    // namespace atcg

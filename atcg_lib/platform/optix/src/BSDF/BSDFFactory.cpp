@@ -14,7 +14,10 @@ public:
 
     void registerBuilder(MaterialType type, BSDFBuilder builder) { _registry[type] = std::move(builder); }
 
-    atcg::ref_ptr<BSDF> create(MaterialType type, const Dictionary& dict)
+    atcg::ref_ptr<BSDF> create(MaterialType type,
+                               const Dictionary& dict,
+                               const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                               const atcg::ref_ptr<ShaderBindingTable>& sbt)
     {
         auto it = _registry.find(type);
         if(it == _registry.end())
@@ -22,7 +25,7 @@ public:
             throw std::runtime_error("Unknown MaterialType");
         }
 
-        return it->second(dict);
+        return it->second(dict, pipeline, sbt);
     }
 
 private:
@@ -38,9 +41,12 @@ void BSDFFactory::registerBSDF(MaterialType type, BSDFBuilder builder)
     instance->registerBuilder(type, builder);
 }
 
-atcg::ref_ptr<BSDF> BSDFFactory::createBSDF(MaterialType type, const Dictionary& dict)
+atcg::ref_ptr<BSDF> BSDFFactory::createBSDF(MaterialType type,
+                                            const Dictionary& dict,
+                                            const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                            const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     auto instance = BSDFFactory_T::getInstance();
-    return instance->create(type, dict);
+    return instance->create(type, dict, pipeline, sbt);
 }
 }    // namespace atcg
