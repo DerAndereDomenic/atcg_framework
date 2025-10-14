@@ -6,6 +6,7 @@
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
+#include <Scene/SceneHierarchyPanel.h>
 
 namespace atcg
 {
@@ -92,6 +93,8 @@ private:
     std::vector<Differentiable*> _differentiable_components;
 
     Dictionary _state;
+
+    GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
 };
 
 struct DiffPathtracingFunction

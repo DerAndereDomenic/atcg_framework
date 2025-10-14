@@ -33,7 +33,7 @@ public:
     /**
      * @brief A callback to display debug information in imgui
      */
-    virtual void onImGuiRender() override {};
+    virtual void onImGuiRender() override;
 
     ATCG_INLINE atcg::dref_ptr<PBRBSDFData> getDataBuffer() const { return _bsdf_data_buffer; }
 
@@ -43,6 +43,9 @@ private:
     torch::Tensor _roughness_texture;
 
     atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
+
+    atcg::ref_ptr<Texture2D> _diffuse_optimized, _metallic_optimized, _roughness_optimized;
+    atcg::ref_ptr<Texture2D> _diffuse_grad, _metallic_grad, _roughness_grad;
 };
 
 ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(PBRBSDF);

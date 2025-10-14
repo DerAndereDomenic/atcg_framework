@@ -58,6 +58,41 @@ std::vector<torch::Tensor> PBRBSDF::getParameters() const
     return {_diffuse_texture, _metallic_texture, _roughness_texture};
 }
 
+void PBRBSDF::onImGuiRender()
+{
+    if(!_diffuse_optimized) return;
+
+    _diffuse_optimized->setData(_diffuse_texture);
+    _diffuse_grad->setData(_diffuse_texture.grad());
+
+    _metallic_optimized->setData(_metallic_texture);
+    _metallic_grad->setData(_metallic_texture.grad());
+
+    _roughness_optimized->setData(_roughness_texture);
+    _roughness_grad->setData(_roughness_texture.grad());
+
+    ImGui::Text("Diffuse");
+    ImGui::Text("Texture");
+    ImGui::Image((ImTextureID)_diffuse_optimized->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+    ImGui::Text("Grad");
+    ImGui::Image((ImTextureID)_diffuse_grad->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+    ImGui::Separator();
+
+    ImGui::Text("Metallic");
+    ImGui::Text("Texture");
+    ImGui::Image((ImTextureID)_metallic_optimized->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+    ImGui::Text("Grad");
+    ImGui::Image((ImTextureID)_metallic_grad->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+    ImGui::Separator();
+
+    ImGui::Text("Roughness");
+    ImGui::Text("Texture");
+    ImGui::Image((ImTextureID)_roughness_optimized->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+    ImGui::Text("Grad");
+    ImGui::Image((ImTextureID)_roughness_grad->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+    ImGui::Separator();
+}
+
 void PBRBSDF::markOptimizable()
 {
     atcg::TextureSpecification spec_diffuse;
@@ -92,6 +127,14 @@ void PBRBSDF::markOptimizable()
     data.roughness_grad = TextureSampler<float>(_roughness_texture.grad().data_ptr(), spec_float);
 
     _bsdf_data_buffer.upload(&data);
+
+    _diffuse_optimized   = atcg::Texture2D::create(spec_diffuse);
+    _metallic_optimized  = atcg::Texture2D::create(spec_float);
+    _roughness_optimized = atcg::Texture2D::create(spec_float);
+
+    _diffuse_grad   = atcg::Texture2D::create(spec_diffuse);
+    _metallic_grad  = atcg::Texture2D::create(spec_float);
+    _roughness_grad = atcg::Texture2D::create(spec_float);
 }
 
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);

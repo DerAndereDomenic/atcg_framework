@@ -58,7 +58,10 @@ void DiffPathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracin
     ATCG_TRACE("Number differentiable objects: {}", _differentiable_components.size());
 }
 
-void DiffPathtracingIntegrator::onImGuiRender() {}
+void DiffPathtracingIntegrator::onImGuiRender()
+{
+    _panel.renderPanel(_optix_scene);
+}
 
 void DiffPathtracingIntegrator::reset()
 {
