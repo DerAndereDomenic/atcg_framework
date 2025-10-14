@@ -78,14 +78,12 @@ extern "C" __global__ void __raygen__forward()
 
         if(si.valid)
         {
-            // TODO: No NEE for now
             // Check for light source
             if(si.emitter)
             {
                 bool mis_valid             = last_si.valid;
                 float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
                 float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                // float mis_weight = 1.0f;
                 ray.radiance += mis_weight * ray.throughput * si.emitter->evalLight(si);
             }
 
@@ -166,7 +164,6 @@ extern "C" __global__ void __raygen__forward()
                     mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
                               : 0.0f;
                 float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                // mis_weight       = 1.0f;
                 ray.radiance += mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
             }
         }
