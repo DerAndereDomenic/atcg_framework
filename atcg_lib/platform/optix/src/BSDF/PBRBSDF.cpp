@@ -24,6 +24,8 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
     data.roughness_texture =
         TextureSampler<float>(_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
 
+    data.optimizable = _optimizable;
+
     _flags = BSDFComponentType::GlossyReflection | BSDFComponentType::DiffuseReflection;
 
     _bsdf_data_buffer.upload(&data);
@@ -60,6 +62,11 @@ std::vector<torch::Tensor> PBRBSDF::getParameters() const
 
 void PBRBSDF::onImGuiRender()
 {
+    if(ImGui::Button("Make Optimizable"))
+    {
+        markOptimizable();
+    }
+
     if(!_diffuse_optimized) return;
 
     auto normalize = [](torch::Tensor inp) -> torch::Tensor
@@ -156,6 +163,13 @@ void PBRBSDF::markOptimizable()
     _diffuse_grad     = atcg::Texture2D::create(spec_diffuse);
     _metallic_grad    = atcg::Texture2D::create(spec_float);
     _roughness_grad   = atcg::Texture2D::create(spec_float);
+
+    _optimizable = true;
+
+    PBRBSDFData bsdf_data;
+    _bsdf_data_buffer.download(&bsdf_data);
+    bsdf_data.optimizable = _optimizable;
+    _bsdf_data_buffer.upload(&bsdf_data);
 }
 
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);

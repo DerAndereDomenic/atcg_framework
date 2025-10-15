@@ -32,5 +32,10 @@ public:
     virtual std::vector<torch::Tensor> getParameters() const = 0;
 
     virtual void markOptimizable() = 0;
+
+    bool isOptimizable() const { return _optimizable; }
+
+protected:
+    bool _optimizable = false;
 };
 }    // namespace atcg

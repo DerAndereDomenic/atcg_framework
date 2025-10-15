@@ -303,7 +303,7 @@ public:
             optimize = !optimize;
             if(optimize)
             {
-                integrator->markOptimizable();
+                // integrator->markOptimizable();
                 optimizer =
                     atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions(0.005));
             }

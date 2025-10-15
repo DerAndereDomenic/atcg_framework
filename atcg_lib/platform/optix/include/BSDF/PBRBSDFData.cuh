@@ -13,5 +13,7 @@ struct PBRBSDFData
     TextureSampler<glm::vec3> diffuse_grad;
     TextureSampler<float> metallic_grad;
     TextureSampler<float> roughness_grad;
+
+    bool optimizable;
 };
 }    // namespace atcg

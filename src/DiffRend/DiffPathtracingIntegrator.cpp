@@ -246,6 +246,7 @@ std::vector<torch::Tensor> DiffPathtracingIntegrator::getParameters() const
     std::vector<torch::Tensor> parameters;
     for(auto obj: _differentiable_components)
     {
+        if(!obj->isOptimizable()) continue;
         auto obj_parameters = obj->getParameters();
 
         parameters.insert(parameters.end(), obj_parameters.begin(), obj_parameters.end());

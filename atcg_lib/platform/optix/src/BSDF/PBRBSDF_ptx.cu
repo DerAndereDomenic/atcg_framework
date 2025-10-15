@@ -252,6 +252,8 @@ extern "C" __device__ void __direct_callable__grad_pbrbsdf(const atcg::SurfaceIn
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
+    if(!sbt_data->optimizable) return;
+
     glm::vec3 alpha         = sbt_data->diffuse_texture.read(si.uv);
     float m                 = sbt_data->metallic_texture.read(si.uv);
     float r                 = sbt_data->roughness_texture.read(si.uv);
