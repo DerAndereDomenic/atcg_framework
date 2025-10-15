@@ -62,14 +62,34 @@ void PBRBSDF::onImGuiRender()
 {
     if(!_diffuse_optimized) return;
 
+    auto normalize = [](torch::Tensor inp) -> torch::Tensor
+    {
+        auto min = torch::amin(inp);
+        auto max = torch::amax(inp);
+        auto y   = (inp - min) / (max - min);
+
+        return y;
+    };
+
+    auto pos_neg = [normalize](torch::Tensor inp) -> torch::Tensor
+    {
+        torch::Tensor pos = torch::relu(inp);
+
+        torch::Tensor neg = torch::relu(-inp);
+
+        torch::Tensor y = torch::concat({pos, neg}, /*dim=*/-1);
+
+        return normalize(y);
+    };
+
     _diffuse_optimized->setData(_diffuse_texture);
-    _diffuse_grad->setData(_diffuse_texture.grad());
+    _diffuse_grad->setData(normalize(_diffuse_texture.grad()));
 
     _metallic_optimized->setData(_metallic_texture);
-    _metallic_grad->setData(_metallic_texture.grad());
+    _metallic_grad->setData(pos_neg(_metallic_texture.grad()));
 
     _roughness_optimized->setData(_roughness_texture);
-    _roughness_grad->setData(_roughness_texture.grad());
+    _roughness_grad->setData(pos_neg(_roughness_texture.grad()));
 
     ImGui::Text("Diffuse");
     ImGui::Text("Texture");
@@ -132,9 +152,10 @@ void PBRBSDF::markOptimizable()
     _metallic_optimized  = atcg::Texture2D::create(spec_float);
     _roughness_optimized = atcg::Texture2D::create(spec_float);
 
-    _diffuse_grad   = atcg::Texture2D::create(spec_diffuse);
-    _metallic_grad  = atcg::Texture2D::create(spec_float);
-    _roughness_grad = atcg::Texture2D::create(spec_float);
+    spec_float.format = TextureFormat::RGFLOAT;    // For pos/neg visualization
+    _diffuse_grad     = atcg::Texture2D::create(spec_diffuse);
+    _metallic_grad    = atcg::Texture2D::create(spec_float);
+    _roughness_grad   = atcg::Texture2D::create(spec_float);
 }
 
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);
