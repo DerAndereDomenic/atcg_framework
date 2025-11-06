@@ -44,3 +44,6 @@
 [submodule "external/tinyobjloader"]
 	path = external/tinyobjloader
 	url = https://github.com/tinyobjloader/tinyobjloader.git
+[submodule "external/CuDiff"]
+	path = external/CuDiff
+	url = https://github.com/DerAndereDomenic/CuDiff.git

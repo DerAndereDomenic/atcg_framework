@@ -92,6 +92,9 @@ target_sources(atcg_glad PRIVATE "external/glad/src/glad.c")
 target_include_directories(atcg_glad PUBLIC "external/glad/include")
 add_library(atcg::glad ALIAS atcg_glad)
 
+# CuDiff
+add_subdirectory(external/CuDiff)
+
 if(NOT ATCG_HEADLESS)
     # imgui
     add_library(atcg_imgui STATIC)

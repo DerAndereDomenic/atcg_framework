@@ -119,4 +119,5 @@ target_link_libraries(atcg_lib PUBLIC atcg::glad
                                       Python::Python
                                       torch_python_interface
                                       atcg::openvr
+                                      CuDiff
 )
