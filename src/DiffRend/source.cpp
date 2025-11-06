@@ -14,7 +14,7 @@
 #include <Core/Common.h>
 #include <torch/optim.h>
 
-#include "DiffPathtracingIntegrator.h"
+#include "AttachedDiffPathtracingIntegrator.h"
 
 class DiffRendLayer : public atcg::Layer
 {
@@ -45,7 +45,7 @@ public:
         pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
         sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
 
-        integrator = atcg::make_ref<atcg::DiffPathtracingIntegrator>(optx_context, atcg::Dictionary());
+        integrator = atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(optx_context, atcg::Dictionary());
         integrator->setScene(atcg::Project::getActive()->getActiveScene());
         integrator->initializePipeline(pipeline, sbt);
 
@@ -118,7 +118,7 @@ public:
             if(optimize)
             {
                 optimizer->zero_grad(false);
-                auto result = atcg::DiffPathtracingFunction::apply(integrator, dict);
+                auto result = atcg::AttachedDiffPathtracingFunction::apply(integrator, dict);
 
                 auto difference = (result - target);
                 auto L          = torch::sum(torch::abs(difference));
@@ -464,7 +464,7 @@ private:
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
     atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
-    atcg::ref_ptr<atcg::DiffPathtracingIntegrator> integrator;
+    atcg::ref_ptr<atcg::AttachedDiffPathtracingIntegrator> integrator;
     torch::Tensor target;
     bool optimize = false;
     atcg::ref_ptr<torch::optim::Adam> optimizer;
