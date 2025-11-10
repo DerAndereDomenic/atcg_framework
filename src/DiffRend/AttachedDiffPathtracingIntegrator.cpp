@@ -32,12 +32,14 @@ void AttachedDiffPathtracingIntegrator::initializePipeline(const atcg::ref_ptr<R
     OptixProgramGroup raygen_prog_group_forward = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__forward"});
     OptixProgramGroup raygen_prog_group_backward =
         pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__backward"});
-    OptixProgramGroup miss_prog_group = pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
-    OptixProgramGroup occl_prog_group = pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
+    OptixProgramGroup miss_prog_group      = pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
+    OptixProgramGroup dual_miss_prog_group = pipeline->addMissShader({ptx_raygen_filename, "__miss__dual"});
+    OptixProgramGroup occl_prog_group      = pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
     _raygen_index_forward  = sbt->addRaygenEntry(raygen_prog_group_forward);
     _raygen_index_backward = sbt->addRaygenEntry(raygen_prog_group_backward);
     _surface_miss_index    = sbt->addMissEntry(miss_prog_group);
+    _dual_miss_index       = sbt->addMissEntry(dual_miss_prog_group);
     _occlusion_miss_index  = sbt->addMissEntry(occl_prog_group);
 
     _pipeline = pipeline;
@@ -115,12 +117,17 @@ void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_diction
 
     params.surface_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
     params.surface_trace_params.SBToffset    = 0;
-    params.surface_trace_params.SBTstride    = 1;
+    params.surface_trace_params.SBTstride    = 2;
     params.surface_trace_params.missSBTIndex = _surface_miss_index;
+
+    params.dual_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
+    params.dual_trace_params.SBToffset    = 1;
+    params.dual_trace_params.SBTstride    = 2;
+    params.dual_trace_params.missSBTIndex = _dual_miss_index;
 
     params.occlusion_trace_params.rayFlags  = OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT;
     params.occlusion_trace_params.SBToffset = 0;
-    params.occlusion_trace_params.SBTstride = 1;
+    params.occlusion_trace_params.SBTstride = 2;
     params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
 
     _launch_params.upload(&params);

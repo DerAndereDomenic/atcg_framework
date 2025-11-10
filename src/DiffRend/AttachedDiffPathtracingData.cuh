@@ -22,6 +22,7 @@ struct AttachedDiffPathtracingParams
     OptixTraversableHandle handle;
 
     TraceParameters surface_trace_params;
+    TraceParameters dual_trace_params;
     TraceParameters occlusion_trace_params;
 
     // Cam data
