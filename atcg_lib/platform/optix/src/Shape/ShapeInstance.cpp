@@ -48,6 +48,7 @@ void PipelineInitializer<ShapeInstance>::apply(const atcg::ref_ptr<ShapeInstance
     data.entity_id      = component->entity_id();
     data.color          = component->color();
     sbt->addHitEntry(shape->getHitGroup(), data);
+    sbt->addHitEntry(shape->getDualHitGroup(), data);
 
     component->markInitialized();
 }

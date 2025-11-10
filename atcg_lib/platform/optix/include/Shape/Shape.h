@@ -63,8 +63,10 @@ public:
      * @return The hit group
      */
     ATCG_INLINE OptixProgramGroup getHitGroup() const { return _hit_group; }
+    ATCG_INLINE OptixProgramGroup getDualHitGroup() const { return _dual_hit_group; }
 
     ATCG_INLINE void setHitGroup(OptixProgramGroup hit_group) { _hit_group = hit_group; }
+    ATCG_INLINE void setDualHitGroup(OptixProgramGroup dual_hit_group) { _dual_hit_group = dual_hit_group; }
 
     ATCG_INLINE ShapeData* getShapeData() const { return _shape_data; }
 
@@ -73,6 +75,7 @@ protected:
     atcg::DeviceBuffer<uint8_t> _ast_buffer;
     OptixTraversableHandle _ast_handle = 0;
     OptixProgramGroup _hit_group;
+    OptixProgramGroup _dual_hit_group;
 
     ShapeData* _shape_data;
 };

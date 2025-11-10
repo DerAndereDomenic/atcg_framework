@@ -34,6 +34,8 @@ void PipelineInitializer<MeshShape>::apply(const atcg::ref_ptr<MeshShape>& compo
 {
     const std::string ptx_raygen_filename = "./bin/MeshShape_ptx.ptx";
     component->setHitGroup(pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__mesh"}, {}));
+    component->setDualHitGroup(
+        pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__dual_mesh"}, {}));
 
     component->markInitialized();
 }

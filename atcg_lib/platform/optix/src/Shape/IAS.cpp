@@ -18,7 +18,7 @@ InstanceAccelerationStructure::InstanceAccelerationStructure(const atcg::ref_ptr
 
         optix_instance.flags             = OPTIX_INSTANCE_FLAG_NONE;
         optix_instance.instanceId        = num_instances;
-        optix_instance.sbtOffset         = num_instances;
+        optix_instance.sbtOffset         = 2 * num_instances;
         optix_instance.visibilityMask    = 1;
         optix_instance.traversableHandle = shape->getShape()->getAST();
 
