@@ -368,7 +368,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_ggx_deriv
     float v      = uv.y;
     float alpha  = roughness;
     float alpha2 = alpha * alpha;
-    float phi    = glm::two_pi<float>() * uv.y;
+    float phi    = glm::two_pi<float>() * v;
 
     float a  = alpha * u * (u - 1.0f);
     float b  = u * (alpha2 - 1.0f) + 1.0f;
@@ -433,6 +433,13 @@ __direct_callable__sample_dual_pbrbsdf(const atcg::DualSurfaceInteraction& si, a
         glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
         result.out_dir = apply_local_frame(local_frame, local_outgoing_ray_dir);
+
+        // Differentiate the sampling
+        for(int i = 0; i < 6; ++i)
+        {
+            result.out_dir.mut_derivative(i) +=
+                diffuse_probability.derivative(i) * result.out_dir.val() / diffuse_probability.val();
+        }
     }
     else
     {
@@ -441,6 +448,12 @@ __direct_callable__sample_dual_pbrbsdf(const atcg::DualSurfaceInteraction& si, a
         // Transform local halfway vector from tangent space to world space
         auto halfway   = apply_local_frame(local_frame, local_halfway);
         result.out_dir = CuDiff::reflect(si.incoming_direction, halfway);
+
+        for(int i = 0; i < 6; ++i)
+        {
+            result.out_dir.mut_derivative(i) +=
+                specular_probability.derivative(i) * result.out_dir.val() / specular_probability.val();
+        }
     }
 
     // It is possible that light directions below the horizon are sampled..
@@ -656,17 +669,28 @@ __direct_callable__sample_grad_pbrbsdf(const atcg::SurfaceInteraction& si, atcg:
     // the world coordinate system.
     glm::mat3 local_frame = atcg::Math::compute_local_frame(normal);
 
-    float diffuse_probability =
-        glm::dot(diffuse_color, glm::vec3(1)) /
-        (glm::dot(diffuse_color, glm::vec3(1)) + glm::dot(metallic_color, glm::vec3(1)) + 1e-5f);
+    float diffuse_sum          = glm::dot(diffuse_color, glm::vec3(1));
+    float metallic_sum         = glm::dot(metallic_color, glm::vec3(1));
+    float denom                = (diffuse_sum + metallic_sum + 1e-5f);
+    float diffuse_probability  = diffuse_sum / denom;
     float specular_probability = 1 - diffuse_probability;
+
+    glm::vec3 dpddiffuse  = glm::vec3(metallic_sum / (denom * denom));
+    glm::vec3 dpdmetallic = glm::vec3(-diffuse_sum / (denom * denom));
+
+    glm::vec3 dwodroughness = glm::vec3(0);
+    glm::mat3 dwoddiffuse   = glm::mat3(1);
+    glm::mat3 dwodmetallic  = glm::mat3(1);
 
     if(rng.next1d() < diffuse_probability)
     {
         // Sample light direction from diffuse bsdf
         glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
-        return;    // Independent on variables
+        auto out_dir = local_frame * local_outgoing_ray_dir;
+
+        dwoddiffuse  = glm::outerProduct(dpddiffuse, out_dir / diffuse_probability);
+        dwodmetallic = glm::outerProduct(dpdmetallic, out_dir / diffuse_probability);
     }
     else
     {
@@ -677,10 +701,7 @@ __direct_callable__sample_grad_pbrbsdf(const atcg::SurfaceInteraction& si, atcg:
         glm::vec3 halfway = local_frame * local_halfway;
 
         auto out_dir = glm::reflect(si.incoming_direction, halfway);
-
-        // It is possible that light directions below the horizon are sampled..
-        // If outgoing ray direction is below horizon, let the sampling fail!
-        float NdotL = glm::dot(normal, out_dir);
+        float NdotL  = glm::dot(normal, out_dir);
         if(NdotL <= 0)
         {
             return;
@@ -690,15 +711,27 @@ __direct_callable__sample_grad_pbrbsdf(const atcg::SurfaceInteraction& si, atcg:
         glm::mat3 dwodh = -glm::mat3(1) * 2.0f * VdotH - 2.0f * glm::outerProduct(halfway, si.incoming_direction);
         glm::mat3 dhdh_ = local_frame;
         glm::vec3 dh_droughness = warp_square_to_hemisphere_ggx_derivative(uv, roughness);
-        float droughnessdr      = 2.0f * r;
 
-        glm::vec3 dwodr  = dwodh * dhdh_ * dh_droughness * droughnessdr;
-        glm::mat3 dwidwo = glm::mat3(1) - 2.0f * glm::outerProduct(halfway, halfway);
+        dwodroughness = dwodh * dhdh_ * dh_droughness;
 
-        float dLdr = glm::dot(out_grad, dwidwo * dwodr);
+        dwoddiffuse  = glm::outerProduct(-dpddiffuse, out_dir / specular_probability);
+        dwodmetallic = glm::outerProduct(-dpdmetallic, out_dir / specular_probability);
+    }
 
-        {
-            DERIVATIVE_INTERPOLATION_SCALAR(dLdr, sbt_data->roughness_grad);
-        }
+    // ? glm::mat3 dwidwo = glm::mat3(1) - 2.0f * glm::outerProduct(halfway, halfway);
+
+    glm::vec3 dwodr    = 2.0f * r * dwodroughness;
+    float dLdr         = glm::dot(out_grad, dwodr);
+    glm::vec3 dLdalpha = out_grad * dwoddiffuse * (1.0f - m);
+    float dLdm         = glm::dot(out_grad, dwodmetallic * (alpha - glm::vec3(0.04)));
+
+    {
+        DERIVATIVE_INTERPOLATION_VECTOR(dLdalpha, sbt_data->diffuse_grad);
+    }
+    {
+        DERIVATIVE_INTERPOLATION_SCALAR(dLdr, sbt_data->roughness_grad);
+    }
+    {
+        DERIVATIVE_INTERPOLATION_SCALAR(dLdm, sbt_data->metallic_grad);
     }
 }
