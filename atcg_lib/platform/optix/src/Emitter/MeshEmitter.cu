@@ -78,9 +78,10 @@ MeshEmitter::MeshEmitter(const Dictionary& dict)
 
     MeshEmitterData data;
 
-    _emissive_texture                          = std::dynamic_pointer_cast<Texture2D>(texture_emissive->clone());
-    data.emissive_texture.texture_data.texture = _emissive_texture->getTextureObject();
-    data.emissive_texture.spec                 = _emissive_texture->getSpecification();
+    auto emissive_texture = std::dynamic_pointer_cast<Texture2D>(texture_emissive->clone());
+    _emissive_texture     = emissive_texture->getData(atcg::GPU);
+    data.emissive_texture =
+        TextureSampler<glm::vec3>(_emissive_texture.data_ptr(), emissive_texture->getSpecification());
 
     data.emitter_scaling = emission_scaling;
 
@@ -152,10 +153,7 @@ MeshEmitter::MeshEmitter(const Dictionary& dict)
     _mesh_emitter_data.upload(&data);
 }
 
-MeshEmitter::~MeshEmitter()
-{
-    _emissive_texture->unmapDevicePointers();
-}
+MeshEmitter::~MeshEmitter() {}
 
 void PipelineInitializer<MeshEmitter>::apply(const atcg::ref_ptr<MeshEmitter>& component) const
 {
@@ -163,17 +161,21 @@ void PipelineInitializer<MeshEmitter>::apply(const atcg::ref_ptr<MeshEmitter>& c
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_meshemitter"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_meshemitter"});
+    auto eval_dual_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_dual_meshemitter"});
     auto evalpdf_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_meshemitter"});
-    uint32_t sample_idx   = sbt->addCallableEntry(sample_prog_group, component->getDataBuffer().get());
-    uint32_t eval_idx     = sbt->addCallableEntry(eval_prog_group, component->getDataBuffer().get());
-    uint32_t eval_pdf_idx = sbt->addCallableEntry(evalpdf_prog_group, component->getDataBuffer().get());
+    uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group, component->getDataBuffer().get());
+    uint32_t eval_idx      = sbt->addCallableEntry(eval_prog_group, component->getDataBuffer().get());
+    uint32_t eval_dual_idx = sbt->addCallableEntry(eval_dual_prog_group, component->getDataBuffer().get());
+    uint32_t eval_pdf_idx  = sbt->addCallableEntry(evalpdf_prog_group, component->getDataBuffer().get());
 
     EmitterVPtrTable table;
-    table.flags            = component->flags();
-    table.sampleCallIndex  = sample_idx;
-    table.evalCallIndex    = eval_idx;
-    table.evalPdfCallIndex = eval_pdf_idx;
+    table.flags             = component->flags();
+    table.sampleCallIndex   = sample_idx;
+    table.evalCallIndex     = eval_idx;
+    table.evalDualCallIndex = eval_dual_idx;
+    table.evalPdfCallIndex  = eval_pdf_idx;
 
     component->getVPtrTableHolder().upload(&table);
 

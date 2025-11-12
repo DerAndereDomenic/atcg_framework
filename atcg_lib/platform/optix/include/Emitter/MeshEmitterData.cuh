@@ -1,6 +1,6 @@
 #pragma once
 
-#include <DataStructure/CUDATexture.h>
+#include <DataStructure/TextureSampler.h>
 
 namespace atcg
 {
@@ -12,7 +12,7 @@ struct MeshEmitterData
     uint32_t num_faces;
 
     float emitter_scaling;
-    CUDATexture<glm::vec3> emissive_texture;
+    TextureSampler<glm::vec3> emissive_texture;
 
     glm::mat4 world_to_local;
     glm::mat4 local_to_world;

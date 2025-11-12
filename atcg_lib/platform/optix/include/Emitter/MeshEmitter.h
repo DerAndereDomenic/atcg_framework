@@ -39,7 +39,7 @@ public:
     ATCG_INLINE atcg::dref_ptr<MeshEmitterData> getDataBuffer() const { return _mesh_emitter_data; }
 
 private:
-    atcg::ref_ptr<Texture2D> _emissive_texture;
+    torch::Tensor _emissive_texture;
 
     torch::Tensor _mesh_cdf;
 
