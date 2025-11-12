@@ -87,6 +87,7 @@ void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_diction
     {
         _accumulation_buffer = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
         _current_sample      = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
+        _current_JL          = torch::zeros({height, width, 3 * 6}, atcg::TensorOptions::floatDeviceOptions());
     }
 
     AttachedDiffPathtracingParams params;
@@ -106,6 +107,7 @@ void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_diction
 
     params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
     params.current_sample      = (glm::vec3*)_current_sample.data_ptr();
+    params.JL_buffer           = (mat3x6*)_current_JL.data_ptr();
 
     params.rng_index     = _iteration_counter + _frame_counter;
     params.frame_counter = _frame_counter++;
@@ -170,6 +172,7 @@ void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictio
 
     params.accumulation_buffer = (glm::vec3*)_samples[step].data_ptr();    // Input L
     params.adjoint_y           = (glm::vec3*)adjoint_y.data_ptr();         // Input 𝛿L
+    params.JL_buffer           = (mat3x6*)_JL_samples[step].data_ptr();    // Input JL from forward pass
 
     params.rng_index     = _iteration_counter + _frame_counter;
     params.frame_counter = _frame_counter++;
@@ -181,12 +184,17 @@ void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictio
 
     params.surface_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
     params.surface_trace_params.SBToffset    = 0;
-    params.surface_trace_params.SBTstride    = 1;
+    params.surface_trace_params.SBTstride    = 2;
     params.surface_trace_params.missSBTIndex = _surface_miss_index;
+
+    params.dual_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
+    params.dual_trace_params.SBToffset    = 1;
+    params.dual_trace_params.SBTstride    = 2;
+    params.dual_trace_params.missSBTIndex = _dual_miss_index;
 
     params.occlusion_trace_params.rayFlags  = OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT;
     params.occlusion_trace_params.SBToffset = 0;
-    params.occlusion_trace_params.SBTstride = 1;
+    params.occlusion_trace_params.SBTstride = 2;
     params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
 
     _launch_params.upload(&params);
@@ -224,11 +232,14 @@ void AttachedDiffPathtracingIntegrator::forwardPass(Dictionary& in_out_dictionar
     const uint32_t num_samples = in_out_dictionary.getValueOr<uint32_t>("num_samples", 16);
 
     reset();
-    _samples.clear();
+    _samples.resize(num_samples);
+    _JL_samples.resize(num_samples);
+
     for(int i = 0; i < num_samples; ++i)
     {
         _forwardTrace(in_out_dictionary);
-        _samples.push_back(_current_sample.clone());
+        _samples[i]    = _current_sample.clone();
+        _JL_samples[i] = _current_JL.clone();
     }
     _state = std::move(in_out_dictionary);    // Store for backward pass (cant be stored in ctx directly)
 }

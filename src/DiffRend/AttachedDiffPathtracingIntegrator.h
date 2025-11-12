@@ -87,7 +87,9 @@ private:
     uint32_t _iteration_counter = 0;
 
     torch::Tensor _current_sample;
+    torch::Tensor _current_JL;
     std::vector<torch::Tensor> _samples;
+    std::vector<torch::Tensor> _JL_samples;
 
     torch::Tensor _accumulation_buffer;
 
