@@ -4,6 +4,7 @@
 #include <Core/SurfaceInteraction.h>
 #include <Math/Random.h>
 #include <Emitter/EmitterFlags.h>
+#include <CuDiff/CuDiff.h>
 
 #include <optix.h>
 
@@ -34,6 +35,7 @@ struct EmitterVPtrTable
     EmitterFlags flags;
 
     uint32_t evalCallIndex;
+    uint32_t evalDualCallIndex;
     uint32_t sampleCallIndex;
     uint32_t evalPdfCallIndex;
 
@@ -42,6 +44,11 @@ struct EmitterVPtrTable
     __device__ glm::vec3 evalLight(const SurfaceInteraction& si) const
     {
         return optixDirectCall<glm::vec3, const SurfaceInteraction&>(evalCallIndex, si);
+    }
+
+    __device__ CuDiff::Dual<6, glm::vec3> evalLightDual(const DualSurfaceInteraction& si) const
+    {
+        return optixDirectCall<CuDiff::Dual<6, glm::vec3>, const DualSurfaceInteraction&>(evalDualCallIndex, si);
     }
 
     __device__ EmitterSamplingResult sampleLight(const SurfaceInteraction& si, PCG32& rng) const
