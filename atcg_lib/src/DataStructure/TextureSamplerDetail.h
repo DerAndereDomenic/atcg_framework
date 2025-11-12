@@ -18,6 +18,15 @@ ATCG_INLINE ATCG_HOST_DEVICE T TextureSampler<T>::read(const glm::vec2& uv) cons
 }
 
 template<typename T>
+template<int N>
+ATCG_INLINE ATCG_HOST_DEVICE CuDiff::Dual<N, T> TextureSampler<T>::read(const CuDiff::Dual<N, glm::vec2>& uv) const
+{
+    auto _uv = clamp_uv(uv);
+    auto x   = _read_interpolated(_uv);
+    return x;
+}
+
+template<typename T>
 ATCG_INLINE ATCG_HOST_DEVICE T TextureSampler<T>::texel_fetch(const glm::ivec2& texel) const
 {
     size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
@@ -145,6 +154,14 @@ ATCG_INLINE ATCG_HOST_DEVICE glm::vec2 TextureSampler<T>::clamp_uv(const glm::ve
 }
 
 template<typename T>
+template<int N>
+ATCG_INLINE ATCG_HOST_DEVICE CuDiff::Dual<N, glm::vec2>
+TextureSampler<T>::clamp_uv(const CuDiff::Dual<N, glm::vec2>& uv) const
+{
+    return CuDiff::clamp(uv, glm::vec2(0), glm::vec2(1));
+}
+
+template<typename T>
 ATCG_HOST_DEVICE T TextureSampler<T>::_read_interpolated(const glm::vec2& uv) const
 {
     switch(_spec.sampler.filter_mode)
@@ -163,6 +180,13 @@ ATCG_HOST_DEVICE T TextureSampler<T>::_read_interpolated(const glm::vec2& uv) co
     }
 
     return T(0);
+}
+
+template<typename T>
+template<int N>
+ATCG_HOST_DEVICE CuDiff::Dual<N, T> TextureSampler<T>::_read_interpolated(const CuDiff::Dual<N, glm::vec2>& uv) const
+{
+    return _read_linear(uv);
 }
 
 template<typename T>
@@ -199,6 +223,42 @@ ATCG_HOST_DEVICE T TextureSampler<T>::_read_linear(const glm::vec2& uv) const
     T cx0 = glm::mix(c00, c10, tx);
     T cx1 = glm::mix(c01, c11, tx);
     T res = glm::mix(cx0, cx1, ty);
+
+    return res;
+}
+
+template<typename T>
+template<int N>
+ATCG_HOST_DEVICE CuDiff::Dual<N, T> TextureSampler<T>::_read_linear(const CuDiff::Dual<N, glm::vec2>& uv) const
+{
+    CuDiff::Dual<N, float> ux = uv.val().x;
+    CuDiff::Dual<N, float> uy = uv.val().y;
+
+    for(int i = 0; i < N; ++i)
+    {
+        ux.setDerivative(i, uv.derivative(i).x);
+        uy.setDerivative(i, uv.derivative(i).y);
+    }
+
+    auto fx = ux * (_spec.width - 1);
+    auto fy = uy * (_spec.height - 1);
+
+    int x0 = static_cast<int>(glm::floor(fx.val()));
+    int y0 = static_cast<int>(glm::floor(fy.val()));
+    int x1 = glm::min(x0 + 1, (int)_spec.width - 1);    // TODO: wrap
+    int y1 = glm::min(y0 + 1, (int)_spec.height - 1);
+
+    auto tx = fx - (float)x0;
+    auto ty = fy - (float)y0;
+
+    T c00 = texel_fetch(glm::ivec2(x0, y0));
+    T c10 = texel_fetch(glm::ivec2(x1, y0));
+    T c01 = texel_fetch(glm::ivec2(x0, y1));
+    T c11 = texel_fetch(glm::ivec2(x1, y1));
+
+    auto cx0 = (1.0f - tx) * c00 + c10 * tx;
+    auto cx1 = (1.0f - tx) * c01 + c11 * tx;
+    auto res = (1.0f - ty) * cx0 + cx1 * ty;
 
     return res;
 }

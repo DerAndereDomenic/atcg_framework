@@ -3,6 +3,9 @@
 #include <Core/glm.h>
 #include <Core/CUDA.h>
 #include <Renderer/TextureSpecification.h>
+#include <CuDiff/CuDiff.h>
+#include <CuDiff/ext/glm/Function.h>
+#include <CuDiff/ext/glm/Traits.h>
 
 namespace atcg
 {
@@ -46,6 +49,9 @@ public:
 
     ATCG_HOST_DEVICE T read(const glm::vec2& uv) const;
 
+    template<int N>
+    ATCG_HOST_DEVICE CuDiff::Dual<N, T> read(const CuDiff::Dual<N, glm::vec2>& uv) const;
+
     ATCG_HOST_DEVICE T texel_fetch(const glm::ivec2& texel) const;
 
     ATCG_HOST_DEVICE void write(const T& val, const glm::ivec2& texel);
@@ -57,13 +63,22 @@ public:
     ATCG_INLINE ATCG_HOST_DEVICE const TextureSpecification getSpecification() const { return _spec; }
 
     ATCG_HOST_DEVICE glm::vec2 clamp_uv(const glm::vec2& uv) const;
-private:
 
+    template<int N>
+    ATCG_HOST_DEVICE CuDiff::Dual<N, glm::vec2> clamp_uv(const CuDiff::Dual<N, glm::vec2>& uv) const;
+
+private:
     ATCG_HOST_DEVICE T _read_interpolated(const glm::vec2& uv) const;
+
+    template<int N>
+    ATCG_HOST_DEVICE CuDiff::Dual<N, T> _read_interpolated(const CuDiff::Dual<N, glm::vec2>& uv) const;
 
     ATCG_HOST_DEVICE T _read_nearest(const glm::vec2& uv) const;
 
     ATCG_HOST_DEVICE T _read_linear(const glm::vec2& uv) const;
+
+    template<int N>
+    ATCG_HOST_DEVICE CuDiff::Dual<N, T> _read_linear(const CuDiff::Dual<N, glm::vec2>& uv) const;
 
 private:
     void* _data                = nullptr;
