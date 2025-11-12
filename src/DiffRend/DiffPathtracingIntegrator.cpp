@@ -174,12 +174,12 @@ void DiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 
     params.surface_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
     params.surface_trace_params.SBToffset    = 0;
-    params.surface_trace_params.SBTstride    = 1;
+    params.surface_trace_params.SBTstride    = 2;
     params.surface_trace_params.missSBTIndex = _surface_miss_index;
 
     params.occlusion_trace_params.rayFlags  = OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT;
     params.occlusion_trace_params.SBToffset = 0;
-    params.occlusion_trace_params.SBTstride = 1;
+    params.occlusion_trace_params.SBTstride = 2;
     params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
 
     _launch_params.upload(&params);
