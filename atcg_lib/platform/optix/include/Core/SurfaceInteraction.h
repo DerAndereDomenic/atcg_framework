@@ -44,7 +44,7 @@ struct DualSurfaceInteraction
     bool valid = false;
     CuDiff::Dual<6, glm::vec3> position;
     CuDiff::Dual<6, glm::vec3> normal;
-    CuDiff::Dual<6, glm::vec3> uv;
+    CuDiff::Dual<6, glm::vec2> uv;
     CuDiff::Dual<6, glm::vec3> incoming_direction;
     CuDiff::Dual<6, float> incoming_distance;
 
