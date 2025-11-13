@@ -312,8 +312,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE CuDiff::Dual<6, glm::vec3>
 warp_square_to_hemisphere_ggx(const glm::vec2& uv, CuDiff::Dual<6, float> roughness)
 {
     // GGX NDF sampling
-    auto cos_theta = CuDiff::sqrt((1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x));
-    auto sin_theta = CuDiff::sqrt(CuDiff::max(0.0f, 1.0f - cos_theta * cos_theta));
+    auto cos_theta = CuDiff::sqrt(CuDiff::max(1e-3f, (1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x)));
+    auto sin_theta = CuDiff::sqrt(CuDiff::max(1e-3f, 1.0f - cos_theta * cos_theta));
     float phi      = 2.0f * glm::pi<float>() * uv.y;
 
     auto x = sin_theta * glm::cos(phi);
