@@ -55,6 +55,18 @@ ATCG_INLINE ATCG_DEVICE mat6 operator*(const mat6& M, const mat6& N)
     return result;
 }
 
+ATCG_INLINE ATCG_DEVICE mat6 operator*(const float& v, const mat6& N)
+{
+    mat6 result;
+
+    result.m00 = v * N.m00;
+    result.m01 = v * N.m01;
+    result.m10 = v * N.m10;
+    result.m11 = v * N.m11;
+
+    return result;
+}
+
 struct mat3x6
 {
     glm::mat3 m00 = glm::mat3(0);
