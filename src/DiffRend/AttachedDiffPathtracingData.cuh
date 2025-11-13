@@ -191,5 +191,7 @@ struct AttachedDiffPathtracingParams
     const EmitterVPtrTable** emitters;
 
     const EmitterVPtrTable* environment_emitter;
+
+    bool debug;
 };
 }    // namespace atcg

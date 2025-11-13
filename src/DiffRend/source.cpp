@@ -110,6 +110,7 @@ public:
             dict.setValue("entity_ids", output_entities);
             dict.setValue("target", target);
             dict.setValue("num_samples", 128u);
+            dict.setValue("debug", debug);
             integrator->generateRays(dict);
             output_texture->setData(output_img_tensor);
             output_entity_texture->setData(output_entities);
@@ -121,7 +122,7 @@ public:
                 auto result = atcg::AttachedDiffPathtracingFunction::apply(integrator, dict);
 
                 auto difference = (result - target);
-                auto L          = torch::sum(torch::abs(difference));
+                auto L          = torch::sum(torch::abs(difference)) / 128.0f;
 
                 L.backward();
                 optimizer->step();
@@ -285,6 +286,8 @@ public:
             }
     #endif
 
+            ImGui::Checkbox("Enable Debug", &debug);
+
             ImGui::End();
         }
 
@@ -447,8 +450,9 @@ private:
 
     glm::vec2 mouse_pos;
 
-    bool show_render_settings = false;
+    bool show_render_settings = true;
     bool vsync                = true;
+    bool debug                = false;
 
     bool enable_pathtracing = true;
 

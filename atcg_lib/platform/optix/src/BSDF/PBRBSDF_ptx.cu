@@ -390,12 +390,12 @@ __direct_callable__sample_dual_pbrbsdf(const atcg::DualSurfaceInteraction& si, a
     auto diffuse_color = sbt_data->diffuse_texture.read(si.uv);
     auto metallic      = sbt_data->metallic_texture.read(si.uv);
     auto roughness     = sbt_data->roughness_texture.read(si.uv);
-    if(roughness.val() < 1e-3f)
-    {
-        roughness.mut_val() = 1e-3f;
-    }
-    roughness = roughness * roughness;
-    // roughness          = CuDiff::max(roughness * roughness, 1e-3f);    // TODO: We only clamp values but not
+    // if(roughness.val() < 1e-3f)
+    // {
+    //     roughness.mut_val() = 1e-3f;
+    // }
+    // roughness = roughness * roughness;
+    roughness = CuDiff::max(roughness * roughness, 1e-3f);    // TODO: We only clamp values but not
     // derivative to not loose them. Correct?
 
     auto metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
@@ -435,11 +435,11 @@ __direct_callable__sample_dual_pbrbsdf(const atcg::DualSurfaceInteraction& si, a
         result.out_dir = apply_local_frame(local_frame, local_outgoing_ray_dir);
 
         // Differentiate the sampling
-        for(int i = 0; i < 6; ++i)
-        {
-            result.out_dir.mut_derivative(i) +=
-                diffuse_probability.derivative(i) * result.out_dir.val() / diffuse_probability.val();
-        }
+        // for(int i = 0; i < 6; ++i)
+        // {
+        //     result.out_dir.mut_derivative(i) +=
+        //         diffuse_probability.derivative(i) * result.out_dir.val() / diffuse_probability.val();
+        // }
     }
     else
     {
@@ -449,11 +449,11 @@ __direct_callable__sample_dual_pbrbsdf(const atcg::DualSurfaceInteraction& si, a
         auto halfway   = apply_local_frame(local_frame, local_halfway);
         result.out_dir = CuDiff::reflect(si.incoming_direction, halfway);
 
-        for(int i = 0; i < 6; ++i)
-        {
-            result.out_dir.mut_derivative(i) +=
-                specular_probability.derivative(i) * result.out_dir.val() / specular_probability.val();
-        }
+        // for(int i = 0; i < 6; ++i)
+        // {
+        //     result.out_dir.mut_derivative(i) +=
+        //         -specular_probability.derivative(i) * result.out_dir.val() / specular_probability.val();
+        // }
     }
 
     // It is possible that light directions below the horizon are sampled..

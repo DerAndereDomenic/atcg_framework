@@ -132,6 +132,8 @@ void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_diction
     params.occlusion_trace_params.SBTstride = 2;
     params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
 
+    params.debug = in_out_dictionary.getValueOr<bool>("debug", false);
+
     _launch_params.upload(&params);
 
     OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
