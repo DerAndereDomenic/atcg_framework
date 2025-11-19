@@ -568,7 +568,7 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::SurfaceInteraction& si, cons
 
 extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
                                                                     const glm::vec3& outgoing_dir,
-                                                                    const glm::vec3& out_grad)
+                                                                    const glm::vec3& dLdbsdf)
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
@@ -606,22 +606,25 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
 
     glm::vec3 diffuse_bsdf = glm::one_over_pi<float>() * diffuse_color;
 
-    glm::vec3 grad_albedo =
-        (kD * glm::one_over_pi<float>() * (1.0f - m) + m * dFdM * (V * NDF - diffuse_bsdf)) * out_grad;
+    glm::vec3 dbsdfdalbedo =
+        kD * glm::one_over_pi<float>() * (1.0f - m) + m * dFdM * (V * NDF - diffuse_bsdf);    // Diagonal matrix
+    glm::vec3 dLdalbedo = dbsdfdalbedo * dLdbsdf;
 
-    float grad_roughness = glm::dot((2.0f * r * (F * dNDFdR * V + F * NDF * dVdR)), out_grad);
-    float grad_metallic  = glm::dot(
-        ((alpha - glm::vec3(0.04f)) * dFdM * (V * NDF - diffuse_bsdf) - alpha * kD * glm::one_over_pi<float>()),
-        out_grad);
+    glm::vec3 dbsdfdroughness = 2.0f * r * (F * dNDFdR * V + F * NDF * dVdR);
+    float dLdroughness        = glm::dot(dbsdfdroughness, dLdbsdf);
+
+    glm::vec3 dbsdfdmetallic =
+        (alpha - glm::vec3(0.04f)) * dFdM * (V * NDF - diffuse_bsdf) - alpha * kD * glm::one_over_pi<float>();
+    float dLdmetallic = glm::dot(dbsdfdmetallic, dLdbsdf);
 
     {
-        DERIVATIVE_INTERPOLATION_VECTOR(grad_albedo, sbt_data->diffuse_grad);
+        DERIVATIVE_INTERPOLATION_VECTOR(dLdalbedo, sbt_data->diffuse_grad);
     }
     {
-        DERIVATIVE_INTERPOLATION_SCALAR(grad_roughness, sbt_data->roughness_grad);
+        DERIVATIVE_INTERPOLATION_SCALAR(dLdroughness, sbt_data->roughness_grad);
     }
     {
-        DERIVATIVE_INTERPOLATION_SCALAR(grad_metallic, sbt_data->metallic_grad);
+        DERIVATIVE_INTERPOLATION_SCALAR(dLdmetallic, sbt_data->metallic_grad);
     }
 }
 
