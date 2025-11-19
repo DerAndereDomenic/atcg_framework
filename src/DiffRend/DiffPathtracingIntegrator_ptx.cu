@@ -301,7 +301,7 @@ extern "C" __global__ void __raygen__backward()
                                              glm::abs(glm::dot(si.normal, emitter_sampling.direction_to_light));
 
                     glm::vec3 grad_out = (ray.delta_y * (radiance_nee + 1e-4f)) / (bsdf_result.bsdf_value + 1e-4f);
-                    si.bsdf->evalBackwardGrad(si, emitter_sampling.direction_to_light, grad_out);
+                    si.bsdf->evalBSDFBackward(si, emitter_sampling.direction_to_light, grad_out);
 
                     ray.radiance -= radiance_nee;
                 } while(false);
@@ -315,7 +315,7 @@ extern "C" __global__ void __raygen__backward()
                     glm::vec3 grad_out = (ray.delta_y * (ray.radiance + 1e-4f)) /
                                          (result.bsdf_weight * result.sample_probability +
                                           1e-4f);    // bsdf_weight = bsdf_value * cos / p - so this should work?
-                    si.bsdf->evalBackwardGrad(si, result.out_dir, grad_out);
+                    si.bsdf->evalBSDFBackward(si, result.out_dir, grad_out);
 
                     next_origin = si.position;
                     next_dir    = result.out_dir;

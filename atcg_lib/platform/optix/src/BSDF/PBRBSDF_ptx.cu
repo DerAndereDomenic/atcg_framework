@@ -383,7 +383,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_ggx_deriv
 }
 
 extern "C" __device__ atcg::BSDFDualSamplingResult
-__direct_callable__sample_dual_pbrbsdf(const atcg::DualSurfaceInteraction& si, atcg::PCG32& rng)
+__direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si, atcg::PCG32& rng)
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
@@ -425,21 +425,12 @@ __direct_callable__sample_dual_pbrbsdf(const atcg::DualSurfaceInteraction& si, a
         CuDiff::dot(diffuse_color, glm::vec3(1)) /
         (CuDiff::dot(diffuse_color, glm::vec3(1)) + CuDiff::dot(metallic_color, glm::vec3(1)) + 1e-5f);
     auto specular_probability = 1.0f - diffuse_probability;
-
-
     if(rng.next1d() < diffuse_probability)
     {
         // Sample light direction from diffuse bsdf
         glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
         result.out_dir = apply_local_frame(local_frame, local_outgoing_ray_dir);
-
-        // Differentiate the sampling
-        // for(int i = 0; i < 6; ++i)
-        // {
-        //     result.out_dir.mut_derivative(i) +=
-        //         diffuse_probability.derivative(i) * result.out_dir.val() / diffuse_probability.val();
-        // }
     }
     else
     {
@@ -448,12 +439,6 @@ __direct_callable__sample_dual_pbrbsdf(const atcg::DualSurfaceInteraction& si, a
         // Transform local halfway vector from tangent space to world space
         auto halfway   = apply_local_frame(local_frame, local_halfway);
         result.out_dir = CuDiff::reflect(si.incoming_direction, halfway);
-
-        // for(int i = 0; i < 6; ++i)
-        // {
-        //     result.out_dir.mut_derivative(i) +=
-        //         -specular_probability.derivative(i) * result.out_dir.val() / specular_probability.val();
-        // }
     }
 
     // It is possible that light directions below the horizon are sampled..
@@ -497,15 +482,16 @@ __direct_callable__sample_dual_pbrbsdf(const atcg::DualSurfaceInteraction& si, a
     }
 
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
-    result.bsdf_value         = (specular_bsdf + kD * diffuse_bsdf) * NdotL;
+    result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.sample_probability + 1e-5f);
+
     result.flags =
         result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
 
     return result;
 }
 
-extern "C" __device__ atcg::BSDFDualEvalResult __direct_callable__eval_dual_pbrbsdf(const atcg::SurfaceInteraction& si,
-                                                                                    const glm::vec3& outgoing_dir)
+extern "C" __device__ atcg::BSDFDualEvalResult
+__direct_callable__eval_forward_pbrbsdf(const atcg::SurfaceInteraction& si, const glm::vec3& outgoing_dir)
 {
     // const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
     // atcg::BSDFEvalResult result;
@@ -580,9 +566,9 @@ extern "C" __device__ atcg::BSDFDualEvalResult __direct_callable__eval_dual_pbrb
     atomicAdd(inp_grad##_c01_p + 0, inp_grad##_c01);                                                                   \
     atomicAdd(inp_grad##_c11_p + 0, inp_grad##_c11)
 
-extern "C" __device__ void __direct_callable__eval_grad_pbrbsdf(const atcg::SurfaceInteraction& si,
-                                                                const glm::vec3& outgoing_dir,
-                                                                const glm::vec3& out_grad)
+extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                                                    const glm::vec3& outgoing_dir,
+                                                                    const glm::vec3& out_grad)
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
@@ -639,8 +625,9 @@ extern "C" __device__ void __direct_callable__eval_grad_pbrbsdf(const atcg::Surf
     }
 }
 
-extern "C" __device__ void
-__direct_callable__sample_grad_pbrbsdf(const atcg::SurfaceInteraction& si, atcg::PCG32& rng, const glm::vec3& out_grad)
+extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                                                      atcg::PCG32& rng,
+                                                                      const glm::vec3& out_grad)
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 

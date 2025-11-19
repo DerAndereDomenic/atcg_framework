@@ -21,7 +21,7 @@ struct BSDFSamplingResult
 struct BSDFDualSamplingResult
 {
     CuDiff::Dual<6, glm::vec3> out_dir;
-    CuDiff::Dual<6, glm::vec3> bsdf_value;
+    CuDiff::Dual<6, glm::vec3> bsdf_weight;
     CuDiff::Dual<6, float> sample_probability;
     BSDFComponentType flags = BSDFComponentType::Any;
 };
@@ -43,11 +43,11 @@ struct BSDFVPtrTable
 {
     uint32_t sampleCallIndex;
     uint32_t evalCallIndex;
-    uint32_t evalBackwardIndex;
-    uint32_t sampleBackwardIndex;
+    uint32_t sampleForwardCallIndex;
+    uint32_t evalForwardCallIndex;
+    uint32_t sampleBackwardCallIndex;
+    uint32_t evalBackwardCallIndex;
 
-    uint32_t sampleDualCallIndex;
-    uint32_t evalDualCallIndex;
 
     BSDFComponentType flags;
 
@@ -65,32 +65,32 @@ struct BSDFVPtrTable
                                                                                             outgoing_dir);
     }
 
-    __device__ BSDFDualSamplingResult sampleBSDFDual(const DualSurfaceInteraction& si, PCG32& rng) const
+    __device__ BSDFDualSamplingResult sampleBSDFForward(const DualSurfaceInteraction& si, PCG32& rng) const
     {
-        return optixDirectCall<BSDFDualSamplingResult, const DualSurfaceInteraction&, PCG32&>(sampleDualCallIndex,
+        return optixDirectCall<BSDFDualSamplingResult, const DualSurfaceInteraction&, PCG32&>(sampleForwardCallIndex,
                                                                                               si,
                                                                                               rng);
     }
 
-    __device__ BSDFDualEvalResult evalBSDFDual(const SurfaceInteraction& si, const glm::vec3& outgoing_dir) const
+    __device__ BSDFDualEvalResult evalBSDFForward(const SurfaceInteraction& si, const glm::vec3& outgoing_dir) const
     {
-        return optixDirectCall<BSDFDualEvalResult, const SurfaceInteraction&, const glm::vec3&>(evalDualCallIndex,
+        return optixDirectCall<BSDFDualEvalResult, const SurfaceInteraction&, const glm::vec3&>(evalForwardCallIndex,
                                                                                                 si,
                                                                                                 outgoing_dir);
     }
 
     __device__ void
-    evalBackwardGrad(const SurfaceInteraction& si, const glm::vec3& outgoing_dir, const glm::vec3& out_grad) const
+    evalBSDFBackward(const SurfaceInteraction& si, const glm::vec3& outgoing_dir, const glm::vec3& out_grad) const
     {
-        optixDirectCall<void, const SurfaceInteraction&, const glm::vec3&, const glm::vec3&>(evalBackwardIndex,
+        optixDirectCall<void, const SurfaceInteraction&, const glm::vec3&, const glm::vec3&>(evalBackwardCallIndex,
                                                                                              si,
                                                                                              outgoing_dir,
                                                                                              out_grad);
     }
 
-    __device__ void sampleBackwardGrad(const SurfaceInteraction& si, PCG32& rng, const glm::vec3& out_grad) const
+    __device__ void sampleBSDFBackward(const SurfaceInteraction& si, PCG32& rng, const glm::vec3& out_grad) const
     {
-        optixDirectCall<void, const SurfaceInteraction&, PCG32&, const glm::vec3&>(sampleBackwardIndex,
+        optixDirectCall<void, const SurfaceInteraction&, PCG32&, const glm::vec3&>(sampleBackwardCallIndex,
                                                                                    si,
                                                                                    rng,
                                                                                    out_grad);

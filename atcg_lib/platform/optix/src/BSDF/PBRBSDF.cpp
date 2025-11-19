@@ -40,28 +40,28 @@ void PipelineInitializer<PBRBSDF>::apply(const atcg::ref_ptr<PBRBSDF>& component
     auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_pbrbsdf"});
     auto eval_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_pbrbsdf"});
     auto backward_eval_prog_group =
-        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_grad_pbrbsdf"});
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_backward_pbrbsdf"});
     auto backward_sample_prog_group =
-        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_grad_pbrbsdf"});
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_backward_pbrbsdf"});
     auto eval_dual_prog_group =
-        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_dual_pbrbsdf"});
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_forward_pbrbsdf"});
     auto sample_dual_prog_group =
-        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_dual_pbrbsdf"});
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_forward_pbrbsdf"});
     uint32_t sample_idx          = sbt->addCallableEntry(sample_prog_group, component->getDataBuffer().get());
     uint32_t eval_idx            = sbt->addCallableEntry(eval_prog_group, component->getDataBuffer().get());
     uint32_t eval_backward_idx   = sbt->addCallableEntry(backward_eval_prog_group, component->getDataBuffer().get());
     uint32_t sample_backward_idx = sbt->addCallableEntry(backward_sample_prog_group, component->getDataBuffer().get());
-    uint32_t sample_dual_idx     = sbt->addCallableEntry(sample_dual_prog_group, component->getDataBuffer().get());
-    uint32_t eval_dual_idx       = sbt->addCallableEntry(eval_dual_prog_group, component->getDataBuffer().get());
+    uint32_t sample_forward_idx  = sbt->addCallableEntry(sample_dual_prog_group, component->getDataBuffer().get());
+    uint32_t eval_forward_idx    = sbt->addCallableEntry(eval_dual_prog_group, component->getDataBuffer().get());
 
     BSDFVPtrTable table;
-    table.sampleCallIndex     = sample_idx;
-    table.evalCallIndex       = eval_idx;
-    table.evalBackwardIndex   = eval_backward_idx;
-    table.sampleBackwardIndex = sample_backward_idx;
-    table.evalDualCallIndex   = eval_dual_idx;
-    table.sampleDualCallIndex = sample_dual_idx;
-    table.flags               = component->flags();
+    table.sampleCallIndex         = sample_idx;
+    table.evalCallIndex           = eval_idx;
+    table.evalBackwardCallIndex   = eval_backward_idx;
+    table.sampleBackwardCallIndex = sample_backward_idx;
+    table.evalForwardCallIndex    = eval_forward_idx;
+    table.sampleForwardCallIndex  = sample_forward_idx;
+    table.flags                   = component->flags();
 
     component->getVPtrTableHolder().upload(&table);
 
