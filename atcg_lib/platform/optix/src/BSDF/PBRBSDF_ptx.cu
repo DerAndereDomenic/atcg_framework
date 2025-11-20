@@ -803,9 +803,13 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         glm::vec3 dbsdf_weightdm = bsdf_weight.derivative(3);
         glm::vec3 dbsdf_weightdr = bsdf_weight.derivative(4);
 
-        glm::vec3 dLdalbedo = dLdbsdf * dbsdf_weightdalbedo;
-        float dLdm          = glm::dot(dLdbsdf, dbsdf_weightdm);
-        float dLdr          = glm::dot(dLdbsdf, dbsdf_weightdr);
+        glm::mat3 dwodalbedo = glm::mat3(out_dir.derivative(0), out_dir.derivative(1), out_dir.derivative(2));
+        glm::vec3 dwodm      = out_dir.derivative(3);
+        glm::vec3 dwodr      = out_dir.derivative(4);
+
+        glm::vec3 dLdalbedo = dLdbsdf * dbsdf_weightdalbedo + dLdwo * dwodalbedo;
+        float dLdm          = glm::dot(dLdbsdf, dbsdf_weightdm) + glm::dot(dLdwo, dwodm);
+        float dLdr          = glm::dot(dLdbsdf, dbsdf_weightdr) + glm::dot(dLdwo, dwodr);
 
         {
             DERIVATIVE_INTERPOLATION_VECTOR(dLdalbedo, sbt_data->diffuse_grad);
