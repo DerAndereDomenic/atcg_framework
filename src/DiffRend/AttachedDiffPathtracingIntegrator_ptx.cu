@@ -58,7 +58,6 @@ extern "C" __global__ void __raygen__forward()
     atcg::SurfaceInteraction last_si;
     float last_bsdf_pdf = 1.0f;
 
-    mat3x6 JL;
     mat3x6 Jb;
     mat6 Jray;
 
@@ -86,6 +85,7 @@ extern "C" __global__ void __raygen__forward()
         {
             // Check for light source
             CuDiff::Dual<6, glm::vec3> Le;
+            mat3x6 JLe;
             if(si.emitter)
             {
                 bool mis_valid             = last_si.valid;
@@ -93,7 +93,16 @@ extern "C" __global__ void __raygen__forward()
                 float mis_weight           = 1.0f;    // last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
                 Le                         = si.emitter->evalLightDual(dsi);
                 ray.radiance += mis_weight * ray.throughput * Le.val();
+
+                glm::mat3 dLedxi = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
+                glm::mat3 dLedwi = glm::mat3(Le.derivative(3), Le.derivative(4), Le.derivative(5));
+
+                JLe = {dLedxi, dLedwi};
+
+                JLe = JLe * Jray;
             }
+
+            ray.JL = ray.JL + diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
 
             // PBR Sampling
             if(si.bsdf)
@@ -143,62 +152,46 @@ extern "C" __global__ void __raygen__forward()
                 //     ray.radiance += radiance_nee;
                 // } while(false);
 
-                auto result = si.bsdf->sampleBSDFDual(dsi, rng);
+                auto result = si.bsdf->sampleBSDFForward(dsi, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
                     // Jray
-                    glm::mat3 dxodxi = glm::transpose(
-                        glm::mat3(dsi.position.derivative(0), dsi.position.derivative(1), dsi.position.derivative(2)));
-                    glm::mat3 dwodxi = glm::transpose(glm::mat3(result.out_dir.derivative(0),
-                                                                result.out_dir.derivative(1),
-                                                                result.out_dir.derivative(2)));
-                    glm::mat3 dxodwi = glm::transpose(
-                        glm::mat3(dsi.position.derivative(3), dsi.position.derivative(4), dsi.position.derivative(5)));
-                    glm::mat3 dwodwi = glm::transpose(glm::mat3(result.out_dir.derivative(3),
-                                                                result.out_dir.derivative(4),
-                                                                result.out_dir.derivative(5)));
+                    glm::mat3 dxodxi =
+                        glm::mat3(dsi.position.derivative(0), dsi.position.derivative(1), dsi.position.derivative(2));
+                    glm::mat3 dwodxi = glm::mat3(glm::mat3(result.out_dir.derivative(0),
+                                                           result.out_dir.derivative(1),
+                                                           result.out_dir.derivative(2)));
+                    glm::mat3 dxodwi =
+                        glm::mat3(dsi.position.derivative(3), dsi.position.derivative(4), dsi.position.derivative(5));
+                    glm::mat3 dwodwi = glm::mat3(result.out_dir.derivative(3),
+                                                 result.out_dir.derivative(4),
+                                                 result.out_dir.derivative(5));
                     mat6 Jray_       = {dxodxi, dxodwi, dwodxi, dwodwi};
 
                     // -------------------
 
                     // Jbsdf
-                    glm::mat3 dbsdfdxi = glm::transpose(glm::mat3(result.bsdf_value.derivative(0),
-                                                                  result.bsdf_value.derivative(1),
-                                                                  result.bsdf_value.derivative(2)));
+                    glm::mat3 dbsdfdxi = glm::mat3(result.bsdf_weight.derivative(0),
+                                                   result.bsdf_weight.derivative(1),
+                                                   result.bsdf_weight.derivative(2));
 
-                    glm::mat3 dbsdfdwi = glm::transpose(glm::mat3(result.bsdf_value.derivative(3),
-                                                                  result.bsdf_value.derivative(4),
-                                                                  result.bsdf_value.derivative(5)));
+                    glm::mat3 dbsdfdwi = glm::mat3(result.bsdf_weight.derivative(3),
+                                                   result.bsdf_weight.derivative(4),
+                                                   result.bsdf_weight.derivative(5));
                     mat3x6 Jbsdf       = {dbsdfdxi, dbsdfdwi};
 
                     Jbsdf = Jbsdf * Jray;
 
                     // -------------------
 
-                    // JLe
-                    mat3x6 JLe;
-                    if(si.emitter)
-                    {
-                        glm::mat3 dLedxi =
-                            glm::transpose(glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2)));
+                    Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
 
-                        glm::mat3 dLedwi = glm::transpose(
-                            glm::mat3(result.bsdf_value.derivative(3), Le.derivative(4), Le.derivative(5)));
-
-                        JLe = {dLedxi, dLedwi};
-
-                        JLe = JLe * Jray;
-                    }
-                    // -------------------
                     Jray = Jray_ * Jray;
-
-                    JL = JL + diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
-                    Jb = diag(result.bsdf_value.val()) * Jb + diag(ray.throughput) * Jbsdf;
 
                     next_origin = si.position;
                     next_dir    = result.out_dir;
-                    ray.throughput *= result.bsdf_value.val() / (result.sample_probability.val() + 1e-5f);
+                    ray.throughput *= result.bsdf_weight.val();
                     ray.valid = true;
 
                     last_si       = si;
@@ -230,7 +223,7 @@ extern "C" __global__ void __raygen__forward()
     }
 
     params.current_sample[pixel_index] = ray.radiance;
-    params.JL_buffer[pixel_index]      = JL;
+    params.JL_buffer[pixel_index]      = ray.JL;
 
     if(params.frame_counter > 0)
     {
@@ -309,6 +302,7 @@ extern "C" __global__ void __raygen__backward()
             // TODO: No NEE for now
             // Check for light source
             CuDiff::Dual<6, glm::vec3> Le;
+            mat3x6 JLe;
             if(si.emitter)
             {
                 bool mis_valid             = last_si.valid;
@@ -316,6 +310,13 @@ extern "C" __global__ void __raygen__backward()
                 float mis_weight           = 1.0f;    // last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
                 Le                         = si.emitter->evalLightDual(dsi);
                 ray.radiance -= mis_weight * ray.throughput * Le.val();
+
+                glm::mat3 dLedxi = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
+                glm::mat3 dLedwi = glm::mat3(Le.derivative(3), Le.derivative(4), Le.derivative(5));
+
+                JLe = {dLedxi, dLedwi};
+
+                JLe = JLe * Jray;
             }
 
             // PBR Sampling
@@ -369,74 +370,61 @@ extern "C" __global__ void __raygen__backward()
                 //     ray.radiance -= radiance_nee;
                 // } while(false);
 
-                auto result = si.bsdf->sampleBSDFDual(dsi, rng);
+                auto result = si.bsdf->sampleBSDFForward(dsi, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
                     // Jray
-                    glm::mat3 dxodxi = glm::transpose(
-                        glm::mat3(dsi.position.derivative(0), dsi.position.derivative(1), dsi.position.derivative(2)));
-                    glm::mat3 dwodxi = glm::transpose(glm::mat3(result.out_dir.derivative(0),
-                                                                result.out_dir.derivative(1),
-                                                                result.out_dir.derivative(2)));
-                    glm::mat3 dxodwi = glm::transpose(
-                        glm::mat3(dsi.position.derivative(3), dsi.position.derivative(4), dsi.position.derivative(5)));
-                    glm::mat3 dwodwi = glm::transpose(glm::mat3(result.out_dir.derivative(3),
-                                                                result.out_dir.derivative(4),
-                                                                result.out_dir.derivative(5)));
+                    glm::mat3 dxodxi =
+                        glm::mat3(dsi.position.derivative(0), dsi.position.derivative(1), dsi.position.derivative(2));
+                    glm::mat3 dwodxi = glm::mat3(result.out_dir.derivative(0),
+                                                 result.out_dir.derivative(1),
+                                                 result.out_dir.derivative(2));
+                    glm::mat3 dxodwi =
+                        glm::mat3(dsi.position.derivative(3), dsi.position.derivative(4), dsi.position.derivative(5));
+                    glm::mat3 dwodwi = glm::mat3(result.out_dir.derivative(3),
+                                                 result.out_dir.derivative(4),
+                                                 result.out_dir.derivative(5));
                     mat6 Jray_       = {dxodxi, dxodwi, dwodxi, dwodwi};
 
                     // -------------------
 
                     // Jbsdf
-                    glm::mat3 dbsdfdxi = glm::transpose(glm::mat3(result.bsdf_value.derivative(0),
-                                                                  result.bsdf_value.derivative(1),
-                                                                  result.bsdf_value.derivative(2)));
+                    glm::mat3 dbsdfdxi = glm::mat3(result.bsdf_weight.derivative(0),
+                                                   result.bsdf_weight.derivative(1),
+                                                   result.bsdf_weight.derivative(2));
 
-                    glm::mat3 dbsdfdwi = glm::transpose(glm::mat3(result.bsdf_value.derivative(3),
-                                                                  result.bsdf_value.derivative(4),
-                                                                  result.bsdf_value.derivative(5)));
+                    glm::mat3 dbsdfdwi = glm::mat3(result.bsdf_weight.derivative(3),
+                                                   result.bsdf_weight.derivative(4),
+                                                   result.bsdf_weight.derivative(5));
                     mat3x6 Jbsdf       = {dbsdfdxi, dbsdfdwi};
 
                     Jbsdf = Jbsdf * Jray;
 
                     // -------------------
 
-                    // JLe
-                    mat3x6 JLe;
-                    if(si.emitter)
-                    {
-                        glm::mat3 dLedxi =
-                            glm::transpose(glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2)));
-
-                        glm::mat3 dLedwi = glm::transpose(
-                            glm::mat3(result.bsdf_value.derivative(3), Le.derivative(4), Le.derivative(5)));
-
-                        JLe = {dLedxi, dLedwi};
-
-                        JLe = JLe * Jray;
-                    }
-                    // -------------------
                     Jray = Jray_ * Jray;
 
                     ray.JL =
-                        ray.JL - (diag(ray.radiance / result.bsdf_value.val()) * Jbsdf + diag(ray.throughput) * JLe);
-
-                    mat3x6 JL_ = ray.JL * inverse(Jray);
+                        ray.JL -
+                        (diag(ray.radiance / (result.bsdf_weight.val() * result.sample_probability.val())) * Jbsdf +
+                         diag(ray.throughput) * JLe);
+                    auto Jrayinv = inverse(Jray);
+                    mat3x6 JL_   = ray.JL * Jrayinv;
 
                     // ray.JL = JL - diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
                     // Jb = diag(result.bsdf_value.val()) * Jb + diag(ray.throughput) * Jbsdf;
 
                     // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
                     // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
-                    glm::vec3 grad_out = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_value.val() + 1e-4f);
-                    si.bsdf->evalBackwardGrad(si, result.out_dir, grad_out);
+                    glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / ((result.bsdf_weight.val()) + 1e-4f);
+                    glm::vec3 dLdwo   = (ray.delta_y * JL_).v2;    // Only v2?
 
-                    si.bsdf->sampleBackwardGrad(si, rng, (ray.delta_y * JL_).v2);    // Only v2?
+                    si.bsdf->sampleBSDFBackward(si, rng, dLdbsdf, dLdwo);
 
                     next_origin = si.position;
                     next_dir    = result.out_dir;
-                    ray.throughput *= result.bsdf_value.val() / (result.sample_probability.val() + 1e-5f);
+                    ray.throughput *= result.bsdf_weight.val();
                     ray.valid = true;
 
                     last_si       = si;
