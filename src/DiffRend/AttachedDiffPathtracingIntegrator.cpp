@@ -12,6 +12,7 @@
 #include <DataStructure/WorkerPool.h>
 #include <Emitter/MeshEmitter.h>
 #include <Scene/SceneAdapter.h>
+#include <Math/Utils.h>
 
 #include <optix_stubs.h>
 
@@ -87,7 +88,7 @@ void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_diction
     {
         _accumulation_buffer = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
         _current_sample      = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
-        _current_JL          = torch::zeros({height, width, 3 * 6}, atcg::TensorOptions::floatDeviceOptions());
+        _current_JL          = torch::zeros({height, width, 3 * 4}, atcg::TensorOptions::floatDeviceOptions());
     }
 
     AttachedDiffPathtracingParams params;
@@ -107,7 +108,7 @@ void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_diction
 
     params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
     params.current_sample      = (glm::vec3*)_current_sample.data_ptr();
-    params.JL_buffer           = (mat3x6*)_current_JL.data_ptr();
+    params.JL_buffer           = (glm::mat4x3*)_current_JL.data_ptr();
 
     params.rng_index     = _iteration_counter + _frame_counter;
     params.frame_counter = _frame_counter++;
@@ -172,9 +173,9 @@ void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictio
 
     params.entity_ids = entity_ids.numel() > 0 ? (int32_t*)entity_ids.data_ptr() : nullptr;
 
-    params.accumulation_buffer = (glm::vec3*)_samples[step].data_ptr();    // Input L
-    params.adjoint_y           = (glm::vec3*)adjoint_y.data_ptr();         // Input 𝛿L
-    params.JL_buffer           = (mat3x6*)_JL_samples[step].data_ptr();    // Input JL from forward pass
+    params.accumulation_buffer = (glm::vec3*)_samples[step].data_ptr();         // Input L
+    params.adjoint_y           = (glm::vec3*)adjoint_y.data_ptr();              // Input 𝛿L
+    params.JL_buffer           = (glm::mat4x3*)_JL_samples[step].data_ptr();    // Input JL from forward pass
 
     params.rng_index     = _iteration_counter + _frame_counter;
     params.frame_counter = _frame_counter++;

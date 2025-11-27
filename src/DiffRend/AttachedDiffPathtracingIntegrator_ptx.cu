@@ -9,6 +9,9 @@
 #include <Core/Payload.h>
 #include <Math/Random.h>
 
+#include <CuDiff/CuDiff.h>
+#include <CuDiff/ext/glm.h>
+
 extern "C"
 {
     __constant__ atcg::AttachedDiffPathtracingParams params;
@@ -17,13 +20,13 @@ extern "C"
 struct RayContext
 {
     bool valid;
-    glm::vec3 origin;
-    glm::vec3 direction;
+    CuDiff::Dual<4, glm::vec3> origin;
+    CuDiff::Dual<4, glm::vec3> direction;
     glm::vec3 throughput;
     glm::vec3 radiance;
 
     glm::vec3 delta_y;
-    mat3x6 JL;
+    glm::mat4x3 JL;
 };
 
 extern "C" __global__ void __raygen__forward()
@@ -35,8 +38,8 @@ extern "C" __global__ void __raygen__forward()
     atcg::PCG32 rng(seed);
 
     glm::vec2 jitter = rng.next2d();
-    float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
-    float v          = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
+    float u_         = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
+    float v_         = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
 
     glm::vec3 cam_eye = glm::make_vec3(params.cam_eye);
     glm::vec3 U       = glm::make_vec3(params.U) * (float)params.image_width / (float)params.image_height;
@@ -45,21 +48,34 @@ extern "C" __global__ void __raygen__forward()
 
     RayContext ray;
 
-    ray.direction     = glm::normalize(u * U + v * V + W);
-    ray.origin        = cam_eye;
+    glm::vec3 ray_origin    = cam_eye;
+    glm::vec3 ray_direction = glm::normalize((u_ * U + v_ * V + W));
+    float theta_            = glm::acos(glm::clamp(ray_direction.y, -1.0f, 1.0f));
+    float phi_              = glm::atan2(ray_direction.z, ray_direction.x);
+
+    auto [u, v, phi, theta] = CuDiff::make_variables<4>(u_, v_, phi_, theta_);
+
+    auto sinTheta = CuDiff::sin(theta);
+
+    auto x = sinTheta * CuDiff::cos(phi);
+    auto y = CuDiff::cos(theta);
+    auto z = sinTheta * CuDiff::sin(phi);
+
+    CuDiff::Dual<4, glm::vec3> dir = CuDiff::wrap(x, y, z);
+
+    ray.origin        = cam_eye + 0.01f * CuDiff::normalize((u * U + v * V + W));
+    ray.direction     = dir;
     ray.radiance      = glm::vec3(0);
     ray.throughput    = glm::vec3(1);
     ray.valid         = true;
+    ray.JL            = glm::mat4x3(0);
     int32_t entity_id = -1;
-
-    glm::vec3 next_origin;
-    glm::vec3 next_dir;
 
     atcg::SurfaceInteraction last_si;
     float last_bsdf_pdf = 1.0f;
 
-    mat3x6 Jb;
-    mat6 Jray;
+    glm::mat4x3 Jb = glm::mat4x3(0);
+    glm::mat4 Jray = glm::mat4(1);
 
     for(int n = 0; n < 8; ++n)
     {
@@ -67,6 +83,8 @@ extern "C" __global__ void __raygen__forward()
         ray.valid = false;
 
         atcg::DualSurfaceInteraction dsi;
+        dsi.incoming_position  = ray.origin;
+        dsi.incoming_direction = ray.direction;
         atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
                                                                  ray.origin,
                                                                  ray.direction,
@@ -84,8 +102,8 @@ extern "C" __global__ void __raygen__forward()
         if(si.valid)
         {
             // Check for light source
-            CuDiff::Dual<6, glm::vec3> Le;
-            mat3x6 JLe;
+            CuDiff::Dual<4, glm::vec3> Le;
+            glm::mat4x3 JLe;
             if(si.emitter)
             {
                 bool mis_valid             = last_si.valid;
@@ -94,10 +112,7 @@ extern "C" __global__ void __raygen__forward()
                 Le                         = si.emitter->evalLightDual(dsi);
                 ray.radiance += mis_weight * ray.throughput * Le.val();
 
-                glm::mat3 dLedxi = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
-                glm::mat3 dLedwi = glm::mat3(Le.derivative(3), Le.derivative(4), Le.derivative(5));
-
-                JLe = {dLedxi, dLedwi};
+                JLe = glm::mat4x3(Le.derivative(0), Le.derivative(1), Le.derivative(2), Le.derivative(3));
 
                 JLe = JLe * Jray;
             }
@@ -156,30 +171,43 @@ extern "C" __global__ void __raygen__forward()
 
                 if(result.sample_probability > 0.0f)
                 {
+                    auto [dx, dy, dz] = CuDiff::unwrap(result.out_dir);
+
+                    auto theta_n = CuDiff::acos(CuDiff::clamp(dy, -1.0f, 1.0f));
+                    auto phi_n   = CuDiff::atan2(dz, dx);
+
                     // Jray
-                    glm::mat3 dxodxi =
-                        glm::mat3(dsi.position.derivative(0), dsi.position.derivative(1), dsi.position.derivative(2));
-                    glm::mat3 dwodxi = glm::mat3(glm::mat3(result.out_dir.derivative(0),
-                                                           result.out_dir.derivative(1),
-                                                           result.out_dir.derivative(2)));
-                    glm::mat3 dxodwi =
-                        glm::mat3(dsi.position.derivative(3), dsi.position.derivative(4), dsi.position.derivative(5));
-                    glm::mat3 dwodwi = glm::mat3(result.out_dir.derivative(3),
-                                                 result.out_dir.derivative(4),
-                                                 result.out_dir.derivative(5));
-                    mat6 Jray_       = {dxodxi, dxodwi, dwodxi, dwodwi};
+                    float duip1dui    = dsi.u_surface.derivative(0);
+                    float duip1p1dvi  = dsi.u_surface.derivative(1);
+                    float duip1p1dphi = dsi.u_surface.derivative(2);
+                    float duip1dtheta = dsi.u_surface.derivative(3);
+                    float dvip1dui    = dsi.v_surface.derivative(0);
+                    float dvip1dvi    = dsi.v_surface.derivative(1);
+                    float dvip1dphi   = dsi.v_surface.derivative(2);
+                    float dvip1dtheta = dsi.v_surface.derivative(3);
+
+                    float dthetaip1dui    = theta_n.derivative(0);
+                    float dthetaip1p1dvi  = theta_n.derivative(1);
+                    float dthetaip1p1dphi = theta_n.derivative(2);
+                    float dthetaip1dtheta = theta_n.derivative(3);
+                    float dphiip1dui      = phi_n.derivative(0);
+                    float dphiip1dvi      = phi_n.derivative(1);
+                    float dphiip1dphi     = phi_n.derivative(2);
+                    float dphiip1dtheta   = phi_n.derivative(3);
+
+                    glm::mat4 Jray_ = glm::mat4(glm::vec4(duip1dui, dvip1dui, dphiip1dui, dthetaip1dui),
+                                                glm::vec4(duip1p1dvi, dvip1dvi, dphiip1dvi, dthetaip1p1dvi),
+                                                glm::vec4(duip1p1dphi, dvip1dphi, dphiip1dphi, dthetaip1p1dphi),
+                                                glm::vec4(duip1dtheta, dvip1dtheta, dphiip1dtheta, dthetaip1dtheta));
 
                     // -------------------
 
                     // Jbsdf
-                    glm::mat3 dbsdfdxi = glm::mat3(result.bsdf_weight.derivative(0),
-                                                   result.bsdf_weight.derivative(1),
-                                                   result.bsdf_weight.derivative(2));
 
-                    glm::mat3 dbsdfdwi = glm::mat3(result.bsdf_weight.derivative(3),
-                                                   result.bsdf_weight.derivative(4),
-                                                   result.bsdf_weight.derivative(5));
-                    mat3x6 Jbsdf       = {dbsdfdxi, dbsdfdwi};
+                    glm::mat4x3 Jbsdf = glm::mat4x3(result.bsdf_weight.derivative(0),
+                                                    result.bsdf_weight.derivative(1),
+                                                    result.bsdf_weight.derivative(2),
+                                                    result.bsdf_weight.derivative(3));
 
                     Jbsdf = Jbsdf * Jray;
 
@@ -189,8 +217,17 @@ extern "C" __global__ void __raygen__forward()
 
                     Jray = Jray_ * Jray;
 
-                    next_origin = si.position;
-                    next_dir    = result.out_dir;
+                    thrust::tie(u, v, phi, theta) =
+                        CuDiff::make_variables<4>(dsi.u_surface.val(), dsi.v_surface.val(), phi_n.val(), theta_n.val());
+
+                    auto sinTheta = CuDiff::sin(theta);
+
+                    auto x = sinTheta * CuDiff::cos(phi);
+                    auto y = CuDiff::cos(theta);
+                    auto z = sinTheta * CuDiff::sin(phi);
+
+                    ray.origin    = (1.0f - u - v) * dsi.P0 + u * dsi.P1 + v * dsi.P2;
+                    ray.direction = CuDiff::wrap(x, y, z);
                     ray.throughput *= result.bsdf_weight.val();
                     ray.valid = true;
 
@@ -217,9 +254,6 @@ extern "C" __global__ void __raygen__forward()
                 ray.radiance += mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
             }
         }
-
-        ray.origin    = next_origin;
-        ray.direction = next_dir;
     }
 
     params.current_sample[pixel_index] = ray.radiance;
@@ -250,8 +284,8 @@ extern "C" __global__ void __raygen__backward()
     atcg::PCG32 rng(seed);
 
     glm::vec2 jitter = rng.next2d();
-    float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
-    float v          = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
+    float u_         = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
+    float v_         = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
 
     glm::vec3 cam_eye = glm::make_vec3(params.cam_eye);
     glm::vec3 U       = glm::make_vec3(params.U) * (float)params.image_width / (float)params.image_height;
@@ -260,22 +294,34 @@ extern "C" __global__ void __raygen__backward()
 
     RayContext ray;
 
-    ray.direction     = glm::normalize(u * U + v * V + W);
-    ray.origin        = cam_eye;
-    ray.radiance      = params.accumulation_buffer[pixel_index];    // L from forward pass
-    ray.throughput    = glm::vec3(1);
+    glm::vec3 ray_origin    = cam_eye;
+    glm::vec3 ray_direction = glm::normalize((u_ * U + v_ * V + W));
+    float theta_            = glm::acos(glm::clamp(ray_direction.y, -1.0f, 1.0f));
+    float phi_              = glm::atan2(ray_direction.z, ray_direction.x);
+
+    auto [u, v, phi, theta] = CuDiff::make_variables<4>(u_, v_, phi_, theta_);
+
+    auto sinTheta = CuDiff::sin(theta);
+
+    auto x = sinTheta * CuDiff::cos(phi);
+    auto y = CuDiff::cos(theta);
+    auto z = sinTheta * CuDiff::sin(phi);
+
+    CuDiff::Dual<4, glm::vec3> dir = CuDiff::wrap(x, y, z);
+
+    ray.origin        = cam_eye + 0.01f * CuDiff::normalize((u * U + v * V + W));
+    ray.direction     = dir;
+    ray.radiance      = params.accumulation_buffer[pixel_index];
     ray.delta_y       = params.adjoint_y[pixel_index];
     ray.JL            = params.JL_buffer[pixel_index];
+    ray.throughput    = glm::vec3(1);
     ray.valid         = true;
     int32_t entity_id = -1;
-
-    glm::vec3 next_origin;
-    glm::vec3 next_dir;
 
     atcg::SurfaceInteraction last_si;
     float last_bsdf_pdf = 1.0f;
 
-    mat6 Jray;
+    glm::mat4 Jray = glm::mat4(1);
 
     for(int n = 0; n < 8; ++n)
     {
@@ -283,6 +329,8 @@ extern "C" __global__ void __raygen__backward()
         ray.valid = false;
 
         atcg::DualSurfaceInteraction dsi;
+        dsi.incoming_position  = ray.origin;
+        dsi.incoming_direction = ray.direction;
         atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
                                                                  ray.origin,
                                                                  ray.direction,
@@ -301,8 +349,8 @@ extern "C" __global__ void __raygen__backward()
         {
             // TODO: No NEE for now
             // Check for light source
-            CuDiff::Dual<6, glm::vec3> Le;
-            mat3x6 JLe;
+            CuDiff::Dual<4, glm::vec3> Le;
+            glm::mat4x3 JLe;
             if(si.emitter)
             {
                 bool mis_valid             = last_si.valid;
@@ -311,10 +359,7 @@ extern "C" __global__ void __raygen__backward()
                 Le                         = si.emitter->evalLightDual(dsi);
                 ray.radiance -= mis_weight * ray.throughput * Le.val();
 
-                glm::mat3 dLedxi = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
-                glm::mat3 dLedwi = glm::mat3(Le.derivative(3), Le.derivative(4), Le.derivative(5));
-
-                JLe = {dLedxi, dLedwi};
+                JLe = glm::mat4x3(Le.derivative(0), Le.derivative(1), Le.derivative(2), Le.derivative(3));
 
                 JLe = JLe * Jray;
             }
@@ -374,30 +419,43 @@ extern "C" __global__ void __raygen__backward()
 
                 if(result.sample_probability > 0.0f)
                 {
+                    auto [dx, dy, dz] = CuDiff::unwrap(result.out_dir);
+
+                    auto theta_n = CuDiff::acos(CuDiff::clamp(dy, -1.0f, 1.0f));
+                    auto phi_n   = CuDiff::atan2(dz, dx);
+
                     // Jray
-                    glm::mat3 dxodxi =
-                        glm::mat3(dsi.position.derivative(0), dsi.position.derivative(1), dsi.position.derivative(2));
-                    glm::mat3 dwodxi = glm::mat3(result.out_dir.derivative(0),
-                                                 result.out_dir.derivative(1),
-                                                 result.out_dir.derivative(2));
-                    glm::mat3 dxodwi =
-                        glm::mat3(dsi.position.derivative(3), dsi.position.derivative(4), dsi.position.derivative(5));
-                    glm::mat3 dwodwi = glm::mat3(result.out_dir.derivative(3),
-                                                 result.out_dir.derivative(4),
-                                                 result.out_dir.derivative(5));
-                    mat6 Jray_       = {dxodxi, dxodwi, dwodxi, dwodwi};
+                    float duip1dui    = dsi.u_surface.derivative(0);
+                    float duip1p1dvi  = dsi.u_surface.derivative(1);
+                    float duip1p1dphi = dsi.u_surface.derivative(2);
+                    float duip1dtheta = dsi.u_surface.derivative(3);
+                    float dvip1dui    = dsi.v_surface.derivative(0);
+                    float dvip1dvi    = dsi.v_surface.derivative(1);
+                    float dvip1dphi   = dsi.v_surface.derivative(2);
+                    float dvip1dtheta = dsi.v_surface.derivative(3);
+
+                    float dthetaip1dui    = theta_n.derivative(0);
+                    float dthetaip1p1dvi  = theta_n.derivative(1);
+                    float dthetaip1p1dphi = theta_n.derivative(2);
+                    float dthetaip1dtheta = theta_n.derivative(3);
+                    float dphiip1dui      = phi_n.derivative(0);
+                    float dphiip1dvi      = phi_n.derivative(1);
+                    float dphiip1dphi     = phi_n.derivative(2);
+                    float dphiip1dtheta   = phi_n.derivative(3);
+
+                    glm::mat4 Jray_ = glm::mat4(glm::vec4(duip1dui, dvip1dui, dphiip1dui, dthetaip1dui),
+                                                glm::vec4(duip1p1dvi, dvip1dvi, dphiip1dvi, dthetaip1p1dvi),
+                                                glm::vec4(duip1p1dphi, dvip1dphi, dphiip1dphi, dthetaip1p1dphi),
+                                                glm::vec4(duip1dtheta, dvip1dtheta, dphiip1dtheta, dthetaip1dtheta));
 
                     // -------------------
 
                     // Jbsdf
-                    glm::mat3 dbsdfdxi = glm::mat3(result.bsdf_weight.derivative(0),
-                                                   result.bsdf_weight.derivative(1),
-                                                   result.bsdf_weight.derivative(2));
 
-                    glm::mat3 dbsdfdwi = glm::mat3(result.bsdf_weight.derivative(3),
-                                                   result.bsdf_weight.derivative(4),
-                                                   result.bsdf_weight.derivative(5));
-                    mat3x6 Jbsdf       = {dbsdfdxi, dbsdfdwi};
+                    glm::mat4x3 Jbsdf = glm::mat4x3(result.bsdf_weight.derivative(0),
+                                                    result.bsdf_weight.derivative(1),
+                                                    result.bsdf_weight.derivative(2),
+                                                    result.bsdf_weight.derivative(3));
 
                     Jbsdf = Jbsdf * Jray;
 
@@ -405,12 +463,34 @@ extern "C" __global__ void __raygen__backward()
 
                     Jray = Jray_ * Jray;
 
-                    ray.JL =
-                        ray.JL -
+                    ray.JL -=
                         (diag(ray.radiance / (result.bsdf_weight.val() * result.sample_probability.val())) * Jbsdf +
                          diag(ray.throughput) * JLe);
-                    auto Jrayinv = inverse(Jray);
-                    mat3x6 JL_   = ray.JL * Jrayinv;
+                    auto Jrayinv    = glm::inverse(Jray);
+                    glm::mat4x3 JL_ = ray.JL * Jrayinv;
+
+                    // if(isnan(Jrayinv[0][0]))
+                    // {
+                    //     printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n------\n",
+                    //            Jray[0][0],
+                    //            Jray[0][1],
+                    //            Jray[0][2],
+                    //            Jray[0][3],
+                    //            Jray[1][0],
+                    //            Jray[1][1],
+                    //            Jray[1][2],
+                    //            Jray[1][3],
+                    //            Jray[2][0],
+                    //            Jray[2][1],
+                    //            Jray[2][2],
+                    //            Jray[2][3],
+                    //            Jray[3][0],
+                    //            Jray[3][1],
+                    //            Jray[3][2],
+                    //            Jray[3][3]);
+
+                    //     printf("Theta: %f\n", theta_n.val());
+                    // }
 
                     // ray.JL = JL - diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
                     // Jb = diag(result.bsdf_value.val()) * Jb + diag(ray.throughput) * Jbsdf;
@@ -418,12 +498,23 @@ extern "C" __global__ void __raygen__backward()
                     // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
                     // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
                     glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / ((result.bsdf_weight.val()) + 1e-4f);
-                    glm::vec3 dLdwo   = (ray.delta_y * JL_).v2;    // Only v2?
+                    glm::vec2 dLdwo   = glm::zw(ray.delta_y * JL_);    // Only v2?
 
                     si.bsdf->sampleBSDFBackward(si, rng, dLdbsdf, dLdwo);
 
-                    next_origin = si.position;
-                    next_dir    = result.out_dir;
+                    thrust::tie(u, v, phi, theta) =
+                        CuDiff::make_variables<4>(dsi.u_surface.val(), dsi.v_surface.val(), phi_n.val(), theta_n.val());
+
+                    auto sinTheta = CuDiff::sin(theta);
+
+                    auto x = sinTheta * CuDiff::cos(phi);
+                    auto y = CuDiff::cos(theta);
+                    auto z = sinTheta * CuDiff::sin(phi);
+
+                    auto origin = (1.0f - u - v) * dsi.P0 + u * dsi.P1 + v * dsi.P2;
+
+                    ray.origin    = origin;
+                    ray.direction = CuDiff::wrap(x, y, z);
                     ray.throughput *= result.bsdf_weight.val();
                     ray.valid = true;
 
@@ -450,9 +541,6 @@ extern "C" __global__ void __raygen__backward()
                 ray.radiance -= mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
             }
         }
-
-        ray.origin    = next_origin;
-        ray.direction = next_dir;
     }
 }
 

@@ -163,7 +163,7 @@ struct AttachedDiffPathtracingParams
     glm::vec3* accumulation_buffer;
     glm::vec3* current_sample;
     glm::vec3* adjoint_y;
-    mat3x6* JL_buffer;
+    glm::mat4x3* JL_buffer;
 
     uint32_t image_width;
     uint32_t image_height;

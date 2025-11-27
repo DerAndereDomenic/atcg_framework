@@ -20,9 +20,9 @@ struct BSDFSamplingResult
 
 struct BSDFDualSamplingResult
 {
-    CuDiff::Dual<6, glm::vec3> out_dir;
-    CuDiff::Dual<6, glm::vec3> bsdf_weight;
-    CuDiff::Dual<6, float> sample_probability;
+    CuDiff::Dual<4, glm::vec3> out_dir;
+    CuDiff::Dual<4, glm::vec3> bsdf_weight;
+    CuDiff::Dual<4, float> sample_probability;
     BSDFComponentType flags = BSDFComponentType::Any;
 };
 
@@ -35,8 +35,8 @@ struct BSDFEvalResult
 
 struct BSDFDualEvalResult
 {
-    CuDiff::Dual<6, glm::vec3> bsdf_value;
-    CuDiff::Dual<6, float> sample_probability;
+    CuDiff::Dual<4, glm::vec3> bsdf_value;
+    CuDiff::Dual<4, float> sample_probability;
 };
 
 struct BSDFVPtrTable
@@ -88,12 +88,15 @@ struct BSDFVPtrTable
                                                                                              out_grad);
     }
 
-    __device__ void sampleBSDFBackward(const SurfaceInteraction& si, PCG32& rng, const glm::vec3& out_grad) const
+    __device__ void
+    sampleBSDFBackward(const SurfaceInteraction& si, PCG32& rng, const glm::vec3& dLdbsdf, const glm::vec2& dLdwo) const
     {
-        optixDirectCall<void, const SurfaceInteraction&, PCG32&, const glm::vec3&>(sampleBackwardCallIndex,
-                                                                                   si,
-                                                                                   rng,
-                                                                                   out_grad);
+        optixDirectCall<void, const SurfaceInteraction&, PCG32&, const glm::vec3&, const glm::vec2&>(
+            sampleBackwardCallIndex,
+            si,
+            rng,
+            dLdbsdf,
+            dLdwo);
     }
 
 #endif

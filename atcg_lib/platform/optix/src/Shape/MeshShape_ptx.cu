@@ -76,13 +76,7 @@ extern "C" __global__ void __closesthit__dual_mesh()
         *reinterpret_cast<const atcg::ShapeInstanceData*>(optixGetSbtDataPointer());
     const atcg::MeshShapeData sbt_data = *(atcg::MeshShapeData*)(_sbt_data.shape);
 
-    float3 optix_world_origin = optixGetWorldRayOrigin();
-    float3 optix_world_dir    = optixGetWorldRayDirection();
-    glm::vec3 ray_origin_     = glm::make_vec3((float*)&optix_world_origin);
-    glm::vec3 ray_dir_        = glm::make_vec3((float*)&optix_world_dir);
-    si->primitive_idx         = optixGetPrimitiveIndex();
-
-    auto [xi, wi] = CuDiff::make_variables<6>(ray_origin_, ray_dir_);
+    si->primitive_idx = optixGetPrimitiveIndex();
 
     glm::u32vec3 triangle = sbt_data.faces[si->primitive_idx];
     const float3 P0_      = glm2cuda(sbt_data.positions[triangle.x]);
@@ -97,6 +91,9 @@ extern "C" __global__ void __closesthit__dual_mesh()
     glm::vec3 v0              = P1 - P0;
     glm::vec3 v1              = P2 - P0;
     glm::vec3 geometry_normal = glm::normalize(glm::cross(v0, v1));
+
+    auto xi = si->incoming_position;
+    auto wi = si->incoming_direction;
 
     auto tmax = (CuDiff::dot((P0 - xi), geometry_normal)) / (CuDiff::dot(wi, geometry_normal));
     auto xo   = xi + tmax * wi;
@@ -115,14 +112,15 @@ extern "C" __global__ void __closesthit__dual_mesh()
     auto gamma = (d00 * d21 - d01 * d20) / den;
     auto alpha = 1.0f - beta - gamma;
 
-    si->valid              = true;
-    si->position           = xo;
-    si->incoming_distance  = tmax;
-    si->incoming_direction = wi;
+    si->valid             = true;
+    si->position          = xo;
+    si->incoming_distance = tmax;
+    si->u_surface         = beta;
+    si->v_surface         = gamma;
+    si->P0                = P0;
+    si->P1                = P1;
+    si->P2                = P2;
     // float2 optix_barys     = optixGetTriangleBarycentrics();
-
-    // Already global
-    si->position = alpha * P0 + beta * P1 + gamma * P2;
 
     const float3 N0_ = glm2cuda(sbt_data.normals[triangle.x]);
     const float3 N1_ = glm2cuda(sbt_data.normals[triangle.y]);

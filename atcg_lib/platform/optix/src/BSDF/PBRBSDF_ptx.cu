@@ -10,8 +10,7 @@
 #include <BSDF/PBRBSDFData.cuh>
 
 #include <CuDiff/CuDiff.h>
-#include <CuDiff/ext/glm/Traits.h>
-#include <CuDiff/ext/glm/Function.h>
+#include <CuDiff/ext/glm.h>
 
 namespace detail
 {
@@ -440,7 +439,7 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
         // Sample light direction from diffuse bsdf
         glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
-        result.out_dir = apply_local_frame(local_frame, CuDiff::Dual<6, glm::vec3>(local_outgoing_ray_dir));
+        result.out_dir = apply_local_frame(local_frame, CuDiff::Dual<4, glm::vec3>(local_outgoing_ray_dir));
     }
     else
     {
@@ -463,10 +462,10 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
     auto diffuse_bsdf = diffuse_color / glm::pi<float>();
     auto diffuse_pdf  = NdotL / glm::pi<float>();
 
-    CuDiff::Dual<6, glm::vec3> specular_bsdf = glm::vec3(0);
-    CuDiff::Dual<6, float> specular_pdf      = 0.0f;
+    CuDiff::Dual<4, glm::vec3> specular_bsdf = glm::vec3(0);
+    CuDiff::Dual<4, float> specular_pdf      = 0.0f;
     // Only compute specular component if specular_f0 is not zero!
-    CuDiff::Dual<6, glm::vec3> kD = glm::vec3(1);
+    CuDiff::Dual<4, glm::vec3> kD = glm::vec3(1);
     if(CuDiff::dot(metallic_color, metallic_color) > 1e-6f)
     {
         auto halfway = CuDiff::normalize(result.out_dir + view_dir);
@@ -701,12 +700,14 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
 extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
                                                                       atcg::PCG32& rng,
                                                                       const glm::vec3& dLdbsdf,
-                                                                      const glm::vec3& dLdwo)
+                                                                      const glm::vec2& dLdwo)
 {
     {
         const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
         if(!sbt_data->optimizable) return;
+
+        if(isnan(dLdwo.x) || isnan(dLdwo.y)) return;
 
         glm::vec3 albedo_ = sbt_data->diffuse_texture.read(si.uv);
         float m_          = sbt_data->metallic_texture.read(si.uv);
@@ -803,13 +804,23 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         glm::vec3 dbsdf_weightdm = bsdf_weight.derivative(3);
         glm::vec3 dbsdf_weightdr = bsdf_weight.derivative(4);
 
-        glm::mat3 dwodalbedo = glm::mat3(out_dir.derivative(0), out_dir.derivative(1), out_dir.derivative(2));
-        glm::vec3 dwodm      = out_dir.derivative(3);
-        glm::vec3 dwodr      = out_dir.derivative(4);
+
+        auto [dx, dy, dz] = CuDiff::unwrap(out_dir);
+        auto dy_clamp     = CuDiff::clamp(dy, -1.0f, 1.0f);
+        auto theta_n      = CuDiff::acos(dy_clamp);
+        auto phi_n        = CuDiff::atan2(dz, dx);
+
+        glm::mat3x2 dwodalbedo = glm::mat3x2(glm::vec2(phi_n.derivative(0), theta_n.derivative(0)),
+                                             glm::vec2(phi_n.derivative(1), theta_n.derivative(1)),
+                                             glm::vec2(phi_n.derivative(2), theta_n.derivative(2)));
+        glm::vec2 dwodm        = glm::vec2(phi_n.derivative(3), theta_n.derivative(3));
+        glm::vec2 dwodr        = glm::vec2(phi_n.derivative(4), theta_n.derivative(4));
 
         glm::vec3 dLdalbedo = dLdbsdf * dbsdf_weightdalbedo + dLdwo * dwodalbedo;
         float dLdm          = glm::dot(dLdbsdf, dbsdf_weightdm) + glm::dot(dLdwo, dwodm);
         float dLdr          = glm::dot(dLdbsdf, dbsdf_weightdr) + glm::dot(dLdwo, dwodr);
+
+        if(isnan(glm::length2(dLdalbedo)) || isnan(dLdm) || isnan(dLdr)) return;
 
         {
             DERIVATIVE_INTERPOLATION_VECTOR(dLdalbedo, sbt_data->diffuse_grad);
