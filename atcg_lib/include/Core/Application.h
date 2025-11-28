@@ -133,6 +133,13 @@ public:
      */
     virtual void run();
 
+    /**
+     * @brief Get the counter of the application loop
+     *
+     * @return The frame count
+     */
+    ATCG_INLINE uint64_t getApplicationCounter() const { return _application_counter; }
+
 private:
     bool onWindowClose(WindowCloseEvent* e);
     bool onWindowResize(WindowResizeEvent* e);
@@ -151,6 +158,8 @@ private:
     ImGuiLayer* _imgui_layer;
 #endif
     LayerStack _layer_stack;
+
+    uint64_t _application_counter = 0;
 
     // Systems
     atcg::ref_ptr<AssetManagerSystem> _asset_manager;
