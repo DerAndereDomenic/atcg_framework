@@ -53,6 +53,13 @@ void SkyboxPass::initRenderPass()
                     int value = -1;
                     target->getColorAttachement(1)->fill(&value);
                 }
+
+                if(target->numColorAttachements() > 2 &&
+                   target->getColorAttachement(2)->getSpecification().format == TextureFormat::RINT8)
+                {
+                    uint8_t value = 0;
+                    target->getColorAttachement(2)->fill(&value);
+                }
             }
 
             if(has_skybox && _skybox)
