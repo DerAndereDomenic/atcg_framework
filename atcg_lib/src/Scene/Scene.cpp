@@ -160,6 +160,7 @@ void Scene::draw(Dictionary& context)
 
     impl->_render_graph->ensureCompiled(context);
     impl->_render_graph->execute(context);
+    impl->_render_graph->garbageCollect();
 }
 
 void Scene::draw(const atcg::ref_ptr<Camera>& camera, const atcg::ref_ptr<Framebuffer>& target)

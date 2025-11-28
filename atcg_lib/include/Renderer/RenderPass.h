@@ -156,6 +156,13 @@ public:
      */
     ATCG_INLINE const std::string& name() const { return _name; }
 
+    /**
+     * @brief Garbage collect.
+     * This function increases the lifetime of garbage collected objects and destroys them if the maximum life time is
+     * reached.
+     */
+    ATCG_INLINE void garbageCollect() { _pool.garbageCollect(); }
+
     ATCG_INLINE atcg::ref_ptr<Framebuffer>
     prepareFramebuffer(Dictionary& context, const Dictionary& inputs, Dictionary& data, Dictionary& outputs)
     {
@@ -187,8 +194,6 @@ public:
 
                 (*target)->use();
                 target_fb = *target;
-
-                _pool.garbageCollect();
             }
             break;
         }

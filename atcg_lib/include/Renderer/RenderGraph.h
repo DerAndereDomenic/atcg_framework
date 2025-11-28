@@ -100,6 +100,13 @@ public:
     ATCG_INLINE bool isCompiled() const { return _compiled; }
 
     /**
+     * @brief Trigger the garbage collection for each render pass.
+     * This function increases the lifetime of garbage collected objects and destroys them if the maximum life time is
+     * reached.
+     */
+    void garbageCollect();
+
+    /**
      * @brief Compile the graph if it is not compiled, otherwise NOP
      *
      * @param ctx The compile context
