@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include <optix_stubs.h>
+#include <optix_stack_size.h>
 
 struct OptixProgramGroupEntryKey
 {
@@ -360,6 +361,8 @@ void RayTracingPipeline::createPipeline()
                                     log,
                                     &sizeof_log,
                                     &impl->pipeline));
+    // TODO
+    OPTIX_CHECK(optixPipelineSetStackSize(impl->pipeline, 4 * 1024, 4 * 1024, 16 * 1024, 1));
     if(sizeof_log > 1) ATCG_TRACE(log);
 
     impl->pipeline_created = true;
