@@ -1,6 +1,7 @@
 #include <DataStructure/ResourcePool.h>
+#include <Core/Application.h>
 
-#define MAX_LIVE_TIME 500
+#define MAX_LIVE_TIME 1
 
 namespace atcg
 {
@@ -15,21 +16,22 @@ atcg::ref_ptr<Framebuffer> ResourcePool::acquireFramebuffer(ResourceDescription 
                    desc.spec.height,
                    desc.spec.depth);
         auto fbo = Framebuffer::create(desc.spec);
-        _resources.insert(std::make_pair(desc, ResourceEntry {fbo, 0}));
+        _resources.insert(std::make_pair(desc, ResourceEntry {fbo, Application::get()->getApplicationCounter()}));
         return fbo;
     }
 
-    it->second.live_time = 0;
+    it->second.live_time = Application::get()->getApplicationCounter();
     return it->second.fbo;
 }
 
 void ResourcePool::garbageCollect()
 {
+    uint64_t current_counter = Application::get()->getApplicationCounter();
     for(auto it = _resources.begin(); it != _resources.end();)
     {
-        ++(it->second.live_time);
+        uint64_t live_time = current_counter - it->second.live_time;
 
-        if(it->second.live_time > MAX_LIVE_TIME)
+        if(live_time > MAX_LIVE_TIME)
         {
             ATCG_TRACE("Deleted Framebuffer resource {} with resolution {} x {} x {}",
                        it->first.name,

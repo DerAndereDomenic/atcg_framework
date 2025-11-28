@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added MeshLight component
 - Added a class to sample textures from host/device code
 - Added vector traits for compile time glm checks
+- Added an application counter
 
 ### Changed
 
@@ -71,6 +72,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed rendering of InstanceRenderComponent
 - Fixed Revision of Camera Components
 - Fixed mip level when copying texture3d
+- Fixed garbage collection of Render Graph resources based on application counter and reduce how many frames are cached
+- Fixed tonemapping of background color
 
 ## [0.2.1-beta]
 
