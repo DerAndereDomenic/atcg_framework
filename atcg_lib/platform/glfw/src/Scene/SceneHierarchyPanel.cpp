@@ -126,7 +126,7 @@ void SceneHierarchyPanel::renderPanel(const atcg::ref_ptr<Scene>& scene)
     {
         if(ImGui::MenuItem(ATCG_CONCAT_ID("Create Empty Entity", _uuid)))
         {
-            Entity entity = scene->createEntity(ATCG_CONCAT_ID("Empty Entity", _uuid));
+            Entity entity = scene->createEntity("Empty Entity");
             atcg::RevisionStack::startRecording<EntityAddedRevision>(scene, entity);
             atcg::RevisionStack::endRecording();
             selectEntity(entity);
