@@ -181,6 +181,7 @@ void Application::run()
         VR::onUpdate(delta_time);
         VR::emitEvents();
         _window->onUpdate();
+        ++_application_counter;
 
 #ifndef ATCG_HEADLESS
         glm::ivec2 viewport_size = _imgui_layer->getViewportSize();

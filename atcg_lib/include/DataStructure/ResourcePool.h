@@ -76,7 +76,7 @@ private:
     struct ResourceEntry
     {
         atcg::ref_ptr<Framebuffer> fbo;
-        uint32_t live_time = 0;
+        uint64_t live_time = 0;
     };
     std::unordered_map<ResourceDescription, ResourceEntry, ResourceDescriptionHash, ResourceDescriptionEqual>
         _resources;

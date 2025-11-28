@@ -134,6 +134,13 @@ void RenderGraph::exportToDOT(const std::string& path) const
     out << "}\n";
 }
 
+void RenderGraph::garbageCollect()
+{
+    for(auto& pass: _passes)
+    {
+        pass->garbageCollect();
+    }
+}
 
 atcg::ref_ptr<RenderGraph> createStandardGraph()
 {
