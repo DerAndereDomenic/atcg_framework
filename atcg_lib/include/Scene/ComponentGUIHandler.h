@@ -45,6 +45,11 @@ struct ComponentGUIRenderer
     void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, T& component) const {}
 };
 
+template<typename T>
+struct is_gui_addable : std::true_type
+{
+};
+
 #define ATCG_DECLARE_COMPONENT_GUI_RENDERER(ComponentType)                                                             \
     template<>                                                                                                         \
     struct ComponentGUIRenderer<ComponentType>                                                                         \
@@ -115,6 +120,8 @@ template<typename T>
 ATCG_INLINE void displayAddComponentEntry(const atcg::ref_ptr<atcg::Scene>& scene, Entity entity)
 {
 #ifndef ATCG_HEADLESS
+    if constexpr(!is_gui_addable<T>::value) return;
+
     if(!entity.hasComponent<T>())
     {
         if(ImGui::MenuItem(T::toString()))
