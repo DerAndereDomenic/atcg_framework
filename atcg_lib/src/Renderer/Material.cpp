@@ -32,6 +32,13 @@ Material::Material(MaterialType type) : _material_type(type)
     spec_metallic.format = TextureFormat::RFLOAT;
     float metallic       = 0.0f;
     _metallic_texture    = atcg::Texture2D::create(&metallic, spec_metallic);
+
+    TextureSpecification spec_ior;
+    spec_ior.width  = 1;
+    spec_ior.height = 1;
+    spec_ior.format = TextureFormat::RFLOAT;
+    float ior_value = 1.45f;
+    _ior_texture    = atcg::Texture2D::create(&ior_value, spec_ior);
 }
 
 void Material::setDiffuseColor(const glm::vec4& color)
@@ -69,6 +76,15 @@ void Material::setMetallic(const float metallic)
     _metallic_texture    = atcg::Texture2D::create(&metallic, spec_metallic);
 }
 
+void Material::setIor(const float ior_value)
+{
+    TextureSpecification spec_ior;
+    spec_ior.width  = 1;
+    spec_ior.height = 1;
+    spec_ior.format = TextureFormat::RFLOAT;
+    _ior_texture    = atcg::Texture2D::create(&ior_value, spec_ior);
+}
+
 void Material::removeNormalMap()
 {
     TextureSpecification spec_normal;
@@ -102,7 +118,10 @@ void Material::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shad
     shader->setInt("texture_metallic", metallic_id);
     _used_texture_ids[3] = metallic_id;
 
-    shader->setFloat("ior", ior);
+    uint32_t ior_id = renderer->popTextureID();
+    getIorTexture()->use(ior_id);
+    shader->setInt("texture_ior", ior_id);
+    _used_texture_ids[4] = ior_id;
 
     switch(_material_type)
     {
@@ -137,6 +156,7 @@ void Material::releaseTextureIDs(RendererSystem* renderer)
     renderer->pushTextureID(_used_texture_ids[1]);
     renderer->pushTextureID(_used_texture_ids[2]);
     renderer->pushTextureID(_used_texture_ids[3]);
+    renderer->pushTextureID(_used_texture_ids[4]);
 
     _uploaded = false;
 }

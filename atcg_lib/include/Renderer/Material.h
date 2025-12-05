@@ -90,6 +90,13 @@ struct Material : public Asset
     ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getMetallicTexture() const { return _metallic_texture; }
 
     /**
+     * @brief Get the ior texture.
+     *
+     * @return The ior texture
+     */
+    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getIorTexture() const { return _ior_texture; }
+
+    /**
      * @brief Set the diffuse texture.
      *
      * @param texture The diffuse texture
@@ -121,6 +128,13 @@ struct Material : public Asset
     ATCG_INLINE void setMetallicTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _metallic_texture = texture; }
 
     /**
+     * @brief Set the ior texture.
+     *
+     * @param texture The ior texture
+     */
+    ATCG_INLINE void setIorTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _ior_texture = texture; }
+
+    /**
      * @brief Set the diffuse color.
      *
      * @param color The color
@@ -149,6 +163,13 @@ struct Material : public Asset
     void setMetallic(const float metallic);
 
     /**
+     * @brief Set the ior value.
+     * 
+     * @param ior The ior value
+     */
+    void setIor(const float ior);
+
+    /**
      * @brief Remove the normal map
      */
     void removeNormalMap();
@@ -173,8 +194,6 @@ struct Material : public Asset
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
 
-    float ior = 1.5f;
-
     ATCG_INLINE void setMaterialType(MaterialType type) { _material_type = type; }
 
     ATCG_INLINE MaterialType getMaterialType() const { return _material_type; }
@@ -184,8 +203,9 @@ private:
     atcg::ref_ptr<atcg::Texture2D> _normal_texture;
     atcg::ref_ptr<atcg::Texture2D> _roughness_texture;
     atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
+    atcg::ref_ptr<atcg::Texture2D> _ior_texture;
 
-    std::array<uint32_t, 4> _used_texture_ids;
+    std::array<uint32_t, 5> _used_texture_ids;
     bool _uploaded = false;
 
     MaterialType _material_type = MaterialType::MATERIAL_TYPE_OPAQUE;

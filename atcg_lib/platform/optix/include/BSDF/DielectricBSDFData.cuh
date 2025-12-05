@@ -8,6 +8,6 @@ struct DielectricBSDFData
 {
     CUDATexture<glm::vec3> diffuse_texture;
     CUDATexture<float> roughness_texture;
-    float ior;
+    CUDATexture<float> ior_texture;
 };
 }    // namespace atcg

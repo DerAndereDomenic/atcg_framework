@@ -1179,16 +1179,19 @@ inline void defineBindings(py::module_& m)
         .def("getNormalTexture", &atcg::Material::getNormalTexture)
         .def("getRoughnessTexture", &atcg::Material::getRoughnessTexture)
         .def("getMetallicTexture", &atcg::Material::getMetallicTexture)
+        .def("getIorTexture", &atcg::Material::getIorTexture)
         .def("setDiffuseTexture", &atcg::Material::setDiffuseTexture)
         .def("setNormalTexture", &atcg::Material::setNormalTexture)
         .def("setRoughnessTexture", &atcg::Material::setRoughnessTexture)
         .def("setMetallicTexture", &atcg::Material::setMetallicTexture)
+        .def("setIorTexture", &atcg::Material::setIorTexture)
         .def("setDiffuseColor",
              [](atcg::Material& material, const glm::vec3& color) { material.setDiffuseColor(color); })
         .def("setDiffuseColor",
              [](atcg::Material& material, const glm::vec4& color) { material.setDiffuseColor(color); })
         .def("setRoughness", &atcg::Material::setRoughness)
         .def("setMetallic", &atcg::Material::setMetallic)
+        .def("setIor", &atcg::Material::setIor)
         .def("removeNormalMap", &atcg::Material::removeNormalMap);
 
     m_transform.def(py::init<glm::vec3, glm::vec3, glm::vec3>(), "position"_a, "scale"_a, "rotation"_a)

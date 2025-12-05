@@ -74,6 +74,10 @@ struct MediumComponent
 #ifndef __CUDACC__
 namespace GUI
 {
+template<>
+struct is_gui_addable<MediumComponent> : std::false_type
+{
+};
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(MediumComponent);
 }    // namespace GUI
 #endif

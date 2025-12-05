@@ -25,6 +25,7 @@ uniform sampler2D texture_diffuse;
 uniform sampler2D texture_normal;
 uniform sampler2D texture_roughness;
 uniform sampler2D texture_metallic;
+uniform sampler2D texture_ior;
 
 // Light data
 uniform vec3 light_colors[MAX_LIGHTS];
@@ -60,6 +61,7 @@ void main()
     vec3 base_color = frag_color * flat_color * diffuse_lookup.rgb;
     float roughness = texture(texture_roughness, frag_uv).r;
     float metallic = texture(texture_metallic, frag_uv).r;
+    float ior = texture(texture_ior, frag_uv).r;
     vec3 texture_normal = normalize(texture(texture_normal, frag_uv).rgb * 2.0 - 1.0);
     vec3 normal = frag_tbn * texture_normal;
 
@@ -71,7 +73,7 @@ void main()
     vec3 view_light = vec3(0);
     if(num_lights <= 0)
     {
-        vec3 brdf = eval_brdf(base_color, metallic, roughness, normal, light_dir, view_dir);
+        vec3 brdf = eval_brdf(base_color, metallic, roughness, ior, normal, light_dir, view_dir);
         float NdotL = max(dot(normal, light_dir), 0.0);
         view_light = brdf * light_radiance * NdotL;
     }
@@ -84,7 +86,7 @@ void main()
         float r = length(light_dir);
         light_dir = light_dir / r;
 
-        vec3 pl_brdf = eval_brdf(base_color, metallic, roughness, normal, light_dir, view_dir);
+        vec3 pl_brdf = eval_brdf(base_color, metallic, roughness, ior, normal, light_dir, view_dir);
         vec3 light_radiance = light_intensities[i] * light_colors[i] / (r * r);
         float NdotL = max(dot(normal, light_dir), 0.0);
         float shadow = shadowCalculation(i, frag_pos);
@@ -92,7 +94,7 @@ void main()
     }
 
     // IBL
-    vec3 ambient = image_based_lighting(base_color, metallic, roughness, normal, view_dir);
+    vec3 ambient = image_based_lighting(base_color, metallic, roughness, ior, normal, view_dir);
 
     vec3 color = (1.0 - float(use_ibl)) * view_light + (float(use_ibl)) * ambient + point_light_contribution;
 

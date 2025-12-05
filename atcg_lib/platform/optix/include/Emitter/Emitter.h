@@ -78,6 +78,10 @@ struct EmitterComponent
 #ifndef __CUDACC__
 namespace GUI
 {
+template<>
+struct is_gui_addable<EmitterComponent> : std::false_type
+{
+};
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(EmitterComponent);
 }    // namespace GUI
 #endif
