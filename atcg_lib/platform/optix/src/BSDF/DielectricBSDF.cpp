@@ -15,6 +15,7 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
 
     _diffuse_texture   = std::dynamic_pointer_cast<Texture2D>(material->getDiffuseTexture()->clone());
     _roughness_texture = std::dynamic_pointer_cast<Texture2D>(material->getRoughnessTexture()->clone());
+    _ior_texture       = std::dynamic_pointer_cast<Texture2D>(material->getIorTexture()->clone());
 
     DielectricBSDFData data;
 
@@ -22,7 +23,8 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
     data.diffuse_texture.spec                   = _diffuse_texture->getSpecification();
     data.roughness_texture.texture_data.texture = _roughness_texture->getTextureObject();
     data.roughness_texture.spec                 = _roughness_texture->getSpecification();
-    data.ior                                    = material->ior;
+    data.ior_texture.texture_data.texture       = _ior_texture->getTextureObject();
+    data.ior_texture.spec                       = _ior_texture->getSpecification();
 
     _flags = BSDFComponentType::IdealReflection | BSDFComponentType::IdealReflection;
 

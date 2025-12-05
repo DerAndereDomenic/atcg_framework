@@ -34,6 +34,7 @@ public:
 private:
     atcg::ref_ptr<Texture2D> _diffuse_texture;
     atcg::ref_ptr<Texture2D> _roughness_texture;
+    atcg::ref_ptr<Texture2D> _ior_texture;
 
     atcg::dref_ptr<DielectricBSDFData> _bsdf_data_buffer;
 };

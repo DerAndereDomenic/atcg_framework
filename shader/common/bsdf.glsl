@@ -1,10 +1,15 @@
 #include "bsdf_functions.glsl"
 
 subroutine vec3
-sr_eval_brdf(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 light_dir, vec3 view_dir);
+sr_eval_brdf(vec3 base_color, float metallic, float roughness, float ior, vec3 normal, vec3 light_dir, vec3 view_dir);
 
-subroutine(sr_eval_brdf) vec3
-    eval_brdf_pbr(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 light_dir, vec3 view_dir)
+subroutine(sr_eval_brdf) vec3 eval_brdf_pbr(vec3 base_color,
+                                            float metallic,
+                                            float roughness,
+                                            float ior,
+                                            vec3 normal,
+                                            vec3 light_dir,
+                                            vec3 view_dir)
 {
     vec3 H = normalize(light_dir + view_dir);
 
@@ -34,14 +39,24 @@ subroutine(sr_eval_brdf) vec3
     return brdf;
 }
 
-subroutine(sr_eval_brdf) vec3
-    eval_brdf_glass(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 light_dir, vec3 view_dir)
+subroutine(sr_eval_brdf) vec3 eval_brdf_glass(vec3 base_color,
+                                              float metallic,
+                                              float roughness,
+                                              float ior,
+                                              vec3 normal,
+                                              vec3 light_dir,
+                                              vec3 view_dir)
 {
     return vec3(0);
 }
 
-subroutine(sr_eval_brdf) vec3
-    eval_brdf_null(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 light_dir, vec3 view_dir)
+subroutine(sr_eval_brdf) vec3 eval_brdf_null(vec3 base_color,
+                                             float metallic,
+                                             float roughness,
+                                             float ior,
+                                             vec3 normal,
+                                             vec3 light_dir,
+                                             vec3 view_dir)
 {
     return vec3(0);
 }

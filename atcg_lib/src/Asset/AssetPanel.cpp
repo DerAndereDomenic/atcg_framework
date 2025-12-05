@@ -63,8 +63,6 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     ImGui::Text("Material");
 
-    updated = ImGui::DragFloat(("IOR##" + key).c_str(), &material.ior, 0.01f, 0.4f, 3.0f) || updated;
-
     int currentIndex = static_cast<int>(material.getMaterialType());
 
     constexpr const char* materialTypeLabels[] = {"Opaque", "Glass", "Null"};
@@ -320,6 +318,67 @@ void AssetPanel::displayMaterial(AssetHandle handle)
             }
             else
                 ImGui::Image((ImTextureID)material.getMetallicTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+
+    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
+    {
+        auto spec        = material.getIorTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto data = material.getIorTexture()->getData(atcg::CPU);
+            float ior = data.item<float>();
+
+            if(ImGui::DragFloat(("IoR##" + key).c_str(), &ior, 0.005f, 1.0f, 2.5f))
+            {
+                material.setIor(ior);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##ior" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                        pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                        pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
+                    material.setIorTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("IoR Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##ior" + key).c_str()))
+            {
+                material.setIor(1.5f);
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material.getIorTexture()->getID(),
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});

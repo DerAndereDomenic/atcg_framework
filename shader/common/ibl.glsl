@@ -2,10 +2,11 @@ uniform samplerCube irradiance_map;
 uniform samplerCube prefilter_map;
 uniform sampler2D lut;
 
-subroutine vec3 sr_image_based_lighting(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 view_dir);
+subroutine vec3
+sr_image_based_lighting(vec3 base_color, float metallic, float roughness, float ior, vec3 normal, vec3 view_dir);
 
 subroutine(sr_image_based_lighting) vec3
-    image_based_lighting_pbr(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 view_dir)
+    image_based_lighting_pbr(vec3 base_color, float metallic, float roughness, float ior, vec3 normal, vec3 view_dir)
 {
     float eta    = 1.0 / ior;
     float F0_eta = (1 - eta) / (1 + eta);
@@ -30,7 +31,7 @@ subroutine(sr_image_based_lighting) vec3
 }
 
 subroutine(sr_image_based_lighting) vec3
-    image_based_lighting_glass(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 view_dir)
+    image_based_lighting_glass(vec3 base_color, float metallic, float roughness, float ior, vec3 normal, vec3 view_dir)
 {
     float eta    = 1.0 / ior;
     float F0_eta = (1 - eta) / (1 + eta);
@@ -67,7 +68,7 @@ subroutine(sr_image_based_lighting) vec3
 }
 
 subroutine(sr_image_based_lighting) vec3
-    image_based_lighting_null(vec3 base_color, float metallic, float roughness, vec3 normal, vec3 view_dir)
+    image_based_lighting_null(vec3 base_color, float metallic, float roughness, float ior, vec3 normal, vec3 view_dir)
 {
     vec3 prefiltered_refracted = textureLod(prefilter_map, -view_dir, 0).rgb;
 
