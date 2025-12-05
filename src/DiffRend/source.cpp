@@ -16,6 +16,10 @@
 
 #include "AttachedDiffPathtracingIntegrator.h"
 
+#ifndef ATCG_HEADLESS
+    #include <implot.h>
+#endif
+
 class DiffRendLayer : public atcg::Layer
 {
 public:
@@ -126,6 +130,12 @@ public:
 
                 L.backward();
                 optimizer->step();
+
+                ATCG_TRACE("Iteration {}: Loss = {}", iteration_count, L.item<float>());
+                time_collection.addSample((float)iteration_count);
+                loss_collection.addSample(L.item<float>());
+
+                ++iteration_count;
 
                 {
                     torch::NoGradGuard no_grad;
@@ -308,9 +318,27 @@ public:
             {
                 // integrator->markOptimizable();
                 optimizer =
-                    atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions(0.005));
+                    atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions(0.01));
+                iteration_count = 0;
+                time_collection.resetStatistics();
+                loss_collection.resetStatistics();
             }
         }
+
+        // ImPlot::SetNextAxisLimits(ImAxis_Y1, 0, 100);
+        if(ImPlot::BeginPlot("Loss"))
+        {
+            ImPlot::SetupAxes("Iteration", "Loss", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+            ImPlot::PlotLine("Loss",
+                             time_collection.get(),
+                             loss_collection.get(),
+                             loss_collection.count(),
+                             0,
+                             loss_collection.index(),
+                             sizeof(float));
+            ImPlot::EndPlot();
+        }
+
 
         if(integrator)
         {
@@ -470,7 +498,8 @@ private:
     atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
     atcg::ref_ptr<atcg::AttachedDiffPathtracingIntegrator> integrator;
     torch::Tensor target;
-    bool optimize = false;
+    bool optimize       = false;
+    int iteration_count = 0;
     atcg::ref_ptr<torch::optim::Adam> optimizer;
     atcg::ref_ptr<atcg::Texture2D> target_texture;
     atcg::ref_ptr<atcg::Texture2D> difference_texture;
@@ -484,6 +513,9 @@ private:
     atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
 
     uint32_t last_revision = 0;
+
+    atcg::CyclicCollection<float> time_collection = atcg::CyclicCollection<float>("Time Collection", 35 * 60 / 5);
+    atcg::CyclicCollection<float> loss_collection = atcg::CyclicCollection<float>("Loss Collection", 35 * 60 / 5);
 };
 
 class DiffRend : public atcg::Application
