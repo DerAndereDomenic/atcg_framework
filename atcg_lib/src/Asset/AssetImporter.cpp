@@ -24,6 +24,7 @@ namespace detail
 #define METALLIC_KEY          "Metallic"
 #define METALLIC_TEXTURE_KEY  "MetallicTexture"
 #define IOR_KEY               "IoR"
+#define IOR_TEXTURE_KEY       "IoRTexture"
 #define TYPE_KEY              "Type"
 #define VERTICES_KEY          "Vertices"
 #define FACES_KEY             "Faces"
@@ -35,8 +36,6 @@ atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path,
     std::string material_type_string = material_node.value(TYPE_KEY, "Opaque");
 
     atcg::ref_ptr<Material> material = atcg::make_ref<Material>(stringToMaterialType(material_type_string.c_str()));
-
-    material->ior = material_node.value(IOR_KEY, 1.5f);
 
     // Diffuse
     if(material_node.contains(DIFFUSE_KEY))
@@ -87,6 +86,20 @@ atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path,
         auto img                            = IO::imread(metallic_path.generic_string());
         auto metallic_texture               = atcg::Texture2D::create(img);
         material->setMetallicTexture(metallic_texture);
+    }
+
+    // IoR
+    if(material_node.contains(IOR_KEY))
+    {
+        float ior = material_node[IOR_KEY];
+        material->setIor(ior);
+    }
+    else if(material_node.contains(IOR_TEXTURE_KEY))
+    {
+        std::filesystem::path ior_path = path.parent_path() / material_node[IOR_TEXTURE_KEY];
+        auto img                       = IO::imread(ior_path.generic_string());
+        auto ior_texture               = atcg::Texture2D::create(img);
+        material->setIorTexture(ior_texture);
     }
 
     return material;
