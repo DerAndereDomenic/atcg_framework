@@ -252,16 +252,7 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
 template<int N>
 ATCG_DEVICE ATCG_INLINE auto compute_local_frame(const CuDiff::Dual<N, glm::vec3>& localZ)
 {
-    CuDiff::Dual<N, float> x = localZ.val().x;
-    CuDiff::Dual<N, float> y = localZ.val().y;
-    CuDiff::Dual<N, float> z = localZ.val().z;
-
-    for(int i = 0; i < N; ++i)
-    {
-        x.setDerivative(i, localZ.derivative(i).x);
-        y.setDerivative(i, localZ.derivative(i).y);
-        z.setDerivative(i, localZ.derivative(i).z);
-    }
+    auto [x, y, z] = CuDiff::unwrap(localZ);
 
     float sz = (z >= 0) ? 1 : -1;
     auto a   = 1 / (sz + z);
@@ -273,17 +264,11 @@ ATCG_DEVICE ATCG_INLINE auto compute_local_frame(const CuDiff::Dual<N, glm::vec3
     auto localXy = sz * b;
     auto localXz = c;
 
-    auto localYx                      = b;
-    auto localYy                      = y * ya - sz;
-    auto localYz                      = y;
-    CuDiff::Dual<N, glm::vec3> localX = glm::vec3(localXx, localXy, localXz);
-    CuDiff::Dual<N, glm::vec3> localY = glm::vec3(localYx, localYy, localYz);
-
-    for(int i = 0; i < N; ++i)
-    {
-        localX.mut_derivative(i) = glm::vec3(localXx.derivative(i), localXy.derivative(i), localXz.derivative(i));
-        localY.mut_derivative(i) = glm::vec3(localYx.derivative(i), localYy.derivative(i), localYz.derivative(i));
-    }
+    auto localYx = b;
+    auto localYy = y * ya - sz;
+    auto localYz = y;
+    auto localX  = CuDiff::wrap(localXx, localXy, localXz);
+    auto localY  = CuDiff::wrap(localYx, localYy, localYz);
 
     return thrust::make_tuple(localX, localY, localZ);
 }
@@ -294,17 +279,7 @@ ATCG_DEVICE ATCG_INLINE CuDiff::Dual<N, glm::vec3> apply_local_frame(
         local_frame,
     const CuDiff::Dual<N, glm::vec3>& v)
 {
-    const auto& v_val        = v.val();
-    CuDiff::Dual<N, float> x = v_val.x;
-    CuDiff::Dual<N, float> y = v_val.y;
-    CuDiff::Dual<N, float> z = v_val.z;
-
-    for(int i = 0; i < N; ++i)
-    {
-        x.setDerivative(i, v.derivative(i).x);
-        y.setDerivative(i, v.derivative(i).y);
-        z.setDerivative(i, v.derivative(i).z);
-    }
+    auto [x, y, z] = CuDiff::unwrap(v);
 
     return thrust::get<0>(local_frame) * x + thrust::get<1>(local_frame) * y + thrust::get<2>(local_frame) * z;
 }
@@ -322,11 +297,7 @@ warp_square_to_hemisphere_ggx(const glm::vec2& uv, CuDiff::Dual<N, float> roughn
     auto y = sin_theta * glm::sin(phi);
     auto z = cos_theta;
 
-    CuDiff::Dual<N, glm::vec3> res = glm::vec3(x.val(), y.val(), z.val());
-    for(int i = 0; i < N; ++i)
-    {
-        res.mut_derivative(i) = glm::vec3(x.derivative(i), y.derivative(i), z.derivative(i));
-    }
+    auto res = CuDiff::wrap(x, y, z);
 
     return res;
 }
@@ -715,10 +686,12 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
 
         auto [albedo, m, r] = CuDiff::make_variables<5>(albedo_, m_, r_);
 
-        auto roughness = CuDiff::max(r * r, 1e-3f);    // In the real time shaders, roughness is squared
+        // auto roughness = CuDiff::max(r * r, 1e-3f);    // In the real time shaders, roughness is squared
+        auto roughness = r * r;    // In the real time shaders, roughness is squared
+        if(roughness.val() < 1e-3f) roughness.mut_val() = 1e-3f;
+        auto diffuse_color = (1.0f - m) * albedo;
 
         auto metallic_color = (1.0f - m) * glm::vec3(0.04f) + m * albedo;
-        auto diffuse_color  = (1.0f - m) * albedo * si.color;
 
         // Direction towards viewer
         glm::vec3 view_dir = -si.incoming_direction;
@@ -757,54 +730,6 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             out_dir      = CuDiff::reflect(si.incoming_direction, halfway);
         }
 
-        // It is possible that light directions below the horizon are sampled..
-        // If outgoing ray direction is below horizon, let the sampling fail!
-        auto NdotL = CuDiff::dot(normal, out_dir);
-        if(NdotL <= 0)
-        {
-            return;
-        }
-
-        auto diffuse_bsdf = diffuse_color / glm::pi<float>();
-        auto diffuse_pdf  = NdotL / glm::pi<float>();
-
-        CuDiff::Dual<5, glm::vec3> specular_bsdf = glm::vec3(0);
-        CuDiff::Dual<5, float> specular_pdf      = 0;
-        // Only compute specular component if specular_f0 is not zero!
-        CuDiff::Dual<5, glm::vec3> kD = glm::vec3(1.0f);
-        if(CuDiff::dot(metallic_color, metallic_color) > 1e-6f)
-        {
-            auto halfway = CuDiff::normalize(out_dir + view_dir);
-            auto HdotV   = CuDiff::dot(halfway, out_dir);
-            auto NdotH   = CuDiff::dot(halfway, normal);
-
-            // Normal distribution
-            auto NDF = D_GGX(NdotH, roughness);
-
-            // Visibility
-            auto V = V_SmithGGX(NdotL, NdotV, roughness);
-
-            // Fresnel
-            auto F = fresnel_schlick(metallic_color, HdotV);
-
-            kD = (1.0f - F);
-
-            specular_bsdf = NDF * V * F;
-
-            auto halfway_pdf             = NDF * NdotH;
-            auto halfway_to_outgoing_pdf = warp_normal_to_reflected_direction_pdf(out_dir, halfway);    // 1 / (4*HdotV)
-            specular_pdf                 = halfway_pdf * halfway_to_outgoing_pdf;
-        }
-
-        auto sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
-        auto bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (sample_probability + 1e-5f);
-
-        glm::mat3 dbsdf_weightdalbedo =
-            glm::mat3(bsdf_weight.derivative(0), bsdf_weight.derivative(1), bsdf_weight.derivative(2));
-        glm::vec3 dbsdf_weightdm = bsdf_weight.derivative(3);
-        glm::vec3 dbsdf_weightdr = bsdf_weight.derivative(4);
-
-
         auto [dx, dy, dz] = CuDiff::unwrap(out_dir);
         auto dy_clamp     = CuDiff::clamp(dy, -1.0f, 1.0f);
         auto theta_n      = CuDiff::acos(dy_clamp);
@@ -815,6 +740,57 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
                                              glm::vec2(phi_n.derivative(2), theta_n.derivative(2)));
         glm::vec2 dwodm        = glm::vec2(phi_n.derivative(3), theta_n.derivative(3));
         glm::vec2 dwodr        = glm::vec2(phi_n.derivative(4), theta_n.derivative(4));
+
+        // I think that light_dir needs to be detached here because of these lines in the pseudo code:
+        // # Backpropagate gradients of the current BSDF value
+        // δπ += backward_grad(bsdf_weight, δL ∗ L / bsdf_weight)
+        // # Backpropagate through shading frame and
+        // # BSDF sampling calculation
+        // δπ += backward_grad(ray′, δL @ J′  L)
+        CuDiff::Dual<5, glm::vec3> light_dir = out_dir;
+
+        // It is possible that light directions below the horizon are sampled..
+        // If outgoing ray direction is below horizon, let the sampling fail!
+        auto NdotL = CuDiff::dot(normal, light_dir);
+        if(NdotL <= 0)
+        {
+            return;
+        }
+
+        auto diffuse_bsdf = diffuse_color / glm::pi<float>();
+        auto diffuse_pdf  = NdotL / glm::pi<float>();
+
+
+        auto H     = CuDiff::normalize(light_dir + view_dir);
+        auto NdotH = CuDiff::max(CuDiff::dot(si.normal, H), 0.0f);
+        auto VdotH = CuDiff::max(CuDiff::dot(H, view_dir), 0.0f);
+
+        // Normal distribution
+        auto NDF = D_GGX(NdotH, roughness);
+
+        // Visibility
+        auto V = V_SmithGGX(NdotL, NdotV, roughness);
+
+        // Fresnel
+        auto F = fresnel_schlick(metallic_color, VdotH);
+
+        auto kS = F;
+        auto kD = glm::vec3(1.0f) - kS;
+
+        auto specular_bsdf = NDF * V * F;
+
+        auto halfway_pdf             = NDF * NdotH;
+        auto halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(view_dir, H);    // 1 / (4*HdotV)
+        auto specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
+
+        auto sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+        auto bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (sample_probability + 1e-5f);
+
+        glm::mat3 dbsdf_weightdalbedo =
+            glm::mat3(bsdf_weight.derivative(0), bsdf_weight.derivative(1), bsdf_weight.derivative(2));
+        glm::vec3 dbsdf_weightdm = bsdf_weight.derivative(3);
+        glm::vec3 dbsdf_weightdr = bsdf_weight.derivative(4);
+
 
         glm::vec3 dLdalbedo = dLdbsdf * dbsdf_weightdalbedo + dLdwo * dwodalbedo;
         float dLdm          = glm::dot(dLdbsdf, dbsdf_weightdm) + glm::dot(dLdwo, dwodm);
