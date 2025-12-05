@@ -103,7 +103,7 @@ extern "C" __global__ void __raygen__forward()
         {
             // Check for light source
             CuDiff::Dual<4, glm::vec3> Le;
-            glm::mat4x3 JLe;
+            glm::mat4x3 JLe = glm::mat4x3(0);
             if(si.emitter)
             {
                 bool mis_valid             = last_si.valid;
@@ -117,7 +117,7 @@ extern "C" __global__ void __raygen__forward()
                 JLe = JLe * Jray;
             }
 
-            ray.JL = ray.JL + diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
+            ray.JL += +diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
 
             // PBR Sampling
             if(si.bsdf)
@@ -213,9 +213,9 @@ extern "C" __global__ void __raygen__forward()
 
                     // -------------------
 
-                    Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
-
                     Jray = Jray_ * Jray;
+
+                    Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
 
                     thrust::tie(u, v, phi, theta) =
                         CuDiff::make_variables<4>(dsi.u_surface.val(), dsi.v_surface.val(), phi_n.val(), theta_n.val());
@@ -350,7 +350,7 @@ extern "C" __global__ void __raygen__backward()
             // TODO: No NEE for now
             // Check for light source
             CuDiff::Dual<4, glm::vec3> Le;
-            glm::mat4x3 JLe;
+            glm::mat4x3 JLe = glm::mat4x3(0);
             if(si.emitter)
             {
                 bool mis_valid             = last_si.valid;
@@ -415,7 +415,8 @@ extern "C" __global__ void __raygen__backward()
                 //     ray.radiance -= radiance_nee;
                 // } while(false);
 
-                auto result = si.bsdf->sampleBSDFForward(dsi, rng);
+                auto rng_copy = rng;
+                auto result   = si.bsdf->sampleBSDFForward(dsi, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
@@ -463,9 +464,8 @@ extern "C" __global__ void __raygen__backward()
 
                     Jray = Jray_ * Jray;
 
-                    ray.JL -=
-                        (diag(ray.radiance / (result.bsdf_weight.val() * result.sample_probability.val())) * Jbsdf +
-                         diag(ray.throughput) * JLe);
+                    ray.JL -= (diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf + diag(ray.throughput) * JLe);
+
                     auto Jrayinv    = glm::inverse(Jray);
                     glm::mat4x3 JL_ = ray.JL * Jrayinv;
 
@@ -497,10 +497,10 @@ extern "C" __global__ void __raygen__backward()
 
                     // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
                     // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
-                    glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / ((result.bsdf_weight.val()) + 1e-4f);
+                    glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight.val() + 1e-4f);
                     glm::vec2 dLdwo   = glm::zw(ray.delta_y * JL_);    // Only v2?
 
-                    si.bsdf->sampleBSDFBackward(si, rng, dLdbsdf, dLdwo);
+                    si.bsdf->sampleBSDFBackward(si, rng_copy, dLdbsdf, dLdwo);
 
                     thrust::tie(u, v, phi, theta) =
                         CuDiff::make_variables<4>(dsi.u_surface.val(), dsi.v_surface.val(), phi_n.val(), theta_n.val());
