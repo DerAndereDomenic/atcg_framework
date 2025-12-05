@@ -75,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed mip level when copying texture3d
 - Fixed garbage collection of Render Graph resources based on application counter and reduce how many frames are cached
 - Fixed tonemapping of background color
+- Fixed crash when trying to add path tracing components to entities via the gui
 
 ## [0.2.1-beta]
 
