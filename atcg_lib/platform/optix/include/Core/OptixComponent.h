@@ -35,6 +35,8 @@ public:
 
     bool isOptimizable() const { return _optimizable; }
 
+    virtual void clampParameters() = 0;
+
 protected:
     bool _optimizable = false;
 };

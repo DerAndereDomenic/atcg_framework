@@ -140,11 +140,7 @@ public:
                 {
                     torch::NoGradGuard no_grad;
 
-                    auto& parameters = integrator->getParameters();
-                    for(auto p: parameters)
-                    {
-                        p.clamp_(0.0f, 1.0f);
-                    }
+                    integrator->clampParameters();
                     difference_texture->setData(torch::abs(difference));
                     result_texture->setData(result);
                 }

@@ -35,6 +35,8 @@ public:
      */
     virtual void onImGuiRender() override;
 
+    virtual void clampParameters() override;
+
     ATCG_INLINE atcg::dref_ptr<PBRBSDFData> getDataBuffer() const { return _bsdf_data_buffer; }
 
 private:

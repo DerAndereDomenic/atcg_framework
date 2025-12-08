@@ -185,5 +185,12 @@ void PBRBSDF::markOptimizable()
     _bsdf_data_buffer.upload(&bsdf_data);
 }
 
+void PBRBSDF::clampParameters()
+{
+    _diffuse_texture.clamp_(0.0f, 1.0f);
+    _roughness_texture.clamp_(0.01f, 1.0f);
+    _metallic_texture.clamp_(0.0f, 1.0f);
+}
+
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);
 }    // namespace atcg

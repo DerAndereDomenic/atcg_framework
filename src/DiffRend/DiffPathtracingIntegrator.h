@@ -68,6 +68,8 @@ public:
 
     virtual std::vector<torch::Tensor> getParameters() const override;
 
+    virtual void clampParameters() override;
+
     virtual void markOptimizable() override;
 
 private:

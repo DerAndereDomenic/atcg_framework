@@ -276,6 +276,15 @@ std::vector<torch::Tensor> AttachedDiffPathtracingIntegrator::getParameters() co
     return parameters;
 }
 
+void AttachedDiffPathtracingIntegrator::clampParameters()
+{
+    for(auto obj: _differentiable_components)
+    {
+        if(!obj->isOptimizable()) continue;
+        obj->clampParameters();
+    }
+}
+
 void AttachedDiffPathtracingIntegrator::markOptimizable()
 {
     for(auto obj: _differentiable_components)

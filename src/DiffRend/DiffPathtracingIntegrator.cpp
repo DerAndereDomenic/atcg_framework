@@ -255,6 +255,14 @@ std::vector<torch::Tensor> DiffPathtracingIntegrator::getParameters() const
     return parameters;
 }
 
+void DiffPathtracingIntegrator::clampParameters()
+{
+    for(auto obj: _differentiable_components)
+    {
+        obj->clampParameters();
+    }
+}
+
 void DiffPathtracingIntegrator::markOptimizable()
 {
     for(auto obj: _differentiable_components)
