@@ -379,18 +379,18 @@ def forward_pass(plane1, plane2, bsdf, emitter, ray):
 
     Jray_ = torch.cat([Jposition_, Jdirection_], dim=0)
 
-    Jbsdf = torch.cat([Jsample[0][0], Jsample[0][1]], dim=1)
+    # Jbsdf = torch.cat([Jsample[0][0], Jsample[0][1]], dim=1)
 
-    Jbsdf = Jbsdf @ Jray
+    # Jbsdf = Jbsdf @ Jray
 
-    Jray = Jray_ @ Jray
+    # Jray = Jray_ @ Jray
 
     # JL += 0
 
-    Jbeta = (
-        torch.diag(bsdf_result.brdf / bsdf_result.pdf) @ Jbeta
-        + torch.diag(beta) @ Jbsdf
-    )
+    # Jbeta = (
+    #     torch.diag(bsdf_result.brdf / bsdf_result.pdf) @ Jbeta
+    #     + torch.diag(beta) @ Jbsdf
+    # )
     beta *= bsdf_result.brdf / bsdf_result.pdf
 
     current_ray = Ray(intersection.detach(), bsdf_result.direction.detach())
@@ -481,25 +481,25 @@ def backward_pass(plane1, plane2, bsdf, emitter, ray, L, JL):
         bsdf_result = BSDFSamplingResult(brdf=brdf, pdf=pdf, direction=sampled_dir)
         return bsdf_result.brdf / bsdf_result.pdf, bsdf_result.direction
 
-    Jintersect = jacobian(
-        intersect_plane1_fn, (current_ray.origin, current_ray.direction)
-    )
+    # Jintersect = jacobian(
+    #     intersect_plane1_fn, (current_ray.origin, current_ray.direction)
+    # )
 
     rng_copy = rng.clone()
     Jsample = jacobian(bsdf_plane1_fn, (current_ray.origin, current_ray.direction))
 
-    Jposition_ = torch.cat([Jintersect[0], Jintersect[1]], dim=1)
-    Jdirection_ = torch.cat([Jsample[1][0], Jsample[1][1]], dim=1)
+    # Jposition_ = torch.cat([Jintersect[0], Jintersect[1]], dim=1)
+    # Jdirection_ = torch.cat([Jsample[1][0], Jsample[1][1]], dim=1)
 
-    Jray_ = torch.cat([Jposition_, Jdirection_], dim=0)
+    # Jray_ = torch.cat([Jposition_, Jdirection_], dim=0)
 
-    Jbsdf = torch.cat([Jsample[0][0], Jsample[0][1]], dim=1)
+    # Jbsdf = torch.cat([Jsample[0][0], Jsample[0][1]], dim=1)
 
-    Jbsdf = Jbsdf @ Jray
+    # Jbsdf = Jbsdf @ Jray
 
-    Jray = Jray_ @ Jray
+    # Jray = Jray_ @ Jray
 
-    JL -= torch.diag(L / (bsdf_result.brdf / bsdf_result.pdf)) @ Jbsdf
+    # JL -= torch.diag(L / (bsdf_result.brdf / bsdf_result.pdf)) @ Jbsdf
     # JL_ = JL[:, 3:] @ torch.linalg.inv(Jray[3:, 3:])
     JL_ = (JL @ torch.linalg.pinv(Jray))[:, 3:]
 

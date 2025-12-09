@@ -50,21 +50,9 @@ extern "C" __global__ void __raygen__forward()
 
     glm::vec3 ray_origin    = cam_eye;
     glm::vec3 ray_direction = glm::normalize((u_ * U + v_ * V + W));
-    float theta_            = glm::acos(glm::clamp(ray_direction.y, -1.0f, 1.0f));
-    float phi_              = glm::atan2(ray_direction.z, ray_direction.x);
 
-    auto [u, v, phi, theta] = CuDiff::make_variables<4>(u_, v_, phi_, theta_);
-
-    auto sinTheta = CuDiff::sin(theta);
-
-    auto x = sinTheta * CuDiff::cos(phi);
-    auto y = CuDiff::cos(theta);
-    auto z = sinTheta * CuDiff::sin(phi);
-
-    CuDiff::Dual<4, glm::vec3> dir = CuDiff::wrap(x, y, z);
-
-    ray.origin        = cam_eye + 0.01f * CuDiff::normalize((u * U + v * V + W));
-    ray.direction     = dir;
+    ray.origin        = ray_origin;
+    ray.direction     = ray_direction;
     ray.radiance      = glm::vec3(0);
     ray.throughput    = glm::vec3(1);
     ray.valid         = true;
@@ -76,6 +64,8 @@ extern "C" __global__ void __raygen__forward()
 
     glm::mat4x3 Jb = glm::mat4x3(0);
     glm::mat4 Jray = glm::mat4(1);
+
+    CuDiff::Dual<4, float> u, v, phi, theta;
 
     for(int n = 0; n < 8; ++n)
     {
@@ -117,7 +107,7 @@ extern "C" __global__ void __raygen__forward()
                 JLe = JLe * Jray;
             }
 
-            ray.JL += +diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
+            ray.JL += diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
 
             // PBR Sampling
             if(si.bsdf)
@@ -204,18 +194,21 @@ extern "C" __global__ void __raygen__forward()
 
                     // Jbsdf
 
-                    glm::mat4x3 Jbsdf = glm::mat4x3(result.bsdf_weight.derivative(0),
-                                                    result.bsdf_weight.derivative(1),
-                                                    result.bsdf_weight.derivative(2),
-                                                    result.bsdf_weight.derivative(3));
+                    if(n != 0)
+                    {
+                        glm::mat4x3 Jbsdf = glm::mat4x3(result.bsdf_weight.derivative(0),
+                                                        result.bsdf_weight.derivative(1),
+                                                        result.bsdf_weight.derivative(2),
+                                                        result.bsdf_weight.derivative(3));
 
-                    Jbsdf = Jbsdf * Jray;
+                        Jbsdf = Jbsdf * Jray;
 
-                    // -------------------
+                        // -------------------
 
-                    Jray = Jray_ * Jray;
+                        Jray = Jray_ * Jray;
 
-                    Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
+                        Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
+                    }
 
                     thrust::tie(u, v, phi, theta) =
                         CuDiff::make_variables<4>(dsi.u_surface.val(), dsi.v_surface.val(), phi_n.val(), theta_n.val());
@@ -296,21 +289,9 @@ extern "C" __global__ void __raygen__backward()
 
     glm::vec3 ray_origin    = cam_eye;
     glm::vec3 ray_direction = glm::normalize((u_ * U + v_ * V + W));
-    float theta_            = glm::acos(glm::clamp(ray_direction.y, -1.0f, 1.0f));
-    float phi_              = glm::atan2(ray_direction.z, ray_direction.x);
 
-    auto [u, v, phi, theta] = CuDiff::make_variables<4>(u_, v_, phi_, theta_);
-
-    auto sinTheta = CuDiff::sin(theta);
-
-    auto x = sinTheta * CuDiff::cos(phi);
-    auto y = CuDiff::cos(theta);
-    auto z = sinTheta * CuDiff::sin(phi);
-
-    CuDiff::Dual<4, glm::vec3> dir = CuDiff::wrap(x, y, z);
-
-    ray.origin        = cam_eye + 0.01f * CuDiff::normalize((u * U + v * V + W));
-    ray.direction     = dir;
+    ray.origin        = ray_origin;
+    ray.direction     = ray_direction;
     ray.radiance      = params.accumulation_buffer[pixel_index];
     ray.delta_y       = params.adjoint_y[pixel_index];
     ray.JL            = params.JL_buffer[pixel_index];
@@ -322,6 +303,8 @@ extern "C" __global__ void __raygen__backward()
     float last_bsdf_pdf = 1.0f;
 
     glm::mat4 Jray = glm::mat4(1);
+
+    CuDiff::Dual<4, float> u, v, phi, theta;
 
     for(int n = 0; n < 8; ++n)
     {
@@ -453,18 +436,21 @@ extern "C" __global__ void __raygen__backward()
 
                     // Jbsdf
 
-                    glm::mat4x3 Jbsdf = glm::mat4x3(result.bsdf_weight.derivative(0),
-                                                    result.bsdf_weight.derivative(1),
-                                                    result.bsdf_weight.derivative(2),
-                                                    result.bsdf_weight.derivative(3));
+                    if(n != 0)
+                    {
+                        glm::mat4x3 Jbsdf = glm::mat4x3(result.bsdf_weight.derivative(0),
+                                                        result.bsdf_weight.derivative(1),
+                                                        result.bsdf_weight.derivative(2),
+                                                        result.bsdf_weight.derivative(3));
 
-                    Jbsdf = Jbsdf * Jray;
+                        Jbsdf = Jbsdf * Jray;
 
-                    // -------------------
+                        // -------------------
 
-                    Jray = Jray_ * Jray;
+                        Jray = Jray_ * Jray;
+                        ray.JL -= (diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf + diag(ray.throughput) * JLe);
+                    }
 
-                    ray.JL -= (diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf + diag(ray.throughput) * JLe);
 
                     auto Jrayinv    = glm::inverse(Jray);
                     glm::mat4x3 JL_ = ray.JL * Jrayinv;
