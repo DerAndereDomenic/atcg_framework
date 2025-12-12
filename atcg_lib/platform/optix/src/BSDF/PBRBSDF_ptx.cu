@@ -671,14 +671,18 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
 extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
                                                                       atcg::PCG32& rng,
                                                                       const glm::vec3& dLdbsdf,
-                                                                      const glm::vec2& dLdwo)
+                                                                      const glm::vec2& dLdwo_)
 {
     {
         const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
         if(!sbt_data->optimizable) return;
 
-        if(isnan(dLdwo.x) || isnan(dLdwo.y)) return;
+        glm::vec2 dLdwo = dLdwo_;
+        if(!isfinite(dLdwo.x) || !isfinite(dLdwo.y))
+        {
+            dLdwo = glm::vec2(0.0f);
+        }
 
         glm::vec3 albedo_ = sbt_data->diffuse_texture.read(si.uv);
         float m_          = sbt_data->metallic_texture.read(si.uv);
@@ -784,19 +788,54 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         auto specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
 
         auto sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
-        auto bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (sample_probability + 1e-5f);
+        auto bsdf_value         = (specular_bsdf + kD * diffuse_bsdf) * NdotL;
+        auto bsdf_weight        = bsdf_value / (sample_probability + 1e-5f);
 
         glm::mat3 dbsdf_weightdalbedo =
             glm::mat3(bsdf_weight.derivative(0), bsdf_weight.derivative(1), bsdf_weight.derivative(2));
         glm::vec3 dbsdf_weightdm = bsdf_weight.derivative(3);
         glm::vec3 dbsdf_weightdr = bsdf_weight.derivative(4);
 
+        glm::vec3 partial_wo = dLdwo * dwodalbedo;
+        float partial_m      = glm::dot(dLdwo, dwodm);
+        float partial_r      = glm::dot(dLdwo, dwodr);
 
-        glm::vec3 dLdalbedo = dLdbsdf * dbsdf_weightdalbedo + dLdwo * dwodalbedo;
-        float dLdm          = glm::dot(dLdbsdf, dbsdf_weightdm) + glm::dot(dLdwo, dwodm);
-        float dLdr          = glm::dot(dLdbsdf, dbsdf_weightdr) + glm::dot(dLdwo, dwodr);
 
-        if(isnan(glm::length2(dLdalbedo)) || isnan(dLdm) || isnan(dLdr)) return;
+        glm::vec3 dLdalbedo = dLdbsdf * dbsdf_weightdalbedo;
+
+        if(!isfinite(dLdalbedo.x) || !isfinite(dLdalbedo.y) || !isfinite(dLdalbedo.z))
+        {
+            dLdalbedo = glm::vec3(0.0f);
+        }
+
+        float dLdm = glm::dot(dLdbsdf, dbsdf_weightdm);
+
+        if(!isfinite(dLdm))
+        {
+            dLdm = 0.0f;
+        }
+
+        float dLdr = glm::dot(dLdbsdf, dbsdf_weightdr);
+
+        if(!isfinite(dLdr))
+        {
+            dLdr = 0.0f;
+        }
+
+        if(isfinite(partial_wo.x) && isfinite(partial_wo.y) && isfinite(partial_wo.z))
+        {
+            dLdalbedo += partial_wo;
+        }
+
+        if(isfinite(partial_m))
+        {
+            dLdm += partial_m;
+        }
+
+        if(isfinite(partial_r))
+        {
+            dLdr += partial_r;
+        }
 
         {
             DERIVATIVE_INTERPOLATION_VECTOR(dLdalbedo, sbt_data->diffuse_grad);
