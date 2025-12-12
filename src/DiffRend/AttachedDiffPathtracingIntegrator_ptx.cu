@@ -98,8 +98,9 @@ extern "C" __global__ void __raygen__forward()
             {
                 bool mis_valid             = last_si.valid;
                 float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                float mis_weight           = 1.0f;    // last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                Le                         = si.emitter->evalLightDual(dsi);
+                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);    // TODO: Differentiate ?
+                mis_weight       = 1.0f;
+                Le               = si.emitter->evalLightDual(dsi);
                 ray.radiance += mis_weight * ray.throughput * Le.val();
 
                 JLe = glm::mat4x3(Le.derivative(0), Le.derivative(1), Le.derivative(2), Le.derivative(3));
@@ -125,7 +126,8 @@ extern "C" __global__ void __raygen__forward()
 
                 //     if(si.emitter == emitter) break;
 
-                //     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+                //     atcg::EmitterSamplingResult emitter_sampling =
+                //         emitter->sampleLight(si, rng);    // TODO: Differentiate
 
                 //     if(emitter_sampling.sampling_pdf == 0) break;
 
@@ -206,6 +208,7 @@ extern "C" __global__ void __raygen__forward()
                         // -------------------
 
                         Jray = Jray_ * Jray;
+                        Jray += 0.01f * glm::mat4(1) * glm::sign(rng.nextFloat() - 0.5f);
 
                         Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
                     }
@@ -338,8 +341,9 @@ extern "C" __global__ void __raygen__backward()
             {
                 bool mis_valid             = last_si.valid;
                 float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                float mis_weight           = 1.0f;    // last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                Le                         = si.emitter->evalLightDual(dsi);
+                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);    // TODO: Differentiate?
+                mis_weight       = 1.0f;
+                Le               = si.emitter->evalLightDual(dsi);
                 ray.radiance -= mis_weight * ray.throughput * Le.val();
 
                 JLe = glm::mat4x3(Le.derivative(0), Le.derivative(1), Le.derivative(2), Le.derivative(3));
@@ -393,7 +397,7 @@ extern "C" __global__ void __raygen__backward()
                 //                              glm::abs(glm::dot(si.normal, emitter_sampling.direction_to_light));
 
                 //     glm::vec3 grad_out = (ray.delta_y * (radiance_nee + 1e-4f)) / (bsdf_result.bsdf_value + 1e-4f);
-                //     si.bsdf->backwardGrad(si, emitter_sampling.direction_to_light, grad_out);
+                //     si.bsdf->evalBSDFBackward(si, emitter_sampling.direction_to_light, grad_out);
 
                 //     ray.radiance -= radiance_nee;
                 // } while(false);
@@ -448,6 +452,7 @@ extern "C" __global__ void __raygen__backward()
                         // -------------------
 
                         Jray = Jray_ * Jray;
+                        Jray += 0.01f * glm::mat4(1) * glm::sign(rng.nextFloat() - 0.5f);
                         ray.JL -= (diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf + diag(ray.throughput) * JLe);
                     }
 
@@ -485,6 +490,27 @@ extern "C" __global__ void __raygen__backward()
                     // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
                     glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight.val() + 1e-4f);
                     glm::vec2 dLdwo   = glm::zw(ray.delta_y * JL_);    // Only v2?
+
+                    // if(isnan(dLdwo.x) || isnan(dLdwo.y))
+                    // {
+                    //     printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n------\n",
+                    //            Jray[0][0],
+                    //            Jray[0][1],
+                    //            Jray[0][2],
+                    //            Jray[0][3],
+                    //            Jray[1][0],
+                    //            Jray[1][1],
+                    //            Jray[1][2],
+                    //            Jray[1][3],
+                    //            Jray[2][0],
+                    //            Jray[2][1],
+                    //            Jray[2][2],
+                    //            Jray[2][3],
+                    //            Jray[3][0],
+                    //            Jray[3][1],
+                    //            Jray[3][2],
+                    //            Jray[3][3]);
+                    // }
 
                     si.bsdf->sampleBSDFBackward(si, rng_copy, dLdbsdf, dLdwo);
 
