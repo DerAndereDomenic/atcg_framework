@@ -17,6 +17,30 @@ static GLenum toGLPrimitive(PrimitiveTopology topo)
     }
     return GL_TRIANGLES;
 }
+
+static GLenum toGLDepthFunction(DepthFunction func)
+{
+    switch(func)
+    {
+        case DepthFunction::ATCG_LESS:
+            return GL_LESS;
+        case DepthFunction::ATCG_LEQUAL:
+            return GL_LEQUAL;
+        case DepthFunction::ATCG_EQUAL:
+            return GL_EQUAL;
+        case DepthFunction::ATCG_GREATER:
+            return GL_GREATER;
+        case DepthFunction::ATCG_GEQUAL:
+            return GL_GEQUAL;
+        case DepthFunction::ATCG_ALWAYS:
+            return GL_ALWAYS;
+        case DepthFunction::ATCG_NEVER:
+            return GL_NEVER;
+        case DepthFunction::ATCG_NOTEQUAL:
+            return GL_NOTEQUAL;
+    }
+    return GL_LESS;
+}
 }    // namespace detail
 
 void RenderAPI::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
@@ -68,7 +92,7 @@ void RenderAPI::setPipeline(const GraphicsPipeline& pipeline)
         break;
     }
 
-    if(_current_pipeline.render_state.depth_testing_enabled)
+    if(_current_pipeline.render_state.depth_state.depth_testing_enabled)
     {
         glEnable(GL_DEPTH_TEST);
     }
@@ -77,19 +101,40 @@ void RenderAPI::setPipeline(const GraphicsPipeline& pipeline)
         glDisable(GL_DEPTH_TEST);
     }
 
-    if(_current_pipeline.render_state.depth_write_enabled)
+    if(_current_pipeline.render_state.depth_state.depth_write_enabled)
     {
         glDepthMask(GL_TRUE);
+        glDepthFunc(detail::toGLDepthFunction(_current_pipeline.render_state.depth_state.depth_function));
     }
     else
     {
         glDepthMask(GL_FALSE);
     }
+
+    if(_current_pipeline.render_state.blend_state.blend_enabled)
+    {
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+    else
+    {
+        glDisable(GL_BLEND);
+    }
+
+    glPointSize(_current_pipeline.render_state.point_size);
+    glLineWidth(_current_pipeline.render_state.line_size);
 }
 
 void RenderAPI::setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
     glViewport(x, y, width, height);
+}
+
+glm::ivec4 RenderAPI::getViewport() const
+{
+    GLint viewport[4];
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    return glm::ivec4(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
 
 void RenderAPI::bindVertexArray(const atcg::ref_ptr<VertexArray>& vao)
@@ -132,4 +177,18 @@ void RenderAPI::drawIndexedInstanced(uint32_t indexCount, uint32_t nInstances)
                             nInstances);
 }
 
+void RenderAPI::setClearColor(const glm::vec4& color)
+{
+    glClearColor(color.r, color.g, color.b, color.a);
+}
+
+void RenderAPI::setClearDepth(float depth)
+{
+    glClearDepth(depth);
+}
+
+void RenderAPI::clear()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
 }    // namespace atcg

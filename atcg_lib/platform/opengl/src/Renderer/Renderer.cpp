@@ -7,6 +7,7 @@
 
 #include <Renderer/ShaderManager.h>
 #include <Renderer/DrawCommand.h>
+#include <Renderer/RenderAPI.h>
 #include <Scene/Components.h>
 
 #include <Scene/Scene.h>
@@ -57,7 +58,7 @@ public:
     atcg::ref_ptr<Graph> sphere_mesh;
     atcg::ref_ptr<Graph> cylinder_mesh;
 
-    uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
+    glm::vec4 clear_color;
 
     uint32_t frame_counter = 0;
 
@@ -66,7 +67,7 @@ public:
                  const glm::vec3& color,
                  const atcg::ref_ptr<Shader>& shader,
                  const glm::mat4& model,
-                 GLenum mode,
+                 PrimitiveTopology mode,
                  uint32_t size,
                  uint32_t instances = 1);
 
@@ -105,6 +106,8 @@ public:
     std::vector<uint32_t> used_texture_units;
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
     void freeTextureUnits();
+
+    RenderAPI render_api;
 };
 
 RendererSystem::RendererSystem() {}
@@ -158,7 +161,7 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
     initFramebuffer(width, height);
 
     int total_units;
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &total_units);
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &total_units);    // TODO
     for(uint32_t i = 0; i < (uint32_t)total_units; ++i)
     {
         texture_ids.push(i);
@@ -316,13 +319,18 @@ void RendererSystem::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
                                    const glm::vec3& color,
                                    const atcg::ref_ptr<Shader>& shader,
                                    const glm::mat4& model,
-                                   GLenum mode,
+                                   PrimitiveTopology mode,
                                    uint32_t size,
                                    uint32_t instances)
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
-    vao->use();
+    GraphicsPipeline pipeline =
+        GraphicsPipeline().setPrimitiveTopology(mode).setShader(shader).setRenderState(render_state);
+
+    render_api.beginRenderPass(Framebuffer::currentFramebuffer());    // TODO
+    render_api.bindVertexArray(vao);
+
     shader->setVec3("flat_color", color);
     shader->setInt("instanced", static_cast<int>(instances > 1));
     if(camera)
@@ -335,14 +343,20 @@ void RendererSystem::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
     {
         shader->setMVP(model);
     }
-    shader->use();
 
     const atcg::ref_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
+    render_api.setPipeline(pipeline);
     if(ibo)
-        glDrawElementsInstanced(mode, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0, instances);
+    {
+        render_api.drawIndexedInstanced(static_cast<uint32_t>(ibo->getCount()), instances);
+    }
     else
-        glDrawArraysInstanced(mode, 0, static_cast<GLsizei>(size), instances);
+    {
+        render_api.drawInstanced(static_cast<uint32_t>(size), instances);
+    }
+
+    render_api.endRenderPass();
 }
 
 void RendererSystem::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
@@ -359,7 +373,14 @@ void RendererSystem::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffe
     shader->setFloat("point_size", render_state.point_size);
 
     vao_sphere->pushInstanceBuffer(vbo);
-    drawVAO(vao_sphere, camera, color, shader, model_new, GL_TRIANGLES, sphere_mesh->n_vertices(), n_instances);
+    drawVAO(vao_sphere,
+            camera,
+            color,
+            shader,
+            model_new,
+            PrimitiveTopology::ATCG_TRIANGLES,
+            sphere_mesh->n_vertices(),
+            n_instances);
     vao_sphere->popVertexBuffer();
 }
 
@@ -372,8 +393,15 @@ void RendererSystem::Impl::drawCircle(const glm::vec3& position,
 {
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
-    quad_vao->use();
-    const auto& shader = shader_manager->getShader("circle");
+    const auto& shader        = shader_manager->getShader("circle");
+    GraphicsPipeline pipeline = GraphicsPipeline()
+                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                    .setShader(shader)
+                                    .setRenderState(render_state);
+
+    render_api.beginRenderPass(Framebuffer::currentFramebuffer());    // TODO
+    render_api.bindVertexArray(quad_vao);
+
     shader->setVec3("flat_color", color);
     shader->setFloat("radius", radius);
     shader->setFloat("thickness", thickness);
@@ -386,11 +414,16 @@ void RendererSystem::Impl::drawCircle(const glm::vec3& position,
 
     const atcg::ref_ptr<IndexBuffer> ibo = quad_vao->getIndexBuffer();
 
-    shader->use();
+    render_api.setPipeline(pipeline);
     if(ibo)
-        glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
+    {
+        render_api.drawIndexed(static_cast<uint32_t>(ibo->getCount()));
+    }
     else
+    {
         ATCG_ERROR("Missing IndexBuffer!");
+    }
+    render_api.endRenderPass();
 }
 
 void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
@@ -417,7 +450,7 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
                     color,
                     shader,
                     model,
-                    GL_TRIANGLES,
+                    PrimitiveTopology::ATCG_TRIANGLES,
                     mesh->n_vertices());    // TODO
         }
         break;
@@ -426,7 +459,13 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
             ATCG_ASSERT(shader, "Tried rendering a point cloud without valid shader");
             shader->setInt("entityID", entity_id);
             setMaterial(material, shader);
-            drawVAO(mesh->getVerticesArray(), camera, color, shader, model, GL_POINTS, mesh->n_vertices());
+            drawVAO(mesh->getVerticesArray(),
+                    camera,
+                    color,
+                    shader,
+                    model,
+                    PrimitiveTopology::ATCG_POINTS,
+                    mesh->n_vertices());
         }
         break;
         case ATCG_DRAW_MODE_POINTS_SPHERE:
@@ -449,7 +488,14 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
             setMaterial(material, override_shader);
             atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
             points->bindStorage(0);
-            drawVAO(mesh->getEdgesArray(), camera, color, override_shader, model, GL_POINTS, mesh->n_edges(), 1);
+            drawVAO(mesh->getEdgesArray(),
+                    camera,
+                    color,
+                    override_shader,
+                    model,
+                    PrimitiveTopology::ATCG_POINTS,
+                    mesh->n_edges(),
+                    1);
         }
         break;
         case ATCG_DRAW_MODE_EDGES_CYLINDER:
@@ -468,7 +514,14 @@ void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
             atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
             atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
             uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
-            drawVAO(vao_mesh, camera, color, shader, model, GL_TRIANGLES, mesh->n_vertices(), n_instances);
+            drawVAO(vao_mesh,
+                    camera,
+                    color,
+                    shader,
+                    model,
+                    PrimitiveTopology::ATCG_TRIANGLES,
+                    mesh->n_vertices(),
+                    n_instances);
         }
         break;
     }
@@ -492,7 +545,14 @@ void RendererSystem::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
     points->bindStorage(0);
 
     vao_cylinder->pushInstanceBuffer(indices);
-    drawVAO(vao_cylinder, camera, color, shader, model, GL_TRIANGLES, cylinder_mesh->n_vertices(), num_edges);
+    drawVAO(vao_cylinder,
+            camera,
+            color,
+            shader,
+            model,
+            PrimitiveTopology::ATCG_TRIANGLES,
+            cylinder_mesh->n_vertices(),
+            num_edges);
     vao_cylinder->popVertexBuffer();
 }
 
@@ -515,11 +575,6 @@ void RendererSystem::init(uint32_t width,
     toggleDepthTesting(true);
     toggleCulling(true);
     setCullFace(ATCG_BACK_FACE_CULLING);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glEnable(GL_MULTISAMPLE);
     setViewport(0, 0, width, height);
 
     impl->shader_manager = shader_manager;
@@ -552,26 +607,35 @@ void RendererSystem::finishFrame()
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 #ifndef ATCG_HEADLESS
-    Framebuffer::useDefault();
-    clear();
-    impl->quad_vao->use();
-    auto shader = impl->shader_manager->getShader("screen");
+    auto shader               = impl->shader_manager->getShader("screen");
+    GraphicsPipeline pipeline = GraphicsPipeline()
+                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                    .setRenderState(impl->render_state)
+                                    .setShader(shader);
+
+    impl->render_api.beginRenderPass(nullptr);
+    impl->render_api.bindVertexArray(impl->quad_vao);
+
+    impl->render_api.clear();
+
     shader->setInt("screen_texture", 0);
     shader->selectSubroutine("_getEntityID", "getDefaultID");
 
-    shader->use();
-    impl->screen_fbo->getColorAttachement()->use();
+    impl->render_api.bindTexture(0, impl->screen_fbo->getColorAttachement());
+    impl->render_api.setPipeline(pipeline);
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
+    impl->render_api.drawIndexed(static_cast<uint32_t>(ibo->getCount()));
+    impl->render_api.endRenderPass();
 #endif
     ++impl->frame_counter;
 
     GLint maxTextureUnits;
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextureUnits);
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextureUnits);    // TODO
 
     for(int i = 0; i < maxTextureUnits; ++i)
     {
+        // TODO
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, 0);
         glBindTexture(GL_TEXTURE_3D, 0);
@@ -591,97 +655,49 @@ void RendererSystem::finish() const
 void RendererSystem::setClearColor(const glm::vec4& color)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_state.clear_color = color;
-    glClearColor(color.r, color.g, color.b, color.a);
+    impl->clear_color = color;
+    impl->render_api.setClearColor(color);
 }
 
 glm::vec4 RendererSystem::getClearColor() const
 {
-    return impl->render_state.clear_color;
+    return impl->clear_color;
 }
 
 void RendererSystem::setPointSize(const float& size)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->render_state.point_size = size;
-    glPointSize(size);
 }
 
 void RendererSystem::setLineSize(const float& size)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->render_state.line_size = size;
-    glLineWidth(size);
 }
 
 void RendererSystem::toggleDepthTesting(bool enable)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->clear_flag = GL_COLOR_BUFFER_BIT;
-    switch(enable)
-    {
-        case true:
-        {
-            glEnable(GL_DEPTH_TEST);
-            impl->clear_flag |= GL_DEPTH_BUFFER_BIT;
-        }
-        break;
-        case false:
-        {
-            glDisable(GL_DEPTH_TEST);
-        }
-        break;
-    }
+    impl->render_state.depth_state.depth_testing_enabled = enable;
 }
 
 void RendererSystem::toggleCulling(bool enable)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     impl->render_state.culling_enabled = enable;
-    switch(enable)
-    {
-        case true:
-        {
-            glEnable(GL_CULL_FACE);
-        }
-        break;
-        case false:
-        {
-            glDisable(GL_CULL_FACE);
-        }
-        break;
-    }
 }
 
 void RendererSystem::setCullFace(CullMode mode)
 {
     impl->render_state.cull_mode = mode;
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    switch(mode)
-    {
-        case CullMode::ATCG_BACK_FACE_CULLING:
-        {
-            glCullFace(GL_BACK);
-        }
-        break;
-        case CullMode::ATCG_FRONT_FACE_CULLING:
-        {
-            glCullFace(GL_FRONT);
-        }
-        break;
-        case CullMode::ATCG_BOTH_FACE_CULLING:
-        {
-            glCullFace(GL_FRONT_AND_BACK);
-        }
-        break;
-    }
 }
-
 
 void RendererSystem::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    glViewport(x, y, width, height);
+    impl->render_api.setViewport(x, y, width, height);
 }
 
 void RendererSystem::setDefaultViewport()
@@ -691,9 +707,7 @@ void RendererSystem::setDefaultViewport()
 
 glm::vec4 RendererSystem::getViewport() const
 {
-    GLint old_viewport[4];
-    glGetIntegerv(GL_VIEWPORT, old_viewport);
-    return glm::make_vec4(old_viewport);
+    return impl->render_api.getViewport();
 }
 
 void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_texture,
@@ -701,6 +715,7 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
                                    const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
                                    const atcg::ref_ptr<TextureCube>& prefiltered_cubemap)
 {
+    // TODO
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     bool culling = impl->render_state.culling_enabled;
@@ -866,7 +881,7 @@ void RendererSystem::pushTextureID(const uint32_t id)
 void RendererSystem::clear() const
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    glClear(impl->clear_flag);
+    impl->render_api.clear();
 
     if(Framebuffer::currentFramebuffer() == impl->screen_fbo)
     {
@@ -919,8 +934,14 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    impl->quad_vao->use();
-    auto shader = impl->shader_manager->getShader("screen");
+    auto shader               = impl->shader_manager->getShader("screen");
+    GraphicsPipeline pipeline = GraphicsPipeline()
+                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                    .setRenderState(impl->render_state)
+                                    .setShader(shader);
+
+    impl->render_api.beginRenderPass(Framebuffer::currentFramebuffer());
+    impl->render_api.bindVertexArray(impl->quad_vao);
     shader->setInt("screen_texture", 0);
 
     if(entity_ids)
@@ -934,29 +955,29 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
         shader->selectSubroutine("_getEntityID", "getDefaultID");
     }
 
-    shader->use();
-    img->use();
+    impl->render_api.bindTexture(0, img);
+    impl->render_api.setPipeline(pipeline);
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(ibo->getCount()), GL_UNSIGNED_INT, (void*)0);
+    impl->render_api.drawIndexed(static_cast<uint32_t>(ibo->getCount()));
+    impl->render_api.endRenderPass();
 }
 
 void RendererSystem::drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera)
 {
+    // TODO
     uint32_t skybox_id = popTextureID();
-    glDepthMask(GL_FALSE);
-    glDepthFunc(GL_LEQUAL);
-    bool culling = impl->render_state.culling_enabled;
-    toggleCulling(false);
+    impl->render_state.depth_state.setDepthFunction(DepthFunction::ATCG_LEQUAL).enableDepthWrite(false);
+    bool culling                       = impl->render_state.culling_enabled;
+    impl->render_state.culling_enabled = false;
     impl->shader_manager->getShader("skybox")->use();
     impl->shader_manager->getShader("skybox")->setInt("skybox", skybox_id);
     skybox_cubemap->use(skybox_id);
 
     draw(impl->cube, camera, glm::mat4(1), glm::vec3(1), impl->shader_manager->getShader("skybox"));
 
-    glDepthMask(GL_TRUE);
-    glDepthFunc(GL_LESS);
-    toggleCulling(culling);
+    impl->render_state.depth_state.setDepthFunction(DepthFunction::ATCG_LESS).enableDepthWrite(true);
+    impl->render_state.culling_enabled = culling;
     pushTextureID(skybox_id);
 }
 
@@ -1000,7 +1021,7 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
                           comp.color,
                           impl->shader_manager->getShader("image_display"),
                           model,
-                          GL_TRIANGLES,
+                          PrimitiveTopology::ATCG_TRIANGLES,
                           impl->quad_vao->getIndexBuffer()->getCount());
             toggleCulling(culling_enabled);
             pushTextureID(id);
@@ -1019,7 +1040,7 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
                           comp.color,
                           impl->shader_manager->getShader("image_display"),
                           model,
-                          GL_TRIANGLES,
+                          PrimitiveTopology::ATCG_TRIANGLES,
                           impl->quad_vao->getIndexBuffer()->getCount());
             toggleCulling(culling_enabled);
             pushTextureID(id);
@@ -1145,6 +1166,7 @@ torch::Tensor RendererSystem::getZBuffer(const torch::DeviceType& device) const
 
 int RendererSystem::getEntityIndex(const glm::vec2& mouse) const
 {
+    // TODO
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     impl->screen_fbo->use();
