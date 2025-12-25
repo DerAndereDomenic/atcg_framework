@@ -154,7 +154,7 @@ void Scene::draw(Dictionary& context)
         return;
     }
 
-    context.setValue("scene", this);
+    context.setValue("scene", shared_from_this());
     context.setValue("has_skybox", impl->has_skybox);
     context.setValue("skybox", impl->skybox);
 

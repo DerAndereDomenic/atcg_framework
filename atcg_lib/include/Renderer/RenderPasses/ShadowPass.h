@@ -9,7 +9,7 @@ namespace atcg
  *
  * This pass reads the following variables from the context:
  * * context<RendererSystem*>["renderer"] - The renderer
- * * context<Scene*>["scene"] - The scene
+ * * context<atcg::ref_ptr<Scene>>["scene"] - The scene
  *
  * data:
  * * data<atcg::ref_ptr<Framebuffer>>["point_light_framebuffer"] - The internal framebuffer used for the depth passes

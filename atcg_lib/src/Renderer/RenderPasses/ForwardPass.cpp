@@ -25,7 +25,7 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
         {
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
-            auto scene       = context.getValue<Scene*>("scene");
+            auto scene       = context.getValue<atcg::ref_ptr<Scene>>("scene");
             auto camera      = context.getValue<atcg::ref_ptr<Camera>>("camera");
             const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
@@ -72,7 +72,7 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
             }
             for(auto e: view)
             {
-                Entity entity(e, scene);
+                Entity entity(e, scene.get());
                 if(entity.hasComponent<CustomRenderComponent>())
                 {
                     CustomRenderComponent renderer = entity.getComponent<CustomRenderComponent>();

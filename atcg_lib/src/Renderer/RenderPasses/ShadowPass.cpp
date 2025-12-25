@@ -26,7 +26,7 @@ void ShadowPass::initRenderPass()
         {
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
-            auto scene = context.getValue<Scene*>("scene");
+            auto scene = context.getValue<atcg::ref_ptr<Scene>>("scene");
 
             float n              = 0.1f;
             float f              = 100.0f;
@@ -78,7 +78,7 @@ void ShadowPass::initRenderPass()
             uint32_t light_idx = 0;
             for(auto e: light_view)
             {
-                atcg::Entity entity(e, scene);
+                atcg::Entity entity(e, scene.get());
 
                 auto& point_light = entity.getComponent<PointLightComponent>();
                 auto& transform   = entity.getComponent<TransformComponent>();
@@ -122,7 +122,7 @@ void ShadowPass::initRenderPass()
                 auxiliary.setValue("override_shader", depth_pass_shader);
                 for(auto e: view)
                 {
-                    atcg::Entity entity(e, scene);
+                    atcg::Entity entity(e, scene.get());
 
                     renderComponent<MeshRenderComponent>(renderer, entity, camera, auxiliary);
                 }

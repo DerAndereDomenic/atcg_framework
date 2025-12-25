@@ -68,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed internal format of TextureFormat::RINT8 to be an unsigned integer
 - A graphics context now stores the full fbo, not just its renderer ID
 - Framebuffer::bindByID was removed
+- RenderPasses now expect the scene to be a shared_ptr
 
 ### Fixed
 
