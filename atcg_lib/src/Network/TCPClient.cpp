@@ -71,7 +71,8 @@ std::vector<uint8_t> TCPClient::sendAndWait(const std::vector<uint8_t>& data)
     uint32_t message_size = 0;
     do
     {
-        impl->socket.receive((char*)(&message_size), sizeof(uint32_t) - total_received, received);
+        sf::Socket::Status status =
+            impl->socket.receive((char*)(&message_size), sizeof(uint32_t) - total_received, received);
         total_received += received;
     } while(total_received < sizeof(uint32_t));
 
@@ -80,7 +81,8 @@ std::vector<uint8_t> TCPClient::sendAndWait(const std::vector<uint8_t>& data)
     total_received = 0;
     while(total_received < expected_size)
     {
-        impl->socket.receive((char*)(rec_data.data() + total_received), expected_size - total_received, received);
+        sf::Socket::Status status =
+            impl->socket.receive((char*)(rec_data.data() + total_received), expected_size - total_received, received);
         total_received += received;
     }
 

@@ -206,10 +206,10 @@ void VRSystem::onUpdate(const float delta_time)
 
     // Upload to HMD
     {
-        vr::Texture_t left_eye_texture  = {(void*)(uint64_t*)impl->render_target_left->getColorAttachement()->getID(),
+        vr::Texture_t left_eye_texture  = {(void*)(uint64_t)impl->render_target_left->getColorAttachement()->getID(),
                                            vr::TextureType_OpenGL,
                                            vr::ColorSpace::ColorSpace_Linear};
-        vr::Texture_t right_eye_texture = {(void*)(uint64_t*)impl->render_target_right->getColorAttachement()->getID(),
+        vr::Texture_t right_eye_texture = {(void*)(uint64_t)impl->render_target_right->getColorAttachement()->getID(),
                                            vr::TextureType_OpenGL,
                                            vr::ColorSpace::ColorSpace_Linear};
 
