@@ -24,7 +24,7 @@ public:
 
     ~Impl() = default;
 
-    RenderState render_state;
+    RasterizerState render_state;
     std::vector<DrawCommand> draw_commands;
 
     atcg::ref_ptr<Context> context;

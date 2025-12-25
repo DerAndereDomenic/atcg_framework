@@ -8,7 +8,7 @@ namespace atcg
 struct GraphicsPipeline
 {
     atcg::ref_ptr<Shader> shader;
-    RenderState render_state;
+    RasterizerState render_state;
     PrimitiveTopology primitive_type = PrimitiveTopology::ATCG_TRIANGLES;
 
     ATCG_INLINE GraphicsPipeline() = default;
@@ -19,7 +19,7 @@ struct GraphicsPipeline
         return *this;
     }
 
-    ATCG_INLINE GraphicsPipeline setRenderState(const RenderState& state)
+    ATCG_INLINE GraphicsPipeline setRenderState(const RasterizerState& state)
     {
         render_state = state;
         return *this;
