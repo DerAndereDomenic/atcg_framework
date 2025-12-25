@@ -66,6 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - In the SkyboxPass, the skybox is now a context variable
 - All shader now output linear color that needs to be tonemapped
 - Changed internal format of TextureFormat::RINT8 to be an unsigned integer
+- A graphics context now stores the full fbo, not just its renderer ID
+- Framebuffer::bindByID was removed
 
 ### Fixed
 

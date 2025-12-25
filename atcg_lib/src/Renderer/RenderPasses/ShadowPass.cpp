@@ -35,7 +35,7 @@ void ShadowPass::initRenderPass()
             const atcg::ref_ptr<Shader>& depth_pass_shader = renderer->getShaderManager()->getShader("depth_pass");
             depth_pass_shader->setFloat("far_plane", f);
 
-            uint32_t active_fbo = atcg::Framebuffer::currentFramebuffer();
+            auto active_fbo = atcg::Framebuffer::currentFramebuffer();
 
             glm::vec4 old_viewport = renderer->getViewport();
 
@@ -131,7 +131,7 @@ void ShadowPass::initRenderPass()
             }
 
             renderer->setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
-            atcg::Framebuffer::bindByID(active_fbo);
+            active_fbo ? active_fbo->use() : atcg::Framebuffer::useDefault();
         });
 }
 

@@ -721,7 +721,7 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
     capture_cam->setProjection(captureProjection);
     // convert HDR equirectangular environment map to cubemap equivalent
 
-    uint32_t current_fbo = atcg::Framebuffer::currentFramebuffer();
+    auto current_fbo = atcg::Framebuffer::currentFramebuffer();
     int old_viewport[4];
     glGetIntegerv(GL_VIEWPORT, old_viewport);
 
@@ -732,11 +732,11 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
         atcg::ref_ptr<Shader> equirect_shader = impl->shader_manager->getShader("equirectangularToCubemap");
         float width                           = skybox_cubemap->width();
         float height                          = skybox_cubemap->height();
-        Framebuffer captureFBO(width, height);
-        captureFBO.attachDepth();
+        atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(width, height);
+        captureFBO->attachDepth();
 
         glViewport(0, 0, width, height);    // don't forget to configure the viewport to the capture dimensions.
-        captureFBO.use();
+        captureFBO->use();
 
         equirect_shader->use();
         skybox_texture->use(cubemap_id);
@@ -763,11 +763,11 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
         atcg::ref_ptr<Shader> cubeconv_shader = impl->shader_manager->getShader("cubeMapConvolution");
         float width                           = irradiance_cubemap->width();
         float height                          = irradiance_cubemap->height();
-        Framebuffer captureFBO(width, height);
-        captureFBO.attachDepth();
+        atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(width, height);
+        captureFBO->attachDepth();
 
         glViewport(0, 0, width, height);    // don't forget to configure the viewport to the capture dimensions.
-        captureFBO.use();
+        captureFBO->use();
 
         cubeconv_shader->use();
         skybox_cubemap->use(cubemap_id);
@@ -802,9 +802,9 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
             unsigned int mip_height = prefiltered_cubemap->height() * std::pow(0.5, mip);
 
             // Recreate captureFBO with new resolution
-            Framebuffer captureFBO(mip_width, mip_height);
-            captureFBO.attachDepth();
-            captureFBO.use();
+            atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(mip_width, mip_height);
+            captureFBO->attachDepth();
+            captureFBO->use();
 
             skybox_cubemap->use(cubemap_id);
 
@@ -829,7 +829,7 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
     }
 
     pushTextureID(cubemap_id);
-    Framebuffer::bindByID(current_fbo);
+    current_fbo ? current_fbo->use() : Framebuffer::useDefault();
     setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
     toggleCulling(culling);
 }
@@ -870,7 +870,7 @@ void RendererSystem::clear() const
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     glClear(impl->clear_flag);
 
-    if(Framebuffer::currentFramebuffer() == impl->screen_fbo->getID())
+    if(Framebuffer::currentFramebuffer() == impl->screen_fbo)
     {
         int value = -1;
         impl->screen_fbo->getColorAttachement(1)->fill(&value);

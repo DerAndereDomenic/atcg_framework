@@ -79,14 +79,14 @@ Framebuffer::~Framebuffer()
     _color_attachements.clear();
 }
 
-void Framebuffer::use() const
+void Framebuffer::use()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, _ID);
     auto context = ContextManager::getCurrentContext();
-    context->setCurrentFBO(_ID);
+    context->setCurrentFBO(shared_from_this());
 }
 
-bool Framebuffer::complete() const
+bool Framebuffer::complete()
 {
     use();
 
@@ -196,26 +196,19 @@ void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, boo
     glDrawBuffers(buffers.size(), buffers.data());
 
     // Restore old binding status
-    uint32_t current_fbo = currentFramebuffer();
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, current_fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_fbo);
-}
-
-void Framebuffer::bindByID(uint32_t fbo_id)
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-    auto context = ContextManager::getCurrentContext();
-    context->setCurrentFBO(fbo_id);
+    atcg::ref_ptr<Framebuffer> current_fbo = currentFramebuffer();
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, current_fbo->getID());
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_fbo->getID());
 }
 
 void Framebuffer::useDefault()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     auto context = ContextManager::getCurrentContext();
-    context->setCurrentFBO(0);
+    context->setCurrentFBO(nullptr);
 }
 
-uint32_t Framebuffer::currentFramebuffer()
+atcg::ref_ptr<Framebuffer> Framebuffer::currentFramebuffer()
 {
     auto context = ContextManager::getCurrentContext();
     return context->getCurrentFBO();

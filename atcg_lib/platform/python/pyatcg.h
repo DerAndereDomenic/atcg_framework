@@ -1117,7 +1117,6 @@ inline void defineBindings(py::module_& m)
         .def("width", &atcg::Framebuffer::width)
         .def("height", &atcg::Framebuffer::height)
         .def("currentFramebuffer", &atcg::Framebuffer::currentFramebuffer)
-        .def("bindByID", &atcg::Framebuffer::bindByID)
         .def("useDefault", &atcg::Framebuffer::useDefault)
         .def("complete", &atcg::Framebuffer::complete);
 

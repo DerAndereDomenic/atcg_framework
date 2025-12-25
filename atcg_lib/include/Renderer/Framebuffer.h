@@ -96,7 +96,7 @@ struct FramebufferSpecification
 /**
  * @brief Class to model a framebuffer
  */
-class Framebuffer
+class Framebuffer : public std::enable_shared_from_this<Framebuffer>
 {
 public:
     Framebuffer() = default;
@@ -124,14 +124,14 @@ public:
     /**
      * @brief Use the framebuffer
      */
-    void use() const;
+    void use();
 
     /**
      * @brief Complete the Framebuffer. Should be called after all attachements where made
      *
      * @return True if it is complete, false otherwise
      */
-    bool complete() const;
+    bool complete();
 
     /**
      * @brief Add a color attachement
@@ -233,14 +233,7 @@ public:
      *
      * @return ID of the fbo
      */
-    static uint32_t currentFramebuffer();
-
-    /**
-     * @brief Bind a specific framebuffer by ID
-     *
-     * @param ID The id to bind
-     */
-    static void bindByID(uint32_t fbo_id);
+    static atcg::ref_ptr<Framebuffer> currentFramebuffer();
 
     /**
      * @brief Use the default framebuffer
