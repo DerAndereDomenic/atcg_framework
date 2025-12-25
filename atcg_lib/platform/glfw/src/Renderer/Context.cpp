@@ -102,6 +102,9 @@ void Context::initGraphicsAPI()
 #ifndef NDEBUG
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(detail::MessageCallback, 0);
+        glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+        glEnable(GL_MULTISAMPLE);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 #endif
         detail::s_opengl_initialized = true;
     }
