@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added vector traits for compile time glm checks
 - Added an application counter
 - Added ior textures
+- Added RendererState
 
 ### Changed
 

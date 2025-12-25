@@ -6,6 +6,7 @@
 #include <Core/SystemRegistry.h>
 
 #include <Renderer/ShaderManager.h>
+#include <Renderer/DrawCommand.h>
 #include <Scene/Components.h>
 
 #include <Scene/Scene.h>
@@ -21,6 +22,9 @@ public:
     Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<Context>& context);
 
     ~Impl() = default;
+
+    RenderState render_state;
+    std::vector<DrawCommand> draw_commands;
 
     atcg::ref_ptr<Context> context;
     atcg::ref_ptr<ShaderManagerSystem> shader_manager;
@@ -52,14 +56,8 @@ public:
 
     atcg::ref_ptr<Graph> sphere_mesh;
     atcg::ref_ptr<Graph> cylinder_mesh;
-    bool culling_enabled = false;
-    CullMode cull_mode;
 
     uint32_t clear_flag = GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT;
-    glm::vec4 clear_color;
-
-    float point_size = 1.0f;
-    float line_size  = 1.0f;
 
     uint32_t frame_counter = 0;
 
@@ -358,7 +356,7 @@ void RendererSystem::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffe
 
     atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVerticesArray();
     glm::mat4 model_new                   = model;
-    shader->setFloat("point_size", point_size);
+    shader->setFloat("point_size", render_state.point_size);
 
     vao_sphere->pushInstanceBuffer(vbo);
     drawVAO(vao_sphere, camera, color, shader, model_new, GL_TRIANGLES, sphere_mesh->n_vertices(), n_instances);
@@ -593,26 +591,26 @@ void RendererSystem::finish() const
 void RendererSystem::setClearColor(const glm::vec4& color)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->clear_color = color;
+    impl->render_state.clear_color = color;
     glClearColor(color.r, color.g, color.b, color.a);
 }
 
 glm::vec4 RendererSystem::getClearColor() const
 {
-    return impl->clear_color;
+    return impl->render_state.clear_color;
 }
 
 void RendererSystem::setPointSize(const float& size)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->point_size = size;
+    impl->render_state.point_size = size;
     glPointSize(size);
 }
 
 void RendererSystem::setLineSize(const float& size)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->line_size = size;
+    impl->render_state.line_size = size;
     glLineWidth(size);
 }
 
@@ -639,7 +637,7 @@ void RendererSystem::toggleDepthTesting(bool enable)
 void RendererSystem::toggleCulling(bool enable)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->culling_enabled = enable;
+    impl->render_state.culling_enabled = enable;
     switch(enable)
     {
         case true:
@@ -657,7 +655,7 @@ void RendererSystem::toggleCulling(bool enable)
 
 void RendererSystem::setCullFace(CullMode mode)
 {
-    impl->cull_mode = mode;
+    impl->render_state.cull_mode = mode;
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
     switch(mode)
     {
@@ -705,7 +703,7 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    bool culling = impl->culling_enabled;
+    bool culling = impl->render_state.culling_enabled;
     toggleCulling(false);
     atcg::ref_ptr<PerspectiveCamera> capture_cam = atcg::make_ref<atcg::PerspectiveCamera>();
     glm::mat4 captureProjection                  = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
@@ -948,7 +946,7 @@ void RendererSystem::drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap
     uint32_t skybox_id = popTextureID();
     glDepthMask(GL_FALSE);
     glDepthFunc(GL_LEQUAL);
-    bool culling = impl->culling_enabled;
+    bool culling = impl->render_state.culling_enabled;
     toggleCulling(false);
     impl->shader_manager->getShader("skybox")->use();
     impl->shader_manager->getShader("skybox")->setInt("skybox", skybox_id);
@@ -991,7 +989,7 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
         if(comp.image())
         {
             uint32_t id          = popTextureID();
-            bool culling_enabled = impl->culling_enabled;
+            bool culling_enabled = impl->render_state.culling_enabled;
             toggleCulling(false);
             model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
             impl->shader_manager->getShader("image_display")->setInt("screen_texture", id);
@@ -1010,7 +1008,7 @@ void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::
         else if(comp.render_preview && comp.preview)
         {
             uint32_t id          = popTextureID();
-            bool culling_enabled = impl->culling_enabled;
+            bool culling_enabled = impl->render_state.culling_enabled;
             toggleCulling(false);
             model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
             impl->shader_manager->getShader("image_display")->setInt("screen_texture", id);
@@ -1050,7 +1048,7 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     float distance     = glm::abs(camera->getPosition().y);
-    float current_size = impl->line_size;
+    float current_size = impl->render_state.line_size;
 
     setLineSize(1.0f);
 
