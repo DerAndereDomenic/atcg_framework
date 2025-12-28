@@ -1,8 +1,10 @@
 #include <Asset/AssetManagerSystem.h>
 
+#include <Core/Path.h>
 #include <Asset/AssetImporter.h>
 #include <Asset/AssetExporter.h>
 #include <Asset/Project.h>
+#include <DataStructure/GraphLoader.h>
 
 #include <json.hpp>
 
@@ -224,6 +226,20 @@ void AssetManagerSystem::clear()
 void AssetManagerSystem::destroy()
 {
     clear();
+}
+
+void AssetManagerSystem::loadStandardAssets()
+{
+    _sphere_mesh   = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
+    _cylinder_mesh = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
+
+    auto img = IO::imread((atcg::resource_directory() / "LUT.hdr").string());
+    TextureSpecification spec_lut;
+    spec_lut.width             = img->width();
+    spec_lut.height            = img->height();
+    spec_lut.format            = TextureFormat::RGBFLOAT;
+    spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+    _lut_texture               = atcg::Texture2D::create(img, spec_lut);
 }
 
 }    // namespace atcg

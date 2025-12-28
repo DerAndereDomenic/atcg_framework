@@ -2,6 +2,8 @@
 
 #include <Asset/Asset.h>
 #include <Core/SystemRegistry.h>
+#include <DataStructure/Graph.h>
+#include <Renderer/Texture.h>
 
 namespace atcg
 {
@@ -150,9 +152,40 @@ public:
      */
     void destroy();
 
+    /**
+     * @brief Load standard assets like sphere mesh, cylinder mesh, lut texture
+     */
+    void loadStandardAssets();
+
+    /**
+     * @brief Get the standard sphere mesh
+     *
+     * @return The sphere mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getSphereMesh() const { return _sphere_mesh; }
+
+    /**
+     * @brief Get the standard cylinder mesh
+     *
+     * @return The cylinder mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getCylinderMesh() const { return _cylinder_mesh; }
+
+    /**
+     * @brief Get the standard lut texture
+     *
+     * @return The lut texture
+     */
+    ATCG_INLINE atcg::ref_ptr<Texture2D> getLUTTexture() const { return _lut_texture; }
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
+
+private:
+    atcg::ref_ptr<Graph> _sphere_mesh;
+    atcg::ref_ptr<Graph> _cylinder_mesh;
+    atcg::ref_ptr<Texture2D> _lut_texture;
 };
 
 namespace AssetManager
@@ -347,6 +380,45 @@ ATCG_INLINE void clear()
 {
     SystemRegistry::instance()->getSystem<AssetManagerSystem>()->clear();
 }
+
+/**
+ * @brief Load standard assets like sphere mesh, cylinder mesh, lut texture
+ */
+ATCG_INLINE void loadStandardAssets()
+{
+    SystemRegistry::instance()->getSystem<AssetManagerSystem>()->loadStandardAssets();
+}
+
+/**
+ * @brief Get the standard sphere mesh
+ *
+ * @return The sphere mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getSphereMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getSphereMesh();
+}
+
+/**
+ * @brief Get the standard cylinder mesh
+ *
+ * @return The cylinder mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getCylinderMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getCylinderMesh();
+}
+
+/**
+ * @brief Get the standard lut texture
+ *
+ * @return The lut texture
+ */
+ATCG_INLINE atcg::ref_ptr<Texture2D> getLUTTexture()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getLUTTexture();
+}
+
 }    // namespace AssetManager
 
 }    // namespace atcg
