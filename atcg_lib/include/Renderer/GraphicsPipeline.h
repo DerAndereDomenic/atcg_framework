@@ -19,7 +19,7 @@ struct GraphicsPipeline
         return *this;
     }
 
-    ATCG_INLINE GraphicsPipeline setRenderState(const RasterizerState& state)
+    ATCG_INLINE GraphicsPipeline setRasterizerState(const RasterizerState& state)
     {
         render_state = state;
         return *this;
