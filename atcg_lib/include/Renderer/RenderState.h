@@ -2,19 +2,6 @@
 
 namespace atcg
 {
-/**
- * @brief An enum defining draw modes.
- *
- */
-enum DrawMode
-{
-    ATCG_DRAW_MODE_TRIANGLE,          // Draw as standard mesh
-    ATCG_DRAW_MODE_POINTS,            // Draw as points (screen space)
-    ATCG_DRAW_MODE_POINTS_SPHERE,     // Draw points as spheres
-    ATCG_DRAW_MODE_EDGES,             // Draw edges
-    ATCG_DRAW_MODE_EDGES_CYLINDER,    // Draw edges as 3D cylinders
-    ATCG_DRAW_MODE_INSTANCED          // Draw a standard mesh instanced
-};
 
 /**
  * @brief An enum defining cull modes.
@@ -31,6 +18,7 @@ enum class PrimitiveTopology
 {
     ATCG_POINTS,
     ATCG_TRIANGLES,
+    ATCG_LINES
 };
 
 enum class DepthFunction
