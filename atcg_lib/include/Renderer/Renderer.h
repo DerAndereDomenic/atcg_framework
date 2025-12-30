@@ -180,14 +180,6 @@ public:
     void drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::ref_ptr<Texture2D>& entity_ids = nullptr);
 
     /**
-     * @brief Draw a skybox
-     *
-     * @param skybox The skybox cubemap
-     * @param camera The camera
-     */
-    void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera);
-
-    /**
      * @brief Draws a CAD grid with three resolutions (0.1, 1, 10)
      *
      * @param camera The camera
@@ -421,17 +413,6 @@ ATCG_INLINE void drawVAO(const atcg::ref_ptr<VertexArray>& vao,
                          const size_t instances = 1)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->drawVAO(vao, camera, model, pipeline, size, instances);
-}
-
-/**
- * @brief Draw a skybox
- *
- * @param skybox The skybox cubemap
- * @param camera The camera
- */
-ATCG_INLINE void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(skybox_cubemap, camera);
 }
 
 /**

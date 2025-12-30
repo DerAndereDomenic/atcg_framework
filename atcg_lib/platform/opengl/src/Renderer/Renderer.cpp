@@ -616,29 +616,6 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
     impl->render_api.endRenderPass();
 }
 
-void RendererSystem::drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    ATCG_ASSERT(impl->render_pass_started, "Cannot draw skybox while no render pass is active.");
-
-    auto shader = impl->shader_manager->getShader("skybox");
-    GraphicsPipeline pipeline =
-        GraphicsPipeline()
-            .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
-            .setRasterizerState(RasterizerState().enableCulling(false).setDepthState(
-                DepthState().setDepthFunction(DepthFunction::ATCG_LEQUAL).enableDepthWrite(false)))
-            .setShader(shader);
-
-    uint32_t skybox_id = popTextureID();
-    shader->setInt("skybox", skybox_id);
-    impl->render_api.bindTexture(skybox_id, skybox_cubemap);
-    impl->render_api.bindPipeline(pipeline);
-
-    drawVAO(impl->cube->getVerticesArray(), camera, glm::mat4(1), pipeline, impl->cube->n_vertices());
-
-    pushTextureID(skybox_id);
-}
-
 void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency_)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
