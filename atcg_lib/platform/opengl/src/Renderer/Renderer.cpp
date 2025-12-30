@@ -6,7 +6,6 @@
 #include <Core/SystemRegistry.h>
 
 #include <Renderer/ShaderManager.h>
-#include <Renderer/DrawCommand.h>
 #include <Renderer/RenderAPI.h>
 #include <Scene/Components.h>
 
@@ -24,12 +23,8 @@ public:
 
     ~Impl() = default;
 
-    RasterizerState render_state;
-    std::vector<DrawCommand> draw_commands;
-
     atcg::ref_ptr<Context> context;
     atcg::ref_ptr<ShaderManagerSystem> shader_manager;
-    RendererSystem* renderer = nullptr;
 
     atcg::ref_ptr<VertexArray> quad_vao;
     atcg::ref_ptr<VertexBuffer> quad_vbo;
@@ -49,41 +44,11 @@ public:
 
     void initFramebuffer(uint32_t width, uint32_t height);
 
-    atcg::ref_ptr<Material> standard_material = atcg::make_ref<Material>();
-
-    atcg::ref_ptr<Texture2D> lut;
-
     atcg::ref_ptr<Framebuffer> screen_fbo;
-
-    atcg::ref_ptr<Graph> sphere_mesh;
-    atcg::ref_ptr<Graph> cylinder_mesh;
 
     glm::vec4 clear_color;
 
     uint32_t frame_counter = 0;
-
-    void drawVAO(const atcg::ref_ptr<VertexArray>& vao,
-                 const atcg::ref_ptr<Camera>& camera,
-                 const glm::vec3& color,
-                 const atcg::ref_ptr<Shader>& shader,
-                 const glm::mat4& model,
-                 PrimitiveTopology mode,
-                 uint32_t size,
-                 uint32_t instances = 1);
-
-    void drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
-                               const atcg::ref_ptr<Camera>& camera,
-                               const glm::mat4& model,
-                               const glm::vec3& color,
-                               const atcg::ref_ptr<Shader>& shader,
-                               uint32_t n_instances);
-
-    void drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
-                  const atcg::ref_ptr<VertexBuffer>& indices,
-                  const atcg::ref_ptr<Shader>& shader,
-                  const atcg::ref_ptr<Camera>& camera = {},
-                  const glm::mat4& model              = glm::mat4(1),
-                  const glm::vec3& color              = glm::vec3(1));
 
     void drawCircle(const glm::vec3& position,
                     const float& radius,
@@ -92,22 +57,11 @@ public:
                     const atcg::ref_ptr<Camera>& camera = {},
                     uint32_t entity_id                  = -1);
 
-    void draw(const atcg::ref_ptr<Graph>& mesh,
-              const atcg::ref_ptr<Camera>& camera,
-              const glm::mat4& model,
-              const glm::vec3& color,
-              const atcg::ref_ptr<Shader>& shader,
-              DrawMode draw_mode,
-              const atcg::ref_ptr<Material>& material,
-              uint32_t entity_id);
-
-    void setMaterial(const atcg::ref_ptr<Material>& material, const atcg::ref_ptr<Shader>& shader);
-
-    std::vector<uint32_t> used_texture_units;
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
     void freeTextureUnits();
 
     RenderAPI render_api;
+    bool render_pass_started = false;
 };
 
 RendererSystem::RendererSystem() {}
@@ -137,11 +91,6 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
         quad_vao->setIndexBuffer(quad_ibo);
     }
 
-    // Load a sphere
-    sphere_mesh = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
-
-    cylinder_mesh = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
-
     // Generate CAD grid
     initGrid();
     initCross();
@@ -149,14 +98,6 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
     initCube();
 
     initCameraFrustrum();
-
-    auto img = IO::imread((atcg::resource_directory() / "LUT.hdr").string());
-    TextureSpecification spec_lut;
-    spec_lut.width             = img->width();
-    spec_lut.height            = img->height();
-    spec_lut.format            = TextureFormat::RGBFLOAT;
-    spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
-    lut                        = atcg::Texture2D::create(img, spec_lut);
 
     initFramebuffer(width, height);
 
@@ -293,97 +234,6 @@ void RendererSystem::Impl::initFramebuffer(uint32_t width, uint32_t height)
     screen_fbo = Framebuffer::create(spec);
 }
 
-void RendererSystem::Impl::setMaterial(const atcg::ref_ptr<Material>& material, const atcg::ref_ptr<Shader>& shader)
-{
-    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
-
-    material->uploadMaterial(renderer, shader);
-
-    uint32_t lut_id = renderer->popTextureID();
-    lut->use(lut_id);
-    shader->setInt("lut", lut_id);
-    used_texture_units.push_back(lut_id);
-}
-
-void RendererSystem::Impl::freeTextureUnits()
-{
-    for(uint32_t texture_id: used_texture_units)
-    {
-        renderer->pushTextureID(texture_id);
-    }
-    used_texture_units.clear();
-}
-
-void RendererSystem::Impl::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
-                                   const atcg::ref_ptr<Camera>& camera,
-                                   const glm::vec3& color,
-                                   const atcg::ref_ptr<Shader>& shader,
-                                   const glm::mat4& model,
-                                   PrimitiveTopology mode,
-                                   uint32_t size,
-                                   uint32_t instances)
-{
-    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
-
-    GraphicsPipeline pipeline =
-        GraphicsPipeline().setPrimitiveTopology(mode).setShader(shader).setRenderState(render_state);
-
-    render_api.beginRenderPass(Framebuffer::currentFramebuffer());    // TODO
-    render_api.bindVertexArray(vao);
-
-    shader->setVec3("flat_color", color);
-    shader->setInt("instanced", static_cast<int>(instances > 1));
-    if(camera)
-    {
-        shader->setVec3("camera_pos", camera->getPosition());
-        shader->setVec3("camera_dir", camera->getDirection());
-        shader->setMVP(model, camera->getView(), camera->getProjection());
-    }
-    else
-    {
-        shader->setMVP(model);
-    }
-
-    const atcg::ref_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
-
-    render_api.setPipeline(pipeline);
-    if(ibo)
-    {
-        render_api.drawIndexedInstanced(static_cast<uint32_t>(ibo->getCount()), instances);
-    }
-    else
-    {
-        render_api.drawInstanced(static_cast<uint32_t>(size), instances);
-    }
-
-    render_api.endRenderPass();
-}
-
-void RendererSystem::Impl::drawPointCloudSpheres(const atcg::ref_ptr<VertexBuffer>& vbo,
-                                                 const atcg::ref_ptr<Camera>& camera,
-                                                 const glm::mat4& model,
-                                                 const glm::vec3& color,
-                                                 const atcg::ref_ptr<Shader>& shader,
-                                                 uint32_t n_instances)
-{
-    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
-
-    atcg::ref_ptr<VertexArray> vao_sphere = sphere_mesh->getVerticesArray();
-    glm::mat4 model_new                   = model;
-    shader->setFloat("point_size", render_state.point_size);
-
-    vao_sphere->pushInstanceBuffer(vbo);
-    drawVAO(vao_sphere,
-            camera,
-            color,
-            shader,
-            model_new,
-            PrimitiveTopology::ATCG_TRIANGLES,
-            sphere_mesh->n_vertices(),
-            n_instances);
-    vao_sphere->popVertexBuffer();
-}
-
 void RendererSystem::Impl::drawCircle(const glm::vec3& position,
                                       const float& radius,
                                       const float& thickness,
@@ -391,15 +241,12 @@ void RendererSystem::Impl::drawCircle(const glm::vec3& position,
                                       const atcg::ref_ptr<Camera>& camera,
                                       uint32_t entity_id)
 {
+    ATCG_ASSERT(render_pass_started, "Render pass not started in Renderer.");
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
-    const auto& shader        = shader_manager->getShader("circle");
-    GraphicsPipeline pipeline = GraphicsPipeline()
-                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
-                                    .setShader(shader)
-                                    .setRenderState(render_state);
 
-    render_api.beginRenderPass(Framebuffer::currentFramebuffer());    // TODO
+    const auto& shader = shader_manager->getShader("circle");
+
     render_api.bindVertexArray(quad_vao);
 
     shader->setVec3("flat_color", color);
@@ -414,7 +261,9 @@ void RendererSystem::Impl::drawCircle(const glm::vec3& position,
 
     const atcg::ref_ptr<IndexBuffer> ibo = quad_vao->getIndexBuffer();
 
-    render_api.setPipeline(pipeline);
+    GraphicsPipeline pipeline =
+        GraphicsPipeline().setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES).setShader(shader).setShader(shader);
+    render_api.bindPipeline(pipeline);
     if(ibo)
     {
         render_api.drawIndexed(static_cast<uint32_t>(ibo->getCount()));
@@ -423,137 +272,6 @@ void RendererSystem::Impl::drawCircle(const glm::vec3& position,
     {
         ATCG_ERROR("Missing IndexBuffer!");
     }
-    render_api.endRenderPass();
-}
-
-void RendererSystem::Impl::draw(const atcg::ref_ptr<Graph>& mesh,
-                                const atcg::ref_ptr<Camera>& camera,
-                                const glm::mat4& model,
-                                const glm::vec3& color,
-                                const atcg::ref_ptr<Shader>& shader,
-                                DrawMode draw_mode,
-                                const atcg::ref_ptr<Material>& material,
-                                uint32_t entity_id)
-{
-    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
-
-    mesh->unmapAllPointers();
-    switch(draw_mode)
-    {
-        case ATCG_DRAW_MODE_TRIANGLE:
-        {
-            ATCG_ASSERT(shader, "Tried rendering a mesh without valid shader");
-            shader->setInt("entityID", entity_id);
-            setMaterial(material, shader);
-            drawVAO(mesh->getVerticesArray(),
-                    camera,
-                    color,
-                    shader,
-                    model,
-                    PrimitiveTopology::ATCG_TRIANGLES,
-                    mesh->n_vertices());    // TODO
-        }
-        break;
-        case ATCG_DRAW_MODE_POINTS:
-        {
-            ATCG_ASSERT(shader, "Tried rendering a point cloud without valid shader");
-            shader->setInt("entityID", entity_id);
-            setMaterial(material, shader);
-            drawVAO(mesh->getVerticesArray(),
-                    camera,
-                    color,
-                    shader,
-                    model,
-                    PrimitiveTopology::ATCG_POINTS,
-                    mesh->n_vertices());
-        }
-        break;
-        case ATCG_DRAW_MODE_POINTS_SPHERE:
-        {
-            ATCG_ASSERT(shader, "Tried rendering a point cloud without valid shader");
-            shader->setInt("entityID", entity_id);
-            setMaterial(material, shader);
-            drawPointCloudSpheres(mesh->getVerticesArray()->peekVertexBuffer(),
-                                  camera,
-                                  model,
-                                  color,
-                                  shader,
-                                  mesh->n_vertices());
-        }
-        break;
-        case ATCG_DRAW_MODE_EDGES:
-        {
-            auto override_shader = shader ? shader : shader_manager->getShader("edge");
-            override_shader->setInt("entityID", entity_id);
-            setMaterial(material, override_shader);
-            atcg::ref_ptr<VertexBuffer> points = mesh->getVerticesBuffer();
-            points->bindStorage(0);
-            drawVAO(mesh->getEdgesArray(),
-                    camera,
-                    color,
-                    override_shader,
-                    model,
-                    PrimitiveTopology::ATCG_POINTS,
-                    mesh->n_edges(),
-                    1);
-        }
-        break;
-        case ATCG_DRAW_MODE_EDGES_CYLINDER:
-        {
-            auto override_shader = shader ? shader : shader_manager->getShader("cylinder_edge");
-            override_shader->setInt("entityID", entity_id);
-            setMaterial(material, override_shader);
-            drawGrid(mesh->getVerticesBuffer(), mesh->getEdgesBuffer(), override_shader, camera, model, color);
-        }
-        break;
-        case ATCG_DRAW_MODE_INSTANCED:
-        {
-            auto override_shader = shader ? shader : shader_manager->getShader("instanced");
-            override_shader->setInt("entityID", entity_id);
-            setMaterial(material, shader);
-            atcg::ref_ptr<VertexArray> vao_mesh      = mesh->getVerticesArray();
-            atcg::ref_ptr<VertexBuffer> instance_vbo = vao_mesh->peekVertexBuffer();
-            uint32_t n_instances                     = instance_vbo->size() / instance_vbo->getLayout().getStride();
-            drawVAO(vao_mesh,
-                    camera,
-                    color,
-                    shader,
-                    model,
-                    PrimitiveTopology::ATCG_TRIANGLES,
-                    mesh->n_vertices(),
-                    n_instances);
-        }
-        break;
-    }
-
-    material->releaseTextureIDs(renderer);
-    freeTextureUnits();
-}
-
-void RendererSystem::Impl::drawGrid(const atcg::ref_ptr<VertexBuffer>& points,
-                                    const atcg::ref_ptr<VertexBuffer>& indices,
-                                    const atcg::ref_ptr<Shader>& shader,
-                                    const atcg::ref_ptr<Camera>& camera,
-                                    const glm::mat4& model,
-                                    const glm::vec3& color)
-{
-    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
-
-    atcg::ref_ptr<VertexArray> vao_cylinder = cylinder_mesh->getVerticesArray();
-
-    uint32_t num_edges = indices->size() / (sizeof(Edge));
-    points->bindStorage(0);
-
-    vao_cylinder->pushInstanceBuffer(indices);
-    drawVAO(vao_cylinder,
-            camera,
-            color,
-            shader,
-            model,
-            PrimitiveTopology::ATCG_TRIANGLES,
-            cylinder_mesh->n_vertices(),
-            num_edges);
-    vao_cylinder->popVertexBuffer();
 }
 
 void RendererSystem::init(uint32_t width,
@@ -570,12 +288,6 @@ void RendererSystem::init(uint32_t width,
     ATCG_INFO("---------------------------------");
 
     impl = atcg::make_scope<Impl>(width, height, context);
-
-    // General settings
-    toggleDepthTesting(true);
-    toggleCulling(true);
-    setCullFace(ATCG_BACK_FACE_CULLING);
-    setViewport(0, 0, width, height);
 
     impl->shader_manager = shader_manager;
     impl->shader_manager->addShaderFromName("base");
@@ -594,8 +306,6 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("image_display");
     impl->shader_manager->addShaderFromName("emissive");
     impl->shader_manager->addShaderFromName("tonemap");
-
-    impl->renderer = this;
 }
 
 void RendererSystem::use()
@@ -603,17 +313,39 @@ void RendererSystem::use()
     impl->context->makeCurrent();
 }
 
-void RendererSystem::finishFrame()
+void RendererSystem::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
+{
+    ATCG_ASSERT(!impl->render_pass_started, "Render pass already started.");
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    impl->render_api.beginRenderPass(target);
+    impl->render_pass_started = true;
+}
+
+void RendererSystem::endRenderPass()
+{
+    ATCG_ASSERT(impl->render_pass_started, "Render pass not started.");
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    impl->render_api.endRenderPass();
+    impl->render_pass_started = false;
+}
+
+void RendererSystem::clear()
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    impl->render_api.clear();
+}
+
+void RendererSystem::finishFrame()
+{
+    ATCG_ASSERT(!impl->render_pass_started, "Cannot finish frame while render pass is active.");
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 #ifndef ATCG_HEADLESS
-    auto shader               = impl->shader_manager->getShader("screen");
-    GraphicsPipeline pipeline = GraphicsPipeline()
-                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
-                                    .setRenderState(impl->render_state)
-                                    .setShader(shader);
+    auto shader = impl->shader_manager->getShader("screen");
+    GraphicsPipeline pipeline =
+        GraphicsPipeline().setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES).setShader(shader);
 
     impl->render_api.beginRenderPass(nullptr);
+    impl->render_api.setViewport(0, 0, impl->screen_fbo->width(), impl->screen_fbo->height());
     impl->render_api.bindVertexArray(impl->quad_vao);
 
     impl->render_api.clear();
@@ -622,7 +354,7 @@ void RendererSystem::finishFrame()
     shader->selectSubroutine("_getEntityID", "getDefaultID");
 
     impl->render_api.bindTexture(0, impl->screen_fbo->getColorAttachement());
-    impl->render_api.setPipeline(pipeline);
+    impl->render_api.bindPipeline(pipeline);
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
     impl->render_api.drawIndexed(static_cast<uint32_t>(ibo->getCount()));
@@ -652,74 +384,14 @@ void RendererSystem::finish() const
     glFinish();
 }
 
-void RendererSystem::setClearColor(const glm::vec4& color)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->clear_color = color;
-    impl->render_api.setClearColor(color);
-}
-
-glm::vec4 RendererSystem::getClearColor() const
-{
-    return impl->clear_color;
-}
-
-void RendererSystem::setPointSize(const float& size)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_state.point_size = size;
-}
-
-void RendererSystem::setLineSize(const float& size)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_state.line_size = size;
-}
-
-void RendererSystem::toggleDepthTesting(bool enable)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_state.depth_state.depth_testing_enabled = enable;
-}
-
-void RendererSystem::toggleCulling(bool enable)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_state.culling_enabled = enable;
-}
-
-void RendererSystem::setCullFace(CullMode mode)
-{
-    impl->render_state.cull_mode = mode;
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-}
-
-void RendererSystem::setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_api.setViewport(x, y, width, height);
-}
-
-void RendererSystem::setDefaultViewport()
-{
-    setViewport(0, 0, getFramebuffer()->width(), getFramebuffer()->height());
-}
-
-glm::vec4 RendererSystem::getViewport() const
-{
-    return impl->render_api.getViewport();
-}
-
 void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_texture,
                                    const atcg::ref_ptr<TextureCube>& skybox_cubemap,
                                    const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
                                    const atcg::ref_ptr<TextureCube>& prefiltered_cubemap)
 {
-    // TODO
+    ATCG_ASSERT(!impl->render_pass_started, "Cannot process skybox while render pass is active.");
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    bool culling = impl->render_state.culling_enabled;
-    toggleCulling(false);
     atcg::ref_ptr<PerspectiveCamera> capture_cam = atcg::make_ref<atcg::PerspectiveCamera>();
     glm::mat4 captureProjection                  = glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 10.0f);
     glm::mat4 captureViews[]                     = {
@@ -734,26 +406,24 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
     capture_cam->setProjection(captureProjection);
     // convert HDR equirectangular environment map to cubemap equivalent
 
-    auto current_fbo = atcg::Framebuffer::currentFramebuffer();
-    int old_viewport[4];
-    glGetIntegerv(GL_VIEWPORT, old_viewport);
-
     uint32_t cubemap_id = popTextureID();
 
     // * Create a cubemap from the equirectangular map
     {
         atcg::ref_ptr<Shader> equirect_shader = impl->shader_manager->getShader("equirectangularToCubemap");
+        GraphicsPipeline pipeline             = GraphicsPipeline()
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                        .setShader(equirect_shader)
+                                        .setRasterizerState(RasterizerState().enableCulling(false));
+
         float width                           = skybox_cubemap->width();
         float height                          = skybox_cubemap->height();
         atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(width, height);
         captureFBO->attachDepth();
+        beginRenderPass(captureFBO);
 
-        glViewport(0, 0, width, height);    // don't forget to configure the viewport to the capture dimensions.
-        captureFBO->use();
-
-        equirect_shader->use();
-        skybox_texture->use(cubemap_id);
         equirect_shader->setInt("equirectangularMap", cubemap_id);
+        impl->render_api.bindTexture(cubemap_id, skybox_texture);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -762,29 +432,33 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
                                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                                    skybox_cubemap->getID(),
                                    0);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            impl->render_api.clear();
 
-            draw(impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), equirect_shader);
-            // renderCube();    // renders a 1x1 cube
+            drawVAO(impl->cube->getVerticesArray(), capture_cam, glm::mat4(1), pipeline, impl->cube->n_vertices());
         }
 
         skybox_cubemap->generateMipmaps();
+        endRenderPass();
     }
 
     // * Convolution of cube map for irradiance map
     {
         atcg::ref_ptr<Shader> cubeconv_shader = impl->shader_manager->getShader("cubeMapConvolution");
+        GraphicsPipeline pipeline             = GraphicsPipeline()
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                        .setShader(cubeconv_shader)
+                                        .setRasterizerState(RasterizerState().enableCulling(false));
+
         float width                           = irradiance_cubemap->width();
         float height                          = irradiance_cubemap->height();
         atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(width, height);
         captureFBO->attachDepth();
 
-        glViewport(0, 0, width, height);    // don't forget to configure the viewport to the capture dimensions.
-        captureFBO->use();
+        beginRenderPass(captureFBO);
 
-        cubeconv_shader->use();
-        skybox_cubemap->use(cubemap_id);
         cubeconv_shader->setInt("skybox", cubemap_id);
+        impl->render_api.bindTexture(cubemap_id, skybox_cubemap);
+        impl->render_api.bindPipeline(pipeline);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -793,11 +467,11 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
                                    GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                                    irradiance_cubemap->getID(),
                                    0);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            impl->render_api.clear();
 
-            draw(impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), cubeconv_shader);
-            // renderCube();    // renders a 1x1 cube
+            drawVAO(impl->cube->getVerticesArray(), capture_cam, glm::mat4(1), pipeline, impl->cube->n_vertices());
         }
+        endRenderPass();
     }
 
     // * Prefilter environment map
@@ -817,14 +491,19 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
             // Recreate captureFBO with new resolution
             atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(mip_width, mip_height);
             captureFBO->attachDepth();
-            captureFBO->use();
 
-            skybox_cubemap->use(cubemap_id);
+            GraphicsPipeline pipeline = GraphicsPipeline()
+                                            .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                            .setShader(prefilter_shader)
+                                            .setRasterizerState(RasterizerState().enableCulling(false));
 
-            glViewport(0, 0, mip_width, mip_height);
+            beginRenderPass(captureFBO);
+            impl->render_api.bindTexture(cubemap_id, skybox_cubemap);
 
             float roughness = (float)mip / (float)(max_mip_levels - 1);
             prefilter_shader->setFloat("roughness", roughness);
+
+            impl->render_api.bindPipeline(pipeline);
             for(unsigned int i = 0; i < 6; ++i)
             {
                 capture_cam->setView(captureViews[i]);
@@ -833,25 +512,22 @@ void RendererSystem::processSkybox(const atcg::ref_ptr<Texture2D>& skybox_textur
                                        GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                                        prefiltered_cubemap->getID(),
                                        mip);
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                impl->render_api.clear();
 
-                draw(impl->cube, capture_cam, glm::mat4(1), glm::vec3(1), prefilter_shader);
+                drawVAO(impl->cube->getVerticesArray(), capture_cam, glm::mat4(1), pipeline, impl->cube->n_vertices());
                 // renderCube();    // renders a 1x1 cube
             }
+            endRenderPass();
         }
     }
 
     pushTextureID(cubemap_id);
-    current_fbo ? current_fbo->use() : Framebuffer::useDefault();
-    setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
-    toggleCulling(culling);
 }
 
 void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    setViewport(0, 0, width, height);
     impl->initFramebuffer(width, height);
 }
 
@@ -878,32 +554,41 @@ void RendererSystem::pushTextureID(const uint32_t id)
     impl->texture_ids.push(id);
 }
 
-void RendererSystem::clear() const
+void RendererSystem::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
+                             const atcg::ref_ptr<Camera>& camera,
+                             const glm::mat4& model,
+                             const GraphicsPipeline& pipeline,
+                             const size_t size,
+                             const size_t instances)
 {
+    ATCG_ASSERT(impl->render_pass_started, "Render pass not started in Renderer.");
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_api.clear();
 
-    if(Framebuffer::currentFramebuffer() == impl->screen_fbo)
+    impl->render_api.bindVertexArray(vao);
+
+    pipeline.shader->setInt("instanced", static_cast<int>(instances > 1));
+    if(camera)
     {
-        int value = -1;
-        impl->screen_fbo->getColorAttachement(1)->fill(&value);
+        pipeline.shader->setVec3("camera_pos", camera->getPosition());
+        pipeline.shader->setVec3("camera_dir", camera->getDirection());
+        pipeline.shader->setMVP(model, camera->getView(), camera->getProjection());
     }
-}
+    else
+    {
+        pipeline.shader->setMVP(model);
+    }
 
-void RendererSystem::draw(const atcg::ref_ptr<Graph>& mesh,
-                          const atcg::ref_ptr<Camera>& camera,
-                          const glm::mat4& model,
-                          const glm::vec3& color,
-                          const atcg::ref_ptr<Shader>& shader,
-                          DrawMode draw_mode,
-                          const std::optional<atcg::ref_ptr<Material>>& material,
-                          const uint32_t entity_id)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    const atcg::ref_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
-    const atcg::ref_ptr<Material>& used_material = material.value_or(impl->standard_material);
-
-    impl->draw(mesh, camera, model, color, shader, draw_mode, used_material, entity_id);
+    impl->render_api.bindPipeline(pipeline);
+    if(ibo)
+    {
+        impl->render_api.drawIndexedInstanced(static_cast<uint32_t>(ibo->getCount()), instances);
+    }
+    else
+    {
+        impl->render_api.drawInstanced(static_cast<uint32_t>(size), instances);
+    }
 }
 
 void RendererSystem::drawCircle(const glm::vec3& position,
@@ -935,10 +620,7 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     auto shader               = impl->shader_manager->getShader("screen");
-    GraphicsPipeline pipeline = GraphicsPipeline()
-                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
-                                    .setRenderState(impl->render_state)
-                                    .setShader(shader);
+    GraphicsPipeline pipeline = GraphicsPipeline();
 
     impl->render_api.beginRenderPass(Framebuffer::currentFramebuffer());
     impl->render_api.bindVertexArray(impl->quad_vao);
@@ -956,7 +638,7 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
     }
 
     impl->render_api.bindTexture(0, img);
-    impl->render_api.setPipeline(pipeline);
+    impl->render_api.bindPipeline(pipeline);
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
     impl->render_api.drawIndexed(static_cast<uint32_t>(ibo->getCount()));
@@ -965,84 +647,94 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
 
 void RendererSystem::drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera)
 {
-    // TODO
+    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    ATCG_ASSERT(impl->render_pass_started, "Cannot draw skybox while no render pass is active.");
+
+    auto shader = impl->shader_manager->getShader("skybox");
+    GraphicsPipeline pipeline =
+        GraphicsPipeline()
+            .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+            .setRasterizerState(RasterizerState().enableCulling(false).setDepthState(
+                DepthState().setDepthFunction(DepthFunction::ATCG_LEQUAL).enableDepthWrite(false)))
+            .setShader(shader);
+
     uint32_t skybox_id = popTextureID();
-    impl->render_state.depth_state.setDepthFunction(DepthFunction::ATCG_LEQUAL).enableDepthWrite(false);
-    bool culling                       = impl->render_state.culling_enabled;
-    impl->render_state.culling_enabled = false;
-    impl->shader_manager->getShader("skybox")->use();
-    impl->shader_manager->getShader("skybox")->setInt("skybox", skybox_id);
-    skybox_cubemap->use(skybox_id);
+    shader->setInt("skybox", skybox_id);
+    impl->render_api.bindTexture(skybox_id, skybox_cubemap);
+    impl->render_api.bindPipeline(pipeline);
 
-    draw(impl->cube, camera, glm::mat4(1), glm::vec3(1), impl->shader_manager->getShader("skybox"));
+    drawVAO(impl->cube->getVerticesArray(), camera, glm::mat4(1), pipeline, impl->cube->n_vertices());
 
-    impl->render_state.depth_state.setDepthFunction(DepthFunction::ATCG_LESS).enableDepthWrite(true);
-    impl->render_state.culling_enabled = culling;
     pushTextureID(skybox_id);
 }
 
 void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    ATCG_ASSERT(impl->render_pass_started, "Cannot draw cameras while no render pass is active.");
 
     const auto& view = scene->getAllEntitiesWith<atcg::CameraComponent>();
 
     for(auto e: view)
     {
         Entity entity(e, scene.get());
-        setLineSize(2.0f);
+
+        auto shader               = impl->shader_manager->getShader("edge");
+        GraphicsPipeline pipeline = GraphicsPipeline()
+                                        .setShader(shader)
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_POINTS)
+                                        .setRasterizerState(RasterizerState().enableCulling(false).setLineSize(2.0f));
+
         uint32_t entity_id = entity.entity_handle();
-        impl->shader_manager->getShader("edge")->setInt("entityID", entity_id);
-        atcg::CameraComponent& comp          = entity.getComponent<CameraComponent>();
+        shader->setInt("entityID", entity_id);
+        atcg::CameraComponent& comp = entity.getComponent<CameraComponent>();
+        shader->setVec3("flat_color", comp.color);
         atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(comp.camera);
         float aspect_ratio                   = cam->getAspectRatio();
         glm::mat4 scale                      = glm::scale(
             glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)) * comp.render_scale);
         glm::mat4 model = glm::inverse(cam->getView()) * scale;
-        draw(impl->camera_frustrum,
-             camera,
-             model,
-             comp.color,
-             impl->shader_manager->getShader("edge"),
-             atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+
+        auto points = impl->camera_frustrum->getVerticesBuffer();
+        points->bindStorage(0);
+
+        drawVAO(impl->camera_frustrum->getEdgesArray(), camera, model, pipeline, impl->camera_frustrum->n_edges());
 
 
         if(comp.image())
         {
-            uint32_t id          = popTextureID();
-            bool culling_enabled = impl->render_state.culling_enabled;
-            toggleCulling(false);
+            uint32_t id = popTextureID();
+
+            auto shader = impl->shader_manager->getShader("image_display");
+
+            GraphicsPipeline pipeline = GraphicsPipeline()
+                                            .setShader(shader)
+                                            .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                            .setRasterizerState(RasterizerState().enableCulling(false));
+
             model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
-            impl->shader_manager->getShader("image_display")->setInt("screen_texture", id);
-            impl->shader_manager->getShader("image_display")->setInt("entityID", entity_id);
-            comp.image()->use(id);
-            impl->drawVAO(impl->quad_vao,
-                          camera,
-                          comp.color,
-                          impl->shader_manager->getShader("image_display"),
-                          model,
-                          PrimitiveTopology::ATCG_TRIANGLES,
-                          impl->quad_vao->getIndexBuffer()->getCount());
-            toggleCulling(culling_enabled);
+            shader->setInt("screen_texture", id);
+            shader->setInt("entityID", entity_id);
+            impl->render_api.bindTexture(id, comp.image());
+            drawVAO(impl->quad_vao, camera, model, pipeline, 4);
             pushTextureID(id);
         }
         else if(comp.render_preview && comp.preview)
         {
-            uint32_t id          = popTextureID();
-            bool culling_enabled = impl->render_state.culling_enabled;
-            toggleCulling(false);
-            model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
-            impl->shader_manager->getShader("image_display")->setInt("screen_texture", id);
-            impl->shader_manager->getShader("image_display")->setInt("entityID", entity_id);
-            comp.preview->getColorAttachement(0)->use(id);
-            impl->drawVAO(impl->quad_vao,
-                          camera,
-                          comp.color,
-                          impl->shader_manager->getShader("image_display"),
-                          model,
-                          PrimitiveTopology::ATCG_TRIANGLES,
-                          impl->quad_vao->getIndexBuffer()->getCount());
-            toggleCulling(culling_enabled);
+            auto shader = impl->shader_manager->getShader("image_display");
+
+            GraphicsPipeline pipeline = GraphicsPipeline()
+                                            .setShader(shader)
+                                            .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                            .setRasterizerState(RasterizerState().enableCulling(false));
+
+            uint32_t id = popTextureID();
+            model       = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
+            shader->setInt("screen_texture", id);
+            shader->setInt("entityID", entity_id);
+
+            impl->render_api.bindTexture(id, comp.preview->getColorAttachement(0));
+            drawVAO(impl->quad_vao, camera, model, pipeline, 4);
             pushTextureID(id);
         }
     }
@@ -1068,19 +760,24 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    float distance     = glm::abs(camera->getPosition().y);
-    float current_size = impl->render_state.line_size;
-
-    setLineSize(1.0f);
+    float distance = glm::abs(camera->getPosition().y);
 
     auto& shader = impl->shader_manager->getShader("edge");
+    GraphicsPipeline pipeline =
+        GraphicsPipeline()
+            .setPrimitiveTopology(PrimitiveTopology::ATCG_POINTS)
+            .setRasterizerState(
+                RasterizerState()
+                    .enableCulling(false)
+                    .setDepthState(DepthState().setDepthFunction(DepthFunction::ATCG_LEQUAL).enableDepthWrite(false))
+                    .setLineSize(1.0f))
+            .setShader(shader);
+
     shader->setInt("entityID", -1);
     shader->setFloat("fall_off_edge", distance);
+    shader->setVec3("flat_color", glm::vec3(1));
 
     float edge1 = 1, edge2 = 15;
-
-    glDepthMask(GL_FALSE);
-    glDepthFunc(GL_LEQUAL);
 
     float base_transparency = transparency_;
     float resolution        = 0.1f;
@@ -1112,12 +809,15 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
 
             shader->setFloat("base_transparency", base_transparency * transparency);
 
-            draw(impl->grid,
-                 camera,
-                 glm::translate(resolution * glm::vec3(x, 0, z)) * glm::scale(glm::vec3(resolution)),
-                 glm::vec3(1),
-                 shader,
-                 atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+            auto points = impl->grid->getVerticesBuffer();
+            points->bindStorage(0);
+
+            impl->render_api.bindPipeline(pipeline);
+            drawVAO(impl->grid->getEdgesArray(),
+                    camera,
+                    glm::translate(resolution * glm::vec3(x, 0, z)) * glm::scale(glm::vec3(resolution)),
+                    pipeline,
+                    impl->grid->n_edges());
         }
 
         resolution *= 10.0f;
@@ -1126,13 +826,15 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
     // Reset shader for normal rendering
     shader->setFloat("base_transparency", 1.0f);
 
-    setLineSize(2.0f);
-    draw(impl->cross, camera, glm::mat4(1), glm::vec3(1), shader, atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
-    setLineSize(current_size);
+    pipeline.render_state.setLineSize(2.0f);
+
+    auto points = impl->cross->getVerticesBuffer();
+    points->bindStorage(0);
+
+    impl->render_api.bindPipeline(pipeline);
+    drawVAO(impl->cross->getEdgesArray(), camera, glm::mat4(1), pipeline, impl->cross->n_edges());
 
     shader->setFloat("fall_off_edge", 1000.0f);
-    glDepthMask(GL_TRUE);
-    glDepthFunc(GL_LESS);
 }
 
 atcg::ref_ptr<Framebuffer> RendererSystem::getFramebuffer() const
@@ -1204,21 +906,18 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
     screenshot_buffer->attachDepth();
     screenshot_buffer->complete();
 
-    screenshot_buffer->use();
-    clear();
-    setViewport(0, 0, width, height);
     atcg::Dictionary context;
     context.setValue("camera", camera);
     context.setValue("target", screenshot_buffer);
-    scene->draw(context);
-    useScreenBuffer();
-    setDefaultViewport();
+    scene->draw(context);    // Starts a renderpass
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
     Image img(data);
 
     img.store(path);
+
+    useScreenBuffer();
 }
 
 torch::Tensor
@@ -1233,14 +932,11 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     screenshot_buffer->complete();
 
     screenshot_buffer->use();
-    clear();
-    setViewport(0, 0, width, height);
     atcg::Dictionary context;
     context.setValue("camera", camera);
     context.setValue("target", screenshot_buffer);
     scene->draw(context);
     useScreenBuffer();
-    setDefaultViewport();
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 

@@ -12,7 +12,7 @@
 #include <DataStructure/Graph.h>
 #include <Scene/Entity.h>
 #include <Renderer/Material.h>
-#include <Renderer/RenderState.h>
+#include <Renderer/GraphicsPipeline.h>
 
 namespace atcg
 {
@@ -45,6 +45,12 @@ public:
      */
     void use();
 
+    void beginRenderPass(const atcg::ref_ptr<Framebuffer>& target);
+
+    void endRenderPass();
+
+    void clear();
+
     /**
      * @brief Finished the currently drawn frame (should not be called by client!)
      */
@@ -54,78 +60,6 @@ public:
      * @brief Stalls the CPU until all rendering requests are finished
      */
     void finish() const;
-
-    /**
-     * @brief Set the clear color
-     *
-     * @param color The clear color
-     */
-    void setClearColor(const glm::vec4& color);
-
-    /**
-     * @brief Get the current clear color
-     *
-     * @return The clear color
-     */
-    glm::vec4 getClearColor() const;
-
-    /**
-     * @brief Set the size of rendered points
-     *
-     * @param size The size
-     */
-    void setPointSize(const float& size);
-
-    /**
-     * @brief Set the size of rendered lines
-     *
-     * @param size The size
-     */
-    void setLineSize(const float& size);
-
-    /**
-     * @brief Toggle depth testing
-     *
-     * @param enable If it should be enabled or disabled
-     */
-    void toggleDepthTesting(bool enable = true);
-
-    /**
-     * @brief Toggle face culling
-     *
-     * @param enable If it should be enabled or disabled
-     */
-    void toggleCulling(bool enable = true);
-
-    /**
-     * @brief Set the cull face
-     *
-     * @param mode The culling mode
-     */
-    void setCullFace(CullMode mode);
-
-    /**
-     * @brief Change the viewport of the renderer
-     *
-     * @param x The viewport x location
-     * @param y The viewport y location
-     * @param width The width
-     * @param height The height
-     */
-    void setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height);
-
-    /**
-     * @brief Set the viewport according to the current main screen render buffer
-     *
-     */
-    void setDefaultViewport();
-
-    /**
-     * @brief Get the current viewport dimensions
-     *
-     * @return A vec4 containing the viewport (x,y,width,height)
-     */
-    glm::vec4 getViewport() const;
 
     /**
      * @brief Preprocess a skybox
@@ -182,11 +116,6 @@ public:
     void pushTextureID(const uint32_t id);
 
     /**
-     * @brief Clear the currently bound framebuffer
-     */
-    void clear() const;
-
-    /**
      * @brief Render a mesh
      *
      * The default draw mode is "base". It applys slight shading based on the vertex normals.
@@ -208,14 +137,12 @@ public:
      * @param material The material
      * @param entity_id The entity id
      */
-    void draw(const atcg::ref_ptr<Graph>& mesh,
-              const atcg::ref_ptr<Camera>& camera                    = {},
-              const glm::mat4& model                                 = glm::mat4(1),
-              const glm::vec3& color                                 = glm::vec3(1),
-              const atcg::ref_ptr<Shader>& shader                    = atcg::ShaderManager::getShader("base"),
-              DrawMode draw_mode                                     = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
-              const std::optional<atcg::ref_ptr<Material>>& material = {},
-              const uint32_t entity_id                               = -1);
+    void drawVAO(const atcg::ref_ptr<VertexArray>& vao,
+                 const atcg::ref_ptr<Camera>& camera,
+                 const glm::mat4& model,
+                 const GraphicsPipeline& pipeline,
+                 const size_t size,
+                 const size_t instances = 1);
 
     /**
      * @brief Draw Circle
@@ -409,6 +336,21 @@ ATCG_INLINE void use()
     SystemRegistry::instance()->getSystem<RendererSystem>()->use();
 }
 
+ATCG_INLINE void beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->beginRenderPass(target);
+}
+
+ATCG_INLINE void endRenderPass()
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->endRenderPass();
+}
+
+ATCG_INLINE void clear()
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->clear();
+}
+
 /**
  * @brief Finished the currently drawn frame (should not be called by client!)
  */
@@ -423,78 +365,6 @@ ATCG_INLINE void finishFrame()
 ATCG_INLINE void finish()
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->finish();
-}
-
-/**
- * @brief Set the clear color
- *
- * @param color The clear color
- */
-ATCG_INLINE void setClearColor(const glm::vec4& color)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setClearColor(color);
-}
-
-/**
- * @brief Get the current clear color
- *
- * @return The clear color
- */
-ATCG_INLINE glm::vec4 getClearColor()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getClearColor();
-}
-
-/**
- * @brief Set the size of rendered points
- *
- * @param size The size
- */
-ATCG_INLINE void setPointSize(const float& size)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setPointSize(size);
-}
-
-/**
- * @brief Set the size of rendered lines
- *
- * @param size The size
- */
-ATCG_INLINE void setLineSize(const float& size)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setLineSize(size);
-}
-
-/**
- * @brief Change the viewport of the renderer
- *
- * @param x The viewport x location
- * @param y The viewport y location
- * @param width The width
- * @param height The height
- */
-ATCG_INLINE void setViewport(const uint32_t& x, const uint32_t& y, const uint32_t& width, const uint32_t& height)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setViewport(x, y, width, height);
-}
-
-/**
- * @brief Set the viewport according to the current main screen render buffer
- *
- */
-ATCG_INLINE void setDefaultViewport()
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setDefaultViewport();
-}
-
-/**
- * @brief Get the current viewport dimensions
- *
- * @return A vec4 containing the viewport (x,y,width,height)
- */
-ATCG_INLINE glm::vec4 getViewport()
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getViewport();
 }
 
 /**
@@ -559,18 +429,14 @@ ATCG_INLINE void useScreenBuffer()
  * @param material The material
  * @param entity_id The entity id
  */
-ATCG_INLINE void draw(const atcg::ref_ptr<Graph>& mesh,
-                      const atcg::ref_ptr<Camera>& camera                    = {},
-                      const glm::mat4& model                                 = glm::mat4(1),
-                      const glm::vec3& color                                 = glm::vec3(1),
-                      const atcg::ref_ptr<Shader>& shader                    = atcg::ShaderManager::getShader("base"),
-                      DrawMode draw_mode                                     = DrawMode::ATCG_DRAW_MODE_TRIANGLE,
-                      const std::optional<atcg::ref_ptr<Material>>& material = {},
-                      const uint32_t entity_id                               = -1)
+ATCG_INLINE void drawVAO(const atcg::ref_ptr<VertexArray>& vao,
+                         const atcg::ref_ptr<Camera>& camera,
+                         const glm::mat4& model,
+                         const GraphicsPipeline& pipeline,
+                         const size_t size,
+                         const size_t instances = 1)
 {
-    SystemRegistry::instance()
-        ->getSystem<RendererSystem>()
-        ->draw(mesh, camera, model, color, shader, draw_mode, material, entity_id);
+    SystemRegistry::instance()->getSystem<RendererSystem>()->drawVAO(vao, camera, model, pipeline, size, instances);
 }
 
 /**
@@ -761,44 +627,6 @@ ATCG_INLINE torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU)
 ATCG_INLINE torch::Tensor getZBuffer(const torch::DeviceType& device = atcg::GPU)
 {
     return SystemRegistry::instance()->getSystem<RendererSystem>()->getZBuffer(device);
-}
-
-/**
- * @brief Clear the currently bound framebuffer
- */
-ATCG_INLINE void clear()
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->clear();
-}
-
-/**
- * @brief Toggle depth testing
- *
- * @param enable If it should be enabled or disabled
- */
-ATCG_INLINE void toggleDepthTesting(bool enable = true)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->toggleDepthTesting(enable);
-}
-
-/**
- * @brief Toggle face culling
- *
- * @param enable If it should be enabled or disabled
- */
-ATCG_INLINE void toggleCulling(bool enable = true)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->toggleCulling(enable);
-}
-
-/**
- * @brief Set the cull face
- *
- * @param mode The culling mode
- */
-ATCG_INLINE void setCullFace(CullMode mode)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->setCullFace(mode);
 }
 
 /**
