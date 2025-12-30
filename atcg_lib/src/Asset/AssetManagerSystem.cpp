@@ -240,6 +240,41 @@ void AssetManagerSystem::loadStandardAssets()
     spec_lut.format            = TextureFormat::RGBFLOAT;
     spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     _lut_texture               = atcg::Texture2D::create(img, spec_lut);
+
+    {
+        glm::vec3 eye = glm::vec3(0);
+
+        std::vector<atcg::Vertex> points;
+        points.push_back(atcg::Vertex(eye, glm::vec3(1)));
+        points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, -0.5, 1.0f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(eye + glm::vec3(0.5, -0.5, 1.0f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(eye + glm::vec3(0.5, 0.5, 1.0f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, 0.5, 1.0f), glm::vec3(1)));
+
+        std::vector<atcg::Edge> edges;
+        edges.push_back({glm::vec2(0, 1), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(0, 2), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(0, 3), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(0, 4), glm::vec3(1), 0.01f});
+
+        edges.push_back({glm::vec2(1, 2), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(2, 3), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(3, 4), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(4, 1), glm::vec3(1), 0.01f});
+
+        _camera_frustum = atcg::Graph::createGraph(points, edges);
+    }
+
+    {
+        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
+                                              atcg::Vertex(glm::vec3(1, -1, 0)),
+                                              atcg::Vertex(glm::vec3(1, 1, 0)),
+                                              atcg::Vertex(glm::vec3(-1, 1, 0))};
+
+        std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+
+        _quad = atcg::Graph::createTriangleMesh(vertices, edges);
+    }
 }
 
 }    // namespace atcg

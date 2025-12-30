@@ -178,6 +178,20 @@ public:
      */
     ATCG_INLINE atcg::ref_ptr<Texture2D> getLUTTexture() const { return _lut_texture; }
 
+    /**
+     * @brief Get the camera frustum mesh
+     *
+     * @return The camera frustum mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getCameraFrustumMesh() const { return _camera_frustum; }
+
+    /**
+     * @brief Get the quad mesh
+     *
+     * @return The quad mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getQuadMesh() const { return _quad; }
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
@@ -186,6 +200,8 @@ private:
     atcg::ref_ptr<Graph> _sphere_mesh;
     atcg::ref_ptr<Graph> _cylinder_mesh;
     atcg::ref_ptr<Texture2D> _lut_texture;
+    atcg::ref_ptr<Graph> _camera_frustum;
+    atcg::ref_ptr<Graph> _quad;
 };
 
 namespace AssetManager
@@ -417,6 +433,26 @@ ATCG_INLINE atcg::ref_ptr<Graph> getCylinderMesh()
 ATCG_INLINE atcg::ref_ptr<Texture2D> getLUTTexture()
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getLUTTexture();
+}
+
+/**
+ * @brief Get the camera frustum mesh
+ *
+ * @return The camera frustum mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getCameraFrustumMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getCameraFrustumMesh();
+}
+
+/**
+ * @brief Get the quad mesh
+ *
+ * @return The quad mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getQuadMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getQuadMesh();
 }
 
 }    // namespace AssetManager
