@@ -76,6 +76,7 @@ ATCG_DECLARE_COMPONENT_RENDERER(EdgeRenderComponent);
 ATCG_DECLARE_COMPONENT_RENDERER(EdgeCylinderRenderComponent);
 ATCG_DECLARE_COMPONENT_RENDERER(InstanceRenderComponent);
 ATCG_DECLARE_COMPONENT_RENDERER(MeshLightComponent);
+ATCG_DECLARE_COMPONENT_RENDERER(CameraComponent);
 
 template<typename T>
 void renderComponent(atcg::RendererSystem* renderer,

@@ -186,6 +186,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
     atcg::Dictionary context;
     context.setValue("camera", component.camera);
     context.setValue("target", component.preview);
+    context.setValue("draw_cameras", false);
     scene->draw(context);
     atcg::Renderer::useScreenBuffer();
 

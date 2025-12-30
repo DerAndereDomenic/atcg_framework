@@ -659,4 +659,77 @@ void ComponentRenderer<MeshLightComponent>::renderComponent(atcg::RendererSystem
         _renderer->pushTextureID(emissive_id);
     }
 }
+
+void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _renderer,
+                                                         Entity entity,
+                                                         const atcg::ref_ptr<Camera>& camera,
+                                                         atcg::Dictionary& auxiliary) const
+{
+    bool draw_cameras = auxiliary.getValueOr<bool>("draw_cameras", true);
+    if(!draw_cameras)
+    {
+        return;
+    }
+
+    auto camera_frustum       = AssetManager::getCameraFrustumMesh();
+    auto quad                 = AssetManager::getQuadMesh();
+    auto shader               = _renderer->getShaderManager()->getShader("edge");
+    GraphicsPipeline pipeline = GraphicsPipeline()
+                                    .setShader(shader)
+                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_POINTS)
+                                    .setRasterizerState(RasterizerState().enableCulling(false).setLineSize(2.0f));
+
+    uint32_t entity_id = entity.entity_handle();
+    shader->setInt("entityID", entity_id);
+    atcg::CameraComponent& comp = entity.getComponent<CameraComponent>();
+    shader->setVec3("flat_color", comp.color);
+    atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(comp.camera);
+    float aspect_ratio                   = cam->getAspectRatio();
+    glm::mat4 scale = glm::scale(glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)) *
+                                 comp.render_scale);
+    glm::mat4 model = glm::inverse(cam->getView()) * scale;
+
+    auto points = camera_frustum->getVerticesBuffer();
+    points->bindStorage(0);
+
+    _renderer->drawVAO(camera_frustum->getEdgesArray(), camera, model, pipeline, camera_frustum->n_edges());
+
+
+    if(comp.image())
+    {
+        uint32_t id = _renderer->popTextureID();
+
+        auto shader = _renderer->getShaderManager()->getShader("image_display");
+
+        GraphicsPipeline pipeline = GraphicsPipeline()
+                                        .setShader(shader)
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                        .setRasterizerState(RasterizerState().enableCulling(false));
+
+        model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
+        shader->setInt("screen_texture", id);
+        shader->setInt("entityID", entity_id);
+        comp.image()->use(id);
+        _renderer->drawVAO(quad->getVerticesArray(), camera, model, pipeline, quad->n_vertices());
+        _renderer->pushTextureID(id);
+    }
+    else if(comp.render_preview && comp.preview)
+    {
+        auto shader = _renderer->getShaderManager()->getShader("image_display");
+
+        GraphicsPipeline pipeline = GraphicsPipeline()
+                                        .setShader(shader)
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                        .setRasterizerState(RasterizerState().enableCulling(false));
+
+        uint32_t id = _renderer->popTextureID();
+        model       = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
+        shader->setInt("screen_texture", id);
+        shader->setInt("entityID", entity_id);
+
+        comp.preview->getColorAttachement(0)->use(id);
+        _renderer->drawVAO(quad->getVerticesArray(), camera, model, pipeline, quad->n_vertices());
+        _renderer->pushTextureID(id);
+    }
+}
 }    // namespace atcg

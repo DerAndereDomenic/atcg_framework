@@ -39,9 +39,6 @@ public:
     void initCube();
     atcg::ref_ptr<Graph> cube;
 
-    void initCameraFrustrum();
-    atcg::ref_ptr<Graph> camera_frustrum;
-
     void initFramebuffer(uint32_t width, uint32_t height);
 
     atcg::ref_ptr<Framebuffer> screen_fbo;
@@ -96,8 +93,6 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
     initCross();
 
     initCube();
-
-    initCameraFrustrum();
 
     initFramebuffer(width, height);
 
@@ -184,33 +179,6 @@ void RendererSystem::Impl::initCube()
     faces.push_back(glm::u32vec3(4, 0, 1));
 
     cube = atcg::Graph::createTriangleMesh(points, faces);
-}
-
-void RendererSystem::Impl::initCameraFrustrum()
-{
-    ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
-
-    glm::vec3 eye = glm::vec3(0);
-
-    std::vector<atcg::Vertex> points;
-    points.push_back(atcg::Vertex(eye, glm::vec3(1)));
-    points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, -0.5, 1.0f), glm::vec3(1)));
-    points.push_back(atcg::Vertex(eye + glm::vec3(0.5, -0.5, 1.0f), glm::vec3(1)));
-    points.push_back(atcg::Vertex(eye + glm::vec3(0.5, 0.5, 1.0f), glm::vec3(1)));
-    points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, 0.5, 1.0f), glm::vec3(1)));
-
-    std::vector<atcg::Edge> edges;
-    edges.push_back({glm::vec2(0, 1), glm::vec3(1), 0.01f});
-    edges.push_back({glm::vec2(0, 2), glm::vec3(1), 0.01f});
-    edges.push_back({glm::vec2(0, 3), glm::vec3(1), 0.01f});
-    edges.push_back({glm::vec2(0, 4), glm::vec3(1), 0.01f});
-
-    edges.push_back({glm::vec2(1, 2), glm::vec3(1), 0.01f});
-    edges.push_back({glm::vec2(2, 3), glm::vec3(1), 0.01f});
-    edges.push_back({glm::vec2(3, 4), glm::vec3(1), 0.01f});
-    edges.push_back({glm::vec2(4, 1), glm::vec3(1), 0.01f});
-
-    camera_frustrum = atcg::Graph::createGraph(points, edges);
 }
 
 void RendererSystem::Impl::initFramebuffer(uint32_t width, uint32_t height)
@@ -666,78 +634,6 @@ void RendererSystem::drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap
     drawVAO(impl->cube->getVerticesArray(), camera, glm::mat4(1), pipeline, impl->cube->n_vertices());
 
     pushTextureID(skybox_id);
-}
-
-void RendererSystem::drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    ATCG_ASSERT(impl->render_pass_started, "Cannot draw cameras while no render pass is active.");
-
-    const auto& view = scene->getAllEntitiesWith<atcg::CameraComponent>();
-
-    for(auto e: view)
-    {
-        Entity entity(e, scene.get());
-
-        auto shader               = impl->shader_manager->getShader("edge");
-        GraphicsPipeline pipeline = GraphicsPipeline()
-                                        .setShader(shader)
-                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_POINTS)
-                                        .setRasterizerState(RasterizerState().enableCulling(false).setLineSize(2.0f));
-
-        uint32_t entity_id = entity.entity_handle();
-        shader->setInt("entityID", entity_id);
-        atcg::CameraComponent& comp = entity.getComponent<CameraComponent>();
-        shader->setVec3("flat_color", comp.color);
-        atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(comp.camera);
-        float aspect_ratio                   = cam->getAspectRatio();
-        glm::mat4 scale                      = glm::scale(
-            glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)) * comp.render_scale);
-        glm::mat4 model = glm::inverse(cam->getView()) * scale;
-
-        auto points = impl->camera_frustrum->getVerticesBuffer();
-        points->bindStorage(0);
-
-        drawVAO(impl->camera_frustrum->getEdgesArray(), camera, model, pipeline, impl->camera_frustrum->n_edges());
-
-
-        if(comp.image())
-        {
-            uint32_t id = popTextureID();
-
-            auto shader = impl->shader_manager->getShader("image_display");
-
-            GraphicsPipeline pipeline = GraphicsPipeline()
-                                            .setShader(shader)
-                                            .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
-                                            .setRasterizerState(RasterizerState().enableCulling(false));
-
-            model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
-            shader->setInt("screen_texture", id);
-            shader->setInt("entityID", entity_id);
-            impl->render_api.bindTexture(id, comp.image());
-            drawVAO(impl->quad_vao, camera, model, pipeline, 4);
-            pushTextureID(id);
-        }
-        else if(comp.render_preview && comp.preview)
-        {
-            auto shader = impl->shader_manager->getShader("image_display");
-
-            GraphicsPipeline pipeline = GraphicsPipeline()
-                                            .setShader(shader)
-                                            .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
-                                            .setRasterizerState(RasterizerState().enableCulling(false));
-
-            uint32_t id = popTextureID();
-            model       = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
-            shader->setInt("screen_texture", id);
-            shader->setInt("entityID", entity_id);
-
-            impl->render_api.bindTexture(id, comp.preview->getColorAttachement(0));
-            drawVAO(impl->quad_vao, camera, model, pipeline, 4);
-            pushTextureID(id);
-        }
-    }
 }
 
 void RendererSystem::drawLights(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)

@@ -188,14 +188,6 @@ public:
     void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera);
 
     /**
-     * @brief Draw camera frustrums
-     *
-     * @param scene The scene
-     * @param camera The camera
-     */
-    void drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {});
-
-    /**
      * @brief Draw light sources
      *
      * @param scene The scene
@@ -448,17 +440,6 @@ ATCG_INLINE void drawVAO(const atcg::ref_ptr<VertexArray>& vao,
 ATCG_INLINE void drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap, const atcg::ref_ptr<Camera>& camera)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->drawSkybox(skybox_cubemap, camera);
-}
-
-/**
- * @brief Draw camera frustrums
- *
- * @param scene The scene
- * @param camera The camera
- */
-ATCG_INLINE void drawCameras(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera = {})
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->drawCameras(scene, camera);
 }
 
 /**

@@ -48,6 +48,7 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
             auxiliary.setValue("point_light_depth_maps", point_light_depth_maps);
             auxiliary.setValue("skybox", has_skybox ? skybox : data.getValue<atcg::ref_ptr<Skybox>>("dummy_skybox"));
             auxiliary.setValue("has_skybox", has_skybox);
+            auxiliary.setValue("draw_cameras", context.getValueOr("draw_cameras", true));
 
             auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffe"
                                                                                                   "r");
