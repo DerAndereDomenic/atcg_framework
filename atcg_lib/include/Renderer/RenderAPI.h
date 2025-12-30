@@ -14,7 +14,7 @@ public:
     void beginRenderPass(const atcg::ref_ptr<Framebuffer>& target);
     void endRenderPass();
 
-    void setPipeline(const GraphicsPipeline& pipeline);
+    void bindPipeline(const GraphicsPipeline& pipeline);
 
     void setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
     glm::ivec4 getViewport() const;
@@ -34,5 +34,6 @@ public:
 private:
     GraphicsPipeline _current_pipeline;
     atcg::ref_ptr<IndexBuffer> _current_ibo = nullptr;
+    bool _started_render_pass               = false;
 };
 }    // namespace atcg

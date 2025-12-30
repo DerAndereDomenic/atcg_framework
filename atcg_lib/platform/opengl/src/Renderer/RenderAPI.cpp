@@ -1,4 +1,5 @@
 #include <Renderer/RenderAPI.h>
+#include <Core/Assert.h>
 
 #include <glad/glad.h>
 
@@ -14,6 +15,8 @@ static GLenum toGLPrimitive(PrimitiveTopology topo)
             return GL_TRIANGLES;
         case PrimitiveTopology::ATCG_POINTS:
             return GL_POINTS;
+        case PrimitiveTopology::ATCG_LINES:
+            return GL_LINES;
     }
     return GL_TRIANGLES;
 }
@@ -45,15 +48,23 @@ static GLenum toGLDepthFunction(DepthFunction func)
 
 void RenderAPI::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
 {
+    ATCG_ASSERT(!_started_render_pass, "Render pass already started");
+    _started_render_pass = true;
     target ? target->use() : Framebuffer::useDefault();
+    if(target)
+    {
+        setViewport(0, 0, target->width(), target->height());
+    }
 }
 
 void RenderAPI::endRenderPass()
 {
+    ATCG_ASSERT(_started_render_pass, "Render pass not started");
+    _started_render_pass = false;
     // Nothing to do for OpenGL
 }
 
-void RenderAPI::setPipeline(const GraphicsPipeline& pipeline)
+void RenderAPI::bindPipeline(const GraphicsPipeline& pipeline)
 {
     pipeline.shader->use();
 
@@ -104,12 +115,12 @@ void RenderAPI::setPipeline(const GraphicsPipeline& pipeline)
     if(_current_pipeline.render_state.depth_state.depth_write_enabled)
     {
         glDepthMask(GL_TRUE);
-        glDepthFunc(detail::toGLDepthFunction(_current_pipeline.render_state.depth_state.depth_function));
     }
     else
     {
         glDepthMask(GL_FALSE);
     }
+    glDepthFunc(detail::toGLDepthFunction(_current_pipeline.render_state.depth_state.depth_function));
 
     if(_current_pipeline.render_state.blend_state.blend_enabled)
     {
