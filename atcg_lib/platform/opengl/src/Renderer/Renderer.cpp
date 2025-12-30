@@ -300,6 +300,9 @@ void RendererSystem::endRenderPass()
 void RendererSystem::clear()
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
+    GraphicsPipeline pipeline =
+        GraphicsPipeline().setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthWrite(true)));
+    impl->render_api.bindPipeline(pipeline);
     impl->render_api.clear();
 }
 
@@ -634,22 +637,6 @@ void RendererSystem::drawSkybox(const atcg::ref_ptr<TextureCube>& skybox_cubemap
     drawVAO(impl->cube->getVerticesArray(), camera, glm::mat4(1), pipeline, impl->cube->n_vertices());
 
     pushTextureID(skybox_id);
-}
-
-void RendererSystem::drawLights(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-
-    const auto& view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
-    for(auto e: view)
-    {
-        Entity entity(e, scene.get());
-
-        auto& transform   = entity.getComponent<atcg::TransformComponent>();
-        auto& point_light = entity.getComponent<atcg::PointLightComponent>();
-
-        impl->drawCircle(transform.getPosition(), 0.1f, 1.0f, point_light.color, camera, entity.entity_handle());
-    }
 }
 
 void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency_)
