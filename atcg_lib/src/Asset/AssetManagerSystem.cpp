@@ -275,6 +275,34 @@ void AssetManagerSystem::loadStandardAssets()
 
         _quad = atcg::Graph::createTriangleMesh(vertices, edges);
     }
+
+    {
+        std::vector<atcg::Vertex> points;
+        points.push_back(atcg::Vertex(glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(1)));
+
+        std::vector<glm::u32vec3> faces;
+        faces.push_back(glm::u32vec3(4, 2, 0));
+        faces.push_back(glm::u32vec3(2, 7, 3));
+        faces.push_back(glm::u32vec3(6, 5, 7));
+        faces.push_back(glm::u32vec3(1, 7, 5));
+        faces.push_back(glm::u32vec3(0, 3, 1));
+        faces.push_back(glm::u32vec3(4, 1, 5));
+        faces.push_back(glm::u32vec3(4, 6, 2));
+        faces.push_back(glm::u32vec3(2, 6, 7));
+        faces.push_back(glm::u32vec3(6, 4, 5));
+        faces.push_back(glm::u32vec3(1, 3, 7));
+        faces.push_back(glm::u32vec3(0, 2, 3));
+        faces.push_back(glm::u32vec3(4, 0, 1));
+
+        _cube_mesh = atcg::Graph::createTriangleMesh(points, faces);
+    }
 }
 
 }    // namespace atcg

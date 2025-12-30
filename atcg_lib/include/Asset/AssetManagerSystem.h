@@ -192,6 +192,13 @@ public:
      */
     ATCG_INLINE atcg::ref_ptr<Graph> getQuadMesh() const { return _quad; }
 
+    /**
+     * @brief Get the cube mesh
+     *
+     * @return The cube mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getCubeMesh() const { return _cube_mesh; }
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
@@ -202,6 +209,7 @@ private:
     atcg::ref_ptr<Texture2D> _lut_texture;
     atcg::ref_ptr<Graph> _camera_frustum;
     atcg::ref_ptr<Graph> _quad;
+    atcg::ref_ptr<Graph> _cube_mesh;
 };
 
 namespace AssetManager
@@ -453,6 +461,16 @@ ATCG_INLINE atcg::ref_ptr<Graph> getCameraFrustumMesh()
 ATCG_INLINE atcg::ref_ptr<Graph> getQuadMesh()
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getQuadMesh();
+}
+
+/**
+ * @brief Get the cube mesh
+ *
+ * @return The cube mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getCubeMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getCubeMesh();
 }
 
 }    // namespace AssetManager
