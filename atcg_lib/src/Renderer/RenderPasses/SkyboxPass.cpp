@@ -62,10 +62,12 @@ void SkyboxPass::initRenderPass()
                 }
             }
 
+            renderer->beginRenderPass(target);
             if(has_skybox && _skybox)
             {
                 renderer->drawSkybox(_skybox->getSkyboxCubeMap(), context.getValue<atcg::ref_ptr<Camera>>("camera"));
             }
+            renderer->endRenderPass();
         });
 }
 }    // namespace atcg

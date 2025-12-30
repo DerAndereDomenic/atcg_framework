@@ -427,9 +427,16 @@ void VRSystem::renderToScreen()
     vr_shader->setInt("texture_right", 11);
     impl->render_target_left->getColorAttachement()->use(10);
     impl->render_target_right->getColorAttachement()->use(11);
-    atcg::Renderer::toggleDepthTesting(false);
-    atcg::Renderer::draw(impl->quad, {}, glm::mat4(1), glm::vec3(1), vr_shader);
-    atcg::Renderer::toggleDepthTesting(true);
+
+    atcg::GraphicsPipeline pipeline =
+        atcg::GraphicsPipeline()
+            .setShader(vr_shader)
+            .setPrimitiveTopology(atcg::PrimitiveTopology::ATCG_TRIANGLES)
+            .setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthTesting(false)));
+
+    atcg::Renderer::beginRenderPass(atcg::Framebuffer::currentFramebuffer());
+    atcg::Renderer::drawVAO(impl->quad->getVerticesArray(), {}, glm::mat4(1), pipeline, impl->quad->n_vertices());
+    atcg::Renderer::endRenderPass();
 }
 
 glm::vec3 VRSystem::getPosition()
@@ -515,12 +522,18 @@ void VRSystem::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& ca
 
     atcg::ShaderManager::getShader("edge")->setFloat("fall_off_edge", 1000.0f);
     atcg::ShaderManager::getShader("edge")->setFloat("base_transparency", 1.0f);
-    atcg::Renderer::draw(impl->movement_line,
-                         camera,
-                         glm::mat4(1),
-                         glm::vec3(1),
-                         nullptr,
-                         atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+
+    GraphicsPipeline pipeline = GraphicsPipeline()
+                                    .setShader(atcg::ShaderManager::getShader("edge"))
+                                    .setPrimitiveTopology(atcg::PrimitiveTopology::ATCG_LINES)
+                                    .setRasterizerState(RasterizerState().setLineSize(5.0f).setDepthState(
+                                        DepthState().enableDepthTesting(true)));
+
+    atcg::Renderer::drawVAO(impl->movement_line->getVerticesArray(),
+                            camera,
+                            glm::mat4(1),
+                            pipeline,
+                            impl->movement_line->n_vertices());
 }
 
 void VRSystem::setOffset(const glm::vec3& offset)

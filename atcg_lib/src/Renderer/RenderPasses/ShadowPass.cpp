@@ -37,8 +37,6 @@ void ShadowPass::initRenderPass()
 
             auto active_fbo = atcg::Framebuffer::currentFramebuffer();
 
-            glm::vec4 old_viewport = renderer->getViewport();
-
             auto light_view = scene->getAllEntitiesWith<PointLightComponent, TransformComponent>();
 
             uint32_t num_lights = 0;
@@ -71,8 +69,7 @@ void ShadowPass::initRenderPass()
                 point_light_framebuffer->complete();
             }
 
-            point_light_framebuffer->use();
-            renderer->setViewport(0, 0, point_light_framebuffer->width(), point_light_framebuffer->height());
+            renderer->beginRenderPass(point_light_framebuffer);
             renderer->clear();
 
             uint32_t light_idx = 0;
@@ -130,7 +127,8 @@ void ShadowPass::initRenderPass()
                 ++light_idx;
             }
 
-            renderer->setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
+            renderer->endRenderPass();
+
             active_fbo ? active_fbo->use() : atcg::Framebuffer::useDefault();
         });
 }

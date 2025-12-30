@@ -71,9 +71,17 @@ void TonemapPass::initRenderPass()
                     target->getColorAttachement(2)->fill(&value);
                 }
             }
+            renderer->beginRenderPass(target);
+
             target->blit(hdr, false, true);    // Copy depth
 
             auto shader = renderer->getShaderManager()->getShader("tonemap");
+
+            GraphicsPipeline pipeline =
+                GraphicsPipeline()
+                    .setShader(shader)
+                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                    .setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthTesting(false)));
 
             uint32_t screen_id  = renderer->popTextureID();
             uint32_t entity_id  = renderer->popTextureID();
@@ -87,14 +95,14 @@ void TonemapPass::initRenderPass()
             hdr->getColorAttachement(1)->use(entity_id);
             hdr->getColorAttachement(2)->use(stencil_id);
 
-            renderer->toggleDepthTesting(false);
             auto screen_quad = data.getValue<atcg::ref_ptr<Graph>>("screen_quad");
-            renderer->draw(screen_quad, {}, glm::mat4(1), glm::vec3(1), shader);
-            renderer->toggleDepthTesting(true);
+            renderer->drawVAO(screen_quad->getVerticesArray(), {}, glm::mat4(1), pipeline, screen_quad->n_vertices());
 
             renderer->pushTextureID(screen_id);
             renderer->pushTextureID(entity_id);
             renderer->pushTextureID(stencil_id);
+
+            renderer->endRenderPass();
         });
 }
 }    // namespace atcg

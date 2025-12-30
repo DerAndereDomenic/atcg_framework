@@ -182,15 +182,12 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
     }
 
     component.preview->use();
-    atcg::Renderer::clear();
-    atcg::Renderer::setViewport(0, 0, preview_width, preview_height);
 
     atcg::Dictionary context;
     context.setValue("camera", component.camera);
     context.setValue("target", component.preview);
     scene->draw(context);
     atcg::Renderer::useScreenBuffer();
-    atcg::Renderer::setDefaultViewport();
 
     updated = ImGui::Checkbox("Show Preview##cam", &component.render_preview) || updated;
 

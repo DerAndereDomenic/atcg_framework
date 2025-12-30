@@ -39,7 +39,9 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
                                                                                                                 "maps");
             }
 
-            auto skybox     = *inputs.getValueOr<atcg::ref_ptr<atcg::ref_ptr<Skybox>>>("skybox", nullptr);
+            auto skybox = *inputs.getValueOr<atcg::ref_ptr<atcg::ref_ptr<Skybox>>>(
+                "skybox",
+                atcg::make_ref<atcg::ref_ptr<Skybox>>(nullptr));
             bool has_skybox = context.getValueOr("has_skybox", false) && (skybox != nullptr);
 
             Dictionary auxiliary;
@@ -55,7 +57,7 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
             if(_render_target.clear)
             {
                 renderer->clear();
-                // We assume that this is an entity buffer, better solution?
+                //  We assume that this is an entity buffer, better solution?
                 if(target->numColorAttachements() > 1 &&
                    target->getColorAttachement(1)->getSpecification().format == TextureFormat::RINT)
                 {
@@ -70,6 +72,9 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
                     target->getColorAttachement(2)->fill(&value);
                 }
             }
+
+            renderer->beginRenderPass(target);
+
             for(auto e: view)
             {
                 Entity entity(e, scene.get());
@@ -81,6 +86,8 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
 
                 ComponentRegistry::renderAllComponents(renderer, entity, camera, auxiliary);
             }
+
+            renderer->endRenderPass();
         });
 }
 }    // namespace atcg
