@@ -10,6 +10,8 @@
 namespace atcg
 {
 
+class RenderAPI;
+
 /**
  * @brief A class to model a texture
  */
@@ -108,13 +110,6 @@ public:
      * @return The specification
      */
     ATCG_INLINE TextureSpecification getSpecification() const { return _spec; }
-
-    /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const = 0;
 
     /**
      * @brief Use this texture as output in a compute shader
@@ -223,6 +218,14 @@ public:
     void fill(void* value);
 
 protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const = 0;
+
+    friend class RenderAPI;
     uint32_t _ID;
     TextureSpecification _spec;
 
@@ -333,13 +336,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -354,6 +350,16 @@ public:
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture2D; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    friend class RenderAPI;
 };
 
 /**
@@ -440,13 +446,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -461,6 +460,16 @@ public:
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture3D; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    friend class RenderAPI;
 };
 
 /**
@@ -523,13 +532,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -540,6 +542,16 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    friend class RenderAPI;
 };
 
 /**
@@ -626,13 +638,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -643,6 +648,16 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    friend class RenderAPI;
 };
 
 /**
@@ -705,13 +720,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -722,6 +730,16 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    friend class RenderAPI;
 };
 
 /**
@@ -775,13 +793,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      * @note This function is a NoOp as it is not possible to generate mipmaps of a multisampled texture.
      */
@@ -795,6 +806,16 @@ public:
      * @return nullptr
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void use(const uint32_t& slot = 0) const override;
+
+    friend class RenderAPI;
 };
 
 }    // namespace atcg

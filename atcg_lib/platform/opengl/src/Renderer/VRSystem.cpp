@@ -425,8 +425,9 @@ void VRSystem::renderToScreen()
     auto vr_shader = atcg::ShaderManager::getShader("vrScreen");
     vr_shader->setInt("texture_left", 10);
     vr_shader->setInt("texture_right", 11);
-    impl->render_target_left->getColorAttachement()->use(10);
-    impl->render_target_right->getColorAttachement()->use(11);
+
+    atcg::Renderer::bindTexture(10, impl->render_target_left->getColorAttachement());
+    atcg::Renderer::bindTexture(11, impl->render_target_right->getColorAttachement());
 
     atcg::GraphicsPipeline pipeline =
         atcg::GraphicsPipeline()

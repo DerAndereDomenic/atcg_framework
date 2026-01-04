@@ -48,7 +48,7 @@ ATCG_INLINE uint32_t setLights(atcg::RendererSystem* renderer,
         uint32_t shadow_map_id = renderer->popTextureID();
         shader->setInt("shadow_maps", shadow_map_id);
         shader->setInt("shadow_pass", 1);
-        point_light_depth_maps->use(shadow_map_id);
+        renderer->bindTexture(shadow_map_id, point_light_depth_maps);
 
         return shadow_map_id;
     }
@@ -65,11 +65,11 @@ ATCG_INLINE std::pair<uint32_t, uint32_t>
 setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const atcg::ref_ptr<Skybox>& skybox)
 {
     uint32_t irradiance_id = renderer->popTextureID();
-    skybox->getIrradianceMap()->use(irradiance_id);
+    renderer->bindTexture(irradiance_id, skybox->getIrradianceMap());
     shader->setInt("irradiance_map", irradiance_id);
 
     uint32_t prefiltered_id = renderer->popTextureID();
-    skybox->getPrefilteredMap()->use(prefiltered_id);
+    renderer->bindTexture(prefiltered_id, skybox->getPrefilteredMap());
     shader->setInt("prefilter_map", prefiltered_id);
 
     return std::make_pair(irradiance_id, prefiltered_id);
@@ -128,9 +128,9 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
         shader->setInt("entityID", entity.entity_handle());
         shader->setVec3("flat_color", glm::vec3(1));
         renderer.material()->uploadMaterial(_renderer, shader);
-        uint32_t lud_id = _renderer->popTextureID();
-        shader->setInt("lut", lud_id);
-        AssetManager::getLUTTexture()->use(lud_id);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
 
         GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
 
@@ -151,9 +151,9 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
         {
             _renderer->pushTextureID(pre_id);
         }
-        if(lud_id != -1)
+        if(lut_id != -1)
         {
-            _renderer->pushTextureID(lud_id);
+            _renderer->pushTextureID(lut_id);
         }
         renderer.material()->releaseTextureIDs(_renderer);
     }
@@ -211,9 +211,9 @@ void ComponentRenderer<PointRenderComponent>::renderComponent(atcg::RendererSyst
         shader->setInt("entityID", entity.entity_handle());
         shader->setVec3("flat_color", renderer.color);
         renderer.default_material->uploadMaterial(_renderer, shader);
-        uint32_t lud_id = _renderer->popTextureID();
-        shader->setInt("lut", lud_id);
-        AssetManager::getLUTTexture()->use(lud_id);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
 
         GraphicsPipeline pipeline = GraphicsPipeline()
                                         .setShader(shader)
@@ -237,9 +237,9 @@ void ComponentRenderer<PointRenderComponent>::renderComponent(atcg::RendererSyst
         {
             _renderer->pushTextureID(pre_id);
         }
-        if(lud_id != -1)
+        if(lut_id != -1)
         {
-            _renderer->pushTextureID(lud_id);
+            _renderer->pushTextureID(lut_id);
         }
         renderer.default_material->releaseTextureIDs(_renderer);
     }
@@ -298,9 +298,9 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
         shader->setFloat("point_size", renderer.point_size);
         shader->setVec3("flat_color", glm::vec3(1));
         renderer.material()->uploadMaterial(_renderer, shader);
-        uint32_t lud_id = _renderer->popTextureID();
-        shader->setInt("lut", lud_id);
-        AssetManager::getLUTTexture()->use(lud_id);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
 
         auto vbo = geometry.graph()->getVerticesBuffer();
 
@@ -331,9 +331,9 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
         {
             _renderer->pushTextureID(pre_id);
         }
-        if(lud_id != -1)
+        if(lut_id != -1)
         {
-            _renderer->pushTextureID(lud_id);
+            _renderer->pushTextureID(lut_id);
         }
         renderer.material()->releaseTextureIDs(_renderer);
     }
@@ -392,9 +392,9 @@ void ComponentRenderer<EdgeRenderComponent>::renderComponent(atcg::RendererSyste
         shader->setInt("entityID", entity.entity_handle());
         shader->setVec3("flat_color", renderer.color);
         renderer.default_material->uploadMaterial(_renderer, shader);
-        uint32_t lud_id = _renderer->popTextureID();
-        shader->setInt("lut", lud_id);
-        AssetManager::getLUTTexture()->use(lud_id);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
 
         auto points = geometry.graph()->getVerticesBuffer();
         points->bindStorage(0);
@@ -421,9 +421,9 @@ void ComponentRenderer<EdgeRenderComponent>::renderComponent(atcg::RendererSyste
         {
             _renderer->pushTextureID(pre_id);
         }
-        if(lud_id != -1)
+        if(lut_id != -1)
         {
-            _renderer->pushTextureID(lud_id);
+            _renderer->pushTextureID(lut_id);
         }
         renderer.default_material->releaseTextureIDs(_renderer);
     }
@@ -483,9 +483,9 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
         shader->setInt("entityID", entity.entity_handle());
         shader->setVec3("flat_color", glm::vec3(1));
         renderer.material()->uploadMaterial(_renderer, shader);
-        uint32_t lud_id = _renderer->popTextureID();
-        shader->setInt("lut", lud_id);
-        AssetManager::getLUTTexture()->use(lud_id);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
 
         auto points  = geometry.graph()->getVerticesBuffer();
         auto indices = geometry.graph()->getEdgesBuffer();
@@ -518,9 +518,9 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
         {
             _renderer->pushTextureID(pre_id);
         }
-        if(lud_id != -1)
+        if(lut_id != -1)
         {
-            _renderer->pushTextureID(lud_id);
+            _renderer->pushTextureID(lut_id);
         }
         renderer.material()->releaseTextureIDs(_renderer);
     }
@@ -589,9 +589,9 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
         shader->setInt("entityID", entity.entity_handle());
         shader->setVec3("flat_color", glm::vec3(1));
         renderer.material()->uploadMaterial(_renderer, shader);
-        uint32_t lud_id = _renderer->popTextureID();
-        shader->setInt("lut", lud_id);
-        AssetManager::getLUTTexture()->use(lud_id);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
 
         auto instance_vbo    = vao->peekVertexBuffer();
         uint32_t n_instances = instance_vbo->size() / instance_vbo->getLayout().getStride();
@@ -611,9 +611,9 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
         {
             _renderer->pushTextureID(pre_id);
         }
-        if(lud_id != -1)
+        if(lut_id != -1)
         {
-            _renderer->pushTextureID(lud_id);
+            _renderer->pushTextureID(lut_id);
         }
         renderer.material()->releaseTextureIDs(_renderer);
 
@@ -645,7 +645,7 @@ void ComponentRenderer<MeshLightComponent>::renderComponent(atcg::RendererSystem
     // if(renderer.visible)
     {
         auto emissive_id = _renderer->popTextureID();
-        renderer.getEmissiveTexture()->use(emissive_id);
+        _renderer->bindTexture(emissive_id, renderer.getEmissiveTexture());
         shader->setInt("texture_emissive", emissive_id);
         shader->setFloat("emissive_scaling", renderer.intensity);
         shader->setInt("entityID", entity.entity_handle());
@@ -709,7 +709,7 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
         model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
         shader->setInt("screen_texture", id);
         shader->setInt("entityID", entity_id);
-        comp.image()->use(id);
+        _renderer->bindTexture(id, comp.image());
         _renderer->drawVAO(quad->getVerticesArray(), camera, model, pipeline, quad->n_vertices());
         _renderer->pushTextureID(id);
     }
@@ -727,7 +727,7 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
         shader->setInt("screen_texture", id);
         shader->setInt("entityID", entity_id);
 
-        comp.preview->getColorAttachement(0)->use(id);
+        _renderer->bindTexture(id, comp.preview->getColorAttachement(0));
         _renderer->drawVAO(quad->getVerticesArray(), camera, model, pipeline, quad->n_vertices());
         _renderer->pushTextureID(id);
     }

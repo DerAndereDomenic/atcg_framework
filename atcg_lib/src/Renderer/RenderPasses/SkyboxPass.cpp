@@ -77,7 +77,7 @@ void SkyboxPass::initRenderPass()
 
                 uint32_t skybox_id = renderer->popTextureID();
                 shader->setInt("skybox", skybox_id);
-                _skybox->getSkyboxCubeMap()->use(skybox_id);
+                renderer->bindTexture(skybox_id, _skybox->getSkyboxCubeMap());
 
                 renderer->drawVAO(cube->getVerticesArray(),
                                   context.getValue<atcg::ref_ptr<Camera>>("camera"),

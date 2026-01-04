@@ -53,7 +53,7 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
         Renderer::beginRenderPass(captureFBO);
 
         equirect_shader->setInt("equirectangularMap", cubemap_id);
-        skybox_texture->use(cubemap_id);
+        Renderer::bindTexture(cubemap_id, skybox_texture);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -84,7 +84,7 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
         Renderer::beginRenderPass(captureFBO);
 
         cubeconv_shader->setInt("skybox", cubemap_id);
-        _skybox_cubemap->use(cubemap_id);
+        Renderer::bindTexture(cubemap_id, _skybox_cubemap);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
@@ -120,7 +120,7 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
                                             .setRasterizerState(RasterizerState().enableCulling(false));
 
             Renderer::beginRenderPass(captureFBO);
-            _skybox_cubemap->use(cubemap_id);
+            Renderer::bindTexture(cubemap_id, _skybox_cubemap);
 
             float roughness = (float)mip / (float)(max_mip_levels - 1);
             prefilter_shader->setFloat("roughness", roughness);

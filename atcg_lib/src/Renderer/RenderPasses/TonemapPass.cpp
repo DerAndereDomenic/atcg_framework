@@ -91,9 +91,9 @@ void TonemapPass::initRenderPass()
             shader->setInt("entity_texture", entity_id);
             shader->setInt("stencil_texture", stencil_id);
 
-            hdr->getColorAttachement(0)->use(screen_id);
-            hdr->getColorAttachement(1)->use(entity_id);
-            hdr->getColorAttachement(2)->use(stencil_id);
+            renderer->bindTexture(screen_id, hdr->getColorAttachement(0));
+            renderer->bindTexture(entity_id, hdr->getColorAttachement(1));
+            renderer->bindTexture(stencil_id, hdr->getColorAttachement(2));
 
             auto screen_quad = data.getValue<atcg::ref_ptr<Graph>>("screen_quad");
             renderer->drawVAO(screen_quad->getVerticesArray(), {}, glm::mat4(1), pipeline, screen_quad->n_vertices());
