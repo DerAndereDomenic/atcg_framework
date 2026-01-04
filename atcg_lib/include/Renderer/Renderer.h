@@ -51,6 +51,8 @@ public:
 
     void clear();
 
+    void bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture);
+
     /**
      * @brief Finished the currently drawn frame (should not be called by client!)
      */
@@ -312,6 +314,11 @@ ATCG_INLINE void endRenderPass()
 ATCG_INLINE void clear()
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->clear();
+}
+
+ATCG_INLINE void bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->bindTexture(slot, texture);
 }
 
 /**

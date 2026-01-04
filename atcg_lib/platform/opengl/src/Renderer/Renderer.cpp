@@ -306,6 +306,11 @@ void RendererSystem::clear()
     impl->render_api.clear();
 }
 
+void RendererSystem::bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
+{
+    impl->render_api.bindTexture(slot, texture);
+}
+
 void RendererSystem::finishFrame()
 {
     ATCG_ASSERT(!impl->render_pass_started, "Cannot finish frame while render pass is active.");
@@ -460,7 +465,7 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
     if(entity_ids)
     {
         shader->setInt("entity_ids", 1);
-        entity_ids->use(1);
+        impl->render_api.bindTexture(1, entity_ids);
         shader->selectSubroutine("_getEntityID", "getFromTextureID");
     }
     else
