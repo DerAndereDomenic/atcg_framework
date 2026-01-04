@@ -21,6 +21,7 @@ public:
 
     void bindVertexArray(const atcg::ref_ptr<VertexArray>& vao);
     void bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture);
+    void bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer);
 
     void draw(uint32_t vertexCount);
     void drawIndexed(uint32_t indexCount);

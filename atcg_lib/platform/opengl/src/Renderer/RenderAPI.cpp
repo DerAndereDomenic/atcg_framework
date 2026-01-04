@@ -156,13 +156,18 @@ glm::ivec4 RenderAPI::getViewport() const
 
 void RenderAPI::bindVertexArray(const atcg::ref_ptr<VertexArray>& vao)
 {
-    vao->use();
+    vao->bind();
 }
 
 void RenderAPI::bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
 {
     texture->bind(slot);
     _bound_textures.emplace_back(slot, texture);
+}
+
+void RenderAPI::bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer)
+{
+    buffer->bindStorage(slot);
 }
 
 void RenderAPI::draw(uint32_t vertexCount)

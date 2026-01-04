@@ -53,6 +53,8 @@ public:
 
     void bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture);
 
+    void bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer);
+
     /**
      * @brief Finished the currently drawn frame (should not be called by client!)
      */
@@ -319,6 +321,11 @@ ATCG_INLINE void clear()
 ATCG_INLINE void bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->bindTexture(slot, texture);
+}
+
+ATCG_INLINE void bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer)
+{
+    SystemRegistry::instance()->getSystem<RendererSystem>()->bindStorageBuffer(slot, buffer);
 }
 
 /**

@@ -311,6 +311,11 @@ void RendererSystem::bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& te
     impl->render_api.bindTexture(slot, texture);
 }
 
+void RendererSystem::bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer)
+{
+    impl->render_api.bindStorageBuffer(slot, buffer);
+}
+
 void RendererSystem::finishFrame()
 {
     ATCG_ASSERT(!impl->render_pass_started, "Cannot finish frame while render pass is active.");
@@ -519,7 +524,7 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
             shader->setFloat("base_transparency", base_transparency * transparency);
 
             auto points = impl->grid->getVerticesBuffer();
-            points->bindStorage(0);
+            impl->render_api.bindStorageBuffer(0, points);
 
             impl->render_api.bindPipeline(pipeline);
             drawVAO(impl->grid->getEdgesArray(),
@@ -538,7 +543,7 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
     pipeline.render_state.setLineSize(2.0f);
 
     auto points = impl->cross->getVerticesBuffer();
-    points->bindStorage(0);
+    impl->render_api.bindStorageBuffer(0, points);
 
     impl->render_api.bindPipeline(pipeline);
     drawVAO(impl->cross->getEdgesArray(), camera, glm::mat4(1), pipeline, impl->cross->n_edges());
