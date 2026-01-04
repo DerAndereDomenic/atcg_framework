@@ -397,7 +397,7 @@ void ComponentRenderer<EdgeRenderComponent>::renderComponent(atcg::RendererSyste
         _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
 
         auto points = geometry.graph()->getVerticesBuffer();
-        points->bindStorage(0);
+        _renderer->bindStorageBuffer(0, points);
 
         GraphicsPipeline pipeline = GraphicsPipeline()
                                         .setShader(shader)
@@ -490,7 +490,7 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
         auto points  = geometry.graph()->getVerticesBuffer();
         auto indices = geometry.graph()->getEdgesBuffer();
 
-        points->bindStorage(0);
+        _renderer->bindStorageBuffer(0, points);
 
         auto cylinder_mesh = AssetManager::getCylinderMesh();
         auto vao_cylinder  = cylinder_mesh->getVerticesArray();
@@ -690,7 +690,7 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
     glm::mat4 model = glm::inverse(cam->getView()) * scale;
 
     auto points = camera_frustum->getVerticesBuffer();
-    points->bindStorage(0);
+    _renderer->bindStorageBuffer(0, points);
 
     _renderer->drawVAO(camera_frustum->getEdgesArray(), camera, model, pipeline, camera_frustum->n_edges());
 
