@@ -337,22 +337,6 @@ void RendererSystem::finishFrame()
     impl->render_api.endRenderPass();
 #endif
     ++impl->frame_counter;
-
-    GLint maxTextureUnits;
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &maxTextureUnits);    // TODO
-
-    for(int i = 0; i < maxTextureUnits; ++i)
-    {
-        // TODO
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindTexture(GL_TEXTURE_3D, 0);
-        glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-    }
-    glActiveTexture(GL_TEXTURE0);
 }
 
 void RendererSystem::finish() const

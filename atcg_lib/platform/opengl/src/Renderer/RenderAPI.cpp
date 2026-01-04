@@ -61,7 +61,13 @@ void RenderAPI::endRenderPass()
 {
     ATCG_ASSERT(_started_render_pass, "Render pass not started");
     _started_render_pass = false;
-    // Nothing to do for OpenGL
+
+    // Clear texture bindings
+    for(const auto& binding: _bound_textures)
+    {
+        binding.texture->unbind(binding.slot);
+    }
+    _bound_textures.clear();
 }
 
 void RenderAPI::bindPipeline(const GraphicsPipeline& pipeline)
@@ -155,7 +161,8 @@ void RenderAPI::bindVertexArray(const atcg::ref_ptr<VertexArray>& vao)
 
 void RenderAPI::bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
 {
-    texture->use(slot);
+    texture->bind(slot);
+    _bound_textures.emplace_back(slot, texture);
 }
 
 void RenderAPI::draw(uint32_t vertexCount)

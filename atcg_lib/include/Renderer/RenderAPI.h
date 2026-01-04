@@ -35,5 +35,15 @@ private:
     GraphicsPipeline _current_pipeline;
     atcg::ref_ptr<IndexBuffer> _current_ibo = nullptr;
     bool _started_render_pass               = false;
+
+    struct TextureBinding
+    {
+        TextureBinding(uint32_t s, const atcg::ref_ptr<Texture>& t) : slot(s), texture(t) {}
+
+        uint32_t slot;
+        atcg::ref_ptr<Texture> texture;
+    };
+
+    std::vector<TextureBinding> _bound_textures = {};
 };
 }    // namespace atcg
