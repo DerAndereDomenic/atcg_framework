@@ -140,6 +140,16 @@ void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
     useDefault();
 }
 
+void Framebuffer::attachCubeFace(const atcg::ref_ptr<TextureCube>& cube_map, uint32_t face_index, uint32_t mip_level)
+{
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
+                           GL_TEXTURE_CUBE_MAP_POSITIVE_X + face_index,
+                           cube_map->getID(),
+                           mip_level);
+    _color_attachements.push_back(cube_map);
+}
+
 void Framebuffer::attachDepth()
 {
     TextureSpecification spec;
@@ -166,6 +176,19 @@ void Framebuffer::attachDepth(const atcg::ref_ptr<Texture>& depth_map)
     _depth_attachement = depth_map;
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, _depth_attachement->getID(), 0);
     useDefault();
+}
+
+void Framebuffer::detachColor()
+{
+    if(_color_attachements.size() == 0)
+    {
+        ATCG_WARN("No color attachements to detach");
+        return;
+    }
+
+    uint32_t last_index = static_cast<uint32_t>(_color_attachements.size() - 1);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + last_index, 0, 0);
+    _color_attachements.pop_back();
 }
 
 void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, bool depth)

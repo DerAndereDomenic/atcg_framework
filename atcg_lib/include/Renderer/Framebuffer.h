@@ -151,6 +151,15 @@ public:
     void attachTexture(const atcg::ref_ptr<Texture>& texture);
 
     /**
+     * @brief Attach a face of a cube map as color attachement
+     *
+     * @param cube_map The cube map
+     * @param face_index The face index (0-5)
+     * @param mip_level The mip level
+     */
+    void attachCubeFace(const atcg::ref_ptr<TextureCube>& cube_map, uint32_t face_index, uint32_t mip_level = 0);
+
+    /**
      * @brief Add a depth attachement
      */
     void attachDepth();
@@ -166,6 +175,11 @@ public:
      * @param depth_map The depth map component
      */
     void attachDepth(const atcg::ref_ptr<Texture>& depth_map);
+
+    /**
+     * @brief Detach the last color attachement
+     */
+    void detachColor();
 
     /**
      * @brief Blit two framebuffer together.
