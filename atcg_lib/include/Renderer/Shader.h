@@ -11,6 +11,8 @@
 
 namespace atcg
 {
+class RenderAPI;
+
 /**
  * @brief This class models a shader
  */
@@ -75,13 +77,6 @@ public:
      * @param geometry_path The path to the geometry shader
      */
     void recompile(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path);
-
-    /**
-     * @brief Use the shader.
-     * This sets all the shader uniforms so it should always be called last before doing the draw call.
-     * Typically the client does not have to use it as every Rendering command uses the shader at some point.
-     */
-    void use() const;
 
     /**
      * @brief Set an int uniform.
@@ -238,5 +233,14 @@ private:
     std::string _fragment_code = "";
     std::string _geometry_code = "";
     std::string _compute_code  = "";
+
+    /**
+     * @brief Use the shader.
+     * This sets all the shader uniforms so it should always be called last before doing the draw call.
+     * Typically the client does not have to use it as every Rendering command uses the shader at some point.
+     */
+    void bind() const;
+
+    friend class RenderAPI;
 };
 }    // namespace atcg

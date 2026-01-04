@@ -72,7 +72,7 @@ void RenderAPI::endRenderPass()
 
 void RenderAPI::bindPipeline(const GraphicsPipeline& pipeline)
 {
-    if(pipeline.shader) pipeline.shader->use();
+    if(pipeline.shader) pipeline.shader->bind();
 
     if(_current_pipeline == pipeline)
     {
