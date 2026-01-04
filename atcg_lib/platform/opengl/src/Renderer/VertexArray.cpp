@@ -45,7 +45,7 @@ VertexArray::~VertexArray()
     glDeleteVertexArrays(1, &_ID);
 }
 
-void VertexArray::use() const
+void VertexArray::bind() const
 {
     glBindVertexArray(_ID);
 }
@@ -53,7 +53,7 @@ void VertexArray::use() const
 void VertexArray::pushVertexBuffer(const atcg::ref_ptr<VertexBuffer>& vbo)
 {
     glBindVertexArray(_ID);
-    vbo->use();
+    vbo->bind();
 
     uint32_t vertex_buffer_index = _vertex_buffer_index.empty() ? 0 : _vertex_buffer_index.back().vertex_buffer_index;
 
@@ -144,7 +144,7 @@ const atcg::ref_ptr<VertexBuffer>& VertexArray::peekVertexBuffer() const
 void VertexArray::setIndexBuffer(const atcg::ref_ptr<IndexBuffer>& ibo)
 {
     glBindVertexArray(_ID);
-    ibo->use();
+    ibo->bind();
     _ibo = ibo;
 }
 
@@ -163,7 +163,7 @@ void VertexArray::markInstance(uint32_t divisor)
         return;
     }
 
-    this->use();
+    this->bind();
     _vertex_buffer_index.back().divisor = divisor;
     const auto& layout                  = _vertex_buffers.back()->getLayout();
     for(uint32_t i = 0; i < layout.getElements().size(); ++i)

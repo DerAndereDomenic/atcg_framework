@@ -167,10 +167,16 @@ VertexBuffer::~VertexBuffer()
     glDeleteBuffers(1, &_ID);
 }
 
-void VertexBuffer::use() const
+void VertexBuffer::bind() const
 {
     unmapPointers();
     glBindBuffer(GL_ARRAY_BUFFER, _ID);
+}
+
+void VertexBuffer::unbind() const
+{
+    unmapPointers();
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void VertexBuffer::bindStorage(uint32_t slot) const
@@ -288,10 +294,16 @@ IndexBuffer::IndexBuffer(size_t count) : VertexBuffer(count * sizeof(uint32_t)) 
 
 IndexBuffer::~IndexBuffer() {}
 
-void IndexBuffer::use() const
+void IndexBuffer::bind() const
 {
     unmapPointers();
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _ID);
+}
+
+void IndexBuffer::unbind() const
+{
+    unmapPointers();
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 void IndexBuffer::setData(const uint32_t* data, size_t count)
@@ -313,7 +325,7 @@ PixelUnpackBuffer::~PixelUnpackBuffer()
     unbind();
 }
 
-void PixelUnpackBuffer::use() const
+void PixelUnpackBuffer::bind() const
 {
     unmapPointers();
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, _ID);

@@ -5,6 +5,8 @@
 
 namespace atcg
 {
+
+class RenderAPI;
 /**
  * @brief A class to model a VertexArray
  */
@@ -20,11 +22,6 @@ public:
      * @brief Destroy the VertexArray object
      */
     ~VertexArray();
-
-    /**
-     * @brief Use this vao
-     */
-    void use() const;
 
     /**
      * @brief Push a VertexBuffer to the vbo stack
@@ -69,6 +66,13 @@ public:
     ATCG_INLINE const atcg::ref_ptr<IndexBuffer>& getIndexBuffer() const { return _ibo; }
 
 private:
+    friend class RenderAPI;
+
+    /**
+     * @brief Use this vao
+     */
+    void bind() const;
+
     /**
      * @brief Changes how the underlying VertexBuffer is interpreted for instance rendering.
      * It's always applied on the top element of the stack
