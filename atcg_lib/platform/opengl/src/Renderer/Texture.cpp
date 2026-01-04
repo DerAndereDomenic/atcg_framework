@@ -624,7 +624,7 @@ void Texture2D::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
-void Texture2D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+void Texture2D::setData(const atcg::ref_ptr<VertexBuffer>& data)
 {
     TORCH_CHECK_EQ(data->size(), _spec.width * _spec.height * _spec.channelSize() * _spec.numChannels());
 
@@ -931,7 +931,7 @@ void Texture3D::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
-void Texture3D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+void Texture3D::setData(const atcg::ref_ptr<VertexBuffer>& data)
 {
     TORCH_CHECK_EQ(data->size(), _spec.width * _spec.height * _spec.depth * _spec.channelSize() * _spec.numChannels());
 
@@ -1207,7 +1207,7 @@ void TextureCube::setData(const torch::Tensor& data)
     }
 }
 
-void TextureCube::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+void TextureCube::setData(const atcg::ref_ptr<VertexBuffer>& data)
 {
     size_t faceSize = _spec.width * _spec.height * _spec.channelSize() * _spec.numChannels();
 
@@ -1473,7 +1473,7 @@ void TextureArray::setData(const torch::Tensor& data)
                     (void*)pixel_data.data_ptr());
 }
 
-void TextureArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+void TextureArray::setData(const atcg::ref_ptr<VertexBuffer>& data)
 {
     TORCH_CHECK_EQ(data->size(), _spec.width * _spec.height * _spec.depth * _spec.channelSize() * _spec.numChannels());
 
@@ -1748,7 +1748,7 @@ void TextureCubeArray::setData(const torch::Tensor& data)
     }
 }
 
-void TextureCubeArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+void TextureCubeArray::setData(const atcg::ref_ptr<VertexBuffer>& data)
 {
     TORCH_CHECK_EQ(data->size(),
                    _spec.width * _spec.height * _spec.depth * 6 * _spec.channelSize() * _spec.numChannels());
@@ -1877,7 +1877,7 @@ void Texture2DMultiSample::setData(const torch::Tensor& data)
     // No Op
 }
 
-void Texture2DMultiSample::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
+void Texture2DMultiSample::setData(const atcg::ref_ptr<VertexBuffer>& data)
 {
     // No Op
 }

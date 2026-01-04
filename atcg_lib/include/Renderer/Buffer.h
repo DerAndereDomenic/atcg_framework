@@ -454,49 +454,4 @@ protected:
 
     friend class VertexArray;
 };
-
-/**
- * @brief A class to model a pixel unpack buffer
- */
-class PixelUnpackBuffer : public VertexBuffer
-{
-public:
-    /**
-     * @brief Construct a new Pixel Unpack Buffer object
-     */
-    PixelUnpackBuffer();
-
-    /**
-     * @brief Construct a new empty Pixel Unpack Buffer object
-     *
-     * @param size The size of bytes allocated on the GPU
-     */
-    PixelUnpackBuffer(size_t size);
-
-    /**
-     * @brief Construct a new Pixel Unpack Buffer object
-     *
-     * @param data The data to fill the buffer with
-     * @param size The size in bytes
-     */
-    PixelUnpackBuffer(const void* data, size_t size);
-
-    /**
-     * @brief Destroy the Pixel Unpack Buffer object
-     */
-    ~PixelUnpackBuffer();
-
-protected:
-    /**
-     * @brief Use this vbo
-     *
-     * @note Invalidades the device pointer obtained by getDevicePointer()
-     */
-    void bind() const;
-
-    /**
-     * @brief Unbindes the pbo
-     */
-    void unbind() const;
-};
 }    // namespace atcg

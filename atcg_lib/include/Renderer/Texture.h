@@ -42,11 +42,11 @@ public:
     virtual void setData(const torch::Tensor& data) = 0;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) = 0;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) = 0;
 
     /**
      * @brief Get the data in the texture.
@@ -322,11 +322,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -439,11 +439,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -533,11 +533,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -645,11 +645,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -735,11 +735,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -815,12 +815,12 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      * @note This function is a NoOp as it is not possible to set data to a multisampled texture
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
