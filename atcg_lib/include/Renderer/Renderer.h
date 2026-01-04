@@ -62,19 +62,6 @@ public:
     void finish() const;
 
     /**
-     * @brief Preprocess a skybox
-     *
-     * @param skybox An equirectangular representation of the skybox
-     * @param skybox_cubemap The output skybox as a cubemap
-     * @param irradiance_cubemap The output irradiance cubemap
-     * @param prefiltered_cubemap The output prefiltered cubemap for ibl
-     */
-    void processSkybox(const atcg::ref_ptr<Texture2D>& skybox,
-                       const atcg::ref_ptr<TextureCube>& skybox_cubemap,
-                       const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
-                       const atcg::ref_ptr<TextureCube>& prefiltered_cubemap);
-
-    /**
      * @brief Change the size of the renderer
      *
      * @param width The width
@@ -341,25 +328,6 @@ ATCG_INLINE void finishFrame()
 ATCG_INLINE void finish()
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->finish();
-}
-
-/**
- * @brief Preprocess a skybox
- *
- * @param skybox An equirectangular representation of the skybox
- * @param skybox_cubemap The output skybox as a cubemap
- * @param irradiance_cubemap The output irradiance cubemap
- * @param prefiltered_cubemap The output prefiltered cubemap for ibl
- */
-ATCG_INLINE void processSkybox(const atcg::ref_ptr<Texture2D>& skybox,
-                               const atcg::ref_ptr<TextureCube>& skybox_cubemap,
-                               const atcg::ref_ptr<TextureCube>& irradiance_cubemap,
-                               const atcg::ref_ptr<TextureCube>& prefiltered_cubemap)
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->processSkybox(skybox,
-                                                                                  skybox_cubemap,
-                                                                                  irradiance_cubemap,
-                                                                                  prefiltered_cubemap);
 }
 
 /**
