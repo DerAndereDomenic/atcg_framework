@@ -629,7 +629,7 @@ void Texture2D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
     TORCH_CHECK_EQ(data->size(), _spec.width * _spec.height * _spec.channelSize() * _spec.numChannels());
 
     data->use();
-    use(0);
+    bind(0);
 
     if(_spec.format != TextureFormat::DEPTH)
         impl->deinitResource();    // Somehow no registered resource is allowed when doing pbo transfers
@@ -696,7 +696,7 @@ torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip
                                                                     : atcg::TensorOptions::uint8HostOptions());
     result       = torch::empty({height, width, num_channels}, options);
 
-    use();
+    bind();
     glGetTexImage(GL_TEXTURE_2D,
                   mip_level,
                   detail::toGLformat(_spec.format),
@@ -705,16 +705,23 @@ torch::Tensor Texture2D::getData(const torch::Device& device, const uint32_t mip
     return result.to(device);
 }
 
-void Texture2D::use(const uint32_t& slot) const
+void Texture2D::bind(const uint32_t& slot) const
 {
     unmapPointers();
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_2D, _ID);
 }
 
+void Texture2D::unbind(const uint32_t& slot) const
+{
+    unmapPointers();
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void Texture2D::generateMipmaps()
 {
-    use();
+    bind();
     _spec.sampler.mip_map = true;
     auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_2D,
@@ -727,7 +734,7 @@ atcg::ref_ptr<Texture> Texture2D::clone() const
 {
     auto result = atcg::Texture2D::create(_spec);
 
-    use();
+    bind();
 
     int max_level = _spec.sampler.mip_map
                         ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
@@ -927,7 +934,7 @@ void Texture3D::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
     TORCH_CHECK_EQ(data->size(), _spec.width * _spec.height * _spec.depth * _spec.channelSize() * _spec.numChannels());
 
     data->use();
-    use(0);
+    bind(0);
 
     if(_spec.format != TextureFormat::DEPTH) impl->deinitResource();
 
@@ -1004,7 +1011,7 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
                                                                     : atcg::TensorOptions::uint8HostOptions());
     result       = torch::empty({depth, height, width, num_channels}, options);
 
-    use();
+    bind();
     glGetTexImage(GL_TEXTURE_3D,
                   mip_level,
                   detail::toGLformat(_spec.format),
@@ -1013,16 +1020,23 @@ torch::Tensor Texture3D::getData(const torch::Device& device, const uint32_t mip
     return result.to(device);
 }
 
-void Texture3D::use(const uint32_t& slot) const
+void Texture3D::bind(const uint32_t& slot) const
 {
     unmapPointers();
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_3D, _ID);
 }
 
+void Texture3D::unbind(const uint32_t& slot) const
+{
+    unmapPointers();
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_3D, 0);
+}
+
 void Texture3D::generateMipmaps()
 {
-    use();
+    bind();
     _spec.sampler.mip_map = true;
     auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_3D,
@@ -1035,7 +1049,7 @@ atcg::ref_ptr<Texture> Texture3D::clone() const
 {
     auto result = atcg::Texture3D::create(_spec);
 
-    use();
+    bind();
 
     int max_level = _spec.sampler.mip_map
                         ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
@@ -1148,10 +1162,16 @@ TextureCube::~TextureCube()
     glDeleteTextures(1, &_ID);
 }
 
-void TextureCube::use(const uint32_t& slot) const
+void TextureCube::bind(const uint32_t& slot) const
 {
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_CUBE_MAP, _ID);
+}
+
+void TextureCube::unbind(const uint32_t& slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
 
 void TextureCube::setData(const torch::Tensor& data)
@@ -1190,7 +1210,7 @@ void TextureCube::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
     TORCH_CHECK_EQ(data->size(), faceSize * 6);
 
     data->use();
-    use(0);
+    bind(0);
 
     for(int i = 0; i < 6; ++i)
     {
@@ -1239,7 +1259,7 @@ torch::Tensor TextureCube::getData(const torch::Device& device, const uint32_t m
 
 void TextureCube::generateMipmaps()
 {
-    use();
+    bind();
     _spec.sampler.mip_map = true;
     auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_CUBE_MAP,
@@ -1252,7 +1272,7 @@ atcg::ref_ptr<Texture> TextureCube::clone() const
 {
     auto result = atcg::TextureCube::create(_spec);
 
-    use();
+    bind();
 
     int max_level = _spec.sampler.mip_map
                         ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
@@ -1452,7 +1472,7 @@ void TextureArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
     TORCH_CHECK_EQ(data->size(), _spec.width * _spec.height * _spec.depth * _spec.channelSize() * _spec.numChannels());
 
     data->use();
-    use(0);
+    bind(0);
 
     if(_spec.format != TextureFormat::DEPTH) impl->deinitResource();
 
@@ -1524,7 +1544,7 @@ torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t 
                                                                     : atcg::TensorOptions::uint8HostOptions());
     result       = torch::empty({depth, height, width, num_channels}, options);
 
-    use();
+    bind();
     glGetTexImage(GL_TEXTURE_2D_ARRAY,
                   mip_level,
                   detail::toGLformat(_spec.format),
@@ -1533,16 +1553,23 @@ torch::Tensor TextureArray::getData(const torch::Device& device, const uint32_t 
     return result.to(device);
 }
 
-void TextureArray::use(const uint32_t& slot) const
+void TextureArray::bind(const uint32_t& slot) const
 {
     unmapPointers();
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_2D_ARRAY, _ID);
 }
 
+void TextureArray::unbind(const uint32_t& slot) const
+{
+    unmapPointers();
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+}
+
 void TextureArray::generateMipmaps()
 {
-    use();
+    bind();
     _spec.sampler.mip_map = true;
     auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_2D_ARRAY,
@@ -1555,7 +1582,7 @@ atcg::ref_ptr<Texture> TextureArray::clone() const
 {
     auto result = atcg::TextureArray::create(_spec);
 
-    use();
+    bind();
 
     int max_level = _spec.sampler.mip_map
                         ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
@@ -1666,10 +1693,16 @@ TextureCubeArray::~TextureCubeArray()
     glDeleteTextures(1, &_ID);
 }
 
-void TextureCubeArray::use(const uint32_t& slot) const
+void TextureCubeArray::bind(const uint32_t& slot) const
 {
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, _ID);
+}
+
+void TextureCubeArray::unbind(const uint32_t& slot) const
+{
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
 }
 
 void TextureCubeArray::setData(const torch::Tensor& data)
@@ -1713,7 +1746,7 @@ void TextureCubeArray::setData(const atcg::ref_ptr<PixelUnpackBuffer>& data)
                    _spec.width * _spec.height * _spec.depth * 6 * _spec.channelSize() * _spec.numChannels());
 
     data->use();
-    use(0);
+    bind(0);
 
     glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY,
                  0,
@@ -1756,7 +1789,7 @@ torch::Tensor TextureCubeArray::getData(const torch::Device& device, const uint3
 
 void TextureCubeArray::generateMipmaps()
 {
-    use();
+    bind();
     _spec.sampler.mip_map = true;
     auto filtermode       = detail::toGLFilterMode(_spec.sampler.filter_mode);
     glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY,
@@ -1769,7 +1802,7 @@ atcg::ref_ptr<Texture> TextureCubeArray::clone() const
 {
     auto result = atcg::TextureCubeArray::create(_spec);
 
-    use();
+    bind();
 
     int max_level = _spec.sampler.mip_map
                         ? 1 + glm::floor(glm::log2((float)glm::max(_spec.width, glm::max(_spec.height, _spec.depth))))
@@ -1845,11 +1878,18 @@ torch::Tensor Texture2DMultiSample::getData(const torch::Device& device, const u
     return {};
 }
 
-void Texture2DMultiSample::use(const uint32_t& slot) const
+void Texture2DMultiSample::bind(const uint32_t& slot) const
 {
     unmapPointers();
     glActiveTexture(GL_TEXTURE0 + slot);
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, _ID);
+}
+
+void Texture2DMultiSample::unbind(const uint32_t& slot) const
+{
+    unmapPointers();
+    glActiveTexture(GL_TEXTURE0 + slot);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 }
 
 void Texture2DMultiSample::generateMipmaps()

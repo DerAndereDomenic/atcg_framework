@@ -223,7 +223,14 @@ protected:
      *
      * @param slot The used texture slot
      */
-    virtual void use(const uint32_t& slot = 0) const = 0;
+    virtual void bind(const uint32_t& slot = 0) const = 0;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const = 0;
 
     friend class RenderAPI;
     uint32_t _ID;
@@ -357,7 +364,14 @@ protected:
      *
      * @param slot The used texture slot
      */
-    virtual void use(const uint32_t& slot = 0) const override;
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
 
     friend class RenderAPI;
 };
@@ -467,7 +481,14 @@ protected:
      *
      * @param slot The used texture slot
      */
-    virtual void use(const uint32_t& slot = 0) const override;
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
 
     friend class RenderAPI;
 };
@@ -549,7 +570,14 @@ protected:
      *
      * @param slot The used texture slot
      */
-    virtual void use(const uint32_t& slot = 0) const override;
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
 
     friend class RenderAPI;
 };
@@ -655,7 +683,14 @@ protected:
      *
      * @param slot The used texture slot
      */
-    virtual void use(const uint32_t& slot = 0) const override;
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
 
     friend class RenderAPI;
 };
@@ -737,7 +772,14 @@ protected:
      *
      * @param slot The used texture slot
      */
-    virtual void use(const uint32_t& slot = 0) const override;
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
 
     friend class RenderAPI;
 };
@@ -813,7 +855,14 @@ protected:
      *
      * @param slot The used texture slot
      */
-    virtual void use(const uint32_t& slot = 0) const override;
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
 
     friend class RenderAPI;
 };
