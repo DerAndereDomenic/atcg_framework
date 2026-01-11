@@ -81,7 +81,7 @@ public:
     /**
      * @brief Set an int uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -93,7 +93,7 @@ public:
     /**
      * @brief Set a float uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -105,7 +105,7 @@ public:
     /**
      * @brief Set a vec2 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -117,7 +117,7 @@ public:
     /**
      * @brief Set a vec3 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -129,7 +129,7 @@ public:
     /**
      * @brief Set a vec4 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -141,7 +141,7 @@ public:
     /**
      * @brief Set a mat4 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -235,9 +235,9 @@ private:
     std::string _compute_code  = "";
 
     /**
-     * @brief Use the shader.
+     * @brief bind the shader.
      * This sets all the shader uniforms so it should always be called last before doing the draw call.
-     * Typically the client does not have to use it as every Rendering command uses the shader at some point.
+     * Typically the client does not have to bind it as every Rendering command binds the shader at some point.
      */
     void bind() const;
 

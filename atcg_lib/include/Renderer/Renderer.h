@@ -45,14 +45,37 @@ public:
      */
     void use();
 
+    /**
+     * @brief Begin a render pass
+     *
+     * @param target The target framebuffer
+     */
     void beginRenderPass(const atcg::ref_ptr<Framebuffer>& target);
 
+    /**
+     * @brief End the current render pass
+     */
     void endRenderPass();
 
+    /**
+     * @brief Clear the current framebuffer with the clear color
+     */
     void clear();
 
+    /**
+     * @brief Bind a texture to the given slot
+     *
+     * @param slot The slot
+     * @param texture The texture
+     */
     void bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture);
 
+    /**
+     * @brief Bind a storage buffer to the given slot
+     *
+     * @param slot The slot
+     * @param buffer The buffer
+     */
     void bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer);
 
     /**
@@ -285,26 +308,49 @@ ATCG_INLINE void use()
     SystemRegistry::instance()->getSystem<RendererSystem>()->use();
 }
 
+/**
+ * @brief Begin a render pass
+ *
+ * @param target The target framebuffer
+ */
 ATCG_INLINE void beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->beginRenderPass(target);
 }
 
+/**
+ * @brief End the current render pass
+ */
 ATCG_INLINE void endRenderPass()
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->endRenderPass();
 }
 
+/**
+ * @brief Clear the current framebuffer with the clear color
+ */
 ATCG_INLINE void clear()
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->clear();
 }
 
+/**
+ * @brief Bind a texture to the given slot
+ *
+ * @param slot The slot
+ * @param texture The texture
+ */
 ATCG_INLINE void bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->bindTexture(slot, texture);
 }
 
+/**
+ * @brief Bind a storage buffer to the given slot
+ *
+ * @param slot The slot
+ * @param buffer The buffer
+ */
 ATCG_INLINE void bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->bindStorageBuffer(slot, buffer);
