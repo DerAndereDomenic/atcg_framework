@@ -50,7 +50,7 @@ void RenderAPI::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
 {
     ATCG_ASSERT(!_started_render_pass, "Render pass already started");
     _started_render_pass = true;
-    target ? target->use() : Framebuffer::useDefault();
+    target ? target->bind() : Framebuffer::bindDefault();
     if(target)
     {
         setViewport(0, 0, target->width(), target->height());
@@ -68,6 +68,8 @@ void RenderAPI::endRenderPass()
         binding.texture->unbind(binding.slot);
     }
     _bound_textures.clear();
+
+    Framebuffer::bindDefault();
 }
 
 void RenderAPI::bindPipeline(const GraphicsPipeline& pipeline)
@@ -212,6 +214,11 @@ void RenderAPI::setClearDepth(float depth)
 
 void RenderAPI::clear()
 {
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDepthMask(_current_pipeline.render_state.depth_state.depth_write_enabled ? GL_TRUE : GL_FALSE);
+    _current_pipeline.render_state.depth_state.depth_testing_enabled ? glEnable(GL_DEPTH_TEST)
+                                                                     : glDisable(GL_DEPTH_TEST);
 }
 }    // namespace atcg

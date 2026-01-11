@@ -13,7 +13,7 @@ namespace atcg
 
 enum class RenderTargetMode
 {
-    RENDER_TARGET_BOUND_FRAMEBUFFER,
+    RENDER_TARGET_OUTPUT,
     RENDER_TARGET_INPUT_FRAMEBUFFER,
     RENDER_TARGET_OWN_FRAMEBUFFER
 };
@@ -35,7 +35,7 @@ struct RenderTargetDesc
     {
     }
 
-    RenderTargetMode mode = RenderTargetMode::RENDER_TARGET_BOUND_FRAMEBUFFER;
+    RenderTargetMode mode = RenderTargetMode::RENDER_TARGET_OUTPUT;
 
     FramebufferSpecification target_spec = {};
 
@@ -169,17 +169,15 @@ public:
         atcg::ref_ptr<Framebuffer> target_fb = nullptr;
         switch(_render_target.mode)
         {
-            case RenderTargetMode::RENDER_TARGET_BOUND_FRAMEBUFFER:
+            case RenderTargetMode::RENDER_TARGET_OUTPUT:
             {
                 target_fb = context.getValue<atcg::ref_ptr<Framebuffer>>("target");
-                target_fb->use();
             }
             break;
             case RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER:
             {
                 auto target = inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
-                (*target)->use();
-                target_fb = *target;
+                target_fb   = *target;
             }
             break;
             case RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER:
@@ -189,10 +187,8 @@ public:
 
                 _render_target.target_spec.width  = screen_fbo->width();
                 _render_target.target_spec.height = screen_fbo->height();
-                //*target                           = Framebuffer::create(_render_target.target_spec);    // TODO
-                *target = _pool.acquireFramebuffer({"target", _render_target.target_spec});
+                *target                           = _pool.acquireFramebuffer({"target", _render_target.target_spec});
 
-                (*target)->use();
                 target_fb = *target;
             }
             break;

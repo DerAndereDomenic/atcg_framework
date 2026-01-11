@@ -162,7 +162,6 @@ void Application::run()
 
         VR::doTracking();
 
-        Renderer::useScreenBuffer();
         for(Layer* layer: _layer_stack)
         {
             layer->onUpdate(delta_time);

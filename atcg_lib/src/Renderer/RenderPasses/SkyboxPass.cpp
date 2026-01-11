@@ -43,6 +43,7 @@ void SkyboxPass::initRenderPass()
             auto target             = prepareFramebuffer(context, inputs, data, outputs);
             *output_framebuffer     = target;
             *output_skybox          = _skybox;
+            renderer->beginRenderPass(target);
             if(_render_target.clear)
             {
                 renderer->clear();
@@ -65,7 +66,6 @@ void SkyboxPass::initRenderPass()
 
             if(has_skybox && _skybox)
             {
-                renderer->beginRenderPass(target);
                 auto shader = renderer->getShaderManager()->getShader("skybox");
                 auto cube   = AssetManager::getCubeMesh();
                 GraphicsPipeline pipeline =
@@ -86,8 +86,8 @@ void SkyboxPass::initRenderPass()
                                   cube->n_vertices());
 
                 renderer->pushTextureID(skybox_id);
-                renderer->endRenderPass();
             }
+            renderer->endRenderPass();
         });
 }
 }    // namespace atcg

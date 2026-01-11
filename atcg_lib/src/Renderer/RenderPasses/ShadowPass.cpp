@@ -35,8 +35,6 @@ void ShadowPass::initRenderPass()
             const atcg::ref_ptr<Shader>& depth_pass_shader = renderer->getShaderManager()->getShader("depth_pass");
             depth_pass_shader->setFloat("far_plane", f);
 
-            auto active_fbo = atcg::Framebuffer::currentFramebuffer();
-
             auto light_view = scene->getAllEntitiesWith<PointLightComponent, TransformComponent>();
 
             uint32_t num_lights = 0;
@@ -128,8 +126,6 @@ void ShadowPass::initRenderPass()
             }
 
             renderer->endRenderPass();
-
-            active_fbo ? active_fbo->use() : atcg::Framebuffer::useDefault();
         });
 }
 

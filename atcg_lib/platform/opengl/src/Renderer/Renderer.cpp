@@ -300,9 +300,6 @@ void RendererSystem::endRenderPass()
 void RendererSystem::clear()
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    GraphicsPipeline pipeline =
-        GraphicsPipeline().setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthWrite(true)));
-    impl->render_api.bindPipeline(pipeline);
     impl->render_api.clear();
 }
 
@@ -354,12 +351,6 @@ void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     impl->initFramebuffer(width, height);
-}
-
-void RendererSystem::useScreenBuffer() const
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->screen_fbo->use();
 }
 
 uint32_t RendererSystem::getFrameCounter() const
@@ -564,28 +555,12 @@ torch::Tensor RendererSystem::getFrame(const torch::DeviceType& device) const
     return impl->screen_fbo->getColorAttachement(0)->getData(device);
 }
 
-torch::Tensor RendererSystem::getZBuffer(const torch::DeviceType& device) const
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-
-    auto frame           = impl->screen_fbo->getDepthAttachement();
-    uint32_t width       = frame->width();
-    uint32_t height      = frame->height();
-    torch::Tensor buffer = torch::empty({height, width, 1}, atcg::TensorOptions::floatHostOptions());
-
-    impl->screen_fbo->use();
-
-    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer.data_ptr());
-
-    return buffer.to(device);
-}
-
 int RendererSystem::getEntityIndex(const glm::vec2& mouse) const
 {
     // TODO
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    impl->screen_fbo->use();
+    // impl->screen_fbo->use();
     glReadBuffer(GL_COLOR_ATTACHMENT1);
     int pixelData;
     glReadPixels((int)mouse.x, (int)mouse.y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
@@ -630,8 +605,6 @@ void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
     Image img(data);
 
     img.store(path);
-
-    useScreenBuffer();
 }
 
 torch::Tensor
@@ -645,12 +618,10 @@ RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_pt
     screenshot_buffer->attachDepth();
     screenshot_buffer->complete();
 
-    screenshot_buffer->use();
     atcg::Dictionary context;
     context.setValue("camera", camera);
     context.setValue("target", screenshot_buffer);
     scene->draw(context);
-    useScreenBuffer();
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 

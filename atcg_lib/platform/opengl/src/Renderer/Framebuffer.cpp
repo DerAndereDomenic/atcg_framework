@@ -79,7 +79,7 @@ Framebuffer::~Framebuffer()
     _color_attachements.clear();
 }
 
-void Framebuffer::use()
+void Framebuffer::bind()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, _ID);
     auto context = ContextManager::getCurrentContext();
@@ -88,7 +88,7 @@ void Framebuffer::use()
 
 bool Framebuffer::complete()
 {
-    use();
+    bind();
 
     std::vector<GLenum> buffers(_color_attachements.size());
     for(uint32_t i = 0; i < _color_attachements.size(); ++i)
@@ -103,13 +103,13 @@ bool Framebuffer::complete()
     {
         ATCG_ERROR("ERROR: Framebuffer not complete! Code: {}", error);
     }
-    useDefault();
+    bindDefault();
     return complete;
 }
 
 void Framebuffer::attachColor()
 {
-    use();
+    bind();
 
     TextureSpecification spec;
     spec.width                       = _width;
@@ -120,7 +120,7 @@ void Framebuffer::attachColor()
 
 void Framebuffer::attachColorMultiSample(uint32_t num_samples)
 {
-    use();
+    bind();
 
     TextureSpecification spec;
     spec.width                                  = _width;
@@ -131,13 +131,13 @@ void Framebuffer::attachColorMultiSample(uint32_t num_samples)
 
 void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
 {
-    use();
+    bind();
     glFramebufferTexture(GL_FRAMEBUFFER,
                          GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
                          texture->getID(),
                          0);
     _color_attachements.push_back(texture);
-    useDefault();
+    bindDefault();
 }
 
 void Framebuffer::attachCubeFace(const atcg::ref_ptr<TextureCube>& cube_map, uint32_t face_index, uint32_t mip_level)
@@ -172,10 +172,10 @@ void Framebuffer::attachDepthMultiSample(uint32_t num_samples)
 
 void Framebuffer::attachDepth(const atcg::ref_ptr<Texture>& depth_map)
 {
-    use();
+    bind();
     _depth_attachement = depth_map;
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, _depth_attachement->getID(), 0);
-    useDefault();
+    bindDefault();
 }
 
 void Framebuffer::detachColor()
@@ -220,11 +220,11 @@ void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, boo
 
     // Restore old binding status
     atcg::ref_ptr<Framebuffer> current_fbo = currentFramebuffer();
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, current_fbo->getID());
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_fbo->getID());
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, current_fbo ? current_fbo->getID() : 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_fbo ? current_fbo->getID() : 0);
 }
 
-void Framebuffer::useDefault()
+void Framebuffer::bindDefault()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     auto context = ContextManager::getCurrentContext();

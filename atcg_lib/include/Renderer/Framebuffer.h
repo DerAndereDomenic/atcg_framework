@@ -7,6 +7,8 @@
 namespace atcg
 {
 
+class RenderAPI;
+
 /**
  * @brief The type of framebuffer texture
  */
@@ -120,11 +122,6 @@ public:
      * @brief Destructor
      */
     ~Framebuffer();
-
-    /**
-     * @brief Use the framebuffer
-     */
-    void use();
 
     /**
      * @brief Complete the Framebuffer. Should be called after all attachements where made
@@ -249,15 +246,23 @@ public:
      */
     static atcg::ref_ptr<Framebuffer> currentFramebuffer();
 
-    /**
-     * @brief Use the default framebuffer
-     */
-    static void useDefault();
 
 private:
     uint32_t _ID;
     uint32_t _width, _height;
     std::vector<atcg::ref_ptr<Texture>> _color_attachements;
     atcg::ref_ptr<Texture> _depth_attachement;
+
+    /**
+     * @brief Use the framebuffer
+     */
+    void bind();
+
+    /**
+     * @brief Use the default framebuffer
+     */
+    static void bindDefault();
+
+    friend class RenderAPI;
 };
 }    // namespace atcg

@@ -51,7 +51,7 @@ void TonemapPass::initRenderPass()
             auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
             *output_framebuffer     = target;
 
-            target->use();
+            renderer->beginRenderPass(target);
             if(_render_target.clear)
             {
                 renderer->clear();
@@ -71,7 +71,6 @@ void TonemapPass::initRenderPass()
                     target->getColorAttachement(2)->fill(&value);
                 }
             }
-            renderer->beginRenderPass(target);
 
             target->blit(hdr, false, true);    // Copy depth
 

@@ -74,13 +74,6 @@ public:
     void resize(const uint32_t& width, const uint32_t& height);
 
     /**
-     * @brief Use the default screen fbo.
-     * Per default this will be a MSAA framebuffer. If MSAA is disabled using toggleMSAA, this function will bind the
-     * normal framebuffer that is used in the end to render to the screen.
-     */
-    void useScreenBuffer() const;
-
-    /**
      * @brief Get the current frame counter
      *
      * @return The index of the current frame
@@ -196,17 +189,6 @@ public:
      * @return The buffer containing the frame image.
      */
     torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU) const;
-
-    /**
-     * @brief Get the Z-buffer of the current frame as torch tensor
-     * @note This function always does a GPU-CPU memcopy because depth maps can not be mapped from OpenGL to CUDA. If
-     * device = GPU is specified, an additional memcpy from CPU to GPU is performed.
-     *
-     * @param device The device
-     *
-     * @return The depth buffer
-     */
-    torch::Tensor getZBuffer(const torch::DeviceType& device = atcg::GPU) const;
 
     /**
      * @brief Get the entity index that was rendered onto the given pixel
@@ -353,16 +335,6 @@ ATCG_INLINE void finish()
 ATCG_INLINE void resize(const uint32_t& width, const uint32_t& height)
 {
     SystemRegistry::instance()->getSystem<RendererSystem>()->resize(width, height);
-}
-
-/**
- * @brief Use the default screen fbo.
- * Per default this will be a MSAA framebuffer. If MSAA is disabled using toggleMSAA, this function will bind the
- * normal framebuffer that is used in the end to render to the screen.
- */
-ATCG_INLINE void useScreenBuffer()
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->useScreenBuffer();
 }
 
 /**
@@ -538,20 +510,6 @@ screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camer
 ATCG_INLINE torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU)
 {
     return SystemRegistry::instance()->getSystem<RendererSystem>()->getFrame(device);
-}
-
-/**
- * @brief Get the Z-buffer of the current frame as torch tensor
- * @note This function always does a GPU-CPU memcopy because depth maps can not be mapped from OpenGL to CUDA. If
- * device = GPU is specified, an additional memcpy from CPU to GPU is performed.
- *
- * @param device The device
- *
- * @return The depth buffer
- */
-ATCG_INLINE torch::Tensor getZBuffer(const torch::DeviceType& device = atcg::GPU)
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getZBuffer(device);
 }
 
 /**
