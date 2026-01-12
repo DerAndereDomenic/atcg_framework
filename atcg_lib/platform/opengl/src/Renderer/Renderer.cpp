@@ -531,7 +531,7 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
     // Reset shader for normal rendering
     shader->setFloat("base_transparency", 1.0f);
 
-    pipeline.render_state.setLineSize(2.0f);
+    pipeline.rasterizer_state.setLineSize(2.0f);
 
     auto points = impl->cross->getVerticesBuffer();
     impl->render_api.bindStorageBuffer(0, points);
