@@ -165,8 +165,13 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_scene_hierarchy_panel = py::class_<atcg::GUI::SceneHierarchyPanel>(m, "SceneHierarchyPanel");                        \
     auto m_hit_info              = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                            \
     auto m_utils                 = m.def_submodule("Utils");                                                                    \
-    auto m_draw_mode             = py::enum_<atcg::DrawMode>(m, "DrawMode");                                                    \
     auto m_cull_mode             = py::enum_<atcg::CullMode>(m, "CullMode");                                                    \
+    auto m_primitive_topology    = py::enum_<atcg::PrimitiveTopology>(m, "PrimitiveTopology");                                  \
+    auto m_depth_function        = py::enum_<atcg::DepthFunction>(m, "DepthFunction");                                          \
+    auto m_depth_state           = py::class_<atcg::DepthState>(m, "DepthState");                                               \
+    auto m_blend_state           = py::class_<atcg::BlendState>(m, "BlendState");                                               \
+    auto m_rasterizer_state      = py::class_<atcg::RasterizerState>(m, "RasterizerState");                                     \
+    auto m_graphics_pipeline     = py::class_<atcg::GraphicsPipeline>(m, "GraphicsPipeline");                                   \
     auto m_network               = m.def_submodule("Network");                                                                  \
     auto m_tcp_server            = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                         \
     auto m_tcp_client            = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                         \
@@ -721,53 +726,71 @@ inline void defineBindings(py::module_& m)
         .def("registerFrameTime", &atcg::GUI::PerformancePanel::registerFrameTime);
 
     // ------------------- RENDERER ---------------------------------
-    m_draw_mode.value("ATCG_DRAW_MODE_TRIANGLE", atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
-        .value("ATCG_DRAW_MODE_POINTS", atcg::DrawMode::ATCG_DRAW_MODE_POINTS)
-        .value("ATCG_DRAW_MODE_POINTS_SPHERE", atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE)
-        .value("ATCG_DRAW_MODE_EDGES", atcg::DrawMode::ATCG_DRAW_MODE_EDGES)
-        .value("ATCG_DRAW_MODE_EDGES_CYLINDER", atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER)
-        .value("ATCG_DRAW_MODE_INSTANCED", atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED)
-        .export_values();
 
     m_cull_mode.value("ATCG_FRONT_FACE_CULLING", atcg::CullMode::ATCG_FRONT_FACE_CULLING)
         .value("ATCG_BACK_FACE_CULLING", atcg::CullMode::ATCG_BACK_FACE_CULLING)
         .value("ATCG_BOTH_FACE_CULLING", atcg::CullMode::ATCG_BOTH_FACE_CULLING)
         .export_values();
 
-    m_renderer.def("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
-        .def("init", &atcg::Renderer::init)
-        .def("finishFrame", &atcg::Renderer::finishFrame)
-        .def("setClearColor", &atcg::Renderer::setClearColor, "color"_a)
-        .def("getClearColor", &atcg::Renderer::getClearColor)
-        .def("setPointSize", &atcg::Renderer::setPointSize, "size"_a)
-        .def("setLineSize", &atcg::Renderer::setLineSize, "size"_a)
-        .def("setViewport", &atcg::Renderer::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
-        .def("setDefaultViewport", &atcg::Renderer::setDefaultViewport)
-        .def("useScreenBuffer", &atcg::Renderer::useScreenBuffer)
+    m_primitive_topology.value("ATCG_POINTS", atcg::PrimitiveTopology::ATCG_POINTS)
+        .value("ATCG_TRIANGLES", atcg::PrimitiveTopology::ATCG_TRIANGLES)
+        .value("ATCG_LINES", atcg::PrimitiveTopology::ATCG_LINES)
+        .export_values();
+
+    m_depth_function.value("ATCG_LESS", atcg::DepthFunction::ATCG_LESS)
+        .value("ATCG_LEQUAL", atcg::DepthFunction::ATCG_LEQUAL)
+        .value("ATCG_EQUAL", atcg::DepthFunction::ATCG_EQUAL)
+        .value("ATCG_GREATER", atcg::DepthFunction::ATCG_GREATER)
+        .value("ATCG_GEQUAL", atcg::DepthFunction::ATCG_GEQUAL)
+        .value("ATCG_ALWAYS", atcg::DepthFunction::ATCG_ALWAYS)
+        .value("ATCG_NEVER", atcg::DepthFunction::ATCG_NEVER)
+        .value("ATCG_NOTEQUAL", atcg::DepthFunction::ATCG_NOTEQUAL)
+        .export_values();
+
+    m_depth_state.def(py::init<>())
+        .def_readwrite("depth_testing_enabled", &atcg::DepthState::depth_testing_enabled)
+        .def_readwrite("depth_write_enabled", &atcg::DepthState::depth_write_enabled)
+        .def_readwrite("depth_function", &atcg::DepthState::depth_function)
+        .def("setDepthFunction", &atcg::DepthState::setDepthFunction, "function"_a)
+        .def("enableDepthTesting", &atcg::DepthState::enableDepthTesting, "enable"_a)
+        .def("enableDepthWrite", &atcg::DepthState::enableDepthWrite, "enable"_a);
+
+    m_blend_state.def(py::init<>())
+        .def_readwrite("blend_enabled", &atcg::BlendState::blend_enabled)
+        .def("enableBlending", &atcg::BlendState::enableBlending, "enable"_a);
+
+    m_rasterizer_state.def(py::init<>())
+        .def_readwrite("cull_mode", &atcg::RasterizerState::cull_mode)
+        .def_readwrite("culling_enabled", &atcg::RasterizerState::culling_enabled)
+        .def_readwrite("depth_state", &atcg::RasterizerState::depth_state)
+        .def_readwrite("blend_state", &atcg::RasterizerState::blend_state)
+        .def_readwrite("point_size", &atcg::RasterizerState::point_size)
+        .def_readwrite("line_size", &atcg::RasterizerState::line_size)
+        .def("setCullMode", &atcg::RasterizerState::setCullMode, "mode"_a)
+        .def("enableCulling", &atcg::RasterizerState::enableCulling, "enable"_a)
+        .def("setPointSize", &atcg::RasterizerState::setPointSize, "size"_a)
+        .def("setLineSize", &atcg::RasterizerState::setLineSize, "size"_a)
+        .def("setDepthState", &atcg::RasterizerState::setDepthState, "depth_state"_a)
+        .def("setBlendState", &atcg::RasterizerState::setBlendState, "blend_state"_a);
+
+    m_graphics_pipeline.def(py::init<>())
+        .def_readwrite("shader", &atcg::GraphicsPipeline::shader)
+        .def_readwrite("rasterizer_state", &atcg::GraphicsPipeline::rasterizer_state)
+        .def_readwrite("primitive_topology", &atcg::GraphicsPipeline::primitive_topology)
+        .def("setShader", &atcg::GraphicsPipeline::setShader, "shader"_a)
+        .def("setRasterizerState", &atcg::GraphicsPipeline::setRasterizerState, "rasterizer_state"_a)
+        .def("setPrimitiveTopology", &atcg::GraphicsPipeline::setPrimitiveTopology, "topology"_a);
+
+    m_renderer.def("init", &atcg::Renderer::init)
+        .def("beginRenderPass", &atcg::Renderer::beginRenderPass, "target_framebuffer"_a)
+        .def("endRenderPass", &atcg::Renderer::endRenderPass)
         .def("clear", &atcg::Renderer::clear)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::Graph>& mesh,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-               const glm::mat4& model,
-               const glm::vec3& color,
-               const atcg::ref_ptr<atcg::Shader>& shader,
-               atcg::DrawMode draw_mode) { atcg::Renderer::draw(mesh, camera, model, color, shader, draw_mode); },
-            "graph"_a,
-            "camera"_a,
-            "model"_a,
-            "color"_a,
-            "shader"_a,
-            "draw_mode"_a)
+        .def("bindTexture", &atcg::Renderer::bindTexture, "slot"_a, "texture"_a)
+        .def("bindStorageBuffer", &atcg::Renderer::bindStorageBuffer, "slot"_a, "buffer"_a)
+        .def("finishFrame", &atcg::Renderer::finishFrame)
         .def(
             "drawCADGrid",
             [](const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { atcg::Renderer::drawCADGrid(camera); },
-            "camera"_a)
-        .def(
-            "drawCameras",
-            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
-            { atcg::Renderer::drawCameras(scene, camera); },
-            "scene"_a,
             "camera"_a)
         .def("drawCircle", &atcg::Renderer::drawCircle, "position"_a, "radius"_a, "thickness"_a, "color"_a, "camera"_a)
         .def(
@@ -780,7 +803,6 @@ inline void defineBindings(py::module_& m)
             "img"_a)
         .def("getFramebuffer", &atcg::Renderer::getFramebuffer)
         .def("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
-        .def("toggleCulling", &atcg::Renderer::toggleCulling, "enabled"_a)
         .def("screenshot",
              [](const atcg::ref_ptr<atcg::Scene>& scene,
                 const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
@@ -809,51 +831,22 @@ inline void defineBindings(py::module_& m)
             "path"_a)
         .def("resize", &atcg::Renderer::resize)
         .def("getFrame", &atcg::Renderer::getFrame, "device"_a)
-        .def("getZBuffer", &atcg::Renderer::getZBuffer, "device"_a)
-        .def("toggleDepthTesting", &atcg::Renderer::toggleDepthTesting, "enabled"_a)
-        .def("setCullFace", &atcg::Renderer::setCullFace, "mode"_a)
         .def("getFrameCounter", &atcg::Renderer::getFrameCounter)
         .def("popTextureID", &atcg::Renderer::popTextureID)
         .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a);
 
     m_renderer_system.def(py::init<>())
-        .def("setClearColor", &atcg::RendererSystem::setClearColor, "color"_a)
         .def("init", &atcg::RendererSystem::init)
-        .def("finishFrame", &atcg::RendererSystem::finishFrame)
-        .def("setClearColor", &atcg::RendererSystem::setClearColor, "color"_a)
-        .def("getClearColor", &atcg::RendererSystem::getClearColor)
-        .def("setPointSize", &atcg::RendererSystem::setPointSize, "size"_a)
-        .def("setLineSize", &atcg::RendererSystem::setLineSize, "size"_a)
-        .def("setViewport", &atcg::RendererSystem::setViewport, "x"_a, "y"_a, "width"_a, "height"_a)
-        .def("setDefaultViewport", &atcg::RendererSystem::setDefaultViewport)
-        .def("useScreenBuffer", &atcg::RendererSystem::useScreenBuffer)
+        .def("beginRenderPass", &atcg::RendererSystem::beginRenderPass, "target_framebuffer"_a)
+        .def("endRenderPass", &atcg::RendererSystem::endRenderPass)
         .def("clear", &atcg::RendererSystem::clear)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               const atcg::ref_ptr<atcg::Graph>& mesh,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-               const glm::mat4& model,
-               const glm::vec3& color,
-               const atcg::ref_ptr<atcg::Shader>& shader,
-               atcg::DrawMode draw_mode) { self->draw(mesh, camera, model, color, shader, draw_mode); },
-            "graph"_a,
-            "camera"_a,
-            "model"_a,
-            "color"_a,
-            "shader"_a,
-            "draw_mode"_a)
+        .def("bindTexture", &atcg::RendererSystem::bindTexture, "slot"_a, "texture"_a)
+        .def("bindStorageBuffer", &atcg::RendererSystem::bindStorageBuffer, "slot"_a, "buffer"_a)
+        .def("finishFrame", &atcg::RendererSystem::finishFrame)
         .def(
             "drawCADGrid",
             [](const atcg::ref_ptr<atcg::RendererSystem>& self, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
             { self->drawCADGrid(camera); },
-            "camera"_a)
-        .def(
-            "drawCameras",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera) { self->drawCameras(scene, camera); },
-            "scene"_a,
             "camera"_a)
         .def("drawCircle",
              &atcg::RendererSystem::drawCircle,
@@ -874,7 +867,6 @@ inline void defineBindings(py::module_& m)
             "img"_a)
         .def("getFramebuffer", &atcg::RendererSystem::getFramebuffer)
         .def("getEntityIndex", &atcg::RendererSystem::getEntityIndex, "mouse_pos"_a)
-        .def("toggleCulling", &atcg::RendererSystem::toggleCulling, "enabled"_a)
         .def("screenshot",
              [](const atcg::ref_ptr<atcg::RendererSystem>& self,
                 const atcg::ref_ptr<atcg::Scene>& scene,
@@ -906,9 +898,6 @@ inline void defineBindings(py::module_& m)
             "path"_a)
         .def("resize", &atcg::RendererSystem::resize)
         .def("getFrame", &atcg::RendererSystem::getFrame, "device"_a)
-        .def("getZBuffer", &atcg::RendererSystem::getZBuffer, "device"_a)
-        .def("toggleDepthTesting", &atcg::RendererSystem::toggleDepthTesting, "enabled"_a)
-        .def("setCullFace", &atcg::RendererSystem::setCullFace, "mode"_a)
         .def("getFrameCounter", &atcg::RendererSystem::getFrameCounter)
         .def("popTextureID", &atcg::RendererSystem::popTextureID)
         .def("pushTextureID", &atcg::RendererSystem::pushTextureID, "id"_a);
@@ -937,7 +926,6 @@ inline void defineBindings(py::module_& m)
             "vertex_path"_a,
             "fragment_path"_a,
             "geometry_path"_a)
-        .def("use", &atcg::Shader::use)
         .def("setInt", &atcg::Shader::setInt, "uniform_name"_a, "value"_a)
         .def("setFloat", &atcg::Shader::setFloat, "uniform_name"_a, "value"_a)
         .def("setVec3", &atcg::Shader::setVec3, "uniform_name"_a, "value"_a)
@@ -1071,7 +1059,6 @@ inline void defineBindings(py::module_& m)
             [](const torch::Tensor& img) { return atcg::Texture2D::create(img); },
             "img"_a)
         .def("getID", &atcg::Texture2D::getID)
-        .def("use", &atcg::Texture2D::use)
         .def(
             "setData",
             [](const atcg::ref_ptr<atcg::Texture2D>& texture, const torch::Tensor& data) { texture->setData(data); },
@@ -1093,7 +1080,6 @@ inline void defineBindings(py::module_& m)
             [](const torch::Tensor& img) { return atcg::TextureCube::create(img); },
             "img"_a)
         .def("getID", &atcg::TextureCube::getID)
-        .def("use", &atcg::TextureCube::use)
         .def(
             "setData",
             [](const atcg::ref_ptr<atcg::TextureCube>& texture, const torch::Tensor& data) { texture->setData(data); },
@@ -1104,7 +1090,6 @@ inline void defineBindings(py::module_& m)
 
     m_framebuffer.def(py::init<>())
         .def(py::init<uint32_t, uint32_t>())
-        .def("use", &atcg::Framebuffer::use)
         .def("attachColor", &atcg::Framebuffer::attachColor)
         .def("attachColorMultiSample", &atcg::Framebuffer::attachColorMultiSample)
         .def("attachTexture", &atcg::Framebuffer::attachTexture)
@@ -1117,7 +1102,6 @@ inline void defineBindings(py::module_& m)
         .def("width", &atcg::Framebuffer::width)
         .def("height", &atcg::Framebuffer::height)
         .def("currentFramebuffer", &atcg::Framebuffer::currentFramebuffer)
-        .def("useDefault", &atcg::Framebuffer::useDefault)
         .def("complete", &atcg::Framebuffer::complete);
 
     m_vertex_buffer.def(py::init<>())
@@ -1138,7 +1122,6 @@ inline void defineBindings(py::module_& m)
                 vbo->setData(info.ptr, info.size * info.itemsize);
             },
             "data"_a)
-        .def("use", &atcg::VertexBuffer::use)
         .def("resize", &atcg::VertexBuffer::resize, "size"_a)
         .def("getLayout", &atcg::VertexBuffer::getLayout)
         .def("setLayout", &atcg::VertexBuffer::setLayout, "setLayout"_a)
