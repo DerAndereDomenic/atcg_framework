@@ -21,7 +21,6 @@ public:
     // This is run at the start of the program
     virtual void onAttach() override
     {
-        atcg::Renderer::setPointSize(2.0f);
         // atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -61,13 +60,21 @@ public:
     {
         camera_controller->onUpdate(delta_time);
 
+        atcg::ShaderManager::getShader("flat")->setVec3("flat_color", glm::vec3(1.0f));
+        atcg::ShaderManager::getShader("flat")->setInt("texture_diffuse", 0);
+        atcg::GraphicsPipeline pipeline = atcg::GraphicsPipeline().setShader(atcg::ShaderManager::getShader("flat"));
+
+        atcg::Renderer::beginRenderPass(atcg::Renderer::getFramebuffer());
         atcg::Renderer::clear();
 
-        atcg::Renderer::draw(mesh,
-                             camera_controller->getCamera(),
-                             glm::mat4(1),
-                             glm::vec3(1),
-                             atcg::ShaderManager::getShader("flat"));
+        atcg::Renderer::bindTexture(0, diffuse_material.getDiffuseTexture());
+
+        atcg::Renderer::drawVAO(mesh->getVerticesArray(),
+                                camera_controller->getCamera(),
+                                glm::mat4(1),
+                                pipeline,
+                                mesh->n_vertices());
+        atcg::Renderer::endRenderPass();
     }
 
 #ifndef ATCG_HEADLESS
@@ -99,6 +106,8 @@ private:
     atcg::ref_ptr<atcg::FocusedController> camera_controller;
     atcg::ref_ptr<atcg::Graph> mesh;
     atcg::ref_ptr<atcg::TriMesh> trimesh;
+
+    atcg::Material diffuse_material;
 
     bool show_render_settings = false;
 };

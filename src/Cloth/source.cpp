@@ -96,12 +96,15 @@ public:
     {
         camera_controller->onUpdate(delta_time);
 
-        atcg::Renderer::clear();
 
         time += delta_time;
 
         atcg::Timer timer;
+
+        atcg::Renderer::beginRenderPass(atcg::Renderer::getFramebuffer());
+        atcg::Renderer::clear();
         atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+        atcg::Renderer::endRenderPass();
 
         // ATCG_TRACE("{0} ms", timer.elapsedMillis());
 
@@ -121,9 +124,6 @@ public:
         context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
         context.setValue<atcg::ref_ptr<atcg::Framebuffer>>("target", atcg::Renderer::getFramebuffer());
         scene->draw(context);
-
-
-        atcg::Renderer::drawCameras(scene, camera_controller->getCamera());
     }
 
 #ifndef ATCG_HEADLESS

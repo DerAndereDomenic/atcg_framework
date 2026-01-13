@@ -51,8 +51,6 @@ public:
     {
         camera_controller->onUpdate(delta_time);
 
-        atcg::Renderer::clear();
-
         atcg::ShaderManager::getShader("Mandelbulb")
             ->setVec3("camera_position", camera_controller->getCamera()->getPosition());
         atcg::ShaderManager::getShader("Mandelbulb")->setMat4("V", camera_controller->getCamera()->getView());
@@ -61,17 +59,20 @@ public:
             ->setMat4("VP", camera_controller->getCamera()->getViewProjection());
         atcg::ShaderManager::getShader("Mandelbulb")
             ->setMat4("invVP", glm::inverse(camera_controller->getCamera()->getViewProjection()));
-        atcg::ShaderManager::getShader("Mandelbulb")->use();
         texture->useForCompute();
         atcg::ShaderManager::getShader("Mandelbulb")
             ->dispatch(glm::ivec3(ceil(texture->width() / 8), ceil(texture->height() / 8), 1));
 
         atcg::ShaderManager::getShader("screen")->setInt("screen_texture", screen_id);
-        atcg::ShaderManager::getShader("screen")->use();
 
-        texture->use(screen_id);
+        atcg::GraphicsPipeline pipeline = atcg::GraphicsPipeline().setShader(atcg::ShaderManager::getShader("screen"));
 
-        atcg::Renderer::draw(quad_mesh, {}, glm::mat4(1), glm::vec3(1), atcg::ShaderManager::getShader("screen"));
+        atcg::Renderer::beginRenderPass(atcg::Renderer::getFramebuffer());
+        atcg::Renderer::clear();
+        atcg::Renderer::bindTexture(screen_id, texture);
+
+        atcg::Renderer::drawVAO(quad_mesh->getVerticesArray(), {}, glm::mat4(1), pipeline, quad_mesh->n_vertices());
+        atcg::Renderer::endRenderPass();
     }
 
     virtual void onImGuiRender() override {}

@@ -57,7 +57,6 @@ public:
     virtual void onAttach() override
     {
         atcg::Application::get()->enableDockSpace(true);
-        atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
         auto skybox         = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
         auto skybox_texture = atcg::Texture2D::create(skybox);
@@ -167,8 +166,6 @@ public:
 
         atcg::Scripting::handleScriptUpdates(atcg::Project::getActive()->getActiveScene(), delta_time);
 
-        atcg::Renderer::clear();
-
         if(atcg::VR::isVRAvailable())
         {
             atcg::ref_ptr<atcg::VRController> controller =
@@ -181,15 +178,12 @@ public:
 
             auto [t_left, t_right] = atcg::VR::getRenderTargets();
 
-            t_left->use();
-            atcg::Renderer::setViewport(0, 0, atcg::VR::width(), atcg::VR::height());
+            // t_left->use();
+            //  atcg::Renderer::setViewport(0, 0, atcg::VR::width(), atcg::VR::height());
 
-            atcg::Renderer::clear();
+            // atcg::Renderer::clear();
 
             atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraLeft(), t_left);
-
-            atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), controller->getCameraLeft());
-            atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), controller->getCameraLeft());
 
             atcg::Renderer::drawCADGrid(controller->getCameraLeft());
 
@@ -198,14 +192,11 @@ public:
                 atcg::VR::drawMovementLine(controller->getCameraLeft());
             }
 
-            t_right->use();
+            // t_right->use();
 
-            atcg::Renderer::clear();
+            // atcg::Renderer::clear();
 
             atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraRight(), t_right);
-
-            atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), controller->getCameraRight());
-            atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), controller->getCameraRight());
 
             atcg::Renderer::drawCADGrid(controller->getCameraRight());
 
@@ -214,14 +205,14 @@ public:
                 atcg::VR::drawMovementLine(controller->getCameraRight());
             }
 
-            atcg::Renderer::useScreenBuffer();
-            atcg::Renderer::setDefaultViewport();
+            // atcg::Renderer::useScreenBuffer();
+            // atcg::Renderer::setDefaultViewport();
 
             atcg::VR::renderToScreen();
         }
         else
         {
-            atcg::Renderer::clear();
+            // atcg::Renderer::clear();
 
             if(enable_pathtracing)
             {
@@ -243,11 +234,10 @@ public:
                                                                    atcg::Renderer::getFramebuffer());
             }
 
-
-            atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
-            atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
+            atcg::Renderer::beginRenderPass(atcg::Renderer::getFramebuffer());
 
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+            atcg::Renderer::endRenderPass();
         }
 
         uint32_t current_revision = atcg::RevisionStack::numUndos();
