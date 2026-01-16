@@ -336,6 +336,49 @@ def sample_L(plane1, plane2, bsdf, emitter, ray):
 
     Le = emitter.evaluate()
 
+    # def test(x0, x1):
+    #     throughput = torch.tensor([1.0, 1.0, 1.0])
+    #     rng = TorchRNG(seed=42)
+
+    #     # Iteration 1
+    #     w = x1 - x0
+    #     w = w / torch.norm(w)
+    #     current_ray = Ray(x0, w)
+    #     bsdf_result = bsdf.sample(current_ray, plane1.getNormal(x1), rng)
+
+    #     # Spawn ray
+    #     # current_ray = Ray(x1, bsdf_result.direction)
+    #     # x2 = plane2.intersect(current_ray)
+
+    #     throughput *= bsdf_result.brdf / bsdf_result.pdf
+
+    #     # Iteration 2
+    #     # x1 = x1.detach()
+    #     # x2 = x2.detach()
+    #     # w = x2 - x1
+    #     # w = w / torch.norm(w)
+    #     # current_ray = Ray(x1, w)
+    #     # bsdf_result = bsdf.sample(current_ray, plane2.getNormal(x2), rng)
+
+    #     # Spawn ray
+    #     # current_ray = Ray(x2, bsdf_result.direction)
+    #     # x3 = plane1.intersect(current_ray)
+
+    #     # throughput *= bsdf_result.brdf / bsdf_result.pdf
+    #     Le = emitter.evaluate()
+
+    #     L = throughput * Le
+
+    #     # print("Sanity", L)
+
+    #     return L
+
+    # Jt = jacobian(test, (ray.origin, intersection))
+    # frame0 = BSDF.compute_local_frame(ray.direction)[:, :2]
+    # frame1 = BSDF.compute_local_frame(plane1.getNormal(intersection))[:, :2]
+    # Jt = torch.cat([Jt[0] @ frame0, Jt[1] @ frame1], dim=1)
+    # print("Jt", Jt)
+
     return throughput * Le
 
 
@@ -715,12 +758,331 @@ def prbprob(plane1, plane2, bsdf, emitter, ray):
     backward_pass(plane1, plane2, bsdf, emitter, ray, L, JL)
 
 
+def trace_forward(plane1, plane2, bsdf, emitter, ray):
+
+    L = 0
+    beta = torch.ones(3)
+    JL = torch.zeros((3, 4))
+    Jbeta = torch.zeros((3, 4))
+    Jray = torch.eye(4)
+
+    rng = TorchRNG(seed=42)
+
+    # Iteration 1
+    frame0 = BSDF.compute_local_frame(ray.direction)[:, :2]
+    intersection1 = plane1.intersect(ray)
+    frame1 = BSDF.compute_local_frame(plane1.getNormal(intersection1))[:, :2]
+
+    def sample_ray1(p1, p2):
+        global intersection2
+        global bsdf_result
+        w = p2 - p1
+        w = w / torch.norm(w)
+        temp_ray = Ray(p1, w)
+        bsdf_result = bsdf.sample(temp_ray, plane1.getNormal(p2), rng)
+        intersection2 = plane2.intersect(Ray(p2, bsdf_result.direction))
+
+        return p2, intersection2, bsdf_result.brdf / bsdf_result.pdf
+
+    Jsample = jacobian(sample_ray1, (ray.origin, intersection1))
+    frame2 = BSDF.compute_local_frame(plane2.getNormal(intersection2))[:, :2]
+
+    print("Jx1x0", Jsample[0][0])
+
+    Jx1x0 = frame1.T @ Jsample[0][0] @ frame0
+    Jx2x0 = frame2.T @ Jsample[1][0] @ frame0
+    Jx1x1 = frame1.T @ Jsample[0][1] @ frame1
+    Jx2x1 = frame2.T @ Jsample[1][1] @ frame1
+
+    J1 = torch.cat([Jx1x0, Jx1x1], dim=1)
+    J2 = torch.cat([Jx2x0, Jx2x1], dim=1)
+    Jray_ = torch.cat([J1, J2], dim=0)
+    Jbsdfx0 = Jsample[2][0] @ frame0
+    Jbsdfx1 = Jsample[2][1] @ frame1
+    Jbsdf = torch.cat([Jbsdfx0, Jbsdfx1], dim=1)
+    # Jbsdf = Jbsdf @ Jray
+    Jray = Jray_ @ Jray
+    Jbeta = Jbsdf
+
+    beta *= bsdf_result.brdf / bsdf_result.pdf
+
+    # Le = emitter.evaluate()
+    # L = beta * Le
+
+    # JLe = torch.zeros((3, 4))  # effectively independent on the incoming ray
+    # JL = torch.diag(beta) @ JLe + torch.diag(Le) @ Jbeta
+
+    # print("L", L)
+    # print("JL", JL)
+
+    # return L, JL
+
+    # Iteration 2
+    frame0 = frame1
+    # intersection3 = plane1.intersect(Ray(intersection2, bsdf_result.direction))
+    frame1 = frame2
+
+    def sample_ray2(p1, p2):
+        global intersection3
+        global bsdf_result
+        w = p2 - p1
+        w = w / torch.norm(w)
+        temp_ray = Ray(p1, w)
+        bsdf_result = bsdf.sample(temp_ray, plane2.getNormal(p2), rng)
+        intersection3 = plane1.intersect(Ray(p2, bsdf_result.direction))
+
+        return p2, intersection3, bsdf_result.brdf / bsdf_result.pdf
+
+    Jsample = jacobian(sample_ray2, (intersection1, intersection2))
+    frame2 = BSDF.compute_local_frame(plane1.getNormal(intersection3))[:, :2]
+
+    print("Jx1x0", Jsample[0][0])
+    Jx1x0 = frame1.T @ Jsample[0][0] @ frame0
+    Jx2x0 = frame2.T @ Jsample[1][0] @ frame0
+    Jx1x1 = frame1.T @ Jsample[0][1] @ frame1
+    Jx2x1 = frame2.T @ Jsample[1][1] @ frame1
+
+    J1 = torch.cat([Jx1x0, Jx1x1], dim=1)
+    J2 = torch.cat([Jx2x0, Jx2x1], dim=1)
+    Jray_ = torch.cat([J1, J2], dim=0)
+    Jbsdfx0 = Jsample[2][0] @ frame0
+    Jbsdfx1 = Jsample[2][1] @ frame1
+    Jbsdf = torch.cat([Jbsdfx0, Jbsdfx1], dim=1)
+    Jbsdf = Jbsdf @ Jray
+    Jray = Jray_ @ Jray
+    Jbeta = (
+        torch.diag(bsdf_result.brdf / bsdf_result.pdf) @ Jbeta
+        + torch.diag(beta) @ Jbsdf
+    )
+    beta *= bsdf_result.brdf / bsdf_result.pdf
+
+    # Iteration 3 (just evaluate light source)
+    Le = emitter.evaluate()
+    L = beta * Le
+
+    JLe = torch.zeros((3, 4))  # effectively independent on the incoming ray
+    JL += torch.diag(beta) @ JLe + torch.diag(Le) @ Jbeta
+
+    print("L", L)
+    print("JL", JL)
+
+    return L, JL
+
+
+def trace_backward(plane1, plane2, bsdf, emitter, ray, L, JL):
+    # return
+    beta = torch.ones(3)
+    Jray = torch.eye(4)
+
+    JL_albedo = torch.zeros((3, 3))
+    JL_metallic = torch.zeros((3, 1))
+    JL_roughness = torch.zeros((3, 1))
+
+    rng = TorchRNG(seed=42)
+
+    # Iteration 1
+    frame0 = BSDF.compute_local_frame(ray.direction)[:, :2]
+    intersection1 = plane1.intersect(ray)
+    frame1 = BSDF.compute_local_frame(plane1.getNormal(intersection1))[:, :2]
+
+    def sample_ray1(p1, p2):
+        global intersection2
+        global bsdf_result
+        w = p2 - p1
+        w = w / torch.norm(w)
+        temp_ray = Ray(p1, w)
+        bsdf_result = bsdf.sample(temp_ray, plane1.getNormal(p2), rng)
+        intersection2 = plane2.intersect(Ray(p2, bsdf_result.direction))
+
+        return p2, intersection2, bsdf_result.brdf / bsdf_result.pdf
+
+    rng_copy = rng.clone()
+    Jsample = jacobian(sample_ray1, (ray.origin, intersection1))
+    frame2 = BSDF.compute_local_frame(plane2.getNormal(intersection2))[:, :2]
+
+    Jx1x0 = frame1.T @ Jsample[0][0] @ frame0
+    Jx2x0 = frame2.T @ Jsample[1][0] @ frame0
+    Jx1x1 = frame1.T @ Jsample[0][1] @ frame1
+    Jx2x1 = frame2.T @ Jsample[1][1] @ frame1
+
+    J1 = torch.cat([Jx1x0, Jx1x1], dim=1)
+    J2 = torch.cat([Jx2x0, Jx2x1], dim=1)
+    Jray_ = torch.cat([J1, J2], dim=0)
+    Jbsdfx0 = Jsample[2][0] @ frame0
+    Jbsdfx1 = Jsample[2][1] @ frame1
+    Jbsdf = torch.cat([Jbsdfx0, Jbsdfx1], dim=1)
+    Jbsdf = Jbsdf @ Jray
+    Jray = Jray_ @ Jray
+
+    JL -= torch.diag(L / (bsdf_result.brdf / bsdf_result.pdf)) @ Jbsdf
+    JL_ = JL @ torch.linalg.inv(Jray)
+
+    def bsdf_eval_plane1_bw(albedo, metallic, roughness, p1, p2):
+        global bsdf_result
+        w = p2 - p1
+        w = w / torch.norm(w)
+        temp_ray = Ray(p1, w)
+        bsdf.albedo = albedo
+        bsdf.metallic = metallic
+        bsdf.roughness = roughness
+        sampled_dir = bsdf.sample_direction(temp_ray, plane1.getNormal(p2), rng_copy)
+        brdf, pdf = bsdf.eval(temp_ray, sampled_dir, plane1.getNormal(p2))
+        return brdf / pdf, sampled_dir
+
+    Jbsdf_bw, Jwo_bw = jacobian(
+        bsdf_eval_plane1_bw,
+        (
+            bsdf.albedo,
+            bsdf.metallic,
+            bsdf.roughness,
+            ray.origin,
+            intersection1,
+            # bsdf_result.direction.detach(),
+        ),
+    )
+
+    def intersect1(w):
+        return plane2.intersect(Ray(intersection1, w))
+
+    (Jx2,) = jacobian(intersect1, (bsdf_result.direction.detach(),))
+
+    Jx2_wo = frame2.T @ Jx2
+
+    JL_wo = JL_[:, 2:] @ Jx2_wo
+
+    Jbsdf_albedo = Jbsdf_bw[0]
+    Jbsdf_metallic = Jbsdf_bw[1]
+    Jbsdf_roughness = Jbsdf_bw[2]
+
+    Jwo_albedo = Jwo_bw[0]
+    Jwo_metallic = Jwo_bw[1]
+    Jwo_roughness = Jwo_bw[2]
+
+    dL_bsdf = L / (bsdf_result.brdf / bsdf_result.pdf)
+
+    JL_albedo += torch.diag(dL_bsdf) @ Jbsdf_albedo
+    JL_metallic += torch.diag(dL_bsdf) @ Jbsdf_metallic
+    JL_roughness += torch.diag(dL_bsdf) @ Jbsdf_roughness
+
+    JL_albedo += JL_wo @ Jwo_albedo
+    JL_metallic += JL_wo @ Jwo_metallic
+    JL_roughness += JL_wo @ Jwo_roughness
+
+    beta *= bsdf_result.brdf / bsdf_result.pdf
+
+    # Iteration 2
+    frame0 = frame1
+    # intersection3 = plane1.intersect(Ray(intersection2, bsdf_result.direction))
+    frame1 = frame2
+
+    def sample_ray2(p1, p2):
+        global intersection3
+        global bsdf_result
+        w = p2 - p1
+        w = w / torch.norm(w)
+        temp_ray = Ray(p1, w)
+        bsdf_result = bsdf.sample(temp_ray, plane2.getNormal(p2), rng)
+        intersection3 = plane1.intersect(Ray(p2, bsdf_result.direction))
+
+        return p2, intersection3, bsdf_result.brdf / bsdf_result.pdf
+
+    rng_copy = rng.clone()
+    Jsample = jacobian(sample_ray2, (intersection1, intersection2))
+    frame2 = BSDF.compute_local_frame(plane1.getNormal(intersection3))[:, :2]
+
+    Jx1x0 = frame1.T @ Jsample[0][0] @ frame0
+    Jx2x0 = frame2.T @ Jsample[1][0] @ frame0
+    Jx1x1 = frame1.T @ Jsample[0][1] @ frame1
+    Jx2x1 = frame2.T @ Jsample[1][1] @ frame1
+
+    J1 = torch.cat([Jx1x0, Jx1x1], dim=1)
+    J2 = torch.cat([Jx2x0, Jx2x1], dim=1)
+    Jray_ = torch.cat([J1, J2], dim=0)
+    Jbsdfx0 = Jsample[2][0] @ frame0
+    Jbsdfx1 = Jsample[2][1] @ frame1
+    Jbsdf = torch.cat([Jbsdfx0, Jbsdfx1], dim=1)
+    Jbsdf = Jbsdf @ Jray
+    Jray = Jray_ @ Jray
+
+    JL -= torch.diag(L / (bsdf_result.brdf / bsdf_result.pdf)) @ Jbsdf
+    JL_ = JL @ torch.linalg.inv(Jray)
+
+    def bsdf_eval_plane2_bw(albedo, metallic, roughness, p1, p2):
+        global bsdf_result
+        w = p2 - p1
+        w = w / torch.norm(w)
+        temp_ray = Ray(p1, w)
+        bsdf.albedo = albedo
+        bsdf.metallic = metallic
+        bsdf.roughness = roughness
+        sampled_dir = bsdf.sample_direction(temp_ray, plane2.getNormal(p2), rng_copy)
+        brdf, pdf = bsdf.eval(temp_ray, sampled_dir, plane2.getNormal(p2))
+        return brdf / pdf, sampled_dir
+
+    Jbsdf_bw, Jwo_bw = jacobian(
+        bsdf_eval_plane2_bw,
+        (
+            bsdf.albedo,
+            bsdf.metallic,
+            bsdf.roughness,
+            intersection1,
+            intersection2,
+            # bsdf_result.direction.detach(),
+        ),
+    )
+
+    def intersect2(w):
+        return plane1.intersect(Ray(intersection2, w))
+
+    (Jx2,) = jacobian(intersect2, (bsdf_result.direction.detach(),))
+
+    Jx2_wo = frame2.T @ Jx2
+
+    JL_wo = JL_[:, 2:] @ Jx2_wo
+
+    Jbsdf_albedo = Jbsdf_bw[0]
+    Jbsdf_metallic = Jbsdf_bw[1]
+    Jbsdf_roughness = Jbsdf_bw[2]
+
+    Jwo_albedo = Jwo_bw[0]
+    Jwo_metallic = Jwo_bw[1]
+    Jwo_roughness = Jwo_bw[2]
+
+    dL_bsdf = L / (bsdf_result.brdf / bsdf_result.pdf)
+
+    JL_albedo += torch.diag(dL_bsdf) @ Jbsdf_albedo
+    JL_metallic += torch.diag(dL_bsdf) @ Jbsdf_metallic
+    JL_roughness += torch.diag(dL_bsdf) @ Jbsdf_roughness
+
+    JL_albedo += JL_wo @ Jwo_albedo
+    JL_metallic += JL_wo @ Jwo_metallic
+    JL_roughness += JL_wo @ Jwo_roughness
+
+    print("albedo", JL_albedo)
+    print("metallic", JL_metallic)
+    print("roughness", JL_roughness)
+
+    beta *= bsdf_result.brdf / bsdf_result.pdf
+
+    return
+    # Iteration 3 (just evaluate light source)
+    Le = emitter.evaluate()
+    L = beta * Le
+
+    JLe = torch.zeros((3, 4))  # effectively independent on the incoming ray
+    JL += torch.diag(beta) @ JLe + torch.diag(Le) @ Jbeta
+
+    print(L, JL)
+
+    return L, JL
+
+
 def main():
     plane1 = Plane(torch.tensor([0.0, 1.0, 0.0]), torch.tensor([0.0, -1.0, 0.0]))
     plane2 = Plane(torch.tensor([0.0, -1.0, 0.0]), torch.tensor([0.0, 1.0, 0.0]))
 
-    plane1 = Sphere(torch.tensor([0.0, 10.0, 0.0]), torch.tensor([9.0]))
-    plane2 = Sphere(torch.tensor([0.0, -10.0, 0.0]), torch.tensor([9.0]))
+    plane1 = Sphere(torch.tensor([0.0, 15.0, 0.0]), torch.tensor([14.0]))
+    plane2 = Sphere(torch.tensor([0.0, -15.0, 0.0]), torch.tensor([14.0]))
 
     bsdf = BSDF(
         albedo=torch.tensor([0.8, 0.2, 0.2]),
@@ -740,13 +1102,30 @@ def main():
 
     ray = Ray(torch.tensor([0.0, 0.0, 0.0]), torch.tensor([0.0, 1.0, 0.0]))
 
-    def compute_L(origin, direction):
-        temp_ray = Ray(origin, direction)
+    L, JL = trace_forward(plane1, plane2, bsdf, emitter, ray)
+    trace_backward(plane1, plane2, bsdf, emitter, ray, L, JL)
+
+    # sample_L(plane1, plane2, bsdf, emitter, ray)
+
+    # return
+
+    p2 = plane1.intersect(ray)
+    n = plane1.getNormal(p2)
+
+    def compute_L(p1, p2):
+        w = p2 - p1
+        w = w / torch.norm(w)
+        temp_ray = Ray(p1, w)
         L = sample_L(plane1, plane2, bsdf, emitter, temp_ray)
+        print(L)
         return L
 
-    JL = jacobian(compute_L, (ray.origin, ray.direction))
+    frame0 = BSDF.compute_local_frame(ray.direction)[:, :2]
+    frame1 = BSDF.compute_local_frame(n)[:, :2]
+    JL = jacobian(compute_L, (ray.origin, p2))
+    JL = torch.cat([JL[0] @ frame0, JL[1] @ frame1], dim=1)
     print(JL)
+    # return
 
     def compute_L(albedo, metallic, roughness):
         scene[0].bsdf.albedo = albedo
@@ -761,7 +1140,7 @@ def main():
     JL = jacobian(compute_L, params)
     print(JL)
 
-    prbprob(plane1, plane2, bsdf, emitter, ray)
+    # prbprob(plane1, plane2, bsdf, emitter, ray)
 
 
 if __name__ == "__main__":
