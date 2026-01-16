@@ -20,9 +20,9 @@ struct BSDFSamplingResult
 
 struct BSDFDualSamplingResult
 {
-    CuDiff::Dual<4, glm::vec3> out_dir;
-    CuDiff::Dual<4, glm::vec3> bsdf_weight;
-    CuDiff::Dual<4, float> sample_probability;
+    CuDiff::Dual<6, glm::vec3> out_dir;
+    CuDiff::Dual<6, glm::vec3> bsdf_weight;
+    CuDiff::Dual<6, float> sample_probability;
     BSDFComponentType flags = BSDFComponentType::Any;
 };
 

@@ -176,12 +176,12 @@ extern "C" __device__ glm::vec3 __direct_callable__eval_meshemitter(const atcg::
     return detail::evalMeshEmitter(emissive_color, sbt_data->emitter_scaling);
 }
 
-extern "C" __device__ CuDiff::Dual<4, glm::vec3>
+extern "C" __device__ CuDiff::Dual<6, glm::vec3>
 __direct_callable__eval_dual_meshemitter(const atcg::DualSurfaceInteraction& si)
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
 
-    CuDiff::Dual<4, glm::vec3> emissive_color = sbt_data->emissive_texture.read(si.uv);
+    CuDiff::Dual<6, glm::vec3> emissive_color = sbt_data->emissive_texture.read(si.uv);
 
     return emissive_color * sbt_data->emitter_scaling;
 }

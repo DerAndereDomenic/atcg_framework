@@ -289,8 +289,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE CuDiff::Dual<N, glm::vec3>
 warp_square_to_hemisphere_ggx(const glm::vec2& uv, CuDiff::Dual<N, float> roughness)
 {
     // GGX NDF sampling
-    auto cos_theta = CuDiff::sqrt(CuDiff::max(1e-3f, (1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x)));
-    auto sin_theta = CuDiff::sqrt(CuDiff::max(1e-3f, 1.0f - cos_theta * cos_theta));
+    auto cos_theta = CuDiff::sqrt(CuDiff::max(1e-12f, (1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x)));
+    auto sin_theta = CuDiff::sqrt(CuDiff::max(1e-12f, 1.0f - cos_theta * cos_theta));
     float phi      = 2.0f * glm::pi<float>() * uv.y;
 
     auto x = sin_theta * glm::cos(phi);
@@ -370,6 +370,7 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
     auto diffuse_color = sbt_data->diffuse_texture.read(si.uv);
     auto metallic      = sbt_data->metallic_texture.read(si.uv);
     auto roughness     = sbt_data->roughness_texture.read(si.uv);
+
     // if(roughness.val() < 1e-3f)
     // {
     //     roughness.mut_val() = 1e-3f;
@@ -410,7 +411,7 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
         // Sample light direction from diffuse bsdf
         glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
-        result.out_dir = apply_local_frame(local_frame, CuDiff::Dual<4, glm::vec3>(local_outgoing_ray_dir));
+        result.out_dir = apply_local_frame(local_frame, CuDiff::Dual<6, glm::vec3>(local_outgoing_ray_dir));
     }
     else
     {
@@ -433,10 +434,10 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
     auto diffuse_bsdf = diffuse_color / glm::pi<float>();
     auto diffuse_pdf  = NdotL / glm::pi<float>();
 
-    CuDiff::Dual<4, glm::vec3> specular_bsdf = glm::vec3(0);
-    CuDiff::Dual<4, float> specular_pdf      = 0.0f;
+    CuDiff::Dual<6, glm::vec3> specular_bsdf = glm::vec3(0);
+    CuDiff::Dual<6, float> specular_pdf      = 0.0f;
     // Only compute specular component if specular_f0 is not zero!
-    CuDiff::Dual<4, glm::vec3> kD = glm::vec3(1);
+    CuDiff::Dual<6, glm::vec3> kD = glm::vec3(1);
     if(CuDiff::dot(metallic_color, metallic_color) > 1e-6f)
     {
         auto halfway = CuDiff::normalize(result.out_dir + view_dir);

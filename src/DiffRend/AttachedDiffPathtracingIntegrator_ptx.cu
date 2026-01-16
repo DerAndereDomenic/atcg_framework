@@ -8,6 +8,7 @@
 #include <Core/SurfaceInteraction.h>
 #include <Core/Payload.h>
 #include <Math/Random.h>
+#include <Math/Functions.h>
 
 #include <CuDiff/CuDiff.h>
 #include <CuDiff/ext/glm.h>
@@ -20,8 +21,11 @@ extern "C"
 struct RayContext
 {
     bool valid;
-    CuDiff::Dual<4, glm::vec3> origin;
-    CuDiff::Dual<4, glm::vec3> direction;
+    atcg::SurfaceInteraction si0;
+    atcg::SurfaceInteraction si1;
+    CuDiff::Dual<6, glm::vec3> last_normal;
+    CuDiff::Dual<6, glm::vec2> last_uv;
+
     glm::vec3 throughput;
     glm::vec3 radiance;
 
@@ -50,14 +54,17 @@ extern "C" __global__ void __raygen__forward()
 
     glm::vec3 ray_origin    = cam_eye;
     glm::vec3 ray_direction = glm::normalize((u_ * U + v_ * V + W));
+    ray.radiance            = glm::vec3(0);
+    ray.throughput          = glm::vec3(1);
+    ray.valid               = false;
+    ray.JL                  = glm::mat4x3(0);
+    int32_t entity_id       = -1;
 
-    ray.origin        = ray_origin;
-    ray.direction     = ray_direction;
-    ray.radiance      = glm::vec3(0);
-    ray.throughput    = glm::vec3(1);
-    ray.valid         = true;
-    ray.JL            = glm::mat4x3(0);
-    int32_t entity_id = -1;
+    atcg::SurfaceInteraction si0;
+    si0.valid              = true;
+    si0.position           = ray_origin;
+    si0.normal             = ray_direction;
+    si0.incoming_direction = ray_direction;
 
     atcg::SurfaceInteraction last_si;
     float last_bsdf_pdf = 1.0f;
@@ -65,45 +72,75 @@ extern "C" __global__ void __raygen__forward()
     glm::mat4x3 Jb = glm::mat4x3(0);
     glm::mat4 Jray = glm::mat4(1);
 
-    CuDiff::Dual<4, float> u, v, phi, theta;
+    atcg::DualSurfaceInteraction dsi1;
+    dsi1.incoming_position  = ray_origin;
+    dsi1.incoming_direction = ray_direction;
+    atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
+                                                             ray_origin,
+                                                             ray_direction,
+                                                             0.001f,
+                                                             1e16f,
+                                                             &dsi1,
+                                                             params.dual_trace_params);
+    auto si1        = dsi1.toSi();
+    ray.last_normal = dsi1.normal;
+    ray.last_uv     = dsi1.uv;
+
+    if(si1.valid)
+    {
+        entity_id = si1.entity_id;
+        ray.valid = true;
+    }
+
+    ray.si0 = si0;
+    ray.si1 = si1;
 
     for(int n = 0; n < 8; ++n)
     {
         if(!ray.valid) break;
         ray.valid = false;
 
+        auto [x0, x1] = CuDiff::make_variables<6>(ray.si0.position, ray.si1.position);
+        auto distance = CuDiff::length(x1 - x0);
+        auto w        = (x1 - x0) / CuDiff::max(distance, 1e-5f);
+
         atcg::DualSurfaceInteraction dsi;
-        dsi.incoming_position  = ray.origin;
-        dsi.incoming_direction = ray.direction;
-        atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
-                                                                 ray.origin,
-                                                                 ray.direction,
-                                                                 0.001f,
-                                                                 1e16f,
-                                                                 &dsi,
-                                                                 params.dual_trace_params);
-        atcg::SurfaceInteraction si = dsi.toSi();
+        dsi.valid              = true;
+        dsi.position           = x1;
+        dsi.incoming_direction = w;
+        dsi.incoming_distance  = distance;
+        dsi.normal             = ray.last_normal;
+        dsi.uv                 = ray.last_uv;
 
-        if(si.valid && n == 0)
-        {
-            entity_id = si.entity_id;
-        }
+        auto frame0_ = atcg::Math::compute_local_frame(ray.si0.normal);
+        auto frame1_ = atcg::Math::compute_local_frame(ray.si1.normal);
 
-        if(si.valid)
+        glm::mat2x3 frame0 = glm::mat2x3(frame0_[0], frame0_[1]);
+        glm::mat2x3 frame1 = glm::mat2x3(frame1_[0], frame1_[1]);
+
+        // si is valid by contruction if(si.valid)
         {
             // Check for light source
-            CuDiff::Dual<4, glm::vec3> Le;
+            CuDiff::Dual<6, glm::vec3> Le;
             glm::mat4x3 JLe = glm::mat4x3(0);
-            if(si.emitter)
+            if(ray.si1.emitter)
             {
-                bool mis_valid             = last_si.valid;
-                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);    // TODO: Differentiate ?
-                mis_weight       = 1.0f;
-                Le               = si.emitter->evalLightDual(dsi);
-                ray.radiance += mis_weight * ray.throughput * Le.val();
+                // bool mis_valid = last_si.valid;
+                // float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) :
+                // 0.0f; float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                Le = ray.si1.emitter->evalLightDual(dsi);
+                ray.radiance += ray.throughput * Le.val();
 
-                JLe = glm::mat4x3(Le.derivative(0), Le.derivative(1), Le.derivative(2), Le.derivative(3));
+                glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
+                glm::mat3 JLe_dx1 = glm::mat3(Le.derivative(3), Le.derivative(4), Le.derivative(5));
+
+                glm::mat2x3 JLe_du0v0 = JLe_dx0 * frame0;
+                glm::mat2x3 JLe_du1v1 = JLe_dx1 * frame1;
+
+                JLe = glm::mat4x3(glm::vec3(JLe_du0v0[0]),
+                                  glm::vec3(JLe_du0v0[1]),
+                                  glm::vec3(JLe_du1v1[0]),
+                                  glm::vec3(JLe_du1v1[1]));
 
                 JLe = JLe * Jray;
             }
@@ -111,7 +148,7 @@ extern "C" __global__ void __raygen__forward()
             ray.JL += diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
 
             // PBR Sampling
-            if(si.bsdf)
+            if(ray.si1.bsdf)
             {
                 // Next-event estimation
                 // do
@@ -159,97 +196,110 @@ extern "C" __global__ void __raygen__forward()
                 //     ray.radiance += radiance_nee;
                 // } while(false);
 
-                auto result = si.bsdf->sampleBSDFForward(dsi, rng);
+                auto result = ray.si1.bsdf->sampleBSDFForward(dsi, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
-                    auto [dx, dy, dz] = CuDiff::unwrap(result.out_dir);
+                    atcg::DualSurfaceInteraction next_dsi;
+                    next_dsi.incoming_position  = dsi.position;
+                    next_dsi.incoming_direction = result.out_dir;
 
-                    auto theta_n = CuDiff::acos(CuDiff::clamp(dy, -1.0f, 1.0f));
-                    auto phi_n   = CuDiff::atan2(dz, dx);
+                    atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
+                                                                             ray.si1.position,
+                                                                             result.out_dir.val(),
+                                                                             0.001f,
+                                                                             1e16f,
+                                                                             &next_dsi,
+                                                                             params.dual_trace_params);
 
-                    // Jray
-                    float duip1dui    = dsi.u_surface.derivative(0);
-                    float duip1p1dvi  = dsi.u_surface.derivative(1);
-                    float duip1p1dphi = dsi.u_surface.derivative(2);
-                    float duip1dtheta = dsi.u_surface.derivative(3);
-                    float dvip1dui    = dsi.v_surface.derivative(0);
-                    float dvip1dvi    = dsi.v_surface.derivative(1);
-                    float dvip1dphi   = dsi.v_surface.derivative(2);
-                    float dvip1dtheta = dsi.v_surface.derivative(3);
-
-                    float dthetaip1dui    = theta_n.derivative(0);
-                    float dthetaip1p1dvi  = theta_n.derivative(1);
-                    float dthetaip1p1dphi = theta_n.derivative(2);
-                    float dthetaip1dtheta = theta_n.derivative(3);
-                    float dphiip1dui      = phi_n.derivative(0);
-                    float dphiip1dvi      = phi_n.derivative(1);
-                    float dphiip1dphi     = phi_n.derivative(2);
-                    float dphiip1dtheta   = phi_n.derivative(3);
-
-                    glm::mat4 Jray_ = glm::mat4(glm::vec4(duip1dui, dvip1dui, dphiip1dui, dthetaip1dui),
-                                                glm::vec4(duip1p1dvi, dvip1dvi, dphiip1dvi, dthetaip1p1dvi),
-                                                glm::vec4(duip1p1dphi, dvip1dphi, dphiip1dphi, dthetaip1p1dphi),
-                                                glm::vec4(duip1dtheta, dvip1dtheta, dphiip1dtheta, dthetaip1dtheta));
-
-                    // -------------------
-
-                    // Jbsdf
-
-                    if(n != 0)
+                    if(!next_dsi.valid)
                     {
-                        glm::mat4x3 Jbsdf = glm::mat4x3(result.bsdf_weight.derivative(0),
-                                                        result.bsdf_weight.derivative(1),
-                                                        result.bsdf_weight.derivative(2),
-                                                        result.bsdf_weight.derivative(3));
-
-                        Jbsdf = Jbsdf * Jray;
-
-                        // -------------------
-
-                        Jray = Jray_ * Jray;
-                        Jray += 0.01f * glm::mat4(1) * glm::sign(rng.nextFloat() - 0.5f);
-
-                        Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
+                        ray.valid = false;
+                        continue;
                     }
 
-                    thrust::tie(u, v, phi, theta) =
-                        CuDiff::make_variables<4>(dsi.u_surface.val(), dsi.v_surface.val(), phi_n.val(), theta_n.val());
+                    auto frame2_ = atcg::Math::compute_local_frame(next_dsi.normal.val());
 
-                    auto sinTheta = CuDiff::sin(theta);
+                    glm::mat2x3 frame2 = glm::mat2x3(frame2_[0], frame2_[1]);
 
-                    auto x = sinTheta * CuDiff::cos(phi);
-                    auto y = CuDiff::cos(theta);
-                    auto z = sinTheta * CuDiff::sin(phi);
+                    glm::mat3 dx1_dx0 = glm::mat3(0);
+                    glm::mat3 dx2_dx0 = glm::mat3(next_dsi.position.derivative(0),
+                                                  next_dsi.position.derivative(1),
+                                                  next_dsi.position.derivative(2));
+                    glm::mat3 dx1_dx1 = glm::mat3(1);
+                    glm::mat3 dx2_dx1 = glm::mat3(next_dsi.position.derivative(3),
+                                                  next_dsi.position.derivative(4),
+                                                  next_dsi.position.derivative(5));
 
-                    ray.origin    = (1.0f - u - v) * dsi.P0 + u * dsi.P1 + v * dsi.P2;
-                    ray.direction = CuDiff::wrap(x, y, z);
+                    glm::mat2 du1v1_du0v0 = glm::transpose(frame1) * dx1_dx0 * frame0;
+                    glm::mat2 du2v2_du0v0 = glm::transpose(frame2) * dx2_dx0 * frame0;
+                    glm::mat2 du1v1_du1v1 = glm::transpose(frame1) * dx1_dx1 * frame1;
+                    glm::mat2 du2v2_du1v1 = glm::transpose(frame2) * dx2_dx1 * frame1;
+
+                    // Construct 4x4 Jacobian ((du1v1_du0v0, du1v1_du1v1), (du2v2_du0v0, du2v2_du1v1))
+                    glm::mat4 Jray_ = glm::mat4(glm::vec4(du1v1_du0v0[0], du2v2_du0v0[0]),
+                                                glm::vec4(du1v1_du0v0[1], du2v2_du0v0[1]),
+                                                glm::vec4(du1v1_du1v1[0], du2v2_du1v1[0]),
+                                                glm::vec4(du1v1_du1v1[1], du2v2_du1v1[1]));
+
+                    glm::mat3 Jbsdf_dx0 = glm::mat3(result.bsdf_weight.derivative(0),
+                                                    result.bsdf_weight.derivative(1),
+                                                    result.bsdf_weight.derivative(2));
+                    glm::mat3 Jbsdf_dx1 = glm::mat3(result.bsdf_weight.derivative(3),
+                                                    result.bsdf_weight.derivative(4),
+                                                    result.bsdf_weight.derivative(5));
+
+                    glm::mat2x3 Jbsdf_du0v0 = Jbsdf_dx0 * frame0;
+                    glm::mat2x3 Jbsdf_du1v1 = Jbsdf_dx1 * frame1;
+
+                    glm::mat4x3 Jbsdf = glm::mat4x3(glm::vec3(Jbsdf_du0v0[0]),
+                                                    glm::vec3(Jbsdf_du0v0[1]),
+                                                    glm::vec3(Jbsdf_du1v1[0]),
+                                                    glm::vec3(Jbsdf_du1v1[1]));
+
+                    Jbsdf = Jbsdf * Jray;
+                    Jray  = Jray_ * Jray;
+                    Jray += 0.01f * glm::mat4(1) * glm::sign(rng.nextFloat() - 0.5f);    // Regularization
+
+                    Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
+
+                    // if(params.debug)
+                    // {
+                    //     printf("%f\n", glm::determinant(Jray_));
+                    // }
+
+                    ray.si0         = ray.si1;
+                    ray.si1         = next_dsi.toSi();
+                    ray.last_normal = next_dsi.normal;
+                    ray.last_uv     = next_dsi.uv;
+
                     ray.throughput *= result.bsdf_weight.val();
-                    ray.valid = true;
+                    ray.valid = next_dsi.valid;
 
-                    last_si       = si;
-                    last_bsdf_pdf = result.sample_probability;
+                    // last_si       = si;
+                    // last_bsdf_pdf = result.sample_probability;
 
-                    if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
-                    {
-                        last_si.valid = false;
-                    }
+                    // if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                    // {
+                    //     last_si.valid = false;
+                    // }
                 }
             }
         }
-        else
-        {
-            if(params.environment_emitter)
-            {
-                bool mis_valid              = last_si.valid;
-                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
-                float emitter_sampling_pdf =
-                    mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
-                              : 0.0f;
-                float mis_weight = 1.0f;    // last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                ray.radiance += mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
-            }
-        }
+        // TODO
+        // else
+        // {
+        //     if(params.environment_emitter)
+        //     {
+        //         bool mis_valid              = last_si.valid;
+        //         float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+        //         float emitter_sampling_pdf =
+        //             mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
+        //                       : 0.0f;
+        //         float mis_weight = 1.0f;    // last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+        //         ray.radiance += mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
+        //     }
+        // }
     }
 
     params.current_sample[pixel_index] = ray.radiance;
@@ -275,6 +325,8 @@ extern "C" __global__ void __raygen__backward()
 {
     uint3 launch_idx = optixGetLaunchIndex();
 
+    if(launch_idx.x >= params.image_width || launch_idx.y >= params.image_height) return;
+
     uint32_t pixel_index = launch_idx.x + params.image_width * launch_idx.y;
     uint64_t seed        = atcg::sampleTEA64(pixel_index, params.rng_index);
     atcg::PCG32 rng(seed);
@@ -292,67 +344,99 @@ extern "C" __global__ void __raygen__backward()
 
     glm::vec3 ray_origin    = cam_eye;
     glm::vec3 ray_direction = glm::normalize((u_ * U + v_ * V + W));
+    ray.radiance            = params.accumulation_buffer[pixel_index];
+    ray.throughput          = glm::vec3(1);
+    ray.valid               = false;
+    ray.JL                  = params.JL_buffer[pixel_index];
+    ray.delta_y             = params.adjoint_y[pixel_index];
+    int32_t entity_id       = -1;
 
-    ray.origin        = ray_origin;
-    ray.direction     = ray_direction;
-    ray.radiance      = params.accumulation_buffer[pixel_index];
-    ray.delta_y       = params.adjoint_y[pixel_index];
-    ray.JL            = params.JL_buffer[pixel_index];
-    ray.throughput    = glm::vec3(1);
-    ray.valid         = true;
-    int32_t entity_id = -1;
+    atcg::SurfaceInteraction si0;
+    si0.valid              = true;
+    si0.position           = ray_origin;
+    si0.normal             = ray_direction;
+    si0.incoming_direction = ray_direction;
 
     atcg::SurfaceInteraction last_si;
     float last_bsdf_pdf = 1.0f;
 
     glm::mat4 Jray = glm::mat4(1);
 
-    CuDiff::Dual<4, float> u, v, phi, theta;
+    atcg::DualSurfaceInteraction dsi1;
+    dsi1.incoming_position  = ray_origin;
+    dsi1.incoming_direction = ray_direction;
+    atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
+                                                             ray_origin,
+                                                             ray_direction,
+                                                             0.001f,
+                                                             1e16f,
+                                                             &dsi1,
+                                                             params.dual_trace_params);
+    auto si1        = dsi1.toSi();
+    ray.last_normal = dsi1.normal;
+    ray.last_uv     = dsi1.uv;
+
+    if(si1.valid)
+    {
+        entity_id = si1.entity_id;
+        ray.valid = true;
+    }
+
+    ray.si0 = si0;
+    ray.si1 = si1;
 
     for(int n = 0; n < 8; ++n)
     {
         if(!ray.valid) break;
         ray.valid = false;
 
+        auto [x0, x1] = CuDiff::make_variables<6>(ray.si0.position, ray.si1.position);
+        auto distance = CuDiff::length(x1 - x0);
+        auto w        = (x1 - x0) / CuDiff::max(distance, 1e-5f);
+
         atcg::DualSurfaceInteraction dsi;
-        dsi.incoming_position  = ray.origin;
-        dsi.incoming_direction = ray.direction;
-        atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
-                                                                 ray.origin,
-                                                                 ray.direction,
-                                                                 0.001f,
-                                                                 1e16f,
-                                                                 &dsi,
-                                                                 params.dual_trace_params);
-        atcg::SurfaceInteraction si = dsi.toSi();
+        dsi.valid              = true;
+        dsi.position           = x1;
+        dsi.incoming_direction = w;
+        dsi.incoming_distance  = distance;
+        dsi.normal             = ray.last_normal;
+        dsi.uv                 = ray.last_uv;
 
-        if(si.valid && n == 0)
-        {
-            entity_id = si.entity_id;
-        }
+        auto frame0_ = atcg::Math::compute_local_frame(ray.si0.normal);
+        auto frame1_ = atcg::Math::compute_local_frame(ray.si1.normal);
 
-        if(si.valid)
+        glm::mat2x3 frame0 = glm::mat2x3(frame0_[0], frame0_[1]);
+        glm::mat2x3 frame1 = glm::mat2x3(frame1_[0], frame1_[1]);
+
+
         {
-            // TODO: No NEE for now
             // Check for light source
-            CuDiff::Dual<4, glm::vec3> Le;
+            CuDiff::Dual<6, glm::vec3> Le;
             glm::mat4x3 JLe = glm::mat4x3(0);
-            if(si.emitter)
+            if(ray.si1.emitter)
             {
-                bool mis_valid             = last_si.valid;
-                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);    // TODO: Differentiate?
-                mis_weight       = 1.0f;
-                Le               = si.emitter->evalLightDual(dsi);
-                ray.radiance -= mis_weight * ray.throughput * Le.val();
+                // bool mis_valid = last_si.valid;
+                // float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) :
+                // 0.0f; float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                Le = ray.si1.emitter->evalLightDual(dsi);
+                ray.radiance -= ray.throughput * Le.val();
 
-                JLe = glm::mat4x3(Le.derivative(0), Le.derivative(1), Le.derivative(2), Le.derivative(3));
+                glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
+                glm::mat3 JLe_dx1 = glm::mat3(Le.derivative(3), Le.derivative(4), Le.derivative(5));
+
+                glm::mat2x3 JLe_du0v0 = JLe_dx0 * frame0;
+                glm::mat2x3 JLe_du1v1 = JLe_dx1 * frame1;
+
+                JLe = glm::mat4x3(glm::vec3(JLe_du0v0[0]),
+                                  glm::vec3(JLe_du0v0[1]),
+                                  glm::vec3(JLe_du1v1[0]),
+                                  glm::vec3(JLe_du1v1[1]));
 
                 JLe = JLe * Jray;
             }
 
             // PBR Sampling
-            if(si.bsdf)
+            if(ray.si1.bsdf)
             {
                 // Next-event estimation
                 // do
@@ -403,156 +487,114 @@ extern "C" __global__ void __raygen__backward()
                 // } while(false);
 
                 auto rng_copy = rng;
-                auto result   = si.bsdf->sampleBSDFForward(dsi, rng);
+                auto result   = ray.si1.bsdf->sampleBSDFForward(dsi, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
-                    auto [dx, dy, dz] = CuDiff::unwrap(result.out_dir);
+                    atcg::DualSurfaceInteraction next_dsi;
+                    next_dsi.incoming_position  = dsi.position;
+                    next_dsi.incoming_direction = result.out_dir;
 
-                    auto theta_n = CuDiff::acos(CuDiff::clamp(dy, -1.0f, 1.0f));
-                    auto phi_n   = CuDiff::atan2(dz, dx);
+                    atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
+                                                                             ray.si1.position,
+                                                                             result.out_dir.val(),
+                                                                             0.001f,
+                                                                             1e16f,
+                                                                             &next_dsi,
+                                                                             params.dual_trace_params);
 
-                    // Jray
-                    float duip1dui    = dsi.u_surface.derivative(0);
-                    float duip1p1dvi  = dsi.u_surface.derivative(1);
-                    float duip1p1dphi = dsi.u_surface.derivative(2);
-                    float duip1dtheta = dsi.u_surface.derivative(3);
-                    float dvip1dui    = dsi.v_surface.derivative(0);
-                    float dvip1dvi    = dsi.v_surface.derivative(1);
-                    float dvip1dphi   = dsi.v_surface.derivative(2);
-                    float dvip1dtheta = dsi.v_surface.derivative(3);
-
-                    float dthetaip1dui    = theta_n.derivative(0);
-                    float dthetaip1p1dvi  = theta_n.derivative(1);
-                    float dthetaip1p1dphi = theta_n.derivative(2);
-                    float dthetaip1dtheta = theta_n.derivative(3);
-                    float dphiip1dui      = phi_n.derivative(0);
-                    float dphiip1dvi      = phi_n.derivative(1);
-                    float dphiip1dphi     = phi_n.derivative(2);
-                    float dphiip1dtheta   = phi_n.derivative(3);
-
-                    glm::mat4 Jray_ = glm::mat4(glm::vec4(duip1dui, dvip1dui, dphiip1dui, dthetaip1dui),
-                                                glm::vec4(duip1p1dvi, dvip1dvi, dphiip1dvi, dthetaip1p1dvi),
-                                                glm::vec4(duip1p1dphi, dvip1dphi, dphiip1dphi, dthetaip1p1dphi),
-                                                glm::vec4(duip1dtheta, dvip1dtheta, dphiip1dtheta, dthetaip1dtheta));
-
-                    // -------------------
-
-                    // Jbsdf
-
-                    if(n != 0)
+                    if(!next_dsi.valid)
                     {
-                        glm::mat4x3 Jbsdf = glm::mat4x3(result.bsdf_weight.derivative(0),
-                                                        result.bsdf_weight.derivative(1),
-                                                        result.bsdf_weight.derivative(2),
-                                                        result.bsdf_weight.derivative(3));
-
-                        Jbsdf = Jbsdf * Jray;
-
-                        // -------------------
-
-                        Jray = Jray_ * Jray;
-                        Jray += 0.01f * glm::mat4(1) * glm::sign(rng.nextFloat() - 0.5f);
-                        ray.JL -= (diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf + diag(ray.throughput) * JLe);
+                        ray.valid = false;
+                        continue;
                     }
 
+                    auto frame2_ = atcg::Math::compute_local_frame(next_dsi.normal.val());
+
+                    glm::mat2x3 frame2 = glm::mat2x3(frame2_[0], frame2_[1]);
+
+                    glm::mat3 dx1_dx0 = glm::mat3(0);
+                    glm::mat3 dx2_dx0 = glm::mat3(next_dsi.position.derivative(0),
+                                                  next_dsi.position.derivative(1),
+                                                  next_dsi.position.derivative(2));
+                    glm::mat3 dx1_dx1 = glm::mat3(1);
+                    glm::mat3 dx2_dx1 = glm::mat3(next_dsi.position.derivative(3),
+                                                  next_dsi.position.derivative(4),
+                                                  next_dsi.position.derivative(5));
+
+                    glm::mat2 du1v1_du0v0 = glm::transpose(frame1) * dx1_dx0 * frame0;
+                    glm::mat2 du2v2_du0v0 = glm::transpose(frame2) * dx2_dx0 * frame0;
+                    glm::mat2 du1v1_du1v1 = glm::transpose(frame1) * dx1_dx1 * frame1;
+                    glm::mat2 du2v2_du1v1 = glm::transpose(frame2) * dx2_dx1 * frame1;
+
+                    // Construct 4x4 Jacobian ((du1v1_du0v0, du1v1_du1v1), (du2v2_du0v0, du2v2_du1v1))
+                    glm::mat4 Jray_ = glm::mat4(glm::vec4(du1v1_du0v0[0], du2v2_du0v0[0]),
+                                                glm::vec4(du1v1_du0v0[1], du2v2_du0v0[1]),
+                                                glm::vec4(du1v1_du1v1[0], du2v2_du1v1[0]),
+                                                glm::vec4(du1v1_du1v1[1], du2v2_du1v1[1]));
+
+                    glm::mat3 Jbsdf_dx0 = glm::mat3(result.bsdf_weight.derivative(0),
+                                                    result.bsdf_weight.derivative(1),
+                                                    result.bsdf_weight.derivative(2));
+                    glm::mat3 Jbsdf_dx1 = glm::mat3(result.bsdf_weight.derivative(3),
+                                                    result.bsdf_weight.derivative(4),
+                                                    result.bsdf_weight.derivative(5));
+
+                    glm::mat2x3 Jbsdf_du0v0 = Jbsdf_dx0 * frame0;
+                    glm::mat2x3 Jbsdf_du1v1 = Jbsdf_dx1 * frame1;
+
+                    glm::mat4x3 Jbsdf = glm::mat4x3(glm::vec3(Jbsdf_du0v0[0]),
+                                                    glm::vec3(Jbsdf_du0v0[1]),
+                                                    glm::vec3(Jbsdf_du1v1[0]),
+                                                    glm::vec3(Jbsdf_du1v1[1]));
+
+                    Jbsdf = Jbsdf * Jray;
+                    Jray  = Jray_ * Jray;
+                    Jray += 0.01f * glm::mat4(1) * glm::sign(rng.nextFloat() - 0.5f);    // Regularization
+
+                    ray.JL -= (diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf + diag(ray.throughput) * JLe);
 
                     auto Jrayinv    = glm::inverse(Jray);
                     glm::mat4x3 JL_ = ray.JL * Jrayinv;
-
-                    // if(isnan(Jrayinv[0][0]))
-                    // {
-                    //     printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n------\n",
-                    //            Jray[0][0],
-                    //            Jray[0][1],
-                    //            Jray[0][2],
-                    //            Jray[0][3],
-                    //            Jray[1][0],
-                    //            Jray[1][1],
-                    //            Jray[1][2],
-                    //            Jray[1][3],
-                    //            Jray[2][0],
-                    //            Jray[2][1],
-                    //            Jray[2][2],
-                    //            Jray[2][3],
-                    //            Jray[3][0],
-                    //            Jray[3][1],
-                    //            Jray[3][2],
-                    //            Jray[3][3]);
-
-                    //     printf("Theta: %f\n", theta_n.val());
-                    // }
-
-                    // ray.JL = JL - diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
-                    // Jb = diag(result.bsdf_value.val()) * Jb + diag(ray.throughput) * Jbsdf;
 
                     // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
                     // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
                     glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight.val() + 1e-4f);
                     glm::vec2 dLdwo   = glm::zw(ray.delta_y * JL_);    // Only v2?
 
-                    // if(isnan(dLdwo.x) || isnan(dLdwo.y))
-                    // {
-                    //     printf("%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n%f %f %f %f\n------\n",
-                    //            Jray[0][0],
-                    //            Jray[0][1],
-                    //            Jray[0][2],
-                    //            Jray[0][3],
-                    //            Jray[1][0],
-                    //            Jray[1][1],
-                    //            Jray[1][2],
-                    //            Jray[1][3],
-                    //            Jray[2][0],
-                    //            Jray[2][1],
-                    //            Jray[2][2],
-                    //            Jray[2][3],
-                    //            Jray[3][0],
-                    //            Jray[3][1],
-                    //            Jray[3][2],
-                    //            Jray[3][3]);
-                    // }
+                    ray.si1.bsdf->sampleBSDFBackward(ray.si1, rng_copy, dLdbsdf, dLdwo);
 
-                    si.bsdf->sampleBSDFBackward(si, rng_copy, dLdbsdf, dLdwo);
+                    ray.si0         = ray.si1;
+                    ray.si1         = next_dsi.toSi();
+                    ray.last_normal = next_dsi.normal;
+                    ray.last_uv     = next_dsi.uv;
 
-                    thrust::tie(u, v, phi, theta) =
-                        CuDiff::make_variables<4>(dsi.u_surface.val(), dsi.v_surface.val(), phi_n.val(), theta_n.val());
-
-                    auto sinTheta = CuDiff::sin(theta);
-
-                    auto x = sinTheta * CuDiff::cos(phi);
-                    auto y = CuDiff::cos(theta);
-                    auto z = sinTheta * CuDiff::sin(phi);
-
-                    auto origin = (1.0f - u - v) * dsi.P0 + u * dsi.P1 + v * dsi.P2;
-
-                    ray.origin    = origin;
-                    ray.direction = CuDiff::wrap(x, y, z);
                     ray.throughput *= result.bsdf_weight.val();
-                    ray.valid = true;
+                    ray.valid = next_dsi.valid;
 
-                    last_si       = si;
-                    last_bsdf_pdf = result.sample_probability;
+                    // last_si       = si;
+                    // last_bsdf_pdf = result.sample_probability;
 
-                    if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
-                    {
-                        last_si.valid = false;
-                    }
+                    // if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                    // {
+                    //     last_si.valid = false;
+                    // }
                 }
             }
         }
-        else
-        {
-            if(params.environment_emitter)
-            {
-                bool mis_valid              = last_si.valid;
-                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
-                float emitter_sampling_pdf =
-                    mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
-                              : 0.0f;
-                float mis_weight = 1.0f;    // last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                ray.radiance -= mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
-            }
-        }
+        // else
+        // {
+        //     if(params.environment_emitter)
+        //     {
+        //         bool mis_valid              = last_si.valid;
+        //         float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+        //         float emitter_sampling_pdf =
+        //             mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
+        //                       : 0.0f;
+        //         float mis_weight = 1.0f;    // last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+        //         ray.radiance -= mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
+        //     }
+        // }
     }
 }
 

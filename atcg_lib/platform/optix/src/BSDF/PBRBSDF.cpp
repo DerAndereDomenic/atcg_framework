@@ -187,6 +187,7 @@ void PBRBSDF::markOptimizable()
 
 void PBRBSDF::clampParameters()
 {
+    if(!_optimizable) return;
     _diffuse_texture.clamp_(0.0f, 1.0f);
     _roughness_texture.clamp_(0.01f, 1.0f);
     _metallic_texture.clamp_(0.0f, 1.0f);

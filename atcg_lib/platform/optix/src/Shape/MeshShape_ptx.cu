@@ -98,6 +98,18 @@ extern "C" __global__ void __closesthit__dual_mesh()
     auto tmax = (CuDiff::dot((P0 - xi), geometry_normal)) / (CuDiff::dot(wi, geometry_normal));
     auto xo   = xi + tmax * wi;
 
+    si->valid             = true;
+    si->position          = xo;
+    si->incoming_distance = tmax;
+    // float2 optix_barys     = optixGetTriangleBarycentrics();
+
+    // Calculate derivatives wrt to intersection point
+    xo.setDerivative(0, glm::vec3(0.0f, 0.0f, 0.0f));
+    xo.setDerivative(1, glm::vec3(0.0f, 0.0f, 0.0f));
+    xo.setDerivative(2, glm::vec3(0.0f, 0.0f, 0.0f));
+    xo.setDerivative(3, glm::vec3(1.0f, 0.0f, 0.0f));
+    xo.setDerivative(4, glm::vec3(0.0f, 1.0f, 0.0f));
+    xo.setDerivative(5, glm::vec3(0.0f, 0.0f, 1.0f));
     // Calculate barycentric coordinates
     auto v2  = xo - P0;
     auto d00 = glm::dot(v0, v0);
@@ -111,16 +123,6 @@ extern "C" __global__ void __closesthit__dual_mesh()
     auto beta  = (d11 * d20 - d01 * d21) / den;
     auto gamma = (d00 * d21 - d01 * d20) / den;
     auto alpha = 1.0f - beta - gamma;
-
-    si->valid             = true;
-    si->position          = xo;
-    si->incoming_distance = tmax;
-    si->u_surface         = beta;
-    si->v_surface         = gamma;
-    si->P0                = P0;
-    si->P1                = P1;
-    si->P2                = P2;
-    // float2 optix_barys     = optixGetTriangleBarycentrics();
 
     const float3 N0_ = glm2cuda(sbt_data.normals[triangle.x]);
     const float3 N1_ = glm2cuda(sbt_data.normals[triangle.y]);

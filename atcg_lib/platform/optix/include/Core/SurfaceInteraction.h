@@ -43,19 +43,14 @@ struct DualSurfaceInteraction
 {
     bool valid = false;
     // Output
-    CuDiff::Dual<4, glm::vec3> position;
-    CuDiff::Dual<4, glm::vec3> normal;
-    CuDiff::Dual<4, glm::vec2> uv;
-    CuDiff::Dual<4, float> incoming_distance;
-    CuDiff::Dual<4, float> u_surface;
-    CuDiff::Dual<4, float> v_surface;
-
-    glm::vec3 P0, P1, P2;
+    CuDiff::Dual<6, glm::vec3> position;
+    CuDiff::Dual<6, glm::vec3> normal;
+    CuDiff::Dual<6, glm::vec2> uv;
+    CuDiff::Dual<6, float> incoming_distance;
 
     // Input
-    CuDiff::Dual<4, glm::vec3> incoming_direction;
-    CuDiff::Dual<4, glm::vec3> incoming_position;
-    CuDiff::Dual<4, float> phi, theta;
+    CuDiff::Dual<6, glm::vec3> incoming_direction;
+    CuDiff::Dual<6, glm::vec3> incoming_position;
 
     uint32_t primitive_idx;
     uint32_t entity_id;
