@@ -7,7 +7,7 @@
 
 namespace atcg
 {
-class DielectricBSDF : public BSDF
+class DielectricBSDF : public BSDF, public Differentiable
 {
 public:
     /**
@@ -24,19 +24,28 @@ public:
      */
     virtual ~DielectricBSDF();
 
+    virtual std::vector<torch::Tensor> getParameters() const override;
+
+    virtual void markOptimizable() override;
+
+    virtual void clampParameters() override;
+
     /**
      * @brief A callback to display debug information in imgui
      */
-    virtual void onImGuiRender() override {}
+    virtual void onImGuiRender() override;
 
     ATCG_INLINE atcg::dref_ptr<DielectricBSDFData> getDataBuffer() const { return _bsdf_data_buffer; }
 
 private:
-    atcg::ref_ptr<Texture2D> _diffuse_texture;
-    atcg::ref_ptr<Texture2D> _roughness_texture;
-    atcg::ref_ptr<Texture2D> _ior_texture;
+    torch::Tensor _diffuse_texture;
+    torch::Tensor _roughness_texture;
+    torch::Tensor _ior_texture;
 
     atcg::dref_ptr<DielectricBSDFData> _bsdf_data_buffer;
+
+    atcg::ref_ptr<Texture2D> _diffuse_optimized, _roughness_optimized, _ior_optimized;
+    atcg::ref_ptr<Texture2D> _diffuse_grad, _roughness_grad, _ior_grad;
 };
 
 ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(DielectricBSDF);
