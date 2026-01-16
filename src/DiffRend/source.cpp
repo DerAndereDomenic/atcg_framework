@@ -125,7 +125,7 @@ public:
                 optimizer->zero_grad(false);
                 auto result = atcg::AttachedDiffPathtracingFunction::apply(integrator, dict);
 
-                auto difference = (result - target);
+                auto difference = (result - target) * (result - target);
                 auto L          = torch::sum(torch::abs(difference)) / 128.0f;
 
                 L.backward();
