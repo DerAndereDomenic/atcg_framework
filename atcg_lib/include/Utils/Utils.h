@@ -8,6 +8,8 @@
 
 namespace atcg
 {
+namespace Utils
+{
 /**
  * @brief Normalizes a graph to the unit cube
  *
@@ -71,8 +73,6 @@ T hton(T host)
     return ntoh(host);
 }
 
-namespace IO
-{
 /**
  * @brief Dump data as raw binary file to disk.
  *
@@ -80,6 +80,7 @@ namespace IO
  * @param data The data
  */
 void dumpBinary(const std::string& path, const torch::Tensor& data);
-}    // namespace IO
+
+}    // namespace Utils
 
 }    // namespace atcg

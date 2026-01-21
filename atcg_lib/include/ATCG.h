@@ -84,9 +84,12 @@
 //-------- Math -----------
 #include <Math/Constants.h>
 #include <Math/Functions.h>
-#include <Math/Utils.h>
 #include <Math/Tracing.h>
 #include <Math/Color.h>
+
+
+//-------- Utils -----------
+#include <Utils/Utils.h>
 
 //-------- Network ------------
 #include <Network/TCPServer.h>

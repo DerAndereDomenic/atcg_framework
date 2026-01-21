@@ -148,7 +148,7 @@ void TCPServer::Impl::networkLoop()
                         if(disconnected) continue;
 
                         uint32_t read_offset   = 0;
-                        uint32_t expected_size = atcg::ntoh(message_size);
+                        uint32_t expected_size = atcg::Utils::ntoh(message_size);
                         rec_data.resize(expected_size);
 
                         // Do not count header as part of the message
