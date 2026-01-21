@@ -208,7 +208,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 
         oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
 
-        atcg::Renderer::screenshot(scene, component.camera, component.width, component.height, oss.str());
+        atcg::Utils::screenshot(scene, component.camera, component.width, component.height, oss.str());
     }
 
     ImGui::Separator();

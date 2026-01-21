@@ -163,5 +163,59 @@ void dumpBinary(const std::string& path, const torch::Tensor& data)
     std::ofstream out(path, std::ios::out | std::ios::binary);
     out.write((const char*)data_.data_ptr(), data_.numel() * data_.element_size());
 }
+
+void screenshot(const atcg::ref_ptr<Scene>& scene,
+                const atcg::ref_ptr<Camera>& camera,
+                const uint32_t width,
+                const std::string& path)
+{
+    auto data = screenshot(scene, camera, width);
+
+    Image img(data);
+
+    img.store(path);
+}
+
+void screenshot(const atcg::ref_ptr<Scene>& scene,
+                const atcg::ref_ptr<Camera>& camera,
+                const uint32_t width,
+                const uint32_t height,
+                const std::string& path)
+{
+    atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
+    screenshot_buffer->attachColor();
+    screenshot_buffer->attachDepth();
+    screenshot_buffer->complete();
+
+    atcg::Dictionary context;
+    context.setValue("camera", camera);
+    context.setValue("target", screenshot_buffer);
+    scene->draw(context);
+
+    auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
+
+    Image img(data);
+
+    img.store(path);
+}
+
+torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
+{
+    float height                                 = (float)width / camera->getIntrinsics().aspectRatio();
+    atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
+    screenshot_buffer->attachColor();
+    screenshot_buffer->attachDepth();
+    screenshot_buffer->complete();
+
+    atcg::Dictionary context;
+    context.setValue("camera", camera);
+    context.setValue("target", screenshot_buffer);
+    scene->draw(context);
+
+    auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
+
+    return data;
+}
+
 }    // namespace Utils
 }    // namespace atcg

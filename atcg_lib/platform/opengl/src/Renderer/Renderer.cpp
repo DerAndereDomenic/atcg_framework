@@ -547,14 +547,6 @@ atcg::ref_ptr<Framebuffer> RendererSystem::getFramebuffer() const
     return impl->screen_fbo;
 }
 
-
-torch::Tensor RendererSystem::getFrame(const torch::DeviceType& device) const
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-
-    return impl->screen_fbo->getColorAttachement(0)->getData(device);
-}
-
 int RendererSystem::getEntityIndex(const glm::vec2& mouse) const
 {
     // TODO
@@ -566,66 +558,6 @@ int RendererSystem::getEntityIndex(const glm::vec2& mouse) const
     glReadPixels((int)mouse.x, (int)mouse.y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
     glReadBuffer(GL_COLOR_ATTACHMENT0);
     return pixelData;
-}
-
-void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
-                                const atcg::ref_ptr<Camera>& camera,
-                                const uint32_t width,
-                                const std::string& path)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-
-    auto data = screenshot(scene, camera, width);
-
-    Image img(data);
-
-    img.store(path);
-}
-
-void RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene,
-                                const atcg::ref_ptr<Camera>& camera,
-                                const uint32_t width,
-                                const uint32_t height,
-                                const std::string& path)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-
-    atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
-    screenshot_buffer->attachColor();
-    screenshot_buffer->attachDepth();
-    screenshot_buffer->complete();
-
-    atcg::Dictionary context;
-    context.setValue("camera", camera);
-    context.setValue("target", screenshot_buffer);
-    scene->draw(context);    // Starts a renderpass
-
-    auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
-
-    Image img(data);
-
-    img.store(path);
-}
-
-torch::Tensor
-RendererSystem::screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-
-    float height                                 = (float)width / camera->getIntrinsics().aspectRatio();
-    atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
-    screenshot_buffer->attachColor();
-    screenshot_buffer->attachDepth();
-    screenshot_buffer->complete();
-
-    atcg::Dictionary context;
-    context.setValue("camera", camera);
-    context.setValue("target", screenshot_buffer);
-    scene->draw(context);
-
-    auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
-
-    return data;
 }
 
 atcg::ref_ptr<ShaderManagerSystem> RendererSystem::getShaderManager() const

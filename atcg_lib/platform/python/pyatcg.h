@@ -803,34 +803,7 @@ inline void defineBindings(py::module_& m)
             "img"_a)
         .def("getFramebuffer", &atcg::Renderer::getFramebuffer)
         .def("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
-        .def("screenshot",
-             [](const atcg::ref_ptr<atcg::Scene>& scene,
-                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-                const uint32_t width) { return atcg::Renderer::screenshot(scene, cam, width); })
-        .def(
-            "screenshot",
-            [](const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-               const uint32_t width,
-               const std::string& path) { atcg::Renderer::screenshot(scene, cam, width, path); },
-            "scene"_a,
-            "camera"_a,
-            "width"_a,
-            "path"_a)
-        .def(
-            "screenshot",
-            [](const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-               const uint32_t width,
-               const uint32_t height,
-               const std::string& path) { atcg::Renderer::screenshot(scene, cam, width, height, path); },
-            "scene"_a,
-            "camera"_a,
-            "width"_a,
-            "height"_a,
-            "path"_a)
         .def("resize", &atcg::Renderer::resize)
-        .def("getFrame", &atcg::Renderer::getFrame, "device"_a)
         .def("getFrameCounter", &atcg::Renderer::getFrameCounter)
         .def("popTextureID", &atcg::Renderer::popTextureID)
         .def("pushTextureID", &atcg::Renderer::pushTextureID, "id"_a);
@@ -867,37 +840,7 @@ inline void defineBindings(py::module_& m)
             "img"_a)
         .def("getFramebuffer", &atcg::RendererSystem::getFramebuffer)
         .def("getEntityIndex", &atcg::RendererSystem::getEntityIndex, "mouse_pos"_a)
-        .def("screenshot",
-             [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-                const atcg::ref_ptr<atcg::Scene>& scene,
-                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-                const uint32_t width) { return self->screenshot(scene, cam, width); })
-        .def(
-            "screenshot",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-               const uint32_t width,
-               const std::string& path) { self->screenshot(scene, cam, width, path); },
-            "scene"_a,
-            "camera"_a,
-            "width"_a,
-            "path"_a)
-        .def(
-            "screenshot",
-            [](const atcg::ref_ptr<atcg::RendererSystem>& self,
-               const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
-               const uint32_t width,
-               const uint32_t height,
-               const std::string& path) { self->screenshot(scene, cam, width, height, path); },
-            "scene"_a,
-            "camera"_a,
-            "width"_a,
-            "height"_a,
-            "path"_a)
         .def("resize", &atcg::RendererSystem::resize)
-        .def("getFrame", &atcg::RendererSystem::getFrame, "device"_a)
         .def("getFrameCounter", &atcg::RendererSystem::getFrameCounter)
         .def("popTextureID", &atcg::RendererSystem::popTextureID)
         .def("pushTextureID", &atcg::RendererSystem::pushTextureID, "id"_a);
@@ -1152,6 +1095,34 @@ inline void defineBindings(py::module_& m)
         .value("Bool", atcg::ShaderDataType::Bool)
         .export_values();
 
+    // ------------------- Utils ---------------------------------
+    m_utils
+        .def("screenshot",
+             [](const atcg::ref_ptr<atcg::Scene>& scene,
+                const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+                const uint32_t width) { return atcg::Utils::screenshot(scene, cam, width); })
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const std::string& path) { atcg::Utils::screenshot(scene, cam, width, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "path"_a)
+        .def(
+            "screenshot",
+            [](const atcg::ref_ptr<atcg::Scene>& scene,
+               const atcg::ref_ptr<atcg::PerspectiveCamera>& cam,
+               const uint32_t width,
+               const uint32_t height,
+               const std::string& path) { atcg::Utils::screenshot(scene, cam, width, height, path); },
+            "scene"_a,
+            "camera"_a,
+            "width"_a,
+            "height"_a,
+            "path"_a);
 
     // ------------------- Scene ---------------------------------
     m_entity_handle.def(py::init<uint32_t>(), "handle"_a);

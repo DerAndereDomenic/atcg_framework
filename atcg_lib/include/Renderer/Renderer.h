@@ -204,62 +204,12 @@ public:
     atcg::ref_ptr<Framebuffer> getFramebuffer() const;
 
     /**
-     * @brief Get a buffer representing the color attachement of the screen frame buffer.
-     * @note This copies memory between GPU and CPU if device = CPU
-     *
-     * @param device The device
-     *
-     * @return The buffer containing the frame image.
-     */
-    torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU) const;
-
-    /**
      * @brief Get the entity index that was rendered onto the given pixel
      *
      * @param mouse The mouse position
      * @return The entity id
      */
     int getEntityIndex(const glm::vec2& mouse) const;
-
-    /**
-     * @brief Take a screenshot and save it to disk
-     *
-     * @param scene The scene
-     * @param camera The camera
-     * @param width The output width. Height is calculated from the camera's aspect ratio
-     * @param path The output path
-     */
-    void screenshot(const atcg::ref_ptr<Scene>& scene,
-                    const atcg::ref_ptr<Camera>& camera,
-                    const uint32_t width,
-                    const std::string& path);
-
-    /**
-     * @brief Take a screenshot and save it to disk
-     *
-     * @param scene The scene
-     * @param camera The camera
-     * @param width The output width
-     * @param height The output height
-     * @param path The output path
-     */
-    void screenshot(const atcg::ref_ptr<Scene>& scene,
-                    const atcg::ref_ptr<Camera>& camera,
-                    const uint32_t width,
-                    const uint32_t height,
-                    const std::string& path);
-
-    /**
-     * @brief Take a screenshot and return it as tensor
-     *
-     * @param scene The scene
-     * @param camera The camera
-     * @param width The output width. Height is calculated from the camera's aspect ratio
-     *
-     * @return The pixel data as tensor
-     */
-    torch::Tensor
-    screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width);
 
     /**
      * @brief Get the shader manager associated with this renderer
@@ -494,68 +444,6 @@ ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebuffer()
 ATCG_INLINE int getEntityIndex(const glm::vec2& mouse)
 {
     return SystemRegistry::instance()->getSystem<RendererSystem>()->getEntityIndex(mouse);
-}
-
-/**
- * @brief Take a screenshot and save it to disk
- *
- * @param scene The scene
- * @param camera The camera
- * @param width The output width. Height is calculated from the camera's aspect ratio
- * @param path The output path
- */
-ATCG_INLINE void screenshot(const atcg::ref_ptr<Scene>& scene,
-                            const atcg::ref_ptr<Camera>& camera,
-                            const uint32_t width,
-                            const std::string& path)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->screenshot(scene, camera, width, path);
-}
-
-/**
- * @brief Take a screenshot and save it to disk
- *
- * @param scene The scene
- * @param camera The camera
- * @param width The output width
- * @param height The output height
- * @param path The output path
- */
-ATCG_INLINE void screenshot(const atcg::ref_ptr<Scene>& scene,
-                            const atcg::ref_ptr<Camera>& camera,
-                            const uint32_t width,
-                            const uint32_t height,
-                            const std::string& path)
-{
-    SystemRegistry::instance()->getSystem<RendererSystem>()->screenshot(scene, camera, width, height, path);
-}
-
-/**
- * @brief Take a screenshot and return it as tensor
- *
- * @param scene The scene
- * @param camera The camera
- * @param width The output width. Height is calculated from the camera's aspect ratio
- *
- * @return The pixel data as tensor
- */
-ATCG_INLINE torch::Tensor
-screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->screenshot(scene, camera, width);
-}
-
-/**
- * @brief Get a buffer representing the color attachement of the screen frame buffer.
- * @note This copies memory between GPU and CPU if device = CPU
- *
- * @param device The device
- *
- * @return The buffer containing the frame image.
- */
-ATCG_INLINE torch::Tensor getFrame(const torch::DeviceType& device = atcg::GPU)
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getFrame(device);
 }
 
 /**
