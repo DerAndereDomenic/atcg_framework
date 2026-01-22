@@ -7,6 +7,35 @@ namespace atcg
 {
 namespace detail
 {
+
+void GLAPIENTRY MessageCallback(GLenum source,
+                                GLenum type,
+                                GLuint id,
+                                GLenum severity,
+                                GLsizei length,
+                                const GLchar* message,
+                                const void* userParam)
+{
+    switch(severity)
+    {
+        case GL_DEBUG_SEVERITY_LOW:
+        case GL_DEBUG_SEVERITY_MEDIUM:
+        {
+            if(id == 131218) return;    // Some NVIDIA stuff going wrong -> disable this warning
+            ATCG_WARN(message);
+        }
+        break;
+        case GL_DEBUG_SEVERITY_HIGH:
+        {
+            ATCG_ERROR(message);
+        }
+        break;
+        default:
+            break;
+    }
+}
+
+
 static GLenum toGLPrimitive(PrimitiveTopology topo)
 {
     switch(topo)
@@ -48,6 +77,19 @@ static GLenum toGLDepthFunction(DepthFunction func)
 
 void RenderAPI::init()
 {
+    if(!gladLoadGL())
+    {
+        ATCG_ERROR("Error loading glad!");
+    }
+
+#ifndef NDEBUG
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(detail::MessageCallback, 0);
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    glEnable(GL_MULTISAMPLE);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+#endif
+
     ATCG_INFO("OpenGL Renderer:");
     ATCG_INFO("    Vendor: {0}", (const char*)glGetString(GL_VENDOR));
     ATCG_INFO("    Renderer: {0}", (const char*)glGetString(GL_RENDERER));

@@ -15,11 +15,6 @@ class Context
 {
 public:
     /**
-     *   @brief Initiliaze the context
-     */
-    void initGraphicsAPI();
-
-    /**
      *   @brief Swap buffers in the swap chain
      */
     void swapBuffers();

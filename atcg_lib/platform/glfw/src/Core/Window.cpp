@@ -37,7 +37,6 @@ Window::Window(const WindowProps& props)
     }
 
     _context = atcg::ContextManager::createContext();
-    _context->initGraphicsAPI();
 
     _data.width      = props.width;
     _data.height     = props.height;
