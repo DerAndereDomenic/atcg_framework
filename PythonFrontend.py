@@ -124,9 +124,9 @@ class PythonLayer(atcg.Layer):
             self.camera_controller.getCamera(), atcg.Renderer.getFramebuffer()
         )
 
-        atcg.Renderer.beginRenderPass(atcg.Renderer.getFramebuffer())
+        atcg.GraphicsCommand.beginRenderPass(atcg.Renderer.getFramebuffer())
         atcg.Renderer.drawCADGrid(self.camera_controller.getCamera())
-        atcg.Renderer.endRenderPass()
+        atcg.GraphicsCommand.endRenderPass()
 
     def onImGuiRender(self):
         self.panel.renderPanel(atcg.Project.getActive().getActiveScene())
