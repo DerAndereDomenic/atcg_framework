@@ -67,12 +67,12 @@ public:
 
         atcg::GraphicsPipeline pipeline = atcg::GraphicsPipeline().setShader(atcg::ShaderManager::getShader("screen"));
 
-        atcg::Renderer::beginRenderPass(atcg::Renderer::getFramebuffer());
-        atcg::Renderer::clear();
-        atcg::Renderer::bindTexture(screen_id, texture);
+        atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+        atcg::GraphicsCommand::clear();
+        atcg::GraphicsCommand::bindTexture(screen_id, texture);
 
         atcg::Renderer::drawVAO(quad_mesh->getVerticesArray(), {}, glm::mat4(1), pipeline, quad_mesh->n_vertices());
-        atcg::Renderer::endRenderPass();
+        atcg::GraphicsCommand::endRenderPass();
     }
 
     virtual void onImGuiRender() override {}

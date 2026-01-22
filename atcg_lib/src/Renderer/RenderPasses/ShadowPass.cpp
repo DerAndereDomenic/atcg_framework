@@ -67,8 +67,8 @@ void ShadowPass::initRenderPass()
                 point_light_framebuffer->complete();
             }
 
-            renderer->beginRenderPass(point_light_framebuffer);
-            renderer->clear();
+            GraphicsCommand::beginRenderPass(point_light_framebuffer);
+            GraphicsCommand::clear();
 
             uint32_t light_idx = 0;
             for(auto e: light_view)
@@ -125,7 +125,7 @@ void ShadowPass::initRenderPass()
                 ++light_idx;
             }
 
-            renderer->endRenderPass();
+            GraphicsCommand::endRenderPass();
         });
 }
 

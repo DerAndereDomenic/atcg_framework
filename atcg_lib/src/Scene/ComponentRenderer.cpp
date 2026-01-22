@@ -48,7 +48,7 @@ ATCG_INLINE uint32_t setLights(atcg::RendererSystem* renderer,
         uint32_t shadow_map_id = renderer->popTextureID();
         shader->setInt("shadow_maps", shadow_map_id);
         shader->setInt("shadow_pass", 1);
-        renderer->bindTexture(shadow_map_id, point_light_depth_maps);
+        GraphicsCommand::bindTexture(shadow_map_id, point_light_depth_maps);
 
         return shadow_map_id;
     }
@@ -65,11 +65,11 @@ ATCG_INLINE std::pair<uint32_t, uint32_t>
 setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const atcg::ref_ptr<Skybox>& skybox)
 {
     uint32_t irradiance_id = renderer->popTextureID();
-    renderer->bindTexture(irradiance_id, skybox->getIrradianceMap());
+    GraphicsCommand::bindTexture(irradiance_id, skybox->getIrradianceMap());
     shader->setInt("irradiance_map", irradiance_id);
 
     uint32_t prefiltered_id = renderer->popTextureID();
-    renderer->bindTexture(prefiltered_id, skybox->getPrefilteredMap());
+    GraphicsCommand::bindTexture(prefiltered_id, skybox->getPrefilteredMap());
     shader->setInt("prefilter_map", prefiltered_id);
 
     return std::make_pair(irradiance_id, prefiltered_id);
@@ -130,7 +130,7 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
         renderer.material()->uploadMaterial(_renderer, shader);
         uint32_t lut_id = _renderer->popTextureID();
         shader->setInt("lut", lut_id);
-        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
 
         GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
 
@@ -213,7 +213,7 @@ void ComponentRenderer<PointRenderComponent>::renderComponent(atcg::RendererSyst
         renderer.default_material->uploadMaterial(_renderer, shader);
         uint32_t lut_id = _renderer->popTextureID();
         shader->setInt("lut", lut_id);
-        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
 
         GraphicsPipeline pipeline = GraphicsPipeline()
                                         .setShader(shader)
@@ -300,7 +300,7 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
         renderer.material()->uploadMaterial(_renderer, shader);
         uint32_t lut_id = _renderer->popTextureID();
         shader->setInt("lut", lut_id);
-        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
 
         auto vbo = geometry.graph()->getVerticesBuffer();
 
@@ -394,10 +394,10 @@ void ComponentRenderer<EdgeRenderComponent>::renderComponent(atcg::RendererSyste
         renderer.default_material->uploadMaterial(_renderer, shader);
         uint32_t lut_id = _renderer->popTextureID();
         shader->setInt("lut", lut_id);
-        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
 
         auto points = geometry.graph()->getVerticesBuffer();
-        _renderer->bindStorageBuffer(0, points);
+        GraphicsCommand::bindStorageBuffer(0, points);
 
         GraphicsPipeline pipeline = GraphicsPipeline()
                                         .setShader(shader)
@@ -485,12 +485,12 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
         renderer.material()->uploadMaterial(_renderer, shader);
         uint32_t lut_id = _renderer->popTextureID();
         shader->setInt("lut", lut_id);
-        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
 
         auto points  = geometry.graph()->getVerticesBuffer();
         auto indices = geometry.graph()->getEdgesBuffer();
 
-        _renderer->bindStorageBuffer(0, points);
+        GraphicsCommand::bindStorageBuffer(0, points);
 
         auto cylinder_mesh = AssetManager::getCylinderMesh();
         auto vao_cylinder  = cylinder_mesh->getVerticesArray();
@@ -591,7 +591,7 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
         renderer.material()->uploadMaterial(_renderer, shader);
         uint32_t lut_id = _renderer->popTextureID();
         shader->setInt("lut", lut_id);
-        _renderer->bindTexture(lut_id, AssetManager::getLUTTexture());
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
 
         auto instance_vbo    = vao->peekVertexBuffer();
         uint32_t n_instances = instance_vbo->size() / instance_vbo->getLayout().getStride();
@@ -645,7 +645,7 @@ void ComponentRenderer<MeshLightComponent>::renderComponent(atcg::RendererSystem
     // if(renderer.visible)
     {
         auto emissive_id = _renderer->popTextureID();
-        _renderer->bindTexture(emissive_id, renderer.getEmissiveTexture());
+        GraphicsCommand::bindTexture(emissive_id, renderer.getEmissiveTexture());
         shader->setInt("texture_emissive", emissive_id);
         shader->setFloat("emissive_scaling", renderer.intensity);
         shader->setInt("entityID", entity.entity_handle());
@@ -690,7 +690,7 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
     glm::mat4 model = glm::inverse(cam->getView()) * scale;
 
     auto points = camera_frustum->getVerticesBuffer();
-    _renderer->bindStorageBuffer(0, points);
+    GraphicsCommand::bindStorageBuffer(0, points);
 
     _renderer->drawVAO(camera_frustum->getEdgesArray(), camera, model, pipeline, camera_frustum->n_edges());
 
@@ -709,7 +709,7 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
         model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
         shader->setInt("screen_texture", id);
         shader->setInt("entityID", entity_id);
-        _renderer->bindTexture(id, comp.image());
+        GraphicsCommand::bindTexture(id, comp.image());
         _renderer->drawVAO(quad->getVerticesArray(), camera, model, pipeline, quad->n_vertices());
         _renderer->pushTextureID(id);
     }
@@ -727,7 +727,7 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
         shader->setInt("screen_texture", id);
         shader->setInt("entityID", entity_id);
 
-        _renderer->bindTexture(id, comp.preview->getColorAttachement(0));
+        GraphicsCommand::bindTexture(id, comp.preview->getColorAttachement(0));
         _renderer->drawVAO(quad->getVerticesArray(), camera, model, pipeline, quad->n_vertices());
         _renderer->pushTextureID(id);
     }

@@ -130,6 +130,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_graph                 = py::class_<atcg::Graph, atcg::Asset, atcg::ref_ptr<atcg::Graph>>(m, "Graph");                \
     auto m_serializer            = py::class_<atcg::Serialization::SceneSerializer>(m, "SceneSerializer");                      \
     auto m_renderer              = m.def_submodule("Renderer");                                                                 \
+    auto m_graphics_api          = m.def_submodule("GraphicsCommand");                                                          \
     auto m_renderer_system =                                                                                                    \
         py::class_<atcg::RendererSystem, atcg::ref_ptr<atcg::RendererSystem>>(m, "RendererSystem");                             \
     auto m_shader         = py::class_<atcg::Shader, atcg::Asset, atcg::ref_ptr<atcg::Shader>>(m, "Shader");                    \
@@ -781,12 +782,13 @@ inline void defineBindings(py::module_& m)
         .def("setRasterizerState", &atcg::GraphicsPipeline::setRasterizerState, "rasterizer_state"_a)
         .def("setPrimitiveTopology", &atcg::GraphicsPipeline::setPrimitiveTopology, "topology"_a);
 
+    m_graphics_api.def("beginRenderPass", &atcg::GraphicsCommand::beginRenderPass, "target_framebuffer"_a)
+        .def("endRenderPass", &atcg::GraphicsCommand::endRenderPass)
+        .def("clear", &atcg::GraphicsCommand::clear)
+        .def("bindTexture", &atcg::GraphicsCommand::bindTexture, "slot"_a, "texture"_a)
+        .def("bindStorageBuffer", &atcg::GraphicsCommand::bindStorageBuffer, "slot"_a, "buffer"_a);
+
     m_renderer.def("init", &atcg::Renderer::init)
-        .def("beginRenderPass", &atcg::Renderer::beginRenderPass, "target_framebuffer"_a)
-        .def("endRenderPass", &atcg::Renderer::endRenderPass)
-        .def("clear", &atcg::Renderer::clear)
-        .def("bindTexture", &atcg::Renderer::bindTexture, "slot"_a, "texture"_a)
-        .def("bindStorageBuffer", &atcg::Renderer::bindStorageBuffer, "slot"_a, "buffer"_a)
         .def("finishFrame", &atcg::Renderer::finishFrame)
         .def(
             "drawCADGrid",
@@ -809,11 +811,6 @@ inline void defineBindings(py::module_& m)
 
     m_renderer_system.def(py::init<>())
         .def("init", &atcg::RendererSystem::init)
-        .def("beginRenderPass", &atcg::RendererSystem::beginRenderPass, "target_framebuffer"_a)
-        .def("endRenderPass", &atcg::RendererSystem::endRenderPass)
-        .def("clear", &atcg::RendererSystem::clear)
-        .def("bindTexture", &atcg::RendererSystem::bindTexture, "slot"_a, "texture"_a)
-        .def("bindStorageBuffer", &atcg::RendererSystem::bindStorageBuffer, "slot"_a, "buffer"_a)
         .def("finishFrame", &atcg::RendererSystem::finishFrame)
         .def(
             "drawCADGrid",

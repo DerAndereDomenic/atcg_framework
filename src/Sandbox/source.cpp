@@ -140,10 +140,10 @@ public:
     {
         camera_controller->onUpdate(delta_time);
 
-        atcg::Renderer::beginRenderPass(atcg::Renderer::getFramebuffer());
-        atcg::Renderer::clear();
+        atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+        atcg::GraphicsCommand::clear();
         atcg::Renderer::drawCADGrid(camera_controller->getCamera());
-        atcg::Renderer::endRenderPass();
+        atcg::GraphicsCommand::endRenderPass();
 
         glm::vec3 light_pos = light_entity.getComponent<atcg::TransformComponent>().getPosition();
         atcg::ShaderManager::getShader("volume")->setInt("noise_texture", 0);

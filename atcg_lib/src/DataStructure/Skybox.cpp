@@ -50,22 +50,22 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
         float height                          = _skybox_cubemap->height();
         atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(width, height);
         captureFBO->attachDepth();
-        Renderer::beginRenderPass(captureFBO);
+        GraphicsCommand::beginRenderPass(captureFBO);
 
         equirect_shader->setInt("equirectangularMap", cubemap_id);
-        Renderer::bindTexture(cubemap_id, skybox_texture);
+        GraphicsCommand::bindTexture(cubemap_id, skybox_texture);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
             captureFBO->attachCubeFace(_skybox_cubemap, i, 0);
-            Renderer::clear();
+            GraphicsCommand::clear();
 
             Renderer::drawVAO(cube->getVerticesArray(), capture_cam, glm::mat4(1), pipeline, cube->n_vertices());
             captureFBO->detachColor();
         }
 
         _skybox_cubemap->generateMipmaps();
-        Renderer::endRenderPass();
+        GraphicsCommand::endRenderPass();
     }
 
     // * Convolution of cube map for irradiance map
@@ -81,20 +81,20 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
         atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(width, height);
         captureFBO->attachDepth();
 
-        Renderer::beginRenderPass(captureFBO);
+        GraphicsCommand::beginRenderPass(captureFBO);
 
         cubeconv_shader->setInt("skybox", cubemap_id);
-        Renderer::bindTexture(cubemap_id, _skybox_cubemap);
+        GraphicsCommand::bindTexture(cubemap_id, _skybox_cubemap);
         for(unsigned int i = 0; i < 6; ++i)
         {
             capture_cam->setView(captureViews[i]);
             captureFBO->attachCubeFace(_irradiance_cubemap, i, 0);
-            Renderer::clear();
+            GraphicsCommand::clear();
 
             Renderer::drawVAO(cube->getVerticesArray(), capture_cam, glm::mat4(1), pipeline, cube->n_vertices());
             captureFBO->detachColor();
         }
-        Renderer::endRenderPass();
+        GraphicsCommand::endRenderPass();
     }
 
     // * Prefilter environment map
@@ -119,8 +119,8 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
                                             .setShader(prefilter_shader)
                                             .setRasterizerState(RasterizerState().enableCulling(false));
 
-            Renderer::beginRenderPass(captureFBO);
-            Renderer::bindTexture(cubemap_id, _skybox_cubemap);
+            GraphicsCommand::beginRenderPass(captureFBO);
+            GraphicsCommand::bindTexture(cubemap_id, _skybox_cubemap);
 
             float roughness = (float)mip / (float)(max_mip_levels - 1);
             prefilter_shader->setFloat("roughness", roughness);
@@ -129,12 +129,12 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
             {
                 capture_cam->setView(captureViews[i]);
                 captureFBO->attachCubeFace(_prefiltered_cubemap, i, mip);
-                Renderer::clear();
+                GraphicsCommand::clear();
 
                 Renderer::drawVAO(cube->getVerticesArray(), capture_cam, glm::mat4(1), pipeline, cube->n_vertices());
                 captureFBO->detachColor();
             }
-            Renderer::endRenderPass();
+            GraphicsCommand::endRenderPass();
         }
     }
 

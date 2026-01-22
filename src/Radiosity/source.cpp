@@ -64,17 +64,17 @@ public:
         atcg::ShaderManager::getShader("flat")->setInt("texture_diffuse", 0);
         atcg::GraphicsPipeline pipeline = atcg::GraphicsPipeline().setShader(atcg::ShaderManager::getShader("flat"));
 
-        atcg::Renderer::beginRenderPass(atcg::Renderer::getFramebuffer());
-        atcg::Renderer::clear();
+        atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+        atcg::GraphicsCommand::clear();
 
-        atcg::Renderer::bindTexture(0, diffuse_material.getDiffuseTexture());
+        atcg::GraphicsCommand::bindTexture(0, diffuse_material.getDiffuseTexture());
 
         atcg::Renderer::drawVAO(mesh->getVerticesArray(),
                                 camera_controller->getCamera(),
                                 glm::mat4(1),
                                 pipeline,
                                 mesh->n_vertices());
-        atcg::Renderer::endRenderPass();
+        atcg::GraphicsCommand::endRenderPass();
     }
 
 #ifndef ATCG_HEADLESS

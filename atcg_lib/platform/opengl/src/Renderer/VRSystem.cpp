@@ -426,8 +426,8 @@ void VRSystem::renderToScreen()
     vr_shader->setInt("texture_left", 10);
     vr_shader->setInt("texture_right", 11);
 
-    atcg::Renderer::bindTexture(10, impl->render_target_left->getColorAttachement());
-    atcg::Renderer::bindTexture(11, impl->render_target_right->getColorAttachement());
+    atcg::GraphicsCommand::bindTexture(10, impl->render_target_left->getColorAttachement());
+    atcg::GraphicsCommand::bindTexture(11, impl->render_target_right->getColorAttachement());
 
     atcg::GraphicsPipeline pipeline =
         atcg::GraphicsPipeline()
@@ -435,9 +435,9 @@ void VRSystem::renderToScreen()
             .setPrimitiveTopology(atcg::PrimitiveTopology::ATCG_TRIANGLES)
             .setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthTesting(false)));
 
-    atcg::Renderer::beginRenderPass(atcg::Framebuffer::currentFramebuffer());
+    atcg::GraphicsCommand::beginRenderPass(atcg::Framebuffer::currentFramebuffer());
     atcg::Renderer::drawVAO(impl->quad->getVerticesArray(), {}, glm::mat4(1), pipeline, impl->quad->n_vertices());
-    atcg::Renderer::endRenderPass();
+    atcg::GraphicsCommand::endRenderPass();
 }
 
 glm::vec3 VRSystem::getPosition()

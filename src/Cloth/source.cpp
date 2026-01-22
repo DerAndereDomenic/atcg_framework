@@ -101,10 +101,10 @@ public:
 
         atcg::Timer timer;
 
-        atcg::Renderer::beginRenderPass(atcg::Renderer::getFramebuffer());
-        atcg::Renderer::clear();
+        atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+        atcg::GraphicsCommand::clear();
         atcg::Renderer::drawCADGrid(camera_controller->getCamera());
-        atcg::Renderer::endRenderPass();
+        atcg::GraphicsCommand::endRenderPass();
 
         // ATCG_TRACE("{0} ms", timer.elapsedMillis());
 

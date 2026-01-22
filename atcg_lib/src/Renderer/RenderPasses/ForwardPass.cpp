@@ -55,9 +55,10 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
             auto target             = prepareFramebuffer(context, inputs, data, outputs);
             *output_framebuffer     = target;
 
+            GraphicsCommand::beginRenderPass(target);
             if(_render_target.clear)
             {
-                renderer->clear();
+                GraphicsCommand::clear();
                 //  We assume that this is an entity buffer, better solution?
                 if(target->numColorAttachements() > 1 &&
                    target->getColorAttachement(1)->getSpecification().format == TextureFormat::RINT)
@@ -74,8 +75,6 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
                 }
             }
 
-            renderer->beginRenderPass(target);
-
             for(auto e: view)
             {
                 Entity entity(e, scene.get());
@@ -88,7 +87,7 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
                 ComponentRegistry::renderAllComponents(renderer, entity, camera, auxiliary);
             }
 
-            renderer->endRenderPass();
+            GraphicsCommand::endRenderPass();
         });
 }
 }    // namespace atcg

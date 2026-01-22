@@ -37,10 +37,10 @@ void BlitPass::initRenderPass()
             auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
             *output_framebuffer     = target;
 
-            renderer->beginRenderPass(target);
+            GraphicsCommand::beginRenderPass(target);
             if(_render_target.clear)
             {
-                renderer->clear();
+                GraphicsCommand::clear();
 
                 // We assume that this is an entity buffer, better solution?
                 if(target->numColorAttachements() > 1 &&
@@ -58,7 +58,7 @@ void BlitPass::initRenderPass()
                 }
             }
             target->blit(input);
-            renderer->endRenderPass();
+            GraphicsCommand::endRenderPass();
         });
 }
 }    // namespace atcg

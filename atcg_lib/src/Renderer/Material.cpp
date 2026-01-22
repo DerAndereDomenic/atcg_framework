@@ -99,27 +99,27 @@ void Material::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shad
     ATCG_ASSERT(!_uploaded, "Material was already uploaded");
 
     uint32_t diffuse_id = renderer->popTextureID();
-    renderer->bindTexture(diffuse_id, getDiffuseTexture());
+    GraphicsCommand::bindTexture(diffuse_id, getDiffuseTexture());
     shader->setInt("texture_diffuse", diffuse_id);
     _used_texture_ids[0] = diffuse_id;
 
     uint32_t normal_id = renderer->popTextureID();
-    renderer->bindTexture(normal_id, getNormalTexture());
+    GraphicsCommand::bindTexture(normal_id, getNormalTexture());
     shader->setInt("texture_normal", normal_id);
     _used_texture_ids[1] = normal_id;
 
     uint32_t roughness_id = renderer->popTextureID();
-    renderer->bindTexture(roughness_id, getRoughnessTexture());
+    GraphicsCommand::bindTexture(roughness_id, getRoughnessTexture());
     shader->setInt("texture_roughness", roughness_id);
     _used_texture_ids[2] = roughness_id;
 
     uint32_t metallic_id = renderer->popTextureID();
-    renderer->bindTexture(metallic_id, getMetallicTexture());
+    GraphicsCommand::bindTexture(metallic_id, getMetallicTexture());
     shader->setInt("texture_metallic", metallic_id);
     _used_texture_ids[3] = metallic_id;
 
     uint32_t ior_id = renderer->popTextureID();
-    renderer->bindTexture(ior_id, getIorTexture());
+    GraphicsCommand::bindTexture(ior_id, getIorTexture());
     shader->setInt("texture_ior", ior_id);
     _used_texture_ids[4] = ior_id;
 

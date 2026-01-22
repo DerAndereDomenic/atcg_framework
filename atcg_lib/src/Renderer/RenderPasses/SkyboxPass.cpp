@@ -43,10 +43,10 @@ void SkyboxPass::initRenderPass()
             auto target             = prepareFramebuffer(context, inputs, data, outputs);
             *output_framebuffer     = target;
             *output_skybox          = _skybox;
-            renderer->beginRenderPass(target);
+            GraphicsCommand::beginRenderPass(target);
             if(_render_target.clear)
             {
-                renderer->clear();
+                GraphicsCommand::clear();
 
                 // We assume that this is an entity buffer, better solution?
                 if(target->numColorAttachements() > 1 &&
@@ -77,7 +77,7 @@ void SkyboxPass::initRenderPass()
 
                 uint32_t skybox_id = renderer->popTextureID();
                 shader->setInt("skybox", skybox_id);
-                renderer->bindTexture(skybox_id, _skybox->getSkyboxCubeMap());
+                GraphicsCommand::bindTexture(skybox_id, _skybox->getSkyboxCubeMap());
 
                 renderer->drawVAO(cube->getVerticesArray(),
                                   context.getValue<atcg::ref_ptr<Camera>>("camera"),
@@ -87,7 +87,7 @@ void SkyboxPass::initRenderPass()
 
                 renderer->pushTextureID(skybox_id);
             }
-            renderer->endRenderPass();
+            GraphicsCommand::endRenderPass();
         });
 }
 }    // namespace atcg

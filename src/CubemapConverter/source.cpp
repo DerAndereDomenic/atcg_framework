@@ -106,10 +106,10 @@ public:
 
         atcg::GraphicsPipeline pipeline = atcg::GraphicsPipeline().setShader(converter_shader);
 
-        atcg::Renderer::beginRenderPass(frame_buffer);
-        atcg::Renderer::clear();
+        atcg::GraphicsCommand::beginRenderPass(frame_buffer);
+        atcg::GraphicsCommand::clear();
         atcg::Renderer::drawVAO(quad->getVerticesArray(), {}, glm::mat4(1), pipeline, quad->n_vertices());
-        atcg::Renderer::endRenderPass();
+        atcg::GraphicsCommand::endRenderPass();
 
         auto texture_data = skybox_texture->getData(atcg::CPU);
 
@@ -126,7 +126,7 @@ public:
     {
         camera_controller->onUpdate(delta_time);
 
-        atcg::Renderer::clear();
+        atcg::GraphicsCommand::clear();
 
         atcg::Dictionary context;
         context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());

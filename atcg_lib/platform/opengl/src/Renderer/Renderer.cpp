@@ -55,8 +55,6 @@ public:
 
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
     void freeTextureUnits();
-
-    bool render_pass_started = false;
 };
 
 RendererSystem::RendererSystem() {}
@@ -206,7 +204,6 @@ void RendererSystem::Impl::drawCircle(const glm::vec3& position,
                                       const atcg::ref_ptr<Camera>& camera,
                                       uint32_t entity_id)
 {
-    ATCG_ASSERT(render_pass_started, "Render pass not started in Renderer.");
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
 
@@ -272,41 +269,8 @@ void RendererSystem::use()
     impl->context->makeCurrent();
 }
 
-void RendererSystem::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
-{
-    ATCG_ASSERT(!impl->render_pass_started, "Render pass already started.");
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    GraphicsCommand::beginRenderPass(target);
-    impl->render_pass_started = true;
-}
-
-void RendererSystem::endRenderPass()
-{
-    ATCG_ASSERT(impl->render_pass_started, "Render pass not started.");
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    GraphicsCommand::endRenderPass();
-    impl->render_pass_started = false;
-}
-
-void RendererSystem::clear()
-{
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    GraphicsCommand::clear();
-}
-
-void RendererSystem::bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
-{
-    GraphicsCommand::bindTexture(slot, texture);
-}
-
-void RendererSystem::bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer)
-{
-    GraphicsCommand::bindStorageBuffer(slot, buffer);
-}
-
 void RendererSystem::finishFrame()
 {
-    ATCG_ASSERT(!impl->render_pass_started, "Cannot finish frame while render pass is active.");
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 #ifndef ATCG_HEADLESS
     auto shader = impl->shader_manager->getShader("screen");
@@ -368,7 +332,6 @@ void RendererSystem::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
                              const size_t size,
                              const size_t instances)
 {
-    ATCG_ASSERT(impl->render_pass_started, "Render pass not started in Renderer.");
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     GraphicsCommand::bindVertexArray(vao);

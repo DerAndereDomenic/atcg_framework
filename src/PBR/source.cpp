@@ -234,10 +234,10 @@ public:
                                                                    atcg::Renderer::getFramebuffer());
             }
 
-            atcg::Renderer::beginRenderPass(atcg::Renderer::getFramebuffer());
+            atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
 
             atcg::Renderer::drawCADGrid(camera_controller->getCamera());
-            atcg::Renderer::endRenderPass();
+            atcg::GraphicsCommand::endRenderPass();
         }
 
         uint32_t current_revision = atcg::RevisionStack::numUndos();
