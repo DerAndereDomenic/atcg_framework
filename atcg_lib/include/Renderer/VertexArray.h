@@ -6,7 +6,7 @@
 namespace atcg
 {
 
-class RenderAPI;
+class GraphicsAPI;
 /**
  * @brief A class to model a VertexArray
  */
@@ -66,7 +66,7 @@ public:
     ATCG_INLINE const atcg::ref_ptr<IndexBuffer>& getIndexBuffer() const { return _ibo; }
 
 private:
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 
     /**
      * @brief Use this vao

@@ -1,4 +1,4 @@
-#include <Renderer/RenderAPI.h>
+#include <Renderer/GraphicsAPI.h>
 #include <Core/Assert.h>
 
 #include <glad/glad.h>
@@ -75,7 +75,7 @@ static GLenum toGLDepthFunction(DepthFunction func)
 }
 }    // namespace detail
 
-void RenderAPI::init()
+void GraphicsAPI::init()
 {
     if(!gladLoadGL())
     {
@@ -97,7 +97,7 @@ void RenderAPI::init()
     ATCG_INFO("---------------------------------");
 }
 
-void RenderAPI::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
+void GraphicsAPI::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
 {
     ATCG_ASSERT(!_started_render_pass, "Render pass already started");
     _started_render_pass = true;
@@ -108,7 +108,7 @@ void RenderAPI::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
     }
 }
 
-void RenderAPI::endRenderPass()
+void GraphicsAPI::endRenderPass()
 {
     ATCG_ASSERT(_started_render_pass, "Render pass not started");
     _started_render_pass = false;
@@ -123,7 +123,7 @@ void RenderAPI::endRenderPass()
     Framebuffer::bindDefault();
 }
 
-void RenderAPI::bindPipeline(const GraphicsPipeline& pipeline)
+void GraphicsAPI::bindPipeline(const GraphicsPipeline& pipeline)
 {
     if(pipeline.shader) pipeline.shader->bind();
 
@@ -195,40 +195,40 @@ void RenderAPI::bindPipeline(const GraphicsPipeline& pipeline)
     glLineWidth(_current_pipeline.rasterizer_state.line_size);
 }
 
-void RenderAPI::setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
+void GraphicsAPI::setViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
 {
     glViewport(x, y, width, height);
 }
 
-glm::ivec4 RenderAPI::getViewport() const
+glm::ivec4 GraphicsAPI::getViewport() const
 {
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);
     return glm::ivec4(viewport[0], viewport[1], viewport[2], viewport[3]);
 }
 
-void RenderAPI::bindVertexArray(const atcg::ref_ptr<VertexArray>& vao)
+void GraphicsAPI::bindVertexArray(const atcg::ref_ptr<VertexArray>& vao)
 {
     vao->bind();
 }
 
-void RenderAPI::bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
+void GraphicsAPI::bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
 {
     texture->bind(slot);
     _bound_textures.emplace_back(slot, texture);
 }
 
-void RenderAPI::bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer)
+void GraphicsAPI::bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer)
 {
     buffer->bindStorage(slot);
 }
 
-void RenderAPI::draw(uint32_t vertexCount) const
+void GraphicsAPI::draw(uint32_t vertexCount) const
 {
     glDrawArrays(detail::toGLPrimitive(_current_pipeline.primitive_topology), 0, static_cast<GLsizei>(vertexCount));
 }
 
-void RenderAPI::drawIndexed(uint32_t indexCount) const
+void GraphicsAPI::drawIndexed(uint32_t indexCount) const
 {
     glDrawElements(detail::toGLPrimitive(_current_pipeline.primitive_topology),
                    static_cast<GLsizei>(indexCount),
@@ -236,7 +236,7 @@ void RenderAPI::drawIndexed(uint32_t indexCount) const
                    (void*)0);
 }
 
-void RenderAPI::drawInstanced(uint32_t vertexCount, uint32_t nInstances) const
+void GraphicsAPI::drawInstanced(uint32_t vertexCount, uint32_t nInstances) const
 {
     glDrawArraysInstanced(detail::toGLPrimitive(_current_pipeline.primitive_topology),
                           0,
@@ -244,7 +244,7 @@ void RenderAPI::drawInstanced(uint32_t vertexCount, uint32_t nInstances) const
                           nInstances);
 }
 
-void RenderAPI::drawIndexedInstanced(uint32_t indexCount, uint32_t nInstances) const
+void GraphicsAPI::drawIndexedInstanced(uint32_t indexCount, uint32_t nInstances) const
 {
     glDrawElementsInstanced(detail::toGLPrimitive(_current_pipeline.primitive_topology),
                             static_cast<GLsizei>(indexCount),
@@ -253,17 +253,17 @@ void RenderAPI::drawIndexedInstanced(uint32_t indexCount, uint32_t nInstances) c
                             nInstances);
 }
 
-void RenderAPI::setClearColor(const glm::vec4& color)
+void GraphicsAPI::setClearColor(const glm::vec4& color)
 {
     glClearColor(color.r, color.g, color.b, color.a);
 }
 
-void RenderAPI::setClearDepth(float depth)
+void GraphicsAPI::setClearDepth(float depth)
 {
     glClearDepth(depth);
 }
 
-void RenderAPI::clear()
+void GraphicsAPI::clear()
 {
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
@@ -273,12 +273,12 @@ void RenderAPI::clear()
                                                                          : glDisable(GL_DEPTH_TEST);
 }
 
-void RenderAPI::finish() const
+void GraphicsAPI::finish() const
 {
     glFinish();
 }
 
-int RenderAPI::getTotalTextureUnits() const
+int GraphicsAPI::getTotalTextureUnits() const
 {
     GLint units = 0;
     glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &units);

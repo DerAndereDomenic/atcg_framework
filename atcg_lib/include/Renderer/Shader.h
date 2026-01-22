@@ -11,7 +11,7 @@
 
 namespace atcg
 {
-class RenderAPI;
+class GraphicsAPI;
 
 /**
  * @brief This class models a shader
@@ -241,6 +241,6 @@ private:
      */
     void bind() const;
 
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 };
 }    // namespace atcg

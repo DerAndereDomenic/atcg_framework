@@ -12,7 +12,7 @@
 namespace atcg
 {
 class VertexArray;
-class RenderAPI;
+class GraphicsAPI;
 
 /**
  * @brief This enum holds the possible vertex attributes that can be passed to a shader via a vertex buffer
@@ -390,7 +390,7 @@ protected:
     void bindStorage(uint32_t slot = 0) const;
 
     friend class VertexArray;
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 };
 
 /**

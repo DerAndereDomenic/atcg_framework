@@ -7,7 +7,7 @@
 namespace atcg
 {
 
-class RenderAPI;
+class GraphicsAPI;
 
 /**
  * @brief The type of framebuffer texture
@@ -263,6 +263,6 @@ private:
      */
     static void bindDefault();
 
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 };
 }    // namespace atcg

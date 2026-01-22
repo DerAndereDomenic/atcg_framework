@@ -51,6 +51,10 @@ void Application::init(const WindowProps& props)
     _window = atcg::make_scope<Window>(props);
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
+    _graphics_api = atcg::make_ref<GraphicsAPI>();
+    _graphics_api->init();
+    SystemRegistry::instance()->registerSystem(_graphics_api.get());
+
     _renderer = atcg::make_ref<RendererSystem>();
     _renderer->init(_window->getWidth(), _window->getHeight(), _window->getContext(), _shader_manager);
     SystemRegistry::instance()->registerSystem(_renderer.get());

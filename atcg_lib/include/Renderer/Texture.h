@@ -10,7 +10,7 @@
 namespace atcg
 {
 
-class RenderAPI;
+class GraphicsAPI;
 
 /**
  * @brief A class to model a texture
@@ -232,7 +232,7 @@ protected:
      */
     virtual void unbind(const uint32_t& slot = 0) const = 0;
 
-    friend class RenderAPI;
+    friend class GraphicsAPI;
     uint32_t _ID;
     TextureSpecification _spec;
 
@@ -373,7 +373,7 @@ protected:
      */
     virtual void unbind(const uint32_t& slot = 0) const override;
 
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 };
 
 /**
@@ -490,7 +490,7 @@ protected:
      */
     virtual void unbind(const uint32_t& slot = 0) const override;
 
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 };
 
 /**
@@ -579,7 +579,7 @@ protected:
      */
     virtual void unbind(const uint32_t& slot = 0) const override;
 
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 };
 
 /**
@@ -692,7 +692,7 @@ protected:
      */
     virtual void unbind(const uint32_t& slot = 0) const override;
 
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 };
 
 /**
@@ -781,7 +781,7 @@ protected:
      */
     virtual void unbind(const uint32_t& slot = 0) const override;
 
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 };
 
 /**
@@ -864,7 +864,7 @@ protected:
      */
     virtual void unbind(const uint32_t& slot = 0) const override;
 
-    friend class RenderAPI;
+    friend class GraphicsAPI;
 };
 
 }    // namespace atcg

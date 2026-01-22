@@ -5,7 +5,7 @@
 #include <Core/SystemRegistry.h>
 
 #include <Renderer/ShaderManager.h>
-#include <Renderer/RenderAPI.h>
+#include <Renderer/GraphicsAPI.h>
 #include <Scene/Components.h>
 
 #include <Scene/Scene.h>
@@ -56,7 +56,6 @@ public:
     std::priority_queue<uint32_t, std::vector<uint32_t>, std::greater<uint32_t>> texture_ids;
     void freeTextureUnits();
 
-    RenderAPI render_api;
     bool render_pass_started = false;
 };
 
@@ -67,7 +66,6 @@ RendererSystem::~RendererSystem() {}
 RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<Context>& context)
 {
     this->context = context;
-    this->render_api.init();
 
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
@@ -96,7 +94,7 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
 
     initFramebuffer(width, height);
 
-    int total_units = render_api.getTotalTextureUnits();
+    int total_units = GraphicsCommand::getTotalTextureUnits();
     for(uint32_t i = 0; i < (uint32_t)total_units; ++i)
     {
         texture_ids.push(i);
@@ -214,7 +212,7 @@ void RendererSystem::Impl::drawCircle(const glm::vec3& position,
 
     const auto& shader = shader_manager->getShader("circle");
 
-    render_api.bindVertexArray(quad_vao);
+    GraphicsCommand::bindVertexArray(quad_vao);
 
     shader->setVec3("flat_color", color);
     shader->setFloat("radius", radius);
@@ -230,10 +228,10 @@ void RendererSystem::Impl::drawCircle(const glm::vec3& position,
 
     GraphicsPipeline pipeline =
         GraphicsPipeline().setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES).setShader(shader).setShader(shader);
-    render_api.bindPipeline(pipeline);
+    GraphicsCommand::bindPipeline(pipeline);
     if(ibo)
     {
-        render_api.drawIndexed(static_cast<uint32_t>(ibo->getCount()));
+        GraphicsCommand::drawIndexed(static_cast<uint32_t>(ibo->getCount()));
     }
     else
     {
@@ -278,7 +276,7 @@ void RendererSystem::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
 {
     ATCG_ASSERT(!impl->render_pass_started, "Render pass already started.");
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_api.beginRenderPass(target);
+    GraphicsCommand::beginRenderPass(target);
     impl->render_pass_started = true;
 }
 
@@ -286,24 +284,24 @@ void RendererSystem::endRenderPass()
 {
     ATCG_ASSERT(impl->render_pass_started, "Render pass not started.");
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_api.endRenderPass();
+    GraphicsCommand::endRenderPass();
     impl->render_pass_started = false;
 }
 
 void RendererSystem::clear()
 {
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-    impl->render_api.clear();
+    GraphicsCommand::clear();
 }
 
 void RendererSystem::bindTexture(uint32_t slot, const atcg::ref_ptr<Texture>& texture)
 {
-    impl->render_api.bindTexture(slot, texture);
+    GraphicsCommand::bindTexture(slot, texture);
 }
 
 void RendererSystem::bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffer>& buffer)
 {
-    impl->render_api.bindStorageBuffer(slot, buffer);
+    GraphicsCommand::bindStorageBuffer(slot, buffer);
 }
 
 void RendererSystem::finishFrame()
@@ -315,28 +313,28 @@ void RendererSystem::finishFrame()
     GraphicsPipeline pipeline =
         GraphicsPipeline().setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES).setShader(shader);
 
-    impl->render_api.beginRenderPass(nullptr);
-    impl->render_api.setViewport(0, 0, impl->screen_fbo->width(), impl->screen_fbo->height());
-    impl->render_api.bindVertexArray(impl->quad_vao);
+    GraphicsCommand::beginRenderPass(nullptr);
+    GraphicsCommand::setViewport(0, 0, impl->screen_fbo->width(), impl->screen_fbo->height());
+    GraphicsCommand::bindVertexArray(impl->quad_vao);
 
-    impl->render_api.clear();
+    GraphicsCommand::clear();
 
     shader->setInt("screen_texture", 0);
     shader->selectSubroutine("_getEntityID", "getDefaultID");
 
-    impl->render_api.bindTexture(0, impl->screen_fbo->getColorAttachement());
-    impl->render_api.bindPipeline(pipeline);
+    GraphicsCommand::bindTexture(0, impl->screen_fbo->getColorAttachement());
+    GraphicsCommand::bindPipeline(pipeline);
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
-    impl->render_api.drawIndexed(static_cast<uint32_t>(ibo->getCount()));
-    impl->render_api.endRenderPass();
+    GraphicsCommand::drawIndexed(static_cast<uint32_t>(ibo->getCount()));
+    GraphicsCommand::endRenderPass();
 #endif
     ++impl->frame_counter;
 }
 
 void RendererSystem::finish() const
 {
-    impl->render_api.finish();
+    GraphicsCommand::finish();
 }
 
 void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
@@ -373,7 +371,7 @@ void RendererSystem::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
     ATCG_ASSERT(impl->render_pass_started, "Render pass not started in Renderer.");
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
-    impl->render_api.bindVertexArray(vao);
+    GraphicsCommand::bindVertexArray(vao);
 
     pipeline.shader->setInt("instanced", static_cast<int>(instances > 1));
     if(camera)
@@ -389,14 +387,14 @@ void RendererSystem::drawVAO(const atcg::ref_ptr<VertexArray>& vao,
 
     const atcg::ref_ptr<IndexBuffer> ibo = vao->getIndexBuffer();
 
-    impl->render_api.bindPipeline(pipeline);
+    GraphicsCommand::bindPipeline(pipeline);
     if(ibo)
     {
-        impl->render_api.drawIndexedInstanced(static_cast<uint32_t>(ibo->getCount()), instances);
+        GraphicsCommand::drawIndexedInstanced(static_cast<uint32_t>(ibo->getCount()), instances);
     }
     else
     {
-        impl->render_api.drawInstanced(static_cast<uint32_t>(size), instances);
+        GraphicsCommand::drawInstanced(static_cast<uint32_t>(size), instances);
     }
 }
 
@@ -431,14 +429,14 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
     auto shader               = impl->shader_manager->getShader("screen");
     GraphicsPipeline pipeline = GraphicsPipeline();
 
-    impl->render_api.beginRenderPass(Framebuffer::currentFramebuffer());
-    impl->render_api.bindVertexArray(impl->quad_vao);
+    GraphicsCommand::beginRenderPass(Framebuffer::currentFramebuffer());
+    GraphicsCommand::bindVertexArray(impl->quad_vao);
     shader->setInt("screen_texture", 0);
 
     if(entity_ids)
     {
         shader->setInt("entity_ids", 1);
-        impl->render_api.bindTexture(1, entity_ids);
+        GraphicsCommand::bindTexture(1, entity_ids);
         shader->selectSubroutine("_getEntityID", "getFromTextureID");
     }
     else
@@ -446,12 +444,12 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
         shader->selectSubroutine("_getEntityID", "getDefaultID");
     }
 
-    impl->render_api.bindTexture(0, img);
-    impl->render_api.bindPipeline(pipeline);
+    GraphicsCommand::bindTexture(0, img);
+    GraphicsCommand::bindPipeline(pipeline);
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
-    impl->render_api.drawIndexed(static_cast<uint32_t>(ibo->getCount()));
-    impl->render_api.endRenderPass();
+    GraphicsCommand::drawIndexed(static_cast<uint32_t>(ibo->getCount()));
+    GraphicsCommand::endRenderPass();
 }
 
 void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency_)
@@ -508,9 +506,9 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
             shader->setFloat("base_transparency", base_transparency * transparency);
 
             auto points = impl->grid->getVerticesBuffer();
-            impl->render_api.bindStorageBuffer(0, points);
+            GraphicsCommand::bindStorageBuffer(0, points);
 
-            impl->render_api.bindPipeline(pipeline);
+            GraphicsCommand::bindPipeline(pipeline);
             drawVAO(impl->grid->getEdgesArray(),
                     camera,
                     glm::translate(resolution * glm::vec3(x, 0, z)) * glm::scale(glm::vec3(resolution)),
@@ -527,9 +525,9 @@ void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const floa
     pipeline.rasterizer_state.setLineSize(2.0f);
 
     auto points = impl->cross->getVerticesBuffer();
-    impl->render_api.bindStorageBuffer(0, points);
+    GraphicsCommand::bindStorageBuffer(0, points);
 
-    impl->render_api.bindPipeline(pipeline);
+    GraphicsCommand::bindPipeline(pipeline);
     drawVAO(impl->cross->getEdgesArray(), camera, glm::mat4(1), pipeline, impl->cross->n_edges());
 
     shader->setFloat("fall_off_edge", 1000.0f);
