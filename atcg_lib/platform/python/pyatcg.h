@@ -802,7 +802,6 @@ inline void defineBindings(py::module_& m)
             [](const atcg::ref_ptr<atcg::Texture2D>& img) { atcg::Renderer::drawImage(img); },
             "img"_a)
         .def("getFramebuffer", &atcg::Renderer::getFramebuffer)
-        .def("getEntityIndex", &atcg::Renderer::getEntityIndex, "mouse_pos"_a)
         .def("resize", &atcg::Renderer::resize)
         .def("getFrameCounter", &atcg::Renderer::getFrameCounter)
         .def("popTextureID", &atcg::Renderer::popTextureID)
@@ -839,7 +838,6 @@ inline void defineBindings(py::module_& m)
             { self->drawImage(img); },
             "img"_a)
         .def("getFramebuffer", &atcg::RendererSystem::getFramebuffer)
-        .def("getEntityIndex", &atcg::RendererSystem::getEntityIndex, "mouse_pos"_a)
         .def("resize", &atcg::RendererSystem::resize)
         .def("getFrameCounter", &atcg::RendererSystem::getFrameCounter)
         .def("popTextureID", &atcg::RendererSystem::popTextureID)
@@ -1122,7 +1120,8 @@ inline void defineBindings(py::module_& m)
             "camera"_a,
             "width"_a,
             "height"_a,
-            "path"_a);
+            "path"_a)
+        .def("pickEntity", &atcg::Utils::pickEntity, "mouse_pos"_a);
 
     // ------------------- Scene ---------------------------------
     m_entity_handle.def(py::init<uint32_t>(), "handle"_a);

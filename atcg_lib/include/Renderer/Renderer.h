@@ -204,14 +204,6 @@ public:
     atcg::ref_ptr<Framebuffer> getFramebuffer() const;
 
     /**
-     * @brief Get the entity index that was rendered onto the given pixel
-     *
-     * @param mouse The mouse position
-     * @return The entity id
-     */
-    int getEntityIndex(const glm::vec2& mouse) const;
-
-    /**
      * @brief Get the shader manager associated with this renderer
      *
      * @return The shader manager
@@ -433,17 +425,6 @@ ATCG_INLINE void drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::ref_
 ATCG_INLINE atcg::ref_ptr<Framebuffer> getFramebuffer()
 {
     return SystemRegistry::instance()->getSystem<RendererSystem>()->getFramebuffer();
-}
-
-/**
- * @brief Get the entity index that was rendered onto the given pixel
- *
- * @param mouse The mouse position
- * @return The entity id
- */
-ATCG_INLINE int getEntityIndex(const glm::vec2& mouse)
-{
-    return SystemRegistry::instance()->getSystem<RendererSystem>()->getEntityIndex(mouse);
 }
 
 /**

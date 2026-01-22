@@ -1,5 +1,7 @@
 #include <Utils/Utils.h>
 
+#include <Asset/Project.h>
+
 #include <fstream>
 
 namespace atcg
@@ -215,6 +217,18 @@ torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
     return data;
+}
+
+Entity pickEntity(const glm::vec2& mouse_pos)
+{
+    auto fbo        = atcg::Renderer::getFramebuffer();
+    auto pixel_data = fbo->getColorAttachement(1)->getData(
+        atcg::CPU);    // TODO: Overkill to copy the entire buffer just for one pixel
+
+    int pixelData = pixel_data.index({(int)mouse_pos.y, (int)mouse_pos.x, 0}).item<int>();
+
+    return pixelData == -1 ? atcg::Entity()
+                           : atcg::Entity((entt::entity)pixelData, atcg::Project::getActive()->getActiveScene().get());
 }
 
 }    // namespace Utils

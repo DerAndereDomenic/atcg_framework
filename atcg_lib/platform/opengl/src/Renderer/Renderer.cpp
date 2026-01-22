@@ -547,19 +547,6 @@ atcg::ref_ptr<Framebuffer> RendererSystem::getFramebuffer() const
     return impl->screen_fbo;
 }
 
-int RendererSystem::getEntityIndex(const glm::vec2& mouse) const
-{
-    // TODO
-    ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
-
-    // impl->screen_fbo->use();
-    glReadBuffer(GL_COLOR_ATTACHMENT1);
-    int pixelData;
-    glReadPixels((int)mouse.x, (int)mouse.y, 1, 1, GL_RED_INTEGER, GL_INT, &pixelData);
-    glReadBuffer(GL_COLOR_ATTACHMENT0);
-    return pixelData;
-}
-
 atcg::ref_ptr<ShaderManagerSystem> RendererSystem::getShaderManager() const
 {
     return impl->shader_manager;

@@ -119,6 +119,16 @@ void screenshot(const atcg::ref_ptr<Scene>& scene,
  * @return The pixel data as tensor
  */
 torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width);
+
+/**
+ * @brief Pick an entity at the given screen coordinates. This reads information from the current framebuffer, i.e.,
+ * Renderer::Framebuffer. If no entity is found, an invalid entity is returned.
+ *
+ * @param mouse_pos The mouse position in screen coordinates
+ *
+ * @return The picked entity
+ */
+Entity pickEntity(const glm::vec2& mouse_pos);
 }    // namespace Utils
 
 }    // namespace atcg

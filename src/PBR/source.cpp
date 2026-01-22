@@ -445,10 +445,7 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
         {
-            int id         = atcg::Renderer::getEntityIndex(mouse_pos);
-            hovered_entity = id == -1
-                                 ? atcg::Entity()
-                                 : atcg::Entity((entt::entity)id, atcg::Project::getActive()->getActiveScene().get());
+            hovered_entity = atcg::Utils::pickEntity(mouse_pos);
             panel.selectEntity(hovered_entity);
         }
         return true;
