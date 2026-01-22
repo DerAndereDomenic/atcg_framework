@@ -46,6 +46,15 @@ static GLenum toGLDepthFunction(DepthFunction func)
 }
 }    // namespace detail
 
+void RenderAPI::init()
+{
+    ATCG_INFO("OpenGL Renderer:");
+    ATCG_INFO("    Vendor: {0}", (const char*)glGetString(GL_VENDOR));
+    ATCG_INFO("    Renderer: {0}", (const char*)glGetString(GL_RENDERER));
+    ATCG_INFO("    Version: {0}", (const char*)glGetString(GL_VERSION));
+    ATCG_INFO("---------------------------------");
+}
+
 void RenderAPI::beginRenderPass(const atcg::ref_ptr<Framebuffer>& target)
 {
     ATCG_ASSERT(!_started_render_pass, "Render pass already started");
@@ -172,12 +181,12 @@ void RenderAPI::bindStorageBuffer(uint32_t slot, const atcg::ref_ptr<VertexBuffe
     buffer->bindStorage(slot);
 }
 
-void RenderAPI::draw(uint32_t vertexCount)
+void RenderAPI::draw(uint32_t vertexCount) const
 {
     glDrawArrays(detail::toGLPrimitive(_current_pipeline.primitive_topology), 0, static_cast<GLsizei>(vertexCount));
 }
 
-void RenderAPI::drawIndexed(uint32_t indexCount)
+void RenderAPI::drawIndexed(uint32_t indexCount) const
 {
     glDrawElements(detail::toGLPrimitive(_current_pipeline.primitive_topology),
                    static_cast<GLsizei>(indexCount),
@@ -185,7 +194,7 @@ void RenderAPI::drawIndexed(uint32_t indexCount)
                    (void*)0);
 }
 
-void RenderAPI::drawInstanced(uint32_t vertexCount, uint32_t nInstances)
+void RenderAPI::drawInstanced(uint32_t vertexCount, uint32_t nInstances) const
 {
     glDrawArraysInstanced(detail::toGLPrimitive(_current_pipeline.primitive_topology),
                           0,
@@ -193,7 +202,7 @@ void RenderAPI::drawInstanced(uint32_t vertexCount, uint32_t nInstances)
                           nInstances);
 }
 
-void RenderAPI::drawIndexedInstanced(uint32_t indexCount, uint32_t nInstances)
+void RenderAPI::drawIndexedInstanced(uint32_t indexCount, uint32_t nInstances) const
 {
     glDrawElementsInstanced(detail::toGLPrimitive(_current_pipeline.primitive_topology),
                             static_cast<GLsizei>(indexCount),
@@ -220,5 +229,17 @@ void RenderAPI::clear()
     glDepthMask(_current_pipeline.rasterizer_state.depth_state.depth_write_enabled ? GL_TRUE : GL_FALSE);
     _current_pipeline.rasterizer_state.depth_state.depth_testing_enabled ? glEnable(GL_DEPTH_TEST)
                                                                          : glDisable(GL_DEPTH_TEST);
+}
+
+void RenderAPI::finish() const
+{
+    glFinish();
+}
+
+int RenderAPI::getTotalTextureUnits() const
+{
+    GLint units = 0;
+    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &units);
+    return static_cast<int>(units);
 }
 }    // namespace atcg

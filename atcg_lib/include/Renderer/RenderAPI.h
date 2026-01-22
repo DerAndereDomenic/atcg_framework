@@ -15,6 +15,11 @@ class RenderAPI
 {
 public:
     /**
+     * @brief Initializes the RenderAPI
+     */
+    void init();
+
+    /**
      * @brief Begins a render pass
      *
      * @param target The target framebuffer
@@ -79,14 +84,14 @@ public:
      *
      * @param vertexCount The number of vertices to draw
      */
-    void draw(uint32_t vertexCount);
+    void draw(uint32_t vertexCount) const;
 
     /**
      * @brief Draw call for indexed vertex arrays
      *
      * @param indexCount The number of indices to draw
      */
-    void drawIndexed(uint32_t indexCount);
+    void drawIndexed(uint32_t indexCount) const;
 
     /**
      * @brief Draw call for instanced vertex arrays
@@ -94,7 +99,7 @@ public:
      * @param vertexCount The number of vertices per instance
      * @param nInstances The number of instances to draw
      */
-    void drawInstanced(uint32_t vertexCount, uint32_t nInstances);
+    void drawInstanced(uint32_t vertexCount, uint32_t nInstances) const;
 
     /**
      * @brief Draw call for indexed and instanced vertex arrays
@@ -102,7 +107,7 @@ public:
      * @param indexCount The number of indices per instance
      * @param nInstances The number of instances to draw
      */
-    void drawIndexedInstanced(uint32_t indexCount, uint32_t nInstances);
+    void drawIndexedInstanced(uint32_t indexCount, uint32_t nInstances) const;
 
     /**
      * @brief Set the clear color
@@ -122,6 +127,18 @@ public:
      * @brief Clear the current framebuffer with the clear color
      */
     void clear();
+
+    /**
+     * @brief Forces the GPU to finish all operations
+     */
+    void finish() const;
+
+    /**
+     * @brief Get the total number of texture units available
+     *
+     * @return The number of texture units
+     */
+    int getTotalTextureUnits() const;
 
 private:
     GraphicsPipeline _current_pipeline;

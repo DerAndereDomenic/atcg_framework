@@ -1,5 +1,4 @@
 #include <Renderer/Renderer.h>
-#include <glad/glad.h>
 
 #include <Core/Assert.h>
 #include <Core/Path.h>
@@ -68,6 +67,7 @@ RendererSystem::~RendererSystem() {}
 RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<Context>& context)
 {
     this->context = context;
+    this->render_api.init();
 
     ATCG_ASSERT(context->isCurrent(), "Context of Renderer not current.");
 
@@ -96,8 +96,7 @@ RendererSystem::Impl::Impl(uint32_t width, uint32_t height, const atcg::ref_ptr<
 
     initFramebuffer(width, height);
 
-    int total_units;
-    glGetIntegerv(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS, &total_units);    // TODO
+    int total_units = render_api.getTotalTextureUnits();
     for(uint32_t i = 0; i < (uint32_t)total_units; ++i)
     {
         texture_ids.push(i);
@@ -249,12 +248,6 @@ void RendererSystem::init(uint32_t width,
 {
     context->makeCurrent();
 
-    ATCG_INFO("OpenGL Renderer:");
-    ATCG_INFO("    Vendor: {0}", (const char*)glGetString(GL_VENDOR));
-    ATCG_INFO("    Renderer: {0}", (const char*)glGetString(GL_RENDERER));
-    ATCG_INFO("    Version: {0}", (const char*)glGetString(GL_VERSION));
-    ATCG_INFO("---------------------------------");
-
     impl = atcg::make_scope<Impl>(width, height, context);
 
     impl->shader_manager = shader_manager;
@@ -343,7 +336,7 @@ void RendererSystem::finishFrame()
 
 void RendererSystem::finish() const
 {
-    glFinish();
+    impl->render_api.finish();
 }
 
 void RendererSystem::resize(const uint32_t& width, const uint32_t& height)
