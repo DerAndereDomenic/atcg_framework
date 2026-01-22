@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added an application counter
 - Added ior textures
 - Added RendererState
+- Added rasterizer control via a GraphicsPipeline object
 
 ### Changed
 
@@ -70,6 +71,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A graphics context now stores the full fbo, not just its renderer ID
 - Framebuffer::bindByID was removed
 - RenderPasses now expect the scene to be a shared_ptr
+- Removed clear functions from renderer
+- The renderer is restructured to a command like rendering architecture. Therefore, the rasterizer state can no longer be controlled vie the RendererSystem class. This means that functions like toggleDepthTest, toggleCulling, etc. are removed
+- The abstraction of RendererSystem was reduced. It is now only used for generic draw calls, no longer handling things like entity/component handling
+- Removed atcg::DrawMode as this is already described by the components themselves
+- Remove atcg::Renderer::drawCameras as this is now handled by the component renderer
+- Remove atcg::Renderer::drawLights
+- Skybox data and processing is now handled by the Skybox class. Removed all related methods in RendererSystem
+- Removed PixelUnpackBuffer, use VertexBuffer instead. Binding is handled internally
+- Shader, Framebuffer, and Textures can now longer be used manually (i.e. removed use()), this is now handled via the Renderer and Pipeline objects/Render Passes
+- Moved Utils to own submodule and add Utils namespace
+- Remove screenshot functions from Renderer and move to Utils
+- Remove entity picking form Renderer to Utils
 
 ### Fixed
 
