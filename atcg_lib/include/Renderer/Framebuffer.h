@@ -7,6 +7,8 @@
 namespace atcg
 {
 
+class GraphicsAPI;
+
 /**
  * @brief The type of framebuffer texture
  */
@@ -96,7 +98,7 @@ struct FramebufferSpecification
 /**
  * @brief Class to model a framebuffer
  */
-class Framebuffer
+class Framebuffer : public std::enable_shared_from_this<Framebuffer>
 {
 public:
     Framebuffer() = default;
@@ -122,16 +124,11 @@ public:
     ~Framebuffer();
 
     /**
-     * @brief Use the framebuffer
-     */
-    void use() const;
-
-    /**
      * @brief Complete the Framebuffer. Should be called after all attachements where made
      *
      * @return True if it is complete, false otherwise
      */
-    bool complete() const;
+    bool complete();
 
     /**
      * @brief Add a color attachement
@@ -151,6 +148,15 @@ public:
     void attachTexture(const atcg::ref_ptr<Texture>& texture);
 
     /**
+     * @brief Attach a face of a cube map as color attachement
+     *
+     * @param cube_map The cube map
+     * @param face_index The face index (0-5)
+     * @param mip_level The mip level
+     */
+    void attachCubeFace(const atcg::ref_ptr<TextureCube>& cube_map, uint32_t face_index, uint32_t mip_level = 0);
+
+    /**
      * @brief Add a depth attachement
      */
     void attachDepth();
@@ -166,6 +172,11 @@ public:
      * @param depth_map The depth map component
      */
     void attachDepth(const atcg::ref_ptr<Texture>& depth_map);
+
+    /**
+     * @brief Detach the last color attachement
+     */
+    void detachColor();
 
     /**
      * @brief Blit two framebuffer together.
@@ -233,24 +244,25 @@ public:
      *
      * @return ID of the fbo
      */
-    static uint32_t currentFramebuffer();
+    static atcg::ref_ptr<Framebuffer> currentFramebuffer();
 
-    /**
-     * @brief Bind a specific framebuffer by ID
-     *
-     * @param ID The id to bind
-     */
-    static void bindByID(uint32_t fbo_id);
-
-    /**
-     * @brief Use the default framebuffer
-     */
-    static void useDefault();
 
 private:
     uint32_t _ID;
     uint32_t _width, _height;
     std::vector<atcg::ref_ptr<Texture>> _color_attachements;
     atcg::ref_ptr<Texture> _depth_attachement;
+
+    /**
+     * @brief Use the framebuffer
+     */
+    void bind();
+
+    /**
+     * @brief Use the default framebuffer
+     */
+    static void bindDefault();
+
+    friend class GraphicsAPI;
 };
 }    // namespace atcg

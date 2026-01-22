@@ -11,6 +11,8 @@
 
 namespace atcg
 {
+class GraphicsAPI;
+
 /**
  * @brief This class models a shader
  */
@@ -77,16 +79,9 @@ public:
     void recompile(const std::string& vertex_path, const std::string& fragment_path, const std::string& geometry_path);
 
     /**
-     * @brief Use the shader.
-     * This sets all the shader uniforms so it should always be called last before doing the draw call.
-     * Typically the client does not have to use it as every Rendering command uses the shader at some point.
-     */
-    void use() const;
-
-    /**
      * @brief Set an int uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -98,7 +93,7 @@ public:
     /**
      * @brief Set a float uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -110,7 +105,7 @@ public:
     /**
      * @brief Set a vec2 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -122,7 +117,7 @@ public:
     /**
      * @brief Set a vec3 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -134,7 +129,7 @@ public:
     /**
      * @brief Set a vec4 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -146,7 +141,7 @@ public:
     /**
      * @brief Set a mat4 uniform.
      * All shader uniforms are uploaded in a deferred way. I.e. this function caches the location and value of the
-     * uniform. The upload to the actual shader program is done when calling shader->use();
+     * uniform. The upload to the actual shader program is done when calling shader->bind();
      * This cache is persistent over frames, so "const" values can be set only once and do not have to be reset every
      * frame.
      *
@@ -238,5 +233,14 @@ private:
     std::string _fragment_code = "";
     std::string _geometry_code = "";
     std::string _compute_code  = "";
+
+    /**
+     * @brief bind the shader.
+     * This sets all the shader uniforms so it should always be called last before doing the draw call.
+     * Typically the client does not have to bind it as every Rendering command binds the shader at some point.
+     */
+    void bind() const;
+
+    friend class GraphicsAPI;
 };
 }    // namespace atcg

@@ -104,11 +104,12 @@ public:
         auto converter_shader = atcg::make_ref<atcg::Shader>("exercises/CubemapConverter/converter.vs",
                                                              "exercises/CubemapConverter/converter.fs");
 
-        frame_buffer->use();
-        atcg::Renderer::setViewport(0, 0, 4096, 2048);
-        atcg::Renderer::draw(quad, {}, glm::mat4(1), glm::vec3(1), converter_shader);
-        atcg::Framebuffer::useDefault();
-        atcg::Renderer::setViewport(0, 0, window->getWidth(), window->getHeight());
+        atcg::GraphicsPipeline pipeline = atcg::GraphicsPipeline().setShader(converter_shader);
+
+        atcg::GraphicsCommand::beginRenderPass(frame_buffer);
+        atcg::GraphicsCommand::clear();
+        atcg::Renderer::drawVAO(quad->getVerticesArray(), {}, glm::mat4(1), pipeline, quad->n_vertices());
+        atcg::GraphicsCommand::endRenderPass();
 
         auto texture_data = skybox_texture->getData(atcg::CPU);
 
@@ -125,7 +126,7 @@ public:
     {
         camera_controller->onUpdate(delta_time);
 
-        atcg::Renderer::clear();
+        atcg::GraphicsCommand::clear();
 
         atcg::Dictionary context;
         context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());

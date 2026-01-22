@@ -13,7 +13,7 @@ namespace atcg
  *
  * This pass reads the following variables from the context:
  * * context<RendererSystem*>["renderer"] - The renderer
- * * context<Scene*>["scene"] - The scene
+ * * context<atcg::ref_ptr<Scene>>["scene"] - The scene
  * * context<ref_ptr<Camera>>["camera"] - The camera
  * * context<bool>["has_skybox"] - If a skybox should be used for ibl (default: false)
  *

@@ -25,7 +25,7 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
         {
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
-            auto scene       = context.getValue<Scene*>("scene");
+            auto scene       = context.getValue<atcg::ref_ptr<Scene>>("scene");
             auto camera      = context.getValue<atcg::ref_ptr<Camera>>("camera");
             const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent>();
 
@@ -39,23 +39,27 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
                                                                                                                 "maps");
             }
 
-            auto skybox     = *inputs.getValueOr<atcg::ref_ptr<atcg::ref_ptr<Skybox>>>("skybox", nullptr);
+            auto skybox = *inputs.getValueOr<atcg::ref_ptr<atcg::ref_ptr<Skybox>>>(
+                "skybox",
+                atcg::make_ref<atcg::ref_ptr<Skybox>>(nullptr));
             bool has_skybox = context.getValueOr("has_skybox", false) && (skybox != nullptr);
 
             Dictionary auxiliary;
             auxiliary.setValue("point_light_depth_maps", point_light_depth_maps);
             auxiliary.setValue("skybox", has_skybox ? skybox : data.getValue<atcg::ref_ptr<Skybox>>("dummy_skybox"));
             auxiliary.setValue("has_skybox", has_skybox);
+            auxiliary.setValue("draw_cameras", context.getValueOr("draw_cameras", true));
 
             auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffe"
                                                                                                   "r");
             auto target             = prepareFramebuffer(context, inputs, data, outputs);
             *output_framebuffer     = target;
 
+            GraphicsCommand::beginRenderPass(target);
             if(_render_target.clear)
             {
-                renderer->clear();
-                // We assume that this is an entity buffer, better solution?
+                GraphicsCommand::clear();
+                //  We assume that this is an entity buffer, better solution?
                 if(target->numColorAttachements() > 1 &&
                    target->getColorAttachement(1)->getSpecification().format == TextureFormat::RINT)
                 {
@@ -70,9 +74,10 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
                     target->getColorAttachement(2)->fill(&value);
                 }
             }
+
             for(auto e: view)
             {
-                Entity entity(e, scene);
+                Entity entity(e, scene.get());
                 if(entity.hasComponent<CustomRenderComponent>())
                 {
                     CustomRenderComponent renderer = entity.getComponent<CustomRenderComponent>();
@@ -81,6 +86,8 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
 
                 ComponentRegistry::renderAllComponents(renderer, entity, camera, auxiliary);
             }
+
+            GraphicsCommand::endRenderPass();
         });
 }
 }    // namespace atcg

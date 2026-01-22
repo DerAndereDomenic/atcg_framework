@@ -206,10 +206,10 @@ void VRSystem::onUpdate(const float delta_time)
 
     // Upload to HMD
     {
-        vr::Texture_t left_eye_texture  = {(void*)(uint64_t*)impl->render_target_left->getColorAttachement()->getID(),
+        vr::Texture_t left_eye_texture  = {(void*)(uint64_t)impl->render_target_left->getColorAttachement()->getID(),
                                            vr::TextureType_OpenGL,
                                            vr::ColorSpace::ColorSpace_Linear};
-        vr::Texture_t right_eye_texture = {(void*)(uint64_t*)impl->render_target_right->getColorAttachement()->getID(),
+        vr::Texture_t right_eye_texture = {(void*)(uint64_t)impl->render_target_right->getColorAttachement()->getID(),
                                            vr::TextureType_OpenGL,
                                            vr::ColorSpace::ColorSpace_Linear};
 
@@ -425,11 +425,19 @@ void VRSystem::renderToScreen()
     auto vr_shader = atcg::ShaderManager::getShader("vrScreen");
     vr_shader->setInt("texture_left", 10);
     vr_shader->setInt("texture_right", 11);
-    impl->render_target_left->getColorAttachement()->use(10);
-    impl->render_target_right->getColorAttachement()->use(11);
-    atcg::Renderer::toggleDepthTesting(false);
-    atcg::Renderer::draw(impl->quad, {}, glm::mat4(1), glm::vec3(1), vr_shader);
-    atcg::Renderer::toggleDepthTesting(true);
+
+    atcg::GraphicsCommand::bindTexture(10, impl->render_target_left->getColorAttachement());
+    atcg::GraphicsCommand::bindTexture(11, impl->render_target_right->getColorAttachement());
+
+    atcg::GraphicsPipeline pipeline =
+        atcg::GraphicsPipeline()
+            .setShader(vr_shader)
+            .setPrimitiveTopology(atcg::PrimitiveTopology::ATCG_TRIANGLES)
+            .setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthTesting(false)));
+
+    atcg::GraphicsCommand::beginRenderPass(atcg::Framebuffer::currentFramebuffer());
+    atcg::Renderer::drawVAO(impl->quad->getVerticesArray(), {}, glm::mat4(1), pipeline, impl->quad->n_vertices());
+    atcg::GraphicsCommand::endRenderPass();
 }
 
 glm::vec3 VRSystem::getPosition()
@@ -515,12 +523,18 @@ void VRSystem::drawMovementLine(const atcg::ref_ptr<atcg::PerspectiveCamera>& ca
 
     atcg::ShaderManager::getShader("edge")->setFloat("fall_off_edge", 1000.0f);
     atcg::ShaderManager::getShader("edge")->setFloat("base_transparency", 1.0f);
-    atcg::Renderer::draw(impl->movement_line,
-                         camera,
-                         glm::mat4(1),
-                         glm::vec3(1),
-                         nullptr,
-                         atcg::DrawMode::ATCG_DRAW_MODE_EDGES);
+
+    GraphicsPipeline pipeline = GraphicsPipeline()
+                                    .setShader(atcg::ShaderManager::getShader("edge"))
+                                    .setPrimitiveTopology(atcg::PrimitiveTopology::ATCG_LINES)
+                                    .setRasterizerState(RasterizerState().setLineSize(5.0f).setDepthState(
+                                        DepthState().enableDepthTesting(true)));
+
+    atcg::Renderer::drawVAO(impl->movement_line->getVerticesArray(),
+                            camera,
+                            glm::mat4(1),
+                            pipeline,
+                            impl->movement_line->n_vertices());
 }
 
 void VRSystem::setOffset(const glm::vec3& offset)

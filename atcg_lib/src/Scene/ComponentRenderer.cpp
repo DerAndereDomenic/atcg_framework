@@ -48,7 +48,7 @@ ATCG_INLINE uint32_t setLights(atcg::RendererSystem* renderer,
         uint32_t shadow_map_id = renderer->popTextureID();
         shader->setInt("shadow_maps", shadow_map_id);
         shader->setInt("shadow_pass", 1);
-        point_light_depth_maps->use(shadow_map_id);
+        GraphicsCommand::bindTexture(shadow_map_id, point_light_depth_maps);
 
         return shadow_map_id;
     }
@@ -65,11 +65,11 @@ ATCG_INLINE std::pair<uint32_t, uint32_t>
 setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const atcg::ref_ptr<Skybox>& skybox)
 {
     uint32_t irradiance_id = renderer->popTextureID();
-    skybox->getIrradianceMap()->use(irradiance_id);
+    GraphicsCommand::bindTexture(irradiance_id, skybox->getIrradianceMap());
     shader->setInt("irradiance_map", irradiance_id);
 
     uint32_t prefiltered_id = renderer->popTextureID();
-    skybox->getPrefilteredMap()->use(prefiltered_id);
+    GraphicsCommand::bindTexture(prefiltered_id, skybox->getPrefilteredMap());
     shader->setInt("prefilter_map", prefiltered_id);
 
     return std::make_pair(irradiance_id, prefiltered_id);
@@ -125,14 +125,20 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
         auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
-        _renderer->draw(geometry.graph(),
-                        camera,
-                        transform.getModel(),
-                        glm::vec3(1),
-                        shader,
-                        atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE,
-                        renderer.material(),
-                        entity.entity_handle());
+        shader->setInt("entityID", entity.entity_handle());
+        shader->setVec3("flat_color", glm::vec3(1));
+        renderer.material()->uploadMaterial(_renderer, shader);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
+
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+
+        _renderer->drawVAO(geometry.graph()->getVerticesArray(),
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           geometry.graph()->n_vertices());
         if(id != -1)
         {
             _renderer->pushTextureID(id);
@@ -145,6 +151,11 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
         {
             _renderer->pushTextureID(pre_id);
         }
+        if(lut_id != -1)
+        {
+            _renderer->pushTextureID(lut_id);
+        }
+        renderer.material()->releaseTextureIDs(_renderer);
     }
 }
 
@@ -197,15 +208,23 @@ void ComponentRenderer<PointRenderComponent>::renderComponent(atcg::RendererSyst
         uint32_t id          = detail::setLights(_renderer, scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
-        _renderer->setPointSize(renderer.point_size);
-        _renderer->draw(geometry.graph(),
-                        camera,
-                        transform.getModel(),
-                        renderer.color,
-                        shader,
-                        atcg::DrawMode::ATCG_DRAW_MODE_POINTS,
-                        {},
-                        entity.entity_handle());
+        shader->setInt("entityID", entity.entity_handle());
+        shader->setVec3("flat_color", renderer.color);
+        renderer.default_material->uploadMaterial(_renderer, shader);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
+
+        GraphicsPipeline pipeline = GraphicsPipeline()
+                                        .setShader(shader)
+                                        .setRasterizerState(RasterizerState().setPointSize(renderer.point_size))
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_POINTS);
+
+        _renderer->drawVAO(geometry.graph()->getVerticesArray(),
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           geometry.graph()->n_vertices());
         if(id != -1)
         {
             _renderer->pushTextureID(id);
@@ -218,6 +237,11 @@ void ComponentRenderer<PointRenderComponent>::renderComponent(atcg::RendererSyst
         {
             _renderer->pushTextureID(pre_id);
         }
+        if(lut_id != -1)
+        {
+            _renderer->pushTextureID(lut_id);
+        }
+        renderer.default_material->releaseTextureIDs(_renderer);
     }
 }
 
@@ -270,15 +294,31 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
         uint32_t id          = detail::setLights(_renderer, scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
-        _renderer->setPointSize(renderer.point_size);
-        _renderer->draw(geometry.graph(),
-                        camera,
-                        transform.getModel(),
-                        glm::vec3(1),
-                        shader,
-                        atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE,
-                        renderer.material(),
-                        entity.entity_handle());
+        shader->setInt("entityID", entity.entity_handle());
+        shader->setFloat("point_size", renderer.point_size);
+        shader->setVec3("flat_color", glm::vec3(1));
+        renderer.material()->uploadMaterial(_renderer, shader);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
+
+        auto vbo = geometry.graph()->getVerticesBuffer();
+
+        auto sphere_mesh = AssetManager::getSphereMesh();
+        auto vao_sphere  = sphere_mesh->getVerticesArray();
+
+        vao_sphere->pushInstanceBuffer(vbo);
+
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+
+        // _renderer->setPointSize(renderer.point_size);
+        _renderer->drawVAO(vao_sphere,
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           sphere_mesh->n_vertices(),
+                           geometry.graph()->n_vertices());
+        vao_sphere->popVertexBuffer();
         if(id != -1)
         {
             _renderer->pushTextureID(id);
@@ -291,6 +331,11 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
         {
             _renderer->pushTextureID(pre_id);
         }
+        if(lut_id != -1)
+        {
+            _renderer->pushTextureID(lut_id);
+        }
+        renderer.material()->releaseTextureIDs(_renderer);
     }
 }
 
@@ -344,14 +389,26 @@ void ComponentRenderer<EdgeRenderComponent>::renderComponent(atcg::RendererSyste
         uint32_t id          = detail::setLights(_renderer, scene, point_light_depth_maps, shader);
         auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
-        _renderer->draw(geometry.graph(),
-                        camera,
-                        transform.getModel(),
-                        renderer.color,
-                        shader,
-                        atcg::DrawMode::ATCG_DRAW_MODE_EDGES,
-                        {},
-                        entity.entity_handle());
+        shader->setInt("entityID", entity.entity_handle());
+        shader->setVec3("flat_color", renderer.color);
+        renderer.default_material->uploadMaterial(_renderer, shader);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
+
+        auto points = geometry.graph()->getVerticesBuffer();
+        GraphicsCommand::bindStorageBuffer(0, points);
+
+        GraphicsPipeline pipeline = GraphicsPipeline()
+                                        .setShader(shader)
+                                        .setRasterizerState(RasterizerState().setLineSize(1.0f))    // TODO
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_POINTS);
+
+        _renderer->drawVAO(geometry.graph()->getEdgesArray(),
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           geometry.graph()->n_edges());
         if(id != -1)
         {
             _renderer->pushTextureID(id);
@@ -364,6 +421,11 @@ void ComponentRenderer<EdgeRenderComponent>::renderComponent(atcg::RendererSyste
         {
             _renderer->pushTextureID(pre_id);
         }
+        if(lut_id != -1)
+        {
+            _renderer->pushTextureID(lut_id);
+        }
+        renderer.default_material->releaseTextureIDs(_renderer);
     }
 }
 
@@ -418,14 +480,32 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
         auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setFloat("edge_radius", renderer.radius);
-        _renderer->draw(geometry.graph(),
-                        camera,
-                        transform.getModel(),
-                        glm::vec3(1),
-                        shader,
-                        atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER,
-                        renderer.material(),
-                        entity.entity_handle());
+        shader->setInt("entityID", entity.entity_handle());
+        shader->setVec3("flat_color", glm::vec3(1));
+        renderer.material()->uploadMaterial(_renderer, shader);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
+
+        auto points  = geometry.graph()->getVerticesBuffer();
+        auto indices = geometry.graph()->getEdgesBuffer();
+
+        GraphicsCommand::bindStorageBuffer(0, points);
+
+        auto cylinder_mesh = AssetManager::getCylinderMesh();
+        auto vao_cylinder  = cylinder_mesh->getVerticesArray();
+
+        vao_cylinder->pushInstanceBuffer(indices);
+
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+
+        _renderer->drawVAO(vao_cylinder,
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           cylinder_mesh->n_vertices(),
+                           geometry.graph()->n_edges());
+        vao_cylinder->popVertexBuffer();
         if(id != -1)
         {
             _renderer->pushTextureID(id);
@@ -438,6 +518,11 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
         {
             _renderer->pushTextureID(pre_id);
         }
+        if(lut_id != -1)
+        {
+            _renderer->pushTextureID(lut_id);
+        }
+        renderer.material()->releaseTextureIDs(_renderer);
     }
 }
 
@@ -501,14 +586,19 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
         auto [ir_id, pre_id] = detail::setSkyLight(_renderer, shader, skybox);
         shader->setInt("use_ibl", has_skybox);
         shader->setInt("receive_shadow", (int)renderer.receive_shadow);
-        _renderer->draw(geometry.graph(),
-                        camera,
-                        transform.getModel(),
-                        glm::vec3(1),
-                        shader,
-                        atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED,
-                        renderer.material(),
-                        entity.entity_handle());
+        shader->setInt("entityID", entity.entity_handle());
+        shader->setVec3("flat_color", glm::vec3(1));
+        renderer.material()->uploadMaterial(_renderer, shader);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
+
+        auto instance_vbo    = vao->peekVertexBuffer();
+        uint32_t n_instances = instance_vbo->size() / instance_vbo->getLayout().getStride();
+
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+
+        _renderer->drawVAO(vao, camera, transform.getModel(), pipeline, geometry.graph()->n_vertices(), n_instances);
         if(id != -1)
         {
             _renderer->pushTextureID(id);
@@ -521,6 +611,11 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
         {
             _renderer->pushTextureID(pre_id);
         }
+        if(lut_id != -1)
+        {
+            _renderer->pushTextureID(lut_id);
+        }
+        renderer.material()->releaseTextureIDs(_renderer);
 
         for(int i = 0; i < renderer.instance_vbos.size(); ++i)
         {
@@ -550,19 +645,104 @@ void ComponentRenderer<MeshLightComponent>::renderComponent(atcg::RendererSystem
     // if(renderer.visible)
     {
         auto emissive_id = _renderer->popTextureID();
-        renderer.getEmissiveTexture()->use(emissive_id);
+        GraphicsCommand::bindTexture(emissive_id, renderer.getEmissiveTexture());
         shader->setInt("texture_emissive", emissive_id);
         shader->setFloat("emissive_scaling", renderer.intensity);
-        _renderer->draw(geometry.graph(),
-                        camera,
-                        transform.getModel(),
-                        glm::vec3(1),
-                        shader,
-                        atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE,
-                        {},
-                        entity.entity_handle());
+        shader->setInt("entityID", entity.entity_handle());
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+        _renderer->drawVAO(geometry.graph()->getVerticesArray(),
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           geometry.graph()->n_vertices());
 
         _renderer->pushTextureID(emissive_id);
     }
+}
+
+void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _renderer,
+                                                         Entity entity,
+                                                         const atcg::ref_ptr<Camera>& camera,
+                                                         atcg::Dictionary& auxiliary) const
+{
+    bool draw_cameras = auxiliary.getValueOr<bool>("draw_cameras", true);
+    if(!draw_cameras)
+    {
+        return;
+    }
+
+    auto camera_frustum       = AssetManager::getCameraFrustumMesh();
+    auto quad                 = AssetManager::getQuadMesh();
+    auto shader               = _renderer->getShaderManager()->getShader("edge");
+    GraphicsPipeline pipeline = GraphicsPipeline()
+                                    .setShader(shader)
+                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_POINTS)
+                                    .setRasterizerState(RasterizerState().enableCulling(false).setLineSize(2.0f));
+
+    uint32_t entity_id = entity.entity_handle();
+    shader->setInt("entityID", entity_id);
+    atcg::CameraComponent& comp = entity.getComponent<CameraComponent>();
+    shader->setVec3("flat_color", comp.color);
+    atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(comp.camera);
+    float aspect_ratio                   = cam->getAspectRatio();
+    glm::mat4 scale = glm::scale(glm::vec3(aspect_ratio, 1.0f, -0.5f / glm::tan(glm::radians(cam->getFOV()) / 2.0f)) *
+                                 comp.render_scale);
+    glm::mat4 model = glm::inverse(cam->getView()) * scale;
+
+    auto points = camera_frustum->getVerticesBuffer();
+    GraphicsCommand::bindStorageBuffer(0, points);
+
+    _renderer->drawVAO(camera_frustum->getEdgesArray(), camera, model, pipeline, camera_frustum->n_edges());
+
+
+    if(comp.image())
+    {
+        uint32_t id = _renderer->popTextureID();
+
+        auto shader = _renderer->getShaderManager()->getShader("image_display");
+
+        GraphicsPipeline pipeline = GraphicsPipeline()
+                                        .setShader(shader)
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                        .setRasterizerState(RasterizerState().enableCulling(false));
+
+        model = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
+        shader->setInt("screen_texture", id);
+        shader->setInt("entityID", entity_id);
+        GraphicsCommand::bindTexture(id, comp.image());
+        _renderer->drawVAO(quad->getVerticesArray(), camera, model, pipeline, quad->n_vertices());
+        _renderer->pushTextureID(id);
+    }
+    else if(comp.render_preview && comp.preview)
+    {
+        auto shader = _renderer->getShaderManager()->getShader("image_display");
+
+        GraphicsPipeline pipeline = GraphicsPipeline()
+                                        .setShader(shader)
+                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                        .setRasterizerState(RasterizerState().enableCulling(false));
+
+        uint32_t id = _renderer->popTextureID();
+        model       = model * glm::translate(glm::vec3(0, 0, 1)) * glm::scale(glm::vec3(0.5));
+        shader->setInt("screen_texture", id);
+        shader->setInt("entityID", entity_id);
+
+        GraphicsCommand::bindTexture(id, comp.preview->getColorAttachement(0));
+        _renderer->drawVAO(quad->getVerticesArray(), camera, model, pipeline, quad->n_vertices());
+        _renderer->pushTextureID(id);
+    }
+}
+
+void ComponentRenderer<PointLightComponent>::renderComponent(atcg::RendererSystem* _renderer,
+                                                             Entity entity,
+                                                             const atcg::ref_ptr<Camera>& camera,
+                                                             atcg::Dictionary& auxiliary) const
+{
+    auto& transform   = entity.getComponent<atcg::TransformComponent>();
+    auto& point_light = entity.getComponent<atcg::PointLightComponent>();
+
+    const auto& shader = _renderer->getShaderManager()->getShader("circle");
+    shader->setInt("entityID", entity.entity_handle());
+    _renderer->drawCircle(transform.getPosition(), 0.1f, 1.0f, point_light.color, camera);
 }
 }    // namespace atcg

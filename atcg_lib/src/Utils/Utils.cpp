@@ -1,10 +1,14 @@
-#include <Math/Utils.h>
+#include <Utils/Utils.h>
+
+#include <Asset/Project.h>
 
 #include <fstream>
 
 namespace atcg
 {
 
+namespace Utils
+{
 void normalize(const atcg::ref_ptr<Graph>& graph)
 {
     auto vertices = graph->getPositions(atcg::GPU);
@@ -155,13 +159,77 @@ uint64_t ntoh<uint64_t>(uint64_t network)
     return network;
 }
 
-namespace IO
-{
 void dumpBinary(const std::string& path, const torch::Tensor& data)
 {
     auto data_ = data.to(atcg::CPU);
     std::ofstream out(path, std::ios::out | std::ios::binary);
     out.write((const char*)data_.data_ptr(), data_.numel() * data_.element_size());
 }
-}    // namespace IO
+
+void screenshot(const atcg::ref_ptr<Scene>& scene,
+                const atcg::ref_ptr<Camera>& camera,
+                const uint32_t width,
+                const std::string& path)
+{
+    auto data = screenshot(scene, camera, width);
+
+    Image img(data);
+
+    img.store(path);
+}
+
+void screenshot(const atcg::ref_ptr<Scene>& scene,
+                const atcg::ref_ptr<Camera>& camera,
+                const uint32_t width,
+                const uint32_t height,
+                const std::string& path)
+{
+    atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
+    screenshot_buffer->attachColor();
+    screenshot_buffer->attachDepth();
+    screenshot_buffer->complete();
+
+    atcg::Dictionary context;
+    context.setValue("camera", camera);
+    context.setValue("target", screenshot_buffer);
+    scene->draw(context);
+
+    auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
+
+    Image img(data);
+
+    img.store(path);
+}
+
+torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width)
+{
+    float height                                 = (float)width / camera->getIntrinsics().aspectRatio();
+    atcg::ref_ptr<Framebuffer> screenshot_buffer = atcg::make_ref<Framebuffer>((int)width, (int)height);
+    screenshot_buffer->attachColor();
+    screenshot_buffer->attachDepth();
+    screenshot_buffer->complete();
+
+    atcg::Dictionary context;
+    context.setValue("camera", camera);
+    context.setValue("target", screenshot_buffer);
+    scene->draw(context);
+
+    auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
+
+    return data;
+}
+
+Entity pickEntity(const glm::vec2& mouse_pos)
+{
+    auto fbo        = atcg::Renderer::getFramebuffer();
+    auto pixel_data = fbo->getColorAttachement(1)->getData(
+        atcg::CPU);    // TODO: Overkill to copy the entire buffer just for one pixel
+
+    int pixelData = pixel_data.index({(int)mouse_pos.y, (int)mouse_pos.x, 0}).item<int>();
+
+    return pixelData == -1 ? atcg::Entity()
+                           : atcg::Entity((entt::entity)pixelData, atcg::Project::getActive()->getActiveScene().get());
+}
+
+}    // namespace Utils
 }    // namespace atcg

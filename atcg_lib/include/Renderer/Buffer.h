@@ -11,6 +11,9 @@
 
 namespace atcg
 {
+class VertexArray;
+class GraphicsAPI;
+
 /**
  * @brief This enum holds the possible vertex attributes that can be passed to a shader via a vertex buffer
  *
@@ -199,22 +202,6 @@ public:
     virtual ~VertexBuffer();
 
     /**
-     * @brief Use this vbo
-     *
-     * @note Invalidades the device pointer obtained by getDevicePointer()
-     */
-    void use() const;
-
-    /**
-     * @brief Bind the buffer as Shader Storage Buffer
-     *
-     * @note Invalidades the device pointer obtained by getDevicePointer()
-     *
-     * @param slot The slot to bind to
-     */
-    void bindStorage(uint32_t slot = 0) const;
-
-    /**
      * @brief Set the Data of the buffer. The data gets copied if size < capacity(). Otherwise a buffer with capacity()
      * = size will be allocated.
      *
@@ -380,6 +367,30 @@ protected:
     atcg::scope_ptr<Impl> impl;
     uint32_t _ID;
     BufferLayout _layout;
+
+    /**
+     * @brief Use this vbo
+     *
+     * @note Invalidades the device pointer obtained by getDevicePointer()
+     */
+    void bind() const;
+
+    /**
+     * @brief Unbindes the vertex buffer
+     */
+    void unbind() const;
+
+    /**
+     * @brief Bind the buffer as Shader Storage Buffer
+     *
+     * @note Invalidades the device pointer obtained by getDevicePointer()
+     *
+     * @param slot The slot to bind to
+     */
+    void bindStorage(uint32_t slot = 0) const;
+
+    friend class VertexArray;
+    friend class GraphicsAPI;
 };
 
 /**
@@ -415,11 +426,6 @@ public:
     ~IndexBuffer();
 
     /**
-     * @brief Use this ibo
-     */
-    void use() const;
-
-    /**
      * @brief Set the Data of the buffer. The data gets copied if size < capacity(). Otherwise a buffer with capacity()
      * = size will be allocated.
      *
@@ -435,52 +441,17 @@ public:
      */
     ATCG_INLINE size_t getCount() const { return size() / sizeof(uint32_t); }
 
-private:
-};
-
-/**
- * @brief A class to model a pixel unpack buffer
- */
-class PixelUnpackBuffer : public VertexBuffer
-{
-public:
+protected:
     /**
-     * @brief Construct a new Pixel Unpack Buffer object
+     * @brief Use this ibo
      */
-    PixelUnpackBuffer();
+    void bind() const;
 
     /**
-     * @brief Construct a new empty Pixel Unpack Buffer object
-     *
-     * @param size The size of bytes allocated on the GPU
-     */
-    PixelUnpackBuffer(size_t size);
-
-    /**
-     * @brief Construct a new Pixel Unpack Buffer object
-     *
-     * @param data The data to fill the buffer with
-     * @param size The size in bytes
-     */
-    PixelUnpackBuffer(const void* data, size_t size);
-
-    /**
-     * @brief Destroy the Pixel Unpack Buffer object
-     */
-    ~PixelUnpackBuffer();
-
-    /**
-     * @brief Use this vbo
-     *
-     * @note Invalidades the device pointer obtained by getDevicePointer()
-     */
-    void use() const;
-
-    /**
-     * @brief Unbindes the pbo
+     * @brief Unbindes the index buffer
      */
     void unbind() const;
 
-protected:
+    friend class VertexArray;
 };
 }    // namespace atcg

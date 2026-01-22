@@ -15,11 +15,6 @@ class Context
 {
 public:
     /**
-     *   @brief Initiliaze the context
-     */
-    void initGraphicsAPI();
-
-    /**
      *   @brief Swap buffers in the swap chain
      */
     void swapBuffers();
@@ -45,9 +40,9 @@ public:
     /**
      * @brief Get the current fbo of this context
      *
-     * @return The ID of the fbo
+     * @return The fbo
      */
-    ATCG_INLINE uint32_t getCurrentFBO() const { return _fbo; }
+    ATCG_INLINE atcg::ref_ptr<Framebuffer> getCurrentFBO() const { return _fbo; }
 
     /**
      * @brief The native context handle
@@ -100,14 +95,14 @@ private:
      *
      * @param fbo The ID of the fbo
      */
-    ATCG_INLINE void setCurrentFBO(const uint32_t fbo) { _fbo = fbo; }
+    ATCG_INLINE void setCurrentFBO(const atcg::ref_ptr<Framebuffer>& fbo) { _fbo = fbo; }
 
     Context(const Context&)            = delete;
     Context& operator=(const Context&) = delete;
 
 private:
-    void* _context_handle = nullptr;
-    uint32_t _fbo         = 0;
+    void* _context_handle           = nullptr;
+    atcg::ref_ptr<Framebuffer> _fbo = nullptr;
 
     friend class ContextManagerSystem;
     friend class Framebuffer;

@@ -312,7 +312,7 @@ void Shader::setMVP(const glm::mat4& M, const glm::mat4& V, const glm::mat4& P)
     setMat4("P", P);
 }
 
-void Shader::use() const
+void Shader::bind() const
 {
     glUseProgram(_ID);
     for(auto it = _uniforms.begin(); it != _uniforms.end(); ++it)
@@ -365,7 +365,7 @@ void Shader::use() const
 
 void Shader::dispatch(const glm::ivec3& work_groups) const
 {
-    use();
+    bind();
     glDispatchCompute(work_groups.x, work_groups.y, work_groups.z);
     glMemoryBarrier(GL_ALL_BARRIER_BITS);
 }

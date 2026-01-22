@@ -2,7 +2,7 @@
 
 #include <Core/Assert.h>
 #include <DataStructure/TorchUtils.h>
-#include <Math/Utils.h>
+#include <Utils/Utils.h>
 #include <Network/NetworkUtils.h>
 
 namespace atcg
@@ -71,16 +71,18 @@ std::vector<uint8_t> TCPClient::sendAndWait(const std::vector<uint8_t>& data)
     uint32_t message_size = 0;
     do
     {
-        impl->socket.receive((char*)(&message_size), sizeof(uint32_t) - total_received, received);
+        sf::Socket::Status status =
+            impl->socket.receive((char*)(&message_size), sizeof(uint32_t) - total_received, received);
         total_received += received;
     } while(total_received < sizeof(uint32_t));
 
-    uint32_t expected_size = atcg::hton<uint32_t>(message_size);
+    uint32_t expected_size = atcg::Utils::hton<uint32_t>(message_size);
     std::vector<uint8_t> rec_data(expected_size);
     total_received = 0;
     while(total_received < expected_size)
     {
-        impl->socket.receive((char*)(rec_data.data() + total_received), expected_size - total_received, received);
+        sf::Socket::Status status =
+            impl->socket.receive((char*)(rec_data.data() + total_received), expected_size - total_received, received);
         total_received += received;
     }
 

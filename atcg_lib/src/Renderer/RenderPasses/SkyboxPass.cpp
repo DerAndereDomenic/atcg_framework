@@ -1,5 +1,6 @@
 #include <Renderer/RenderPasses/SkyboxPass.h>
 
+#include <Asset/AssetManagerSystem.h>
 #include <Renderer/Renderer.h>
 
 namespace atcg
@@ -42,9 +43,10 @@ void SkyboxPass::initRenderPass()
             auto target             = prepareFramebuffer(context, inputs, data, outputs);
             *output_framebuffer     = target;
             *output_skybox          = _skybox;
+            GraphicsCommand::beginRenderPass(target);
             if(_render_target.clear)
             {
-                renderer->clear();
+                GraphicsCommand::clear();
 
                 // We assume that this is an entity buffer, better solution?
                 if(target->numColorAttachements() > 1 &&
@@ -64,8 +66,28 @@ void SkyboxPass::initRenderPass()
 
             if(has_skybox && _skybox)
             {
-                renderer->drawSkybox(_skybox->getSkyboxCubeMap(), context.getValue<atcg::ref_ptr<Camera>>("camera"));
+                auto shader = renderer->getShaderManager()->getShader("skybox");
+                auto cube   = AssetManager::getCubeMesh();
+                GraphicsPipeline pipeline =
+                    GraphicsPipeline()
+                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                        .setRasterizerState(RasterizerState().enableCulling(false).setDepthState(
+                            DepthState().setDepthFunction(DepthFunction::ATCG_LEQUAL).enableDepthWrite(false)))
+                        .setShader(shader);
+
+                uint32_t skybox_id = renderer->popTextureID();
+                shader->setInt("skybox", skybox_id);
+                GraphicsCommand::bindTexture(skybox_id, _skybox->getSkyboxCubeMap());
+
+                renderer->drawVAO(cube->getVerticesArray(),
+                                  context.getValue<atcg::ref_ptr<Camera>>("camera"),
+                                  glm::mat4(1),
+                                  pipeline,
+                                  cube->n_vertices());
+
+                renderer->pushTextureID(skybox_id);
             }
+            GraphicsCommand::endRenderPass();
         });
 }
 }    // namespace atcg

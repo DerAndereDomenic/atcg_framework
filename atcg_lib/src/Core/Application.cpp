@@ -51,9 +51,16 @@ void Application::init(const WindowProps& props)
     _window = atcg::make_scope<Window>(props);
     _window->setEventCallback(ATCG_BIND_EVENT_FN(Application::onEvent));
 
+    _graphics_api = atcg::make_ref<GraphicsAPI>();
+    _graphics_api->init();
+    SystemRegistry::instance()->registerSystem(_graphics_api.get());
+
     _renderer = atcg::make_ref<RendererSystem>();
     _renderer->init(_window->getWidth(), _window->getHeight(), _window->getContext(), _shader_manager);
     SystemRegistry::instance()->registerSystem(_renderer.get());
+
+    // Needs to be called after the renderer is initialized
+    _asset_manager->loadStandardAssets();
 
     _vr_system = atcg::make_ref<VRSystem>();
     _vr_system->init(ATCG_BIND_EVENT_FN(Application::onEvent));
@@ -68,8 +75,6 @@ void Application::init(const WindowProps& props)
     _script_engine = atcg::make_ref<PythonScriptEngine>();
     _script_engine->init();
     SystemRegistry::instance()->registerSystem(_script_engine.get());
-
-    Renderer::setClearColor(glm::vec4(76.0f, 76.0f, 128.0f, 255.0f) / 255.0f);
 
     // Create an active project
     atcg::Project::create("./DefaultProject");
@@ -161,7 +166,6 @@ void Application::run()
 
         VR::doTracking();
 
-        Renderer::useScreenBuffer();
         for(Layer* layer: _layer_stack)
         {
             layer->onUpdate(delta_time);

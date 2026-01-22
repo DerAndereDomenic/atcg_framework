@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Core/Platform.h>
-#include <Math/Utils.h>
+#include <Utils/Utils.h>
 
 namespace atcg
 {
@@ -36,7 +36,7 @@ ATCG_INLINE uint8_t readByte(uint8_t* data, uint32_t& offset)
 template<typename T>
 ATCG_INLINE T readInt(uint8_t* data, uint32_t& offset)
 {
-    T result = atcg::ntoh(*(T*)(data + offset));
+    T result = atcg::Utils::ntoh(*(T*)(data + offset));
     offset += sizeof(T);
     return result;
 }
@@ -101,7 +101,7 @@ ATCG_INLINE void writeByte(uint8_t* data, uint32_t& offset, const uint8_t toWrit
 template<typename T>
 ATCG_INLINE void writeInt(uint8_t* data, uint32_t& offset, T toWrite)
 {
-    *(T*)(data + offset) = atcg::hton(toWrite);
+    *(T*)(data + offset) = atcg::Utils::hton(toWrite);
     offset += sizeof(T);
 }
 
