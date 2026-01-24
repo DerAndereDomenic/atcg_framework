@@ -37,3 +37,15 @@ extern "C" __device__ void __direct_callable__add_sample_hdrfilm(const glm::ivec
 
     accumulation_buffer[pixel_index] = radiance;
 }
+
+extern "C" __device__ uint32_t __direct_callable__get_width_hdrfilm()
+{
+    const atcg::HDRFilmData* hdr_film_data = *reinterpret_cast<const atcg::HDRFilmData**>(optixGetSbtDataPointer());
+    return hdr_film_data->width;
+}
+
+extern "C" __device__ uint32_t __direct_callable__get_height_hdrfilm()
+{
+    const atcg::HDRFilmData* hdr_film_data = *reinterpret_cast<const atcg::HDRFilmData**>(optixGetSbtDataPointer());
+    return hdr_film_data->height;
+}

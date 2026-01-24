@@ -120,11 +120,20 @@ void PipelineInitializer<HDRFilm>::apply(const atcg::ref_ptr<HDRFilm>& component
     const std::string ptx_film_filename = "./bin/HDRFILM_ptx.ptx";
     auto add_sample_prog_group =
         pipeline->addCallableShader({ptx_film_filename, "__direct_callable__add_sample_hdrfilm"});
+    auto get_width_prog_group =
+        pipeline->addCallableShader({ptx_film_filename, "__direct_callable__get_width_hdrfilm"});
+    auto get_height_prog_group =
+        pipeline->addCallableShader({ptx_film_filename, "__direct_callable__get_height_hdrfilm"});
     uint32_t add_sampled_idx = sbt->addCallableEntry(add_sample_prog_group, component->getDataBuffer().get());
+    uint32_t get_width_idx   = sbt->addCallableEntry(get_width_prog_group, component->getDataBuffer().get());
+    uint32_t get_height_idx  = sbt->addCallableEntry(get_height_prog_group, component->getDataBuffer().get());
 
     FilmVPtrTable vptr_table;
     vptr_table.addSampleCallIndex = add_sampled_idx;
+    vptr_table.getWidthCallIndex  = get_width_idx;
+    vptr_table.getHeightCallIndex = get_height_idx;
 
     component->getVPtrTableHolder().upload(&vptr_table);
+    component->markInitialized();
 }
 }    // namespace atcg
