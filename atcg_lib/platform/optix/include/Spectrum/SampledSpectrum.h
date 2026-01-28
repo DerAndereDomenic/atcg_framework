@@ -85,11 +85,31 @@ struct SampledSpectrumBase
 {
     using Base = glm::vec<num_wavelength_samples, float>;
 
+    ATCG_HOST_DEVICE static SampledSpectrumBase<num_wavelength_samples>
+    fromRGB(const glm::vec3& rgb, const SampledWavelengthsBase<num_wavelength_samples>& sampled_wavelengths)
+    {
+        return SampledSpectrumBase<num_wavelength_samples>(rgb);
+        // SampledSpectrumBase<num_wavelength_samples> result;
+        // for(int i = 0; i < num_wavelength_samples; ++i)
+        // {
+        //     float r = atcg::Color::sRGB_to_lRGB(rgb.r);
+        //     float g = atcg::Color::sRGB_to_lRGB(rgb.g);
+        //     float b = atcg::Color::sRGB_to_lRGB(rgb.b);
+
+        //     float sr = atcg::Color::spectrum_r(sampled_wavelengths[i]);
+        //     float sg = atcg::Color::spectrum_g(sampled_wavelengths[i]);
+        //     float sb = atcg::Color::spectrum_b(sampled_wavelengths[i]);
+
+        //     result._data[i] = r * sr + g * sg + b * sb;
+        // }
+        // return result;
+    }
+
     ATCG_HOST_DEVICE SampledSpectrumBase() : _data(0.0f) {}
 
-    ATCG_HOST_DEVICE SampledSpectrumBase(const Base& other) : _data(other) {}
+    ATCG_HOST_DEVICE explicit SampledSpectrumBase(const Base& other) : _data(other) {}
 
-    ATCG_HOST_DEVICE SampledSpectrumBase(const float& value) : _data(value) {}
+    ATCG_HOST_DEVICE explicit SampledSpectrumBase(const float& value) : _data(value) {}
 
     ATCG_HOST_DEVICE operator Base&() { return _data; }
 
@@ -218,6 +238,16 @@ struct SampledSpectrumBase
         return sum / static_cast<float>(num_wavelength_samples);
     }
 
+    ATCG_HOST_DEVICE ATCG_INLINE float sum() const
+    {
+        float sum = 0.0f;
+        for(int i = 0; i < num_wavelength_samples; ++i)
+        {
+            sum += _data[i];
+        }
+        return sum;
+    }
+
     ATCG_HOST_DEVICE ATCG_INLINE float maxComponent() const
     {
         float max_val = _data[0];
@@ -253,6 +283,17 @@ struct SampledSpectrumBase
             xyz.z += wavelengths.pdf(i) < 1e-4f ? 0.0f : (*this)[i] * z_bar / wavelengths.pdf(i);
         }
         return xyz / atcg::Constants::Y_integral<float>();
+    }
+
+    ATCG_HOST_DEVICE ATCG_INLINE static SampledSpectrumBase<num_wavelength_samples>
+    exp(const SampledSpectrumBase<num_wavelength_samples>& s)
+    {
+        SampledSpectrumBase<num_wavelength_samples> ret;
+        for(int i = 0; i < num_wavelength_samples; ++i)
+        {
+            ret[i] = glm::exp(s[i]);
+        }
+        return ret;
     }
 
 private:

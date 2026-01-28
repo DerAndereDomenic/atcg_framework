@@ -66,7 +66,7 @@ extern "C" __global__ void __raygen__rg()
                 bool mis_valid             = last_si.valid;
                 float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
                 float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                radiance += mis_weight * camera_ray.importance * si.emitter->evalLight(si);
+                radiance += mis_weight * camera_ray.importance * si.emitter->evalLight(si, wavelengths);
             }
 
             // PBR Sampling
@@ -85,7 +85,7 @@ extern "C" __global__ void __raygen__rg()
 
                     if(si.emitter == emitter) break;
 
-                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, wavelengths, rng);
 
                     if(emitter_sampling.sampling_pdf == 0) break;
 
@@ -103,7 +103,8 @@ extern "C" __global__ void __raygen__rg()
                         break;
                     }
 
-                    atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+                    atcg::BSDFEvalResult bsdf_result =
+                        si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
                     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
                                            ? 0.0f
@@ -115,7 +116,7 @@ extern "C" __global__ void __raygen__rg()
                                 glm::abs(glm::dot(si.normal, emitter_sampling.direction_to_light));
                 } while(false);
 
-                auto result = si.bsdf->sampleBSDF(si, rng);
+                auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
@@ -144,7 +145,7 @@ extern "C" __global__ void __raygen__rg()
                     mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
                               : 0.0f;
                 float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                radiance += mis_weight * camera_ray.importance * params.environment_emitter->evalLight(si);
+                radiance += mis_weight * camera_ray.importance * params.environment_emitter->evalLight(si, wavelengths);
             }
         }
     }

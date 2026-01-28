@@ -113,7 +113,9 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalEnvironmentEmitterSamplingPdf(const
 }    // namespace detail
 
 extern "C" __device__ atcg::EmitterSamplingResult
-__direct_callable__sample_environmentemitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
+__direct_callable__sample_environmentemitter(const atcg::SurfaceInteraction& si,
+                                             const atcg::SampledWavelengths& wavelengths,
+                                             atcg::PCG32& rng)
 {
     const atcg::EnvironmentEmitterData* sbt_data =
         *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
@@ -124,20 +126,22 @@ __direct_callable__sample_environmentemitter(const atcg::SurfaceInteraction& si,
 
     result.distance_to_light           = std::numeric_limits<float>::infinity();
     result.sampling_pdf                = result.sampling_pdf;
-    result.radiance_weight_at_receiver = color / result.sampling_pdf;
+    result.radiance_weight_at_receiver = atcg::SampledSpectrum::fromRGB(color, wavelengths) / result.sampling_pdf;
 
     return result;
 }
 
 extern "C" __device__ atcg::SampledSpectrum
-__direct_callable__eval_environmentemitter(const atcg::SurfaceInteraction& si)
+__direct_callable__eval_environmentemitter(const atcg::SurfaceInteraction& si,
+                                           const atcg::SampledWavelengths& wavelengths)
 {
     const atcg::EnvironmentEmitterData* sbt_data =
         *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
 
     glm::vec2 uv = detail::evalEnvironmentEmitter(si);
 
-    return sbt_data->environment_texture.read(glm::vec2(uv.x, 1.0f - uv.y));
+    return atcg::SampledSpectrum::fromRGB(sbt_data->environment_texture.read(glm::vec2(uv.x, 1.0f - uv.y)),
+                                          wavelengths);
 }
 
 extern "C" __device__ float __direct_callable__evalpdf_environmentemitter(const atcg::SurfaceInteraction& last_si,

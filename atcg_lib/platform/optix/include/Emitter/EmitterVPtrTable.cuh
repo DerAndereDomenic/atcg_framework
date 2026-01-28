@@ -40,14 +40,23 @@ struct EmitterVPtrTable
 
 #ifdef __CUDACC__
 
-    __device__ SampledSpectrum evalLight(const SurfaceInteraction& si) const
+    __device__ SampledSpectrum evalLight(const SurfaceInteraction& si,
+                                         const atcg::SampledWavelengths& wavelengths) const
     {
-        return optixDirectCall<SampledSpectrum, const SurfaceInteraction&>(evalCallIndex, si);
+        return optixDirectCall<SampledSpectrum, const SurfaceInteraction&, const atcg::SampledWavelengths&>(
+            evalCallIndex,
+            si,
+            wavelengths);
     }
 
-    __device__ EmitterSamplingResult sampleLight(const SurfaceInteraction& si, PCG32& rng) const
+    __device__ EmitterSamplingResult sampleLight(const SurfaceInteraction& si,
+                                                 const atcg::SampledWavelengths& wavelengths,
+                                                 PCG32& rng) const
     {
-        return optixDirectCall<EmitterSamplingResult, const SurfaceInteraction&, PCG32&>(sampleCallIndex, si, rng);
+        return optixDirectCall<EmitterSamplingResult,
+                               const SurfaceInteraction&,
+                               const atcg::SampledWavelengths&,
+                               PCG32&>(sampleCallIndex, si, wavelengths, rng);
     }
 
     __device__ float evalLightSamplingPdf(const SurfaceInteraction& last_si, const SurfaceInteraction& si) const

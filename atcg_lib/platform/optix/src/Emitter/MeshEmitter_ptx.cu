@@ -146,7 +146,9 @@ evalMeshEmitterPDF(const atcg::SurfaceInteraction& last_si, const float total_ar
 }    // namespace detail
 
 extern "C" __device__ atcg::EmitterSamplingResult
-__direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
+__direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si,
+                                      const atcg::SampledWavelengths& wavelengths,
+                                      atcg::PCG32& rng)
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
     atcg::EmitterSamplingResult result    = detail::sampleMeshEmitter(si,
@@ -162,18 +164,20 @@ __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::
 
     glm::vec3 emissive_color = sbt_data->emissive_texture.read(si.uv);
 
-    result.radiance_weight_at_receiver = sbt_data->emitter_scaling * emissive_color / result.sampling_pdf;
+    result.radiance_weight_at_receiver =
+        atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling * emissive_color, wavelengths) / result.sampling_pdf;
 
     return result;
 }
 
-extern "C" __device__ atcg::SampledSpectrum __direct_callable__eval_meshemitter(const atcg::SurfaceInteraction& si)
+extern "C" __device__ atcg::SampledSpectrum
+__direct_callable__eval_meshemitter(const atcg::SurfaceInteraction& si, const atcg::SampledWavelengths& wavelengths)
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
 
     glm::vec3 emissive_color = sbt_data->emissive_texture.read(si.uv);
 
-    return detail::evalMeshEmitter(emissive_color, sbt_data->emitter_scaling);
+    return atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling * emissive_color, wavelengths);
 }
 
 extern "C" __device__ float __direct_callable__evalpdf_meshemitter(const atcg::SurfaceInteraction& last_si,
