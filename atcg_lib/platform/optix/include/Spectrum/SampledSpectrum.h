@@ -81,22 +81,129 @@ using SampledWavelengths4 = SampledWavelengthsBase<4>;
 using SampledWavelengths = SampledWavelengths3;
 
 template<int num_wavelength_samples>
-struct SampledSpectrumBase : public glm::vec<num_wavelength_samples, float>
+struct SampledSpectrumBase
 {
-    ATCG_HOST_DEVICE SampledSpectrumBase() : glm::vec<num_wavelength_samples, float>(0.0f) {}
+    using Base = glm::vec<num_wavelength_samples, float>;
 
-    ATCG_HOST_DEVICE SampledSpectrumBase(const glm::vec<num_wavelength_samples, float>& other)
-        : glm::vec<num_wavelength_samples, float>(other)
+    ATCG_HOST_DEVICE SampledSpectrumBase() : _data(0.0f) {}
+
+    ATCG_HOST_DEVICE SampledSpectrumBase(const Base& other) : _data(other) {}
+
+    ATCG_HOST_DEVICE SampledSpectrumBase(const float& value) : _data(value) {}
+
+    ATCG_HOST_DEVICE operator Base&() { return _data; }
+
+    ATCG_HOST_DEVICE operator const Base&() const { return _data; }
+
+    ATCG_HOST_DEVICE
+    float& operator[](int i) { return _data[i]; }
+
+    ATCG_HOST_DEVICE
+    const float& operator[](int i) const { return _data[i]; }
+
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples>
+    operator+=(const SampledSpectrumBase<num_wavelength_samples>& s)
     {
+        _data += s._data;
+        return *this;
     }
 
-    ATCG_HOST_DEVICE SampledSpectrumBase(const float& value) : glm::vec<num_wavelength_samples, float>(value) {}
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples>
+    operator+(const SampledSpectrumBase<num_wavelength_samples>& s) const
+    {
+        SampledSpectrumBase<num_wavelength_samples> ret = *this;
+        return ret += s;
+    }
+
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples>
+    operator-=(const SampledSpectrumBase<num_wavelength_samples>& s)
+    {
+        _data -= s._data;
+        return *this;
+    }
+
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples>
+    operator-(const SampledSpectrumBase<num_wavelength_samples>& s) const
+    {
+        SampledSpectrumBase<num_wavelength_samples> ret = *this;
+        return ret -= s;
+    }
+
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples>
+    operator*=(const SampledSpectrumBase<num_wavelength_samples>& s)
+    {
+        _data *= s._data;
+        return *this;
+    }
+
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples>
+    operator*(const SampledSpectrumBase<num_wavelength_samples>& s) const
+    {
+        SampledSpectrumBase<num_wavelength_samples> ret = *this;
+        return ret *= s;
+    }
+
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples>
+    operator/=(const SampledSpectrumBase<num_wavelength_samples>& s)
+    {
+        _data /= s._data;
+        return *this;
+    }
+
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples>
+    operator/(const SampledSpectrumBase<num_wavelength_samples>& s) const
+    {
+        SampledSpectrumBase<num_wavelength_samples> ret = *this;
+        return ret /= s;
+    }
+
+    template<typename T>
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples> operator*=(const T& scalar)
+    {
+        _data *= scalar;
+        return *this;
+    }
+
+    template<typename T>
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples> operator*(const T& scalar) const
+    {
+        SampledSpectrumBase<num_wavelength_samples> ret = *this;
+        return ret *= scalar;
+    }
+
+    template<typename T>
+    ATCG_HOST_DEVICE friend SampledSpectrumBase<num_wavelength_samples>
+    operator*(const T& scalar, const SampledSpectrumBase<num_wavelength_samples>& spectrum)
+    {
+        return spectrum * scalar;
+    }
+
+    template<typename T>
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples> operator/=(const T& scalar)
+    {
+        _data /= scalar;
+        return *this;
+    }
+
+    template<typename T>
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples> operator/(const T& scalar) const
+    {
+        SampledSpectrumBase<num_wavelength_samples> ret = *this;
+        return ret /= scalar;
+    }
+
+    ATCG_HOST_DEVICE SampledSpectrumBase<num_wavelength_samples> operator-() const
+    {
+        SampledSpectrumBase<num_wavelength_samples> ret = *this;
+        ret._data                                       = -ret._data;
+        return ret;
+    }
 
     ATCG_HOST_DEVICE ATCG_INLINE bool hasNaNs() const
     {
         for(int i = 0; i < num_wavelength_samples; ++i)
         {
-            if(glm::isnan((*this)[i])) return true;
+            if(glm::isnan(_data[i])) return true;
         }
         return false;
     }
@@ -106,27 +213,27 @@ struct SampledSpectrumBase : public glm::vec<num_wavelength_samples, float>
         float sum = 0.0f;
         for(int i = 0; i < num_wavelength_samples; ++i)
         {
-            sum += (*this)[i];
+            sum += _data[i];
         }
         return sum / static_cast<float>(num_wavelength_samples);
     }
 
     ATCG_HOST_DEVICE ATCG_INLINE float maxComponent() const
     {
-        float max_val = (*this)[0];
+        float max_val = _data[0];
         for(int i = 1; i < num_wavelength_samples; ++i)
         {
-            max_val = glm::max(max_val, (*this)[i]);
+            max_val = glm::max(max_val, _data[i]);
         }
         return max_val;
     }
 
     ATCG_HOST_DEVICE ATCG_INLINE float minComponent() const
     {
-        float min_val = (*this)[0];
+        float min_val = _data[0];
         for(int i = 1; i < num_wavelength_samples; ++i)
         {
-            min_val = glm::min(min_val, (*this)[i]);
+            min_val = glm::min(min_val, _data[i]);
         }
         return min_val;
     }
@@ -147,6 +254,9 @@ struct SampledSpectrumBase : public glm::vec<num_wavelength_samples, float>
         }
         return xyz / atcg::Constants::Y_integral<float>();
     }
+
+private:
+    Base _data;
 };
 
 using SampledSpectrum1 = SampledSpectrumBase<1>;
