@@ -24,8 +24,7 @@ develop_kernel(const torch::PackedTensorAccessor32<float, 3, torch::RestrictPtrT
         glm::vec3 radiance =
             glm::vec3(accumulation_buffer[y][x][0], accumulation_buffer[y][x][1], accumulation_buffer[y][x][2]);
 
-        glm::vec3 tone_mapped = glm::vec3(1.0f) - glm::exp(-radiance);
-        glm::vec3 sRGB        = atcg::Color::lRGB_to_sRGB(tone_mapped);
+        glm::vec3 sRGB = atcg::Color::lRGB_to_sRGB(radiance);
 
         sRGB.x = glm::min(glm::max(sRGB.x, 0.0f), 1.0f);
         sRGB.y = glm::min(glm::max(sRGB.y, 0.0f), 1.0f);
