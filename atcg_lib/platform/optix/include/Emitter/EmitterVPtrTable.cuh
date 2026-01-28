@@ -4,6 +4,7 @@
 #include <Core/SurfaceInteraction.h>
 #include <Math/Random.h>
 #include <Emitter/EmitterFlags.h>
+#include <Spectrum/SampledSpectrum.h>
 
 #include <optix.h>
 
@@ -14,7 +15,7 @@ struct EmitterSamplingResult
     glm::vec3 direction_to_light;
     float distance_to_light;
     glm::vec3 normal_at_light;
-    glm::vec3 radiance_weight_at_receiver;
+    SampledSpectrum radiance_weight_at_receiver;
     float sampling_pdf;
     glm::vec3 uvs;
 };
@@ -24,8 +25,8 @@ struct PhotonSamplingResult
     glm::vec3 position;
     glm::vec3 direction;
     glm::vec3 normal;
-    glm::vec3 radiance_weight;    // Le / p in area measure
-    float pdf;                    // 1/Area
+    SampledSpectrum radiance_weight;    // Le / p in area measure
+    float pdf;                          // 1/Area
     glm::vec3 uvs;
 };
 
@@ -39,9 +40,9 @@ struct EmitterVPtrTable
 
 #ifdef __CUDACC__
 
-    __device__ glm::vec3 evalLight(const SurfaceInteraction& si) const
+    __device__ SampledSpectrum evalLight(const SurfaceInteraction& si) const
     {
-        return optixDirectCall<glm::vec3, const SurfaceInteraction&>(evalCallIndex, si);
+        return optixDirectCall<SampledSpectrum, const SurfaceInteraction&>(evalCallIndex, si);
     }
 
     __device__ EmitterSamplingResult sampleLight(const SurfaceInteraction& si, PCG32& rng) const

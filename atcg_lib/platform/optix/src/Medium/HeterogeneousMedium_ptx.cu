@@ -59,8 +59,8 @@ estimate_transmittance(const glm::vec3& origin, const glm::vec3& direction, floa
 struct DeltaTrackingWeights
 {
     float distance;
-    glm::vec3 transmittance_weight = glm::vec3(1);
-    glm::vec3 emission_weight      = glm::vec3(0);
+    atcg::SampledSpectrum transmittance_weight = atcg::SampledSpectrum(1);
+    atcg::SampledSpectrum emission_weight      = atcg::SampledSpectrum(0);
 };
 
 __device__ DeltaTrackingWeights sample_free_flight_distance_delta_tracking(const glm::vec3& origin,

@@ -2,14 +2,15 @@
 
 #include <Core/glm.h>
 #include <Medium/PhaseFunctionVPtrTable.cuh>
+#include <Spectrum/SampledSpectrum.h>
 
 namespace atcg
 {
 struct MediumSamplingResult
 {
     MediumInteraction interaction;
-    glm::vec3 transmittance_weight;
-    glm::vec3 radiance_weight;
+    SampledSpectrum transmittance_weight;
+    SampledSpectrum radiance_weight;
 };
 
 struct MediumVPtrTable

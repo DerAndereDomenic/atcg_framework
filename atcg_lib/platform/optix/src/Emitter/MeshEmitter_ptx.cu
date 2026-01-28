@@ -167,7 +167,7 @@ __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si, atcg::
     return result;
 }
 
-extern "C" __device__ glm::vec3 __direct_callable__eval_meshemitter(const atcg::SurfaceInteraction& si)
+extern "C" __device__ atcg::SampledSpectrum __direct_callable__eval_meshemitter(const atcg::SurfaceInteraction& si)
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
 

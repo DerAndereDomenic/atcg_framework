@@ -19,8 +19,8 @@ struct RayContext
     bool valid;
     glm::vec3 origin;
     glm::vec3 direction;
-    glm::vec3 throughput;
-    glm::vec3 radiance;
+    atcg::SampledSpectrum throughput;
+    atcg::SampledSpectrum radiance;
 
     const atcg::MediumVPtrTable* medium = nullptr;
 };
@@ -63,7 +63,7 @@ extern "C" __global__ void __raygen__rg()
         if(!ray.valid) break;
         ray.valid = false;
 
-        float rr_prob = glm::max(ray.throughput.x, glm::max(ray.throughput.y, ray.throughput.z));
+        float rr_prob = ray.throughput.maxComponent();
         if(rng.nextFloat() < rr_prob)
         {
             ray.throughput /= rr_prob;
@@ -227,17 +227,18 @@ extern "C" __global__ void __raygen__rg()
         ray.direction = next_dir;
     }
 
+    glm::vec3 radiance = ray.radiance;
     if(params.frame_counter > 0)
     {
         // Mix with previous subframes if present!
         const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
         const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
-        ray.radiance                         = glm::lerp(prev_output_radiance, ray.radiance, a);
+        radiance                             = glm::lerp(prev_output_radiance, radiance, a);
     }
 
-    params.accumulation_buffer[pixel_index] = ray.radiance;
+    params.accumulation_buffer[pixel_index] = radiance;
 
-    glm::vec3 tone_mapped = glm::pow(1.0f - glm::exp(-ray.radiance), glm::vec3(1.0f / 2.4f));
+    glm::vec3 tone_mapped = glm::pow(1.0f - glm::exp(-radiance), glm::vec3(1.0f / 2.4f));
 
     tone_mapped.x = glm::min(glm::max(tone_mapped.x, 0.0f), 1.0f);
     tone_mapped.y = glm::min(glm::max(tone_mapped.y, 0.0f), 1.0f);

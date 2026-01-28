@@ -71,8 +71,8 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
     // Effectively no medium event.
     result.interaction                    = atcg::MediumInteraction();
     result.interaction.incoming_direction = direction;
-    result.transmittance_weight           = glm::vec3(1);
-    result.radiance_weight                = glm::vec3(0);
+    result.transmittance_weight           = atcg::SampledSpectrum(1);
+    result.radiance_weight                = atcg::SampledSpectrum(0);
     result.interaction.valid              = true;
 
     // Sample the free-flight distance proportional to sigma_s_scalar.

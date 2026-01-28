@@ -129,7 +129,8 @@ __direct_callable__sample_environmentemitter(const atcg::SurfaceInteraction& si,
     return result;
 }
 
-extern "C" __device__ glm::vec3 __direct_callable__eval_environmentemitter(const atcg::SurfaceInteraction& si)
+extern "C" __device__ atcg::SampledSpectrum
+__direct_callable__eval_environmentemitter(const atcg::SurfaceInteraction& si)
 {
     const atcg::EnvironmentEmitterData* sbt_data =
         *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
