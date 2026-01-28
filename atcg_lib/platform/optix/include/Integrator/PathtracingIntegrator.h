@@ -6,6 +6,7 @@
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
+#include <Sensor/Sensor.h>
 
 namespace atcg
 {
@@ -60,7 +61,6 @@ public:
     virtual void reset() override;
 
 private:
-private:
     uint32_t _raygen_index;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
@@ -69,6 +69,6 @@ private:
     atcg::dref_ptr<PathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
 
-    torch::Tensor _accumulation_buffer;
+    atcg::ref_ptr<Sensor> _sensor;
 };
 }    // namespace atcg

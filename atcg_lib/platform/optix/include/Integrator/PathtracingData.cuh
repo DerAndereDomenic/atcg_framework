@@ -5,13 +5,12 @@
 #include <Core/TraceParameters.h>
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
+#include <Sensor/SensorVPtrTable.cuh>
 
 namespace atcg
 {
 struct PathtracingParams
 {
-    glm::u8vec4* output_image;
-    glm::vec3* accumulation_buffer;
     uint32_t image_width;
     uint32_t image_height;
 
@@ -22,13 +21,6 @@ struct PathtracingParams
     TraceParameters surface_trace_params;
     TraceParameters occlusion_trace_params;
 
-    // Cam data
-    float cam_eye[3];
-    float U[3];
-    float V[3];
-    float W[3];
-    float fov_y;
-
     uint32_t frame_counter;
 
     // Emitter
@@ -36,5 +28,7 @@ struct PathtracingParams
     const EmitterVPtrTable** emitters;
 
     const EmitterVPtrTable* environment_emitter;
+
+    const SensorVPtrTable* sensor;
 };
 }
