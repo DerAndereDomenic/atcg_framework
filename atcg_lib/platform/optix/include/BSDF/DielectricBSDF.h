@@ -3,7 +3,6 @@
 #include <BSDF/BSDF.h>
 #include <BSDF/DielectricBSDFData.cuh>
 #include <Renderer/Texture.h>
-#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -29,7 +28,14 @@ public:
      */
     virtual void onImGuiRender() override {}
 
-    ATCG_INLINE atcg::dref_ptr<DielectricBSDFData> getDataBuffer() const { return _bsdf_data_buffer; }
+    /**
+     * @brief Initialize the pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
     atcg::ref_ptr<Texture2D> _diffuse_texture;
@@ -38,6 +44,4 @@ private:
 
     atcg::dref_ptr<DielectricBSDFData> _bsdf_data_buffer;
 };
-
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(DielectricBSDF);
 }    // namespace atcg

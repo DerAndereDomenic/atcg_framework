@@ -34,6 +34,15 @@ public:
     virtual void onImGuiRender() override;
 
     /**
+     * @brief Initialize the pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
+    /**
      * @brief Resize the film
      *
      * @param width The new width
@@ -51,25 +60,10 @@ public:
      */
     virtual void clear() override;
 
-    /**
-     * @brief Get the accumulation buffer
-     *
-     * @return The accumulation buffer
-     */
-    ATCG_INLINE torch::Tensor getAccumulationBuffer() const { return _accumulation_buffer; }
-
-    /**
-     * @brief Get the data buffer
-     *
-     * @return The data buffer
-     */
-    ATCG_INLINE atcg::dref_ptr<HDRFilmData> getDataBuffer() const { return _hdr_film_data; }
-
 private:
     torch::Tensor _accumulation_buffer;
 
     atcg::dref_ptr<HDRFilmData> _hdr_film_data;
 };
 
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(HDRFilm);
 }    // namespace atcg

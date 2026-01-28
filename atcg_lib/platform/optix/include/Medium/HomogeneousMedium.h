@@ -5,7 +5,6 @@
 
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
-#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -33,12 +32,17 @@ public:
      */
     virtual void onImGuiRender() override {}
 
-    ATCG_INLINE atcg::dref_ptr<HomogeneousMediumData> getDataBuffer() const { return _data_buffer; }
+    /**
+     * @brief Initialize the pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
     atcg::dref_ptr<HomogeneousMediumData> _data_buffer;
 };
-
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(HomogeneousMedium);
 
 }    // namespace atcg

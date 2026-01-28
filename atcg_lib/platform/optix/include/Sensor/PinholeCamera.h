@@ -29,20 +29,22 @@ public:
     virtual void onImGuiRender() override;
 
     /**
+     * @brief Initialize the pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
+
+    /**
      * @brief Mark the sensor as dirty (e.g. camera changed)
      */
     virtual void markDirty() override;
 
-    /**
-     * @brief Get the data buffer
-     *
-     * @return The data buffer
-     */
-    ATCG_INLINE atcg::dref_ptr<PinholeCameraData> getDataBuffer() const { return _pinhole_camera_data; }
 
 private:
     atcg::dref_ptr<PinholeCameraData> _pinhole_camera_data;
 };
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(PinholeCamera);
 
 }    // namespace atcg

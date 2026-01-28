@@ -58,8 +58,7 @@ void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPip
 
     _optix_scene = SceneAdapter(_context, pipeline, sbt).apply(_scene);
 
-    PipelineInitializer<HDRFilm>(pipeline, sbt).apply(std::static_pointer_cast<HDRFilm>(_sensor->getFilm()));
-    PipelineInitializer<PinholeCamera>(pipeline, sbt).apply(std::static_pointer_cast<PinholeCamera>(_sensor));
+    _sensor->initializePipeline(pipeline, sbt);
 }
 
 void PathtracingIntegrator::onImGuiRender()

@@ -64,8 +64,6 @@ public:
      */
     ATCG_INLINE OptixProgramGroup getHitGroup() const { return _hit_group; }
 
-    ATCG_INLINE void setHitGroup(OptixProgramGroup hit_group) { _hit_group = hit_group; }
-
     ATCG_INLINE ShapeData* getShapeData() const { return _shape_data; }
 
 protected:

@@ -4,7 +4,6 @@
 #include <Core/OptixComponent.h>
 #include <DataStructure/Dictionary.h>
 #include <Film/FilmVPtrTable.cuh>
-#include <Core/PipelineInitializer.h>
 #include <DataStructure/TorchUtils.h>
 
 namespace atcg
@@ -60,13 +59,6 @@ public:
     inline const FilmVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
 
     /**
-     * @brief Get the VPtrTable Holder
-     *
-     * @return The shared ptr that handles the memory of the VPtrTable
-     */
-    ATCG_INLINE atcg::dref_ptr<FilmVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
-
-    /**
      * @brief Get the width of the film
      *
      * @return The width
@@ -83,8 +75,6 @@ public:
 protected:
     uint32_t _width  = 0;
     uint32_t _height = 0;
-
-private:
     atcg::dref_ptr<FilmVPtrTable> _vptr_table;
 };
 }    // namespace atcg

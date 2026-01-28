@@ -47,13 +47,6 @@ public:
     inline const EmitterVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
 
     /**
-     * @brief Get the VPtrTable Holder
-     *
-     * @return The shared ptr that handles the memory of the VPtrTable
-     */
-    ATCG_INLINE atcg::dref_ptr<EmitterVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
-
-    /**
      * @brief Get the bsdf flags
      *
      * @return The flags

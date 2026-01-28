@@ -30,24 +30,26 @@ void PinholeCamera::markDirty()
     _pinhole_camera_data.upload(&pinhole_camera_data);
 }
 
-void PipelineInitializer<PinholeCamera>::apply(const atcg::ref_ptr<PinholeCamera>& component) const
+void PinholeCamera::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                       const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    // TODO Hack
-    component->markDirty();
+    if(!_film) return;
+    _film->ensureInitialized(pipeline, sbt);
+    markDirty();
 
     const std::string ptx_sensor_filename = "./bin/PinholeCamera_ptx.ptx";
     auto generate_ray_prog_group =
         pipeline->addCallableShader({ptx_sensor_filename, "__direct_callable__generate_ray_pinhole"});
     auto add_sample_prog_group =
         pipeline->addCallableShader({ptx_sensor_filename, "__direct_callable__add_sample_pinhole"});
-    uint32_t generate_ray_idx = sbt->addCallableEntry(generate_ray_prog_group, component->getDataBuffer().get());
-    uint32_t add_sample_idx   = sbt->addCallableEntry(add_sample_prog_group, component->getDataBuffer().get());
+    uint32_t generate_ray_idx = sbt->addCallableEntry(generate_ray_prog_group, _pinhole_camera_data.get());
+    uint32_t add_sample_idx   = sbt->addCallableEntry(add_sample_prog_group, _pinhole_camera_data.get());
 
     SensorVPtrTable vptr_table;
     vptr_table.generateRayCallIndex = generate_ray_idx;
     vptr_table.addSampleCallIndex   = add_sample_idx;
 
-    component->getVPtrTableHolder().upload(&vptr_table);
-    component->markInitialized();
+    _vptr_table.upload(&vptr_table);
+    markInitialized();
 }
 }    // namespace atcg

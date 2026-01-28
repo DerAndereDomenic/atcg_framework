@@ -6,7 +6,6 @@
 #include <Renderer/Material.h>
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
-#include <Core/PipelineInitializer.h>
 
 #include <unordered_map>
 #include <functional>
@@ -54,7 +53,7 @@ atcg::ref_ptr<BSDF> createBSDF(MaterialType type,
                                          const atcg::ref_ptr<ShaderBindingTable>& sbt)                                 \
                                       {                                                                                \
                                           auto bsdf = atcg::make_ref<BSDFClass>(dict);                                 \
-                                          PipelineInitializer<BSDFClass>(pipeline, sbt).apply(bsdf);                   \
+                                          bsdf->initializePipeline(pipeline, sbt);                                     \
                                           return bsdf;                                                                 \
                                       });                                                                              \
         }                                                                                                              \

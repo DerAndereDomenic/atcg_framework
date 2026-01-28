@@ -4,7 +4,6 @@
 #include <Core/OptixComponent.h>
 #include <Renderer/Camera.h>
 #include <DataStructure/Dictionary.h>
-#include <Core/PipelineInitializer.h>
 #include <DataStructure/TorchUtils.h>
 #include <Sensor/SensorVPtrTable.cuh>
 #include <Film/Film.h>
@@ -54,13 +53,6 @@ public:
      * @return The VPtrTable
      */
     inline const SensorVPtrTable* getVPtrTable() const { return _vptr_table.get(); }
-
-    /**
-     * @brief Get the VPtrTable Holder
-     *
-     * @return The shared ptr that handles the memory of the VPtrTable
-     */
-    ATCG_INLINE atcg::dref_ptr<SensorVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
 
     /**
      * @brief Get the attached camera

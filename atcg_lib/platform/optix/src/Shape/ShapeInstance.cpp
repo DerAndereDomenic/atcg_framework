@@ -24,20 +24,20 @@ void ShapeInstance::onImGuiRender()
     if(_outside_medium) _outside_medium->onImGuiRender();
 }
 
-void PipelineInitializer<ShapeInstance>::apply(const atcg::ref_ptr<ShapeInstance>& component) const
+void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                       const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    auto shape          = component->getShape();
-    auto bsdf           = component->getBSDF();
-    auto emitter        = component->getEmitter();
-    auto inside_medium  = component->getInsideMedium();
-    auto outside_medium = component->getOutsideMedium();
-
+    auto shape          = getShape();
+    auto bsdf           = getBSDF();
+    auto emitter        = getEmitter();
+    auto inside_medium  = getInsideMedium();
+    auto outside_medium = getOutsideMedium();
     if(!shape) return;
-    // TODO
-    // _shape->ensureInitialized(pipeline, sbt);
-    // if(emitter) _emitter->ensureInitialized(pipeline, sbt);
-    // if(inside_medium) _inside_medium->ensureInitialized(pipeline, sbt);
-    // if(outside_medium) _outside_medium->ensureInitialized(pipeline, sbt);
+
+    _shape->ensureInitialized(pipeline, sbt);
+    if(emitter) _emitter->ensureInitialized(pipeline, sbt);
+    if(inside_medium) _inside_medium->ensureInitialized(pipeline, sbt);
+    if(outside_medium) _outside_medium->ensureInitialized(pipeline, sbt);
 
     ShapeInstanceData data;
     data.shape          = shape->getShapeData();
@@ -45,10 +45,10 @@ void PipelineInitializer<ShapeInstance>::apply(const atcg::ref_ptr<ShapeInstance
     data.emitter        = emitter ? emitter->getVPtrTable() : nullptr;
     data.inside_medium  = inside_medium ? inside_medium->getVPtrTable() : nullptr;
     data.outside_medium = outside_medium ? outside_medium->getVPtrTable() : nullptr;
-    data.entity_id      = component->entity_id();
-    data.color          = component->color();
+    data.entity_id      = entity_id();
+    data.color          = color();
     sbt->addHitEntry(shape->getHitGroup(), data);
 
-    component->markInitialized();
+    markInitialized();
 }
 }    // namespace atcg

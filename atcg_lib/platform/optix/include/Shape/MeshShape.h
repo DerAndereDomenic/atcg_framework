@@ -4,7 +4,6 @@
 #include <Shape/MeshShapeData.cuh>
 #include <DataStructure/Graph.h>
 #include <DataStructure/TorchUtils.h>
-#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -40,11 +39,13 @@ public:
     virtual void prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context) override;
 
     /**
-     * @brief Get the Mesh Shape data
+     * @brief Initialize the pipeline
      *
-     * @return The data
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
      */
-    ATCG_INLINE atcg::dref_ptr<MeshShapeData> getMeshShapeData() const { return _data; }
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
     ATCG_INLINE torch::Tensor getPositions() const { return _positions; }
     ATCG_INLINE torch::Tensor getNormals() const { return _normals; }
@@ -61,6 +62,4 @@ private:
 
     atcg::dref_ptr<MeshShapeData> _data;
 };
-
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(MeshShape);
 }    // namespace atcg
