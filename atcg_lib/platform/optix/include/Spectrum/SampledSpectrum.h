@@ -3,6 +3,14 @@
 #include <Core/glm.h>
 #include <Math/Color.h>
 
+// #define ATCG_SPECTRAL_RENDERING
+
+#ifdef ATCG_SPECTRAL_RENDERING
+    #define ATCG_NUM_SPECTRAL_SAMPLES 4
+#else
+    #define ATCG_NUM_SPECTRAL_SAMPLES 3
+#endif
+
 namespace atcg
 {
 
@@ -44,6 +52,16 @@ struct SampledWavelengthsBase
         return result;
     }
 
+    static ATCG_HOST_DEVICE SampledWavelengthsBase<num_wavelength_samples>
+    sampleSpectrum(const float u, const float lambda_min, const float lambda_max)
+    {
+#ifdef ATCG_SPECTRAL_RENDERING
+        return sampleUniform(u, lambda_min, lambda_max);
+#else
+        return sampleRGB();
+#endif
+    }
+
     ATCG_INLINE ATCG_HOST_DEVICE float operator[](int i) const { return _wavelengths[i]; }
 
     ATCG_INLINE ATCG_HOST_DEVICE float& operator[](int i) { return _wavelengths[i]; }
@@ -73,13 +91,6 @@ private:
     glm::vec<num_wavelength_samples, float> _pdfs;
 };
 
-using SampledWavelengths1 = SampledWavelengthsBase<1>;
-using SampledWavelengths2 = SampledWavelengthsBase<2>;
-using SampledWavelengths3 = SampledWavelengthsBase<3>;
-using SampledWavelengths4 = SampledWavelengthsBase<4>;
-
-using SampledWavelengths = SampledWavelengths3;
-
 template<int num_wavelength_samples>
 struct SampledSpectrumBase
 {
@@ -88,21 +99,21 @@ struct SampledSpectrumBase
     ATCG_HOST_DEVICE static SampledSpectrumBase<num_wavelength_samples>
     fromRGB(const glm::vec3& rgb, const SampledWavelengthsBase<num_wavelength_samples>& sampled_wavelengths)
     {
-        return SampledSpectrumBase<num_wavelength_samples>(rgb);
-        // SampledSpectrumBase<num_wavelength_samples> result;
-        // for(int i = 0; i < num_wavelength_samples; ++i)
-        // {
-        //     float r = atcg::Color::sRGB_to_lRGB(rgb.r);
-        //     float g = atcg::Color::sRGB_to_lRGB(rgb.g);
-        //     float b = atcg::Color::sRGB_to_lRGB(rgb.b);
+#ifdef ATCG_SPECTRAL_RENDERING
+        SampledSpectrumBase<num_wavelength_samples> result;
+        for(int i = 0; i < num_wavelength_samples; ++i)
+        {
+            float sr = atcg::Color::Sr(sampled_wavelengths[i]);
+            float sg = atcg::Color::Sg(sampled_wavelengths[i]);
+            float sb = atcg::Color::Sb(sampled_wavelengths[i]);
 
-        //     float sr = atcg::Color::spectrum_r(sampled_wavelengths[i]);
-        //     float sg = atcg::Color::spectrum_g(sampled_wavelengths[i]);
-        //     float sb = atcg::Color::spectrum_b(sampled_wavelengths[i]);
-
-        //     result._data[i] = r * sr + g * sg + b * sb;
-        // }
-        // return result;
+            result._data[i] = rgb.r * sr + rgb.g * sg + rgb.b * sb;
+        }
+        return result;
+#else
+        // Just treat a spectrum as RGB values (delta functions)
+        return SampledSpectrumBase<3>(rgb);
+#endif
     }
 
     ATCG_HOST_DEVICE SampledSpectrumBase() : _data(0.0f) {}
@@ -300,10 +311,17 @@ private:
     Base _data;
 };
 
+using SampledWavelengths1 = SampledWavelengthsBase<1>;
+using SampledWavelengths2 = SampledWavelengthsBase<2>;
+using SampledWavelengths3 = SampledWavelengthsBase<3>;
+using SampledWavelengths4 = SampledWavelengthsBase<4>;
+
+using SampledWavelengths = SampledWavelengthsBase<ATCG_NUM_SPECTRAL_SAMPLES>;
+
 using SampledSpectrum1 = SampledSpectrumBase<1>;
 using SampledSpectrum2 = SampledSpectrumBase<2>;
 using SampledSpectrum3 = SampledSpectrumBase<3>;
 using SampledSpectrum4 = SampledSpectrumBase<4>;
 
-using SampledSpectrum = SampledSpectrum3;
+using SampledSpectrum = SampledSpectrumBase<ATCG_NUM_SPECTRAL_SAMPLES>;
 }    // namespace atcg

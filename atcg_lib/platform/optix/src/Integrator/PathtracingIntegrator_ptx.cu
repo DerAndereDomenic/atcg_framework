@@ -31,7 +31,7 @@ extern "C" __global__ void __raygen__rg()
     atcg::CameraRay camera_ray = params.sensor->generateRay(glm::vec2(u, v));
 
     atcg::SampledSpectrum radiance(0);
-    atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleRGB();
+    atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleSpectrum(rng.nextFloat(), 380.0f, 780.0f);
     int32_t entity_id                    = -1;
 
     bool next_ray_valid = true;

@@ -41,7 +41,11 @@ extern "C" __device__ void __direct_callable__add_sample_pinhole(const glm::ivec
     glm::vec3 white_lrgb = atcg::Color::XYZ_to_lRGB(white.toXYZ(sampled_wavelengths));    // TODO
 
     glm::vec3 xyz  = radiance.toXYZ(sampled_wavelengths);
-    glm::vec3 lrgb = atcg::Color::XYZ_to_lRGB(xyz) / white_lrgb;
+    glm::vec3 lrgb = atcg::Color::XYZ_to_lRGB(xyz);
+#ifndef ATCG_SPECTRAL_RENDERING
+    // Normalize for RGB rendering
+    lrgb /= white_lrgb;
+#endif
 
     pinhole_camera_data->film->addSample(sample_index, lrgb);
 }

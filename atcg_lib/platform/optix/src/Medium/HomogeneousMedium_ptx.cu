@@ -70,7 +70,7 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
     atcg::SampledSpectrum Le      = atcg::SampledSpectrum::fromRGB(sbt_data->Le, wavelengths);
 
     // Scalar projection of scattering coefficient, used to sample the next medium scattering event.
-    float sigma_t_scalar = detail::rgb_to_scalar_weight_max(sigma_t);
+    float sigma_t_scalar = sigma_t.maxComponent();
 
 
     atcg::MediumSamplingResult result;

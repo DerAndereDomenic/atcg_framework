@@ -187,7 +187,7 @@ __direct_callable__sample_pbrbsdf(const atcg::SurfaceInteraction& si,
     roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
     atcg::SampledSpectrum metallic_color = (1.0f - metallic) * atcg::SampledSpectrum(0.04f) + metallic * diffuse_color;
-    diffuse_color                        = (1.0f - metallic) * diffuse_color * si.color;
+    diffuse_color = (1.0f - metallic) * diffuse_color * atcg::SampledSpectrum::fromRGB(si.color, wavelengths);
 
     return detail::samplePBR(si, diffuse_color, metallic_color, metallic, roughness, rng);
 }
@@ -205,7 +205,7 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
     roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
     atcg::SampledSpectrum metallic_color = (1.0f - metallic) * atcg::SampledSpectrum(0.04f) + metallic * diffuse_color;
-    diffuse_color                        = (1.0f - metallic) * diffuse_color * si.color;
+    diffuse_color = (1.0f - metallic) * diffuse_color * atcg::SampledSpectrum::fromRGB(si.color, wavelengths);
 
 
     return detail::evalPBR(si, outgoing_dir, diffuse_color, metallic_color, roughness, metallic);
