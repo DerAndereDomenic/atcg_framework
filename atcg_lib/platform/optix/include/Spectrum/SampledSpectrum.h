@@ -3,7 +3,7 @@
 #include <Core/glm.h>
 #include <Math/Color.h>
 
-// #define ATCG_SPECTRAL_RENDERING
+#define ATCG_SPECTRAL_RENDERING
 
 #ifdef ATCG_SPECTRAL_RENDERING
     #define ATCG_NUM_SPECTRAL_SAMPLES 4
@@ -293,7 +293,7 @@ struct SampledSpectrumBase
             xyz.y += wavelengths.pdf(i) < 1e-4f ? 0.0f : (*this)[i] * y_bar / wavelengths.pdf(i);
             xyz.z += wavelengths.pdf(i) < 1e-4f ? 0.0f : (*this)[i] * z_bar / wavelengths.pdf(i);
         }
-        return xyz / atcg::Constants::Y_integral<float>();
+        return xyz / (atcg::Constants::Y_integral<float>() * float(num_wavelength_samples));
     }
 
     ATCG_HOST_DEVICE ATCG_INLINE static SampledSpectrumBase<num_wavelength_samples>
