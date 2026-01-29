@@ -10,13 +10,13 @@ namespace atcg
 struct PhaseFunctionSamplingResult
 {
     glm::vec3 outgoing_ray_dir;
-    glm::vec3 phase_function_weight;
+    float phase_function_weight;
     float sampling_pdf;
 };
 
 struct PhaseFunctionEvalResult
 {
-    glm::vec3 phase_function_value;
+    float phase_function_value;
     float sampling_pdf;
 };
 
