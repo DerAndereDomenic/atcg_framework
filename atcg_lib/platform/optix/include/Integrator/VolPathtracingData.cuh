@@ -6,13 +6,12 @@
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <Medium/MediumVPtrTable.cuh>
+#include <Sensor/SensorVPtrTable.cuh>
 
 namespace atcg
 {
 struct VolPathtracingParams
 {
-    glm::u8vec4* output_image;
-    glm::vec3* accumulation_buffer;
     uint32_t image_width;
     uint32_t image_height;
 
@@ -23,13 +22,6 @@ struct VolPathtracingParams
     TraceParameters surface_trace_params;
     TraceParameters occlusion_trace_params;
 
-    // Cam data
-    float cam_eye[3];
-    float U[3];
-    float V[3];
-    float W[3];
-    float fov_y;
-
     uint32_t frame_counter;
 
     // Emitter
@@ -37,5 +29,7 @@ struct VolPathtracingParams
     const EmitterVPtrTable** emitters;
 
     const EmitterVPtrTable* environment_emitter;
+
+    const SensorVPtrTable* sensor;
 };
 }

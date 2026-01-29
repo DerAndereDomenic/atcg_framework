@@ -19,12 +19,25 @@
     #include <imgui.h>
 #endif
 
+// ! temp
+#include <Film/HDRFilm.h>
+#include <Sensor/PinholeCamera.h>
+
 namespace atcg
 {
 VolPathtracingIntegrator::VolPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context,
                                                    const Dictionary& dict)
     : Integrator(context, dict)
 {
+    atcg::Dictionary film_dict;
+    film_dict.setValue<uint32_t>("width", dict.getValue<uint32_t>("width"));
+    film_dict.setValue<uint32_t>("height", dict.getValue<uint32_t>("height"));
+    atcg::ref_ptr<Film> film = atcg::make_ref<HDRFilm>(film_dict);
+
+    atcg::Dictionary sensor_dict;
+    sensor_dict.setValue("film", film);
+    sensor_dict.setValue<atcg::ref_ptr<Camera>>("camera", dict.getValue<atcg::ref_ptr<Camera>>("camera"));
+    _sensor = atcg::make_ref<PinholeCamera>(sensor_dict);
 }
 
 VolPathtracingIntegrator::~VolPathtracingIntegrator() {}
@@ -45,6 +58,8 @@ void VolPathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracing
     _sbt      = sbt;
 
     _optix_scene = SceneAdapter(_context, pipeline, sbt).apply(_scene);
+
+    _sensor->initializePipeline(pipeline, sbt);
 }
 
 void VolPathtracingIntegrator::onImGuiRender()
@@ -57,38 +72,26 @@ void VolPathtracingIntegrator::onImGuiRender()
 void VolPathtracingIntegrator::reset()
 {
     _frame_counter = 0;
+    _sensor->getFilm()->clear();
+    _sensor->markDirty();
 }
 
 void VolPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 {
-    auto camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
-    auto output     = in_out_dictionary.getValue<torch::Tensor>("output");
-    auto entity_ids = in_out_dictionary.getValueOr<torch::Tensor>("entity_ids", torch::empty({0}));
+    uint32_t width  = _sensor->getFilm()->getWidth();
+    uint32_t height = _sensor->getFilm()->getHeight();
 
-    if(_accumulation_buffer.numel() == 0 || _frame_counter == 0 || _accumulation_buffer.size(0) != output.size(0) ||
-       _accumulation_buffer.size(1) != output.size(1))
-    {
-        _accumulation_buffer =
-            torch::zeros({output.size(0), output.size(1), 3}, atcg::TensorOptions::floatDeviceOptions());
-    }
+    torch::Tensor output_entities = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
 
     VolPathtracingParams params;
 
-    glm::mat4 inv_camera_view = glm::inverse(camera->getView());
-    memcpy(params.cam_eye, glm::value_ptr(inv_camera_view[3]), sizeof(glm::vec3));
-    memcpy(params.U, glm::value_ptr(glm::normalize(inv_camera_view[0])), sizeof(glm::vec3));
-    memcpy(params.V, glm::value_ptr(glm::normalize(inv_camera_view[1])), sizeof(glm::vec3));
-    memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
-    params.fov_y = camera->getFOV();
+    params.sensor = _sensor->getVPtrTable();
 
-    params.output_image = (glm::u8vec4*)output.data_ptr();
-    params.image_height = output.size(0);
-    params.image_width  = output.size(1);
+    params.image_height = height;
+    params.image_width  = width;
     params.handle       = _optix_scene->getIAS()->getTraversableHandle();
 
-    params.entity_ids = entity_ids.numel() > 0 ? (int32_t*)entity_ids.data_ptr() : nullptr;
-
-    params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
+    params.entity_ids = output_entities.numel() > 0 ? (int32_t*)output_entities.data_ptr() : nullptr;
 
     params.frame_counter = _frame_counter++;
 
@@ -114,10 +117,14 @@ void VolPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
                             (CUdeviceptr)_launch_params.get(),
                             sizeof(VolPathtracingParams),
                             _sbt->getSBT(_raygen_index),
-                            output.size(1),
-                            output.size(0),
+                            width,
+                            height,
                             1));    // depth
 
     CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
+
+    torch::Tensor output_tensor = _sensor->getFilm()->develop();
+    in_out_dictionary.setValue("output", output_tensor);
+    in_out_dictionary.setValue("entity_ids", output_entities);
 }
 }    // namespace atcg

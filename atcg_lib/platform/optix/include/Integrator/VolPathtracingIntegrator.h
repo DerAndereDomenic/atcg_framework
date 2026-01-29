@@ -5,6 +5,7 @@
 #include <Integrator/VolPathtracingData.cuh>
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
+#include <Sensor/Sensor.h>
 #include <Scene/OptixScene.h>
 #include <Scene/SceneHierarchyPanel.h>
 
@@ -69,7 +70,7 @@ private:
     atcg::dref_ptr<VolPathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
 
-    torch::Tensor _accumulation_buffer;
+    atcg::ref_ptr<Sensor> _sensor;
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("VolPath");
 };
