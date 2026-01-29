@@ -52,6 +52,7 @@ public:
     ATCG_INLINE torch::Tensor getColors() const { return _colors; }
     ATCG_INLINE torch::Tensor getUVs() const { return _uvs; }
     ATCG_INLINE torch::Tensor getFaces() const { return _faces; }
+    ATCG_INLINE atcg::dref_ptr<MeshShapeData> getMeshShapeData() const { return _data; }
 
 private:
     torch::Tensor _positions;

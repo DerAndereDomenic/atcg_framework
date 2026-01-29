@@ -13,13 +13,13 @@ void RadiosityRayGenerator::initializePipeline(const atcg::ref_ptr<atcg::RayTrac
     dict.setValue("mesh", graph);
     _shape = atcg::make_ref<atcg::MeshShape>(dict);
 
-    atcg::PipelineInitializer<atcg::MeshShape>(pipeline, sbt).apply(std::dynamic_pointer_cast<atcg::MeshShape>(_shape));
+    _shape->initializePipeline(pipeline, sbt);
     _shape->prepareAccelerationStructure(_context);
 
     atcg::Dictionary shape_data;
     shape_data.setValue("shape", _shape);
     auto shape_instance = atcg::make_ref<atcg::ShapeInstance>(shape_data);
-    atcg::PipelineInitializer<atcg::ShapeInstance>(pipeline, sbt).apply(shape_instance);
+    shape_instance->initializePipeline(pipeline, sbt);
     _shapes.push_back(shape_instance);
 
     const std::string ptx_raygen_filename = "./bin/RadiosityRayGenerator_ptx.ptx";
