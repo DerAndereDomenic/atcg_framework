@@ -23,6 +23,10 @@ if(ATCG_CUDA_BACKEND)
         target_compile_definitions(atcg_lib PUBLIC ATCG_ENABLE_OPTIX)
     endif()
 
+    if(ATCG_SPECTRAL_RENDERING)
+        target_compile_definitions(atcg_lib PUBLIC ATCG_SPECTRAL_RENDERING)
+    endif()
+
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
     target_link_libraries(atcg_lib PUBLIC CUDA::nvjpeg)

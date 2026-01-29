@@ -3,8 +3,6 @@
 #include <Core/glm.h>
 #include <Math/Color.h>
 
-#define ATCG_SPECTRAL_RENDERING
-
 #ifdef ATCG_SPECTRAL_RENDERING
     #define ATCG_NUM_SPECTRAL_SAMPLES 4
 #else
