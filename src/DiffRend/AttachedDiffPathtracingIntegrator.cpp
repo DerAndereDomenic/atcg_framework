@@ -31,7 +31,10 @@ AttachedDiffPathtracingIntegrator::~AttachedDiffPathtracingIntegrator() {}
 void AttachedDiffPathtracingIntegrator::initializePipeline(const Dictionary& dict)
 {
     _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"./bin/MeshShape_ptx.ptx", "__closesthit__mesh"}, {});
-    _pipeline->addTrianglesHitGroupShader("MeshShape", 1, {"./bin/MeshShape_ptx.ptx", "__closesthit__dual_mesh"}, {});
+    _pipeline->addTrianglesHitGroupShader("MeshShape",
+                                          1,
+                                          {"./bin/DualMeshShape_ptx.ptx", "__closesthit__dual_mesh"},
+                                          {});
 
     auto scene = dict.getValue<atcg::ref_ptr<Scene>>("scene");
 
@@ -126,20 +129,9 @@ void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_diction
     auto environment_emitter   = _optix_scene->getEnvironmentEmitter();
     params.environment_emitter = environment_emitter ? environment_emitter->getVPtrTable() : nullptr;
 
-    params.surface_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
-    params.surface_trace_params.SBToffset    = 0;
-    params.surface_trace_params.SBTstride    = 2;
-    params.surface_trace_params.missSBTIndex = _surface_miss_index;
-
-    params.dual_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
-    params.dual_trace_params.SBToffset    = 1;
-    params.dual_trace_params.SBTstride    = 2;
-    params.dual_trace_params.missSBTIndex = _dual_miss_index;
-
-    params.occlusion_trace_params.rayFlags  = OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT;
-    params.occlusion_trace_params.SBToffset = 0;
-    params.occlusion_trace_params.SBTstride = 2;
-    params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
+    params.surface_trace_params   = _pipeline->getRay(0, _surface_miss_index, false);
+    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
+    params.dual_trace_params      = _pipeline->getRay(1, _dual_miss_index, false);
 
     params.debug = in_out_dictionary.getValueOr<bool>("debug", false);
 
@@ -193,20 +185,9 @@ void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictio
     auto environment_emitter   = _optix_scene->getEnvironmentEmitter();
     params.environment_emitter = environment_emitter ? environment_emitter->getVPtrTable() : nullptr;
 
-    params.surface_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
-    params.surface_trace_params.SBToffset    = 0;
-    params.surface_trace_params.SBTstride    = 2;
-    params.surface_trace_params.missSBTIndex = _surface_miss_index;
-
-    params.dual_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
-    params.dual_trace_params.SBToffset    = 1;
-    params.dual_trace_params.SBTstride    = 2;
-    params.dual_trace_params.missSBTIndex = _dual_miss_index;
-
-    params.occlusion_trace_params.rayFlags  = OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT;
-    params.occlusion_trace_params.SBToffset = 0;
-    params.occlusion_trace_params.SBTstride = 2;
-    params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
+    params.surface_trace_params   = _pipeline->getRay(0, _surface_miss_index, false);
+    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
+    params.dual_trace_params      = _pipeline->getRay(1, _dual_miss_index, false);
 
     params.debug = in_out_dictionary.getValueOr<bool>("debug", false);
 
