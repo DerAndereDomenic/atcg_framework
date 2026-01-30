@@ -46,5 +46,5 @@ extern "C" __device__ void __direct_callable__add_sample_pinhole(const glm::ivec
     lrgb /= white_lrgb;
 #endif
 
-    pinhole_camera_data->film->addSample(sample_index, lrgb);
+    pinhole_camera_data->film->addSample(sample_index, pinhole_camera_data->exposure * lrgb);
 }

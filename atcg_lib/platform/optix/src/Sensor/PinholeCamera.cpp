@@ -28,6 +28,7 @@ void PinholeCamera::markDirty()
     pinhole_camera_data.fov_y          = camera->getFOV();
     pinhole_camera_data.optical_center = camera->getIntrinsics().opticalCenter();
     pinhole_camera_data.film           = _film->getVPtrTable();
+    pinhole_camera_data.exposure       = camera->getIntrinsics().getExposure();
 
     _pinhole_camera_data.upload(&pinhole_camera_data);
 }
