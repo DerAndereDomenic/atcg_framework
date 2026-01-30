@@ -13,14 +13,12 @@ extern "C" __device__ atcg::CameraRay __direct_callable__generate_ray_pinhole(co
 
     atcg::CameraRay camera_ray;
 
-    uint32_t width  = pinhole_camera_data->film->getWidth();
-    uint32_t height = pinhole_camera_data->film->getHeight();
-
-    glm::vec3 U = pinhole_camera_data->U * (float)width / (float)height;
+    glm::vec3 U = pinhole_camera_data->U * pinhole_camera_data->aspect_ratio;
     glm::vec3 V = pinhole_camera_data->V;
     glm::vec3 W = pinhole_camera_data->W / glm::tan(glm::radians(pinhole_camera_data->fov_y / 2.0f));
 
-    glm::vec3 ray_dir    = glm::normalize(raster_pos.x * U + raster_pos.y * V + W);
+    glm::vec3 ray_dir    = glm::normalize((raster_pos.x + pinhole_camera_data->optical_center.x) * U +
+                                       (raster_pos.y + pinhole_camera_data->optical_center.y) * V + W);
     glm::vec3 ray_origin = pinhole_camera_data->cam_eye;
 
     camera_ray.ray        = atcg::Ray(ray_origin, ray_dir);
@@ -36,13 +34,14 @@ extern "C" __device__ void __direct_callable__add_sample_pinhole(const glm::ivec
     const atcg::PinholeCameraData* pinhole_camera_data =
         *reinterpret_cast<const atcg::PinholeCameraData**>(optixGetSbtDataPointer());
 
-    // Convert spectrum to lRGB
-    atcg::SampledSpectrum white(1.0f);
-    glm::vec3 white_lrgb = atcg::Color::XYZ_to_lRGB(white.toXYZ(sampled_wavelengths));    // TODO
 
     glm::vec3 xyz  = radiance.toXYZ(sampled_wavelengths);
     glm::vec3 lrgb = atcg::Color::XYZ_to_lRGB(xyz);
+
 #ifndef ATCG_SPECTRAL_RENDERING
+    // Convert spectrum to lRGB
+    atcg::SampledSpectrum white(1.0f);
+    glm::vec3 white_lrgb = atcg::Color::XYZ_to_lRGB(white.toXYZ(sampled_wavelengths));
     // Normalize for RGB rendering
     lrgb /= white_lrgb;
 #endif

@@ -11,6 +11,8 @@ struct PinholeCameraData
     glm::vec3 V;
     glm::vec3 W;
     float fov_y;
+    float aspect_ratio;
+    glm::vec2 optical_center;
     const FilmVPtrTable* film;
 };
 }    // namespace atcg

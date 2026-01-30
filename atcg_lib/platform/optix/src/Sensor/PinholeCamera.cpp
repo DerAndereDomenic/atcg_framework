@@ -19,13 +19,15 @@ void PinholeCamera::markDirty()
 
     atcg::ref_ptr<PerspectiveCamera> camera = std::dynamic_pointer_cast<PerspectiveCamera>(_camera);
 
-    glm::mat4 inv_camera_view   = glm::inverse(camera->getView());
-    pinhole_camera_data.cam_eye = inv_camera_view[3];
-    pinhole_camera_data.U       = glm::normalize(inv_camera_view[0]);
-    pinhole_camera_data.V       = glm::normalize(inv_camera_view[1]);
-    pinhole_camera_data.W       = -glm::normalize(inv_camera_view[2]);
-    pinhole_camera_data.fov_y   = camera->getFOV();
-    pinhole_camera_data.film    = _film->getVPtrTable();
+    glm::mat4 inv_camera_view          = glm::inverse(camera->getView());
+    pinhole_camera_data.cam_eye        = inv_camera_view[3];
+    pinhole_camera_data.U              = glm::normalize(inv_camera_view[0]);
+    pinhole_camera_data.V              = glm::normalize(inv_camera_view[1]);
+    pinhole_camera_data.W              = -glm::normalize(inv_camera_view[2]);
+    pinhole_camera_data.aspect_ratio   = camera->getAspectRatio();
+    pinhole_camera_data.fov_y          = camera->getFOV();
+    pinhole_camera_data.optical_center = camera->getIntrinsics().opticalCenter();
+    pinhole_camera_data.film           = _film->getVPtrTable();
 
     _pinhole_camera_data.upload(&pinhole_camera_data);
 }
