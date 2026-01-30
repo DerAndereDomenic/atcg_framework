@@ -11,6 +11,8 @@
 #include <Medium/HenyeyGreensteinPhaseFunction.h>
 #include <Medium/HomogeneousMedium.h>
 #include <Medium/HeterogeneousMedium.h>
+#include <Film/HDRFilm.h>
+#include <Sensor/PinholeCamera.h>
 
 namespace atcg
 {
@@ -354,7 +356,8 @@ void SceneAdapter::prepareComponent<MeshLightComponent>(const atcg::ref_ptr<Opti
     new_entity.addComponent<EmitterComponent>(mesh_emitter);
 }
 
-atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
+atcg::ref_ptr<OptixScene>
+SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, const uint32_t height)
 {
     // Cache shapes and materials
     auto& registry = AssetManager::getAssetRegistry();
@@ -503,6 +506,26 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
 
 
     result->_ias = atcg::make_ref<InstanceAccelerationStructure>(_context, result->_shapes, _pipeline->numRays());
+
+    if(scene->getCamera())
+    {
+        atcg::Dictionary film_dict;
+        film_dict.setValue("width", width);
+        film_dict.setValue("height", height);
+        atcg::ref_ptr<Film> film = atcg::make_ref<HDRFilm>(film_dict);
+
+        atcg::Dictionary sensor_dict;
+        sensor_dict.setValue("film", film);
+        sensor_dict.setValue<atcg::ref_ptr<Camera>>("camera", scene->getCamera());
+        result->_sensor = atcg::make_ref<PinholeCamera>(sensor_dict);
+
+        result->_sensor->initializePipeline(_pipeline, _sbt);
+    }
+    else
+    {
+        ATCG_WARN("No camera found in scene!");
+        result->_sensor = nullptr;
+    }
 
     return result;
 }

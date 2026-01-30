@@ -6,7 +6,6 @@
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
-#include <Sensor/Sensor.h>
 
 namespace atcg
 {
@@ -54,7 +53,7 @@ private:
     /**
      * @brief Initialize a pipeline.
      */
-    void initializePipeline();
+    void initializePipeline(const Dictionary& dict);
 
     uint32_t _raygen_index;
     uint32_t _surface_miss_index;
@@ -64,7 +63,5 @@ private:
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<PathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
-
-    atcg::ref_ptr<Sensor> _sensor;
 };
 }    // namespace atcg

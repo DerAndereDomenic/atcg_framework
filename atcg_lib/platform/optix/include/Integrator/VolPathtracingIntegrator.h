@@ -54,18 +54,15 @@ private:
     /**
      * @brief Initialize a pipeline.
      */
-    virtual void initializePipeline();
+    virtual void initializePipeline(const Dictionary& dict);
 
     uint32_t _raygen_index;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
 
-    atcg::ref_ptr<Scene> _scene;
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<VolPathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;
-
-    atcg::ref_ptr<Sensor> _sensor;
 
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("VolPath");
 };

@@ -5,6 +5,7 @@
 #include <Shape/ShapeInstance.h>
 #include <Shape/IAS.h>
 #include <Emitter/EnvironmentEmitter.h>
+#include <Sensor/Sensor.h>
 
 #include <Scene/Scene.h>
 
@@ -62,6 +63,13 @@ public:
      */
     ATCG_INLINE const atcg::ref_ptr<InstanceAccelerationStructure>& getIAS() const { return _ias; }
 
+    /**
+     * @brief Get the sensor
+     *
+     * @return The sensor
+     */
+    ATCG_INLINE const atcg::ref_ptr<Sensor>& getSensor() const { return _sensor; }
+
 private:
     friend class SceneAdapter;
 
@@ -70,6 +78,7 @@ private:
     atcg::DeviceBuffer<const EmitterVPtrTable*> _emitter_vptr_tables;
     atcg::ref_ptr<EnvironmentEmitter> _environment_emitter = nullptr;
     std::vector<atcg::ref_ptr<Emitter>> _emitter;
+    atcg::ref_ptr<Sensor> _sensor;
 
     atcg::ref_ptr<InstanceAccelerationStructure> _ias;
 };
