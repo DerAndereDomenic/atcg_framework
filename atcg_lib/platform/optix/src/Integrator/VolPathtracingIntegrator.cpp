@@ -48,6 +48,8 @@ VolPathtracingIntegrator::~VolPathtracingIntegrator() {}
 
 void VolPathtracingIntegrator::initializePipeline()
 {
+    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"./bin/MeshShape_ptx.ptx", "__closesthit__mesh"}, {});
+
     const std::string ptx_raygen_filename = "./bin/VolPathtracingIntegrator_ptx.ptx";
     OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
     OptixProgramGroup miss_prog_group     = _pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
@@ -103,15 +105,9 @@ void VolPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
     auto environment_emitter   = _optix_scene->getEnvironmentEmitter();
     params.environment_emitter = environment_emitter ? environment_emitter->getVPtrTable() : nullptr;
 
-    params.surface_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
-    params.surface_trace_params.SBToffset    = 0;
-    params.surface_trace_params.SBTstride    = 1;
-    params.surface_trace_params.missSBTIndex = _surface_miss_index;
+    params.surface_trace_params = _pipeline->getRay(0, _surface_miss_index, false);
 
-    params.occlusion_trace_params.rayFlags  = OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT;
-    params.occlusion_trace_params.SBToffset = 0;
-    params.occlusion_trace_params.SBTstride = 1;
-    params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
+    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
 
     _launch_params.upload(&params);
 

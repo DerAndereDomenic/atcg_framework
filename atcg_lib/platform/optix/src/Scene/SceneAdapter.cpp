@@ -502,7 +502,7 @@ atcg::ref_ptr<OptixScene> SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene)
     }
 
 
-    result->_ias = atcg::make_ref<InstanceAccelerationStructure>(_context, result->_shapes);
+    result->_ias = atcg::make_ref<InstanceAccelerationStructure>(_context, result->_shapes, _pipeline->numRays());
 
     return result;
 }

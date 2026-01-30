@@ -40,14 +40,17 @@ void ShapeInstance::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& 
     if(outside_medium) _outside_medium->ensureInitialized(pipeline, sbt);
 
     ShapeInstanceData data;
-    data.shape          = shape->getShapeData();
-    data.bsdf           = bsdf ? bsdf->getVPtrTable() : nullptr;
-    data.emitter        = emitter ? emitter->getVPtrTable() : nullptr;
-    data.inside_medium  = inside_medium ? inside_medium->getVPtrTable() : nullptr;
-    data.outside_medium = outside_medium ? outside_medium->getVPtrTable() : nullptr;
-    data.entity_id      = entity_id();
-    data.color          = color();
-    sbt->addHitEntry(shape->getHitGroup(), data);
+    data.shape             = shape->getShapeData();
+    data.bsdf              = bsdf ? bsdf->getVPtrTable() : nullptr;
+    data.emitter           = emitter ? emitter->getVPtrTable() : nullptr;
+    data.inside_medium     = inside_medium ? inside_medium->getVPtrTable() : nullptr;
+    data.outside_medium    = outside_medium ? outside_medium->getVPtrTable() : nullptr;
+    data.entity_id         = entity_id();
+    data.color             = color();
+    const auto& hit_groups = pipeline->getRayProgramGroups(shape->getShapeType());
+
+    for(const auto& shape_hit_group: hit_groups)
+        sbt->addHitEntry(shape_hit_group, data);
 
     markInitialized();
 }

@@ -47,6 +47,12 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
+    /**
+     * @brief Get the shape type
+     * @return The shape type
+     */
+    virtual std::string getShapeType() const override { return "MeshShape"; }
+
     ATCG_INLINE torch::Tensor getPositions() const { return _positions; }
     ATCG_INLINE torch::Tensor getNormals() const { return _normals; }
     ATCG_INLINE torch::Tensor getColors() const { return _colors; }

@@ -6,7 +6,6 @@ namespace atcg
 {
 namespace GUI
 {
-
 void ComponentGUIRenderer<ShapeComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,
                                                           Entity entity,
                                                           ShapeComponent& component) const

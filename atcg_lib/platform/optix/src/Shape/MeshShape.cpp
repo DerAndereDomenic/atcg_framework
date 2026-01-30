@@ -33,10 +33,7 @@ MeshShape::~MeshShape() {}
 void MeshShape::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                    const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_raygen_filename = "./bin/MeshShape_ptx.ptx";
-    _hit_group = pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__mesh"}, {});
-
-    markInitialized();
+    // Nothign to do
 }
 
 void MeshShape::prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context)

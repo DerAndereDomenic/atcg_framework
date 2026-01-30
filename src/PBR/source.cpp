@@ -36,20 +36,12 @@ public:
     void initializePathtracer()
     {
 #ifdef ATCG_ENABLE_OPTIX
-        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
-        sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
-
         atcg::Dictionary dict;
-        dict.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
+        dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
         dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
 
         integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
-        integrator->setScene(atcg::Project::getActive()->getActiveScene());
-        integrator->initializePipeline(pipeline, sbt);
-
-        pipeline->createPipeline();
-        sbt->createSBT();
 #endif
     }
 
@@ -502,8 +494,6 @@ private:
 
 #ifdef ATCG_ENABLE_OPTIX
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
-    atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
     atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator;
 #endif
 

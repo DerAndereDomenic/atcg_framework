@@ -18,7 +18,8 @@ public:
      * @param shapes The vector of shapes to build the IAS over
      */
     InstanceAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context,
-                                  const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes);
+                                  const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes,
+                                  const uint32_t num_rays);
 
     /**
      * @brief Get the traversable handle

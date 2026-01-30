@@ -29,7 +29,7 @@ public:
      */
     Integrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict) : _context(context)
     {
-        _pipeline = atcg::make_ref<RayTracingPipeline>(context);
+        _pipeline = atcg::make_ref<RayTracingPipeline>(context, dict.getValueOr<uint32_t>("num_rays", 1));
         _sbt      = atcg::make_ref<ShaderBindingTable>();
     }
 
