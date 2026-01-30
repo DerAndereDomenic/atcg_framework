@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added spectral rendering mode to pathtracing backend
 - Added support for multiple ray types in pathtracing backend
 - Added possibility to customize and add closest hit programs for arbitrary shapes
+- Added simple camera exposure model
 
 ### Changed
 
@@ -89,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove entity picking form Renderer to Utils
 - Changed pipeline behavior of pathtracing backend. This is no longer done using the PipelineInitializer struct but going back to an inheritance-based system
 - Shapes are no longer responsible to define closest hit programs, this has to be done on a pipeline level now
+- RayTracingPipeline and ShaderBindingTable are no longer exposed to the client and are owned by the corresponding integrator used.
 
 ### Fixed
 
