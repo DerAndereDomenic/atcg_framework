@@ -18,7 +18,7 @@ namespace atcg
 /**
  * @brief A class to model an integrator
  */
-class Integrator : public OptixComponent
+class Integrator
 {
 public:
     /**
@@ -27,30 +27,16 @@ public:
      * @param context The raytracing context
      * @param dict Additional paramaters
      */
-    Integrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict) : _context(context) {}
+    Integrator(const atcg::ref_ptr<RaytracingContext>& context, const atcg::Dictionary& dict) : _context(context)
+    {
+        _pipeline = atcg::make_ref<RayTracingPipeline>(context);
+        _sbt      = atcg::make_ref<ShaderBindingTable>();
+    }
 
     /**
      * @brief Destructor
      */
     virtual ~Integrator() = default;
-
-    /**
-     * @brief Set the scene
-     *
-     * @param scene The scene
-     */
-    ATCG_INLINE void setScene(const atcg::ref_ptr<Scene>& scene) { _scene = scene; }
-
-    /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
 
     /**
      * @brief A callback to display debug information in imgui
@@ -69,9 +55,22 @@ public:
      */
     virtual void reset() = 0;
 
+    /**
+     * @brief Get the pipeline
+     *
+     * @return The pipeline
+     */
+    ATCG_INLINE atcg::ref_ptr<RayTracingPipeline> getPipeline() const { return _pipeline; }
+
+    /**
+     * @brief Get the shader binding table
+     *
+     * @return The SBT
+     */
+    ATCG_INLINE atcg::ref_ptr<ShaderBindingTable> getSBT() const { return _sbt; }
+
 protected:
     atcg::ref_ptr<RaytracingContext> _context;
-    atcg::ref_ptr<Scene> _scene;
 
     atcg::ref_ptr<RayTracingPipeline> _pipeline;
     atcg::ref_ptr<ShaderBindingTable> _sbt;

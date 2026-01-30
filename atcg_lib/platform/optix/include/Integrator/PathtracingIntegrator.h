@@ -29,16 +29,6 @@ public:
      */
     virtual ~PathtracingIntegrator();
 
-    /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
     /**
      * @brief A callback to display debug information in imgui
@@ -61,10 +51,16 @@ public:
     virtual void reset() override;
 
 private:
+    /**
+     * @brief Initialize a pipeline.
+     */
+    void initializePipeline();
+
     uint32_t _raygen_index;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
 
+    atcg::ref_ptr<Scene> _scene;
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<PathtracingParams> _launch_params;
     uint32_t _frame_counter = 0;

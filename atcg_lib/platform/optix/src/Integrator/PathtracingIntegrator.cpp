@@ -28,6 +28,8 @@ namespace atcg
 PathtracingIntegrator::PathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const Dictionary& dict)
     : Integrator(context, dict)
 {
+    _scene = dict.getValue<atcg::ref_ptr<Scene>>("scene");
+
     atcg::Dictionary film_dict;
     film_dict.setValue<uint32_t>("width", dict.getValue<uint32_t>("width"));
     film_dict.setValue<uint32_t>("height", dict.getValue<uint32_t>("height"));
@@ -35,30 +37,31 @@ PathtracingIntegrator::PathtracingIntegrator(const atcg::ref_ptr<RaytracingConte
 
     atcg::Dictionary sensor_dict;
     sensor_dict.setValue("film", film);
-    sensor_dict.setValue<atcg::ref_ptr<Camera>>("camera", dict.getValue<atcg::ref_ptr<Camera>>("camera"));
+    sensor_dict.setValue<atcg::ref_ptr<Camera>>("camera", _scene->getCamera());
     _sensor = atcg::make_ref<PinholeCamera>(sensor_dict);
+
+    initializePipeline();
 }
 
 PathtracingIntegrator::~PathtracingIntegrator() {}
 
-void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                               const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void PathtracingIntegrator::initializePipeline()
 {
     const std::string ptx_raygen_filename = "./bin/PathtracingIntegrator_ptx.ptx";
-    OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
-    OptixProgramGroup miss_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
-    OptixProgramGroup occl_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
+    OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
+    OptixProgramGroup miss_prog_group     = _pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
+    OptixProgramGroup occl_prog_group     = _pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
-    _raygen_index         = sbt->addRaygenEntry(raygen_prog_group);
-    _surface_miss_index   = sbt->addMissEntry(miss_prog_group);
-    _occlusion_miss_index = sbt->addMissEntry(occl_prog_group);
+    _raygen_index         = _sbt->addRaygenEntry(raygen_prog_group);
+    _surface_miss_index   = _sbt->addMissEntry(miss_prog_group);
+    _occlusion_miss_index = _sbt->addMissEntry(occl_prog_group);
 
-    _pipeline = pipeline;
-    _sbt      = sbt;
+    _optix_scene = SceneAdapter(_context, _pipeline, _sbt).apply(_scene);
 
-    _optix_scene = SceneAdapter(_context, pipeline, sbt).apply(_scene);
+    _sensor->initializePipeline(_pipeline, _sbt);
 
-    _sensor->initializePipeline(pipeline, sbt);
+    _pipeline->createPipeline();
+    _sbt->createSBT();
 }
 
 void PathtracingIntegrator::onImGuiRender()
