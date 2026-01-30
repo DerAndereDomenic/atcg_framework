@@ -4,7 +4,6 @@
 #include <Emitter/Emitter.h>
 #include <Emitter/MeshEmitterData.cuh>
 #include <DataStructure/Dictionary.h>
-#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -36,7 +35,14 @@ public:
      */
     virtual void onImGuiRender() override {}
 
-    ATCG_INLINE atcg::dref_ptr<MeshEmitterData> getDataBuffer() const { return _mesh_emitter_data; }
+    /**
+     * @brief Initialize the pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
     torch::Tensor _emissive_texture;
@@ -45,6 +51,4 @@ private:
 
     atcg::dref_ptr<MeshEmitterData> _mesh_emitter_data;
 };
-
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(MeshEmitter);
 }    // namespace atcg

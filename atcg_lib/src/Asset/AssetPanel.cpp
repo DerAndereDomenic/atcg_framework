@@ -878,6 +878,13 @@ void AssetPanel::displayScene(AssetHandle handle)
             updated    = true;
         }
 
+        float exposure = intrinsics.getExposure();
+        if(ImGui::DragFloat("Exposure##Camera", &exposure, 0.01f, 0.0f, 10.0f))
+        {
+            intrinsics.setExposure(exposure);
+            updated = true;
+        }
+
         if(updated) scene_camera->setIntrinsics(intrinsics);
     }
 

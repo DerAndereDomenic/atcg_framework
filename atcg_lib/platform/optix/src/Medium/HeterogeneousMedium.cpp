@@ -71,12 +71,12 @@ HeterogeneousMedium::~HeterogeneousMedium()
     if(_emission_texture) _emission_texture->unmapDevicePointers();
 }
 
-void PipelineInitializer<HeterogeneousMedium>::apply(const atcg::ref_ptr<HeterogeneousMedium>& component) const
+void HeterogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                             const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    // TODO
-    // if(_phase_function != nullptr) _phase_function->ensureInitialized(pipeline, sbt);
+    if(_phase_function != nullptr) _phase_function->ensureInitialized(pipeline, sbt);
 
-    auto phase_function = component->getPhaseFunction();
+    auto phase_function = getPhaseFunction();
 
     const std::string ptx_filename = "./bin/HeterogeneousMedium_ptx.ptx";
     OptixProgramGroup eval_transmittance_prog_group =
@@ -84,18 +84,15 @@ void PipelineInitializer<HeterogeneousMedium>::apply(const atcg::ref_ptr<Heterog
     OptixProgramGroup sample_medium_event_prog_group =
         pipeline->addCallableShader({ptx_filename, "__direct_callable__heterogeneousMedium_sampleMediumEvent"});
 
-    uint32_t eval_transmittance_index =
-        sbt->addCallableEntry(eval_transmittance_prog_group, component->getDataBuffer().get());
-    uint32_t sample_medium_event_index =
-        sbt->addCallableEntry(sample_medium_event_prog_group, component->getDataBuffer().get());
+    uint32_t eval_transmittance_index  = sbt->addCallableEntry(eval_transmittance_prog_group, _data_buffer.get());
+    uint32_t sample_medium_event_index = sbt->addCallableEntry(sample_medium_event_prog_group, _data_buffer.get());
 
     MediumVPtrTable vptr_table_data;
     vptr_table_data.evalCallIndex   = eval_transmittance_index;
     vptr_table_data.sampleCallIndex = sample_medium_event_index;
     vptr_table_data.phase_function  = phase_function ? phase_function->getVPtrTable() : nullptr;
 
-    component->getVPtrTableHolder().upload(&vptr_table_data);
-
-    component->markInitialized();
+    _vptr_table.upload(&vptr_table_data);
+    markInitialized();
 }
 }    // namespace atcg

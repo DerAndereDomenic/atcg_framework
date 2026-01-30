@@ -8,8 +8,6 @@
 #include <Emitter/Emitter.h>
 #include <Medium/Medium.h>
 
-#include <Core/PipelineInitializer.h>
-
 namespace atcg
 {
 /**
@@ -38,6 +36,15 @@ public:
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() override;
+
+    /**
+     * @brief Initialize the pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
     /**
      * @brief Get the shape
@@ -75,6 +82,4 @@ private:
     uint32_t _entity_id;
     glm::vec3 _color;
 };
-
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(ShapeInstance);
 }    // namespace atcg

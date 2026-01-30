@@ -73,7 +73,6 @@ class PythonLayer(atcg.Layer):
 
     def onAttach(self):
         atcg.enableDockSpace(True)
-        atcg.Renderer.setClearColor(atcg.vec4(0, 0, 0, 1))
         aspect_ratio = atcg.width() / atcg.height()
 
         extrinsics = atcg.CameraExtrinsics()
@@ -121,18 +120,13 @@ class PythonLayer(atcg.Layer):
 
         atcg.handleScriptUpdates(atcg.Project.getActive().getActiveScene(), dt)
 
-        atcg.Renderer.clear()
-
         atcg.Project.getActive().getActiveScene().draw(
             self.camera_controller.getCamera(), atcg.Renderer.getFramebuffer()
         )
 
-        atcg.Renderer.drawCameras(
-            atcg.Project.getActive().getActiveScene(),
-            self.camera_controller.getCamera(),
-        )
-
+        atcg.GraphicsCommand.beginRenderPass(atcg.Renderer.getFramebuffer())
         atcg.Renderer.drawCADGrid(self.camera_controller.getCamera())
+        atcg.GraphicsCommand.endRenderPass()
 
     def onImGuiRender(self):
         self.panel.renderPanel(atcg.Project.getActive().getActiveScene())

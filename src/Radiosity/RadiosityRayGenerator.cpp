@@ -5,34 +5,35 @@
 
 #include <optix_stubs.h>
 
-void RadiosityRayGenerator::initializePipeline(const atcg::ref_ptr<atcg::RayTracingPipeline>& pipeline,
-                                               const atcg::ref_ptr<atcg::ShaderBindingTable>& sbt)
+void RadiosityRayGenerator::initializePipeline()
 {
+    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"./bin/MeshShape_ptx.ptx", "__closesthit__mesh"}, {});
+
     auto graph = atcg::Graph::createTriangleMesh(_mesh);
     atcg::Dictionary dict;
     dict.setValue("mesh", graph);
     _shape = atcg::make_ref<atcg::MeshShape>(dict);
 
-    atcg::PipelineInitializer<atcg::MeshShape>(pipeline, sbt).apply(std::dynamic_pointer_cast<atcg::MeshShape>(_shape));
+    _shape->initializePipeline(_pipeline, _sbt);
     _shape->prepareAccelerationStructure(_context);
 
     atcg::Dictionary shape_data;
     shape_data.setValue("shape", _shape);
     auto shape_instance = atcg::make_ref<atcg::ShapeInstance>(shape_data);
-    atcg::PipelineInitializer<atcg::ShapeInstance>(pipeline, sbt).apply(shape_instance);
+    shape_instance->initializePipeline(_pipeline, _sbt);
     _shapes.push_back(shape_instance);
 
     const std::string ptx_raygen_filename = "./bin/RadiosityRayGenerator_ptx.ptx";
-    OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
-    OptixProgramGroup occl_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
+    OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
+    OptixProgramGroup occl_prog_group     = _pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
-    _raygen_index         = sbt->addRaygenEntry(raygen_prog_group);
-    _occlusion_miss_index = sbt->addMissEntry(occl_prog_group);
+    _raygen_index         = _sbt->addRaygenEntry(raygen_prog_group);
+    _occlusion_miss_index = _sbt->addMissEntry(occl_prog_group);
 
-    _ias = atcg::make_ref<atcg::InstanceAccelerationStructure>(_context, _shapes);
+    _ias = atcg::make_ref<atcg::InstanceAccelerationStructure>(_context, _shapes, _pipeline->numRays());
 
-    _pipeline = pipeline;
-    _sbt      = sbt;
+    _pipeline->createPipeline();
+    _sbt->createSBT();
 }
 
 void RadiosityRayGenerator::generateRays(atcg::Dictionary& dict)
@@ -42,11 +43,8 @@ void RadiosityRayGenerator::generateRays(atcg::Dictionary& dict)
 
     RadiosityParams params;
 
-    params.handle                           = _ias->getTraversableHandle();
-    params.occlusion_trace_params.rayFlags  = OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT;
-    params.occlusion_trace_params.SBToffset = 0;
-    params.occlusion_trace_params.SBTstride = 1;
-    params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
+    params.handle                 = _ias->getTraversableHandle();
+    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
 
     params.form_factors = (float*)output.data_ptr();
     params.shape        = std::static_pointer_cast<atcg::MeshShape>(_shape)->getMeshShapeData().get();
@@ -67,8 +65,3 @@ void RadiosityRayGenerator::generateRays(atcg::Dictionary& dict)
 }
 
 void RadiosityRayGenerator::reset() {}
-
-void RadiosityRayGenerator::setMesh(const atcg::ref_ptr<atcg::TriMesh>& mesh)
-{
-    _mesh = mesh;
-}

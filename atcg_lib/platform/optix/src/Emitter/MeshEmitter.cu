@@ -155,7 +155,8 @@ MeshEmitter::MeshEmitter(const Dictionary& dict)
 
 MeshEmitter::~MeshEmitter() {}
 
-void PipelineInitializer<MeshEmitter>::apply(const atcg::ref_ptr<MeshEmitter>& component) const
+void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                     const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_emitter_filename = "./bin/MeshEmitter_ptx.ptx";
     auto sample_prog_group =
@@ -165,20 +166,20 @@ void PipelineInitializer<MeshEmitter>::apply(const atcg::ref_ptr<MeshEmitter>& c
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_dual_meshemitter"});
     auto evalpdf_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_meshemitter"});
-    uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group, component->getDataBuffer().get());
-    uint32_t eval_idx      = sbt->addCallableEntry(eval_prog_group, component->getDataBuffer().get());
-    uint32_t eval_dual_idx = sbt->addCallableEntry(eval_dual_prog_group, component->getDataBuffer().get());
-    uint32_t eval_pdf_idx  = sbt->addCallableEntry(evalpdf_prog_group, component->getDataBuffer().get());
+    uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_idx      = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_dual_idx = sbt->addCallableEntry(eval_dual_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_pdf_idx  = sbt->addCallableEntry(evalpdf_prog_group, _mesh_emitter_data.get());
 
     EmitterVPtrTable table;
-    table.flags             = component->flags();
+    table.flags             = _flags;
     table.sampleCallIndex   = sample_idx;
     table.evalCallIndex     = eval_idx;
     table.evalDualCallIndex = eval_dual_idx;
     table.evalPdfCallIndex  = eval_pdf_idx;
 
-    component->getVPtrTableHolder().upload(&table);
+    _vptr_table.upload(&table);
 
-    component->markInitialized();
+    markInitialized();
 }
 }    // namespace atcg

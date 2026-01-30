@@ -3,7 +3,6 @@
 #include <BSDF/BSDF.h>
 #include <BSDF/PBRBSDFData.cuh>
 #include <Renderer/Material.h>
-#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -37,7 +36,14 @@ public:
 
     virtual void clampParameters() override;
 
-    ATCG_INLINE atcg::dref_ptr<PBRBSDFData> getDataBuffer() const { return _bsdf_data_buffer; }
+    /**
+     * @brief Initialize the pipeline
+     *
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
     torch::Tensor _diffuse_texture;
@@ -49,6 +55,4 @@ private:
     atcg::ref_ptr<Texture2D> _diffuse_optimized, _metallic_optimized, _roughness_optimized;
     atcg::ref_ptr<Texture2D> _diffuse_grad, _metallic_grad, _roughness_grad;
 };
-
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(PBRBSDF);
 }    // namespace atcg

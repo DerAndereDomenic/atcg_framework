@@ -75,14 +75,12 @@ public:
                    atcg::Dictionary& output)
                 {
                     auto framebuffer = output.getValue<atcg::ref_ptr<atcg::Framebuffer>>("g_buffer");
-                    framebuffer->use();
-                    atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
-                    atcg::Renderer::setViewport(0, 0, framebuffer->width(), framebuffer->height());
-                    atcg::Renderer::clear();
+                    atcg::GraphicsCommand::beginRenderPass(framebuffer);
+                    atcg::GraphicsCommand::clear();
                     int value = -1;
                     framebuffer->getColorAttachement(4)->fill(&value);
 
-                    auto scene       = context.getValue<atcg::Scene*>("scene");
+                    auto scene       = context.getValue<atcg::ref_ptr<atcg::Scene>>("scene");
                     const auto& view = scene->getAllEntitiesWith<atcg::TransformComponent,
                                                                  atcg::GeometryComponent,
                                                                  atcg::MeshRenderComponent>();
@@ -94,7 +92,7 @@ public:
                     auxiliary.setValue("override_shader", geometry_pass_shader);
                     for(auto e: view)
                     {
-                        atcg::Entity entity(e, scene);
+                        atcg::Entity entity(e, scene.get());
 
                         atcg::renderComponent<atcg::MeshRenderComponent>(
                             atcg::SystemRegistry::instance()->getSystem<atcg::RendererSystem>(),
@@ -102,6 +100,7 @@ public:
                             camera,
                             auxiliary);
                     }
+                    atcg::GraphicsCommand::endRenderPass();
                 });
 
         auto [light_handle, light_builder] = graph->addRenderPass(atcg::RenderTargetDesc(), "Lighting Pass");
@@ -139,16 +138,14 @@ public:
 
                     auto framebuffer = output.getValue<atcg::ref_ptr<atcg::Framebuffer>>("framebuffer");
 
-                    framebuffer->use();
-                    atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
-                    atcg::Renderer::setDefaultViewport();
-                    atcg::Renderer::clear();
+                    atcg::GraphicsCommand::beginRenderPass(framebuffer);
+                    atcg::GraphicsCommand::clear();
 
                     auto camera = context.getValue<atcg::ref_ptr<atcg::Camera>>("camera");
 
                     // TODO skybox
-                    auto scene = context.getValue<atcg::Scene*>("scene");
-                    atcg::Renderer::drawSkybox(scene->getSkyboxCubemap(), camera);
+                    auto scene = context.getValue<atcg::ref_ptr<atcg::Scene>>("scene");
+                    // atcg::Renderer::drawSkybox(scene->getSkyboxCubemap(), camera);
 
                     framebuffer->blit(g_buffer, false);
 
@@ -158,7 +155,7 @@ public:
                     auto light_pass_shader = data.getValue<atcg::ref_ptr<atcg::Shader>>("light_pass_shader");
                     for(auto e: light_view)
                     {
-                        atcg::Entity light(e, scene);
+                        atcg::Entity light(e, scene.get());
                         auto& light_transform = light.getComponent<atcg::TransformComponent>();
                         auto& point_light     = light.getComponent<atcg::PointLightComponent>();
                         std::stringstream ss;
@@ -175,7 +172,7 @@ public:
                     auto point_light_depth_maps =
                         *inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<atcg::TextureCubeArray>>>("point_light_depth_"
                                                                                                "maps");
-                    point_light_depth_maps->use(point_light_id);
+                    atcg::GraphicsCommand::bindTexture(point_light_id, point_light_depth_maps);
                     light_pass_shader->setInt("point_light_depth_maps", point_light_id);
 
                     uint32_t position_texture_id = atcg::Renderer::popTextureID();
@@ -191,16 +188,24 @@ public:
                     light_pass_shader->setVec3("camera_pos", camera->getPosition());
                     light_pass_shader->setVec3("camera_dir", camera->getDirection());
 
-                    g_buffer->getColorAttachement(0)->use(position_texture_id);
-                    g_buffer->getColorAttachement(1)->use(normal_texture_id);
-                    g_buffer->getColorAttachement(2)->use(color_texture_id);
-                    g_buffer->getColorAttachement(3)->use(spec_met_texture_id);
-                    g_buffer->getColorAttachement(4)->use(entity_texture_id);
+                    atcg::GraphicsCommand::bindTexture(position_texture_id, g_buffer->getColorAttachement(0));
+                    atcg::GraphicsCommand::bindTexture(normal_texture_id, g_buffer->getColorAttachement(1));
+                    atcg::GraphicsCommand::bindTexture(color_texture_id, g_buffer->getColorAttachement(2));
+                    atcg::GraphicsCommand::bindTexture(spec_met_texture_id, g_buffer->getColorAttachement(3));
+                    atcg::GraphicsCommand::bindTexture(entity_texture_id, g_buffer->getColorAttachement(4));
+
+                    atcg::GraphicsPipeline pipeline =
+                        atcg::GraphicsPipeline()
+                            .setShader(light_pass_shader)
+                            .setRasterizerState(atcg::RasterizerState().enableCulling(false).setDepthState(
+                                atcg::DepthState().enableDepthTesting(false).enableDepthWrite(false)));
 
                     auto screen_quad = data.getValue<atcg::ref_ptr<atcg::Graph>>("screen_quad");
-                    atcg::Renderer::toggleDepthTesting(false);
-                    atcg::Renderer::draw(screen_quad, {}, glm::mat4(1), glm::vec3(1), light_pass_shader);
-                    atcg::Renderer::toggleDepthTesting(true);
+                    atcg::Renderer::drawVAO(screen_quad->getVerticesArray(),
+                                            {},
+                                            glm::mat4(1),
+                                            pipeline,
+                                            screen_quad->n_vertices());
 
                     atcg::Renderer::pushTextureID(position_texture_id);
                     atcg::Renderer::pushTextureID(normal_texture_id);
@@ -222,6 +227,8 @@ public:
                     //         atcg::Renderer::draw(entity, context->camera);
                     //     }
                     // }
+
+                    atcg::GraphicsCommand::endRenderPass();
                 });
 
         auto shadow_handle = graph->addRenderPass(atcg::make_ref<atcg::ShadowPass>());
@@ -323,7 +330,6 @@ public:
     virtual void onAttach() override
     {
         atcg::Application::get()->enableDockSpace(true);
-        atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
         // auto skybox = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
         // ATCG_TRACE("{0} {1} {2}", skybox->width(), skybox->height(), skybox->channels());
@@ -354,7 +360,7 @@ public:
     {
         camera_controller->onUpdate(delta_time);
 
-        atcg::Renderer::clear();
+        // atcg::Renderer::clear();
 
         atcg::Dictionary context;
         context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
@@ -463,8 +469,7 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
         {
-            int id         = atcg::Renderer::getEntityIndex(mouse_pos);
-            hovered_entity = id == -1 ? atcg::Entity() : atcg::Entity((entt::entity)id, scene.get());
+            hovered_entity = atcg::Utils::pickEntity(mouse_pos);
             panel.selectEntity(hovered_entity);
         }
         return true;

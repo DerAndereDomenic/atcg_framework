@@ -234,9 +234,8 @@ struct EditorCameraComponent : public CameraComponent
 
 struct RenderComponent
 {
-    RenderComponent(atcg::DrawMode draw_mode) : draw_mode(draw_mode) { default_material = atcg::make_ref<Material>(); }
+    RenderComponent() { default_material = atcg::make_ref<Material>(); }
 
-    atcg::DrawMode draw_mode;
     bool visible = true;
 
     atcg::ref_ptr<Material> default_material;
@@ -244,8 +243,8 @@ struct RenderComponent
 
 struct MeshRenderComponent : public RenderComponent
 {
-    MeshRenderComponent() : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE) {}
-    MeshRenderComponent(const atcg::ref_ptr<Shader>& shader) : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_TRIANGLE)
+    MeshRenderComponent() : RenderComponent() {}
+    MeshRenderComponent(const atcg::ref_ptr<Shader>& shader) : RenderComponent()
     {
         if(AssetManager::isAssetHandleValid(shader->handle))
         {
@@ -281,7 +280,7 @@ struct MeshRenderComponent : public RenderComponent
 struct PointRenderComponent : public RenderComponent
 {
     PointRenderComponent(const glm::vec3& color = glm::vec3(1), const float& point_size = 1.0f)
-        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS),
+        : RenderComponent(),
           color(color),
           point_size(point_size)
     {
@@ -289,7 +288,7 @@ struct PointRenderComponent : public RenderComponent
     PointRenderComponent(const atcg::ref_ptr<Shader>& shader,
                          const glm::vec3& color  = glm::vec3(1),
                          const float& point_size = 1.0f)
-        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS),
+        : RenderComponent(),
           color(color),
           point_size(point_size)
     {
@@ -320,14 +319,10 @@ struct PointRenderComponent : public RenderComponent
 
 struct PointSphereRenderComponent : public RenderComponent
 {
-    PointSphereRenderComponent(const float& point_size = 0.1f)
-        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE),
-          point_size(point_size)
-    {
-    }
+    PointSphereRenderComponent(const float& point_size = 0.1f) : RenderComponent(), point_size(point_size) {}
 
     PointSphereRenderComponent(const atcg::ref_ptr<Shader>& shader, const float& point_size = 0.1f)
-        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_POINTS_SPHERE),
+        : RenderComponent(),
           point_size(point_size)
     {
         if(AssetManager::isAssetHandleValid(shader->handle))
@@ -363,24 +358,17 @@ struct PointSphereRenderComponent : public RenderComponent
 
 struct EdgeRenderComponent : public RenderComponent
 {
-    EdgeRenderComponent(const glm::vec3& color = glm::vec3(1))
-        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES),
-          color(color)
-    {
-    }
+    EdgeRenderComponent(const glm::vec3& color = glm::vec3(1)) : RenderComponent(), color(color) {}
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Edge Renderer"; }
 
     glm::vec3 color = glm::vec3(1);
+    // TODO Edge radius?
 };
 
 struct EdgeCylinderRenderComponent : public RenderComponent
 {
-    EdgeCylinderRenderComponent(float radius = 0.001f)
-        : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_EDGES_CYLINDER),
-          radius(radius)
-    {
-    }
+    EdgeCylinderRenderComponent(float radius = 0.001f) : RenderComponent(), radius(radius) {}
 
     ATCG_INLINE atcg::ref_ptr<Material> material() const
     {
@@ -397,7 +385,7 @@ struct EdgeCylinderRenderComponent : public RenderComponent
 
 struct InstanceRenderComponent : public RenderComponent
 {
-    InstanceRenderComponent() : RenderComponent(atcg::DrawMode::ATCG_DRAW_MODE_INSTANCED) {}
+    InstanceRenderComponent() : RenderComponent() {}
 
     void addInstanceBuffer(const atcg::ref_ptr<VertexBuffer>& instance_vbo) { instance_vbos.push_back(instance_vbo); }
 
@@ -427,11 +415,7 @@ struct CustomRenderComponent : public RenderComponent
 {
     using RenderCallbackFn = std::function<void(Entity, const atcg::ref_ptr<Camera>& camera)>;
 
-    CustomRenderComponent(const RenderCallbackFn& callback, atcg::DrawMode draw_mode)
-        : RenderComponent(draw_mode),
-          callback(callback)
-    {
-    }
+    CustomRenderComponent(const RenderCallbackFn& callback) : RenderComponent(), callback(callback) {}
 
     RenderCallbackFn callback;
 };

@@ -79,7 +79,7 @@ __direct_callable__eval_hgphase(const atcg::MediumInteraction& interaction, cons
     result.sampling_pdf =
         detail::henyey_greenstein_phase_function(glm::dot(interaction.incoming_direction, outgoing_ray_dir),
                                                  sbt_data->g);
-    result.phase_function_value = glm::vec3(result.sampling_pdf);
+    result.phase_function_value = result.sampling_pdf;
     return result;
 }
 
@@ -97,7 +97,7 @@ __direct_callable__sample_hgphase(const atcg::MediumInteraction& interaction, at
     result.sampling_pdf     = detail::warp_square_to_sphere_henyey_greenstein_pdf(local_outgoing_ray_dir, sbt_data->g);
     // result.phase_function_weight = glm::vec3(henyey_greenstein_phase_function(local_outgoing_ray_dir.z, sbt_data->g))
     // / result.sampling_pdf;
-    result.phase_function_weight = glm::vec3(1);
+    result.phase_function_weight = 1.0f;
 
     return result;
 }

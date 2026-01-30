@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/RaytracingContext.h>
+#include <Core/TraceParameters.h>
 #include <optix.h>
 
 namespace atcg
@@ -20,7 +21,7 @@ public:
      *
      * @param context The optix context
      */
-    RayTracingPipeline(const atcg::ref_ptr<RaytracingContext>& context);
+    RayTracingPipeline(const atcg::ref_ptr<RaytracingContext>& context, const uint32_t num_rays = 1);
 
     /**
      * @brief Destructor
@@ -57,12 +58,16 @@ public:
     /**
      * @brief Add a triangle hit shader
      *
+     * @param shape_type The shape type
+     * @param shader_slot The shader slot
      * @param closestHit_shader_desc The entry point description for the closest hit shader
      * @param anyHit_shader_desc The entry point description for the any hit shader
      *
      * @return The program group associated with the entry function
      */
-    OptixProgramGroup addTrianglesHitGroupShader(const ShaderEntryPointDesc& closestHit_shader_desc,
+    OptixProgramGroup addTrianglesHitGroupShader(const std::string& shape_type,
+                                                 const uint32_t shader_slot,
+                                                 const ShaderEntryPointDesc& closestHit_shader_desc,
                                                  const ShaderEntryPointDesc& anyHit_shader_desc);
 
     /**
@@ -76,6 +81,33 @@ public:
      * @return The pipeline
      */
     OptixPipeline getPipeline() const;
+
+    /**
+     * @brief Get the number of rays supported by the pipeline
+     *
+     * @return The number of rays
+     */
+    uint32_t numRays() const;
+
+    /**
+     * @brief Get the ray program groups associated with a ray type
+     *
+     * @param ray_type The ray type
+     *
+     * @return The program groups
+     */
+    const std::vector<OptixProgramGroup>& getRayProgramGroups(const std::string& ray_type) const;
+
+    /**
+     * @brief Get the trace parameters for a given ray type index and miss index
+     *
+     * @param ray_type_index The ray type index
+     * @param miss_index The miss index
+     * @param occlusion Whether this is an occlusion ray
+     *
+     * @return The trace parameters
+     */
+    TraceParameters getRay(const uint32_t ray_type_index, const uint32_t miss_index, bool occlusion = false) const;
 
 private:
     class Impl;

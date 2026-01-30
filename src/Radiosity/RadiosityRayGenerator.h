@@ -9,25 +9,23 @@
 class RadiosityRayGenerator : public atcg::Integrator
 {
 public:
-    RadiosityRayGenerator(const atcg::ref_ptr<atcg::RaytracingContext>& context)
-        : atcg::Integrator(context, atcg::Dictionary())
+    RadiosityRayGenerator(const atcg::ref_ptr<atcg::RaytracingContext>& context, const atcg::Dictionary& dict)
+        : atcg::Integrator(context, dict)
     {
+        _mesh = dict.getValue<atcg::ref_ptr<atcg::TriMesh>>("mesh");
+        initializePipeline();
     }
 
     virtual ~RadiosityRayGenerator() {}
-
-    virtual void initializePipeline(const atcg::ref_ptr<atcg::RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<atcg::ShaderBindingTable>& sbt) override;
 
     virtual void generateRays(atcg::Dictionary& dict) override;
 
     virtual void reset() override;
 
-    void setMesh(const atcg::ref_ptr<atcg::TriMesh>& mesh);
-
     virtual void onImGuiRender() override {}
 
 private:
+    void initializePipeline();
     atcg::ref_ptr<atcg::TriMesh> _mesh;
     atcg::ref_ptr<atcg::Shape> _shape;
 

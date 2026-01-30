@@ -37,7 +37,7 @@ public:
      *
      * @return The converted scene
      */
-    atcg::ref_ptr<OptixScene> apply(const atcg::ref_ptr<Scene>& scene);
+    atcg::ref_ptr<OptixScene> apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, const uint32_t height);
 
 private:
     template<typename T>

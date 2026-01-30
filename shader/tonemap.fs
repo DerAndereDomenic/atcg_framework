@@ -11,6 +11,7 @@ in vec2 frag_uv;
 uniform sampler2D screen_texture;
 uniform isampler2D entity_texture;
 uniform isampler2D stencil_texture;
+uniform float exposure;
 
 void main()
 {
@@ -22,7 +23,7 @@ void main()
     
     if(bool(stencil & uint(TONE_MAP_BIT)))
     {
-        tonemapped = pow(vec3(1) - exp(-color), vec3(1.0 / 2.4));
+        tonemapped = pow(vec3(1) - exp(-color * exposure), vec3(1.0 / 2.4));
     }
 
     FragColor = vec4(tonemapped, 1);

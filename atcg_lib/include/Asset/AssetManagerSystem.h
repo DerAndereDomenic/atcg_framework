@@ -2,6 +2,8 @@
 
 #include <Asset/Asset.h>
 #include <Core/SystemRegistry.h>
+#include <DataStructure/Graph.h>
+#include <Renderer/Texture.h>
 
 namespace atcg
 {
@@ -150,9 +152,64 @@ public:
      */
     void destroy();
 
+    /**
+     * @brief Load standard assets like sphere mesh, cylinder mesh, lut texture
+     */
+    void loadStandardAssets();
+
+    /**
+     * @brief Get the standard sphere mesh
+     *
+     * @return The sphere mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getSphereMesh() const { return _sphere_mesh; }
+
+    /**
+     * @brief Get the standard cylinder mesh
+     *
+     * @return The cylinder mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getCylinderMesh() const { return _cylinder_mesh; }
+
+    /**
+     * @brief Get the standard lut texture
+     *
+     * @return The lut texture
+     */
+    ATCG_INLINE atcg::ref_ptr<Texture2D> getLUTTexture() const { return _lut_texture; }
+
+    /**
+     * @brief Get the camera frustum mesh
+     *
+     * @return The camera frustum mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getCameraFrustumMesh() const { return _camera_frustum; }
+
+    /**
+     * @brief Get the quad mesh
+     *
+     * @return The quad mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getQuadMesh() const { return _quad; }
+
+    /**
+     * @brief Get the cube mesh
+     *
+     * @return The cube mesh
+     */
+    ATCG_INLINE atcg::ref_ptr<Graph> getCubeMesh() const { return _cube_mesh; }
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
+
+private:
+    atcg::ref_ptr<Graph> _sphere_mesh;
+    atcg::ref_ptr<Graph> _cylinder_mesh;
+    atcg::ref_ptr<Texture2D> _lut_texture;
+    atcg::ref_ptr<Graph> _camera_frustum;
+    atcg::ref_ptr<Graph> _quad;
+    atcg::ref_ptr<Graph> _cube_mesh;
 };
 
 namespace AssetManager
@@ -347,6 +404,75 @@ ATCG_INLINE void clear()
 {
     SystemRegistry::instance()->getSystem<AssetManagerSystem>()->clear();
 }
+
+/**
+ * @brief Load standard assets like sphere mesh, cylinder mesh, lut texture
+ */
+ATCG_INLINE void loadStandardAssets()
+{
+    SystemRegistry::instance()->getSystem<AssetManagerSystem>()->loadStandardAssets();
+}
+
+/**
+ * @brief Get the standard sphere mesh
+ *
+ * @return The sphere mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getSphereMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getSphereMesh();
+}
+
+/**
+ * @brief Get the standard cylinder mesh
+ *
+ * @return The cylinder mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getCylinderMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getCylinderMesh();
+}
+
+/**
+ * @brief Get the standard lut texture
+ *
+ * @return The lut texture
+ */
+ATCG_INLINE atcg::ref_ptr<Texture2D> getLUTTexture()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getLUTTexture();
+}
+
+/**
+ * @brief Get the camera frustum mesh
+ *
+ * @return The camera frustum mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getCameraFrustumMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getCameraFrustumMesh();
+}
+
+/**
+ * @brief Get the quad mesh
+ *
+ * @return The quad mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getQuadMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getQuadMesh();
+}
+
+/**
+ * @brief Get the cube mesh
+ *
+ * @return The cube mesh
+ */
+ATCG_INLINE atcg::ref_ptr<Graph> getCubeMesh()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getCubeMesh();
+}
+
 }    // namespace AssetManager
 
 }    // namespace atcg

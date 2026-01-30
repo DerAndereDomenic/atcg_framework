@@ -1,8 +1,10 @@
 #include <Asset/AssetManagerSystem.h>
 
+#include <Core/Path.h>
 #include <Asset/AssetImporter.h>
 #include <Asset/AssetExporter.h>
 #include <Asset/Project.h>
+#include <DataStructure/GraphLoader.h>
 
 #include <json.hpp>
 
@@ -224,6 +226,83 @@ void AssetManagerSystem::clear()
 void AssetManagerSystem::destroy()
 {
     clear();
+}
+
+void AssetManagerSystem::loadStandardAssets()
+{
+    _sphere_mesh   = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
+    _cylinder_mesh = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
+
+    auto img = IO::imread((atcg::resource_directory() / "LUT.hdr").string());
+    TextureSpecification spec_lut;
+    spec_lut.width             = img->width();
+    spec_lut.height            = img->height();
+    spec_lut.format            = TextureFormat::RGBFLOAT;
+    spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+    _lut_texture               = atcg::Texture2D::create(img, spec_lut);
+
+    {
+        glm::vec3 eye = glm::vec3(0);
+
+        std::vector<atcg::Vertex> points;
+        points.push_back(atcg::Vertex(eye, glm::vec3(1)));
+        points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, -0.5, 1.0f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(eye + glm::vec3(0.5, -0.5, 1.0f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(eye + glm::vec3(0.5, 0.5, 1.0f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(eye + glm::vec3(-0.5, 0.5, 1.0f), glm::vec3(1)));
+
+        std::vector<atcg::Edge> edges;
+        edges.push_back({glm::vec2(0, 1), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(0, 2), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(0, 3), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(0, 4), glm::vec3(1), 0.01f});
+
+        edges.push_back({glm::vec2(1, 2), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(2, 3), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(3, 4), glm::vec3(1), 0.01f});
+        edges.push_back({glm::vec2(4, 1), glm::vec3(1), 0.01f});
+
+        _camera_frustum = atcg::Graph::createGraph(points, edges);
+    }
+
+    {
+        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
+                                              atcg::Vertex(glm::vec3(1, -1, 0)),
+                                              atcg::Vertex(glm::vec3(1, 1, 0)),
+                                              atcg::Vertex(glm::vec3(-1, 1, 0))};
+
+        std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+
+        _quad = atcg::Graph::createTriangleMesh(vertices, edges);
+    }
+
+    {
+        std::vector<atcg::Vertex> points;
+        points.push_back(atcg::Vertex(glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(1)));
+        points.push_back(atcg::Vertex(glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(1)));
+
+        std::vector<glm::u32vec3> faces;
+        faces.push_back(glm::u32vec3(4, 2, 0));
+        faces.push_back(glm::u32vec3(2, 7, 3));
+        faces.push_back(glm::u32vec3(6, 5, 7));
+        faces.push_back(glm::u32vec3(1, 7, 5));
+        faces.push_back(glm::u32vec3(0, 3, 1));
+        faces.push_back(glm::u32vec3(4, 1, 5));
+        faces.push_back(glm::u32vec3(4, 6, 2));
+        faces.push_back(glm::u32vec3(2, 6, 7));
+        faces.push_back(glm::u32vec3(6, 4, 5));
+        faces.push_back(glm::u32vec3(1, 3, 7));
+        faces.push_back(glm::u32vec3(0, 2, 3));
+        faces.push_back(glm::u32vec3(4, 0, 1));
+
+        _cube_mesh = atcg::Graph::createTriangleMesh(points, faces);
+    }
 }
 
 }    // namespace atcg

@@ -10,6 +10,8 @@
 namespace atcg
 {
 
+class GraphicsAPI;
+
 /**
  * @brief A class to model a texture
  */
@@ -40,11 +42,11 @@ public:
     virtual void setData(const torch::Tensor& data) = 0;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) = 0;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) = 0;
 
     /**
      * @brief Get the data in the texture.
@@ -108,13 +110,6 @@ public:
      * @return The specification
      */
     ATCG_INLINE TextureSpecification getSpecification() const { return _spec; }
-
-    /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const = 0;
 
     /**
      * @brief Use this texture as output in a compute shader
@@ -223,6 +218,21 @@ public:
     void fill(void* value);
 
 protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void bind(const uint32_t& slot = 0) const = 0;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const = 0;
+
+    friend class GraphicsAPI;
     uint32_t _ID;
     TextureSpecification _spec;
 
@@ -312,11 +322,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -333,13 +343,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -354,6 +357,23 @@ public:
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture2D; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
+
+    friend class GraphicsAPI;
 };
 
 /**
@@ -419,11 +439,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -440,13 +460,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -461,6 +474,23 @@ public:
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture3D; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
+
+    friend class GraphicsAPI;
 };
 
 /**
@@ -503,11 +533,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -523,13 +553,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -540,6 +563,23 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
+
+    friend class GraphicsAPI;
 };
 
 /**
@@ -605,11 +645,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -626,13 +666,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -643,6 +676,23 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
+
+    friend class GraphicsAPI;
 };
 
 /**
@@ -685,11 +735,11 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -705,13 +755,6 @@ public:
                                   const uint32_t mip_level    = 0) const override;
 
     /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
-
-    /**
      * @brief Generate mipmap levels
      */
     virtual void generateMipmaps() override;
@@ -722,6 +765,23 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
+
+    friend class GraphicsAPI;
 };
 
 /**
@@ -755,12 +815,12 @@ public:
     virtual void setData(const torch::Tensor& data) override;
 
     /**
-     * @brief Set the data of the texture from a PixelUnpackBuffer.
+     * @brief Set the data of the texture from a VertexBuffer.
      * @note This function is a NoOp as it is not possible to set data to a multisampled texture
      *
      * @param data The data
      */
-    virtual void setData(const atcg::ref_ptr<PixelUnpackBuffer>& data) override;
+    virtual void setData(const atcg::ref_ptr<VertexBuffer>& data) override;
 
     /**
      * @brief Get the data in the texture.
@@ -773,13 +833,6 @@ public:
      */
     virtual torch::Tensor getData(const torch::Device& device = torch::Device(atcg::GPU),
                                   const uint32_t mip_level    = 0) const override;
-
-    /**
-     * @brief Use this texture
-     *
-     * @param slot The used texture slot
-     */
-    virtual void use(const uint32_t& slot = 0) const override;
 
     /**
      * @brief Generate mipmap levels
@@ -795,6 +848,23 @@ public:
      * @return nullptr
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+protected:
+    /**
+     * @brief Use this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void bind(const uint32_t& slot = 0) const override;
+
+    /**
+     * @brief Unuse this texture
+     *
+     * @param slot The used texture slot
+     */
+    virtual void unbind(const uint32_t& slot = 0) const override;
+
+    friend class GraphicsAPI;
 };
 
 }    // namespace atcg

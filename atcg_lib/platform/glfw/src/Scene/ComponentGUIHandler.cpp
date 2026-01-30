@@ -2,7 +2,7 @@
 
 #include <Core/Application.h>
 #include <Scene/Entity.h>
-#include <Math/Utils.h>
+#include <Utils/Utils.h>
 
 #include <imgui.h>
 #include <portable-file-dialogs.h>
@@ -181,16 +181,11 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
         // updated = true;
     }
 
-    component.preview->use();
-    atcg::Renderer::clear();
-    atcg::Renderer::setViewport(0, 0, preview_width, preview_height);
-
     atcg::Dictionary context;
     context.setValue("camera", component.camera);
     context.setValue("target", component.preview);
+    context.setValue("draw_cameras", false);
     scene->draw(context);
-    atcg::Renderer::useScreenBuffer();
-    atcg::Renderer::setDefaultViewport();
 
     updated = ImGui::Checkbox("Show Preview##cam", &component.render_preview) || updated;
 
@@ -213,9 +208,8 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 
         oss << "bin/" << tag << "_" << std::put_time(&tm, "%Y-%m-%d_%H-%M-%S") << ".png";
 
-        atcg::Renderer::screenshot(scene, component.camera, component.width, component.height, oss.str());
+        atcg::Utils::screenshot(scene, component.camera, component.width, component.height, oss.str());
     }
-    atcg::Framebuffer::useDefault();
 
     ImGui::Separator();
 

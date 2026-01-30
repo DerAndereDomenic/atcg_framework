@@ -8,6 +8,8 @@
 
 namespace atcg
 {
+namespace Utils
+{
 /**
  * @brief Normalizes a graph to the unit cube
  *
@@ -71,8 +73,6 @@ T hton(T host)
     return ntoh(host);
 }
 
-namespace IO
-{
 /**
  * @brief Dump data as raw binary file to disk.
  *
@@ -80,6 +80,55 @@ namespace IO
  * @param data The data
  */
 void dumpBinary(const std::string& path, const torch::Tensor& data);
-}    // namespace IO
+
+/**
+ * @brief Take a screenshot and save it to disk
+ *
+ * @param scene The scene
+ * @param camera The camera
+ * @param width The output width. Height is calculated from the camera's aspect ratio
+ * @param path The output path
+ */
+void screenshot(const atcg::ref_ptr<Scene>& scene,
+                const atcg::ref_ptr<Camera>& camera,
+                const uint32_t width,
+                const std::string& path);
+
+/**
+ * @brief Take a screenshot and save it to disk
+ *
+ * @param scene The scene
+ * @param camera The camera
+ * @param width The output width
+ * @param height The output height
+ * @param path The output path
+ */
+void screenshot(const atcg::ref_ptr<Scene>& scene,
+                const atcg::ref_ptr<Camera>& camera,
+                const uint32_t width,
+                const uint32_t height,
+                const std::string& path);
+
+/**
+ * @brief Take a screenshot and return it as tensor
+ *
+ * @param scene The scene
+ * @param camera The camera
+ * @param width The output width. Height is calculated from the camera's aspect ratio
+ *
+ * @return The pixel data as tensor
+ */
+torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width);
+
+/**
+ * @brief Pick an entity at the given screen coordinates. This reads information from the current framebuffer, i.e.,
+ * Renderer::Framebuffer. If no entity is found, an invalid entity is returned.
+ *
+ * @param mouse_pos The mouse position in screen coordinates
+ *
+ * @return The picked entity
+ */
+Entity pickEntity(const glm::vec2& mouse_pos);
+}    // namespace Utils
 
 }    // namespace atcg

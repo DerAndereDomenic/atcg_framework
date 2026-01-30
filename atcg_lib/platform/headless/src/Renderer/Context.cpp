@@ -11,38 +11,6 @@ namespace atcg
 
 namespace detail
 {
-static bool s_opengl_initialized = false;
-
-// This maps egl handles to our custom context handles
-static std::unordered_map<uint64_t, uint64_t> context_map;
-
-void GLAPIENTRY MessageCallback(GLenum source,
-                                GLenum type,
-                                GLuint id,
-                                GLenum severity,
-                                GLsizei length,
-                                const GLchar* message,
-                                const void* userParam)
-{
-    switch(severity)
-    {
-        case GL_DEBUG_SEVERITY_LOW:
-        case GL_DEBUG_SEVERITY_MEDIUM:
-        {
-            if(id == 131218) return;    // Some NVIDIA stuff going wrong -> disable this warning
-            ATCG_WARN(message);
-        }
-        break;
-        case GL_DEBUG_SEVERITY_HIGH:
-        {
-            ATCG_ERROR(message);
-        }
-        break;
-        default:
-            break;
-    }
-}
-
 static EGLDeviceEXT getDeviceFromIndex(const int device_id)
 {
     PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT = (PFNEGLQUERYDEVICESEXTPROC)eglGetProcAddress("eglQueryDevicesEX"
@@ -161,25 +129,6 @@ void Context::create(const atcg::ref_ptr<Context>& shared)
     }
     detail::create(shared, device_id, &_context_handle);
     makeCurrent();
-}
-
-void Context::initGraphicsAPI()
-{
-    if(!detail::s_opengl_initialized)
-    {
-        makeCurrent();
-
-        if(!gladLoadGL())
-        {
-            ATCG_ERROR("Error loading glad!");
-        }
-
-#ifndef NDEBUG
-        glEnable(GL_DEBUG_OUTPUT);
-        glDebugMessageCallback(detail::MessageCallback, 0);
-#endif
-        detail::s_opengl_initialized = true;
-    }
 }
 
 void Context::swapBuffers()

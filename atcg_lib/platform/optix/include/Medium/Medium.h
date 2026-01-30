@@ -4,7 +4,6 @@
 #include <DataStructure/Dictionary.h>
 #include <Medium/PhaseFunction.h>
 #include <Medium/MediumVPtrTable.cuh>
-#include <Core/PipelineInitializer.h>
 
 #ifndef __CUDACC__
     #include <Scene/ComponentGUIHandler.h>
@@ -53,8 +52,6 @@ public:
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() = 0;
-
-    ATCG_INLINE atcg::dref_ptr<MediumVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
 
 protected:
     atcg::dref_ptr<MediumVPtrTable> _vptr_table;

@@ -14,6 +14,7 @@
 #include <Scripting/ScriptEngine.h>
 #include <Asset/AssetManagerSystem.h>
 #include <Scene/ComponentRegistry.h>
+#include <Renderer/GraphicsAPI.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
@@ -168,6 +169,7 @@ private:
     atcg::ref_ptr<VRSystem> _vr_system;
     atcg::ref_ptr<ScriptEngine> _script_engine;
     atcg::ref_ptr<RevisionSystem> _revision_system;
+    atcg::ref_ptr<GraphicsAPI> _graphics_api;
     atcg::ref_ptr<ComponentRegistrySystem> _component_registry;
 
     friend int atcg::atcg_main();

@@ -26,7 +26,7 @@ void ShadowPass::initRenderPass()
         {
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
-            auto scene = context.getValue<Scene*>("scene");
+            auto scene = context.getValue<atcg::ref_ptr<Scene>>("scene");
 
             float n              = 0.1f;
             float f              = 100.0f;
@@ -34,10 +34,6 @@ void ShadowPass::initRenderPass()
 
             const atcg::ref_ptr<Shader>& depth_pass_shader = renderer->getShaderManager()->getShader("depth_pass");
             depth_pass_shader->setFloat("far_plane", f);
-
-            uint32_t active_fbo = atcg::Framebuffer::currentFramebuffer();
-
-            glm::vec4 old_viewport = renderer->getViewport();
 
             auto light_view = scene->getAllEntitiesWith<PointLightComponent, TransformComponent>();
 
@@ -71,14 +67,13 @@ void ShadowPass::initRenderPass()
                 point_light_framebuffer->complete();
             }
 
-            point_light_framebuffer->use();
-            renderer->setViewport(0, 0, point_light_framebuffer->width(), point_light_framebuffer->height());
-            renderer->clear();
+            GraphicsCommand::beginRenderPass(point_light_framebuffer);
+            GraphicsCommand::clear();
 
             uint32_t light_idx = 0;
             for(auto e: light_view)
             {
-                atcg::Entity entity(e, scene);
+                atcg::Entity entity(e, scene.get());
 
                 auto& point_light = entity.getComponent<PointLightComponent>();
                 auto& transform   = entity.getComponent<TransformComponent>();
@@ -122,7 +117,7 @@ void ShadowPass::initRenderPass()
                 auxiliary.setValue("override_shader", depth_pass_shader);
                 for(auto e: view)
                 {
-                    atcg::Entity entity(e, scene);
+                    atcg::Entity entity(e, scene.get());
 
                     renderComponent<MeshRenderComponent>(renderer, entity, camera, auxiliary);
                 }
@@ -130,8 +125,7 @@ void ShadowPass::initRenderPass()
                 ++light_idx;
             }
 
-            renderer->setViewport(old_viewport[0], old_viewport[1], old_viewport[2], old_viewport[3]);
-            atcg::Framebuffer::bindByID(active_fbo);
+            GraphicsCommand::endRenderPass();
         });
 }
 

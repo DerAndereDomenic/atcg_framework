@@ -26,19 +26,14 @@ atcg::ref_ptr<atcg::TriMesh> solve_radiosity_gpu(const atcg::ref_ptr<atcg::TriMe
     atcg::ref_ptr<TriMesh> result = atcg::make_ref<TriMesh>();
 #ifdef ATCG_ENABLE_OPTIX
     auto optx_context = atcg::RaytracingContextManager::createContext();
-    auto pipeline     = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
-    auto sbt          = atcg::make_ref<atcg::ShaderBindingTable>();
 
-    RadiosityRayGenerator generator(optx_context);
-    generator.setMesh(mesh);
-    generator.initializePipeline(pipeline, sbt);
-
-    pipeline->createPipeline();
-    sbt->createSBT();
+    atcg::Dictionary dict;
+    dict.setValue("mesh", mesh);
+    RadiosityRayGenerator generator(optx_context, dict);
 
     torch::Tensor form_factors =
         torch::zeros({(int)mesh->n_faces(), (int)mesh->n_faces()}, atcg::TensorOptions::floatDeviceOptions());
-    atcg::Dictionary dict;
+
     dict.setValue("output", form_factors);
     generator.generateRays(dict);
 

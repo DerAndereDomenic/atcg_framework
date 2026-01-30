@@ -30,14 +30,10 @@ MeshShape::MeshShape(const Dictionary& dict)
 
 MeshShape::~MeshShape() {}
 
-void PipelineInitializer<MeshShape>::apply(const atcg::ref_ptr<MeshShape>& component) const
+void MeshShape::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                   const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_raygen_filename = "./bin/MeshShape_ptx.ptx";
-    component->setHitGroup(pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__mesh"}, {}));
-    component->setDualHitGroup(
-        pipeline->addTrianglesHitGroupShader({ptx_raygen_filename, "__closesthit__dual_mesh"}, {}));
-
-    component->markInitialized();
+    // Nothign to do
 }
 
 void MeshShape::prepareAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context)

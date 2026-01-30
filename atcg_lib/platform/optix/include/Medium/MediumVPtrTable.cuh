@@ -2,14 +2,15 @@
 
 #include <Core/glm.h>
 #include <Medium/PhaseFunctionVPtrTable.cuh>
+#include <Spectrum/SampledSpectrum.h>
 
 namespace atcg
 {
 struct MediumSamplingResult
 {
     MediumInteraction interaction;
-    glm::vec3 transmittance_weight;
-    glm::vec3 radiance_weight;
+    SampledSpectrum transmittance_weight;
+    SampledSpectrum radiance_weight;
 };
 
 struct MediumVPtrTable
@@ -36,13 +37,15 @@ struct MediumVPtrTable
     __device__ MediumSamplingResult sampleMediumEvent(const glm::vec3& origin,
                                                       const glm::vec3& direction,
                                                       float max_distance,
+                                                      const atcg::SampledWavelengths& wavelengths,
                                                       PCG32& rng) const
     {
-        return optixDirectCall<MediumSamplingResult, const glm::vec3&, const glm::vec3&, float, PCG32&>(sampleCallIndex,
-                                                                                                        origin,
-                                                                                                        direction,
-                                                                                                        max_distance,
-                                                                                                        rng);
+        return optixDirectCall<MediumSamplingResult,
+                               const glm::vec3&,
+                               const glm::vec3&,
+                               float,
+                               const atcg::SampledWavelengths&,
+                               PCG32&>(sampleCallIndex, origin, direction, max_distance, wavelengths, rng);
     }
 
 #endif    // __CUDACC__

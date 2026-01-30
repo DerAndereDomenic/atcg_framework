@@ -45,16 +45,17 @@ void TonemapPass::initRenderPass()
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
 
+            auto scene  = context.getValue<atcg::ref_ptr<Scene>>("scene");
             auto hdr    = *inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("hdr");
             auto target = prepareFramebuffer(context, inputs, data, outputs);
 
             auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
             *output_framebuffer     = target;
 
-            target->use();
+            GraphicsCommand::beginRenderPass(target);
             if(_render_target.clear)
             {
-                renderer->clear();
+                GraphicsCommand::clear();
 
                 // We assume that this is an entity buffer, better solution?
                 if(target->numColorAttachements() > 1 &&
@@ -71,9 +72,16 @@ void TonemapPass::initRenderPass()
                     target->getColorAttachement(2)->fill(&value);
                 }
             }
+
             target->blit(hdr, false, true);    // Copy depth
 
             auto shader = renderer->getShaderManager()->getShader("tonemap");
+
+            GraphicsPipeline pipeline =
+                GraphicsPipeline()
+                    .setShader(shader)
+                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                    .setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthTesting(false)));
 
             uint32_t screen_id  = renderer->popTextureID();
             uint32_t entity_id  = renderer->popTextureID();
@@ -82,19 +90,20 @@ void TonemapPass::initRenderPass()
             shader->setInt("screen_texture", screen_id);
             shader->setInt("entity_texture", entity_id);
             shader->setInt("stencil_texture", stencil_id);
+            shader->setFloat("exposure", scene->getCamera() ? scene->getCamera()->getIntrinsics().getExposure() : 1.0f);
 
-            hdr->getColorAttachement(0)->use(screen_id);
-            hdr->getColorAttachement(1)->use(entity_id);
-            hdr->getColorAttachement(2)->use(stencil_id);
+            GraphicsCommand::bindTexture(screen_id, hdr->getColorAttachement(0));
+            GraphicsCommand::bindTexture(entity_id, hdr->getColorAttachement(1));
+            GraphicsCommand::bindTexture(stencil_id, hdr->getColorAttachement(2));
 
-            renderer->toggleDepthTesting(false);
             auto screen_quad = data.getValue<atcg::ref_ptr<Graph>>("screen_quad");
-            renderer->draw(screen_quad, {}, glm::mat4(1), glm::vec3(1), shader);
-            renderer->toggleDepthTesting(true);
+            renderer->drawVAO(screen_quad->getVerticesArray(), {}, glm::mat4(1), pipeline, screen_quad->n_vertices());
 
             renderer->pushTextureID(screen_id);
             renderer->pushTextureID(entity_id);
             renderer->pushTextureID(stencil_id);
+
+            GraphicsCommand::endRenderPass();
         });
 }
 }    // namespace atcg

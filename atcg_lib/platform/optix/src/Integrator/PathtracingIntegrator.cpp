@@ -24,26 +24,31 @@ namespace atcg
 PathtracingIntegrator::PathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const Dictionary& dict)
     : Integrator(context, dict)
 {
+    initializePipeline(dict);
 }
 
 PathtracingIntegrator::~PathtracingIntegrator() {}
 
-void PathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                               const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void PathtracingIntegrator::initializePipeline(const Dictionary& dict)
 {
+    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"./bin/MeshShape_ptx.ptx", "__closesthit__mesh"}, {});
+
+    auto scene = dict.getValue<atcg::ref_ptr<Scene>>("scene");
+
+    _optix_scene = SceneAdapter(_context, _pipeline, _sbt)
+                       .apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
+
     const std::string ptx_raygen_filename = "./bin/PathtracingIntegrator_ptx.ptx";
-    OptixProgramGroup raygen_prog_group   = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
-    OptixProgramGroup miss_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
-    OptixProgramGroup occl_prog_group     = pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
+    OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__rg"});
+    OptixProgramGroup miss_prog_group     = _pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
+    OptixProgramGroup occl_prog_group     = _pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
-    _raygen_index         = sbt->addRaygenEntry(raygen_prog_group);
-    _surface_miss_index   = sbt->addMissEntry(miss_prog_group);
-    _occlusion_miss_index = sbt->addMissEntry(occl_prog_group);
+    _raygen_index         = _sbt->addRaygenEntry(raygen_prog_group);
+    _surface_miss_index   = _sbt->addMissEntry(miss_prog_group);
+    _occlusion_miss_index = _sbt->addMissEntry(occl_prog_group);
 
-    _pipeline = pipeline;
-    _sbt      = sbt;
-
-    _optix_scene = SceneAdapter(_context, pipeline, sbt).apply(_scene);
+    _pipeline->createPipeline();
+    _sbt->createSBT();
 }
 
 void PathtracingIntegrator::onImGuiRender()
@@ -61,38 +66,26 @@ void PathtracingIntegrator::onImGuiRender()
 void PathtracingIntegrator::reset()
 {
     _frame_counter = 0;
+    _optix_scene->getSensor()->getFilm()->clear();
+    _optix_scene->getSensor()->markDirty();
 }
 
 void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
 {
-    auto camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
-    auto output     = in_out_dictionary.getValue<torch::Tensor>("output");
-    auto entity_ids = in_out_dictionary.getValueOr<torch::Tensor>("entity_ids", torch::empty({0}));
+    uint32_t width  = _optix_scene->getSensor()->getFilm()->getWidth();
+    uint32_t height = _optix_scene->getSensor()->getFilm()->getHeight();
 
-    if(_accumulation_buffer.numel() == 0 || _frame_counter == 0 || _accumulation_buffer.size(0) != output.size(0) ||
-       _accumulation_buffer.size(1) != output.size(1))
-    {
-        _accumulation_buffer =
-            torch::zeros({output.size(0), output.size(1), 3}, atcg::TensorOptions::floatDeviceOptions());
-    }
+    torch::Tensor output_entities = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
 
     PathtracingParams params;
 
-    glm::mat4 inv_camera_view = glm::inverse(camera->getView());
-    memcpy(params.cam_eye, glm::value_ptr(inv_camera_view[3]), sizeof(glm::vec3));
-    memcpy(params.U, glm::value_ptr(glm::normalize(inv_camera_view[0])), sizeof(glm::vec3));
-    memcpy(params.V, glm::value_ptr(glm::normalize(inv_camera_view[1])), sizeof(glm::vec3));
-    memcpy(params.W, glm::value_ptr(-glm::normalize(inv_camera_view[2])), sizeof(glm::vec3));
-    params.fov_y = camera->getFOV();
+    params.sensor = _optix_scene->getSensor()->getVPtrTable();
 
-    params.output_image = (glm::u8vec4*)output.data_ptr();
-    params.image_height = output.size(0);
-    params.image_width  = output.size(1);
+    params.image_height = height;
+    params.image_width  = width;
     params.handle       = _optix_scene->getIAS()->getTraversableHandle();
 
-    params.entity_ids = entity_ids.numel() > 0 ? (int32_t*)entity_ids.data_ptr() : nullptr;
-
-    params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
+    params.entity_ids = output_entities.numel() > 0 ? (int32_t*)output_entities.data_ptr() : nullptr;
 
     params.frame_counter = _frame_counter++;
 
@@ -101,15 +94,9 @@ void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
     auto environment_emitter   = _optix_scene->getEnvironmentEmitter();
     params.environment_emitter = environment_emitter ? environment_emitter->getVPtrTable() : nullptr;
 
-    params.surface_trace_params.rayFlags     = OPTIX_RAY_FLAG_NONE;
-    params.surface_trace_params.SBToffset    = 0;
-    params.surface_trace_params.SBTstride    = 1;
-    params.surface_trace_params.missSBTIndex = _surface_miss_index;
+    params.surface_trace_params = _pipeline->getRay(0, _surface_miss_index, false);
 
-    params.occlusion_trace_params.rayFlags  = OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT;
-    params.occlusion_trace_params.SBToffset = 0;
-    params.occlusion_trace_params.SBTstride = 1;
-    params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
+    params.occlusion_trace_params = _pipeline->getRay(0, _occlusion_miss_index, true);
 
     _launch_params.upload(&params);
 
@@ -118,10 +105,14 @@ void PathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
                             (CUdeviceptr)_launch_params.get(),
                             sizeof(PathtracingParams),
                             _sbt->getSBT(_raygen_index),
-                            output.size(1),
-                            output.size(0),
+                            width,
+                            height,
                             1));    // depth
 
     CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
+
+    torch::Tensor output_tensor = _optix_scene->getSensor()->getFilm()->develop();
+    in_out_dictionary.setValue("output", output_tensor);
+    in_out_dictionary.setValue("entity_ids", output_entities);
 }
 }    // namespace atcg

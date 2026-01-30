@@ -18,6 +18,19 @@ public:
      */
     virtual void onImGuiRender() = 0;
 
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) = 0;
+
+    ATCG_INLINE virtual void ensureInitialized(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                               const atcg::ref_ptr<ShaderBindingTable>& sbt)
+    {
+        if(!_initialized)
+        {
+            initializePipeline(pipeline, sbt);
+            _initialized = true;
+        }
+    }
+
     ATCG_INLINE bool isInitialized() const { return _initialized; }
 
     ATCG_INLINE void markInitialized() { _initialized = true; }

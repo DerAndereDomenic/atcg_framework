@@ -24,7 +24,7 @@ class Entity;
 /**
  * @brief A class to model a scene.
  */
-class Scene : public Asset
+class Scene : public Asset, public std::enable_shared_from_this<Scene>
 {
 public:
     /**

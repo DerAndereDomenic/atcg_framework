@@ -19,9 +19,6 @@ public:
     void createOutputTexture(int width, int height)
     {
 #ifdef ATCG_ENABLE_OPTIX
-        output_tensor   = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
-        output_entities = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
-
         atcg::TextureSpecification spec;
         spec.width     = width;
         spec.height    = height;
@@ -39,15 +36,12 @@ public:
     void initializePathtracer()
     {
 #ifdef ATCG_ENABLE_OPTIX
-        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
-        sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
+        atcg::Dictionary dict;
+        dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
+        dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
+        dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
 
-        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, atcg::Dictionary());
-        integrator->setScene(atcg::Project::getActive()->getActiveScene());
-        integrator->initializePipeline(pipeline, sbt);
-
-        pipeline->createPipeline();
-        sbt->createSBT();
+        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
 #endif
     }
 
@@ -57,7 +51,6 @@ public:
     virtual void onAttach() override
     {
         atcg::Application::get()->enableDockSpace(true);
-        atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
         auto skybox         = atcg::IO::imread((atcg::resource_directory() / "pbr/skybox.hdr").string());
         auto skybox_texture = atcg::Texture2D::create(skybox);
@@ -148,8 +141,6 @@ public:
 #endif
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
-
-        scene->setCamera(camera_controller->getCamera());
     }
 
     // This gets called each frame
@@ -167,8 +158,6 @@ public:
 
         atcg::Scripting::handleScriptUpdates(atcg::Project::getActive()->getActiveScene(), delta_time);
 
-        atcg::Renderer::clear();
-
         if(atcg::VR::isVRAvailable())
         {
             atcg::ref_ptr<atcg::VRController> controller =
@@ -181,15 +170,12 @@ public:
 
             auto [t_left, t_right] = atcg::VR::getRenderTargets();
 
-            t_left->use();
-            atcg::Renderer::setViewport(0, 0, atcg::VR::width(), atcg::VR::height());
+            // t_left->use();
+            //  atcg::Renderer::setViewport(0, 0, atcg::VR::width(), atcg::VR::height());
 
-            atcg::Renderer::clear();
+            // atcg::Renderer::clear();
 
             atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraLeft(), t_left);
-
-            atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), controller->getCameraLeft());
-            atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), controller->getCameraLeft());
 
             atcg::Renderer::drawCADGrid(controller->getCameraLeft());
 
@@ -198,14 +184,11 @@ public:
                 atcg::VR::drawMovementLine(controller->getCameraLeft());
             }
 
-            t_right->use();
+            // t_right->use();
 
-            atcg::Renderer::clear();
+            // atcg::Renderer::clear();
 
             atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraRight(), t_right);
-
-            atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), controller->getCameraRight());
-            atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), controller->getCameraRight());
 
             atcg::Renderer::drawCADGrid(controller->getCameraRight());
 
@@ -214,40 +197,41 @@ public:
                 atcg::VR::drawMovementLine(controller->getCameraRight());
             }
 
-            atcg::Renderer::useScreenBuffer();
-            atcg::Renderer::setDefaultViewport();
+            // atcg::Renderer::useScreenBuffer();
+            // atcg::Renderer::setDefaultViewport();
 
             atcg::VR::renderToScreen();
         }
         else
         {
-            atcg::Renderer::clear();
+            // atcg::Renderer::clear();
 
             if(enable_pathtracing)
             {
 #ifdef ATCG_ENABLE_OPTIX
                 atcg::Dictionary dict;
-                dict.setValue("camera", camera_controller->getCamera());
-                dict.setValue("output", output_tensor);
-                dict.setValue("entity_ids", output_entities);
                 integrator->generateRays(dict);
+                torch::Tensor output_tensor   = dict.getValue<torch::Tensor>("output");
+                torch::Tensor output_entities = dict.getValue<torch::Tensor>("entity_ids");
                 output_texture->setData(output_tensor);
                 output_entity_texture->setData(output_entities);
 
+                atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+                atcg::GraphicsCommand::clear();
                 atcg::Renderer::drawImage(output_texture, output_entity_texture);
+                atcg::GraphicsCommand::endRenderPass();
 #endif
             }
             else
             {
                 atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera(),
                                                                    atcg::Renderer::getFramebuffer());
+
+                atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+
+                atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+                atcg::GraphicsCommand::endRenderPass();
             }
-
-
-            atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
-            atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
-
-            atcg::Renderer::drawCADGrid(camera_controller->getCamera());
         }
 
         uint32_t current_revision = atcg::RevisionStack::numUndos();
@@ -421,6 +405,7 @@ public:
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
         createOutputTexture(event->getWidth(), event->getHeight());
+        if(enable_pathtracing) initializePathtracer();
         return false;
     }
 
@@ -455,10 +440,7 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
         {
-            int id         = atcg::Renderer::getEntityIndex(mouse_pos);
-            hovered_entity = id == -1
-                                 ? atcg::Entity()
-                                 : atcg::Entity((entt::entity)id, atcg::Project::getActive()->getActiveScene().get());
+            hovered_entity = atcg::Utils::pickEntity(mouse_pos);
             panel.selectEntity(hovered_entity);
         }
         return true;
@@ -512,15 +494,10 @@ private:
 
 #ifdef ATCG_ENABLE_OPTIX
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
-    atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
     atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator;
 #endif
 
-    torch::Tensor output_tensor;
     atcg::ref_ptr<atcg::Texture2D> output_texture;
-
-    torch::Tensor output_entities;
     atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
 
     uint32_t last_revision = 0;

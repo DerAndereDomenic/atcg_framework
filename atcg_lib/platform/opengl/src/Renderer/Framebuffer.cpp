@@ -79,16 +79,16 @@ Framebuffer::~Framebuffer()
     _color_attachements.clear();
 }
 
-void Framebuffer::use() const
+void Framebuffer::bind()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, _ID);
     auto context = ContextManager::getCurrentContext();
-    context->setCurrentFBO(_ID);
+    context->setCurrentFBO(shared_from_this());
 }
 
-bool Framebuffer::complete() const
+bool Framebuffer::complete()
 {
-    use();
+    bind();
 
     std::vector<GLenum> buffers(_color_attachements.size());
     for(uint32_t i = 0; i < _color_attachements.size(); ++i)
@@ -103,13 +103,13 @@ bool Framebuffer::complete() const
     {
         ATCG_ERROR("ERROR: Framebuffer not complete! Code: {}", error);
     }
-    useDefault();
+    bindDefault();
     return complete;
 }
 
 void Framebuffer::attachColor()
 {
-    use();
+    bind();
 
     TextureSpecification spec;
     spec.width                       = _width;
@@ -120,7 +120,7 @@ void Framebuffer::attachColor()
 
 void Framebuffer::attachColorMultiSample(uint32_t num_samples)
 {
-    use();
+    bind();
 
     TextureSpecification spec;
     spec.width                                  = _width;
@@ -131,13 +131,23 @@ void Framebuffer::attachColorMultiSample(uint32_t num_samples)
 
 void Framebuffer::attachTexture(const atcg::ref_ptr<Texture>& texture)
 {
-    use();
+    bind();
     glFramebufferTexture(GL_FRAMEBUFFER,
                          GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
                          texture->getID(),
                          0);
     _color_attachements.push_back(texture);
-    useDefault();
+    bindDefault();
+}
+
+void Framebuffer::attachCubeFace(const atcg::ref_ptr<TextureCube>& cube_map, uint32_t face_index, uint32_t mip_level)
+{
+    glFramebufferTexture2D(GL_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(_color_attachements.size()),
+                           GL_TEXTURE_CUBE_MAP_POSITIVE_X + face_index,
+                           cube_map->getID(),
+                           mip_level);
+    _color_attachements.push_back(cube_map);
 }
 
 void Framebuffer::attachDepth()
@@ -162,10 +172,23 @@ void Framebuffer::attachDepthMultiSample(uint32_t num_samples)
 
 void Framebuffer::attachDepth(const atcg::ref_ptr<Texture>& depth_map)
 {
-    use();
+    bind();
     _depth_attachement = depth_map;
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, _depth_attachement->getID(), 0);
-    useDefault();
+    bindDefault();
+}
+
+void Framebuffer::detachColor()
+{
+    if(_color_attachements.size() == 0)
+    {
+        ATCG_WARN("No color attachements to detach");
+        return;
+    }
+
+    uint32_t last_index = static_cast<uint32_t>(_color_attachements.size() - 1);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + last_index, 0, 0);
+    _color_attachements.pop_back();
 }
 
 void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, bool depth)
@@ -196,26 +219,19 @@ void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, boo
     glDrawBuffers(buffers.size(), buffers.data());
 
     // Restore old binding status
-    uint32_t current_fbo = currentFramebuffer();
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, current_fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_fbo);
+    atcg::ref_ptr<Framebuffer> current_fbo = currentFramebuffer();
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, current_fbo ? current_fbo->getID() : 0);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, current_fbo ? current_fbo->getID() : 0);
 }
 
-void Framebuffer::bindByID(uint32_t fbo_id)
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo_id);
-    auto context = ContextManager::getCurrentContext();
-    context->setCurrentFBO(fbo_id);
-}
-
-void Framebuffer::useDefault()
+void Framebuffer::bindDefault()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     auto context = ContextManager::getCurrentContext();
-    context->setCurrentFBO(0);
+    context->setCurrentFBO(nullptr);
 }
 
-uint32_t Framebuffer::currentFramebuffer()
+atcg::ref_ptr<Framebuffer> Framebuffer::currentFramebuffer()
 {
     auto context = ContextManager::getCurrentContext();
     return context->getCurrentFBO();

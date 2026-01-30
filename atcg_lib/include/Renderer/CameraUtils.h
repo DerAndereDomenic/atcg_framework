@@ -160,6 +160,13 @@ public:
     void setProjection(const glm::mat4& projection);
 
     /**
+     * @brief Set the exposure
+     *
+     * @param exposure The exposure value
+     */
+    ATCG_INLINE void setExposure(const float exposure) { _exposure = exposure; }
+
+    /**
      * @brief Get the aspect ratio
      * This aspect ratio is given by a = w / h * fy / fx where fx and fy are the typical OpenCV camera parameters. If we
      * have a perfect camera, then fy / fx = 1 and therefore a = w / h, i.e., the aspect ratio of the image
@@ -203,6 +210,13 @@ public:
      */
     ATCG_INLINE const glm::mat4& projection() const { return _projection; }
 
+    /**
+     * @brief Get the exposure
+     *
+     * @return The exposure value
+     */
+    ATCG_INLINE float getExposure() const { return _exposure; }
+
 private:
     void recalculateProjection();
 
@@ -214,6 +228,8 @@ private:
     glm::vec2 _optical_center = glm::vec2(0);
 
     glm::mat4 _projection = glm::perspective(glm::radians(_fov_y), _aspect_ratio, _near, _far);
+
+    float _exposure = 1.0f;
 };
 
 namespace CameraUtils

@@ -34,7 +34,8 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
 
 DielectricBSDF::~DielectricBSDF() {}
 
-void PipelineInitializer<DielectricBSDF>::apply(const atcg::ref_ptr<DielectricBSDF>& component) const
+void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                        const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_bsdf_filename = "./bin/DielectricBSDF_ptx.ptx";
     auto sample_prog_group =
@@ -48,12 +49,12 @@ void PipelineInitializer<DielectricBSDF>::apply(const atcg::ref_ptr<DielectricBS
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_forward_dielectricbsdf"});
     auto sample_dual_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_forward_dielectricbsdf"});
-    uint32_t sample_idx          = sbt->addCallableEntry(sample_prog_group, component->getDataBuffer().get());
-    uint32_t eval_idx            = sbt->addCallableEntry(eval_prog_group, component->getDataBuffer().get());
-    uint32_t eval_backward_idx   = sbt->addCallableEntry(backward_eval_prog_group, component->getDataBuffer().get());
-    uint32_t sample_backward_idx = sbt->addCallableEntry(backward_sample_prog_group, component->getDataBuffer().get());
-    uint32_t sample_forward_idx  = sbt->addCallableEntry(sample_dual_prog_group, component->getDataBuffer().get());
-    uint32_t eval_forward_idx    = sbt->addCallableEntry(eval_dual_prog_group, component->getDataBuffer().get());
+    uint32_t sample_idx          = sbt->addCallableEntry(sample_prog_group, _bsdf_data_buffer.get());
+    uint32_t eval_idx            = sbt->addCallableEntry(eval_prog_group, _bsdf_data_buffer.get());
+    uint32_t eval_backward_idx   = sbt->addCallableEntry(backward_eval_prog_group, _bsdf_data_buffer.get());
+    uint32_t sample_backward_idx = sbt->addCallableEntry(backward_sample_prog_group, _bsdf_data_buffer.get());
+    uint32_t sample_forward_idx  = sbt->addCallableEntry(sample_dual_prog_group, _bsdf_data_buffer.get());
+    uint32_t eval_forward_idx    = sbt->addCallableEntry(eval_dual_prog_group, _bsdf_data_buffer.get());
 
     BSDFVPtrTable table;
     table.sampleCallIndex         = sample_idx;
@@ -62,11 +63,11 @@ void PipelineInitializer<DielectricBSDF>::apply(const atcg::ref_ptr<DielectricBS
     table.sampleBackwardCallIndex = sample_backward_idx;
     table.evalForwardCallIndex    = eval_forward_idx;
     table.sampleForwardCallIndex  = sample_forward_idx;
-    table.flags                   = component->flags();
+    table.flags                   = _flags;
 
-    component->getVPtrTableHolder().upload(&table);
+    _vptr_table.upload(&table);
 
-    component->markInitialized();
+    markInitialized();
 }
 
 std::vector<torch::Tensor> DielectricBSDF::getParameters() const
