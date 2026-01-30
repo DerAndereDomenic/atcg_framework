@@ -14,17 +14,6 @@ extern "C"
     __constant__ atcg::VolPathtracingParams params;
 }
 
-struct RayContext
-{
-    bool valid;
-    glm::vec3 origin;
-    glm::vec3 direction;
-    glm::vec3 throughput;
-    glm::vec3 radiance;
-
-    const atcg::MediumVPtrTable* medium = nullptr;
-};
-
 extern "C" __global__ void __raygen__rg()
 {
     uint3 launch_idx = optixGetLaunchIndex();
@@ -37,60 +26,55 @@ extern "C" __global__ void __raygen__rg()
     float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
     float v          = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
 
-    glm::vec3 cam_eye = glm::make_vec3(params.cam_eye);
-    glm::vec3 U       = glm::make_vec3(params.U) * (float)params.image_width / (float)params.image_height;
-    glm::vec3 V       = glm::make_vec3(params.V);
-    glm::vec3 W       = glm::make_vec3(params.W) / glm::tan(glm::radians(params.fov_y / 2.0f));
+    atcg::CameraRay camera_ray = params.sensor->generateRay(glm::vec2(u, v));
 
-    RayContext ray;
+    atcg::SampledSpectrum radiance(0);
+    atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleSpectrum(rng.nextFloat(), 380.0f, 780.0f);
+    int32_t entity_id                    = -1;
 
-    ray.direction     = glm::normalize(u * U + v * V + W);
-    ray.origin        = cam_eye;
-    ray.radiance      = glm::vec3(0);
-    ray.throughput    = glm::vec3(1);
-    ray.valid         = true;
-    int32_t entity_id = -1;
-
-    glm::vec3 next_origin;
-    glm::vec3 next_dir;
-
+    bool next_ray_valid = true;
 
     atcg::SurfaceInteraction last_si;
     float last_bsdf_pdf = 1.0f;
 
     for(int n = 0; n < 512; ++n)
     {
-        if(!ray.valid) break;
-        ray.valid = false;
+        if(!next_ray_valid) break;
+        next_ray_valid = false;
 
-        float rr_prob = glm::max(ray.throughput.x, glm::max(ray.throughput.y, ray.throughput.z));
+        float rr_prob = camera_ray.importance.maxComponent();
         if(rng.nextFloat() < rr_prob)
         {
-            ray.throughput /= rr_prob;
+            camera_ray.importance /= rr_prob;
         }
         else
         {
-            ray.valid = false;
+            next_ray_valid = false;
             break;
         }
 
         atcg::SurfaceInteraction si;
         atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
-                                                             ray.origin,
-                                                             ray.direction,
+                                                             camera_ray.ray.origin,
+                                                             camera_ray.ray.direction,
                                                              0.00001f,
                                                              1e16f,
                                                              &si,
                                                              params.surface_trace_params);
-        if(si.valid && ray.medium)    // For now, we only allow media inside objects. So if si not valid, reject
+        if(si.valid &&
+           camera_ray.ray.current_medium)    // For now, we only allow media inside objects. So if si not valid, reject
         {
             float max_distance =
-                si.valid ? glm::length(si.position - ray.origin) : std::numeric_limits<float>::infinity();
+                si.valid ? glm::length(si.position - camera_ray.ray.origin) : std::numeric_limits<float>::infinity();
             atcg::MediumSamplingResult result =
-                ray.medium->sampleMediumEvent(ray.origin, ray.direction, max_distance, rng);
+                camera_ray.ray.current_medium->sampleMediumEvent(camera_ray.ray.origin,
+                                                                 camera_ray.ray.direction,
+                                                                 max_distance,
+                                                                 wavelengths,
+                                                                 rng);
 
-            ray.radiance += ray.throughput * result.radiance_weight;
-            ray.throughput *= result.transmittance_weight;
+            radiance += camera_ray.importance * result.radiance_weight;
+            camera_ray.importance *= result.transmittance_weight;
 
             // Check if a medium event was sampled. Otherwise, skip to surface rendering
             if(result.interaction.valid)
@@ -99,18 +83,18 @@ extern "C" __global__ void __raygen__rg()
 
                 // TODO: NEE MIS
 
-                const atcg::PhaseFunctionVPtrTable* phase_function = ray.medium->phase_function;
+                const atcg::PhaseFunctionVPtrTable* phase_function = camera_ray.ray.current_medium->phase_function;
                 atcg::PhaseFunctionSamplingResult phase_result     = phase_function->samplePhaseFunction(mi, rng);
                 if(phase_result.sampling_pdf == 0)
                 {
-                    ray.valid = false;
+                    next_ray_valid = false;
                     break;
                 }
 
-                ray.origin    = mi.position;
-                ray.direction = glm::normalize(phase_result.outgoing_ray_dir);
-                ray.throughput *= phase_result.phase_function_weight;
-                ray.valid = true;
+                camera_ray.ray.origin    = mi.position;
+                camera_ray.ray.direction = glm::normalize(phase_result.outgoing_ray_dir);
+                camera_ray.importance *= phase_result.phase_function_weight;
+                next_ray_valid = true;
 
                 // TODO MIS
 
@@ -128,9 +112,9 @@ extern "C" __global__ void __raygen__rg()
                     mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
                               : 0.0f;
                 float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                ray.radiance += mis_weight * ray.throughput * params.environment_emitter->evalLight(si);
+                radiance += mis_weight * camera_ray.importance * params.environment_emitter->evalLight(si, wavelengths);
             }
-            ray.valid = false;
+            next_ray_valid = false;
             break;
         }
 
@@ -145,7 +129,7 @@ extern "C" __global__ void __raygen__rg()
             bool mis_valid             = last_si.valid;
             float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
             float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-            ray.radiance += mis_weight * ray.throughput * si.emitter->evalLight(si);
+            radiance += mis_weight * camera_ray.importance * si.emitter->evalLight(si, wavelengths);
         }
 
         // PBR Sampling
@@ -164,7 +148,7 @@ extern "C" __global__ void __raygen__rg()
 
                 if(si.emitter == emitter) break;
 
-                atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+                atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, wavelengths, rng);
 
                 if(emitter_sampling.sampling_pdf == 0) break;
 
@@ -182,26 +166,26 @@ extern "C" __global__ void __raygen__rg()
                     break;
                 }
 
-                atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+                atcg::BSDFEvalResult bsdf_result =
+                    si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
                 float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
                                        ? 0.0f
                                        : bsdf_result.sample_probability;
                 float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
-                ray.radiance += mis_weight * ray.throughput * emitter_sampling.radiance_weight_at_receiver *
-                                bsdf_result.bsdf_value *
-                                glm::abs(glm::dot(si.normal, emitter_sampling.direction_to_light));
+                radiance += mis_weight * camera_ray.importance * emitter_sampling.radiance_weight_at_receiver *
+                            bsdf_result.bsdf_value * glm::abs(glm::dot(si.normal, emitter_sampling.direction_to_light));
             } while(false);
 
-            auto result = si.bsdf->sampleBSDF(si, rng);
+            auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);
 
             if(result.sample_probability > 0.0f)
             {
-                next_origin = si.position;
-                next_dir    = result.out_dir;
-                ray.throughput *= result.bsdf_weight;
-                ray.valid = true;
+                camera_ray.ray.origin    = si.position;
+                camera_ray.ray.direction = result.out_dir;
+                camera_ray.importance *= result.bsdf_weight;
+                next_ray_valid = true;
 
                 last_si       = si;
                 last_bsdf_pdf = result.sample_probability;
@@ -209,11 +193,11 @@ extern "C" __global__ void __raygen__rg()
                 // Check if we are entering the geometry or leaving the geometry and assign si.inside_medium or
                 // si.outside_medium, respectively.
                 float cos_theta_curr_ray = glm::dot(si.normal, si.incoming_direction);
-                float cos_theta_next_ray = glm::dot(si.normal, next_dir);
+                float cos_theta_next_ray = glm::dot(si.normal, camera_ray.ray.direction);
                 // Only change the medium if we have a transmission...
                 if(cos_theta_curr_ray * cos_theta_next_ray > 0)
                 {
-                    ray.medium = cos_theta_next_ray < 0 ? si.inside_medium : si.outside_medium;
+                    camera_ray.ray.current_medium = cos_theta_next_ray < 0 ? si.inside_medium : si.outside_medium;
                 }
 
                 if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
@@ -222,31 +206,9 @@ extern "C" __global__ void __raygen__rg()
                 }
             }
         }
-
-        ray.origin    = next_origin;
-        ray.direction = next_dir;
     }
 
-    if(params.frame_counter > 0)
-    {
-        // Mix with previous subframes if present!
-        const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
-        const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
-        ray.radiance                         = glm::lerp(prev_output_radiance, ray.radiance, a);
-    }
-
-    params.accumulation_buffer[pixel_index] = ray.radiance;
-
-    glm::vec3 tone_mapped = glm::pow(1.0f - glm::exp(-ray.radiance), glm::vec3(1.0f / 2.4f));
-
-    tone_mapped.x = glm::min(glm::max(tone_mapped.x, 0.0f), 1.0f);
-    tone_mapped.y = glm::min(glm::max(tone_mapped.y, 0.0f), 1.0f);
-    tone_mapped.z = glm::min(glm::max(tone_mapped.z, 0.0f), 1.0f);
-
-    params.output_image[pixel_index] = glm::u8vec4((uint8_t)(tone_mapped.x * 255.0f),
-                                                   (uint8_t)(tone_mapped.y * 255.0f),
-                                                   (uint8_t)(tone_mapped.z * 255.0f),
-                                                   255);
+    params.sensor->addSample(glm::ivec3(launch_idx.x, launch_idx.y, params.frame_counter), radiance, wavelengths);
 
     if(params.entity_ids)
     {

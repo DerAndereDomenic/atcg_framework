@@ -25,8 +25,8 @@ namespace detail
  * @return The sampling result
  */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg::SurfaceInteraction& si,
-                                                                      const glm::vec3& diffuse_color,
-                                                                      const glm::vec3& specular_F0,
+                                                                      const atcg::SampledSpectrum& diffuse_color,
+                                                                      const atcg::SampledSpectrum& specular_F0,
                                                                       const float& metallic,
                                                                       const float& roughness,
                                                                       atcg::PCG32& rng)
@@ -48,8 +48,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
     // the world coordinate system.
     glm::mat3 local_frame = atcg::Math::compute_local_frame(normal);
 
-    float diffuse_probability = glm::dot(diffuse_color, glm::vec3(1)) /
-                                (glm::dot(diffuse_color, glm::vec3(1)) + glm::dot(specular_F0, glm::vec3(1)) + 1e-5f);
+    float diffuse_probability  = diffuse_color.sum() / (diffuse_color.sum() + specular_F0.sum() + 1e-5f);
     float specular_probability = 1 - diffuse_probability;
 
     if(rng.next1d() < diffuse_probability)
@@ -77,14 +76,14 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         return result;
     }
 
-    glm::vec3 diffuse_bsdf = diffuse_color / glm::pi<float>();
-    float diffuse_pdf      = NdotL / glm::pi<float>();
+    atcg::SampledSpectrum diffuse_bsdf = diffuse_color / glm::pi<float>();
+    float diffuse_pdf                  = NdotL / glm::pi<float>();
 
-    glm::vec3 specular_bsdf = glm::vec3(0);
-    float specular_pdf      = 0;
+    atcg::SampledSpectrum specular_bsdf = atcg::SampledSpectrum(0);
+    float specular_pdf                  = 0;
     // Only compute specular component if specular_f0 is not zero!
-    glm::vec3 kD(1.0f);
-    if(glm::dot(specular_F0, specular_F0) > 1e-6f)
+    atcg::SampledSpectrum kD(1.0f);
+    if(specular_F0.sum() > 1e-5f)
     {
         glm::vec3 halfway = glm::normalize(result.out_dir + view_dir);
         float HdotV       = glm::dot(halfway, result.out_dir);
@@ -97,9 +96,9 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         float V = atcg::V_SmithGGX(NdotL, NdotV, roughness);
 
         // Fresnel
-        glm::vec3 F = atcg::fresnel_schlick(specular_F0, HdotV);
+        atcg::SampledSpectrum F = atcg::fresnel_schlick(specular_F0, HdotV);
 
-        kD = (1.0f - F);
+        kD = (atcg::SampledSpectrum(1.0f) - F);
 
         specular_bsdf = NDF * V * F;
 
@@ -131,8 +130,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
  */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::SurfaceInteraction& si,
                                                                 const glm::vec3& outgoing_dir,
-                                                                const glm::vec3& diffuse_color,
-                                                                const glm::vec3& metallic_color,
+                                                                const atcg::SampledSpectrum& diffuse_color,
+                                                                const atcg::SampledSpectrum& metallic_color,
                                                                 const float roughness,
                                                                 const float metallic)
 {
@@ -149,18 +148,16 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
 
     if(NdotL <= 0.0f || NdotV <= 0.0f) return result;
 
-    float NDF   = atcg::D_GGX(NdotH, roughness);
-    float V     = atcg::V_SmithGGX(NdotL, NdotV, roughness);
-    glm::vec3 F = atcg::fresnel_schlick(metallic_color, glm::max(glm::dot(H, view_dir), 0.0f));
+    float NDF               = atcg::D_GGX(NdotH, roughness);
+    float V                 = atcg::V_SmithGGX(NdotL, NdotV, roughness);
+    atcg::SampledSpectrum F = atcg::fresnel_schlick(metallic_color, glm::max(glm::dot(H, view_dir), 0.0f));
 
-    glm::vec3 specular = NDF * V * F;
+    atcg::SampledSpectrum specular = NDF * V * F;
 
-    glm::vec3 kS = F;
-    glm::vec3 kD = glm::vec3(1.0) - kS;
+    atcg::SampledSpectrum kS = F;
+    atcg::SampledSpectrum kD = atcg::SampledSpectrum(1.0) - kS;
 
-    float diffuse_probability =
-        glm::dot(diffuse_color, glm::vec3(1)) /
-        (glm::dot(diffuse_color, glm::vec3(1)) + glm::dot(metallic_color, glm::vec3(1)) + 1e-5f);
+    float diffuse_probability     = diffuse_color.sum() / (diffuse_color.sum() + metallic_color.sum() + 1e-5f);
     float specular_probability    = 1 - diffuse_probability;
     float diffuse_pdf             = NdotL / glm::pi<float>();
     float halfway_pdf             = NDF * NdotH;
@@ -176,34 +173,39 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
 }
 }    // namespace detail
 
-extern "C" __device__ atcg::BSDFSamplingResult __direct_callable__sample_pbrbsdf(const atcg::SurfaceInteraction& si,
-                                                                                 atcg::PCG32& rng)
+extern "C" __device__ atcg::BSDFSamplingResult
+__direct_callable__sample_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                  const atcg::SampledWavelengths& wavelengths,
+                                  atcg::PCG32& rng)
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
-    glm::vec3 diffuse_color = sbt_data->diffuse_texture.read(si.uv);
-    float metallic          = sbt_data->metallic_texture.read(si.uv);
-    float roughness         = sbt_data->roughness_texture.read(si.uv);
-    roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+    atcg::SampledSpectrum diffuse_color =
+        atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
+    float metallic  = sbt_data->metallic_texture.read(si.uv);
+    float roughness = sbt_data->roughness_texture.read(si.uv);
+    roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
-    glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
-    diffuse_color            = glm::lerp(diffuse_color, glm::vec3(0), metallic) * si.color;
+    atcg::SampledSpectrum metallic_color = (1.0f - metallic) * atcg::SampledSpectrum(0.04f) + metallic * diffuse_color;
+    diffuse_color = (1.0f - metallic) * diffuse_color * atcg::SampledSpectrum::fromRGB(si.color, wavelengths);
 
     return detail::samplePBR(si, diffuse_color, metallic_color, metallic, roughness, rng);
 }
 
 extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const atcg::SurfaceInteraction& si,
-                                                                           const glm::vec3& outgoing_dir)
+                                                                           const glm::vec3& outgoing_dir,
+                                                                           const atcg::SampledWavelengths& wavelengths)
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
-    atcg::BSDFEvalResult result;
 
-    glm::vec3 diffuse_color = sbt_data->diffuse_texture.read(si.uv);
-    float metallic          = sbt_data->metallic_texture.read(si.uv);
-    float roughness         = sbt_data->roughness_texture.read(si.uv);
-    roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
-    glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
-    diffuse_color            = glm::lerp(diffuse_color, glm::vec3(0), metallic) * si.color;
+    atcg::SampledSpectrum diffuse_color =
+        atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
+    float metallic  = sbt_data->metallic_texture.read(si.uv);
+    float roughness = sbt_data->roughness_texture.read(si.uv);
+    roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+
+    atcg::SampledSpectrum metallic_color = (1.0f - metallic) * atcg::SampledSpectrum(0.04f) + metallic * diffuse_color;
+    diffuse_color = (1.0f - metallic) * diffuse_color * atcg::SampledSpectrum::fromRGB(si.color, wavelengths);
 
 
     return detail::evalPBR(si, outgoing_dir, diffuse_color, metallic_color, roughness, metallic);

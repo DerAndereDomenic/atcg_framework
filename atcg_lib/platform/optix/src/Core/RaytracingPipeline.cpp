@@ -112,7 +112,7 @@ class RayTracingPipeline::Impl
 public:
     Impl() = default;
 
-    Impl(const atcg::ref_ptr<RaytracingContext>& context);
+    Impl(const atcg::ref_ptr<RaytracingContext>& context, const uint32_t num_rays);
 
     ~Impl();
 
@@ -130,14 +130,17 @@ public:
 
     std::unordered_map<std::string, OptixModule> module_cache;
     std::unordered_map<OptixProgramGroupDescKey, OptixProgramGroup> program_groups;
+    std::unordered_map<std::string, std::vector<OptixProgramGroup>> ray_program_groups;
 
     OptixPipeline pipeline;
     bool pipeline_created = false;
+    uint32_t num_rays     = 1;
 };
 
-RayTracingPipeline::Impl::Impl(const atcg::ref_ptr<RaytracingContext>& context)
+RayTracingPipeline::Impl::Impl(const atcg::ref_ptr<RaytracingContext>& context, const uint32_t num_rays)
 {
-    this->context = context;
+    this->context  = context;
+    this->num_rays = num_rays;
 
     module_compile_options.maxRegisterCount = OPTIX_COMPILE_DEFAULT_MAX_REGISTER_COUNT;
     module_compile_options.optLevel         = OPTIX_COMPILE_OPTIMIZATION_DEFAULT;
@@ -261,9 +264,9 @@ OptixProgramGroup RayTracingPipeline::Impl::getCachedProgramGroup(const OptixPro
     return prog_group;
 }
 
-RayTracingPipeline::RayTracingPipeline(const atcg::ref_ptr<RaytracingContext>& context)
+RayTracingPipeline::RayTracingPipeline(const atcg::ref_ptr<RaytracingContext>& context, const uint32_t num_rays)
 {
-    impl = std::make_unique<Impl>(context);
+    impl = std::make_unique<Impl>(context, num_rays);
 }
 
 RayTracingPipeline::~RayTracingPipeline() {}
@@ -323,7 +326,9 @@ OptixProgramGroup RayTracingPipeline::addMissShader(const ShaderEntryPointDesc& 
     return impl->getCachedProgramGroup(prog_group_desc);
 }
 
-OptixProgramGroup RayTracingPipeline::addTrianglesHitGroupShader(const ShaderEntryPointDesc& closestHit_shader_desc,
+OptixProgramGroup RayTracingPipeline::addTrianglesHitGroupShader(const std::string& shape_type,
+                                                                 const uint32_t shader_slot,
+                                                                 const ShaderEntryPointDesc& closestHit_shader_desc,
                                                                  const ShaderEntryPointDesc& anyHit_shader_desc)
 {
     OptixModule ptx_module_ch = impl->getCachedModule(closestHit_shader_desc.ptx_filename);
@@ -337,7 +342,17 @@ OptixProgramGroup RayTracingPipeline::addTrianglesHitGroupShader(const ShaderEnt
     prog_group_desc.hitgroup.moduleAH            = ptx_module_ah;
     prog_group_desc.hitgroup.entryFunctionNameAH = ptx_module_ah ? anyHit_shader_desc.entrypoint_name.c_str() : nullptr;
 
-    return impl->getCachedProgramGroup(prog_group_desc);
+    OptixProgramGroup group = impl->getCachedProgramGroup(prog_group_desc);
+
+    auto it = impl->ray_program_groups.find(shape_type);
+    if(it == impl->ray_program_groups.end())
+    {
+        impl->ray_program_groups[shape_type] = std::vector<OptixProgramGroup>(impl->num_rays);
+    }
+
+    impl->ray_program_groups[shape_type][shader_slot] = group;
+
+    return group;
 }
 
 void RayTracingPipeline::createPipeline()
@@ -370,4 +385,27 @@ OptixPipeline RayTracingPipeline::getPipeline() const
     return impl->pipeline;
 }
 
+uint32_t RayTracingPipeline::numRays() const
+{
+    return impl->num_rays;
+}
+
+const std::vector<OptixProgramGroup>& RayTracingPipeline::getRayProgramGroups(const std::string& shape_type) const
+{
+    return impl->ray_program_groups[shape_type];
+}
+
+TraceParameters
+RayTracingPipeline::getRay(const uint32_t ray_type_index, const uint32_t miss_index, bool occlusion) const
+{
+    TraceParameters trace_params;
+
+    trace_params.rayFlags =
+        occlusion ? OPTIX_RAY_FLAG_TERMINATE_ON_FIRST_HIT | OPTIX_RAY_FLAG_DISABLE_CLOSESTHIT : OPTIX_RAY_FLAG_NONE;
+    trace_params.SBToffset    = ray_type_index;
+    trace_params.SBTstride    = impl->num_rays;
+    trace_params.missSBTIndex = miss_index;
+
+    return trace_params;
+}
 }    // namespace atcg

@@ -45,6 +45,7 @@ void TonemapPass::initRenderPass()
             auto renderer =
                 context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
 
+            auto scene  = context.getValue<atcg::ref_ptr<Scene>>("scene");
             auto hdr    = *inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("hdr");
             auto target = prepareFramebuffer(context, inputs, data, outputs);
 
@@ -89,6 +90,7 @@ void TonemapPass::initRenderPass()
             shader->setInt("screen_texture", screen_id);
             shader->setInt("entity_texture", entity_id);
             shader->setInt("stencil_texture", stencil_id);
+            shader->setFloat("exposure", scene->getCamera() ? scene->getCamera()->getIntrinsics().getExposure() : 1.0f);
 
             GraphicsCommand::bindTexture(screen_id, hdr->getColorAttachement(0));
             GraphicsCommand::bindTexture(entity_id, hdr->getColorAttachement(1));

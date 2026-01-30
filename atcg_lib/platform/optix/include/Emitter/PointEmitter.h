@@ -4,7 +4,6 @@
 #include <DataStructure/Dictionary.h>
 #include <Emitter/Emitter.h>
 #include <Emitter/PointEmitterData.cuh>
-#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -34,11 +33,16 @@ public:
      */
     virtual void onImGuiRender() override {}
 
-    ATCG_INLINE atcg::dref_ptr<PointEmitterData> getDataBuffer() const { return _point_emitter_data; }
+    /**
+     * @brief Initialize the pipeline
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
     atcg::dref_ptr<PointEmitterData> _point_emitter_data;
 };
 
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(PointEmitter);
 }    // namespace atcg

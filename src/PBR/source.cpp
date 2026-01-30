@@ -19,9 +19,6 @@ public:
     void createOutputTexture(int width, int height)
     {
 #ifdef ATCG_ENABLE_OPTIX
-        output_tensor   = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
-        output_entities = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
-
         atcg::TextureSpecification spec;
         spec.width     = width;
         spec.height    = height;
@@ -39,15 +36,12 @@ public:
     void initializePathtracer()
     {
 #ifdef ATCG_ENABLE_OPTIX
-        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
-        sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
+        atcg::Dictionary dict;
+        dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
+        dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
+        dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
 
-        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, atcg::Dictionary());
-        integrator->setScene(atcg::Project::getActive()->getActiveScene());
-        integrator->initializePipeline(pipeline, sbt);
-
-        pipeline->createPipeline();
-        sbt->createSBT();
+        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
 #endif
     }
 
@@ -147,8 +141,6 @@ public:
 #endif
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
-
-        scene->setCamera(camera_controller->getCamera());
     }
 
     // This gets called each frame
@@ -218,26 +210,28 @@ public:
             {
 #ifdef ATCG_ENABLE_OPTIX
                 atcg::Dictionary dict;
-                dict.setValue("camera", camera_controller->getCamera());
-                dict.setValue("output", output_tensor);
-                dict.setValue("entity_ids", output_entities);
                 integrator->generateRays(dict);
+                torch::Tensor output_tensor   = dict.getValue<torch::Tensor>("output");
+                torch::Tensor output_entities = dict.getValue<torch::Tensor>("entity_ids");
                 output_texture->setData(output_tensor);
                 output_entity_texture->setData(output_entities);
 
+                atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+                atcg::GraphicsCommand::clear();
                 atcg::Renderer::drawImage(output_texture, output_entity_texture);
+                atcg::GraphicsCommand::endRenderPass();
 #endif
             }
             else
             {
                 atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera(),
                                                                    atcg::Renderer::getFramebuffer());
+
+                atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+
+                atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+                atcg::GraphicsCommand::endRenderPass();
             }
-
-            atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
-
-            atcg::Renderer::drawCADGrid(camera_controller->getCamera());
-            atcg::GraphicsCommand::endRenderPass();
         }
 
         uint32_t current_revision = atcg::RevisionStack::numUndos();
@@ -411,6 +405,7 @@ public:
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
         createOutputTexture(event->getWidth(), event->getHeight());
+        if(enable_pathtracing) initializePathtracer();
         return false;
     }
 
@@ -499,15 +494,10 @@ private:
 
 #ifdef ATCG_ENABLE_OPTIX
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
-    atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
     atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator;
 #endif
 
-    torch::Tensor output_tensor;
     atcg::ref_ptr<atcg::Texture2D> output_texture;
-
-    torch::Tensor output_entities;
     atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
 
     uint32_t last_revision = 0;

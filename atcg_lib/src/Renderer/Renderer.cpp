@@ -391,8 +391,6 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
 
     auto shader               = impl->shader_manager->getShader("screen");
     GraphicsPipeline pipeline = GraphicsPipeline();
-
-    GraphicsCommand::beginRenderPass(Framebuffer::currentFramebuffer());
     GraphicsCommand::bindVertexArray(impl->quad_vao);
     shader->setInt("screen_texture", 0);
 
@@ -412,7 +410,6 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
 
     const atcg::ref_ptr<IndexBuffer> ibo = impl->quad_vao->getIndexBuffer();
     GraphicsCommand::drawIndexed(static_cast<uint32_t>(ibo->getCount()));
-    GraphicsCommand::endRenderPass();
 }
 
 void RendererSystem::drawCADGrid(const atcg::ref_ptr<Camera>& camera, const float& transparency_)

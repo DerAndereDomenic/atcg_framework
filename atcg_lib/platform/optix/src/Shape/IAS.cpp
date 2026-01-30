@@ -7,7 +7,8 @@
 namespace atcg
 {
 InstanceAccelerationStructure::InstanceAccelerationStructure(const atcg::ref_ptr<RaytracingContext>& context,
-                                                             const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes)
+                                                             const std::vector<atcg::ref_ptr<ShapeInstance>>& shapes,
+                                                             const uint32_t num_rays)
 {
     std::vector<OptixInstance> optix_instances;
     int num_instances = 0;
@@ -18,7 +19,7 @@ InstanceAccelerationStructure::InstanceAccelerationStructure(const atcg::ref_ptr
 
         optix_instance.flags             = OPTIX_INSTANCE_FLAG_NONE;
         optix_instance.instanceId        = num_instances;
-        optix_instance.sbtOffset         = num_instances;
+        optix_instance.sbtOffset         = num_rays * num_instances;
         optix_instance.visibilityMask    = 1;
         optix_instance.traversableHandle = shape->getShape()->getAST();
 

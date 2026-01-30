@@ -23,8 +23,6 @@ public:
      */
     virtual void onImGuiRender() = 0;
 
-    ATCG_INLINE atcg::dref_ptr<PhaseFunctionVPtrTable> getVPtrTableHolder() const { return _vptr_table; }
-
 protected:
     atcg::dref_ptr<PhaseFunctionVPtrTable> _vptr_table;
 };

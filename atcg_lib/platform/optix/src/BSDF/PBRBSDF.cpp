@@ -36,22 +36,23 @@ PBRBSDF::~PBRBSDF()
     _roughness_texture->unmapDevicePointers();
 }
 
-void PipelineInitializer<PBRBSDF>::apply(const atcg::ref_ptr<PBRBSDF>& component) const
+void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                 const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
     const std::string ptx_bsdf_filename = "./bin/PBRBSDF_ptx.ptx";
     auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_pbrbsdf"});
     auto eval_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_pbrbsdf"});
-    uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group, component->getDataBuffer().get());
-    uint32_t eval_idx      = sbt->addCallableEntry(eval_prog_group, component->getDataBuffer().get());
+    uint32_t sample_idx    = sbt->addCallableEntry(sample_prog_group, _bsdf_data_buffer.get());
+    uint32_t eval_idx      = sbt->addCallableEntry(eval_prog_group, _bsdf_data_buffer.get());
 
     BSDFVPtrTable table;
     table.sampleCallIndex = sample_idx;
     table.evalCallIndex   = eval_idx;
-    table.flags           = component->flags();
+    table.flags           = _flags;
 
-    component->getVPtrTableHolder().upload(&table);
+    _vptr_table.upload(&table);
 
-    component->markInitialized();
+    markInitialized();
 }
 
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);

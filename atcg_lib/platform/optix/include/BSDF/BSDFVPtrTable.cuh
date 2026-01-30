@@ -4,23 +4,25 @@
 #include <Core/SurfaceInteraction.h>
 #include <Math/Random.h>
 #include <BSDF/BSDFFlags.h>
+#include <Spectrum/SampledSpectrum.h>
 #include <optix.h>
+
 
 namespace atcg
 {
 struct BSDFSamplingResult
 {
     glm::vec3 out_dir;
-    glm::vec3 bsdf_weight;
+    SampledSpectrum bsdf_weight;
     float sample_probability = 0.0f;
     BSDFComponentType flags  = BSDFComponentType::Any;
 };
 
 struct BSDFEvalResult
 {
-    glm::vec3 bsdf_value     = glm::vec3(0);
-    float sample_probability = 0.0f;
-    BSDFComponentType flags  = BSDFComponentType::Any;
+    SampledSpectrum bsdf_value = SampledSpectrum(0);
+    float sample_probability   = 0.0f;
+    BSDFComponentType flags    = BSDFComponentType::Any;
 };
 
 struct BSDFVPtrTable
@@ -32,16 +34,25 @@ struct BSDFVPtrTable
 
 #ifdef __CUDACC__
 
-    __device__ BSDFSamplingResult sampleBSDF(const SurfaceInteraction& si, PCG32& rng) const
+    __device__ BSDFSamplingResult sampleBSDF(const SurfaceInteraction& si,
+                                             const atcg::SampledWavelengths& wavelengths,
+                                             PCG32& rng) const
     {
-        return optixDirectCall<BSDFSamplingResult, const SurfaceInteraction&, PCG32&>(sampleCallIndex, si, rng);
+        return optixDirectCall<BSDFSamplingResult, const SurfaceInteraction&, const atcg::SampledWavelengths&, PCG32&>(
+            sampleCallIndex,
+            si,
+            wavelengths,
+            rng);
     }
 
-    __device__ BSDFEvalResult evalBSDF(const SurfaceInteraction& si, const glm::vec3& outgoing_dir) const
+    __device__ BSDFEvalResult evalBSDF(const SurfaceInteraction& si,
+                                       const glm::vec3& outgoing_dir,
+                                       const atcg::SampledWavelengths& wavelengths) const
     {
-        return optixDirectCall<BSDFEvalResult, const SurfaceInteraction&, const glm::vec3&>(evalCallIndex,
-                                                                                            si,
-                                                                                            outgoing_dir);
+        return optixDirectCall<BSDFEvalResult,
+                               const SurfaceInteraction&,
+                               const glm::vec3&,
+                               const atcg::SampledWavelengths&>(evalCallIndex, si, outgoing_dir, wavelengths);
     }
 
 #endif
@@ -184,6 +195,20 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_HOST_DEVICE float fresnel_schlick(const 
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 fresnel_schlick(const glm::vec3& F0, const float VdotH)
 {
     return F0 + (glm::vec3(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
+}
+
+/**
+ * @brief Fresnel schlick approximation
+ *
+ * @param F0 The base reflectance at normal incidence
+ * @param VdotH Angle between viewing direction and halfway vector
+ *
+ * @return Reflectance
+ */
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::SampledSpectrum fresnel_schlick(const atcg::SampledSpectrum& F0,
+                                                                         const float VdotH)
+{
+    return F0 + (atcg::SampledSpectrum(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
 }
 
 template<typename T>

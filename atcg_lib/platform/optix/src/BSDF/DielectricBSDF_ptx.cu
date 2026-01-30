@@ -23,11 +23,12 @@ namespace detail
  *
  * @return The sampling result
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult sampleRefractive(const atcg::SurfaceInteraction& si,
-                                                                             const glm::vec3& reflectance_color,
-                                                                             const float roughness,
-                                                                             const float ior,
-                                                                             atcg::PCG32& rng)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult
+sampleRefractive(const atcg::SurfaceInteraction& si,
+                 const atcg::SampledSpectrum& reflectance_color,
+                 const float roughness,
+                 const float ior,
+                 atcg::PCG32& rng)
 {
     glm::vec3 wi = -si.incoming_direction;
 
@@ -113,7 +114,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult sampleRefractive(con
 
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atcg::SurfaceInteraction& si,
                                                                        const glm::vec3& outgoing_dir,
-                                                                       const glm::vec3& reflectance_color,
+                                                                       const atcg::SampledSpectrum& reflectance_color,
                                                                        const float roughness,
                                                                        const float ior)
 {
@@ -127,7 +128,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
 
     bool same_side = outsidein == outsideout;
 
-    glm::vec3 specular_bsdf = glm::vec3(0);
+    atcg::SampledSpectrum specular_bsdf = atcg::SampledSpectrum(0);
 
     float F0 = (eta - 1) / (eta + 1);
     F0       = F0 * F0;
@@ -200,29 +201,35 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
 }    // namespace detail
 
 extern "C" __device__ atcg::BSDFSamplingResult
-__direct_callable__sample_dielectricbsdf(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
+__direct_callable__sample_dielectricbsdf(const atcg::SurfaceInteraction& si,
+                                         const atcg::SampledWavelengths& wavelengths,
+                                         atcg::PCG32& rng)
 {
     const atcg::DielectricBSDFData* sbt_data =
         *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
 
-    glm::vec3 reflectance_color = sbt_data->diffuse_texture.read(si.uv);
-    float roughness             = sbt_data->roughness_texture.read(si.uv);
-    roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+    atcg::SampledSpectrum reflectance_color =
+        atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
+    float roughness = sbt_data->roughness_texture.read(si.uv);
+    roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
     float ior = sbt_data->ior_texture.read(si.uv);
 
     return detail::sampleRefractive(si, reflectance_color, roughness, ior, rng);
 }
 
-extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
-                                                                                  const glm::vec3& outgoing_dir)
+extern "C" __device__ atcg::BSDFEvalResult
+__direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
+                                       const glm::vec3& outgoing_dir,
+                                       const atcg::SampledWavelengths& wavelengths)
 {
     const atcg::DielectricBSDFData* sbt_data =
         *reinterpret_cast<const atcg::DielectricBSDFData**>(optixGetSbtDataPointer());
 
-    glm::vec3 reflectance_color = sbt_data->diffuse_texture.read(si.uv);
-    float roughness             = sbt_data->roughness_texture.read(si.uv);
-    roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+    atcg::SampledSpectrum reflectance_color =
+        atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
+    float roughness = sbt_data->roughness_texture.read(si.uv);
+    roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
 
     float ior = sbt_data->ior_texture.read(si.uv);
 

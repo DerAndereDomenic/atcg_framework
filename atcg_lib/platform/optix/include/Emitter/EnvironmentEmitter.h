@@ -3,7 +3,6 @@
 #include <Renderer/Texture.h>
 #include <Emitter/Emitter.h>
 #include <Emitter/EnvironmentEmitterData.cuh>
-#include <Core/PipelineInitializer.h>
 
 namespace atcg
 {
@@ -31,7 +30,13 @@ public:
      */
     virtual void onImGuiRender() override {}
 
-    ATCG_INLINE atcg::dref_ptr<EnvironmentEmitterData> getDataBuffer() const { return _environment_emitter_data; }
+    /**
+     * @brief Initialize the pipeline
+     * @param pipeline The raytracing pipeline
+     * @param sbt The shader binding table
+     */
+    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
     atcg::ref_ptr<Texture2D> _environment_texture;
@@ -39,5 +44,4 @@ private:
     atcg::dref_ptr<EnvironmentEmitterData> _environment_emitter_data;
 };
 
-ATCG_DECLARE_COMPONENT_PIPELINE_INITIALIZER(EnvironmentEmitter);
 }    // namespace atcg
