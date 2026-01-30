@@ -181,7 +181,8 @@ __direct_callable__eval_meshemitter(const atcg::SurfaceInteraction& si, const at
 }
 
 extern "C" __device__ CuDiff::Dual<6, glm::vec3>
-__direct_callable__eval_dual_meshemitter(const atcg::DualSurfaceInteraction& si)
+__direct_callable__eval_dual_meshemitter(const atcg::DualSurfaceInteraction& si,
+                                         const atcg::SampledWavelengths& wavelengths)
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
 

@@ -365,7 +365,9 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_ggx_deriv
 }
 
 extern "C" __device__ atcg::BSDFDualSamplingResult
-__direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si, atcg::PCG32& rng)
+__direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
+                                          const atcg::SampledWavelengths& wavelengths,
+                                          atcg::PCG32& rng)
 {
     const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
@@ -474,7 +476,9 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
 }
 
 extern "C" __device__ atcg::BSDFDualEvalResult
-__direct_callable__eval_forward_pbrbsdf(const atcg::SurfaceInteraction& si, const glm::vec3& outgoing_dir)
+__direct_callable__eval_forward_pbrbsdf(const atcg::SurfaceInteraction& si,
+                                        const glm::vec3& outgoing_dir,
+                                        const atcg::SampledWavelengths& wavelengths)
 {
     // const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
     // atcg::BSDFEvalResult result;

@@ -21,29 +21,35 @@ DiffPathtracingIntegrator::DiffPathtracingIntegrator(const atcg::ref_ptr<Raytrac
                                                      const Dictionary& dict)
     : Integrator(context, dict)
 {
+    initializePipeline(dict);
 }
 
 DiffPathtracingIntegrator::~DiffPathtracingIntegrator() {}
 
-void DiffPathtracingIntegrator::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                                   const atcg::ref_ptr<ShaderBindingTable>& sbt)
+void DiffPathtracingIntegrator::initializePipeline(const Dictionary& dict)
 {
-    const std::string ptx_raygen_filename       = "./bin/DiffPathtracingIntegrator_ptx.ptx";
-    OptixProgramGroup raygen_prog_group_forward = pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__forward"});
+    _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"./bin/MeshShape_ptx.ptx", "__closesthit__mesh"}, {});
+
+    auto scene = dict.getValue<atcg::ref_ptr<Scene>>("scene");
+
+    const std::string ptx_raygen_filename = "./bin/DiffPathtracingIntegrator_ptx.ptx";
+    OptixProgramGroup raygen_prog_group_forward =
+        _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__forward"});
     OptixProgramGroup raygen_prog_group_backward =
-        pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__backward"});
-    OptixProgramGroup miss_prog_group = pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
-    OptixProgramGroup occl_prog_group = pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
+        _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__backward"});
+    OptixProgramGroup miss_prog_group = _pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
+    OptixProgramGroup occl_prog_group = _pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
-    _raygen_index_forward  = sbt->addRaygenEntry(raygen_prog_group_forward);
-    _raygen_index_backward = sbt->addRaygenEntry(raygen_prog_group_backward);
-    _surface_miss_index    = sbt->addMissEntry(miss_prog_group);
-    _occlusion_miss_index  = sbt->addMissEntry(occl_prog_group);
+    _raygen_index_forward  = _sbt->addRaygenEntry(raygen_prog_group_forward);
+    _raygen_index_backward = _sbt->addRaygenEntry(raygen_prog_group_backward);
+    _surface_miss_index    = _sbt->addMissEntry(miss_prog_group);
+    _occlusion_miss_index  = _sbt->addMissEntry(occl_prog_group);
 
-    _pipeline = pipeline;
-    _sbt      = sbt;
+    _optix_scene = SceneAdapter(_context, _pipeline, _sbt)
+                       .apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
 
-    _optix_scene = SceneAdapter(_context, pipeline, sbt).apply(_scene);
+    _pipeline->createPipeline();
+    _sbt->createSBT();
 
     _differentiable_components.clear();
     for(auto shape: _optix_scene->getShapes())

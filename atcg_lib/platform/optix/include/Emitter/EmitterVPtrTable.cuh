@@ -51,9 +51,12 @@ struct EmitterVPtrTable
             wavelengths);
     }
 
-    __device__ CuDiff::Dual<6, glm::vec3> evalLightDual(const DualSurfaceInteraction& si) const
+    __device__ CuDiff::Dual<6, glm::vec3> evalLightDual(const DualSurfaceInteraction& si,
+                                                        const atcg::SampledWavelengths& wavelengths) const
     {
-        return optixDirectCall<CuDiff::Dual<6, glm::vec3>, const DualSurfaceInteraction&>(evalDualCallIndex, si);
+        return optixDirectCall<CuDiff::Dual<6, glm::vec3>,
+                               const DualSurfaceInteraction&,
+                               const atcg::SampledWavelengths&>(evalDualCallIndex, si, wavelengths);
     }
 
     __device__ EmitterSamplingResult sampleLight(const SurfaceInteraction& si,

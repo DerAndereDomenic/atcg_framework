@@ -46,15 +46,12 @@ public:
     void initializePathtracer()
     {
 #ifdef ATCG_ENABLE_OPTIX
-        pipeline = atcg::make_ref<atcg::RayTracingPipeline>(optx_context);
-        sbt      = atcg::make_ref<atcg::ShaderBindingTable>();
+        atcg::Dictionary dict;
+        dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
+        dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
+        dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
 
-        integrator = atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(optx_context, atcg::Dictionary());
-        integrator->setScene(atcg::Project::getActive()->getActiveScene());
-        integrator->initializePipeline(pipeline, sbt);
-
-        pipeline->createPipeline();
-        sbt->createSBT();
+        integrator = atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(optx_context, dict);
 #endif
     }
 
@@ -64,7 +61,6 @@ public:
     virtual void onAttach() override
     {
         atcg::Application::get()->enableDockSpace(true);
-        atcg::Renderer::setClearColor(glm::vec4(0, 0, 0, 1));
 
         atcg::Project::load("../DiffRendTest/Project.json");
 
@@ -102,8 +98,6 @@ public:
 #endif
 
         atcg::Scripting::handleScriptUpdates(atcg::Project::getActive()->getActiveScene(), delta_time);
-
-        atcg::Renderer::clear();
 
         if(enable_pathtracing)
         {
@@ -146,7 +140,10 @@ public:
                 }
             }
 
+            atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
+            atcg::GraphicsCommand::clear();
             atcg::Renderer::drawImage(output_texture, output_entity_texture);
+            atcg::GraphicsCommand::endRenderPass();
 #endif
         }
         else
@@ -155,11 +152,10 @@ public:
                                                                atcg::Renderer::getFramebuffer());
         }
 
-
-        atcg::Renderer::drawCameras(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
-        atcg::Renderer::drawLights(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
+        atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
 
         atcg::Renderer::drawCADGrid(camera_controller->getCamera());
+        atcg::GraphicsCommand::endRenderPass();
 
 
         uint32_t current_revision = atcg::RevisionStack::numUndos();
@@ -432,10 +428,7 @@ public:
     {
         if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
         {
-            int id         = atcg::Renderer::getEntityIndex(mouse_pos);
-            hovered_entity = id == -1
-                                 ? atcg::Entity()
-                                 : atcg::Entity((entt::entity)id, atcg::Project::getActive()->getActiveScene().get());
+            hovered_entity = atcg::Utils::pickEntity(mouse_pos);
             panel.selectEntity(hovered_entity);
         }
         return true;
@@ -490,8 +483,6 @@ private:
 
 #ifdef ATCG_ENABLE_OPTIX
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::RayTracingPipeline> pipeline;
-    atcg::ref_ptr<atcg::ShaderBindingTable> sbt;
     atcg::ref_ptr<atcg::AttachedDiffPathtracingIntegrator> integrator;
     torch::Tensor target;
     bool optimize       = false;

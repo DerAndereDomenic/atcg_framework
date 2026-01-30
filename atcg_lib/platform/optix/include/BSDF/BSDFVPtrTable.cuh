@@ -75,18 +75,24 @@ struct BSDFVPtrTable
                                const atcg::SampledWavelengths&>(evalCallIndex, si, outgoing_dir, wavelengths);
     }
 
-    __device__ BSDFDualSamplingResult sampleBSDFForward(const DualSurfaceInteraction& si, PCG32& rng) const
+    __device__ BSDFDualSamplingResult sampleBSDFForward(const DualSurfaceInteraction& si,
+                                                        const atcg::SampledWavelengths& wavelengths,
+                                                        PCG32& rng) const
     {
-        return optixDirectCall<BSDFDualSamplingResult, const DualSurfaceInteraction&, PCG32&>(sampleForwardCallIndex,
-                                                                                              si,
-                                                                                              rng);
+        return optixDirectCall<BSDFDualSamplingResult,
+                               const DualSurfaceInteraction&,
+                               const atcg::SampledWavelengths&,
+                               PCG32&>(sampleForwardCallIndex, si, wavelengths, rng);
     }
 
-    __device__ BSDFDualEvalResult evalBSDFForward(const SurfaceInteraction& si, const glm::vec3& outgoing_dir) const
+    __device__ BSDFDualEvalResult evalBSDFForward(const SurfaceInteraction& si,
+                                                  const glm::vec3& outgoing_dir,
+                                                  const atcg::SampledWavelengths& wavelengths) const
     {
-        return optixDirectCall<BSDFDualEvalResult, const SurfaceInteraction&, const glm::vec3&>(evalForwardCallIndex,
-                                                                                                si,
-                                                                                                outgoing_dir);
+        return optixDirectCall<BSDFDualEvalResult,
+                               const SurfaceInteraction&,
+                               const glm::vec3&,
+                               const atcg::SampledWavelengths&>(evalForwardCallIndex, si, outgoing_dir, wavelengths);
     }
 
     __device__ void

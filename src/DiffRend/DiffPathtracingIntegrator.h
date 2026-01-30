@@ -30,17 +30,6 @@ public:
     ~DiffPathtracingIntegrator();
 
     /**
-     * @brief Initialize a pipeline.
-     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
-     * sbt.
-     *
-     * @param pipeline The pipeline
-     * @param sbt The shader binding table
-     */
-    virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                                    const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
-
-    /**
      * @brief A callback to display debug information in imgui
      */
     virtual void onImGuiRender() override;
@@ -73,6 +62,17 @@ public:
     virtual void markOptimizable() override;
 
 private:
+    /**
+     * @brief Initialize a pipeline.
+     * This function should be overwritten by each child class and it should add its functions to the pipeline and the
+     * sbt.
+     *
+     * @param pipeline The pipeline
+     * @param sbt The shader binding table
+     */
+    void initializePipeline(const Dictionary& dict);
+
+
     void _forwardTrace(Dictionary& in_out_dictionary);
     void _backwardTrace(Dictionary& in_out_dictionary);
 

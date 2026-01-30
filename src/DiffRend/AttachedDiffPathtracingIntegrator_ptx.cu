@@ -41,6 +41,8 @@ extern "C" __global__ void __raygen__forward()
     uint64_t seed        = atcg::sampleTEA64(pixel_index, params.rng_index);
     atcg::PCG32 rng(seed);
 
+    atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleSpectrum(rng.nextFloat(), 380.0f, 780.0f);
+
     glm::vec2 jitter = rng.next2d();
     float u_         = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
     float v_         = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
@@ -128,7 +130,7 @@ extern "C" __global__ void __raygen__forward()
                 // bool mis_valid = last_si.valid;
                 // float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) :
                 // 0.0f; float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                Le = ray.si1.emitter->evalLightDual(dsi);
+                Le = ray.si1.emitter->evalLightDual(dsi, wavelengths);
                 ray.radiance += ray.throughput * Le.val();
 
                 glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
@@ -196,7 +198,7 @@ extern "C" __global__ void __raygen__forward()
                 //     ray.radiance += radiance_nee;
                 // } while(false);
 
-                auto result = ray.si1.bsdf->sampleBSDFForward(dsi, rng);
+                auto result = ray.si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
@@ -331,6 +333,8 @@ extern "C" __global__ void __raygen__backward()
     uint64_t seed        = atcg::sampleTEA64(pixel_index, params.rng_index);
     atcg::PCG32 rng(seed);
 
+    atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleSpectrum(rng.nextFloat(), 380.0f, 780.0f);
+
     glm::vec2 jitter = rng.next2d();
     float u_         = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
     float v_         = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
@@ -418,7 +422,7 @@ extern "C" __global__ void __raygen__backward()
                 // bool mis_valid = last_si.valid;
                 // float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) :
                 // 0.0f; float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                Le = ray.si1.emitter->evalLightDual(dsi);
+                Le = ray.si1.emitter->evalLightDual(dsi, wavelengths);
                 ray.radiance -= ray.throughput * Le.val();
 
                 glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
@@ -487,7 +491,7 @@ extern "C" __global__ void __raygen__backward()
                 // } while(false);
 
                 auto rng_copy = rng;
-                auto result   = ray.si1.bsdf->sampleBSDFForward(dsi, rng);
+                auto result   = ray.si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
