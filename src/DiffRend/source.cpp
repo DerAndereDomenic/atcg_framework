@@ -23,8 +23,10 @@
 class DiffRendLayer : public atcg::Layer
 {
 public:
-    void createOutputTexture(int width, int height)
+    void createOutputTexture(int width_, int height_)
     {
+        int width  = width_ / 2;
+        int height = height_ / 2;
 #ifdef ATCG_ENABLE_OPTIX
         output_img_tensor = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
         output_entities   = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
@@ -48,8 +50,8 @@ public:
 #ifdef ATCG_ENABLE_OPTIX
         atcg::Dictionary dict;
         dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
-        dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
-        dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
+        dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width() / 2);
+        dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height() / 2);
 
         integrator = atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(optx_context, dict);
 #endif
@@ -337,26 +339,26 @@ public:
             integrator->onImGuiRender();
         }
 
+        ImGui::Begin("Target Texture");
         if(target_texture)
         {
-            ImGui::Begin("Target Texture");
             ImGui::Image((ImTextureID)target_texture->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
-            ImGui::End();
         }
+        ImGui::End();
 
+        ImGui::Begin("Result Texture");
         if(result_texture)
         {
-            ImGui::Begin("Result Texture");
             ImGui::Image((ImTextureID)result_texture->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
-            ImGui::End();
         }
+        ImGui::End();
 
+        ImGui::Begin("Difference Texture");
         if(difference_texture)
         {
-            ImGui::Begin("Difference Texture");
             ImGui::Image((ImTextureID)difference_texture->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
-            ImGui::End();
         }
+        ImGui::End();
 
         ImGui::End();
 
@@ -516,6 +518,8 @@ public:
 atcg::Application* atcg::createApplication()
 {
     atcg::WindowProps props;
-    props.vsync = true;
+    props.width  = 3000;
+    props.height = 1800;
+    props.vsync  = true;
     return new DiffRend(props);
 }
