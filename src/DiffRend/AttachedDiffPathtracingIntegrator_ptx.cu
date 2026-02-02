@@ -127,10 +127,10 @@ extern "C" __global__ void __raygen__forward()
             glm::mat4x3 JLe = glm::mat4x3(0);
             if(ray.si1.emitter)
             {
-                // bool mis_valid = last_si.valid;
-                // float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) :
-                // 0.0f; float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                Le = ray.si1.emitter->evalLightDual(dsi, wavelengths);
+                bool mis_valid             = last_si.valid;
+                float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) : 0.0f;
+                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                Le                         = mis_weight * ray.si1.emitter->evalLightDual(dsi, wavelengths);
                 ray.radiance += ray.throughput * Le.val();
 
                 glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
@@ -153,50 +153,51 @@ extern "C" __global__ void __raygen__forward()
             if(ray.si1.bsdf)
             {
                 // Next-event estimation
-                // do
-                // {
-                //     if(params.num_emitters == 0) break;
+                do
+                {
+                    if(params.num_emitters == 0) break;
 
-                //     uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+                    uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
 
-                //     float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                    float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
 
-                //     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+                    const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-                //     if(si.emitter == emitter) break;
+                    if(ray.si1.emitter == emitter) break;
 
-                //     atcg::EmitterSamplingResult emitter_sampling =
-                //         emitter->sampleLight(si, rng);    // TODO: Differentiate
+                    atcg::EmitterSamplingResult emitter_sampling =
+                        emitter->sampleLight(ray.si1, wavelengths, rng);    // TODO: Differentiate
 
-                //     if(emitter_sampling.sampling_pdf == 0) break;
+                    if(emitter_sampling.sampling_pdf == 0) break;
 
-                //     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
 
-                //     bool occluded = traceOcclusion(params.handle,
-                //                                    si.position,
-                //                                    emitter_sampling.direction_to_light,
-                //                                    1e-3f,
-                //                                    emitter_sampling.distance_to_light - 1e-3f,
-                //                                    params.occlusion_trace_params);
+                    bool occluded = traceOcclusion(params.handle,
+                                                   ray.si1.position,
+                                                   emitter_sampling.direction_to_light,
+                                                   1e-3f,
+                                                   emitter_sampling.distance_to_light - 1e-3f,
+                                                   params.occlusion_trace_params);
 
-                //     if(occluded)
-                //     {
-                //         break;
-                //     }
+                    if(occluded)
+                    {
+                        break;
+                    }
 
-                //     atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+                    atcg::BSDFEvalResult bsdf_result =
+                        ray.si1.bsdf->evalBSDF(ray.si1, emitter_sampling.direction_to_light, wavelengths);
 
-                //     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
-                //                            ? 0.0f
-                //                            : bsdf_result.sample_probability;
-                //     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                                           ? 0.0f
+                                           : bsdf_result.sample_probability;
+                    float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
-                //     glm::vec3 radiance_nee = mis_weight * ray.throughput *
-                //                              emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value *
-                //                              glm::abs(glm::dot(si.normal, emitter_sampling.direction_to_light));
+                    glm::vec3 radiance_nee = mis_weight * ray.throughput *
+                                             emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value *
+                                             glm::abs(glm::dot(ray.si1.normal, emitter_sampling.direction_to_light));
 
-                //     ray.radiance += radiance_nee;
-                // } while(false);
+                    ray.radiance += radiance_nee;
+                } while(false);
 
                 auto result = ray.si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
 
@@ -269,6 +270,13 @@ extern "C" __global__ void __raygen__forward()
                     // {
                     //     printf("%f\n", glm::determinant(Jray_));
                     // }
+                    last_si       = ray.si1;
+                    last_bsdf_pdf = result.sample_probability;
+
+                    if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                    {
+                        last_si.valid = false;
+                    }
 
                     ray.si0         = ray.si1;
                     ray.si1         = next_dsi.toSi();
@@ -277,14 +285,6 @@ extern "C" __global__ void __raygen__forward()
 
                     ray.throughput *= result.bsdf_weight.val();
                     ray.valid = next_dsi.valid;
-
-                    // last_si       = si;
-                    // last_bsdf_pdf = result.sample_probability;
-
-                    // if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
-                    // {
-                    //     last_si.valid = false;
-                    // }
                 }
             }
         }
@@ -419,10 +419,10 @@ extern "C" __global__ void __raygen__backward()
             glm::mat4x3 JLe = glm::mat4x3(0);
             if(ray.si1.emitter)
             {
-                // bool mis_valid = last_si.valid;
-                // float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) :
-                // 0.0f; float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                Le = ray.si1.emitter->evalLightDual(dsi, wavelengths);
+                bool mis_valid             = last_si.valid;
+                float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) : 0.0f;
+                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                Le                         = mis_weight * ray.si1.emitter->evalLightDual(dsi, wavelengths);
                 ray.radiance -= ray.throughput * Le.val();
 
                 glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
@@ -443,52 +443,53 @@ extern "C" __global__ void __raygen__backward()
             if(ray.si1.bsdf)
             {
                 // Next-event estimation
-                // do
-                // {
-                //     if(params.num_emitters == 0) break;
+                do
+                {
+                    if(params.num_emitters == 0) break;
 
-                //     uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+                    uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
 
-                //     float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                    float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
 
-                //     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+                    const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-                //     if(si.emitter == emitter) break;
+                    if(ray.si1.emitter == emitter) break;
 
-                //     atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(si, rng);
+                    atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(ray.si1, wavelengths, rng);
 
-                //     if(emitter_sampling.sampling_pdf == 0) break;
+                    if(emitter_sampling.sampling_pdf == 0) break;
 
-                //     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
 
-                //     bool occluded = traceOcclusion(params.handle,
-                //                                    si.position,
-                //                                    emitter_sampling.direction_to_light,
-                //                                    1e-3f,
-                //                                    emitter_sampling.distance_to_light - 1e-3f,
-                //                                    params.occlusion_trace_params);
+                    bool occluded = traceOcclusion(params.handle,
+                                                   ray.si1.position,
+                                                   emitter_sampling.direction_to_light,
+                                                   1e-3f,
+                                                   emitter_sampling.distance_to_light - 1e-3f,
+                                                   params.occlusion_trace_params);
 
-                //     if(occluded)
-                //     {
-                //         break;
-                //     }
+                    if(occluded)
+                    {
+                        break;
+                    }
 
-                //     atcg::BSDFEvalResult bsdf_result = si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light);
+                    atcg::BSDFEvalResult bsdf_result =
+                        ray.si1.bsdf->evalBSDF(ray.si1, emitter_sampling.direction_to_light, wavelengths);
 
-                //     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
-                //                            ? 0.0f
-                //                            : bsdf_result.sample_probability;
-                //     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                                           ? 0.0f
+                                           : bsdf_result.sample_probability;
+                    float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
-                //     glm::vec3 radiance_nee = mis_weight * ray.throughput *
-                //                              emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value *
-                //                              glm::abs(glm::dot(si.normal, emitter_sampling.direction_to_light));
+                    glm::vec3 radiance_nee = mis_weight * ray.throughput *
+                                             emitter_sampling.radiance_weight_at_receiver * bsdf_result.bsdf_value *
+                                             glm::abs(glm::dot(ray.si1.normal, emitter_sampling.direction_to_light));
 
-                //     glm::vec3 grad_out = (ray.delta_y * (radiance_nee + 1e-4f)) / (bsdf_result.bsdf_value + 1e-4f);
-                //     si.bsdf->evalBSDFBackward(si, emitter_sampling.direction_to_light, grad_out);
-
-                //     ray.radiance -= radiance_nee;
-                // } while(false);
+                    glm::vec3 grad_out =
+                        (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) + 1e-4f);
+                    ray.si1.bsdf->evalBSDFBackward(ray.si1, emitter_sampling.direction_to_light, grad_out);
+                    ray.radiance -= radiance_nee;
+                } while(false);
 
                 auto rng_copy = rng;
                 auto result   = ray.si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
