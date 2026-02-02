@@ -14,6 +14,9 @@ struct PBRBSDFData
     TextureSampler<float> metallic_grad;
     TextureSampler<float> roughness_grad;
 
+    float* roughness_bsdf     = nullptr;
+    float* roughness_sampling = nullptr;
+
     bool optimize_diffuse   = false;
     bool optimize_roughness = false;
     bool optimize_metallic  = false;

@@ -818,11 +818,6 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         //     dLdr = 0.0f;
         // }
 
-        // if(isfinite(partial_r))
-        // {
-        //     dLdr += partial_r;
-        // }
-
         if(sbt_data->optimize_diffuse)
         {
             glm::mat3 dbsdf_weightdalbedo =
@@ -830,9 +825,14 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             glm::vec3 partial_wo = dLdwo * dwodalbedo;
             glm::vec3 dLdalbedo  = dLdbsdf * dbsdf_weightdalbedo;
 
-            if(isfinite(partial_wo.x) && isfinite(partial_wo.y) && isfinite(partial_wo.z))
+            // if(isfinite(partial_wo.x) && isfinite(partial_wo.y) && isfinite(partial_wo.z))
+            // {
+            dLdalbedo += partial_wo;
+            // }
+
+            if(!isfinite(dLdalbedo.x) || !isfinite(dLdalbedo.y) || !isfinite(dLdalbedo.z))
             {
-                dLdalbedo += partial_wo;
+                dLdalbedo = glm::vec3(0.0f);
             }
 
             DERIVATIVE_INTERPOLATION_VECTOR(dLdalbedo, sbt_data->diffuse_grad);
@@ -844,12 +844,23 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             float partial_r          = glm::dot(dLdwo, dwodr);
             float dLdr               = glm::dot(dLdbsdf, dbsdf_weightdr);
 
-            if(isfinite(partial_r))
+            float dbsdf     = dLdr;
+            float dsampling = partial_r;
+
+            // if(isfinite(partial_r))
+            // {
+            dLdr += partial_r;
+            // }
+
+            if(!isfinite(dLdr))
             {
-                dLdr += partial_r;
+                dLdr = 0.0f;
             }
 
             DERIVATIVE_INTERPOLATION_SCALAR(dLdr, sbt_data->roughness_grad);
+
+            atomicAdd(sbt_data->roughness_bsdf, dbsdf);
+            atomicAdd(sbt_data->roughness_sampling, dsampling);
         }
 
         if(sbt_data->optimize_metallic)
@@ -858,9 +869,14 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             float partial_m          = glm::dot(dLdwo, dwodm);
             float dLdm               = glm::dot(dLdbsdf, dbsdf_weightdm);
 
-            if(isfinite(partial_m))
+            // if(isfinite(partial_m))
+            // {
+            dLdm += partial_m;
+            // }
+
+            if(!isfinite(dLdm))
             {
-                dLdm += partial_m;
+                dLdm = 0.0f;
             }
 
             DERIVATIVE_INTERPOLATION_SCALAR(dLdm, sbt_data->metallic_grad);

@@ -3,6 +3,7 @@
 #include <BSDF/BSDF.h>
 #include <BSDF/PBRBSDFData.cuh>
 #include <Renderer/Material.h>
+#include <DataStructure/Statistics.h>
 
 namespace atcg
 {
@@ -55,7 +56,20 @@ private:
     atcg::ref_ptr<Texture2D> _diffuse_optimized, _metallic_optimized, _roughness_optimized;
     atcg::ref_ptr<Texture2D> _diffuse_grad, _metallic_grad, _roughness_grad;
 
-    uint32_t _optimization_width  = 512;
-    uint32_t _optimization_height = 512;
+    uint32_t _optimization_width  = 1;
+    uint32_t _optimization_height = 1;
+
+    atcg::dref_ptr<float> _roughness_bsdf;
+    atcg::dref_ptr<float> _roughness_sampling;
+
+    atcg::CyclicCollection<float> time_collection = atcg::CyclicCollection<float>("Time Collection", 35 * 60 / 5);
+    atcg::CyclicCollection<float> roughness_collection =
+        atcg::CyclicCollection<float>("Roughness Collection", 35 * 60 / 5);
+    atcg::CyclicCollection<float> roughness_grad_collection =
+        atcg::CyclicCollection<float>("Roughness grad Collection", 35 * 60 / 5);
+    atcg::CyclicCollection<float> roughness_bsdf_collection =
+        atcg::CyclicCollection<float>("Roughness BSDF Collection", 35 * 60 / 5);
+    atcg::CyclicCollection<float> roughness_sampling_collection =
+        atcg::CyclicCollection<float>("Roughness Sampling Collection", 35 * 60 / 5);
 };
 }    // namespace atcg
