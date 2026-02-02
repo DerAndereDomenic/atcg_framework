@@ -54,5 +54,8 @@ private:
 
     atcg::ref_ptr<Texture2D> _diffuse_optimized, _metallic_optimized, _roughness_optimized;
     atcg::ref_ptr<Texture2D> _diffuse_grad, _metallic_grad, _roughness_grad;
+
+    uint32_t _optimization_width  = 512;
+    uint32_t _optimization_height = 512;
 };
 }    // namespace atcg

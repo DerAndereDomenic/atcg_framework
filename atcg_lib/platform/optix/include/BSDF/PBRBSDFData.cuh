@@ -14,6 +14,8 @@ struct PBRBSDFData
     TextureSampler<float> metallic_grad;
     TextureSampler<float> roughness_grad;
 
-    bool optimizable;
+    bool optimize_diffuse   = false;
+    bool optimize_roughness = false;
+    bool optimize_metallic  = false;
 };
 }    // namespace atcg

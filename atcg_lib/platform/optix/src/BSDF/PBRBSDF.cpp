@@ -24,8 +24,6 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
     data.roughness_texture =
         TextureSampler<float>(_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
 
-    data.optimizable = _optimizable;
-
     _flags = BSDFComponentType::GlossyReflection | BSDFComponentType::DiffuseReflection;
 
     _bsdf_data_buffer.upload(&data);
@@ -76,12 +74,88 @@ std::vector<torch::Tensor> PBRBSDF::getParameters() const
 
 void PBRBSDF::onImGuiRender()
 {
-    if(ImGui::Button("Make Optimizable"))
+    ImGui::SliderInt("Optimization Width", (int*)&_optimization_width, 1, 512);
+    ImGui::SliderInt("Optimization Height", (int*)&_optimization_height, 1, 512);
+
+    _optimizable = true;
+    if(ImGui::Button("Optimize color"))
     {
-        markOptimizable();
+        atcg::TextureSpecification spec_diffuse;
+        spec_diffuse.width  = _optimization_width;
+        spec_diffuse.height = _optimization_height;
+        spec_diffuse.format = TextureFormat::RGBFLOAT;
+
+        _diffuse_texture = torch::zeros({spec_diffuse.height, spec_diffuse.width, 3},
+                                        TensorOptions::floatDeviceOptions().requires_grad(true));
+
+        _diffuse_texture.mutable_grad() = torch::zeros_like(_diffuse_texture);
+
+        PBRBSDFData data;
+        _bsdf_data_buffer.download(&data);
+
+        data.diffuse_texture = TextureSampler<glm::vec3>(_diffuse_texture.data_ptr(), spec_diffuse);
+        data.diffuse_grad    = TextureSampler<glm::vec3>(_diffuse_texture.grad().data_ptr(), spec_diffuse);
+
+        _diffuse_optimized = atcg::Texture2D::create(spec_diffuse);
+        _diffuse_grad      = atcg::Texture2D::create(spec_diffuse);
+
+        data.optimize_diffuse = true;
+        _bsdf_data_buffer.upload(&data);
     }
 
-    if(!_diffuse_optimized) return;
+    if(ImGui::Button("Optimize roughness"))
+    {
+        atcg::TextureSpecification spec_float;
+        spec_float.width   = _optimization_width;
+        spec_float.height  = _optimization_height;
+        spec_float.format  = TextureFormat::RFLOAT;
+        _roughness_texture = torch::ones({spec_float.height, spec_float.height, 1},
+                                         TensorOptions::floatDeviceOptions().requires_grad(true));    // TODO
+
+        _roughness_texture.mutable_grad() = torch::zeros_like(_roughness_texture);
+
+        PBRBSDFData data;
+        _bsdf_data_buffer.download(&data);
+
+        data.roughness_texture = TextureSampler<float>(_roughness_texture.data_ptr(), spec_float);
+        data.roughness_grad    = TextureSampler<float>(_roughness_texture.grad().data_ptr(), spec_float);
+
+        _roughness_optimized = atcg::Texture2D::create(spec_float);
+
+        spec_float.format = TextureFormat::RGFLOAT;    // For pos/neg visualization
+        _roughness_grad   = atcg::Texture2D::create(spec_float);
+
+        data.optimize_roughness = true;
+        _bsdf_data_buffer.upload(&data);
+    }
+
+    if(ImGui::Button("Optimize metallic"))
+    {
+        atcg::TextureSpecification spec_float;
+        spec_float.width  = _optimization_width;
+        spec_float.height = _optimization_height;
+        spec_float.format = TextureFormat::RFLOAT;
+
+        _metallic_texture = torch::zeros({spec_float.height, spec_float.height, 1},
+                                         TensorOptions::floatDeviceOptions().requires_grad(true));
+
+        _metallic_texture.mutable_grad() = torch::zeros_like(_metallic_texture);
+
+        PBRBSDFData data;
+        _bsdf_data_buffer.download(&data);
+
+        data.metallic_texture = TextureSampler<float>(_metallic_texture.data_ptr(), spec_float);
+        data.metallic_grad    = TextureSampler<float>(_metallic_texture.grad().data_ptr(), spec_float);
+
+        _metallic_optimized = atcg::Texture2D::create(spec_float);
+
+        spec_float.format = TextureFormat::RGFLOAT;    // For pos/neg visualization
+        _metallic_grad    = atcg::Texture2D::create(spec_float);
+
+        data.optimize_metallic = true;
+        data.optimize_metallic = _optimizable;
+        _bsdf_data_buffer.upload(&data);
+    }
 
     auto normalize = [](torch::Tensor inp) -> torch::Tensor
     {
@@ -103,47 +177,56 @@ void PBRBSDF::onImGuiRender()
         return normalize(y);
     };
 
-    _diffuse_optimized->setData(_diffuse_texture);
-    _diffuse_grad->setData(normalize(_diffuse_texture.grad()));
+    if(_diffuse_optimized)
+    {
+        _diffuse_optimized->setData(_diffuse_texture);
+        _diffuse_grad->setData(normalize(_diffuse_texture.grad()));
 
-    _metallic_optimized->setData(_metallic_texture);
-    _metallic_grad->setData(pos_neg(_metallic_texture.grad()));
+        ImGui::Text("Diffuse");
+        ImGui::Text("Texture");
+        ImGui::Image((ImTextureID)_diffuse_optimized->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+        ImGui::Text("Grad");
+        ImGui::Image((ImTextureID)_diffuse_grad->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+        ImGui::Separator();
+    }
 
-    _roughness_optimized->setData(_roughness_texture);
-    _roughness_grad->setData(pos_neg(_roughness_texture.grad()));
+    if(_metallic_optimized)
+    {
+        _metallic_optimized->setData(_metallic_texture);
+        _metallic_grad->setData(pos_neg(_metallic_texture.grad()));
 
-    ImGui::Text("Diffuse");
-    ImGui::Text("Texture");
-    ImGui::Image((ImTextureID)_diffuse_optimized->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
-    ImGui::Text("Grad");
-    ImGui::Image((ImTextureID)_diffuse_grad->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
-    ImGui::Separator();
+        ImGui::Text("Metallic");
+        ImGui::Text("Texture");
+        ImGui::Image((ImTextureID)_metallic_optimized->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+        ImGui::Text("Grad");
+        ImGui::Image((ImTextureID)_metallic_grad->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+        ImGui::Separator();
+    }
 
-    ImGui::Text("Metallic");
-    ImGui::Text("Texture");
-    ImGui::Image((ImTextureID)_metallic_optimized->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
-    ImGui::Text("Grad");
-    ImGui::Image((ImTextureID)_metallic_grad->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
-    ImGui::Separator();
+    if(_roughness_optimized)
+    {
+        _roughness_optimized->setData(_roughness_texture);
+        _roughness_grad->setData(pos_neg(_roughness_texture.grad()));
 
-    ImGui::Text("Roughness");
-    ImGui::Text("Texture");
-    ImGui::Image((ImTextureID)_roughness_optimized->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
-    ImGui::Text("Grad");
-    ImGui::Image((ImTextureID)_roughness_grad->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
-    ImGui::Separator();
+        ImGui::Text("Roughness");
+        ImGui::Text("Texture");
+        ImGui::Image((ImTextureID)_roughness_optimized->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+        ImGui::Text("Grad");
+        ImGui::Image((ImTextureID)_roughness_grad->getID(), ImVec2(512, 512), ImVec2 {0, 1}, ImVec2 {1, 0});
+        ImGui::Separator();
+    }
 }
 
 void PBRBSDF::markOptimizable()
 {
     atcg::TextureSpecification spec_diffuse;
-    spec_diffuse.width  = 512;
-    spec_diffuse.height = 512;
+    spec_diffuse.width  = _optimization_width;
+    spec_diffuse.height = _optimization_height;
     spec_diffuse.format = TextureFormat::RGBFLOAT;
 
     atcg::TextureSpecification spec_float;
-    spec_float.width  = 512;
-    spec_float.height = 512;
+    spec_float.width  = _optimization_width;
+    spec_float.height = _optimization_height;
     spec_float.format = TextureFormat::RFLOAT;
 
     _diffuse_texture   = torch::zeros({spec_diffuse.height, spec_diffuse.width, 3},
@@ -182,16 +265,18 @@ void PBRBSDF::markOptimizable()
 
     PBRBSDFData bsdf_data;
     _bsdf_data_buffer.download(&bsdf_data);
-    bsdf_data.optimizable = _optimizable;
+    bsdf_data.optimize_diffuse   = true;
+    bsdf_data.optimize_metallic  = true;
+    bsdf_data.optimize_roughness = true;
     _bsdf_data_buffer.upload(&bsdf_data);
 }
 
 void PBRBSDF::clampParameters()
 {
     if(!_optimizable) return;
-    _diffuse_texture.clamp_(0.0f, 1.0f);
-    _roughness_texture.clamp_(0.01f, 1.0f);
-    _metallic_texture.clamp_(0.0f, 1.0f);
+    if(_diffuse_optimized) _diffuse_texture.clamp_(0.0f, 1.0f);
+    if(_roughness_optimized) _roughness_texture.clamp_(0.01f, 1.0f);
+    if(_metallic_optimized) _metallic_texture.clamp_(0.0f, 1.0f);
 }
 
 ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);

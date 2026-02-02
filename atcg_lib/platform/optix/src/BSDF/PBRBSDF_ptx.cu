@@ -560,7 +560,7 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
     {
         const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
-        if(!sbt_data->optimizable) return;
+        if(!sbt_data->optimize_diffuse && !sbt_data->optimize_metallic && !sbt_data->optimize_roughness) return;
 
         glm::vec3 alpha_ = sbt_data->diffuse_texture.read(si.uv);
         float m_         = sbt_data->metallic_texture.read(si.uv);
@@ -596,21 +596,25 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
 
         auto bsdf_value = specular + kD * diffuse_color / glm::pi<float>();
 
-        glm::mat3 dbsdfdalpha = glm::mat3(bsdf_value.derivative(0), bsdf_value.derivative(1), bsdf_value.derivative(2));
-        glm::vec3 dbsdfdm     = bsdf_value.derivative(3);
-        glm::vec3 dbsdfdr     = bsdf_value.derivative(4);
-
-        glm::vec3 dLdalbedo = dLdbsdf * dbsdfdalpha;
-        float dLdr          = glm::dot(dbsdfdr, dLdbsdf);
-        float dLdm          = glm::dot(dbsdfdm, dLdbsdf);
-
+        if(sbt_data->optimize_diffuse)
         {
+            glm::mat3 dbsdfdalpha =
+                glm::mat3(bsdf_value.derivative(0), bsdf_value.derivative(1), bsdf_value.derivative(2));
+            glm::vec3 dLdalbedo = dLdbsdf * dbsdfdalpha;
             DERIVATIVE_INTERPOLATION_VECTOR(dLdalbedo, sbt_data->diffuse_grad);
         }
+
+        if(sbt_data->optimize_roughness)
         {
+            glm::vec3 dbsdfdr = bsdf_value.derivative(4);
+            float dLdr        = glm::dot(dbsdfdr, dLdbsdf);
             DERIVATIVE_INTERPOLATION_SCALAR(dLdr, sbt_data->roughness_grad);
         }
+
+        if(sbt_data->optimize_metallic)
         {
+            glm::vec3 dbsdfdm = bsdf_value.derivative(3);
+            float dLdm        = glm::dot(dbsdfdm, dLdbsdf);
             DERIVATIVE_INTERPOLATION_SCALAR(dLdm, sbt_data->metallic_grad);
         }
     }
@@ -683,7 +687,7 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
     {
         const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
-        if(!sbt_data->optimizable) return;
+        if(!sbt_data->optimize_diffuse && !sbt_data->optimize_roughness && !sbt_data->optimize_metallic) return;
 
         glm::vec2 dLdwo = dLdwo_;
         if(!isfinite(dLdwo.x) || !isfinite(dLdwo.y))
@@ -798,59 +802,67 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         auto bsdf_value         = (specular_bsdf + kD * diffuse_bsdf) * NdotL;
         auto bsdf_weight        = bsdf_value / (sample_probability + 1e-5f);
 
-        glm::mat3 dbsdf_weightdalbedo =
-            glm::mat3(bsdf_weight.derivative(0), bsdf_weight.derivative(1), bsdf_weight.derivative(2));
-        glm::vec3 dbsdf_weightdm = bsdf_weight.derivative(3);
-        glm::vec3 dbsdf_weightdr = bsdf_weight.derivative(4);
 
-        glm::vec3 partial_wo = dLdwo * dwodalbedo;
-        float partial_m      = glm::dot(dLdwo, dwodm);
-        float partial_r      = glm::dot(dLdwo, dwodr);
+        // if(!isfinite(dLdalbedo.x) || !isfinite(dLdalbedo.y) || !isfinite(dLdalbedo.z))
+        // {
+        //     dLdalbedo = glm::vec3(0.0f);
+        // }
 
+        // if(!isfinite(dLdm))
+        // {
+        //     dLdm = 0.0f;
+        // }
 
-        glm::vec3 dLdalbedo = dLdbsdf * dbsdf_weightdalbedo;
+        // if(!isfinite(dLdr))
+        // {
+        //     dLdr = 0.0f;
+        // }
 
-        if(!isfinite(dLdalbedo.x) || !isfinite(dLdalbedo.y) || !isfinite(dLdalbedo.z))
+        // if(isfinite(partial_r))
+        // {
+        //     dLdr += partial_r;
+        // }
+
+        if(sbt_data->optimize_diffuse)
         {
-            dLdalbedo = glm::vec3(0.0f);
-        }
+            glm::mat3 dbsdf_weightdalbedo =
+                glm::mat3(bsdf_weight.derivative(0), bsdf_weight.derivative(1), bsdf_weight.derivative(2));
+            glm::vec3 partial_wo = dLdwo * dwodalbedo;
+            glm::vec3 dLdalbedo  = dLdbsdf * dbsdf_weightdalbedo;
 
-        float dLdm = glm::dot(dLdbsdf, dbsdf_weightdm);
+            if(isfinite(partial_wo.x) && isfinite(partial_wo.y) && isfinite(partial_wo.z))
+            {
+                dLdalbedo += partial_wo;
+            }
 
-        if(!isfinite(dLdm))
-        {
-            dLdm = 0.0f;
-        }
-
-        float dLdr = glm::dot(dLdbsdf, dbsdf_weightdr);
-
-        if(!isfinite(dLdr))
-        {
-            dLdr = 0.0f;
-        }
-
-        if(isfinite(partial_wo.x) && isfinite(partial_wo.y) && isfinite(partial_wo.z))
-        {
-            dLdalbedo += partial_wo;
-        }
-
-        if(isfinite(partial_m))
-        {
-            dLdm += partial_m;
-        }
-
-        if(isfinite(partial_r))
-        {
-            dLdr += partial_r;
-        }
-
-        {
             DERIVATIVE_INTERPOLATION_VECTOR(dLdalbedo, sbt_data->diffuse_grad);
         }
+
+        if(sbt_data->optimize_roughness)
         {
+            glm::vec3 dbsdf_weightdr = bsdf_weight.derivative(4);
+            float partial_r          = glm::dot(dLdwo, dwodr);
+            float dLdr               = glm::dot(dLdbsdf, dbsdf_weightdr);
+
+            if(isfinite(partial_r))
+            {
+                dLdr += partial_r;
+            }
+
             DERIVATIVE_INTERPOLATION_SCALAR(dLdr, sbt_data->roughness_grad);
         }
+
+        if(sbt_data->optimize_metallic)
         {
+            glm::vec3 dbsdf_weightdm = bsdf_weight.derivative(3);
+            float partial_m          = glm::dot(dLdwo, dwodm);
+            float dLdm               = glm::dot(dLdbsdf, dbsdf_weightdm);
+
+            if(isfinite(partial_m))
+            {
+                dLdm += partial_m;
+            }
+
             DERIVATIVE_INTERPOLATION_SCALAR(dLdm, sbt_data->metallic_grad);
         }
     }
