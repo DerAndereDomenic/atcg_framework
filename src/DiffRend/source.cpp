@@ -15,6 +15,7 @@
 #include <torch/optim.h>
 
 #include "AttachedDiffPathtracingIntegrator.h"
+#include "DiffPathtracingIntegrator.h"
 
 #ifndef ATCG_HEADLESS
     #include <implot.h>
@@ -25,8 +26,8 @@ class DiffRendLayer : public atcg::Layer
 public:
     void createOutputTexture(int width_, int height_)
     {
-        int width  = width_ / 2;
-        int height = height_ / 2;
+        int width  = width_ / 4;
+        int height = height_ / 4;
 #ifdef ATCG_ENABLE_OPTIX
         output_img_tensor = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
         output_entities   = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
@@ -50,10 +51,13 @@ public:
 #ifdef ATCG_ENABLE_OPTIX
         atcg::Dictionary dict;
         dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
-        dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width() / 2);
-        dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height() / 2);
+        dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width() / 4);
+        dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height() / 4);
 
-        integrator = atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(optx_context, dict);
+        attached_integrator = atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(optx_context, dict);
+        detached_integrator = atcg::make_ref<atcg::DiffPathtracingIntegrator>(optx_context, dict);
+        integrator          = attached ? static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(attached_integrator)
+                                       : static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(detached_integrator);
 #endif
     }
 
@@ -119,7 +123,15 @@ public:
             if(optimize)
             {
                 optimizer->zero_grad(false);
-                auto result = atcg::AttachedDiffPathtracingFunction::apply(integrator, dict);
+                torch::Tensor result;
+                if(attached)
+                {
+                    result = atcg::AttachedDiffPathtracingFunction::apply(attached_integrator, dict);
+                }
+                else
+                {
+                    result = atcg::DiffPathtracingFunction::apply(detached_integrator, dict);
+                }
 
                 auto difference = (result - target) * (result - target);
                 auto L          = torch::sum(torch::abs(difference)) / 128.0f;
@@ -296,6 +308,12 @@ public:
         }
 
         ImGui::Begin("Optimization");
+
+        if(ImGui::Checkbox("Attached Integrator", &attached))
+        {
+            integrator = attached ? static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(attached_integrator)
+                                  : static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(detached_integrator);
+        }
 
         if(ImGui::Button("Register target"))
         {
@@ -485,7 +503,10 @@ private:
 
 #ifdef ATCG_ENABLE_OPTIX
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::AttachedDiffPathtracingIntegrator> integrator;
+    atcg::ref_ptr<atcg::AttachedDiffPathtracingIntegrator> attached_integrator;
+    atcg::ref_ptr<atcg::DiffPathtracingIntegrator> detached_integrator;
+    atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
+    bool attached = true;
     torch::Tensor target;
     bool optimize       = false;
     int iteration_count = 0;

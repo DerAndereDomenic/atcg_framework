@@ -20,7 +20,7 @@ namespace atcg
 {
 AttachedDiffPathtracingIntegrator::AttachedDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context,
                                                                      const Dictionary& dict)
-    : Integrator(context, dict)
+    : DifferentiableIntegrator(context, dict)
 {
     _pipeline = atcg::make_ref<RayTracingPipeline>(context, 2);
     initializePipeline(dict);

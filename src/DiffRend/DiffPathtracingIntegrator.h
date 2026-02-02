@@ -7,13 +7,14 @@
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
 #include <Scene/SceneHierarchyPanel.h>
+#include "DifferentiableIntegrator.h"
 
 namespace atcg
 {
 /**
  * @brief A simple path tracer
  */
-class DiffPathtracingIntegrator : public Integrator, public Differentiable
+class DiffPathtracingIntegrator : public DifferentiableIntegrator
 {
 public:
     /**
@@ -49,7 +50,7 @@ public:
      */
     virtual void reset() override;
 
-    torch::Tensor getHDR() const;
+    virtual torch::Tensor getHDR() const override;
 
     void forwardPass(Dictionary& in_out_dictionary);
 
