@@ -73,11 +73,6 @@ extern "C" __global__ void __raygen__forward()
                                                              &si,
                                                              params.surface_trace_params);
 
-        if(si.valid && n == 0)
-        {
-            entity_id = si.entity_id;
-        }
-
         if(si.valid)
         {
             // Check for light source
@@ -177,20 +172,15 @@ extern "C" __global__ void __raygen__forward()
 
     params.current_sample[pixel_index] = ray.radiance;
 
-    if(params.frame_counter > 0)
-    {
-        // Mix with previous subframes if present!
-        const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
-        const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
-        ray.radiance                         = glm::lerp(prev_output_radiance, ray.radiance, a);
-    }
+    // if(params.frame_counter > 0)
+    // {
+    //     // Mix with previous subframes if present!
+    //     const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
+    //     const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
+    //     ray.radiance                         = glm::lerp(prev_output_radiance, ray.radiance, a);
+    // }
 
-    params.accumulation_buffer[pixel_index] = ray.radiance;
-
-    if(params.entity_ids)
-    {
-        params.entity_ids[pixel_index] = entity_id;
-    }
+    // params.accumulation_buffer[pixel_index] = ray.radiance;
 }
 
 extern "C" __global__ void __raygen__backward()
@@ -216,7 +206,7 @@ extern "C" __global__ void __raygen__backward()
 
     ray.direction     = glm::normalize(u * U + v * V + W);
     ray.origin        = cam_eye;
-    ray.radiance      = params.accumulation_buffer[pixel_index];    // L from forward pass
+    ray.radiance      = params.current_sample[pixel_index];    // L from forward pass
     ray.throughput    = glm::vec3(1);
     ray.delta_y       = params.adjoint_y[pixel_index];
     ray.valid         = true;

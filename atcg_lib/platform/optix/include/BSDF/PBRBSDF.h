@@ -29,6 +29,10 @@ public:
 
     virtual std::vector<torch::Tensor> getParameters() const override;
 
+    virtual std::vector<torch::Tensor> getParameterGradients() const override;
+
+    virtual void zeroGrad() override;
+
     virtual void markOptimizable() override;
     /**
      * @brief A callback to display debug information in imgui
@@ -50,6 +54,10 @@ private:
     torch::Tensor _diffuse_texture;
     torch::Tensor _metallic_texture;
     torch::Tensor _roughness_texture;
+
+    torch::Tensor _diffuse_texture_grad;
+    torch::Tensor _metallic_texture_grad;
+    torch::Tensor _roughness_texture_grad;
 
     atcg::dref_ptr<PBRBSDFData> _bsdf_data_buffer;
 

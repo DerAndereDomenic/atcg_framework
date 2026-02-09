@@ -44,6 +44,10 @@ class Differentiable
 public:
     virtual std::vector<torch::Tensor> getParameters() const = 0;
 
+    virtual std::vector<torch::Tensor> getParameterGradients() const = 0;
+
+    virtual void zeroGrad() = 0;
+
     virtual void markOptimizable() = 0;
 
     bool isOptimizable() const { return _optimizable; }

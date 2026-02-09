@@ -10,14 +10,11 @@ namespace atcg
 {
 struct DiffPathtracingParams
 {
-    glm::vec3* accumulation_buffer;
     glm::vec3* current_sample;
     glm::vec3* adjoint_y;
 
     uint32_t image_width;
     uint32_t image_height;
-
-    int32_t* entity_ids;
 
     OptixTraversableHandle handle;
 
@@ -31,7 +28,6 @@ struct DiffPathtracingParams
     float W[3];
     float fov_y;
 
-    uint32_t frame_counter;
     uint32_t rng_index;
 
     // Emitter

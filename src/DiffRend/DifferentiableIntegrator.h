@@ -19,6 +19,13 @@ public:
     {
     }
 
-    virtual torch::Tensor getHDR() const = 0;
+    // Differentiable
+    virtual torch::Tensor sample(Dictionary& in_out_dictionary) = 0;
+
+    virtual void generateRays(Dictionary& in_out_dictionary) override
+    {
+        auto result = sample(in_out_dictionary);
+        in_out_dictionary.setValue("output_img", result);
+    }
 };
 }    // namespace atcg

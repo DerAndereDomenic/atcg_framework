@@ -13,11 +13,39 @@
 #include <Emitter/MeshEmitter.h>
 #include <Scene/SceneAdapter.h>
 #include <Utils/Utils.h>
+#include <torch/torch.h>
+#include <torch/csrc/autograd/variable.h>
+#include <torch/csrc/autograd/function.h>
+#include <torch/csrc/autograd/VariableTypeUtils.h>
+#include <torch/csrc/autograd/functions/utils.h>
 
 #include <optix_stubs.h>
 
 namespace atcg
 {
+
+torch::autograd::variable_list AttachedDiffPathNode::apply(torch::autograd::variable_list&& grads)
+{
+    auto adjoint_y = grads[0];
+    Dictionary dict;
+    dict.setValue("adjoint_y", adjoint_y);
+    dict.setValue("current_sample", sample);
+    dict.setValue("JL_buffer", JL);
+    dict.setValue("rng_index", rng_index);
+    dict.setValue("camera", camera);
+
+    integrator->_backwardTrace(dict);
+
+    // The backward pass does not have a meaningful output, so we return an empty list.
+    return integrator->getParameterGradients();
+}
+
+void AttachedDiffPathNode::release_variables()
+{
+    sample.reset();
+    JL.reset();
+}
+
 AttachedDiffPathtracingIntegrator::AttachedDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context,
                                                                      const Dictionary& dict)
     : DifferentiableIntegrator(context, dict)
@@ -79,28 +107,18 @@ void AttachedDiffPathtracingIntegrator::onImGuiRender()
 
 void AttachedDiffPathtracingIntegrator::reset()
 {
-    _frame_counter = 0;
+    // _frame_counter = 0;
 }
 
-torch::Tensor AttachedDiffPathtracingIntegrator::getHDR() const
+std::tuple<torch::Tensor, torch::Tensor> AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
 {
-    return _accumulation_buffer.clone();
-}
+    auto camera        = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
+    uint32_t width     = in_out_dictionary.getValue<uint32_t>("width");
+    uint32_t height    = in_out_dictionary.getValue<uint32_t>("height");
+    uint32_t rng_index = in_out_dictionary.getValue<uint32_t>("rng_index");
 
-void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionary)
-{
-    auto camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
-    uint32_t width  = in_out_dictionary.getValue<uint32_t>("width");
-    uint32_t height = in_out_dictionary.getValue<uint32_t>("height");
-    auto entity_ids = in_out_dictionary.getValueOr<torch::Tensor>("entity_ids", torch::empty({0}));
-
-    if(_accumulation_buffer.numel() == 0 || _frame_counter == 0 || _accumulation_buffer.size(0) != height ||
-       _accumulation_buffer.size(1) != width)
-    {
-        _accumulation_buffer = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
-        _current_sample      = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
-        _current_JL          = torch::zeros({height, width, 3 * 4}, atcg::TensorOptions::floatDeviceOptions());
-    }
+    torch::Tensor current_sample = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
+    torch::Tensor current_JL     = torch::zeros({height, width, 3 * 4}, atcg::TensorOptions::floatDeviceOptions());
 
     AttachedDiffPathtracingParams params;
 
@@ -115,14 +133,10 @@ void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_diction
     params.image_width  = width;
     params.handle       = _optix_scene->getIAS()->getTraversableHandle();
 
-    params.entity_ids = entity_ids.numel() > 0 ? (int32_t*)entity_ids.data_ptr() : nullptr;
+    params.current_sample = (glm::vec3*)current_sample.data_ptr();
+    params.JL_buffer      = (glm::mat4x3*)current_JL.data_ptr();
 
-    params.accumulation_buffer = (glm::vec3*)_accumulation_buffer.data_ptr();
-    params.current_sample      = (glm::vec3*)_current_sample.data_ptr();
-    params.JL_buffer           = (glm::mat4x3*)_current_JL.data_ptr();
-
-    params.rng_index     = _iteration_counter + _frame_counter;
-    params.frame_counter = _frame_counter++;
+    params.rng_index = rng_index;
 
     params.num_emitters        = _optix_scene->getEmitterVPtrTables().size();
     params.emitters            = _optix_scene->getEmitterVPtrTables().get();
@@ -147,16 +161,19 @@ void AttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_diction
                             1));    // depth
 
     CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
+
+    return {current_sample, current_JL};
 }
 
 void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 {
-    auto camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera");
-    uint32_t width  = in_out_dictionary.getValue<uint32_t>("width");
-    uint32_t height = in_out_dictionary.getValue<uint32_t>("height");
-    auto entity_ids = in_out_dictionary.getValueOr<torch::Tensor>("entity_ids", torch::empty({0}));
-    auto adjoint_y  = in_out_dictionary.getValue<torch::Tensor>("adjoint_y");
-    uint32_t step   = in_out_dictionary.getValue<uint32_t>("step");
+    auto camera        = in_out_dictionary.getValue<atcg::PerspectiveCamera*>("camera");
+    auto adjoint_y     = in_out_dictionary.getValue<torch::Tensor>("adjoint_y");
+    auto sample        = in_out_dictionary.getValue<torch::Tensor>("current_sample");
+    auto JL            = in_out_dictionary.getValue<torch::Tensor>("JL_buffer");
+    uint32_t width     = adjoint_y.size(1);
+    uint32_t height    = adjoint_y.size(0);
+    uint32_t rng_index = in_out_dictionary.getValue<uint32_t>("rng_index");
 
     AttachedDiffPathtracingParams params;
 
@@ -171,14 +188,12 @@ void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictio
     params.image_width  = width;
     params.handle       = _optix_scene->getIAS()->getTraversableHandle();
 
-    params.entity_ids = entity_ids.numel() > 0 ? (int32_t*)entity_ids.data_ptr() : nullptr;
 
-    params.accumulation_buffer = (glm::vec3*)_samples[step].data_ptr();         // Input L
-    params.adjoint_y           = (glm::vec3*)adjoint_y.data_ptr();              // Input 𝛿L
-    params.JL_buffer           = (glm::mat4x3*)_JL_samples[step].data_ptr();    // Input JL from forward pass
+    params.current_sample = (glm::vec3*)sample.data_ptr();       // Input sample from forward pass
+    params.adjoint_y      = (glm::vec3*)adjoint_y.data_ptr();    // Input 𝛿L
+    params.JL_buffer      = (glm::mat4x3*)JL.data_ptr();         // Input JL from forward pass
 
-    params.rng_index     = _iteration_counter + _frame_counter;
-    params.frame_counter = _frame_counter++;
+    params.rng_index = rng_index;
 
     params.num_emitters        = _optix_scene->getEmitterVPtrTables().size();
     params.emitters            = _optix_scene->getEmitterVPtrTables().get();
@@ -205,52 +220,36 @@ void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictio
     CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
 }
 
-void AttachedDiffPathtracingIntegrator::generateRays(Dictionary& in_out_dictionary)
+torch::Tensor AttachedDiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary)
 {
-    auto output_img = in_out_dictionary.getValue<torch::Tensor>("output_img");
-    in_out_dictionary.setValue("height", (uint32_t)output_img.size(0));
-    in_out_dictionary.setValue("width", (uint32_t)output_img.size(1));
-    _forwardTrace(in_out_dictionary);
+    const auto& parameters = getParameters();
 
-    // Perform tonemapping here for output display:
-    torch::Tensor tonemapped = torch::pow(1.0f - torch::exp(-_accumulation_buffer), 1.0 / 2.4f);
+    bool is_executable = parameters.size() > 0 && torch::autograd::GradMode::is_enabled() &&
+                         torch::autograd::any_variable_requires_grad(parameters);
 
-    tonemapped.clamp_(0.0f, 1.0f);
-    output_img.fill_(255);
-    output_img.index_put_({torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice(0, 3)},
-                          (tonemapped * 255.0f).to(torch::kUInt8));
-}
-
-void AttachedDiffPathtracingIntegrator::forwardPass(Dictionary& in_out_dictionary)
-{
-    const uint32_t num_samples = in_out_dictionary.getValueOr<uint32_t>("num_samples", 16);
-
-    reset();
-    _samples.resize(num_samples);
-    _JL_samples.resize(num_samples);
-
-    for(int i = 0; i < num_samples; ++i)
+    torch::Tensor result, JL;
     {
-        _forwardTrace(in_out_dictionary);
-        _samples[i]    = _current_sample.clone();
-        _JL_samples[i] = _current_JL.clone();
-    }
-    _state = std::move(in_out_dictionary);    // Store for backward pass (cant be stored in ctx directly)
-}
-
-void AttachedDiffPathtracingIntegrator::backwardPass(const torch::Tensor& adjoint_y)
-{
-    const uint32_t num_samples = _state.getValueOr<uint32_t>("num_samples", 16);
-    _state.setValue("adjoint_y", adjoint_y);
-
-    reset();
-    for(uint32_t i = 0; i < num_samples; ++i)
-    {
-        _state.setValue("step", i);
-        _backwardTrace(_state);
+        torch::NoGradGuard no_grad;
+        std::tie(result, JL) = _forwardTrace(in_out_dictionary);
     }
 
-    _iteration_counter += num_samples;
+    if(is_executable)
+    {
+        std::shared_ptr<AttachedDiffPathNode> node(new AttachedDiffPathNode(), torch::autograd::deleteNode);
+        auto next_edges = torch::autograd::collect_next_edges(parameters);
+        node->set_next_edges(std::move(next_edges));
+        // node->clear_input_metadata();
+        node->integrator = this;
+        node->rng_index  = in_out_dictionary.getValueOr<uint32_t>("rng_index", 0);
+        node->camera     = in_out_dictionary.getValue<atcg::ref_ptr<atcg::PerspectiveCamera>>("camera").get();
+        node->sample     = result;
+        node->JL         = JL;
+
+        torch::autograd::set_history(result, node);
+    }
+
+
+    return result;
 }
 
 std::vector<torch::Tensor> AttachedDiffPathtracingIntegrator::getParameters() const
@@ -265,6 +264,29 @@ std::vector<torch::Tensor> AttachedDiffPathtracingIntegrator::getParameters() co
     }
 
     return parameters;
+}
+
+std::vector<torch::Tensor> AttachedDiffPathtracingIntegrator::getParameterGradients() const
+{
+    std::vector<torch::Tensor> gradients;
+    for(auto obj: _differentiable_components)
+    {
+        if(!obj->isOptimizable()) continue;
+        auto obj_gradients = obj->getParameterGradients();
+
+        gradients.insert(gradients.end(), obj_gradients.begin(), obj_gradients.end());
+    }
+
+    return gradients;
+}
+
+void AttachedDiffPathtracingIntegrator::zeroGrad()
+{
+    for(auto obj: _differentiable_components)
+    {
+        if(!obj->isOptimizable()) continue;
+        obj->zeroGrad();
+    }
 }
 
 void AttachedDiffPathtracingIntegrator::clampParameters()
@@ -282,20 +304,5 @@ void AttachedDiffPathtracingIntegrator::markOptimizable()
     {
         obj->markOptimizable();
     }
-}
-
-torch::Tensor AttachedDiffPathtracingFunction::apply(const atcg::ref_ptr<AttachedDiffPathtracingIntegrator>& integrator,
-                                                     Dictionary& dict)
-{
-    torch::NoGradGuard no_grad;
-
-    integrator->forwardPass(dict);
-    auto target_detached = integrator->getHDR();
-
-    torch::Tensor target = target_detached.clone().set_requires_grad(true);
-
-    target.register_hook([&integrator](torch::Tensor adjoint_y) { integrator->backwardPass(adjoint_y); });
-
-    return target;
 }
 }    // namespace atcg

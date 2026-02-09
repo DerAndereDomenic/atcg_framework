@@ -9,8 +9,24 @@
 #include <Scene/SceneHierarchyPanel.h>
 #include "DifferentiableIntegrator.h"
 
+#include <torch/torch.h>
+
 namespace atcg
 {
+class AttachedDiffPathtracingIntegrator;
+
+struct AttachedDiffPathNode : public torch::autograd::Node
+{
+    AttachedDiffPathtracingIntegrator* integrator;
+    torch::Tensor sample;
+    torch::Tensor JL;
+    uint32_t rng_index;
+    PerspectiveCamera* camera;
+    torch::autograd::variable_list apply(torch::autograd::variable_list&& grads) override;
+
+    virtual void release_variables() override;
+};
+
 /**
  * @brief A simple path tracer
  */
@@ -35,34 +51,26 @@ public:
      */
     virtual void onImGuiRender() override;
 
-    /**
-     * @brief Generate the rays and write to some output tensors
-     * This integrator expects:
-     * camera - atcg::ref_ptr<PerspectiveCamera>
-     * output - torch::Tensor
-     *
-     * @param in_out_dictionary The input output dictionary
-     */
-    virtual void generateRays(Dictionary& in_out_dictionary) override;
+    virtual torch::Tensor sample(Dictionary& in_out_dictionary) override;
 
     /**
      * @brief Reset the internal structure of the integrator
      */
     virtual void reset() override;
 
-    virtual torch::Tensor getHDR() const override;
-
-    void forwardPass(Dictionary& in_out_dictionary);
-
-    void backwardPass(const torch::Tensor& adjoint_y);
-
     virtual std::vector<torch::Tensor> getParameters() const override;
+
+    virtual std::vector<torch::Tensor> getParameterGradients() const override;
 
     virtual void clampParameters() override;
 
     virtual void markOptimizable() override;
 
+    virtual void zeroGrad() override;
+
 private:
+    friend class AttachedDiffPathNode;
+
     /**
      * @brief Initialize a pipeline.
      * This function should be overwritten by each child class and it should add its functions to the pipeline and the
@@ -73,7 +81,7 @@ private:
      */
     void initializePipeline(const Dictionary& dict);
 
-    void _forwardTrace(Dictionary& in_out_dictionary);
+    std::tuple<torch::Tensor, torch::Tensor> _forwardTrace(Dictionary& in_out_dictionary);
     void _backwardTrace(Dictionary& in_out_dictionary);
 
 private:
@@ -85,26 +93,10 @@ private:
 
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<AttachedDiffPathtracingParams> _launch_params;
-    uint32_t _frame_counter     = 0;
-    uint32_t _iteration_counter = 0;
-
-    torch::Tensor _current_sample;
-    torch::Tensor _current_JL;
-    std::vector<torch::Tensor> _samples;
-    std::vector<torch::Tensor> _JL_samples;
-
-    torch::Tensor _accumulation_buffer;
 
     std::vector<Differentiable*> _differentiable_components;
 
-    Dictionary _state;
-
     GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("AttDiffPath");
-};
-
-struct AttachedDiffPathtracingFunction
-{
-    static torch::Tensor apply(const atcg::ref_ptr<AttachedDiffPathtracingIntegrator>& integrator, Dictionary& dict);
 };
 
 }    // namespace atcg
