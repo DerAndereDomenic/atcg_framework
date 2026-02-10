@@ -141,6 +141,17 @@ public:
                     integrator->clampParameters();
                     difference_texture->setData(torch::abs(difference));
                     result_texture->setData(result);
+
+                    torch::Tensor tonemapped = torch::pow(1.0f - torch::exp(-result), 1.0 / 2.4f);
+                    tonemapped.clamp_(0.0f, 1.0f);
+
+                    torch::Tensor output_img = torch::full({output_texture->height(), output_texture->width(), 4},
+                                                           255,
+                                                           atcg::TensorOptions::uint8DeviceOptions());
+                    output_img.index_put_(
+                        {torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice(0, 3)},
+                        (tonemapped * 255.0f).to(torch::kUInt8));
+                    output_texture->setData(output_img);
                 }
             }
             else
@@ -202,6 +213,7 @@ public:
         if(current_revision != last_revision)
         {
             last_revision = current_revision;
+            frame_counter = 0;
             if(enable_pathtracing) initializePathtracer();
         }
     }
@@ -344,24 +356,7 @@ public:
 
         if(ImGui::Button("Register target"))
         {
-            target = torch::zeros({output_texture->height(), output_texture->width(), 3},
-                                  atcg::TensorOptions::floatDeviceOptions());
-
-            {
-                torch::NoGradGuard no_grad;
-                for(uint32_t i = 0; i < 128; ++i)
-                {
-                    atcg::Dictionary dict;
-                    dict.setValue("camera", camera_controller->getCamera());
-                    dict.setValue("width", output_texture->width());
-                    dict.setValue("height", output_texture->height());
-                    dict.setValue("rng_index", frame_counter++);
-                    auto output = integrator->sample(dict);
-
-                    target += output;
-                }
-                target /= 128.0f;
-            }
+            target = accumulated_output.clone();
 
             target_texture     = atcg::Texture2D::create(target);
             difference_texture = atcg::Texture2D::create(torch::zeros_like(target));

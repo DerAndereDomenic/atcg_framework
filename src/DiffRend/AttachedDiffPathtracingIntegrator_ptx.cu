@@ -60,7 +60,6 @@ extern "C" __global__ void __raygen__forward()
     ray.throughput          = glm::vec3(1);
     ray.valid               = false;
     ray.JL                  = glm::mat4x3(0);
-    int32_t entity_id       = -1;
 
     atcg::SurfaceInteraction si0;
     si0.valid              = true;
@@ -90,7 +89,6 @@ extern "C" __global__ void __raygen__forward()
 
     if(si1.valid)
     {
-        entity_id = si1.entity_id;
         ray.valid = true;
     }
 
@@ -338,7 +336,6 @@ extern "C" __global__ void __raygen__backward()
     ray.valid               = false;
     ray.JL                  = params.JL_buffer[pixel_index];
     ray.delta_y             = params.adjoint_y[pixel_index];
-    int32_t entity_id       = -1;
 
     atcg::SurfaceInteraction si0;
     si0.valid              = true;
@@ -367,7 +364,6 @@ extern "C" __global__ void __raygen__backward()
 
     if(si1.valid)
     {
-        entity_id = si1.entity_id;
         ray.valid = true;
     }
 

@@ -594,6 +594,17 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
 
         auto specular = NDF * V * F;
 
+        // float diffuse_probability =
+        //     glm::dot(diffuse_color.val(), glm::vec3(1)) /
+        //     (glm::dot(diffuse_color.val(), glm::vec3(1)) + glm::dot(metallic_color.val(), glm::vec3(1)) + 1e-5f);
+        // float specular_probability = 1 - diffuse_probability;
+        // float diffuse_pdf          = NdotL / glm::pi<float>();
+        // float halfway_pdf          = NDF * NdotH;
+        // float halfway_to_outgoing_pdf =
+        //     atcg::warp_normal_to_reflected_direction_pdf(outgoing_dir, H);    // 1 / (4*HdotV)
+        // float specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
+        // float sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+
         auto bsdf_value = specular + kD * diffuse_color / glm::pi<float>();
 
         if(sbt_data->optimize_diffuse)

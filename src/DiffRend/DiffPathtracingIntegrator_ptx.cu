@@ -46,12 +46,11 @@ extern "C" __global__ void __raygen__forward()
 
     RayContext ray;
 
-    ray.direction     = glm::normalize(u * U + v * V + W);
-    ray.origin        = cam_eye;
-    ray.radiance      = glm::vec3(0);
-    ray.throughput    = glm::vec3(1);
-    ray.valid         = true;
-    int32_t entity_id = -1;
+    ray.direction  = glm::normalize(u * U + v * V + W);
+    ray.origin     = cam_eye;
+    ray.radiance   = glm::vec3(0);
+    ray.throughput = glm::vec3(1);
+    ray.valid      = true;
 
     glm::vec3 next_origin;
     glm::vec3 next_dir;
@@ -171,16 +170,6 @@ extern "C" __global__ void __raygen__forward()
     }
 
     params.current_sample[pixel_index] = ray.radiance;
-
-    // if(params.frame_counter > 0)
-    // {
-    //     // Mix with previous subframes if present!
-    //     const float a                        = 1.0f / static_cast<float>(params.frame_counter + 1);
-    //     const glm::vec3 prev_output_radiance = params.accumulation_buffer[pixel_index];
-    //     ray.radiance                         = glm::lerp(prev_output_radiance, ray.radiance, a);
-    // }
-
-    // params.accumulation_buffer[pixel_index] = ray.radiance;
 }
 
 extern "C" __global__ void __raygen__backward()
@@ -204,13 +193,12 @@ extern "C" __global__ void __raygen__backward()
 
     RayContext ray;
 
-    ray.direction     = glm::normalize(u * U + v * V + W);
-    ray.origin        = cam_eye;
-    ray.radiance      = params.current_sample[pixel_index];    // L from forward pass
-    ray.throughput    = glm::vec3(1);
-    ray.delta_y       = params.adjoint_y[pixel_index];
-    ray.valid         = true;
-    int32_t entity_id = -1;
+    ray.direction  = glm::normalize(u * U + v * V + W);
+    ray.origin     = cam_eye;
+    ray.radiance   = params.current_sample[pixel_index];    // L from forward pass
+    ray.throughput = glm::vec3(1);
+    ray.delta_y    = params.adjoint_y[pixel_index];
+    ray.valid      = true;
 
     glm::vec3 next_origin;
     glm::vec3 next_dir;
@@ -232,14 +220,8 @@ extern "C" __global__ void __raygen__backward()
                                                              &si,
                                                              params.surface_trace_params);
 
-        if(si.valid && n == 0)
-        {
-            entity_id = si.entity_id;
-        }
-
         if(si.valid)
         {
-            // TODO: No NEE for now
             // Check for light source
             if(si.emitter)
             {
