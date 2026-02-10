@@ -29,20 +29,12 @@ public:
         int width  = width_ / 4;
         int height = height_ / 4;
 #ifdef ATCG_ENABLE_OPTIX
-        output_img_tensor = torch::zeros({height, width, 4}, atcg::TensorOptions::uint8DeviceOptions());
-        output_entities   = torch::zeros({height, width}, atcg::TensorOptions::int32DeviceOptions());
 
         atcg::TextureSpecification spec;
         spec.width     = width;
         spec.height    = height;
         spec.format    = atcg::TextureFormat::RGBA;
         output_texture = atcg::Texture2D::create(spec);
-
-        atcg::TextureSpecification spec_int;
-        spec_int.width        = width;
-        spec_int.height       = height;
-        spec_int.format       = atcg::TextureFormat::RINT;
-        output_entity_texture = atcg::Texture2D::create(spec_int);
 #endif
     }
 
@@ -100,6 +92,7 @@ public:
         if(enable_pathtracing && updated)
         {
             integrator->reset();
+            frame_counter = 0;
         }
 #endif
 
@@ -108,33 +101,30 @@ public:
         if(enable_pathtracing)
         {
 #ifdef ATCG_ENABLE_OPTIX
-            atcg::Dictionary dict;
-            dict.setValue("camera", camera_controller->getCamera());
-            dict.setValue("output_img", output_img_tensor);
-            dict.setValue("entity_ids", output_entities);
-            dict.setValue("target", target);
-            dict.setValue("num_samples", 128u);
-            dict.setValue("debug", debug);
-            integrator->generateRays(dict);
-            output_texture->setData(output_img_tensor);
-            output_entity_texture->setData(output_entities);
-
 
             if(optimize)
             {
                 optimizer->zero_grad(false);
-                torch::Tensor result;
-                if(attached)
+                integrator->zeroGrad();
+                uint32_t num_samples = 128;
+
+                torch::Tensor result = torch::zeros({output_texture->height(), output_texture->width(), 3},
+                                                    atcg::TensorOptions::floatDeviceOptions());
+
+                for(int i = 0; i < num_samples; ++i)
                 {
-                    result = atcg::AttachedDiffPathtracingFunction::apply(attached_integrator, dict);
+                    atcg::Dictionary dict;
+                    dict.setValue("camera", camera_controller->getCamera());
+                    dict.setValue("width", output_texture->width());
+                    dict.setValue("height", output_texture->height());
+                    dict.setValue("rng_index", iteration_count * num_samples + i);
+
+                    result += integrator->sample(dict);
                 }
-                else
-                {
-                    result = atcg::DiffPathtracingFunction::apply(detached_integrator, dict);
-                }
+                result /= (float)num_samples;
 
                 auto difference = (result - target) * (result - target);
-                auto L          = torch::sum(torch::abs(difference)) / 128.0f;
+                auto L          = torch::sum(torch::abs(difference));
 
                 L.backward();
                 optimizer->step();
@@ -153,10 +143,46 @@ public:
                     result_texture->setData(result);
                 }
             }
+            else
+            {
+                torch::NoGradGuard no_grad;
+
+                atcg::Dictionary dict;
+                dict.setValue("camera", camera_controller->getCamera());
+                dict.setValue("width", output_texture->width());
+                dict.setValue("height", output_texture->height());
+                dict.setValue("debug", debug);
+                dict.setValue("rng_index", frame_counter);
+                integrator->generateRays(dict);
+                auto output = dict.getValue<torch::Tensor>("output_img");
+
+                if(frame_counter > 0)
+                {
+                    float alpha        = 1.0f / (float)(frame_counter + 1);
+                    accumulated_output = accumulated_output * (1.0f - alpha) + output * alpha;
+                }
+                else
+                {
+                    accumulated_output = output;
+                }
+
+                torch::Tensor tonemapped = torch::pow(1.0f - torch::exp(-accumulated_output), 1.0 / 2.4f);
+                tonemapped.clamp_(0.0f, 1.0f);
+
+                torch::Tensor output_img = torch::full({output_texture->height(), output_texture->width(), 4},
+                                                       255,
+                                                       atcg::TensorOptions::uint8DeviceOptions());
+                output_img.index_put_(
+                    {torch::indexing::Slice(), torch::indexing::Slice(), torch::indexing::Slice(0, 3)},
+                    (tonemapped * 255.0f).to(torch::kUInt8));
+                output_texture->setData(output_img);
+
+                ++frame_counter;
+            }
 
             atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
             atcg::GraphicsCommand::clear();
-            atcg::Renderer::drawImage(output_texture, output_entity_texture);
+            atcg::Renderer::drawImage(output_texture);
             atcg::GraphicsCommand::endRenderPass();
 #endif
         }
@@ -311,13 +337,32 @@ public:
 
         if(ImGui::Checkbox("Attached Integrator", &attached))
         {
-            integrator = attached ? static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(attached_integrator)
-                                  : static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(detached_integrator);
+            integrator    = attached ? static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(attached_integrator)
+                                     : static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(detached_integrator);
+            frame_counter = 0;
         }
 
         if(ImGui::Button("Register target"))
         {
-            target             = integrator->getHDR();
+            target = torch::zeros({output_texture->height(), output_texture->width(), 3},
+                                  atcg::TensorOptions::floatDeviceOptions());
+
+            {
+                torch::NoGradGuard no_grad;
+                for(uint32_t i = 0; i < 128; ++i)
+                {
+                    atcg::Dictionary dict;
+                    dict.setValue("camera", camera_controller->getCamera());
+                    dict.setValue("width", output_texture->width());
+                    dict.setValue("height", output_texture->height());
+                    dict.setValue("rng_index", frame_counter++);
+                    auto output = integrator->sample(dict);
+
+                    target += output;
+                }
+                target /= 128.0f;
+            }
+
             target_texture     = atcg::Texture2D::create(target);
             difference_texture = atcg::Texture2D::create(torch::zeros_like(target));
             result_texture     = atcg::Texture2D::create(torch::zeros_like(target));
@@ -414,6 +459,7 @@ public:
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
         createOutputTexture(event->getWidth(), event->getHeight());
+        frame_counter = 0;
         return false;
     }
 
@@ -506,21 +552,19 @@ private:
     atcg::ref_ptr<atcg::AttachedDiffPathtracingIntegrator> attached_integrator;
     atcg::ref_ptr<atcg::DiffPathtracingIntegrator> detached_integrator;
     atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
-    bool attached = true;
+    bool attached = false;
     torch::Tensor target;
-    bool optimize       = false;
-    int iteration_count = 0;
+    torch::Tensor accumulated_output;
+    bool optimize          = false;
+    int iteration_count    = 0;
+    uint32_t frame_counter = 0;
     atcg::ref_ptr<torch::optim::Adam> optimizer;
     atcg::ref_ptr<atcg::Texture2D> target_texture;
     atcg::ref_ptr<atcg::Texture2D> difference_texture;
     atcg::ref_ptr<atcg::Texture2D> result_texture;
 #endif
 
-    torch::Tensor output_img_tensor;
     atcg::ref_ptr<atcg::Texture2D> output_texture;
-
-    torch::Tensor output_entities;
-    atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
 
     uint32_t last_revision = 0;
 
