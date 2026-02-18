@@ -1,6 +1,7 @@
 #pragma cuda_source_property_format = PTX
 
 #include <Core/CUDA.h>
+#include <Core/GlobalAtomicAdd.h>
 
 #include <Math/Random.h>
 
@@ -69,6 +70,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
                                                                       const atcg::SampledSpectrum& specular_F0,
                                                                       const float& metallic,
                                                                       const float& roughness,
+                                                                      const float& fixed_roughness,
                                                                       atcg::PCG32& rng)
 {
     atcg::BSDFSamplingResult result;
@@ -101,7 +103,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
     else
     {
         // Sample light direction from specular bsdf
-        glm::vec3 local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+        glm::vec3 local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), fixed_roughness);
         // Transform local halfway vector from tangent space to world space
         glm::vec3 halfway = local_frame * local_halfway;
         result.out_dir    = glm::reflect(si.incoming_direction, halfway);
@@ -142,7 +144,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
 
         specular_bsdf = NDF * V * F;
 
-        float halfway_pdf = NDF * NdotH;
+        float halfway_pdf = atcg::D_GGX(NdotH, fixed_roughness) * NdotH;
         float halfway_to_outgoing_pdf =
             atcg::warp_normal_to_reflected_direction_pdf(result.out_dir, halfway);    // 1 / (4*HdotV)
         specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
@@ -222,14 +224,16 @@ __direct_callable__sample_pbrbsdf(const atcg::SurfaceInteraction& si,
 
     atcg::SampledSpectrum diffuse_color =
         atcg::SampledSpectrum::fromRGB(sbt_data->diffuse_texture.read(si.uv), wavelengths);
-    float metallic  = sbt_data->metallic_texture.read(si.uv);
-    float roughness = sbt_data->roughness_texture.read(si.uv);
-    roughness       = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+    float metallic        = sbt_data->metallic_texture.read(si.uv);
+    float roughness       = sbt_data->roughness_texture.read(si.uv);
+    roughness             = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
+    float fixed_roughness = sbt_data->fixed_roughness_texture.read(si.uv);
+    fixed_roughness       = glm::max(fixed_roughness * fixed_roughness, 1e-3f);
 
     atcg::SampledSpectrum metallic_color = (1.0f - metallic) * atcg::SampledSpectrum(0.04f) + metallic * diffuse_color;
     diffuse_color = (1.0f - metallic) * diffuse_color * atcg::SampledSpectrum::fromRGB(si.color, wavelengths);
 
-    return detail::samplePBR(si, diffuse_color, metallic_color, metallic, roughness, rng);
+    return detail::samplePBR(si, diffuse_color, metallic_color, metallic, roughness, fixed_roughness, rng);
 }
 
 extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const atcg::SurfaceInteraction& si,
@@ -504,29 +508,39 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::SurfaceInteraction& si,
     int y0 = static_cast<int>(glm::floor(fy));                                                                         \
     int x1 = glm::min(x0 + 1, (int)texture.getSpecification().width - 1);                                              \
     int y1 = glm::min(y0 + 1, (int)texture.getSpecification().height - 1);                                             \
-                                                                                                                       \
-    float tx                 = fx - x0;                                                                                \
-    float ty                 = fy - y0;                                                                                \
-    glm::vec3 inp_grad##_c00 = inp_grad * (1.0f - ty) * (1.0f - tx);                                                   \
-    glm::vec3 inp_grad##_c10 = inp_grad * (1.0f - ty) * (tx);                                                          \
-    glm::vec3 inp_grad##_c01 = inp_grad * (ty) * (1.0f - tx);                                                          \
-    glm::vec3 inp_grad##_c11 = inp_grad * (ty) * (tx);                                                                 \
-    float* inp_grad##_c00_p  = (float*)texture.getTexelPtr(glm::ivec2(x0, y0));                                        \
-    float* inp_grad##_c10_p  = (float*)texture.getTexelPtr(glm::ivec2(x1, y0));                                        \
-    float* inp_grad##_c01_p  = (float*)texture.getTexelPtr(glm::ivec2(x0, y1));                                        \
-    float* inp_grad##_c11_p  = (float*)texture.getTexelPtr(glm::ivec2(x1, y1));                                        \
-    atomicAdd(inp_grad##_c00_p + 0, inp_grad##_c00.x);                                                                 \
-    atomicAdd(inp_grad##_c00_p + 1, inp_grad##_c00.y);                                                                 \
-    atomicAdd(inp_grad##_c00_p + 2, inp_grad##_c00.z);                                                                 \
-    atomicAdd(inp_grad##_c10_p + 0, inp_grad##_c10.x);                                                                 \
-    atomicAdd(inp_grad##_c10_p + 1, inp_grad##_c10.y);                                                                 \
-    atomicAdd(inp_grad##_c10_p + 2, inp_grad##_c10.z);                                                                 \
-    atomicAdd(inp_grad##_c01_p + 0, inp_grad##_c01.x);                                                                 \
-    atomicAdd(inp_grad##_c01_p + 1, inp_grad##_c01.y);                                                                 \
-    atomicAdd(inp_grad##_c01_p + 2, inp_grad##_c01.z);                                                                 \
-    atomicAdd(inp_grad##_c11_p + 0, inp_grad##_c11.x);                                                                 \
-    atomicAdd(inp_grad##_c11_p + 1, inp_grad##_c11.y);                                                                 \
-    atomicAdd(inp_grad##_c11_p + 2, inp_grad##_c11.z)
+    if(x0 == x1 && y0 == y1)                                                                                           \
+    {                                                                                                                  \
+        float* inp_grad##_p = (float*)texture.getTexelPtr(glm::ivec2(x0, y0));                                         \
+        atcg::globalAtomicAdd(inp_grad##_p + 0, inp_grad.x);                                                           \
+        atcg::globalAtomicAdd(inp_grad##_p + 1, inp_grad.y);                                                           \
+        atcg::globalAtomicAdd(inp_grad##_p + 2, inp_grad.z);                                                           \
+    }                                                                                                                  \
+    else                                                                                                               \
+    {                                                                                                                  \
+        float tx                 = fx - x0;                                                                            \
+        float ty                 = fy - y0;                                                                            \
+        glm::vec3 inp_grad##_c00 = inp_grad * (1.0f - ty) * (1.0f - tx);                                               \
+        glm::vec3 inp_grad##_c10 = inp_grad * (1.0f - ty) * (tx);                                                      \
+        glm::vec3 inp_grad##_c01 = inp_grad * (ty) * (1.0f - tx);                                                      \
+        glm::vec3 inp_grad##_c11 = inp_grad * (ty) * (tx);                                                             \
+        float* inp_grad##_c00_p  = (float*)texture.getTexelPtr(glm::ivec2(x0, y0));                                    \
+        float* inp_grad##_c10_p  = (float*)texture.getTexelPtr(glm::ivec2(x1, y0));                                    \
+        float* inp_grad##_c01_p  = (float*)texture.getTexelPtr(glm::ivec2(x0, y1));                                    \
+        float* inp_grad##_c11_p  = (float*)texture.getTexelPtr(glm::ivec2(x1, y1));                                    \
+        atcg::globalAtomicAdd(inp_grad##_c00_p + 0, inp_grad##_c00.x);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c00_p + 1, inp_grad##_c00.y);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c00_p + 2, inp_grad##_c00.z);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c10_p + 0, inp_grad##_c10.x);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c10_p + 1, inp_grad##_c10.y);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c10_p + 2, inp_grad##_c10.z);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c01_p + 0, inp_grad##_c01.x);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c01_p + 1, inp_grad##_c01.y);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c01_p + 2, inp_grad##_c01.z);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c11_p + 0, inp_grad##_c11.x);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c11_p + 1, inp_grad##_c11.y);                                                 \
+        atcg::globalAtomicAdd(inp_grad##_c11_p + 2, inp_grad##_c11.z);                                                 \
+    }                                                                                                                  \
+    void(0)
 
 #define DERIVATIVE_INTERPOLATION_SCALAR(inp_grad, texture)                                                             \
     glm::vec2 uv = texture.clamp_uv(si.uv);                                                                            \
@@ -538,20 +552,29 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::SurfaceInteraction& si,
     int x1 = glm::min(x0 + 1, (int)texture.getSpecification().width - 1);                                              \
     int y1 = glm::min(y0 + 1, (int)texture.getSpecification().height - 1);                                             \
                                                                                                                        \
-    float tx                = fx - x0;                                                                                 \
-    float ty                = fy - y0;                                                                                 \
-    float inp_grad##_c00    = inp_grad * (1.0f - ty) * (1.0f - tx);                                                    \
-    float inp_grad##_c10    = inp_grad * (1.0f - ty) * (tx);                                                           \
-    float inp_grad##_c01    = inp_grad * (ty) * (1.0f - tx);                                                           \
-    float inp_grad##_c11    = inp_grad * (ty) * (tx);                                                                  \
-    float* inp_grad##_c00_p = (float*)texture.getTexelPtr(glm::ivec2(x0, y0));                                         \
-    float* inp_grad##_c10_p = (float*)texture.getTexelPtr(glm::ivec2(x1, y0));                                         \
-    float* inp_grad##_c01_p = (float*)texture.getTexelPtr(glm::ivec2(x0, y1));                                         \
-    float* inp_grad##_c11_p = (float*)texture.getTexelPtr(glm::ivec2(x1, y1));                                         \
-    atomicAdd(inp_grad##_c00_p + 0, inp_grad##_c00);                                                                   \
-    atomicAdd(inp_grad##_c10_p + 0, inp_grad##_c10);                                                                   \
-    atomicAdd(inp_grad##_c01_p + 0, inp_grad##_c01);                                                                   \
-    atomicAdd(inp_grad##_c11_p + 0, inp_grad##_c11)
+    if(x0 == x1 && y0 == y1)                                                                                           \
+    {                                                                                                                  \
+        float* inp_grad##_p = (float*)texture.getTexelPtr(glm::ivec2(x0, y0));                                         \
+        atcg::globalAtomicAdd(inp_grad##_p, inp_grad);                                                                 \
+    }                                                                                                                  \
+    else                                                                                                               \
+    {                                                                                                                  \
+        float tx                = fx - x0;                                                                             \
+        float ty                = fy - y0;                                                                             \
+        float inp_grad##_c00    = inp_grad * (1.0f - ty) * (1.0f - tx);                                                \
+        float inp_grad##_c10    = inp_grad * (1.0f - ty) * (tx);                                                       \
+        float inp_grad##_c01    = inp_grad * (ty) * (1.0f - tx);                                                       \
+        float inp_grad##_c11    = inp_grad * (ty) * (tx);                                                              \
+        float* inp_grad##_c00_p = (float*)texture.getTexelPtr(glm::ivec2(x0, y0));                                     \
+        float* inp_grad##_c10_p = (float*)texture.getTexelPtr(glm::ivec2(x1, y0));                                     \
+        float* inp_grad##_c01_p = (float*)texture.getTexelPtr(glm::ivec2(x0, y1));                                     \
+        float* inp_grad##_c11_p = (float*)texture.getTexelPtr(glm::ivec2(x1, y1));                                     \
+        atcg::globalAtomicAdd(inp_grad##_c00_p + 0, inp_grad##_c00);                                                   \
+        atcg::globalAtomicAdd(inp_grad##_c10_p + 0, inp_grad##_c10);                                                   \
+        atcg::globalAtomicAdd(inp_grad##_c01_p + 0, inp_grad##_c01);                                                   \
+        atcg::globalAtomicAdd(inp_grad##_c11_p + 0, inp_grad##_c11);                                                   \
+    }                                                                                                                  \
+    void(0)
 
 extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
                                                                     const glm::vec3& outgoing_dir,
@@ -605,7 +628,7 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
         // float specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
         // float sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
 
-        auto bsdf_value = specular + kD * diffuse_color / glm::pi<float>();
+        auto bsdf_value = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
 
         if(sbt_data->optimize_diffuse)
         {
