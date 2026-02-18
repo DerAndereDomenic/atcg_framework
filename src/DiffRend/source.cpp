@@ -16,6 +16,7 @@
 
 #include "AttachedDiffPathtracingIntegrator.h"
 #include "DiffPathtracingIntegrator.h"
+#include "FiniteDiffPathIntegrator.h"
 
 #ifndef ATCG_HEADLESS
     #include <implot.h>
@@ -46,10 +47,18 @@ public:
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width() / 4);
         dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height() / 4);
 
-        attached_integrator = atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(optx_context, dict);
-        detached_integrator = atcg::make_ref<atcg::DiffPathtracingIntegrator>(optx_context, dict);
-        integrator          = attached ? static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(attached_integrator)
-                                       : static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(detached_integrator);
+        if(current_integrator_index == 0)
+        {
+            integrator = atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(optx_context, dict);
+        }
+        else if(current_integrator_index == 1)
+        {
+            integrator = atcg::make_ref<atcg::DiffPathtracingIntegrator>(optx_context, dict);
+        }
+        else if(current_integrator_index == 2)
+        {
+            integrator = atcg::make_ref<atcg::FiniteDiffPathtracingIntegrator>(optx_context, dict);
+        }
 #endif
     }
 
@@ -66,8 +75,11 @@ public:
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
         atcg::CameraIntrinsics intrinsics;
         intrinsics.setAspectRatio(aspect_ratio);
+        atcg::CameraExtrinsics extrinsics;
+        extrinsics.setPosition(glm::vec3(0, 1, 3));
+        extrinsics.setTarget(glm::vec3(0, 1, 0));
         camera_controller = atcg::make_ref<atcg::FirstPersonController>(
-            atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
+            atcg::make_ref<atcg::PerspectiveCamera>(extrinsics, intrinsics));
 
 
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
@@ -105,7 +117,7 @@ public:
             if(optimize)
             {
                 optimizer->zero_grad(false);
-                integrator->zeroGrad();
+                // integrator->zeroGrad();
                 uint32_t num_samples = 128;
 
                 torch::Tensor result = torch::zeros({output_texture->height(), output_texture->width(), 3},
@@ -119,9 +131,9 @@ public:
                     dict.setValue("height", output_texture->height());
                     dict.setValue("rng_index", iteration_count * num_samples + i);
 
-                    result += integrator->sample(dict);
+                    result = result + integrator->sample(dict);
                 }
-                result /= (float)num_samples;
+                result = result / (float)num_samples;
 
                 auto difference = (result - target) * (result - target);
                 auto L          = torch::sum(torch::abs(difference));
@@ -189,6 +201,15 @@ public:
                 output_texture->setData(output_img);
 
                 ++frame_counter;
+
+                if(frame_counter == 1024)
+                {
+                    target = accumulated_output.clone();
+
+                    target_texture     = atcg::Texture2D::create(target);
+                    difference_texture = atcg::Texture2D::create(torch::zeros_like(target));
+                    result_texture     = atcg::Texture2D::create(torch::zeros_like(target));
+                }
             }
 
             atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
@@ -347,11 +368,39 @@ public:
 
         ImGui::Begin("Optimization");
 
-        if(ImGui::Checkbox("Attached Integrator", &attached))
+        // Dropdown to select attached, finite or detached integrator
+        if(ImGui::BeginCombo("Integrator", integrator_labels[current_integrator_index]))
         {
-            integrator    = attached ? static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(attached_integrator)
-                                     : static_cast<atcg::ref_ptr<atcg::DifferentiableIntegrator>>(detached_integrator);
-            frame_counter = 0;
+            for(int n = 0; n < IM_ARRAYSIZE(integrator_labels); n++)
+            {
+                const bool is_selected = (current_integrator_index == n);
+                if(ImGui::Selectable(integrator_labels[n], is_selected))
+                {
+                    current_integrator_index = n;
+                    // if(current_integrator_index == 0)
+                    // {
+                    //     integrator =
+                    //         atcg::make_ref<atcg::AttachedDiffPathtracingIntegrator>(*optx_context,
+                    //         atcg::Dictionary());
+                    // }
+                    // else if(current_integrator_index == 1)
+                    // {
+                    //     integrator = atcg::make_ref<atcg::DiffPathtracingIntegrator>(*optx_context,
+                    //     atcg::Dictionary());
+                    // }
+                    // else
+                    // {
+                    //     integrator =
+                    //         atcg::make_ref<atcg::FiniteDiffPathtracingIntegrator>(*optx_context, atcg::Dictionary());
+                    // }
+
+                    initializePathtracer();
+                }
+
+                // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                if(is_selected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
         }
 
         if(ImGui::Button("Register target"))
@@ -544,10 +593,9 @@ private:
 
 #ifdef ATCG_ENABLE_OPTIX
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::AttachedDiffPathtracingIntegrator> attached_integrator;
-    atcg::ref_ptr<atcg::DiffPathtracingIntegrator> detached_integrator;
     atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
-    bool attached = false;
+    const char* integrator_labels[3]  = {"Attached", "Detached", "Finite Difference"};
+    uint32_t current_integrator_index = 0;
     torch::Tensor target;
     torch::Tensor accumulated_output;
     bool optimize          = false;
