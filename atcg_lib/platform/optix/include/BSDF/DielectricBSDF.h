@@ -25,6 +25,10 @@ public:
 
     virtual std::vector<torch::Tensor> getParameters() const override;
 
+    virtual std::vector<torch::Tensor> getParameterGradients() const override;
+
+    virtual void zeroGrad() override;
+
     virtual void markOptimizable() override;
 
     virtual void clampParameters() override;

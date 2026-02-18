@@ -75,6 +75,19 @@ std::vector<torch::Tensor> DielectricBSDF::getParameters() const
     return {_diffuse_texture, _roughness_texture, _ior_texture};
 }
 
+std::vector<torch::Tensor> DielectricBSDF::getParameterGradients() const
+{
+    return {_diffuse_texture.grad(), _roughness_texture.grad(), _ior_texture.grad()};
+}
+
+void DielectricBSDF::zeroGrad()
+{
+    if(_diffuse_texture.grad().defined()) _diffuse_texture.mutable_grad() = torch::zeros_like(_diffuse_texture.grad());
+    if(_roughness_texture.grad().defined())
+        _roughness_texture.mutable_grad() = torch::zeros_like(_roughness_texture.grad());
+    if(_ior_texture.grad().defined()) _ior_texture.mutable_grad() = torch::zeros_like(_ior_texture.grad());
+}
+
 void DielectricBSDF::onImGuiRender()
 {
     if(ImGui::Button("Make Optimizable"))
