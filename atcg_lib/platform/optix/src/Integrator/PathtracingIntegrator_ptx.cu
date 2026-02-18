@@ -112,8 +112,7 @@ extern "C" __global__ void __raygen__rg()
                     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
                     radiance += mis_weight * camera_ray.importance * emitter_sampling.radiance_weight_at_receiver *
-                                bsdf_result.bsdf_value *
-                                glm::abs(glm::dot(si.normal, emitter_sampling.direction_to_light));
+                                bsdf_result.bsdf_value;
                 } while(false);
 
                 auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);

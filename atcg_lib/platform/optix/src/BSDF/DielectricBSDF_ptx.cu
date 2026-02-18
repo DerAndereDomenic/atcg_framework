@@ -107,7 +107,7 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
     result.bsdf_weight = reflectance_color * G * glm::abs(HdotL) / (NdotV * NdotH);
     result.out_dir     = wo;
     result.flags       = roughness < 0.1f
-                             ? atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealReflection
+                             ? atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealTransmission
                              : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::GlossyTransmission;
 
     return result;
@@ -165,7 +165,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         glm::vec3 halfway = -glm::normalize(eta * wi + wo);
         // The halfway vector always points into the thinner medium
         glm::vec3 thin_normal = ior > 1.0f ? si.normal : -si.normal;
-        float NdotH           = glm::dot(thin_normal, si.normal);
+        float NdotH           = glm::dot(si.normal, halfway);
 
         float LdotH = glm::dot(wo, halfway);
         float VdotH = glm::dot(wi, halfway);
