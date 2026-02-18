@@ -54,6 +54,7 @@ private:
     torch::Tensor _diffuse_texture;
     torch::Tensor _metallic_texture;
     torch::Tensor _roughness_texture;
+    torch::Tensor _fixed_roughness_texture;
 
     torch::Tensor _diffuse_texture_grad;
     torch::Tensor _metallic_texture_grad;

@@ -3,6 +3,8 @@
 #include <Core/Common.h>
 #include <BSDF/BSDFFactory.h>
 #include <Renderer/Texture.h>
+#include <ATen/cuda/ApplyGridUtils.cuh>
+#include <c10/cuda/CUDAGuard.h>
 
 #ifndef ATCG_HEADLESS
     #include <implot.h>
@@ -15,9 +17,10 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
 {
     atcg::ref_ptr<Material> material = dict.getValue<atcg::ref_ptr<Material>>("material");
 
-    _diffuse_texture   = material->getDiffuseTexture()->getData(atcg::GPU);
-    _metallic_texture  = material->getMetallicTexture()->getData(atcg::GPU);
-    _roughness_texture = material->getRoughnessTexture()->getData(atcg::GPU);
+    _diffuse_texture         = material->getDiffuseTexture()->getData(atcg::GPU);
+    _metallic_texture        = material->getMetallicTexture()->getData(atcg::GPU);
+    _roughness_texture       = material->getRoughnessTexture()->getData(atcg::GPU);
+    _fixed_roughness_texture = _roughness_texture.clone();
 
     float zero = 0.0f;
     _roughness_bsdf.upload(&zero);
@@ -31,6 +34,8 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
         TextureSampler<float>(_metallic_texture.data_ptr(), material->getMetallicTexture()->getSpecification());
     data.roughness_texture =
         TextureSampler<float>(_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
+    data.fixed_roughness_texture =
+        TextureSampler<float>(_fixed_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
     data.roughness_bsdf     = _roughness_bsdf.get();
     data.roughness_sampling = _roughness_sampling.get();
 
@@ -79,12 +84,44 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
 
 std::vector<torch::Tensor> PBRBSDF::getParameters() const
 {
-    return {_diffuse_texture, _metallic_texture, _roughness_texture};
+    std::vector<torch::Tensor> parameters;
+    if(_diffuse_optimized)
+    {
+        parameters.push_back(_diffuse_texture);
+    }
+
+    if(_metallic_optimized)
+    {
+        parameters.push_back(_metallic_texture);
+    }
+
+    if(_roughness_optimized)
+    {
+        parameters.push_back(_roughness_texture);
+    }
+
+    return parameters;
 }
 
 std::vector<torch::Tensor> PBRBSDF::getParameterGradients() const
 {
-    return {_diffuse_texture_grad, _metallic_texture_grad, _roughness_texture_grad};
+    std::vector<torch::Tensor> gradients;
+    if(_diffuse_optimized)
+    {
+        gradients.push_back(_diffuse_texture_grad);
+    }
+
+    if(_metallic_optimized)
+    {
+        gradients.push_back(_metallic_texture_grad);
+    }
+
+    if(_roughness_optimized)
+    {
+        gradients.push_back(_roughness_texture_grad);
+    }
+
+    return gradients;
 }
 
 void PBRBSDF::onImGuiRender()
@@ -120,12 +157,16 @@ void PBRBSDF::onImGuiRender()
 
     if(ImGui::Button("Optimize roughness"))
     {
+        torch::cuda::device_synchronize();
+        torch::cuda::stream_synchronize(at::cuda::getCurrentCUDAStream());
         atcg::TextureSpecification spec_float;
         spec_float.width   = _optimization_width;
         spec_float.height  = _optimization_height;
         spec_float.format  = TextureFormat::RFLOAT;
-        _roughness_texture = torch::ones({spec_float.height, spec_float.height, 1},
+        _roughness_texture = torch::full({spec_float.height, spec_float.height, 1},
+                                         0.8f,
                                          TensorOptions::floatDeviceOptions().requires_grad(true));    // TODO
+        _fixed_roughness_texture.copy_(_roughness_texture);
 
         _roughness_texture_grad = torch::zeros_like(_roughness_texture);
 
@@ -222,10 +263,12 @@ void PBRBSDF::onImGuiRender()
     if(_roughness_optimized)
     {
         _roughness_optimized->setData(_roughness_texture);
-        _roughness_grad->setData(pos_neg(_roughness_texture_grad));
+        _roughness_grad->setData(
+            pos_neg(_roughness_texture.grad().defined() ? _roughness_texture.grad() : _roughness_texture_grad));
 
-        float roughness      = _roughness_texture.cpu().item<float>();
-        float roughness_grad = _roughness_texture_grad.cpu().item<float>();
+        float roughness = _roughness_texture.cpu().item<float>();
+        float roughness_grad =
+            _roughness_texture.grad().defined() ? _roughness_texture.grad().cpu().item<float>() : 0.0f;
 
         float roughness_bsdf;
         _roughness_bsdf.download(&roughness_bsdf);
@@ -356,12 +399,13 @@ void PBRBSDF::clampParameters()
     }
     if(_roughness_optimized)
     {
-        _roughness_texture.clamp_(0.01f, 1.0f);
+        _roughness_texture.clamp_(0.05f, 1.0f);
     }
     if(_metallic_optimized)
     {
         _metallic_texture.clamp_(0.0f, 1.0f);
     }
+    _fixed_roughness_texture.copy_(_roughness_texture);
 }
 
 void PBRBSDF::zeroGrad()
