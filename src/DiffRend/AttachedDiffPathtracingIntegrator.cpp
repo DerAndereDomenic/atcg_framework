@@ -18,6 +18,8 @@
 #include <torch/csrc/autograd/function.h>
 #include <torch/csrc/autograd/VariableTypeUtils.h>
 #include <torch/csrc/autograd/functions/utils.h>
+#include <ATen/cuda/ApplyGridUtils.cuh>
+#include <c10/cuda/CUDAGuard.h>
 
 #include <optix_stubs.h>
 
@@ -34,9 +36,9 @@ torch::autograd::variable_list AttachedDiffPathNode::apply(torch::autograd::vari
     dict.setValue("rng_index", rng_index);
     dict.setValue("camera", camera);
 
+    integrator->zeroGrad();
     integrator->_backwardTrace(dict);
 
-    // The backward pass does not have a meaningful output, so we return an empty list.
     return integrator->getParameterGradients();
 }
 
@@ -151,8 +153,9 @@ std::tuple<torch::Tensor, torch::Tensor> AttachedDiffPathtracingIntegrator::_for
 
     _launch_params.upload(&params);
 
+    auto stream = at::cuda::getCurrentCUDAStream();
     OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
-                            nullptr,
+                            stream,
                             (CUdeviceptr)_launch_params.get(),
                             sizeof(AttachedDiffPathtracingParams),
                             _sbt->getSBT(_raygen_index_forward),
@@ -160,7 +163,7 @@ std::tuple<torch::Tensor, torch::Tensor> AttachedDiffPathtracingIntegrator::_for
                             height,
                             1));    // depth
 
-    CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
+    CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
 
     return {current_sample, current_JL};
 }
@@ -208,8 +211,9 @@ void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictio
 
     _launch_params.upload(&params);
 
+    auto stream = at::cuda::getCurrentCUDAStream();
     OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
-                            nullptr,
+                            stream,
                             (CUdeviceptr)_launch_params.get(),
                             sizeof(AttachedDiffPathtracingParams),
                             _sbt->getSBT(_raygen_index_backward),
@@ -217,7 +221,7 @@ void AttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictio
                             height,
                             1));    // depth
 
-    CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
+    CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
 }
 
 torch::Tensor AttachedDiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary)
