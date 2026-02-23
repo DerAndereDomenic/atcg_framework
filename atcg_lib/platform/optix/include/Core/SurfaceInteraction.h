@@ -47,6 +47,7 @@ struct DualSurfaceInteraction
     CuDiff::Dual<6, glm::vec3> normal;
     CuDiff::Dual<6, glm::vec2> uv;
     CuDiff::Dual<6, float> incoming_distance;
+    glm::mat3 dxdw;
 
     // Input
     CuDiff::Dual<6, glm::vec3> incoming_direction;
