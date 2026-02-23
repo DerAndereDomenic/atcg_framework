@@ -9,6 +9,8 @@
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <Emitter/EnvironmentEmitterData.cuh>
 
+#include <CuDiff/ext/glm.h>
+
 namespace detail
 {
 
@@ -152,4 +154,25 @@ extern "C" __device__ float __direct_callable__evalpdf_environmentemitter(const 
     // We can assume that outgoing ray dir actually intersects the light source.
 
     return detail::evalEnvironmentEmitterSamplingPdf(last_si, si);
+}
+
+extern "C" __device__ CuDiff::Dual<6, glm::vec3>
+__direct_callable__eval_dual_environmentemitter(const atcg::DualSurfaceInteraction& si,
+                                                const atcg::SampledWavelengths& wavelengths)
+{
+    const atcg::EnvironmentEmitterData* sbt_data =
+        *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
+
+    auto ray_dir = si.incoming_direction;
+
+    auto [x, y, z] = CuDiff::unwrap(ray_dir);
+
+    auto theta = CuDiff::acos(y) / glm::pi<float>();
+    auto phi   = (CuDiff::atan2(z, x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
+
+    auto uv = CuDiff::wrap(phi, theta);
+
+    CuDiff::Dual<6, glm::vec3> emissive_color = sbt_data->environment_texture.read(uv);
+
+    return emissive_color;
 }
