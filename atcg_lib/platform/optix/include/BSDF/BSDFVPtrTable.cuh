@@ -105,9 +105,9 @@ struct BSDFVPtrTable
     }
 
     __device__ void
-    sampleBSDFBackward(const SurfaceInteraction& si, PCG32& rng, const glm::vec3& dLdbsdf, const glm::vec2& dLdwo) const
+    sampleBSDFBackward(const SurfaceInteraction& si, PCG32& rng, const glm::vec3& dLdbsdf, const glm::vec3& dLdwo) const
     {
-        optixDirectCall<void, const SurfaceInteraction&, PCG32&, const glm::vec3&, const glm::vec2&>(
+        optixDirectCall<void, const SurfaceInteraction&, PCG32&, const glm::vec3&, const glm::vec3&>(
             sampleBackwardCallIndex,
             si,
             rng,

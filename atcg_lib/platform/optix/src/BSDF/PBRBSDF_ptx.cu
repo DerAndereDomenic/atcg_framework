@@ -233,7 +233,7 @@ __direct_callable__sample_pbrbsdf(const atcg::SurfaceInteraction& si,
     atcg::SampledSpectrum metallic_color = (1.0f - metallic) * atcg::SampledSpectrum(0.04f) + metallic * diffuse_color;
     diffuse_color = (1.0f - metallic) * diffuse_color * atcg::SampledSpectrum::fromRGB(si.color, wavelengths);
 
-    return detail::samplePBR(si, diffuse_color, metallic_color, metallic, roughness, fixed_roughness, rng);
+    return detail::samplePBR(si, diffuse_color, metallic_color, metallic, roughness, roughness, rng);
 }
 
 extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const atcg::SurfaceInteraction& si,
@@ -716,17 +716,17 @@ extern "C" __device__ void __direct_callable__eval_backward_pbrbsdf(const atcg::
 extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg::SurfaceInteraction& si,
                                                                       atcg::PCG32& rng,
                                                                       const glm::vec3& dLdbsdf,
-                                                                      const glm::vec2& dLdwo_)
+                                                                      const glm::vec3& dLdwo_)
 {
     {
         const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
         if(!sbt_data->optimize_diffuse && !sbt_data->optimize_roughness && !sbt_data->optimize_metallic) return;
 
-        glm::vec2 dLdwo = dLdwo_;
-        if(!isfinite(dLdwo.x) || !isfinite(dLdwo.y))
+        glm::vec3 dLdwo = dLdwo_;
+        if(!isfinite(dLdwo.x) || !isfinite(dLdwo.y) || !isfinite(dLdwo.z))
         {
-            dLdwo = glm::vec2(0.0f);
+            dLdwo = glm::vec3(0.0f);
         }
 
         glm::vec3 albedo_ = sbt_data->diffuse_texture.read(si.uv);
@@ -779,16 +779,9 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             out_dir      = CuDiff::reflect(si.incoming_direction, halfway);
         }
 
-        auto [dx, dy, dz] = CuDiff::unwrap(out_dir);
-        auto dy_clamp     = CuDiff::clamp(dy, -1.0f, 1.0f);
-        auto theta_n      = CuDiff::acos(dy_clamp);
-        auto phi_n        = CuDiff::atan2(dz, dx);
-
-        glm::mat3x2 dwodalbedo = glm::mat3x2(glm::vec2(phi_n.derivative(0), theta_n.derivative(0)),
-                                             glm::vec2(phi_n.derivative(1), theta_n.derivative(1)),
-                                             glm::vec2(phi_n.derivative(2), theta_n.derivative(2)));
-        glm::vec2 dwodm        = glm::vec2(phi_n.derivative(3), theta_n.derivative(3));
-        glm::vec2 dwodr        = glm::vec2(phi_n.derivative(4), theta_n.derivative(4));
+        glm::mat3 dwodalbedo = glm::mat3(out_dir.derivative(0), out_dir.derivative(1), out_dir.derivative(2));
+        glm::vec3 dwodm      = out_dir.derivative(3);
+        glm::vec3 dwodr      = out_dir.derivative(4);
 
         // I think that light_dir needs to be detached here because of these lines in the pseudo code:
         // # Backpropagate gradients of the current BSDF value

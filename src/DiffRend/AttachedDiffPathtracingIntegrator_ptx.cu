@@ -540,13 +540,17 @@ extern "C" __global__ void __raygen__backward()
 
                     ray.JL -= (diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf + diag(ray.throughput) * JLe);
 
-                    auto Jrayinv    = glm::inverse(Jray);
-                    glm::mat4x3 JL_ = ray.JL * Jrayinv;
+                    auto Jrayinv            = glm::inverse(Jray);
+                    glm::mat4x3 JL_         = ray.JL * Jrayinv;    // dL/d(du1v1, du2v2)
+                    glm::mat3x2 du2v2dwo    = glm::transpose(frame2) * next_dsi.dxdw;
+                    glm::mat3x4 du1v1u2v2dw = glm::mat3x4(glm::vec4(glm::vec2(0), du2v2dwo[0]),
+                                                          glm::vec4(glm::vec2(0), du2v2dwo[1]),
+                                                          glm::vec4(glm::vec2(0), du2v2dwo[2]));
 
                     // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
                     // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
                     glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight.val() + 1e-4f);
-                    glm::vec2 dLdwo   = glm::zw(ray.delta_y * JL_);    // Only v2?
+                    glm::vec3 dLdwo   = ray.delta_y * (JL_ * du1v1u2v2dw);
 
                     ray.si1.bsdf->sampleBSDFBackward(ray.si1, rng_copy, dLdbsdf, dLdwo);
 
