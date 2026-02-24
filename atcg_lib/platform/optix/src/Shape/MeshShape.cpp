@@ -15,6 +15,10 @@ MeshShape::MeshShape(const Dictionary& dict)
     _colors    = mesh->getDeviceColors().clone();
     _uvs       = mesh->getDeviceUVs().clone();
     _faces     = mesh->getDeviceFaces().clone();
+    _edges     = mesh->getDeviceEdges()
+                 .index({torch::indexing::Slice(), torch::indexing::Slice(0, 2)})
+                 .to(torch::kInt32)
+                 .clone();
     mesh->unmapAllPointers();
 
     MeshShapeData data;

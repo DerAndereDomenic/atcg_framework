@@ -199,3 +199,37 @@ extern "C" __device__ float __direct_callable__evalpdf_meshemitter(const atcg::S
 
     return detail::evalMeshEmitterPDF(last_si, sbt_data->total_area, si);
 }
+
+extern "C" __device__ atcg::EdgeSamplingResult
+__direct_callable__sample_edge_meshemitter(const atcg::SurfaceInteraction& si,
+                                           const atcg::SampledWavelengths& wavelengths,
+                                           atcg::PCG32& rng)
+{
+    const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
+
+
+    uint32_t num_edges  = sbt_data->num_edges;
+    uint32_t edge_index = static_cast<uint32_t>(rng.next1d() * num_edges);
+    edge_index          = glm::min(edge_index, num_edges - 1);    // TODO biased wrt edge length
+
+    glm::ivec2 edge_vertex_indices = sbt_data->edges[edge_index];
+    glm::vec3 edge_vertex_pos0 = sbt_data->local_to_world * glm::vec4(sbt_data->positions[edge_vertex_indices.x], 1.0f);
+    glm::vec3 edge_vertex_pos1 = sbt_data->local_to_world * glm::vec4(sbt_data->positions[edge_vertex_indices.y], 1.0f);
+
+    atcg::EdgeSamplingResult result;
+
+    glm::vec3 direction = edge_vertex_pos1 - edge_vertex_pos0;
+    float edge_length   = glm::length(direction);
+
+    float dx = rng.next1d();
+
+    result.position          = edge_vertex_pos0 + dx * direction;
+    result.direction         = direction / edge_length;
+    glm::vec3 w              = glm::normalize(result.position - si.position);
+    result.normal            = glm::normalize(glm::cross(direction, w));    // Sign?
+    result.pdf               = 1.0f / (edge_length * (float)num_edges);
+    glm::vec3 emissive_color = sbt_data->emissive_texture.read(si.uv);
+    result.radiance_weight   = atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling * emissive_color, wavelengths);
+
+    return result;
+}

@@ -11,6 +11,9 @@ struct MeshEmitterData
     glm::u32vec3* faces;
     uint32_t num_faces;
 
+    glm::ivec2* edges;
+    uint32_t num_edges;
+
     float emitter_scaling;
     TextureSampler<glm::vec3> emissive_texture;
 

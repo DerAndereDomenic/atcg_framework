@@ -31,6 +31,15 @@ struct PhotonSamplingResult
     glm::vec3 uvs;
 };
 
+struct EdgeSamplingResult
+{
+    glm::vec3 position;
+    glm::vec3 direction;
+    glm::vec3 normal;
+    SampledSpectrum radiance_weight;
+    float pdf;
+};
+
 struct EmitterVPtrTable
 {
     EmitterFlags flags;
@@ -39,6 +48,7 @@ struct EmitterVPtrTable
     uint32_t evalDualCallIndex;
     uint32_t sampleCallIndex;
     uint32_t evalPdfCallIndex;
+    uint32_t sampleEdgeCallIndex;
 
 #ifdef __CUDACC__
 
@@ -67,6 +77,17 @@ struct EmitterVPtrTable
                                const SurfaceInteraction&,
                                const atcg::SampledWavelengths&,
                                PCG32&>(sampleCallIndex, si, wavelengths, rng);
+    }
+
+    __device__ EdgeSamplingResult sampleEdge(const SurfaceInteraction& si,
+                                             const atcg::SampledWavelengths& wavelengths,
+                                             PCG32& rng) const
+    {
+        return optixDirectCall<EdgeSamplingResult, const SurfaceInteraction&, const atcg::SampledWavelengths&, PCG32&>(
+            sampleEdgeCallIndex,
+            si,
+            wavelengths,
+            rng);
     }
 
     __device__ float evalLightSamplingPdf(const SurfaceInteraction& last_si, const SurfaceInteraction& si) const
