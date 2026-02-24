@@ -94,6 +94,7 @@ MeshEmitter::MeshEmitter(const Dictionary& dict)
     data.uvs       = (glm::vec3*)uvs.data_ptr();
     data.faces     = (glm::u32vec3*)faces.data_ptr();
     data.edges     = (glm::ivec2*)edges.data_ptr();
+    data.num_faces = faces.size(0);
     data.num_edges = edges.size(0);
 
     _mesh_cdf = torch::zeros({faces.size(0)}, atcg::TensorOptions::floatDeviceOptions());
@@ -164,25 +165,25 @@ void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pi
     auto sample_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_meshemitter"});
     auto eval_prog_group = pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_meshemitter"});
-    auto eval_dual_prog_group =
-        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_dual_meshemitter"});
+    auto eval_forward_prog_group =
+        pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__eval_forward_meshemitter"});
     auto evalpdf_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__evalpdf_meshemitter"});
     auto sample_edge_prog_group =
         pipeline->addCallableShader({ptx_emitter_filename, "__direct_callable__sample_edge_meshemitter"});
-    uint32_t sample_idx      = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
-    uint32_t eval_idx        = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
-    uint32_t eval_dual_idx   = sbt->addCallableEntry(eval_dual_prog_group, _mesh_emitter_data.get());
-    uint32_t eval_pdf_idx    = sbt->addCallableEntry(evalpdf_prog_group, _mesh_emitter_data.get());
-    uint32_t sample_edge_idx = sbt->addCallableEntry(sample_edge_prog_group, _mesh_emitter_data.get());
+    uint32_t sample_idx       = sbt->addCallableEntry(sample_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_idx         = sbt->addCallableEntry(eval_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_forward_idx = sbt->addCallableEntry(eval_forward_prog_group, _mesh_emitter_data.get());
+    uint32_t eval_pdf_idx     = sbt->addCallableEntry(evalpdf_prog_group, _mesh_emitter_data.get());
+    uint32_t sample_edge_idx  = sbt->addCallableEntry(sample_edge_prog_group, _mesh_emitter_data.get());
 
     EmitterVPtrTable table;
-    table.flags               = _flags;
-    table.sampleCallIndex     = sample_idx;
-    table.evalCallIndex       = eval_idx;
-    table.evalDualCallIndex   = eval_dual_idx;
-    table.evalPdfCallIndex    = eval_pdf_idx;
-    table.sampleEdgeCallIndex = sample_edge_idx;
+    table.flags                = _flags;
+    table.sampleCallIndex      = sample_idx;
+    table.evalCallIndex        = eval_idx;
+    table.evalForwardCallIndex = eval_forward_idx;
+    table.evalPdfCallIndex     = eval_pdf_idx;
+    table.sampleEdgeCallIndex  = sample_edge_idx;
 
     _vptr_table.upload(&table);
 
