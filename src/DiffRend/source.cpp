@@ -123,6 +123,9 @@ public:
                 torch::Tensor result = torch::zeros({output_texture->height(), output_texture->width(), 3},
                                                     atcg::TensorOptions::floatDeviceOptions());
 
+                torch::Tensor fake_result = torch::zeros({output_texture->height(), output_texture->width(), 3},
+                                                         atcg::TensorOptions::floatDeviceOptions());
+
                 for(int i = 0; i < num_samples; ++i)
                 {
                     atcg::Dictionary dict;
@@ -131,11 +134,19 @@ public:
                     dict.setValue("height", output_texture->height());
                     dict.setValue("rng_index", iteration_count * num_samples + i);
 
-                    result = result + integrator->sample(dict);
-                }
-                result = result / (float)num_samples;
+                    result = result + integrator->sample(dict) / (float)num_samples;
 
-                auto difference = (result - target) * (result - target);
+                    {
+                        torch::NoGradGuard no_grad;
+                        dict.setValue<uint32_t>("rng_index", 1e6 + iteration_count * num_samples + i);
+
+                        fake_result = fake_result + integrator->sample(dict) / (float)num_samples;
+                    }
+                }
+
+                torch::Tensor result_injected = result + (fake_result - result).detach();
+
+                auto difference = (result_injected - target) * (result_injected - target);
                 auto L          = torch::sum(torch::abs(difference));
 
                 L.backward();
