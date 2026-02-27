@@ -1,12 +1,12 @@
 #pragma once
 
 #include <Core/CUDA.h>
-#include <DataStructure/CUDATexture.h>
+#include <DataStructure/TextureSampler.h>
 
 namespace atcg
 {
 struct EnvironmentEmitterData
 {
-    CUDATexture<glm::vec3> environment_texture;
+    TextureSampler<glm::vec3> environment_texture;
 };
 }    // namespace atcg

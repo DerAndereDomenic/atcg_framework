@@ -10,20 +10,16 @@ EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
     atcg::ref_ptr<atcg::Texture2D> texture = dict.getValue<atcg::ref_ptr<Texture2D>>("environment_texture");
 
     _flags               = EmitterFlags::DistantEmitter;
-    _environment_texture = std::dynamic_pointer_cast<Texture2D>(texture->clone());
+    _environment_texture = texture->getData(atcg::GPU);
 
     EnvironmentEmitterData data;
 
-    data.environment_texture.texture_data.texture = _environment_texture->getTextureObject();
-    data.environment_texture.spec                 = _environment_texture->getSpecification();
+    data.environment_texture = TextureSampler<glm::vec3>(_environment_texture.data_ptr(), texture->getSpecification());
 
     _environment_emitter_data.upload(&data);
 }
 
-EnvironmentEmitter::~EnvironmentEmitter()
-{
-    _environment_texture->unmapDevicePointers();
-}
+EnvironmentEmitter::~EnvironmentEmitter() {}
 
 void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                             const atcg::ref_ptr<ShaderBindingTable>& sbt)

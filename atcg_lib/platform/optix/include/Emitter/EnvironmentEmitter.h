@@ -39,7 +39,7 @@ public:
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
 private:
-    atcg::ref_ptr<Texture2D> _environment_texture;
+    torch::Tensor _environment_texture;
 
     atcg::dref_ptr<EnvironmentEmitterData> _environment_emitter_data;
 };
