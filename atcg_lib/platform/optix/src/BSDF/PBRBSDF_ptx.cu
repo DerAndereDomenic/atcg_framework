@@ -480,23 +480,65 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
 }
 
 extern "C" __device__ atcg::BSDFDualEvalResult
-__direct_callable__eval_forward_pbrbsdf(const atcg::SurfaceInteraction& si,
-                                        const glm::vec3& outgoing_dir,
+__direct_callable__eval_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
+                                        const CuDiff::Dual<6, glm::vec3>& outgoing_dir,
                                         const atcg::SampledWavelengths& wavelengths)
 {
-    // const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
-    // atcg::BSDFEvalResult result;
+    const atcg::PBRBSDFData* sbt_data = *reinterpret_cast<const atcg::PBRBSDFData**>(optixGetSbtDataPointer());
 
-    // glm::vec3 diffuse_color = sbt_data->diffuse_texture.read(si.uv);
-    // float metallic          = sbt_data->metallic_texture.read(si.uv);
-    // float roughness         = sbt_data->roughness_texture.read(si.uv);
-    // roughness = glm::max(roughness * roughness, 1e-3f);    // In the real time shaders, roughness is squared
-    // glm::vec3 metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
-    // diffuse_color            = glm::lerp(diffuse_color, glm::vec3(0), metallic) * si.color;
+    auto diffuse_color = sbt_data->diffuse_texture.read(si.uv);
+    auto metallic      = sbt_data->metallic_texture.read(si.uv);
+    auto roughness     = sbt_data->roughness_texture.read(si.uv);
+
+    // if(roughness.val() < 1e-3f)
+    // {
+    //     roughness.mut_val() = 1e-3f;
+    // }
+    // roughness = roughness * roughness;
+    roughness = CuDiff::max(roughness * roughness, 1e-3f);    // TODO: We only clamp values but not
+    // derivative to not loose them. Correct?
+
+    auto metallic_color = (1.0f - metallic) * glm::vec3(0.04f) + metallic * diffuse_color;
+    diffuse_color       = (1.0f - metallic) * diffuse_color;
 
 
-    // return detail::evalPBR(si, outgoing_dir, diffuse_color, metallic_color, roughness, metallic);
-    return atcg::BSDFDualEvalResult();
+    atcg::BSDFDualEvalResult result;
+
+    auto light_dir = outgoing_dir;
+    auto view_dir  = -si.incoming_direction;
+
+    auto H = CuDiff::normalize(light_dir + view_dir);
+
+    auto NdotH = CuDiff::max(CuDiff::dot(si.normal, H), 0.0f);
+    auto NdotV = CuDiff::max(CuDiff::dot(si.normal, view_dir), 0.0f);
+    auto NdotL = CuDiff::max(CuDiff::dot(si.normal, light_dir), 0.0f);
+
+    if(NdotL <= 0.0f || NdotV <= 0.0f) return result;
+
+    auto NDF = D_GGX(NdotH, roughness);
+    auto V   = V_SmithGGX(NdotL, NdotV, roughness);
+    auto F   = fresnel_schlick(metallic_color, CuDiff::max(CuDiff::dot(H, view_dir), 0.0f));
+
+    auto specular = NDF * V * F;
+
+    auto kS = F;
+    auto kD = glm::vec3(1.0f) - kS;
+
+    float diffuse_probability =
+        glm::dot(diffuse_color.val(), glm::vec3(1.0f)) /
+        (glm::dot(diffuse_color.val(), glm::vec3(1.0f)) + glm::dot(metallic_color.val(), glm::vec3(1.0f)) + 1e-5f);
+    float specular_probability    = 1 - diffuse_probability;
+    float diffuse_pdf             = NdotL / glm::pi<float>();
+    float halfway_pdf             = NDF * NdotH;
+    float halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(outgoing_dir, H);    // 1 / (4*HdotV)
+    float specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
+
+    result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
+    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    result.flags =
+        result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
+
+    return result;
 }
 
 #define DERIVATIVE_INTERPOLATION_VECTOR(inp_grad, texture)                                                             \
