@@ -74,8 +74,8 @@ extern "C" __global__ void __raygen__forward()
     glm::mat4 Jray = glm::mat4(1);
 
     atcg::DualSurfaceInteraction dsi1;
-    dsi1.incoming_position  = ray_origin;
-    dsi1.incoming_direction = ray_direction;
+    dsi1.incoming_position  = CuDiff::Dual<6, glm::vec3>(ray_origin);
+    dsi1.incoming_direction = CuDiff::Dual<6, glm::vec3>(ray_direction);
     atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
                                                              ray_origin,
                                                              ray_direction,
@@ -187,7 +187,7 @@ extern "C" __global__ void __raygen__forward()
 
                     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
                                            ? 0.0f
-                                           : bsdf_result.sample_probability.val();
+                                           : bsdf_result.sample_probability;
                     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
                     glm::vec3 throughput_nee = ray.throughput * bsdf_result.bsdf_value.val();
@@ -387,8 +387,8 @@ extern "C" __global__ void __raygen__backward()
     glm::mat4 Jray = glm::mat4(1);
 
     atcg::DualSurfaceInteraction dsi1;
-    dsi1.incoming_position  = ray_origin;
-    dsi1.incoming_direction = ray_direction;
+    dsi1.incoming_position  = CuDiff::Dual<6, glm::vec3>(ray_origin);
+    dsi1.incoming_direction = CuDiff::Dual<6, glm::vec3>(ray_direction);
     atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
                                                              ray_origin,
                                                              ray_direction,
@@ -498,7 +498,7 @@ extern "C" __global__ void __raygen__backward()
 
                     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
                                            ? 0.0f
-                                           : bsdf_result.sample_probability.val();
+                                           : bsdf_result.sample_probability;
                     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
 
                     glm::vec3 throughput_nee = ray.throughput * bsdf_result.bsdf_value.val();
@@ -678,11 +678,9 @@ extern "C" __global__ void __miss__dual()
 {
     atcg::DualSurfaceInteraction* si = getPayloadDataPointer<atcg::DualSurfaceInteraction>();
     float3 optix_world_dir           = optixGetWorldRayDirection();
-    glm::vec3 ray_dir                = glm::make_vec3((float*)&optix_world_dir);
 
-    si->valid              = false;
-    si->incoming_distance  = std::numeric_limits<float>::infinity();
-    si->incoming_direction = ray_dir;
+    si->valid             = false;
+    si->incoming_distance = CuDiff::Dual<6, float>(std::numeric_limits<float>::infinity());
 }
 
 extern "C" __global__ void __miss__occlusion()

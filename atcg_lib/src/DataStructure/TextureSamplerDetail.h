@@ -1,5 +1,7 @@
 #pragma once
 
+#include <CuDiff/ext/glm/Wrap.h>
+
 namespace atcg
 {
 
@@ -231,14 +233,7 @@ template<typename T>
 template<int N>
 ATCG_HOST_DEVICE CuDiff::Dual<N, T> TextureSampler<T>::_read_linear(const CuDiff::Dual<N, glm::vec2>& uv) const
 {
-    CuDiff::Dual<N, float> ux = uv.val().x;
-    CuDiff::Dual<N, float> uy = uv.val().y;
-
-    for(int i = 0; i < N; ++i)
-    {
-        ux.setDerivative(i, uv.derivative(i).x);
-        uy.setDerivative(i, uv.derivative(i).y);
-    }
+    auto [ux, uy] = CuDiff::unwrap(uv);
 
     auto fx = ux * (_spec.width - 1);
     auto fy = uy * (_spec.height - 1);

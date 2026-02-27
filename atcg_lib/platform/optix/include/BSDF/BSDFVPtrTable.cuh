@@ -37,7 +37,7 @@ struct BSDFEvalResult
 struct BSDFDualEvalResult
 {
     CuDiff::Dual<6, glm::vec3> bsdf_value;
-    CuDiff::Dual<6, float> sample_probability;
+    float sample_probability;
     BSDFComponentType flags = BSDFComponentType::Any;
 };
 

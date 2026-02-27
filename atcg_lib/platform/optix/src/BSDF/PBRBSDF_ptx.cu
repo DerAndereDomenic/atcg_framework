@@ -435,17 +435,17 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
     auto NdotL = CuDiff::dot(normal, result.out_dir);
     if(NdotL <= 0)
     {
-        result.sample_probability = 0;
+        result.sample_probability = CuDiff::Dual<6, float>(0.0f);
         return result;
     }
 
     auto diffuse_bsdf = diffuse_color / glm::pi<float>();
     auto diffuse_pdf  = NdotL / glm::pi<float>();
 
-    CuDiff::Dual<6, glm::vec3> specular_bsdf = glm::vec3(0);
-    CuDiff::Dual<6, float> specular_pdf      = 0.0f;
+    CuDiff::Dual<6, glm::vec3> specular_bsdf = CuDiff::Dual<6, glm::vec3>(glm::vec3(0.0f));
+    CuDiff::Dual<6, float> specular_pdf      = CuDiff::Dual<6, float>(0.0f);
     // Only compute specular component if specular_f0 is not zero!
-    CuDiff::Dual<6, glm::vec3> kD = glm::vec3(1);
+    CuDiff::Dual<6, glm::vec3> kD = CuDiff::Dual<6, glm::vec3>(glm::vec3(1.0f));
     if(CuDiff::dot(metallic_color, metallic_color) > 1e-6f)
     {
         auto halfway = CuDiff::normalize(result.out_dir + view_dir);
@@ -810,7 +810,7 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             // Sample light direction from diffuse bsdf
             glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
             // Transform local outgoing direction from tangent space to world space
-            out_dir = local_frame * local_outgoing_ray_dir;
+            out_dir = CuDiff::Dual<5, glm::vec3>(local_frame * local_outgoing_ray_dir);
         }
         else
         {

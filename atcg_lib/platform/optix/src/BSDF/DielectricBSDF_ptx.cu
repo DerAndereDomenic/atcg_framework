@@ -397,13 +397,13 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
     if(glm::dot(transmitted_ray_dir.val(), transmitted_ray_dir.val()) < 1e-6f)
     {
         // Total internal reflection!
-        transmission_probability = 0.0f;
-        reflection_probability   = 1.0f;
+        transmission_probability = CuDiff::Dual<6, float>(0.0f);
+        reflection_probability   = CuDiff::Dual<6, float>(1.0f);
     }
 
     // Compute sampling result
     atcg::BSDFDualSamplingResult result;
-    result.sample_probability = 0;
+    result.sample_probability = CuDiff::Dual<6, float>(0);
 
     // Stochastically select a reflection or transmission via russian roulette
     CuDiff::Dual<6, glm::vec3> wo;
@@ -431,7 +431,7 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
 
     if(NdotL <= 0)
     {
-        result.sample_probability = 0;
+        result.sample_probability = CuDiff::Dual<6, float>(0.0f);
         return result;
     }
 
@@ -569,8 +569,8 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
     if(glm::dot(transmitted_ray_dir.val(), transmitted_ray_dir.val()) < 1e-6f)
     {
         // Total internal reflection!
-        transmission_probability = 0.0f;
-        reflection_probability   = 1.0f;
+        transmission_probability = CuDiff::Dual<5, float>(0.0f);
+        reflection_probability   = CuDiff::Dual<5, float>(1.0f);
     }
 
     // Stochastically select a reflection or transmission via russian roulette
