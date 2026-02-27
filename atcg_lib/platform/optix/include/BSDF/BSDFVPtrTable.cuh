@@ -36,8 +36,9 @@ struct BSDFEvalResult
 
 struct BSDFDualEvalResult
 {
-    CuDiff::Dual<4, glm::vec3> bsdf_value;
-    CuDiff::Dual<4, float> sample_probability;
+    CuDiff::Dual<6, glm::vec3> bsdf_value;
+    CuDiff::Dual<6, float> sample_probability;
+    BSDFComponentType flags = BSDFComponentType::Any;
 };
 
 struct BSDFVPtrTable
@@ -85,13 +86,13 @@ struct BSDFVPtrTable
                                PCG32&>(sampleForwardCallIndex, si, wavelengths, rng);
     }
 
-    __device__ BSDFDualEvalResult evalBSDFForward(const SurfaceInteraction& si,
-                                                  const glm::vec3& outgoing_dir,
+    __device__ BSDFDualEvalResult evalBSDFForward(const DualSurfaceInteraction& si,
+                                                  const CuDiff::Dual<6, glm::vec3>& outgoing_dir,
                                                   const atcg::SampledWavelengths& wavelengths) const
     {
         return optixDirectCall<BSDFDualEvalResult,
-                               const SurfaceInteraction&,
-                               const glm::vec3&,
+                               const DualSurfaceInteraction&,
+                               const CuDiff::Dual<6, glm::vec3>&,
                                const atcg::SampledWavelengths&>(evalForwardCallIndex, si, outgoing_dir, wavelengths);
     }
 

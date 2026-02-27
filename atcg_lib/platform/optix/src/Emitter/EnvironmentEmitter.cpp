@@ -43,11 +43,11 @@ void EnvironmentEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeli
         _environment_emitter_data.get());
 
     EmitterVPtrTable table;
-    table.flags             = _flags;
-    table.sampleCallIndex   = sample_idx;
-    table.evalCallIndex     = eval_idx;
-    table.evalPdfCallIndex  = evalpdf_idx;
-    table.evalDualCallIndex = eval_dual_idx;
+    table.flags                = _flags;
+    table.sampleCallIndex      = sample_idx;
+    table.evalCallIndex        = eval_idx;
+    table.evalPdfCallIndex     = evalpdf_idx;
+    table.evalForwardCallIndex = eval_dual_idx;
 
     _vptr_table.upload(&table);
 
