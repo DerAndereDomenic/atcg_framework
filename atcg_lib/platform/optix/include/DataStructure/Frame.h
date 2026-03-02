@@ -3,6 +3,8 @@
 #include <Core/glm.h>
 #include <Core/Platform.h>
 #include <Core/CUDA.h>
+#include <CuDiff/CuDiff.h>
+#include <CuDiff/ext/glm.h>
 
 namespace atcg
 {
@@ -43,18 +45,24 @@ struct Frame
      */
     ATCG_HOST_DEVICE Frame(const T& localZ)
     {
-        float x  = localZ.x;
-        float y  = localZ.y;
-        float z  = localZ.z;
-        float sz = (z >= 0) ? 1 : -1;
-        float a  = 1 / (sz + z);
-        float ya = y * a;
-        float b  = x * ya;
-        float c  = x * sz;
+        auto [x, y, z] = CuDiff::unwrap(localZ);
 
-        _localX = T(c * x * a - 1, sz * b, c);
-        _localY = T(b, y * ya - sz, y);
-        _localZ = localZ;
+        float sz = (z >= 0) ? 1 : -1;
+        auto a   = 1 / (sz + z);
+        auto ya  = y * a;
+        auto b   = x * ya;
+        auto c   = x * sz;
+
+        auto localXx = c * x * a - 1;
+        auto localXy = sz * b;
+        auto localXz = c;
+
+        auto localYx = b;
+        auto localYy = y * ya - sz;
+        auto localYz = y;
+        _localX      = CuDiff::wrap(localXx, localXy, localXz);
+        _localY      = CuDiff::wrap(localYx, localYy, localYz);
+        _localZ      = localZ;
     }
 
     /**
@@ -65,9 +73,11 @@ struct Frame
      * @param local The vector in local coordinates to be transformed to world coordinates.
      * @return The transformed vector in world coordinates.
      */
-    ATCG_HOST_DEVICE auto toWorld(const T& local) const
+    template<typename U>
+    ATCG_HOST_DEVICE auto toWorld(const U& local) const
     {
-        return local.x * _localX + local.y * _localY + local.z * _localZ;
+        auto [x, y, z] = CuDiff::unwrap(local);
+        return x * _localX + y * _localY + z * _localZ;
     }
 
     /**
@@ -79,9 +89,10 @@ struct Frame
      * @param world The vector in world coordinates to be transformed to local coordinates.
      * @return The transformed vector in local coordinates.
      */
-    ATCG_HOST_DEVICE auto toLocal(const T& world) const
+    template<typename U>
+    ATCG_HOST_DEVICE auto toLocal(const U& world) const
     {
-        return T(glm::dot(world, _localX), glm::dot(world, _localY), glm::dot(world, _localZ));
+        return CuDiff::wrap(CuDiff::dot(world, _localX), CuDiff::dot(world, _localY), CuDiff::dot(world, _localZ));
     }
 
     /**
@@ -95,7 +106,11 @@ struct Frame
      * @return The cosine of the angle between the local Z direction and the input vector, which is the Z component of
      * the input vector in local coordinates.
      */
-    ATCG_HOST_DEVICE auto cosTheta(const T& local) const { return local.z; }
+    ATCG_HOST_DEVICE auto cosTheta(const T& local) const
+    {
+        auto z = std::get<2>(CuDiff::unwrap(local));
+        return z;
+    }
 
     /**
      * @brief Compute the sine of the angle between the local Z direction of the frame and a given local vector. This is
@@ -108,7 +123,11 @@ struct Frame
      * @return The sine of the angle between the local Z direction and the input vector, which is the length of the
      * projection of the input vector onto the local XY plane of the frame.
      */
-    ATCG_HOST_DEVICE auto sinTheta(const T& local) const { return glm::sqrt(glm::max(T(0), T(1) - local.z * local.z)); }
+    ATCG_HOST_DEVICE auto sinTheta(const T& local) const
+    {
+        auto z = std::get<2>(CuDiff::unwrap(local));
+        return CuDiff::sqrt(CuDiff::max(decltype(z)(0), decltype(z)(1) - z * z));
+    }
 
     /**
      * @brief Accessor for the local X direction of the frame. Returns a reference to the local X vector, which is one

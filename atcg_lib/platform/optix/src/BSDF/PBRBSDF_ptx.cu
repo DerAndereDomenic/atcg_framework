@@ -223,41 +223,6 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
 }
 
 template<int N>
-ATCG_DEVICE ATCG_INLINE auto compute_local_frame(const CuDiff::Dual<N, glm::vec3>& localZ)
-{
-    auto [x, y, z] = CuDiff::unwrap(localZ);
-
-    float sz = (z >= 0) ? 1 : -1;
-    auto a   = 1 / (sz + z);
-    auto ya  = y * a;
-    auto b   = x * ya;
-    auto c   = x * sz;
-
-    auto localXx = c * x * a - 1;
-    auto localXy = sz * b;
-    auto localXz = c;
-
-    auto localYx = b;
-    auto localYy = y * ya - sz;
-    auto localYz = y;
-    auto localX  = CuDiff::wrap(localXx, localXy, localXz);
-    auto localY  = CuDiff::wrap(localYx, localYy, localYz);
-
-    return thrust::make_tuple(localX, localY, localZ);
-}
-
-template<int N>
-ATCG_DEVICE ATCG_INLINE CuDiff::Dual<N, glm::vec3> apply_local_frame(
-    const thrust::tuple<CuDiff::Dual<N, glm::vec3>, CuDiff::Dual<N, glm::vec3>, CuDiff::Dual<N, glm::vec3>>&
-        local_frame,
-    const CuDiff::Dual<N, glm::vec3>& v)
-{
-    auto [x, y, z] = CuDiff::unwrap(v);
-
-    return thrust::get<0>(local_frame) * x + thrust::get<1>(local_frame) * y + thrust::get<2>(local_frame) * z;
-}
-
-template<int N>
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE CuDiff::Dual<N, glm::vec3>
 warp_square_to_hemisphere_ggx(const glm::vec2& uv, CuDiff::Dual<N, float> roughness)
 {
@@ -344,7 +309,7 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
 
     // The matrix local_frame transforms a vector from the coordinate system where geom.N corresponds to the z-axis to
     // the world coordinate system.
-    auto local_frame = compute_local_frame(normal);
+    auto local_frame = atcg::Frame(normal);
 
     auto diffuse_probability =
         CuDiff::dot(diffuse_color, glm::vec3(1)) /
@@ -355,14 +320,14 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
         // Sample light direction from diffuse bsdf
         glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
-        result.out_dir = apply_local_frame(local_frame, CuDiff::Dual<6, glm::vec3>(local_outgoing_ray_dir));
+        result.out_dir = local_frame.toWorld(CuDiff::Dual<6, glm::vec3>(local_outgoing_ray_dir));
     }
     else
     {
         // Sample light direction from specular bsdf
         auto local_halfway = warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
         // Transform local halfway vector from tangent space to world space
-        auto halfway   = apply_local_frame(local_frame, local_halfway);
+        auto halfway   = local_frame.toWorld(local_halfway);
         result.out_dir = CuDiff::reflect(si.incoming_direction, halfway);
     }
 
@@ -663,7 +628,7 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
 
         // The matrix local_frame transforms a vector from the coordinate system where geom.N corresponds to the z-axis
         // to the world coordinate system.
-        glm::mat3 local_frame = atcg::Math::compute_local_frame(normal);
+        atcg::Frame local_frame = atcg::Frame(normal);
 
         auto diffuse_probability =
             CuDiff::dot(diffuse_color, glm::vec3(1)) /
@@ -676,14 +641,14 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
             // Sample light direction from diffuse bsdf
             glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
             // Transform local outgoing direction from tangent space to world space
-            out_dir = CuDiff::Dual<5, glm::vec3>(local_frame * local_outgoing_ray_dir);
+            out_dir = CuDiff::Dual<5, glm::vec3>(local_frame.toWorld(local_outgoing_ray_dir));
         }
         else
         {
             // Sample light direction from specular bsdf
             auto local_halfway = warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
             // Transform local halfway vector from tangent space to world space
-            auto halfway = local_frame * local_halfway;
+            auto halfway = local_frame.toWorld(local_halfway);
             out_dir      = CuDiff::reflect(si.incoming_direction, halfway);
         }
 

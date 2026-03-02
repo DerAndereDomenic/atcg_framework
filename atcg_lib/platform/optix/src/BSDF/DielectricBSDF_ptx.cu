@@ -549,12 +549,12 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
     glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
     auto eta                   = outsidein ? 1.0f / ior : ior;
 
-    glm::mat3 local_frame = atcg::Math::compute_local_frame(interface_normal);
+    atcg::Frame<glm::vec3> local_frame = atcg::Frame(interface_normal);
 
     auto local_halfway = warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
     auto halfway_pdf   = warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
     // Transform local halfway vector from tangent space to world space
-    auto halfway = local_frame * local_halfway;
+    auto halfway = local_frame.toWorld(local_halfway);
 
     // Compute outgoing ray directions
     auto transmitted_ray_dir = CuDiff::refract(-wi, halfway, eta);

@@ -9,6 +9,7 @@
 #include <Core/Payload.h>
 #include <Math/Random.h>
 #include <Math/Functions.h>
+#include <DataStructure/Frame.h>
 
 #include <CuDiff/CuDiff.h>
 #include <CuDiff/ext/glm.h>
@@ -112,11 +113,11 @@ extern "C" __global__ void __raygen__forward()
         dsi.normal             = ray.last_normal;
         dsi.uv                 = ray.last_uv;
 
-        auto frame0_ = atcg::Math::compute_local_frame(ray.si0.normal);
-        auto frame1_ = atcg::Math::compute_local_frame(ray.si1.normal);
+        auto frame0_ = atcg::Frame(ray.si0.normal);
+        auto frame1_ = atcg::Frame(ray.si1.normal);
 
-        glm::mat2x3 frame0 = glm::mat2x3(frame0_[0], frame0_[1]);
-        glm::mat2x3 frame1 = glm::mat2x3(frame1_[0], frame1_[1]);
+        glm::mat2x3 frame0 = glm::mat2x3(frame0_.localX(), frame0_.localY());
+        glm::mat2x3 frame1 = glm::mat2x3(frame1_.localX(), frame1_.localY());
 
         // si is valid by contruction if(si.valid)
         {
@@ -257,9 +258,9 @@ extern "C" __global__ void __raygen__forward()
                         continue;
                     }
 
-                    auto frame2_ = atcg::Math::compute_local_frame(next_dsi.normal.val());
+                    auto frame2_ = atcg::Frame(next_dsi.normal.val());
 
-                    glm::mat2x3 frame2 = glm::mat2x3(frame2_[0], frame2_[1]);
+                    glm::mat2x3 frame2 = glm::mat2x3(frame2_.localX(), frame2_.localY());
 
                     glm::mat3 dx1_dx0 = glm::mat3(0);
                     glm::mat3 dx2_dx0 = glm::mat3(next_dsi.position.derivative(0),
@@ -425,12 +426,11 @@ extern "C" __global__ void __raygen__backward()
         dsi.normal             = ray.last_normal;
         dsi.uv                 = ray.last_uv;
 
-        auto frame0_ = atcg::Math::compute_local_frame(ray.si0.normal);
-        auto frame1_ = atcg::Math::compute_local_frame(ray.si1.normal);
+        auto frame0_ = atcg::Frame(ray.si0.normal);
+        auto frame1_ = atcg::Frame(ray.si1.normal);
 
-        glm::mat2x3 frame0 = glm::mat2x3(frame0_[0], frame0_[1]);
-        glm::mat2x3 frame1 = glm::mat2x3(frame1_[0], frame1_[1]);
-
+        glm::mat2x3 frame0 = glm::mat2x3(frame0_.localX(), frame0_.localY());
+        glm::mat2x3 frame1 = glm::mat2x3(frame1_.localX(), frame1_.localY());
 
         {
             // Check for light source
@@ -570,9 +570,9 @@ extern "C" __global__ void __raygen__backward()
                         continue;
                     }
 
-                    auto frame2_ = atcg::Math::compute_local_frame(next_dsi.normal.val());
+                    auto frame2_ = atcg::Frame(next_dsi.normal.val());
 
-                    glm::mat2x3 frame2 = glm::mat2x3(frame2_[0], frame2_[1]);
+                    glm::mat2x3 frame2 = glm::mat2x3(frame2_.localX(), frame2_.localY());
 
                     glm::mat3 dx1_dx0 = glm::mat3(0);
                     glm::mat3 dx2_dx0 = glm::mat3(next_dsi.position.derivative(0),
