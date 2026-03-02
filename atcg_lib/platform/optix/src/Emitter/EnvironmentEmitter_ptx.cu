@@ -9,6 +9,8 @@
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <Emitter/EnvironmentEmitterData.cuh>
 
+#include <DataStructure/Frame.h>
+
 namespace detail
 {
 
@@ -72,9 +74,9 @@ sampleEnvironmentEmitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
 
     glm::vec3 random_dir = warp_square_to_hemisphere_cosine(rng.next2d());
     float pdf            = warp_square_to_hemisphere_cosine_pdf(random_dir);
-    glm::mat3 frame      = atcg::Math::compute_local_frame(si.normal);
+    atcg::Frame frame    = atcg::Frame(si.normal);
 
-    random_dir = frame * random_dir;
+    random_dir = frame.toWorld(random_dir);
 
     glm::vec3 ray_dir = random_dir;
 
@@ -105,8 +107,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalEnvironmentEmitterSamplingPdf(const
     // We can assume that outgoing ray dir actually intersects the light source.
 
     // Probability of sampling this direction via light source sampling
-    glm::mat3 local_frame     = atcg::Math::compute_local_frame(last_si.normal);
-    glm::vec3 local_direction = glm::transpose(local_frame) * si.incoming_direction;
+    atcg::Frame frame         = atcg::Frame(last_si.normal);
+    glm::vec3 local_direction = frame.toLocal(si.incoming_direction);
 
     return warp_square_to_hemisphere_cosine_pdf(local_direction);
 }

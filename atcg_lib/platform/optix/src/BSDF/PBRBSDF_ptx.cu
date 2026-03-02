@@ -11,6 +11,8 @@
 #include <BSDF/BSDFFunctions.h>
 #include <BSDF/Sampling.h>
 
+#include <DataStructure/Frame.h>
+
 namespace detail
 {
 
@@ -48,7 +50,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
 
     // The matrix local_frame transforms a vector from the coordinate system where geom.N corresponds to the z-axis to
     // the world coordinate system.
-    glm::mat3 local_frame = atcg::Math::compute_local_frame(normal);
+    atcg::Frame local_frame = atcg::Frame(normal);
 
     float diffuse_probability  = diffuse_color.sum() / (diffuse_color.sum() + specular_F0.sum() + 1e-5f);
     float specular_probability = 1 - diffuse_probability;
@@ -58,14 +60,14 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         // Sample light direction from diffuse bsdf
         glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
-        result.out_dir = local_frame * local_outgoing_ray_dir;
+        result.out_dir = local_frame.toWorld(local_outgoing_ray_dir);
     }
     else
     {
         // Sample light direction from specular bsdf
         glm::vec3 local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
         // Transform local halfway vector from tangent space to world space
-        glm::vec3 halfway = local_frame * local_halfway;
+        glm::vec3 halfway = local_frame.toWorld(local_halfway);
         result.out_dir    = glm::reflect(si.incoming_direction, halfway);
     }
 
