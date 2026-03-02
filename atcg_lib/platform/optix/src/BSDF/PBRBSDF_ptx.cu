@@ -8,6 +8,8 @@
 #include <Core/SurfaceInteraction.h>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <BSDF/PBRBSDFData.cuh>
+#include <BSDF/BSDFFunctions.h>
+#include <BSDF/Sampling.h>
 
 namespace detail
 {
