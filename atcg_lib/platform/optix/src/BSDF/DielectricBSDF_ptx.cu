@@ -240,124 +240,6 @@ __direct_callable__eval_dielectricbsdf(const atcg::SurfaceInteraction& si,
     return detail::evalRefractive(si, outgoing_dir, reflectance_color, roughness, ior);
 }
 
-template<int N>
-ATCG_DEVICE ATCG_INLINE auto compute_local_frame(const CuDiff::Dual<N, glm::vec3>& localZ)
-{
-    auto [x, y, z] = CuDiff::unwrap(localZ);
-
-    float sz = (z >= 0) ? 1 : -1;
-    auto a   = 1 / (sz + z);
-    auto ya  = y * a;
-    auto b   = x * ya;
-    auto c   = x * sz;
-
-    auto localXx = c * x * a - 1;
-    auto localXy = sz * b;
-    auto localXz = c;
-
-    auto localYx = b;
-    auto localYy = y * ya - sz;
-    auto localYz = y;
-    auto localX  = CuDiff::wrap(localXx, localXy, localXz);
-    auto localY  = CuDiff::wrap(localYx, localYy, localYz);
-
-    return thrust::make_tuple(localX, localY, localZ);
-}
-
-template<int N>
-ATCG_DEVICE ATCG_INLINE CuDiff::Dual<N, glm::vec3> apply_local_frame(
-    const thrust::tuple<CuDiff::Dual<N, glm::vec3>, CuDiff::Dual<N, glm::vec3>, CuDiff::Dual<N, glm::vec3>>&
-        local_frame,
-    const CuDiff::Dual<N, glm::vec3>& v)
-{
-    auto [x, y, z] = CuDiff::unwrap(v);
-
-    return thrust::get<0>(local_frame) * x + thrust::get<1>(local_frame) * y + thrust::get<2>(local_frame) * z;
-}
-
-template<int N>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE CuDiff::Dual<N, glm::vec3>
-warp_square_to_hemisphere_ggx(const glm::vec2& uv, CuDiff::Dual<N, float> roughness)
-{
-    // GGX NDF sampling
-    auto cos_theta = CuDiff::sqrt(CuDiff::max(1e-3f, (1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x)));
-    auto sin_theta = CuDiff::sqrt(CuDiff::max(1e-3f, 1.0f - cos_theta * cos_theta));
-    float phi      = 2.0f * glm::pi<float>() * uv.y;
-
-    auto x = sin_theta * glm::cos(phi);
-    auto y = sin_theta * glm::sin(phi);
-    auto z = cos_theta;
-
-    auto res = CuDiff::wrap(x, y, z);
-
-    return res;
-}
-
-template<typename NdotHType, typename roughnessType>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto D_GGX(const NdotHType& NdotH, const roughnessType& roughness)
-{
-    auto a2 = roughness * roughness;
-    auto d  = (NdotH * a2 - NdotH) * NdotH + 1.0f;
-    return a2 / (glm::pi<float>() * d * d + 1e-5f);
-}
-
-template<typename NdotLType, typename NdotVType, typename alphaType>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto
-V_SmithGGX(const NdotLType& NdotL, const NdotVType& NdotV, const alphaType& alpha, float eps = 1e-8f)
-{
-    auto a2      = alpha * alpha;
-    auto lambdaV = NdotL * CuDiff::sqrt(NdotV * NdotV * (1.0f - a2) + a2);
-    auto lambdaL = NdotV * CuDiff::sqrt(NdotL * NdotL * (1.0f - a2) + a2);
-    return 0.5f / (lambdaV + lambdaL + eps);
-}
-
-template<typename F0Type, typename VdotHType>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto fresnel_schlick(const F0Type& F0, const VdotHType& VdotH)
-{
-    if constexpr(std::is_floating_point_v<VdotHType>)
-    {
-        return F0 + (glm::vec3(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
-    }
-    else
-    {
-        return F0 + (glm::vec3(1.0f) - F0) * CuDiff::pow(CuDiff::max(0.0f, 1.0f - VdotH), 5.0f);
-    }
-}
-
-template<int N>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE CuDiff::Dual<N, float>
-warp_normal_to_reflected_direction_pdf(const CuDiff::Dual<N, glm::vec3>& reflected_dir,
-                                       const CuDiff::Dual<N, glm::vec3>& normal)
-{
-    return 1.0f / CuDiff::abs(4.0f * CuDiff::dot(reflected_dir, normal));
-}
-
-template<typename HdotVType, typename HdotLType, typename etaType>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto
-warp_normal_to_refracted_direction_pdf(const HdotVType HdotV, const HdotLType HdotL, const etaType eta)
-{
-    auto denom = (HdotL + eta * HdotV);
-    return eta * eta * CuDiff::abs(HdotV) / (denom * denom);
-}
-
-
-template<typename resultType, typename roughnessType>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto warp_square_to_hemisphere_ggx_pdf(const resultType& result,
-                                                                          roughnessType roughness)
-{
-    auto [rx, ry, rz] = CuDiff::unwrap(result);
-    return D_GGX(rz, roughness) * CuDiff::max(0.0f, rz);
-}
-
-template<typename NdotLType, typename NdotVType, typename roughnessType>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto G_SmithJointGGX(NdotLType NdotL, NdotVType NdotV, roughnessType roughness)
-{
-    auto a2      = roughness * roughness;
-    auto LambdaL = 0.5f * (-1.0f + CuDiff::sqrt(1.0f + a2 * (1.0f - NdotL * NdotL) / (NdotL * NdotL)));
-    auto LambdaV = 0.5f * (-1.0f + CuDiff::sqrt(1.0f + a2 * (1.0f - NdotV * NdotV) / (NdotV * NdotV)));
-    return 1.0f / (1.0f + LambdaL + LambdaV);
-}
-
 extern "C" __device__ atcg::BSDFDualSamplingResult
 __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteraction& si, atcg::PCG32& rng)
 {
@@ -377,12 +259,12 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
     auto interface_normal = outsidein ? si.normal : -si.normal;
     auto eta              = outsidein ? 1.0f / ior : ior;
 
-    auto local_frame = compute_local_frame(interface_normal);
+    auto local_frame = atcg::Frame(interface_normal);
 
-    auto local_halfway = warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+    auto local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
     // Transform local halfway vector from tangent space to world space
-    auto halfway     = apply_local_frame(local_frame, local_halfway);
-    auto halfway_pdf = warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
+    auto halfway     = local_frame.toWorld(local_halfway);
+    auto halfway_pdf = atcg::warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
 
     // Compute outgoing ray directions
     auto transmitted_ray_dir = CuDiff::refract(-wi, halfway, eta);
@@ -394,8 +276,8 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
 
     // Reflection an transmission probabilities
     auto HdotV                    = CuDiff::dot(wi, halfway);
-    auto F                        = fresnel_schlick(F0, HdotV);
-    auto reflection_probability   = CuDiff::dot(F, glm::vec3(1.0f / 3.0f));
+    auto F                        = atcg::fresnel_schlick(F0, HdotV);
+    auto reflection_probability   = F;
     auto transmission_probability = 1.0f - reflection_probability;
     if(glm::dot(transmitted_ray_dir.val(), transmitted_ray_dir.val()) < 1e-6f)
     {
@@ -414,8 +296,9 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
     CuDiff::Dual<6, float> HdotL;
     if(rng.next1d() < reflection_probability)
     {
-        wo                 = reflected_ray_dir;
-        auto light_dir_pdf = halfway_pdf * warp_normal_to_reflected_direction_pdf(wo, halfway) * reflection_probability;
+        wo = reflected_ray_dir;
+        auto light_dir_pdf =
+            halfway_pdf * atcg::warp_normal_to_reflected_direction_pdf(wo, halfway) * reflection_probability;
 
         result.sample_probability = light_dir_pdf;
         NdotL                     = CuDiff::dot(interface_normal, wo);
@@ -426,7 +309,7 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
         wo    = transmitted_ray_dir;
         HdotL = CuDiff::dot(halfway, wo);
         auto light_dir_pdf =
-            halfway_pdf * warp_normal_to_refracted_direction_pdf(HdotV, HdotL, eta) * transmission_probability;
+            halfway_pdf * atcg::warp_normal_to_refracted_direction_pdf(HdotV, HdotL, eta) * transmission_probability;
 
         result.sample_probability = light_dir_pdf;
         NdotL                     = -CuDiff::dot(interface_normal, wo);
@@ -441,7 +324,7 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
     auto NdotV = CuDiff::abs(CuDiff::dot(interface_normal, wi));
     auto NdotH = CuDiff::dot(halfway, interface_normal);
 
-    auto G             = G_SmithJointGGX(NdotL, NdotV, roughness);
+    auto G             = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
     result.bsdf_weight = reflectance_color * G * CuDiff::abs(HdotL) / (NdotV * NdotH);
     result.out_dir     = wo;
     result.flags       = roughness < 0.1f
@@ -551,8 +434,8 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
 
     atcg::Frame<glm::vec3> local_frame = atcg::Frame(interface_normal);
 
-    auto local_halfway = warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
-    auto halfway_pdf   = warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
+    auto local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+    auto halfway_pdf   = atcg::warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
     // Transform local halfway vector from tangent space to world space
     auto halfway = local_frame.toWorld(local_halfway);
 
@@ -566,8 +449,8 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
 
     // Reflection an transmission probabilities
     auto HdotV                    = CuDiff::dot(wi, halfway);
-    auto F                        = fresnel_schlick(F0, HdotV);
-    auto reflection_probability   = CuDiff::dot(F, glm::vec3(1.0f / 3.0f));
+    auto F                        = atcg::fresnel_schlick(F0, HdotV);
+    auto reflection_probability   = F;
     auto transmission_probability = 1.0f - reflection_probability;
     if(glm::dot(transmitted_ray_dir.val(), transmitted_ray_dir.val()) < 1e-6f)
     {
@@ -582,8 +465,9 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
     CuDiff::Dual<5, float> HdotL;
     if(rng.next1d() < reflection_probability)
     {
-        wo                 = reflected_ray_dir;
-        auto light_dir_pdf = halfway_pdf * warp_normal_to_reflected_direction_pdf(wo, halfway) * reflection_probability;
+        wo = reflected_ray_dir;
+        auto light_dir_pdf =
+            halfway_pdf * atcg::warp_normal_to_reflected_direction_pdf(wo, halfway) * reflection_probability;
 
         NdotL = CuDiff::dot(interface_normal, wo);
         HdotL = CuDiff::dot(halfway, wo);
@@ -593,7 +477,7 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
         wo    = transmitted_ray_dir;
         HdotL = CuDiff::dot(halfway, wo);
         auto light_dir_pdf =
-            halfway_pdf * warp_normal_to_refracted_direction_pdf(HdotV, HdotL, eta) * transmission_probability;
+            halfway_pdf * atcg::warp_normal_to_refracted_direction_pdf(HdotV, HdotL, eta) * transmission_probability;
 
         NdotL = -CuDiff::dot(interface_normal, wo);
     }
@@ -606,7 +490,7 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
     float NdotV = glm::abs(glm::dot(interface_normal, wi));
     auto NdotH  = CuDiff::dot(halfway, interface_normal);
 
-    auto G           = G_SmithJointGGX(NdotL, NdotV, roughness);
+    auto G           = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
     auto bsdf_weight = reflectance_color * G * CuDiff::abs(HdotL) / (NdotV * NdotH);
     auto out_dir     = wo;
 

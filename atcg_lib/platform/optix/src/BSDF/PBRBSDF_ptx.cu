@@ -222,53 +222,6 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_pbrbsdf(const
     return detail::evalPBR(si, outgoing_dir, diffuse_color, metallic_color, roughness, metallic);
 }
 
-template<int N>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE CuDiff::Dual<N, glm::vec3>
-warp_square_to_hemisphere_ggx(const glm::vec2& uv, CuDiff::Dual<N, float> roughness)
-{
-    // GGX NDF sampling
-    auto cos_theta = CuDiff::sqrt(CuDiff::max(1e-12f, (1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x)));
-    auto sin_theta = CuDiff::sqrt(CuDiff::max(1e-12f, 1.0f - cos_theta * cos_theta));
-    float phi      = 2.0f * glm::pi<float>() * uv.y;
-
-    auto x = sin_theta * glm::cos(phi);
-    auto y = sin_theta * glm::sin(phi);
-    auto z = cos_theta;
-
-    auto res = CuDiff::wrap(x, y, z);
-
-    return res;
-}
-
-template<int N>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE CuDiff::Dual<N, float>
-warp_normal_to_reflected_direction_pdf(const CuDiff::Dual<N, glm::vec3>& reflected_dir,
-                                       const CuDiff::Dual<N, glm::vec3>& normal)
-{
-    return 1.0f / CuDiff::abs(4.0f * CuDiff::dot(reflected_dir, normal));
-}
-
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_ggx_derivative(const glm::vec2& uv,
-                                                                                      const float roughness)
-{
-    float u      = uv.x;
-    float v      = uv.y;
-    float alpha  = roughness;
-    float alpha2 = alpha * alpha;
-    float phi    = glm::two_pi<float>() * v;
-
-    float a  = alpha * u * (u - 1.0f);
-    float b  = u * (alpha2 - 1.0f) + 1.0f;
-    float b2 = b * b;
-    float c  = glm::sqrt((alpha2 * u) / b);
-
-    float x = -(a * glm::cos(phi)) / (c * b2);
-    float y = -(a * glm::sin(phi)) / (c * b2);
-    float z = -(alpha * u * glm::sqrt(-(u - 1.0f) / b)) / b;
-
-    return glm::vec3(x, y, z);
-}
-
 extern "C" __device__ atcg::BSDFDualSamplingResult
 __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
                                           const atcg::SampledWavelengths& wavelengths,
@@ -325,7 +278,7 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
     else
     {
         // Sample light direction from specular bsdf
-        auto local_halfway = warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+        auto local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
         // Transform local halfway vector from tangent space to world space
         auto halfway   = local_frame.toWorld(local_halfway);
         result.out_dir = CuDiff::reflect(si.incoming_direction, halfway);
@@ -367,7 +320,7 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
         specular_bsdf = NDF * V * F;
 
         auto halfway_pdf             = NDF * NdotH;
-        auto halfway_to_outgoing_pdf = warp_normal_to_reflected_direction_pdf(result.out_dir, halfway);
+        auto halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(result.out_dir, halfway);
         specular_pdf                 = halfway_pdf * halfway_to_outgoing_pdf;
     }
 
@@ -646,7 +599,7 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         else
         {
             // Sample light direction from specular bsdf
-            auto local_halfway = warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+            auto local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
             // Transform local halfway vector from tangent space to world space
             auto halfway = local_frame.toWorld(local_halfway);
             out_dir      = CuDiff::reflect(si.incoming_direction, halfway);

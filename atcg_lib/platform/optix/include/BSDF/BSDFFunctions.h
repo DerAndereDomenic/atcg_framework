@@ -47,11 +47,12 @@ V_SmithGGX(const NdotLType& NdotL, const NdotVType& NdotV, const alphaType& alph
     return 0.5f / (lambdaV + lambdaL + eps);
 }
 
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float G_SmithJointGGX(float NdotL, float NdotV, float roughness)
+template<typename NdotLType, typename NdotVType, typename roughnessType>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto G_SmithJointGGX(NdotLType NdotL, NdotVType NdotV, roughnessType roughness)
 {
-    float a2      = roughness * roughness;
-    float LambdaL = 0.5f * (-1 + glm::sqrt(1.0f + a2 * (1 - NdotL * NdotL) / (NdotL * NdotL)));
-    float LambdaV = 0.5f * (-1 + glm::sqrt(1.0f + a2 * (1 - NdotV * NdotV) / (NdotV * NdotV)));
+    auto a2      = roughness * roughness;
+    auto LambdaL = 0.5f * (-1.0f + CuDiff::sqrt(1.0f + a2 * (1.0f - NdotL * NdotL) / (NdotL * NdotL)));
+    auto LambdaV = 0.5f * (-1.0f + CuDiff::sqrt(1.0f + a2 * (1.0f - NdotV * NdotV) / (NdotV * NdotV)));
     return 1.0f / (1.0f + LambdaL + LambdaV);
 }
 }

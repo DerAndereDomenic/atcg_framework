@@ -12,18 +12,21 @@ namespace atcg
  *
  * @return The sampled direction
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_ggx(const glm::vec2& uv, float roughness)
+template<typename T>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto warp_square_to_hemisphere_ggx(const glm::vec2& uv, const T& roughness)
 {
     // GGX NDF sampling
-    float cos_theta = glm::sqrt((1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x));
-    float sin_theta = glm::sqrt(glm::max(0.0f, 1.0f - cos_theta * cos_theta));
-    float phi       = 2.0f * glm::pi<float>() * uv.y;
+    auto cos_theta = CuDiff::sqrt(CuDiff::max(1e-12f, (1.0f - uv.x) / (1.0f + (roughness * roughness - 1.0f) * uv.x)));
+    auto sin_theta = CuDiff::sqrt(CuDiff::max(1e-12f, 1.0f - cos_theta * cos_theta));
+    float phi      = 2.0f * glm::pi<float>() * uv.y;
 
-    float x = sin_theta * glm::cos(phi);
-    float y = sin_theta * glm::sin(phi);
-    float z = cos_theta;
+    auto x = sin_theta * glm::cos(phi);
+    auto y = sin_theta * glm::sin(phi);
+    auto z = cos_theta;
 
-    return glm::vec3(x, y, z);
+    auto res = CuDiff::wrap(x, y, z);
+
+    return res;
 }
 
 /**
@@ -34,9 +37,12 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_ggx(const
  *
  * @return The pdf result
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_square_to_hemisphere_ggx_pdf(const glm::vec3& result, float roughness)
+template<typename resultType, typename roughnessType>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto warp_square_to_hemisphere_ggx_pdf(const resultType& result,
+                                                                          roughnessType roughness)
 {
-    return D_GGX(result.z, roughness) * glm::max(0.0f, result.z);
+    auto [rx, ry, rz] = CuDiff::unwrap(result);
+    return D_GGX(rz, roughness) * CuDiff::max(0.0f, rz);
 }
 
 /**
@@ -81,11 +87,12 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_square_to_hemisphere_cosine_pdf(co
  *
  * @return The pdf
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float
-warp_normal_to_refracted_direction_pdf(const float HdotV, const float HdotL, const float eta)
+template<typename HdotVType, typename HdotLType, typename etaType>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto
+warp_normal_to_refracted_direction_pdf(const HdotVType HdotV, const HdotLType HdotL, const etaType eta)
 {
-    float denom = (HdotL + eta * HdotV);
-    return eta * eta * glm::abs(HdotV) / (denom * denom);
+    auto denom = (HdotL + eta * HdotV);
+    return eta * eta * CuDiff::abs(HdotV) / (denom * denom);
 }
 
 /**
@@ -96,9 +103,9 @@ warp_normal_to_refracted_direction_pdf(const float HdotV, const float HdotL, con
  *
  * @return The pdf
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_normal_to_reflected_direction_pdf(const glm::vec3& reflected_dir,
-                                                                                const glm::vec3& normal)
+template<typename T, typename U>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto warp_normal_to_reflected_direction_pdf(const T& reflected_dir, const U& normal)
 {
-    return 1 / glm::abs(4 * glm::dot(reflected_dir, normal));
+    return 1.0f / CuDiff::abs(4.0f * CuDiff::dot(reflected_dir, normal));
 }
 }    // namespace atcg
