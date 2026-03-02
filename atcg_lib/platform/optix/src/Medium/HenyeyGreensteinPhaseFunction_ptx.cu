@@ -8,6 +8,8 @@
 #include <Medium/PhaseFunctionVPtrTable.cuh>
 #include <Medium/HenyeyGreensteinPhaseFunctionData.cuh>
 
+#include <DataStructure/Frame.h>
+
 namespace detail
 {
 
@@ -89,11 +91,11 @@ __direct_callable__sample_hgphase(const atcg::MediumInteraction& interaction, at
     const atcg::HenyeyGreensteinPhaseFunctionData* sbt_data =
         *reinterpret_cast<const atcg::HenyeyGreensteinPhaseFunctionData**>(optixGetSbtDataPointer());
 
-    glm::mat3 local_frame            = atcg::Math::compute_local_frame(interaction.incoming_direction);
+    atcg::Frame local_frame          = atcg::Frame(interaction.incoming_direction);
     glm::vec3 local_outgoing_ray_dir = detail::warp_square_to_sphere_henyey_greenstein(rng.next2d(), sbt_data->g);
 
     atcg::PhaseFunctionSamplingResult result;
-    result.outgoing_ray_dir = local_frame * local_outgoing_ray_dir;
+    result.outgoing_ray_dir = local_frame.toWorld(local_outgoing_ray_dir);
     result.sampling_pdf     = detail::warp_square_to_sphere_henyey_greenstein_pdf(local_outgoing_ray_dir, sbt_data->g);
     // result.phase_function_weight = glm::vec3(henyey_greenstein_phase_function(local_outgoing_ray_dir.z, sbt_data->g))
     // / result.sampling_pdf;

@@ -108,15 +108,6 @@ template<typename T>
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE T linearDepth2ndc(const T& linear_depth, const T& n, const T& f);
 
 /**
- * @brief Compute an orthoganal frame for a given normal directions
- *
- * @param localZ The local Z direction
- *
- * @return Orthonormal matrix (X|Y|Z)
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::mat3 compute_local_frame(const glm::vec3& localZ);
-
-/**
  * @brief Binary search.
  *
  * @tparam T The type

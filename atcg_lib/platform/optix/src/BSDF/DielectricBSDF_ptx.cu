@@ -8,8 +8,11 @@
 #include <Core/SurfaceInteraction.h>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <BSDF/DielectricBSDFData.cuh>
+#include <BSDF/BSDFFunctions.h>
+#include <BSDF/Sampling.h>
 
 #include <CuDiff/ext/glm.h>
+#include <DataStructure/Frame.h>
 
 namespace detail
 {
@@ -38,12 +41,12 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
     glm::vec3 interface_normal = outsidein ? si.normal : -si.normal;
     float eta                  = outsidein ? 1.0f / ior : ior;
 
-    glm::mat3 local_frame = atcg::Math::compute_local_frame(interface_normal);
+    atcg::Frame local_frame = atcg::Frame(interface_normal);
 
     glm::vec3 local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
     float halfway_pdf       = atcg::warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
     // Transform local halfway vector from tangent space to world space
-    glm::vec3 halfway = local_frame * local_halfway;
+    glm::vec3 halfway = local_frame.toWorld(local_halfway);
 
     // Compute outgoing ray directions
     glm::vec3 transmitted_ray_dir = glm::refract(-wi, halfway, eta);
