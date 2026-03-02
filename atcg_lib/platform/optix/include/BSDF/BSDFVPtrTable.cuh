@@ -127,10 +127,11 @@ struct BSDFVPtrTable
  *
  * @return The pdf value
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float D_GGX(const float NdotH, const float roughness)
+template<typename NdotHType, typename roughnessType>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto D_GGX(const NdotHType& NdotH, const roughnessType& roughness)
 {
-    float a2 = roughness * roughness;
-    float d  = (NdotH * a2 - NdotH) * NdotH + 1.0f;
+    auto a2 = roughness * roughness;
+    auto d  = (NdotH * a2 - NdotH) * NdotH + 1.0f;
     return a2 / (glm::pi<float>() * d * d + 1e-5f);
 }
 
@@ -240,45 +241,21 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_normal_to_reflected_direction_pdf(
  *
  * @return Reflectance
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE ATCG_HOST_DEVICE float fresnel_schlick(const float F0, const float VdotH)
+template<typename F0Type, typename VdotHType>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto fresnel_schlick(const F0Type& F0, const VdotHType& VdotH)
 {
-    return F0 + (1.0f - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
+    return F0 +
+           (F0Type(CuDiff::dual_value_type_t<F0Type>(1.0f)) - F0) * CuDiff::pow(CuDiff::max(0.0f, 1.0f - VdotH), 5.0f);
 }
 
-/**
- * @brief Fresnel schlick approximation
- *
- * @param F0 The base reflectance at normal incidence
- * @param VdotH Angle between viewing direction and halfway vector
- *
- * @return Reflectance
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 fresnel_schlick(const glm::vec3& F0, const float VdotH)
+template<typename NdotLType, typename NdotVType, typename alphaType>
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto
+V_SmithGGX(const NdotLType& NdotL, const NdotVType& NdotV, const alphaType& alpha, float eps = 1e-8f)
 {
-    return F0 + (glm::vec3(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
-}
-
-/**
- * @brief Fresnel schlick approximation
- *
- * @param F0 The base reflectance at normal incidence
- * @param VdotH Angle between viewing direction and halfway vector
- *
- * @return Reflectance
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::SampledSpectrum fresnel_schlick(const atcg::SampledSpectrum& F0,
-                                                                         const float VdotH)
-{
-    return F0 + (atcg::SampledSpectrum(1.0f) - F0) * glm::pow(glm::max(0.0f, 1.0f - VdotH), 5.0f);
-}
-
-template<typename T>
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE T V_SmithGGX(T NdotL, T NdotV, T alpha, T eps = 1e-8f)
-{
-    T a2      = alpha * alpha;
-    T lambdaV = NdotL * glm::sqrt(NdotV * NdotV * (T(1) - a2) + a2);
-    T lambdaL = NdotV * glm::sqrt(NdotL * NdotL * (T(1) - a2) + a2);
-    return T(0.5) / (lambdaV + lambdaL + eps);
+    auto a2      = alpha * alpha;
+    auto lambdaV = NdotL * CuDiff::sqrt(NdotV * NdotV * (1.0f - a2) + a2);
+    auto lambdaL = NdotV * CuDiff::sqrt(NdotL * NdotL * (1.0f - a2) + a2);
+    return 0.5f / (lambdaV + lambdaL + eps);
 }
 
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE float G_SmithJointGGX(float NdotL, float NdotV, float roughness)
