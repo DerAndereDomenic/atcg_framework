@@ -208,7 +208,7 @@ ATCG_INLINE ATCG_HOST_DEVICE void TextureWriter<T>::write(const T& val, const gl
 }
 
 template<typename T>
-ATCG_INLINE ATCG_HOST_DEVICE void TextureWriter<T>::writeAtomicAdd(const T& val, const glm::ivec2& texel)
+ATCG_INLINE ATCG_DEVICE void TextureWriter<T>::writeAtomicAdd(const T& val, const glm::ivec2& texel)
 {
     size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
 
@@ -239,18 +239,7 @@ ATCG_INLINE ATCG_HOST_DEVICE void TextureWriter<T>::writeAtomicAdd(const T& val,
     }
     else
     {
-        uint8_t* pixels = reinterpret_cast<uint8_t*>(_data);
-        if constexpr(std::is_same_v<T, float>)
-        {
-            atomicAdd(pixels + index, static_cast<uint8_t>(glm::clamp(val, 0.0f, 1.0f) * 255.0f));
-        }
-        else
-        {
-            for(uint32_t i = 0; i < vec_traits<T>::dim; i++)
-            {
-                atomicAdd(pixels + index + i, static_cast<uint8_t>(glm::clamp(val[i], 0.0f, 1.0f) * 255.0f));
-            }
-        }
+        printf("Atomic add not supported for normalized uint8_t textures\n");
     }
 }
 
