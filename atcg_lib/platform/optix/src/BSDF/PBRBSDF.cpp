@@ -22,10 +22,6 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
     _roughness_texture       = material->getRoughnessTexture()->getData(atcg::GPU);
     _fixed_roughness_texture = _roughness_texture.clone();
 
-    float zero = 0.0f;
-    _roughness_bsdf.upload(&zero);
-    _roughness_sampling.upload(&zero);
-
     PBRBSDFData data;
 
     data.diffuse_texture =
@@ -36,8 +32,6 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
         TextureSampler<float>(_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
     data.fixed_roughness_texture =
         TextureSampler<float>(_fixed_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
-    data.roughness_bsdf     = _roughness_bsdf.get();
-    data.roughness_sampling = _roughness_sampling.get();
 
     _flags = BSDFComponentType::GlossyReflection | BSDFComponentType::DiffuseReflection;
 
@@ -157,24 +151,23 @@ void PBRBSDF::onImGuiRender()
 
     if(ImGui::Button("Optimize roughness"))
     {
-        torch::cuda::device_synchronize();
-        torch::cuda::stream_synchronize(at::cuda::getCurrentCUDAStream());
         atcg::TextureSpecification spec_float;
-        spec_float.width   = _optimization_width;
-        spec_float.height  = _optimization_height;
-        spec_float.format  = TextureFormat::RFLOAT;
-        _roughness_texture = torch::full({spec_float.height, spec_float.height, 1},
+        spec_float.width         = _optimization_width;
+        spec_float.height        = _optimization_height;
+        spec_float.format        = TextureFormat::RFLOAT;
+        _roughness_texture       = torch::full({spec_float.height, spec_float.height, 1},
                                          0.8f,
                                          TensorOptions::floatDeviceOptions().requires_grad(true));    // TODO
-        _fixed_roughness_texture.copy_(_roughness_texture);
+        _fixed_roughness_texture = _roughness_texture.clone();
 
         _roughness_texture_grad = torch::zeros_like(_roughness_texture);
 
         PBRBSDFData data;
         _bsdf_data_buffer.download(&data);
 
-        data.roughness_texture = TextureSampler<float>(_roughness_texture.data_ptr(), spec_float);
-        data.roughness_grad    = TextureSampler<float>(_roughness_texture_grad.data_ptr(), spec_float);
+        data.roughness_texture       = TextureSampler<float>(_roughness_texture.data_ptr(), spec_float);
+        data.roughness_grad          = TextureSampler<float>(_roughness_texture_grad.data_ptr(), spec_float);
+        data.fixed_roughness_texture = TextureSampler<float>(_fixed_roughness_texture.data_ptr(), spec_float);
 
         _roughness_optimized = atcg::Texture2D::create(spec_float);
 
@@ -266,65 +259,43 @@ void PBRBSDF::onImGuiRender()
         _roughness_grad->setData(
             pos_neg(_roughness_texture.grad().defined() ? _roughness_texture.grad() : _roughness_texture_grad));
 
-        float roughness = _roughness_texture.cpu().item<float>();
-        float roughness_grad =
-            _roughness_texture.grad().defined() ? _roughness_texture.grad().cpu().item<float>() : 0.0f;
-
-        float roughness_bsdf;
-        _roughness_bsdf.download(&roughness_bsdf);
-        float roughness_sampling;
-        _roughness_sampling.download(&roughness_sampling);
-
-        static int iteration_count = 0;
-        time_collection.addSample((float)iteration_count);
-        roughness_collection.addSample(roughness);
-        roughness_grad_collection.addSample(roughness_grad);
-        roughness_bsdf_collection.addSample(roughness_bsdf);
-        roughness_sampling_collection.addSample(roughness_sampling);
-        iteration_count++;
-
-        float zero = 0.0f;
-        _roughness_bsdf.upload(&zero);
-        _roughness_sampling.upload(&zero);
-
-        if(ImPlot::BeginPlot("Roughness"))
+        if(_roughness_texture.numel() == 1)
         {
-            ImPlot::SetupAxes("Iteration", "Roughness", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
-            ImPlot::PlotLine("Roughness",
-                             time_collection.get(),
-                             roughness_collection.get(),
-                             roughness_collection.count(),
-                             0,
-                             roughness_collection.index(),
-                             sizeof(float));
-            ImPlot::EndPlot();
-        }
+            float roughness = _roughness_texture.cpu().item<float>();
+            float roughness_grad =
+                _roughness_texture.grad().defined() ? _roughness_texture.grad().cpu().item<float>() : 0.0f;
 
-        if(ImPlot::BeginPlot("Roughness Gradient"))
-        {
-            ImPlot::SetupAxes("Iteration", "Roughness Gradient", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
-            ImPlot::PlotLine("Roughness Gradient",
-                             time_collection.get(),
-                             roughness_grad_collection.get(),
-                             roughness_grad_collection.count(),
-                             0,
-                             roughness_grad_collection.index(),
-                             sizeof(float));
-            ImPlot::PlotLine("Roughness BSDF Gradient",
-                             time_collection.get(),
-                             roughness_bsdf_collection.get(),
-                             roughness_bsdf_collection.count(),
-                             0,
-                             roughness_bsdf_collection.index(),
-                             sizeof(float));
-            ImPlot::PlotLine("Roughness Sampling Gradient",
-                             time_collection.get(),
-                             roughness_sampling_collection.get(),
-                             roughness_sampling_collection.count(),
-                             0,
-                             roughness_sampling_collection.index(),
-                             sizeof(float));
-            ImPlot::EndPlot();
+            static int iteration_count = 0;
+            time_collection.addSample((float)iteration_count);
+            roughness_collection.addSample(roughness);
+            roughness_grad_collection.addSample(roughness_grad);
+            iteration_count++;
+
+            if(ImPlot::BeginPlot("Roughness"))
+            {
+                ImPlot::SetupAxes("Iteration", "Roughness", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                ImPlot::PlotLine("Roughness",
+                                 time_collection.get(),
+                                 roughness_collection.get(),
+                                 roughness_collection.count(),
+                                 0,
+                                 roughness_collection.index(),
+                                 sizeof(float));
+                ImPlot::EndPlot();
+            }
+
+            if(ImPlot::BeginPlot("Roughness Gradient"))
+            {
+                ImPlot::SetupAxes("Iteration", "Roughness Gradient", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                ImPlot::PlotLine("Roughness Gradient",
+                                 time_collection.get(),
+                                 roughness_grad_collection.get(),
+                                 roughness_grad_collection.count(),
+                                 0,
+                                 roughness_grad_collection.index(),
+                                 sizeof(float));
+                ImPlot::EndPlot();
+            }
         }
 
         ImGui::Text("Roughness");

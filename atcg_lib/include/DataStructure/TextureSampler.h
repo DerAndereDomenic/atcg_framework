@@ -47,10 +47,8 @@ public:
 
     TextureSampler(void* data, const TextureSpecification& spec);
 
-    ATCG_HOST_DEVICE T read(const glm::vec2& uv) const;
-
-    template<int N>
-    ATCG_HOST_DEVICE CuDiff::Dual<N, T> read(const CuDiff::Dual<N, glm::vec2>& uv) const;
+    template<typename uv_t>
+    ATCG_HOST_DEVICE auto read(const uv_t& uv) const;
 
     ATCG_HOST_DEVICE T texel_fetch(const glm::ivec2& texel) const;
 
@@ -62,23 +60,18 @@ public:
 
     ATCG_INLINE ATCG_HOST_DEVICE const TextureSpecification getSpecification() const { return _spec; }
 
-    ATCG_HOST_DEVICE glm::vec2 clamp_uv(const glm::vec2& uv) const;
-
-    template<int N>
-    ATCG_HOST_DEVICE CuDiff::Dual<N, glm::vec2> clamp_uv(const CuDiff::Dual<N, glm::vec2>& uv) const;
+    template<typename uv_t>
+    ATCG_HOST_DEVICE uv_t clamp_uv(const uv_t& uv) const;
 
 private:
-    ATCG_HOST_DEVICE T _read_interpolated(const glm::vec2& uv) const;
+    template<typename uv_t>
+    ATCG_HOST_DEVICE auto _read_interpolated(const uv_t& uv) const;
 
-    template<int N>
-    ATCG_HOST_DEVICE CuDiff::Dual<N, T> _read_interpolated(const CuDiff::Dual<N, glm::vec2>& uv) const;
+    template<typename uv_t>
+    ATCG_HOST_DEVICE auto _read_nearest(const uv_t& uv) const;
 
-    ATCG_HOST_DEVICE T _read_nearest(const glm::vec2& uv) const;
-
-    ATCG_HOST_DEVICE T _read_linear(const glm::vec2& uv) const;
-
-    template<int N>
-    ATCG_HOST_DEVICE CuDiff::Dual<N, T> _read_linear(const CuDiff::Dual<N, glm::vec2>& uv) const;
+    template<typename uv_t>
+    ATCG_HOST_DEVICE auto _read_linear(const uv_t& uv) const;
 
 private:
     void* _data                = nullptr;

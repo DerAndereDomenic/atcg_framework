@@ -12,16 +12,8 @@ TextureSampler<T>::TextureSampler(void* data, const TextureSpecification& spec) 
 }
 
 template<typename T>
-ATCG_INLINE ATCG_HOST_DEVICE T TextureSampler<T>::read(const glm::vec2& uv) const
-{
-    glm::vec2 _uv = clamp_uv(uv);
-    T x           = _read_interpolated(_uv);
-    return x;
-}
-
-template<typename T>
-template<int N>
-ATCG_INLINE ATCG_HOST_DEVICE CuDiff::Dual<N, T> TextureSampler<T>::read(const CuDiff::Dual<N, glm::vec2>& uv) const
+template<typename uv_t>
+ATCG_INLINE ATCG_HOST_DEVICE auto TextureSampler<T>::read(const uv_t& uv) const
 {
     auto _uv = clamp_uv(uv);
     auto x   = _read_interpolated(_uv);
@@ -132,39 +124,40 @@ ATCG_HOST_DEVICE void* TextureSampler<T>::getTexelPtr(const glm::ivec2& texel) c
 }
 
 template<typename T>
-ATCG_INLINE ATCG_HOST_DEVICE glm::vec2 TextureSampler<T>::clamp_uv(const glm::vec2& uv) const
+template<typename uv_t>
+ATCG_INLINE ATCG_HOST_DEVICE uv_t TextureSampler<T>::clamp_uv(const uv_t& uv) const
 {
-    switch(_spec.sampler.wrap_mode)
+    if constexpr(CuDiff::is_dual_v<uv_t>)
     {
-        case TextureWrapMode::BORDER:
-        {
-        };
-        // break; Not implemented yet
-        case TextureWrapMode::CLAMP_TO_EDGE:
-        {
-            return glm::vec2(glm::clamp(uv.x, 0.0f, 1.0f), glm::clamp(uv.y, 0.0f, 1.0f));
-        };
-        break;
-        case TextureWrapMode::REPEAT:
-        {
-            return glm::abs(glm::fract(uv));
-        };
-        break;
+        return CuDiff::clamp(uv, CuDiff::dual_value_type_t<uv_t>(0), CuDiff::dual_value_type_t<uv_t>(1));
     }
+    else
+    {
+        switch(_spec.sampler.wrap_mode)
+        {
+            case TextureWrapMode::BORDER:
+            {
+            };
+            // break; Not implemented yet
+            case TextureWrapMode::CLAMP_TO_EDGE:
+            {
+                return glm::vec2(glm::clamp(uv.x, 0.0f, 1.0f), glm::clamp(uv.y, 0.0f, 1.0f));
+            };
+            break;
+            case TextureWrapMode::REPEAT:
+            {
+                return glm::abs(glm::fract(uv));
+            };
+            break;
+        }
 
-    return uv;
+        return uv;
+    }
 }
 
 template<typename T>
-template<int N>
-ATCG_INLINE ATCG_HOST_DEVICE CuDiff::Dual<N, glm::vec2>
-TextureSampler<T>::clamp_uv(const CuDiff::Dual<N, glm::vec2>& uv) const
-{
-    return CuDiff::clamp(uv, glm::vec2(0), glm::vec2(1));
-}
-
-template<typename T>
-ATCG_HOST_DEVICE T TextureSampler<T>::_read_interpolated(const glm::vec2& uv) const
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_interpolated(const uv_t& uv) const
 {
     switch(_spec.sampler.filter_mode)
     {
@@ -181,65 +174,45 @@ ATCG_HOST_DEVICE T TextureSampler<T>::_read_interpolated(const glm::vec2& uv) co
         break;
     }
 
-    return T(0);
+    return decltype(_read_linear(uv))(T(0));
 }
 
 template<typename T>
-template<int N>
-ATCG_HOST_DEVICE CuDiff::Dual<N, T> TextureSampler<T>::_read_interpolated(const CuDiff::Dual<N, glm::vec2>& uv) const
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_nearest(const uv_t& uv) const
 {
-    return _read_linear(uv);
+    auto [uv_x, uv_y] = CuDiff::unwrap(uv);
+    uint32_t texel_x  = (uint32_t)(CuDiff::value_of(uv_x) * _spec.width);
+    uint32_t texel_y  = (uint32_t)(CuDiff::value_of(uv_y) * _spec.height);
+
+    texel_x = CuDiff::clamp(texel_x, uint32_t(0), uint32_t(_spec.width - 1));
+    texel_y = CuDiff::clamp(texel_y, uint32_t(0), uint32_t(_spec.height - 1));
+
+    auto texel = texel_fetch(glm::ivec2(texel_x, texel_y));
+    if constexpr(CuDiff::is_dual_v<uv_t>)
+    {
+        using R  = CuDiff::Dual<CuDiff::dual_component_count<uv_t>::num_variables, T>;
+        R result = R(texel);
+        // Nearest neighbor sampling is not differentiable, so we set the derivatives to 0
+        return result;
+    }
+    else
+    {
+        return texel;
+    }
 }
 
 template<typename T>
-ATCG_HOST_DEVICE T TextureSampler<T>::_read_nearest(const glm::vec2& uv) const
-{
-    uint32_t texel_x = (uint32_t)(uv.x * _spec.width);
-    uint32_t texel_y = (uint32_t)(uv.y * _spec.height);
-
-    texel_x = glm::clamp(texel_x, 0u, _spec.width - 1u);
-    texel_y = glm::clamp(texel_y, 0u, _spec.height - 1u);
-
-    return texel_fetch(glm::ivec2(texel_x, texel_y));
-}
-
-template<typename T>
-ATCG_HOST_DEVICE T TextureSampler<T>::_read_linear(const glm::vec2& uv) const
-{
-    float fx = uv.x * (_spec.width - 1);
-    float fy = uv.y * (_spec.height - 1);
-
-    int x0 = static_cast<int>(glm::floor(fx));
-    int y0 = static_cast<int>(glm::floor(fy));
-    int x1 = glm::min(x0 + 1, (int)_spec.width - 1);    // TODO: wrap
-    int y1 = glm::min(y0 + 1, (int)_spec.height - 1);
-
-    float tx = fx - x0;
-    float ty = fy - y0;
-
-    T c00 = texel_fetch(glm::ivec2(x0, y0));
-    T c10 = texel_fetch(glm::ivec2(x1, y0));
-    T c01 = texel_fetch(glm::ivec2(x0, y1));
-    T c11 = texel_fetch(glm::ivec2(x1, y1));
-
-    T cx0 = glm::mix(c00, c10, tx);
-    T cx1 = glm::mix(c01, c11, tx);
-    T res = glm::mix(cx0, cx1, ty);
-
-    return res;
-}
-
-template<typename T>
-template<int N>
-ATCG_HOST_DEVICE CuDiff::Dual<N, T> TextureSampler<T>::_read_linear(const CuDiff::Dual<N, glm::vec2>& uv) const
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_linear(const uv_t& uv) const
 {
     auto [ux, uy] = CuDiff::unwrap(uv);
 
     auto fx = ux * (_spec.width - 1);
     auto fy = uy * (_spec.height - 1);
 
-    int x0 = static_cast<int>(glm::floor(fx.val()));
-    int y0 = static_cast<int>(glm::floor(fy.val()));
+    int x0 = static_cast<int>(glm::floor(CuDiff::value_of(fx)));
+    int y0 = static_cast<int>(glm::floor(CuDiff::value_of(fy)));
     int x1 = glm::min(x0 + 1, (int)_spec.width - 1);    // TODO: wrap
     int y1 = glm::min(y0 + 1, (int)_spec.height - 1);
 

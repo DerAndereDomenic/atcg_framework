@@ -162,7 +162,7 @@ __direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si,
                                                                    sbt_data->world_to_local,
                                                                    rng);
 
-    glm::vec3 emissive_color = sbt_data->emissive_texture.read(result.uvs);
+    glm::vec3 emissive_color = sbt_data->emissive_texture.read(glm::vec2(result.uvs));
 
     result.radiance_weight_at_receiver =
         atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling * emissive_color, wavelengths) / result.sampling_pdf;
@@ -242,7 +242,7 @@ __direct_callable__sample_forward_meshemitter(const atcg::DualSurfaceInteraction
     glm::vec3 light_position = glm::vec3(local_to_world * glm::vec4(local_light_position, 1));
 
     // Compute UVS
-    glm::vec3 uv = (1.0f - triangle_barys.x - triangle_barys.y) * UV0 + triangle_barys.x * UV1 + triangle_barys.y * UV2;
+    glm::vec2 uv = (1.0f - triangle_barys.x - triangle_barys.y) * UV0 + triangle_barys.x * UV1 + triangle_barys.y * UV2;
 
     // Compute local normal
     glm::vec3 local_light_normal = glm::cross(P1 - P0, P2 - P0);
