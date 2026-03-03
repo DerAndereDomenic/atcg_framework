@@ -78,7 +78,7 @@ private:
 };
 
 template<typename T>
-class TextureWriter
+class TextureWriter : public TextureInterface<T>
 {
 public:
     TextureWriter() = default;
