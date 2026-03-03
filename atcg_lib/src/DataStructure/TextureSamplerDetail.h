@@ -4,8 +4,23 @@ namespace atcg
 {
 
 template<typename T>
-TextureSampler<T>::TextureSampler(void* data, const TextureSpecification& spec) : _data(data),
-                                                                                  _spec(spec)
+ATCG_HOST_DEVICE void* TextureInterface<T>::getTexelPtr(const glm::ivec2& texel) const
+{
+    size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
+    if(_spec.isFloat() || _spec.isInt())
+    {
+        float* pixels = reinterpret_cast<float*>(_data);
+        return (void*)&pixels[index];
+    }
+    else
+    {
+        uint8_t* pixels = reinterpret_cast<uint8_t*>(_data);
+        return (void*)&pixels[index];
+    }
+}
+
+template<typename T>
+TextureSampler<T>::TextureSampler(void* data, const TextureSpecification& spec) : TextureInterface<T>(data, spec)
 {
 }
 
@@ -54,69 +69,6 @@ ATCG_INLINE ATCG_HOST_DEVICE T TextureSampler<T>::texel_fetch(const glm::ivec2& 
             }
             return result;
         }
-    }
-}
-
-template<typename T>
-ATCG_INLINE ATCG_HOST_DEVICE void TextureSampler<T>::write(const T& val, const glm::ivec2& texel)
-{
-    size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
-
-    if(_spec.isFloat())
-    {
-        float* pixels = reinterpret_cast<float*>(_data);
-        if constexpr(std::is_same_v<T, float>)
-        {
-            pixels[index] = val;
-        }
-        else
-        {
-            for(uint32_t i = 0; i < vec_traits<T>::dim; i++)
-                pixels[index + i] = val[i];
-        }
-    }
-    else if(_spec.isInt())
-    {
-        if constexpr(std::is_same_v<T, int32_t>)
-        {
-            int32_t* pixels = reinterpret_cast<int32_t*>(_data);
-            pixels[index]   = val;
-        }
-        else
-        {
-            static_assert(!(std::is_same_v<T, int32_t>), "Can only write integer as int32_t");
-        }
-    }
-    else
-    {
-        uint8_t* pixels = reinterpret_cast<uint8_t*>(_data);
-        if constexpr(std::is_same_v<T, float>)
-        {
-            pixels[index] = static_cast<uint8_t>(glm::clamp(val, 0.0f, 1.0f) * 255.0f);
-        }
-        else
-        {
-            for(uint32_t i = 0; i < vec_traits<T>::dim; i++)
-            {
-                pixels[index + i] = static_cast<uint8_t>(glm::clamp(val[i], 0.0f, 1.0f) * 255.0f);
-            }
-        }
-    }
-}
-
-template<typename T>
-ATCG_HOST_DEVICE void* TextureSampler<T>::getTexelPtr(const glm::ivec2& texel) const
-{
-    size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
-    if(_spec.isFloat() || _spec.isInt())
-    {
-        float* pixels = reinterpret_cast<float*>(_data);
-        return (void*)&pixels[index];
-    }
-    else
-    {
-        uint8_t* pixels = reinterpret_cast<uint8_t*>(_data);
-        return (void*)&pixels[index];
     }
 }
 
@@ -201,6 +153,105 @@ ATCG_HOST_DEVICE T TextureSampler<T>::_read_linear(const glm::vec2& uv) const
     T res = glm::mix(cx0, cx1, ty);
 
     return res;
+}
+
+template<typename T>
+TextureWriter<T>::TextureWriter(void* data, const TextureSpecification& spec) : TextureInterface<T>(data, spec)
+{
+}
+
+template<typename T>
+ATCG_INLINE ATCG_HOST_DEVICE void TextureWriter<T>::write(const T& val, const glm::ivec2& texel)
+{
+    size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
+
+    if(_spec.isFloat())
+    {
+        float* pixels = reinterpret_cast<float*>(_data);
+        if constexpr(std::is_same_v<T, float>)
+        {
+            pixels[index] = val;
+        }
+        else
+        {
+            for(uint32_t i = 0; i < vec_traits<T>::dim; i++)
+                pixels[index + i] = val[i];
+        }
+    }
+    else if(_spec.isInt())
+    {
+        if constexpr(std::is_same_v<T, int32_t>)
+        {
+            int32_t* pixels = reinterpret_cast<int32_t*>(_data);
+            pixels[index]   = val;
+        }
+        else
+        {
+            static_assert(!(std::is_same_v<T, int32_t>), "Can only write integer as int32_t");
+        }
+    }
+    else
+    {
+        uint8_t* pixels = reinterpret_cast<uint8_t*>(_data);
+        if constexpr(std::is_same_v<T, float>)
+        {
+            pixels[index] = static_cast<uint8_t>(glm::clamp(val, 0.0f, 1.0f) * 255.0f);
+        }
+        else
+        {
+            for(uint32_t i = 0; i < vec_traits<T>::dim; i++)
+            {
+                pixels[index + i] = static_cast<uint8_t>(glm::clamp(val[i], 0.0f, 1.0f) * 255.0f);
+            }
+        }
+    }
+}
+
+template<typename T>
+ATCG_INLINE ATCG_HOST_DEVICE void TextureWriter<T>::writeAtomicAdd(const T& val, const glm::ivec2& texel)
+{
+    size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
+
+    if(_spec.isFloat())
+    {
+        float* pixels = reinterpret_cast<float*>(_data);
+        if constexpr(std::is_same_v<T, float>)
+        {
+            atomicAdd(pixels + index, val);
+        }
+        else
+        {
+            for(uint32_t i = 0; i < vec_traits<T>::dim; i++)
+                atomicAdd(pixels + index + i, val[i]);
+        }
+    }
+    else if(_spec.isInt())
+    {
+        if constexpr(std::is_same_v<T, int32_t>)
+        {
+            int32_t* pixels = reinterpret_cast<int32_t*>(_data);
+            atomicAdd(pixels + index, val);
+        }
+        else
+        {
+            static_assert(!(std::is_same_v<T, int32_t>), "Can only write integer as int32_t");
+        }
+    }
+    else
+    {
+        uint8_t* pixels = reinterpret_cast<uint8_t*>(_data);
+        if constexpr(std::is_same_v<T, float>)
+        {
+            atomicAdd(pixels + index, static_cast<uint8_t>(glm::clamp(val, 0.0f, 1.0f) * 255.0f));
+        }
+        else
+        {
+            for(uint32_t i = 0; i < vec_traits<T>::dim; i++)
+            {
+                atomicAdd(pixels + index + i, static_cast<uint8_t>(glm::clamp(val[i], 0.0f, 1.0f) * 255.0f));
+            }
+        }
+    }
 }
 
 }    // namespace atcg
