@@ -89,8 +89,6 @@ public:
 
     ATCG_HOST_DEVICE void writeAtomicAdd(const T& val, const glm::ivec2& texel);
 
-    ATCG_HOST_DEVICE void* getTexelPtr(const glm::ivec2& texel) const;
-
     ATCG_INLINE ATCG_HOST_DEVICE const TextureSpecification getSpecification() const { return _spec; }
 };
 }    // namespace atcg
