@@ -156,14 +156,13 @@ ATCG_HOST_DEVICE auto TextureSampler<T>::_read_interpolated(const uv_t& uv) cons
         }
         break;
         case TextureFilterMode::NEAREST:
+        default:
         {
             InterpolationReader<T, TextureFilterMode::NEAREST> reader((TextureInterface<T>*)this);
             return reader(uv);
         }
         break;
     }
-
-    return T(0);
 }
 
 template<typename T>
@@ -214,7 +213,7 @@ ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::LINEAR>::operato
     {
         return _read_2d(uv);
     }
-    else if constexpr(std::is_same_v<uv_t, glm::vec3>)
+    else /*if constexpr(std::is_same_v<uv_t, glm::vec3>)*/
     {
         return _read_3d(uv);
     }
@@ -306,6 +305,7 @@ ATCG_HOST_DEVICE void TextureWriter<T>::write(const T& val, const uv_t& uv)
             writer(val, uv);
         }
         break;
+        default:
         case TextureFilterMode::NEAREST:
         {
             InterpolationWriter<T, TextureFilterMode::NEAREST> writer((TextureInterface<T>*)this);
@@ -322,11 +322,11 @@ InterpolationWriter<T, write_mode, TextureFilterMode::NEAREST>::operator()(const
 {
     if constexpr(std::is_same_v<uv_t, glm::vec2>)
     {
-        return _write_2d(val, texel);
+        _write_2d(val, texel);
     }
-    else if constexpr(std::is_same_v<uv_t, glm::vec3>)
+    else /*if constexpr(std::is_same_v<uv_t, glm::vec3>)*/
     {
-        return _write_3d(val, texel);
+        _write_3d(val, texel);
     }
 }
 
