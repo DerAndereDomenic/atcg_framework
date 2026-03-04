@@ -3,7 +3,6 @@
 namespace atcg
 {
 
-
 template<typename T>
 template<typename iuv_t>
 ATCG_INLINE ATCG_HOST_DEVICE std::byte* TextureInterface<T>::getTexelPtr(const iuv_t& texel) const
@@ -428,4 +427,28 @@ ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::LINE
     _texture->writeTexel(w011 * val, glm::ivec3(x0, y1, z1));
     _texture->writeTexel(w111 * val, glm::ivec3(x1, y1, z1));
 }
+
+template<typename T>
+void TexelUpdater<TexelWriteMode::DEFAULT>::operator()(T* data, const T& val) const
+{
+    *data = val;
+}
+
+template<typename T>
+void TexelUpdater<TexelWriteMode::ATOMIC_ADD>::operator()(T* data, const T& val) const
+{
+    if constexpr(std::is_integral_v<T>)
+    {
+        atomicAdd((int*)data, (int)val);
+    }
+    else if constexpr(std::is_floating_point_v<T>)
+    {
+        atomicAdd((float*)data, (float)val);
+    }
+    else
+    {
+        static_assert(always_false<T>::value, "Atomic add not supported for this type");
+    }
+}
+
 }    // namespace atcg
