@@ -283,9 +283,10 @@ TextureWriter<T>::TextureWriter(void* data, const TextureSpecification& spec) : 
 }
 
 template<typename T>
-ATCG_INLINE ATCG_HOST_DEVICE void TextureWriter<T>::write(const T& val, const glm::ivec2& texel)
+template<typename iuv_t>
+ATCG_INLINE ATCG_HOST_DEVICE void TextureWriter<T>::write(const T& val, const iuv_t& texel)
 {
-    size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
+    size_t index = toIndex(texel);
 
     if(_spec.isFloat())
     {
@@ -330,9 +331,10 @@ ATCG_INLINE ATCG_HOST_DEVICE void TextureWriter<T>::write(const T& val, const gl
 }
 
 template<typename T>
-ATCG_INLINE ATCG_DEVICE void TextureWriter<T>::writeAtomicAdd(const T& val, const glm::ivec2& texel)
+template<typename iuv_t>
+ATCG_INLINE ATCG_DEVICE void TextureWriter<T>::writeAtomicAdd(const T& val, const iuv_t& texel)
 {
-    size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
+    size_t index = toIndex(texel);
 
     if(_spec.isFloat())
     {

@@ -112,9 +112,11 @@ public:
 
     TextureWriter(void* data, const TextureSpecification& spec);
 
-    ATCG_HOST_DEVICE void write(const T& val, const glm::ivec2& texel);
+    template<typename iuv_t>
+    ATCG_HOST_DEVICE void write(const T& val, const iuv_t& texel);
 
-    ATCG_DEVICE void writeAtomicAdd(const T& val, const glm::ivec2& texel);
+    template<typename iuv_t>
+    ATCG_DEVICE void writeAtomicAdd(const T& val, const iuv_t& texel);
 
     ATCG_INLINE ATCG_HOST_DEVICE const TextureSpecification getSpecification() const { return _spec; }
 };
