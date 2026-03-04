@@ -26,9 +26,11 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
     auto albedo_texture   = AssetManager::getAsset<Texture3D>(albedo_grid.handle);
     _albedo_texture       = albedo_texture ? std::static_pointer_cast<Texture3D>(albedo_texture->clone()) : nullptr;
 
-    data.density_grid.texture = _density_texture->getTextureObject();
-    data.density_grid.scale   = density_grid.scale;
-    data.density_majorant     = _density_texture->getData(atcg::GPU).max().item<float>() * data.density_grid.scale;
+    auto density_majorant = _density_texture->getData(atcg::GPU).max().item<float>();
+
+    data.density_grid.storage.texture = _density_texture->getTextureObject();
+    data.density_grid.scale           = density_grid.scale;
+    data.density_majorant             = density_majorant * data.density_grid.scale;
     {
         glm::mat4 to_uvw         = glm::mat4(1);
         glm::vec3 scale          = density_grid.bbox.max - density_grid.bbox.min;
@@ -38,9 +40,9 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
         data.density_grid.to_uvw = to_uvw;
     }
 
-    data.emission_grid.texture       = _emission_texture ? _emission_texture->getTextureObject() : 0;
-    data.emission_grid.default_value = glm::vec3(0);
-    data.emission_grid.scale         = emission_grid.scale;
+    data.emission_grid.storage.texture = _emission_texture ? _emission_texture->getTextureObject() : 0;
+    data.emission_grid.default_value   = glm::vec3(0);
+    data.emission_grid.scale           = emission_grid.scale;
     {
         glm::mat4 to_uvw          = glm::mat4(1);
         glm::vec3 scale           = emission_grid.bbox.max - emission_grid.bbox.min;
@@ -50,8 +52,8 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
         data.emission_grid.to_uvw = to_uvw;
     }
 
-    data.albedo_grid.texture = _albedo_texture ? _albedo_texture->getTextureObject() : 0;
-    data.albedo_grid.scale   = albedo_grid.scale;
+    data.albedo_grid.storage.texture = false ? _albedo_texture->getTextureObject() : 0;
+    data.albedo_grid.scale           = albedo_grid.scale;
     {
         glm::mat4 to_uvw        = glm::mat4(1);
         glm::vec3 scale         = albedo_grid.bbox.max - albedo_grid.bbox.min;

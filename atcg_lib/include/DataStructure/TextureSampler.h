@@ -49,9 +49,14 @@ public:
 
     ATCG_INLINE ATCG_HOST_DEVICE const TextureSpecification getSpecification() const { return _spec; }
 
-    ATCG_HOST_DEVICE void* getTexelPtr(const glm::ivec2& texel) const;
+    template<typename iuv_t>
+    ATCG_HOST_DEVICE void* getTexelPtr(const iuv_t& texel) const;
 
 protected:
+    ATCG_HOST_DEVICE size_t toIndex(const glm::ivec2& texel) const;
+
+    ATCG_HOST_DEVICE size_t toIndex(const glm::ivec3& texel) const;
+
     void* _data                = nullptr;
     TextureSpecification _spec = {};
 };
@@ -67,9 +72,14 @@ public:
     template<typename uv_t>
     ATCG_HOST_DEVICE auto read(const uv_t& uv) const;
 
-    ATCG_HOST_DEVICE T texel_fetch(const glm::ivec2& texel) const;
+    template<typename iuv_t>
+    ATCG_HOST_DEVICE T texel_fetch(const iuv_t& texel) const;
 
-    ATCG_INLINE ATCG_HOST_DEVICE T operator()(const glm::vec2& uv) const { return read(uv); }
+    template<typename uv_t>
+    ATCG_INLINE ATCG_HOST_DEVICE auto operator()(const uv_t& uv) const
+    {
+        return read(uv);
+    }
 
     template<typename uv_t>
     ATCG_HOST_DEVICE uv_t clamp_uv(const uv_t& uv) const;
@@ -82,7 +92,19 @@ private:
     ATCG_HOST_DEVICE auto _read_nearest(const uv_t& uv) const;
 
     template<typename uv_t>
+    ATCG_HOST_DEVICE auto _read_nearest_2d(const uv_t& uv) const;
+
+    template<typename uv_t>
+    ATCG_HOST_DEVICE auto _read_nearest_3d(const uv_t& uv) const;
+
+    template<typename uv_t>
     ATCG_HOST_DEVICE auto _read_linear(const uv_t& uv) const;
+
+    template<typename uv_t>
+    ATCG_HOST_DEVICE auto _read_linear_2d(const uv_t& uv) const;
+
+    template<typename uv_t>
+    ATCG_HOST_DEVICE auto _read_linear_3d(const uv_t& uv) const;
 };
 
 template<typename T>

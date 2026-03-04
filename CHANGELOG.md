@@ -92,6 +92,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Shapes are no longer responsible to define closest hit programs, this has to be done on a pipeline level now
 - RayTracingPipeline and ShaderBindingTable are no longer exposed to the client and are owned by the corresponding integrator used.
 - evalBSDF and sampleBSDF are now expected to return f * cos (divided by p for sampling) instead of just the bsdf value
+- Density scaling for heterogeneous media is already applied in the eval function
 
 ### Fixed
 
