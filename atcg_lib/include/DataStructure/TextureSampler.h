@@ -158,15 +158,15 @@ struct TexelUpdater;
 template<>
 struct TexelUpdater<TexelWriteMode::DEFAULT>
 {
-    template<typename T, typename iuv_t>
+    template<typename T>
     ATCG_HOST_DEVICE void operator()(T* data, const T& val) const;
 };
 
 template<>
 struct TexelUpdater<TexelWriteMode::ATOMIC_ADD>
 {
-    template<typename T, typename iuv_t>
-    ATCG_HOST_DEVICE void operator()(T* data, const T& val) const;
+    template<typename T>
+    ATCG_DEVICE void operator()(T* data, const T& val) const;
 };
 
 }    // namespace atcg
