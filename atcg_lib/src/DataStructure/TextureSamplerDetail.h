@@ -4,9 +4,10 @@ namespace atcg
 {
 
 template<typename T>
-ATCG_HOST_DEVICE void* TextureInterface<T>::getTexelPtr(const glm::ivec2& texel) const
+template<typename iuv_t>
+ATCG_HOST_DEVICE void* TextureInterface<T>::getTexelPtr(const iuv_t& texel) const
 {
-    size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
+    size_t index = toIndex(texel);
     if(_spec.isFloat() || _spec.isInt())
     {
         float* pixels = reinterpret_cast<float*>(_data);
@@ -20,22 +21,36 @@ ATCG_HOST_DEVICE void* TextureInterface<T>::getTexelPtr(const glm::ivec2& texel)
 }
 
 template<typename T>
+ATCG_INLINE ATCG_HOST_DEVICE size_t TextureInterface<T>::toIndex(const glm::ivec2& texel) const
+{
+    return size_t((texel.y * _spec.width + texel.x) * _spec.numChannels());
+}
+
+template<typename T>
+ATCG_INLINE ATCG_HOST_DEVICE size_t TextureInterface<T>::toIndex(const glm::ivec3& texel) const
+{
+    return size_t((texel.x + texel.y * _spec.width + texel.z * _spec.width * _spec.height) * _spec.numChannels());
+}
+
+template<typename T>
 TextureSampler<T>::TextureSampler(void* data, const TextureSpecification& spec) : TextureInterface<T>(data, spec)
 {
 }
 
 template<typename T>
-ATCG_INLINE ATCG_HOST_DEVICE T TextureSampler<T>::read(const glm::vec2& uv) const
+template<typename uv_t>
+ATCG_INLINE ATCG_HOST_DEVICE auto TextureSampler<T>::read(const uv_t& uv) const
 {
-    glm::vec2 _uv = clamp_uv(uv);
-    T x           = _read_interpolated(_uv);
+    auto _uv = clamp_uv(uv);
+    auto x   = _read_interpolated(_uv);
     return x;
 }
 
 template<typename T>
-ATCG_INLINE ATCG_HOST_DEVICE T TextureSampler<T>::texel_fetch(const glm::ivec2& texel) const
+template<typename iuv_t>
+ATCG_INLINE ATCG_HOST_DEVICE T TextureSampler<T>::texel_fetch(const iuv_t& texel) const
 {
-    size_t index = (texel.y * _spec.width + texel.x) * _spec.numChannels();
+    size_t index = toIndex(texel);
     if(_spec.isFloat() || _spec.isInt())
     {
         const float* pixels = reinterpret_cast<const float*>(_data);
@@ -73,7 +88,8 @@ ATCG_INLINE ATCG_HOST_DEVICE T TextureSampler<T>::texel_fetch(const glm::ivec2& 
 }
 
 template<typename T>
-ATCG_INLINE ATCG_HOST_DEVICE glm::vec2 TextureSampler<T>::clamp_uv(const glm::vec2& uv) const
+template<typename uv_t>
+ATCG_INLINE ATCG_HOST_DEVICE uv_t TextureSampler<T>::clamp_uv(const uv_t& uv) const
 {
     switch(_spec.sampler.wrap_mode)
     {
@@ -83,7 +99,16 @@ ATCG_INLINE ATCG_HOST_DEVICE glm::vec2 TextureSampler<T>::clamp_uv(const glm::ve
         // break; Not implemented yet
         case TextureWrapMode::CLAMP_TO_EDGE:
         {
-            return glm::vec2(glm::clamp(uv.x, 0.0f, 1.0f), glm::clamp(uv.y, 0.0f, 1.0f));
+            if constexpr(std::is_same_v<uv_t, glm::vec2>)
+            {
+                return glm::vec2(glm::clamp(uv.x, 0.0f, 1.0f), glm::clamp(uv.y, 0.0f, 1.0f));
+            }
+            else if constexpr(std::is_same_v<uv_t, glm::vec3>)
+            {
+                return glm::vec3(glm::clamp(uv.x, 0.0f, 1.0f),
+                                 glm::clamp(uv.y, 0.0f, 1.0f),
+                                 glm::clamp(uv.z, 0.0f, 1.0f));
+            }
         };
         break;
         case TextureWrapMode::REPEAT:
@@ -97,7 +122,8 @@ ATCG_INLINE ATCG_HOST_DEVICE glm::vec2 TextureSampler<T>::clamp_uv(const glm::ve
 }
 
 template<typename T>
-ATCG_HOST_DEVICE T TextureSampler<T>::_read_interpolated(const glm::vec2& uv) const
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_interpolated(const uv_t& uv) const
 {
     switch(_spec.sampler.filter_mode)
     {
@@ -118,7 +144,46 @@ ATCG_HOST_DEVICE T TextureSampler<T>::_read_interpolated(const glm::vec2& uv) co
 }
 
 template<typename T>
-ATCG_HOST_DEVICE T TextureSampler<T>::_read_nearest(const glm::vec2& uv) const
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_nearest(const uv_t& uv) const
+{
+    if constexpr(std::is_same_v<uv_t, glm::vec2>)
+    {
+        return _read_nearest_2d(uv);
+    }
+    else if constexpr(std::is_same_v<uv_t, glm::vec3>)
+    {
+        return _read_nearest_3d(uv);
+    }
+    else
+    {
+        static_assert(!(std::is_same_v<uv_t, uv_t>), "Unsupported UV type");
+        return T(0);
+    }
+}
+
+template<typename T>
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_linear(const uv_t& uv) const
+{
+    if constexpr(std::is_same_v<uv_t, glm::vec2>)
+    {
+        return _read_linear_2d(uv);
+    }
+    else if constexpr(std::is_same_v<uv_t, glm::vec3>)
+    {
+        return _read_linear_3d(uv);
+    }
+    else
+    {
+        static_assert(!(std::is_same_v<uv_t, uv_t>), "Unsupported UV type");
+        return T(0);
+    }
+}
+
+template<typename T>
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_nearest_2d(const uv_t& uv) const
 {
     uint32_t texel_x = (uint32_t)(uv.x * _spec.width);
     uint32_t texel_y = (uint32_t)(uv.y * _spec.height);
@@ -130,7 +195,23 @@ ATCG_HOST_DEVICE T TextureSampler<T>::_read_nearest(const glm::vec2& uv) const
 }
 
 template<typename T>
-ATCG_HOST_DEVICE T TextureSampler<T>::_read_linear(const glm::vec2& uv) const
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_nearest_3d(const uv_t& uv) const
+{
+    uint32_t texel_x = (uint32_t)(uv.x * _spec.width);
+    uint32_t texel_y = (uint32_t)(uv.y * _spec.height);
+    uint32_t texel_z = (uint32_t)(uv.z * _spec.depth);
+
+    texel_x = glm::clamp(texel_x, 0u, _spec.width - 1u);
+    texel_y = glm::clamp(texel_y, 0u, _spec.height - 1u);
+    texel_z = glm::clamp(texel_z, 0u, _spec.depth - 1u);
+
+    return texel_fetch(glm::ivec3(texel_x, texel_y, texel_z));
+}
+
+template<typename T>
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_linear_2d(const uv_t& uv) const
 {
     float fx = uv.x * (_spec.width - 1);
     float fy = uv.y * (_spec.height - 1);
@@ -151,6 +232,47 @@ ATCG_HOST_DEVICE T TextureSampler<T>::_read_linear(const glm::vec2& uv) const
     T cx0 = glm::mix(c00, c10, tx);
     T cx1 = glm::mix(c01, c11, tx);
     T res = glm::mix(cx0, cx1, ty);
+
+    return res;
+}
+
+template<typename T>
+template<typename uv_t>
+ATCG_HOST_DEVICE auto TextureSampler<T>::_read_linear_3d(const uv_t& uv) const
+{
+    float fx = uv.x * (_spec.width - 1);
+    float fy = uv.y * (_spec.height - 1);
+    float fz = uv.z * (_spec.depth - 1);
+
+    int x0 = static_cast<int>(glm::floor(fx));
+    int y0 = static_cast<int>(glm::floor(fy));
+    int z0 = static_cast<int>(glm::floor(fz));
+    int x1 = glm::min(x0 + 1, (int)_spec.width - 1);    // TODO: wrap
+    int y1 = glm::min(y0 + 1, (int)_spec.height - 1);
+    int z1 = glm::min(z0 + 1, (int)_spec.depth - 1);
+
+    float tx = fx - x0;
+    float ty = fy - y0;
+    float tz = fz - z0;
+
+    T c000 = texel_fetch(glm::ivec3(x0, y0, z0));
+    T c100 = texel_fetch(glm::ivec3(x1, y0, z0));
+    T c010 = texel_fetch(glm::ivec3(x0, y1, z0));
+    T c110 = texel_fetch(glm::ivec3(x1, y1, z0));
+    T c001 = texel_fetch(glm::ivec3(x0, y0, z1));
+    T c101 = texel_fetch(glm::ivec3(x1, y0, z1));
+    T c011 = texel_fetch(glm::ivec3(x0, y1, z1));
+    T c111 = texel_fetch(glm::ivec3(x1, y1, z1));
+
+    T cx00 = glm::mix(c000, c100, tx);
+    T cx10 = glm::mix(c010, c110, tx);
+    T cx01 = glm::mix(c001, c101, tx);
+    T cx11 = glm::mix(c011, c111, tx);
+
+    T cxy0 = glm::mix(cx00, cx10, ty);
+    T cxy1 = glm::mix(cx01, cx11, ty);
+
+    T res = glm::mix(cxy0, cxy1, tz);
 
     return res;
 }
