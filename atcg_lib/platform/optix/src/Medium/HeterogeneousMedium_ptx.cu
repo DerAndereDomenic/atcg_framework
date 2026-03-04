@@ -30,7 +30,7 @@ __device__ float estimate_transmittance_ratio_tracking(const glm::vec3& origin,
         float step = warp_1d_sample_to_homogeneous_medium_event_distance(rng.next1d(), sbt_data->density_majorant);
         distance += step;
         glm::vec3 step_position = origin + distance * direction;
-        float step_density      = sbt_data->density_grid.scale * sbt_data->density_grid.eval(step_position);
+        float step_density      = sbt_data->density_grid.eval(step_position);
 
         if(distance >= max_distance) break;
         // multiply sigma_n / \bar{sigma}_t
@@ -87,7 +87,7 @@ __device__ DeltaTrackingWeights sample_free_flight_distance_delta_tracking(const
         float step = warp_1d_sample_to_homogeneous_medium_event_distance(rng.next1d(), sbt_data->density_majorant);
         distance += step;
         glm::vec3 step_position = origin + distance * direction;
-        float step_density      = sbt_data->density_grid.scale * sbt_data->density_grid.eval(step_position);
+        float step_density      = sbt_data->density_grid.eval(step_position);
 
         // Russian-roulette-style acceptance of sample.
         if(rng.next1d() < step_density / sbt_data->density_majorant)
@@ -97,8 +97,8 @@ __device__ DeltaTrackingWeights sample_free_flight_distance_delta_tracking(const
                 atcg::SampledSpectrum::fromRGB(sbt_data->albedo_grid.eval(step_position), wavelengths);
             atcg::SampledSpectrum emission =
                 atcg::SampledSpectrum::fromRGB(sbt_data->emission_grid.eval(step_position), wavelengths);
-            result.transmittance_weight = sbt_data->albedo_grid.scale * albedo;
-            result.emission_weight      = sbt_data->emission_grid.scale * emission;
+            result.transmittance_weight = albedo;
+            result.emission_weight      = emission;
             break;
         }
         else

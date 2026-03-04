@@ -65,14 +65,14 @@ struct GridData
     {
         if(!is_valid())
         {
-            return default_value;
+            return scale * default_value;
         }
 
         glm::vec4 local_pos_hom = to_uvw * glm::vec4(world_pos, 1);
         glm::vec3 local_pos     = glm::xyz(local_pos_hom) / local_pos_hom.w;
         T value                 = storage.eval(local_pos);
 
-        return value;
+        return scale * value;
     }
 #endif
 };
