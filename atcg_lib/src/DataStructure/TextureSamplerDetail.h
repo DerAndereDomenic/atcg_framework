@@ -390,7 +390,7 @@ ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::NEAR
     uint32_t texel_x = (uint32_t)(uv.x * width);
     uint32_t texel_y = (uint32_t)(uv.y * height);
 
-    _texture->writeTexel<glm::ivec2, write_mode>(val, glm::ivec2(texel_x, texel_y));
+    _texture->template writeTexel<glm::ivec2, write_mode>(val, glm::ivec2(texel_x, texel_y));
 }
 
 template<typename T, TexelWriteMode write_mode>
@@ -405,7 +405,7 @@ ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::NEAR
     uint32_t texel_y = (uint32_t)(uv.y * height);
     uint32_t texel_z = (uint32_t)(uv.z * depth);
 
-    _texture->writeTexel<glm::ivec3, write_mode>(val, glm::ivec3(texel_x, texel_y, texel_z));
+    _texture->template writeTexel<glm::ivec3, write_mode>(val, glm::ivec3(texel_x, texel_y, texel_z));
 }
 
 template<typename T, TexelWriteMode write_mode>
@@ -447,10 +447,10 @@ ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::LINE
     float w01 = (1 - tx) * ty;
     float w11 = tx * ty;
 
-    _texture->writeTexel<glm::ivec2, write_mode>(w00 * val, glm::ivec2(x0, y0));
-    _texture->writeTexel<glm::ivec2, write_mode>(w10 * val, glm::ivec2(x1, y0));
-    _texture->writeTexel<glm::ivec2, write_mode>(w01 * val, glm::ivec2(x0, y1));
-    _texture->writeTexel<glm::ivec2, write_mode>(w11 * val, glm::ivec2(x1, y1));
+    _texture->template writeTexel<glm::ivec2, write_mode>(w00 * val, glm::ivec2(x0, y0));
+    _texture->template writeTexel<glm::ivec2, write_mode>(w10 * val, glm::ivec2(x1, y0));
+    _texture->template writeTexel<glm::ivec2, write_mode>(w01 * val, glm::ivec2(x0, y1));
+    _texture->template writeTexel<glm::ivec2, write_mode>(w11 * val, glm::ivec2(x1, y1));
 }
 
 template<typename T, TexelWriteMode write_mode>
@@ -485,14 +485,14 @@ ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::LINE
     float w011 = (1 - tx) * ty * tz;
     float w111 = tx * ty * tz;
 
-    _texture->writeTexel<glm::ivec3, write_mode>(w000 * val, glm::ivec3(x0, y0, z0));
-    _texture->writeTexel<glm::ivec3, write_mode>(w100 * val, glm::ivec3(x1, y0, z0));
-    _texture->writeTexel<glm::ivec3, write_mode>(w010 * val, glm::ivec3(x0, y1, z0));
-    _texture->writeTexel<glm::ivec3, write_mode>(w110 * val, glm::ivec3(x1, y1, z0));
-    _texture->writeTexel<glm::ivec3, write_mode>(w001 * val, glm::ivec3(x0, y0, z1));
-    _texture->writeTexel<glm::ivec3, write_mode>(w101 * val, glm::ivec3(x1, y0, z1));
-    _texture->writeTexel<glm::ivec3, write_mode>(w011 * val, glm::ivec3(x0, y1, z1));
-    _texture->writeTexel<glm::ivec3, write_mode>(w111 * val, glm::ivec3(x1, y1, z1));
+    _texture->template writeTexel<glm::ivec3, write_mode>(w000 * val, glm::ivec3(x0, y0, z0));
+    _texture->template writeTexel<glm::ivec3, write_mode>(w100 * val, glm::ivec3(x1, y0, z0));
+    _texture->template writeTexel<glm::ivec3, write_mode>(w010 * val, glm::ivec3(x0, y1, z0));
+    _texture->template writeTexel<glm::ivec3, write_mode>(w110 * val, glm::ivec3(x1, y1, z0));
+    _texture->template writeTexel<glm::ivec3, write_mode>(w001 * val, glm::ivec3(x0, y0, z1));
+    _texture->template writeTexel<glm::ivec3, write_mode>(w101 * val, glm::ivec3(x1, y0, z1));
+    _texture->template writeTexel<glm::ivec3, write_mode>(w011 * val, glm::ivec3(x0, y1, z1));
+    _texture->template writeTexel<glm::ivec3, write_mode>(w111 * val, glm::ivec3(x1, y1, z1));
 }
 
 template<typename T>
