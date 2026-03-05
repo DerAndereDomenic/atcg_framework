@@ -11,8 +11,8 @@ namespace atcg
 HomogeneousMedium::HomogeneousMedium(const atcg::Dictionary& dict) : Medium(dict)
 {
     HomogeneousMediumData data;
-    data.sigma_a = dict.getValueOr<glm::vec3>("sigma_a", glm::vec3(0));
-    data.sigma_s = dict.getValueOr<glm::vec3>("sigma_s", glm::vec3(0));
+    data.albedo  = dict.getValueOr<glm::vec3>("albedo", glm::vec3(0));
+    data.density = dict.getValueOr<float>("density", 0.0f);
     data.Le      = glm::vec3(dict.getValueOr<glm::vec3>("Le", glm::vec3(0)));
 
     _data_buffer.upload(&data);

@@ -71,12 +71,10 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
         atcg::ref_ptr<HenyeyGreensteinPhaseFunction> phase = atcg::make_ref<HenyeyGreensteinPhaseFunction>(phase_dict);
         phase->initializePipeline(_pipeline, _sbt);
 
-        glm::vec3 sigma_s = component.albedo * component.density;
-        glm::vec3 sigma_a = glm::vec3(component.density) - sigma_s;
 
         Dictionary med_dict;
-        med_dict.setValue("sigma_s", sigma_s);
-        med_dict.setValue("sigma_a", sigma_a);
+        med_dict.setValue("density", component.density);
+        med_dict.setValue("albedo", component.albedo);
         med_dict.setValue<atcg::ref_ptr<PhaseFunction>>("phase_func", phase);
         med_dict.setValue("Le", component.Le * component.Le_color);
         atcg::ref_ptr<HomogeneousMedium> medium = atcg::make_ref<HomogeneousMedium>(med_dict);
