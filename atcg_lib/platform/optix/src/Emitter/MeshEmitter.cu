@@ -81,7 +81,7 @@ MeshEmitter::MeshEmitter(const Dictionary& dict)
     auto emissive_texture = std::dynamic_pointer_cast<Texture2D>(texture_emissive->clone());
     _emissive_texture     = emissive_texture->getData(atcg::GPU);
     data.emissive_texture =
-        TextureSampler<glm::vec3>(_emissive_texture.data_ptr(), emissive_texture->getSpecification());
+        TextureSampler<glm::vec3>((std::byte*)_emissive_texture.data_ptr(), emissive_texture->getSpecification());
 
     data.emitter_scaling = emission_scaling;
 

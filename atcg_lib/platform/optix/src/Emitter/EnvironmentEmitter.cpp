@@ -14,7 +14,8 @@ EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
 
     EnvironmentEmitterData data;
 
-    data.environment_texture = TextureSampler<glm::vec3>(_environment_texture.data_ptr(), texture->getSpecification());
+    data.environment_texture =
+        TextureSampler<glm::vec3>((std::byte*)_environment_texture.data_ptr(), texture->getSpecification());
 
     _environment_emitter_data.upload(&data);
 }
