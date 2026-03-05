@@ -48,8 +48,7 @@ extern "C" __device__ glm::vec3 __direct_callable__homogeneousMedium_evalTransmi
         *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
 
     // Evaluate the probability of the light *not* interacting with the medium.
-    glm::vec3 sigma_t = sbt_data->sigma_a + sbt_data->sigma_s;
-    return detail::transmittance(distance, sigma_t);
+    return glm::vec3(detail::transmittance(distance, sbt_data->density));
 }
 
 extern "C" __device__ atcg::MediumSamplingResult
@@ -64,13 +63,11 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
 
 
     // Absorbtion, scattering and extinction coefficients...
-    atcg::SampledSpectrum sigma_a = atcg::SampledSpectrum::fromRGB(sbt_data->sigma_a, wavelengths);
-    atcg::SampledSpectrum sigma_s = atcg::SampledSpectrum::fromRGB(sbt_data->sigma_s, wavelengths);
-    atcg::SampledSpectrum sigma_t = sigma_a + sigma_s;
-    atcg::SampledSpectrum Le      = atcg::SampledSpectrum::fromRGB(sbt_data->Le, wavelengths);
+    atcg::SampledSpectrum albedo = atcg::SampledSpectrum::fromRGB(sbt_data->albedo, wavelengths);
+    atcg::SampledSpectrum Le     = atcg::SampledSpectrum::fromRGB(sbt_data->Le, wavelengths);
 
     // Scalar projection of scattering coefficient, used to sample the next medium scattering event.
-    float sigma_t_scalar = sigma_t.maxComponent();
+    float sigma_t_scalar = sbt_data->density;
 
 
     atcg::MediumSamplingResult result;
@@ -96,12 +93,13 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
         // Compute the transmittance including the scattering coeficient sigma_s, divided by sampling probability.
         // float sampling_pdf = warp_1d_sample_to_medium_event_distance_pdf(sampled_distance, sigma_s_scalar);
         // result.transmittance_weight = sbt_data->sigma_s * transmittance(sampled_distance, sigma_t) / sampling_pdf;
-        atcg::SampledSpectrum T =
-            detail::transmittance(sampled_distance, sigma_t - atcg::SampledSpectrum(sigma_t_scalar));
-        result.transmittance_weight = sigma_s / sigma_t_scalar * T;
+        // atcg::SampledSpectrum T =
+        //     detail::transmittance(sampled_distance, sigma_t - atcg::SampledSpectrum(sigma_t_scalar));
+        // Transmittance will be equal to 1
+        result.transmittance_weight = albedo;
 
         // ? Attenuate by absorption albedo?
-        result.radiance_weight = /*(1.0f - sbt_data->sigma_s / sigma_t_scalar) */ T * Le;
+        result.radiance_weight = /*(1.0f - sbt_data->sigma_s / sigma_t_scalar) */ Le;
     }
     else
     {
@@ -114,8 +112,8 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
         // *any* such case, i.e. marginalize over all sampled distances >= max_distance.
         // float sampling_pdf = transmittance(max_distance, sigma_s_scalar);
         // result.transmittance_weight = transmittance(max_distance, sigma_t) / sampling_pdf;
-        result.transmittance_weight =
-            detail::transmittance(max_distance, sigma_t - atcg::SampledSpectrum(sigma_t_scalar));
+        result.transmittance_weight = atcg::SampledSpectrum(1.0f);
+        // detail::transmittance(max_distance, sigma_t - atcg::SampledSpectrum(sigma_t_scalar));
     }
 
     return result;
