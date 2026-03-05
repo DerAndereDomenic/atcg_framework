@@ -19,11 +19,12 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
 
     DielectricBSDFData data;
 
-    data.diffuse_texture =
-        TextureSampler<glm::vec3>(_diffuse_texture.data_ptr(), material->getDiffuseTexture()->getSpecification());
-    data.roughness_texture =
-        TextureSampler<float>(_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
-    data.ior_texture = TextureSampler<float>(_ior_texture.data_ptr(), material->getIorTexture()->getSpecification());
+    data.diffuse_texture   = TextureSampler<glm::vec3>((std::byte*)_diffuse_texture.data_ptr(),
+                                                     material->getDiffuseTexture()->getSpecification());
+    data.roughness_texture = TextureSampler<float>((std::byte*)_roughness_texture.data_ptr(),
+                                                   material->getRoughnessTexture()->getSpecification());
+    data.ior_texture =
+        TextureSampler<float>((std::byte*)_ior_texture.data_ptr(), material->getIorTexture()->getSpecification());
 
     data.optimizable = _optimizable;
 
@@ -174,13 +175,13 @@ void DielectricBSDF::markOptimizable()
 
     DielectricBSDFData data;
 
-    data.diffuse_texture   = TextureSampler<glm::vec3>(_diffuse_texture.data_ptr(), spec_diffuse);
-    data.ior_texture       = TextureSampler<float>(_ior_texture.data_ptr(), spec_float);
-    data.roughness_texture = TextureSampler<float>(_roughness_texture.data_ptr(), spec_float);
+    data.diffuse_texture   = TextureSampler<glm::vec3>((std::byte*)_diffuse_texture.data_ptr(), spec_diffuse);
+    data.ior_texture       = TextureSampler<float>((std::byte*)_ior_texture.data_ptr(), spec_float);
+    data.roughness_texture = TextureSampler<float>((std::byte*)_roughness_texture.data_ptr(), spec_float);
 
-    data.diffuse_grad   = TextureSampler<glm::vec3>(_diffuse_texture.grad().data_ptr(), spec_diffuse);
-    data.ior_texture    = TextureSampler<float>(_ior_texture.grad().data_ptr(), spec_float);
-    data.roughness_grad = TextureSampler<float>(_roughness_texture.grad().data_ptr(), spec_float);
+    data.diffuse_grad   = TextureWriter<glm::vec3>((std::byte*)_diffuse_texture.grad().data_ptr(), spec_diffuse);
+    data.ior_grad       = TextureWriter<float>((std::byte*)_ior_texture.grad().data_ptr(), spec_float);
+    data.roughness_grad = TextureWriter<float>((std::byte*)_roughness_texture.grad().data_ptr(), spec_float);
 
     _bsdf_data_buffer.upload(&data);
 

@@ -11,9 +11,9 @@ struct PBRBSDFData
     TextureSampler<float> roughness_texture;
     TextureSampler<float> fixed_roughness_texture;
 
-    TextureSampler<glm::vec3> diffuse_grad;
-    TextureSampler<float> metallic_grad;
-    TextureSampler<float> roughness_grad;
+    TextureWriter<glm::vec3> diffuse_grad;
+    TextureWriter<float> metallic_grad;
+    TextureWriter<float> roughness_grad;
 
     bool optimize_diffuse   = false;
     bool optimize_roughness = false;

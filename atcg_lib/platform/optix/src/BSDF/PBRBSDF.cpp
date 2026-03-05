@@ -24,14 +24,14 @@ PBRBSDF::PBRBSDF(const Dictionary& dict)
 
     PBRBSDFData data;
 
-    data.diffuse_texture =
-        TextureSampler<glm::vec3>(_diffuse_texture.data_ptr(), material->getDiffuseTexture()->getSpecification());
-    data.metallic_texture =
-        TextureSampler<float>(_metallic_texture.data_ptr(), material->getMetallicTexture()->getSpecification());
-    data.roughness_texture =
-        TextureSampler<float>(_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
-    data.fixed_roughness_texture =
-        TextureSampler<float>(_fixed_roughness_texture.data_ptr(), material->getRoughnessTexture()->getSpecification());
+    data.diffuse_texture         = TextureSampler<glm::vec3>((std::byte*)_diffuse_texture.data_ptr(),
+                                                     material->getDiffuseTexture()->getSpecification());
+    data.metallic_texture        = TextureSampler<float>((std::byte*)_metallic_texture.data_ptr(),
+                                                  material->getMetallicTexture()->getSpecification());
+    data.roughness_texture       = TextureSampler<float>((std::byte*)_roughness_texture.data_ptr(),
+                                                   material->getRoughnessTexture()->getSpecification());
+    data.fixed_roughness_texture = TextureSampler<float>((std::byte*)_fixed_roughness_texture.data_ptr(),
+                                                         material->getRoughnessTexture()->getSpecification());
 
     _flags = BSDFComponentType::GlossyReflection | BSDFComponentType::DiffuseReflection;
 
@@ -138,8 +138,8 @@ void PBRBSDF::onImGuiRender()
         PBRBSDFData data;
         _bsdf_data_buffer.download(&data);
 
-        data.diffuse_texture = TextureSampler<glm::vec3>(_diffuse_texture.data_ptr(), spec_diffuse);
-        data.diffuse_grad    = TextureSampler<glm::vec3>(_diffuse_texture_grad.data_ptr(), spec_diffuse);
+        data.diffuse_texture = TextureSampler<glm::vec3>((std::byte*)_diffuse_texture.data_ptr(), spec_diffuse);
+        data.diffuse_grad    = TextureWriter<glm::vec3>((std::byte*)_diffuse_texture_grad.data_ptr(), spec_diffuse);
 
         _diffuse_optimized = atcg::Texture2D::create(spec_diffuse);
         _diffuse_grad      = atcg::Texture2D::create(spec_diffuse);
@@ -165,9 +165,10 @@ void PBRBSDF::onImGuiRender()
         PBRBSDFData data;
         _bsdf_data_buffer.download(&data);
 
-        data.roughness_texture       = TextureSampler<float>(_roughness_texture.data_ptr(), spec_float);
-        data.roughness_grad          = TextureSampler<float>(_roughness_texture_grad.data_ptr(), spec_float);
-        data.fixed_roughness_texture = TextureSampler<float>(_fixed_roughness_texture.data_ptr(), spec_float);
+        data.roughness_texture = TextureSampler<float>((std::byte*)_roughness_texture.data_ptr(), spec_float);
+        data.roughness_grad    = TextureWriter<float>((std::byte*)_roughness_texture_grad.data_ptr(), spec_float);
+        data.fixed_roughness_texture =
+            TextureSampler<float>((std::byte*)_fixed_roughness_texture.data_ptr(), spec_float);
 
         _roughness_optimized = atcg::Texture2D::create(spec_float);
 
@@ -194,8 +195,8 @@ void PBRBSDF::onImGuiRender()
         PBRBSDFData data;
         _bsdf_data_buffer.download(&data);
 
-        data.metallic_texture = TextureSampler<float>(_metallic_texture.data_ptr(), spec_float);
-        data.metallic_grad    = TextureSampler<float>(_metallic_texture_grad.data_ptr(), spec_float);
+        data.metallic_texture = TextureSampler<float>((std::byte*)_metallic_texture.data_ptr(), spec_float);
+        data.metallic_grad    = TextureWriter<float>((std::byte*)_metallic_texture_grad.data_ptr(), spec_float);
 
         _metallic_optimized = atcg::Texture2D::create(spec_float);
 
@@ -332,13 +333,13 @@ void PBRBSDF::markOptimizable()
 
     PBRBSDFData data;
 
-    data.diffuse_texture   = TextureSampler<glm::vec3>(_diffuse_texture.data_ptr(), spec_diffuse);
-    data.metallic_texture  = TextureSampler<float>(_metallic_texture.data_ptr(), spec_float);
-    data.roughness_texture = TextureSampler<float>(_roughness_texture.data_ptr(), spec_float);
+    data.diffuse_texture   = TextureSampler<glm::vec3>((std::byte*)_diffuse_texture.data_ptr(), spec_diffuse);
+    data.metallic_texture  = TextureSampler<float>((std::byte*)_metallic_texture.data_ptr(), spec_float);
+    data.roughness_texture = TextureSampler<float>((std::byte*)_roughness_texture.data_ptr(), spec_float);
 
-    data.diffuse_grad   = TextureSampler<glm::vec3>(_diffuse_texture_grad.data_ptr(), spec_diffuse);
-    data.metallic_grad  = TextureSampler<float>(_metallic_texture_grad.data_ptr(), spec_float);
-    data.roughness_grad = TextureSampler<float>(_roughness_texture_grad.data_ptr(), spec_float);
+    data.diffuse_grad   = TextureWriter<glm::vec3>((std::byte*)_diffuse_texture_grad.data_ptr(), spec_diffuse);
+    data.metallic_grad  = TextureWriter<float>((std::byte*)_metallic_texture_grad.data_ptr(), spec_float);
+    data.roughness_grad = TextureWriter<float>((std::byte*)_roughness_texture_grad.data_ptr(), spec_float);
 
     _bsdf_data_buffer.upload(&data);
 

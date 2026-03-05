@@ -10,9 +10,9 @@ struct DielectricBSDFData
     TextureSampler<float> roughness_texture;
     TextureSampler<float> ior_texture;
 
-    TextureSampler<glm::vec3> diffuse_grad;
-    TextureSampler<float> roughness_grad;
-    TextureSampler<float> ior_grad;
+    TextureWriter<glm::vec3> diffuse_grad;
+    TextureWriter<float> roughness_grad;
+    TextureWriter<float> ior_grad;
 
     bool optimizable;
 };
