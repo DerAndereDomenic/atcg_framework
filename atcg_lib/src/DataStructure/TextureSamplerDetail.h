@@ -232,17 +232,17 @@ ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::LINEAR>::_read_2
     int x1 = x0 + 1;
     int y1 = y0 + 1;
 
-    float tx = fx - x0;
-    float ty = fy - y0;
+    auto tx = fx - x0;
+    auto ty = fy - y0;
 
     T c00 = _texture->fetchTexel(glm::ivec2(x0, y0));
     T c10 = _texture->fetchTexel(glm::ivec2(x1, y0));
     T c01 = _texture->fetchTexel(glm::ivec2(x0, y1));
     T c11 = _texture->fetchTexel(glm::ivec2(x1, y1));
 
-    T cx0 = glm::mix(c00, c10, tx);
-    T cx1 = glm::mix(c01, c11, tx);
-    T res = glm::mix(cx0, cx1, ty);
+    auto cx0 = c00 * (1.0f - tx) + tx * c10;
+    auto cx1 = c01 * (1.0f - tx) + tx * c11;
+    auto res = cx0 * (1.0f - ty) + ty * cx1;
 
     return res;
 }
@@ -265,9 +265,9 @@ ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::LINEAR>::_read_3
     int y1 = y0 + 1;
     int z1 = z0 + 1;
 
-    float tx = fx - x0;
-    float ty = fy - y0;
-    float tz = fz - z0;
+    auto tx = fx - x0;
+    auto ty = fy - y0;
+    auto tz = fz - z0;
 
     T c000 = _texture->fetchTexel(glm::ivec3(x0, y0, z0));
     T c100 = _texture->fetchTexel(glm::ivec3(x1, y0, z0));
@@ -278,15 +278,15 @@ ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::LINEAR>::_read_3
     T c011 = _texture->fetchTexel(glm::ivec3(x0, y1, z1));
     T c111 = _texture->fetchTexel(glm::ivec3(x1, y1, z1));
 
-    T cx00 = glm::mix(c000, c100, tx);
-    T cx10 = glm::mix(c010, c110, tx);
-    T cx01 = glm::mix(c001, c101, tx);
-    T cx11 = glm::mix(c011, c111, tx);
+    auto cx00 = c000 * (1.0f - tx) + tx * c100;
+    auto cx10 = c010 * (1.0f - tx) + tx * c110;
+    auto cx01 = c001 * (1.0f - tx) + tx * c101;
+    auto cx11 = c011 * (1.0f - tx) + tx * c111;
 
-    T cxy0 = glm::mix(cx00, cx10, ty);
-    T cxy1 = glm::mix(cx01, cx11, ty);
+    auto cxy0 = cx00 * (1.0f - ty) + ty * cx10;
+    auto cxy1 = cx01 * (1.0f - ty) + ty * cx11;
 
-    T res = glm::mix(cxy0, cxy1, tz);
+    auto res = cxy0 * (1.0f - tz) + tz * cxy1;
 
     return res;
 }
@@ -300,14 +300,14 @@ ATCG_HOST_DEVICE void TextureWriter<T>::write(const T& val, const uv_t& uv)
         case TextureFilterMode::LINEAR:
         case TextureFilterMode::MIPMAP_LINEAR:
         {
-            InterpolationWriter<T, TextureFilterMode::LINEAR> writer((TextureInterface<T>*)this);
+            InterpolationWriter<T, write_mode, TextureFilterMode::LINEAR> writer((TextureInterface<T>*)this);
             writer(val, uv);
         }
         break;
         default:
         case TextureFilterMode::NEAREST:
         {
-            InterpolationWriter<T, TextureFilterMode::NEAREST> writer((TextureInterface<T>*)this);
+            InterpolationWriter<T, write_mode, TextureFilterMode::NEAREST> writer((TextureInterface<T>*)this);
             writer(val, uv);
         }
         break;
@@ -316,8 +316,8 @@ ATCG_HOST_DEVICE void TextureWriter<T>::write(const T& val, const uv_t& uv)
 
 template<typename T, TexelWriteMode write_mode>
 template<typename uv_t>
-ATCG_HOST_DEVICE void
-InterpolationWriter<T, write_mode, TextureFilterMode::NEAREST>::operator()(const T& val, const uv_t& texel) const
+ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::NEAREST>::operator()(const T& val,
+                                                                                                 const uv_t& texel)
 {
     if constexpr(std::is_same_v<uv_t, glm::vec2>)
     {
@@ -356,6 +356,22 @@ ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::NEAR
 
     _texture->writeTexel(val, glm::ivec3(texel_x, texel_y, texel_z));
 }
+
+template<typename T, TexelWriteMode write_mode>
+template<typename uv_t>
+ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::LINEAR>::operator()(const T& val,
+                                                                                                const uv_t& texel)
+{
+    if constexpr(std::is_same_v<uv_t, glm::vec2>)
+    {
+        _write_2d(val, texel);
+    }
+    else /*if constexpr(std::is_same_v<uv_t, glm::vec3>)*/
+    {
+        _write_3d(val, texel);
+    }
+}
+
 
 template<typename T, TexelWriteMode write_mode>
 template<typename uv_t>
@@ -429,17 +445,17 @@ ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::LINE
 }
 
 template<typename T>
-void TexelUpdater<TexelWriteMode::DEFAULT>::operator()(T* data, const T& val) const
+ATCG_INLINE ATCG_HOST_DEVICE void TexelUpdater<TexelWriteMode::DEFAULT>::operator()(T* data, const T& val) const
 {
     *data = val;
 }
 
 template<typename T>
-void TexelUpdater<TexelWriteMode::ATOMIC_ADD>::operator()(T* data, const T& val) const
+ATCG_INLINE ATCG_DEVICE void TexelUpdater<TexelWriteMode::ATOMIC_ADD>::operator()(T* data, const T& val) const
 {
     if constexpr(std::is_integral_v<T>)
     {
-        atomicAdd((int*)data, (int)val);
+        atomicAdd((int*)data, (int)val);    // TODO?
     }
     else if constexpr(std::is_floating_point_v<T>)
     {
@@ -447,7 +463,7 @@ void TexelUpdater<TexelWriteMode::ATOMIC_ADD>::operator()(T* data, const T& val)
     }
     else
     {
-        static_assert(always_false<T>::value, "Atomic add not supported for this type");
+        printf("Atomic add not supported for this type\n");
     }
 }
 
