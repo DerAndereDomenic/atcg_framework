@@ -8,7 +8,7 @@
 
 namespace atcg
 {
-class HomogeneousMedium : public Medium
+class HomogeneousMedium : public Medium, public Differentiable
 {
 public:
     /**
@@ -30,7 +30,7 @@ public:
     /**
      * @brief A callback to display debug information in imgui
      */
-    virtual void onImGuiRender() override {}
+    virtual void onImGuiRender() override;
 
     /**
      * @brief Initialize the pipeline
@@ -41,8 +41,27 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt) override;
 
+    virtual std::vector<torch::Tensor> getParameters() const override;
+
+    virtual std::vector<torch::Tensor> getParameterGradients() const override;
+
+    virtual void zeroGrad() override;
+
+    virtual void markOptimizable() override;
+
+    virtual void clampParameters() override;
+
 private:
     atcg::dref_ptr<HomogeneousMediumData> _data_buffer;
+
+    torch::Tensor _albedo_tensor;
+    torch::Tensor _density_tensor;
+
+    torch::Tensor _albedo_grad_tensor;
+    torch::Tensor _density_grad_tensor;
+
+    bool _optimize_albedo  = false;
+    bool _optimize_density = false;
 };
 
 }    // namespace atcg

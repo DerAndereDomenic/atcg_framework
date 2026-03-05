@@ -48,7 +48,8 @@ extern "C" __device__ glm::vec3 __direct_callable__homogeneousMedium_evalTransmi
         *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
 
     // Evaluate the probability of the light *not* interacting with the medium.
-    return glm::vec3(detail::transmittance(distance, sbt_data->density));
+    float density = *(sbt_data->density);
+    return glm::vec3(detail::transmittance(distance, density));
 }
 
 extern "C" __device__ atcg::MediumSamplingResult
@@ -63,12 +64,12 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
 
 
     // Absorbtion, scattering and extinction coefficients...
-    atcg::SampledSpectrum albedo = atcg::SampledSpectrum::fromRGB(sbt_data->albedo, wavelengths);
+    glm::vec3 albedo_            = *(sbt_data->albedo);
+    atcg::SampledSpectrum albedo = atcg::SampledSpectrum::fromRGB(albedo_, wavelengths);
     atcg::SampledSpectrum Le     = atcg::SampledSpectrum::fromRGB(sbt_data->Le, wavelengths);
 
     // Scalar projection of scattering coefficient, used to sample the next medium scattering event.
-    float sigma_t_scalar = sbt_data->density;
-
+    float sigma_t_scalar = *(sbt_data->density);
 
     atcg::MediumSamplingResult result;
     // Dummy implementation:
