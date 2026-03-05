@@ -35,3 +35,10 @@ extern "C" __device__ atcg::BSDFEvalResult __direct_callable__eval_nullbsdf(cons
 
     return result;
 }
+
+extern "C" __device__ void __direct_callable__eval_backward_nullbsdf(const atcg::SurfaceInteraction& si,
+                                                                     const glm::vec3& outgoing_dir,
+                                                                     const glm::vec3& out_grad)
+{
+    // Nothing to do
+}
