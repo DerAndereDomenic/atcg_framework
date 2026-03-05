@@ -119,10 +119,10 @@ struct InterpolationWriter;
 template<typename T, TexelWriteMode write_mode>
 struct InterpolationWriter<T, write_mode, TextureFilterMode::NEAREST>
 {
-    InterpolationWriter(TextureInterface<T>* texture) : _texture(texture) {}
+    ATCG_HOST_DEVICE InterpolationWriter(TextureInterface<T>* texture) : _texture(texture) {}
 
     template<typename uv_t>
-    ATCG_HOST_DEVICE void operator()(const T& val, const uv_t& texel) const;
+    ATCG_HOST_DEVICE void operator()(const T& val, const uv_t& texel);
 
 private:
     template<typename uv_t>
@@ -137,10 +137,10 @@ private:
 template<typename T, TexelWriteMode write_mode>
 struct InterpolationWriter<T, write_mode, TextureFilterMode::LINEAR>
 {
-    InterpolationWriter(TextureInterface<T>* texture) : _texture(texture) {}
+    ATCG_HOST_DEVICE InterpolationWriter(TextureInterface<T>* texture) : _texture(texture) {}
 
     template<typename uv_t>
-    ATCG_HOST_DEVICE void operator()(const T& val, const uv_t& texel) const;
+    ATCG_HOST_DEVICE void operator()(const T& val, const uv_t& texel);
 
 private:
     template<typename uv_t>
