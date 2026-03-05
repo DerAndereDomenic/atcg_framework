@@ -1,5 +1,8 @@
 #pragma once
 
+#include <CuDiff/ext/glm.h>
+#include <Core/GlobalAtomicAdd.h>
+
 namespace atcg
 {
 
@@ -168,13 +171,24 @@ template<typename T>
 template<typename uv_t>
 ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::NEAREST>::operator()(const uv_t& uv) const
 {
-    if constexpr(std::is_same_v<uv_t, glm::vec2>)
+    if constexpr(std::is_same_v<CuDiff::dual_value_type_t<uv_t>, glm::vec2>)
     {
         return _read_2d(uv);
     }
-    else if constexpr(std::is_same_v<uv_t, glm::vec3>)
+    else if constexpr(std::is_same_v<CuDiff::dual_value_type_t<uv_t>, glm::vec3>)
     {
         return _read_3d(uv);
+    }
+    else
+    {
+        if constexpr(CuDiff::is_dual_v<uv_t>)
+        {
+            return CuDiff::Dual<CuDiff::dual_component_count<uv_t>::num_variables, T>(T(0));
+        }
+        else
+        {
+            return T(0);
+        }
     }
 }
 
@@ -182,39 +196,72 @@ template<typename T>
 template<typename uv_t>
 ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::NEAREST>::_read_2d(const uv_t& uv) const
 {
+    auto [uv_x, uv_y] = CuDiff::unwrap(uv);
+
     uint32_t width   = _texture->getSpecification().width;
     uint32_t height  = _texture->getSpecification().height;
-    uint32_t texel_x = (uint32_t)(uv.x * width);
-    uint32_t texel_y = (uint32_t)(uv.y * height);
+    uint32_t texel_x = (uint32_t)(uv_x * width);
+    uint32_t texel_y = (uint32_t)(uv_y * height);
 
-    return _texture->fetchTexel(glm::ivec2(texel_x, texel_y));
+    T value = _texture->fetchTexel(glm::ivec2(texel_x, texel_y));
+
+    if constexpr(CuDiff::is_dual_v<uv_t>)
+    {
+        return CuDiff::Dual<CuDiff::dual_component_count<uv_t>::num_variables, T>(value);
+    }
+    else
+    {
+        return value;
+    }
 }
 
 template<typename T>
 template<typename uv_t>
 ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::NEAREST>::_read_3d(const uv_t& uv) const
 {
+    auto [uv_x, uv_y, uv_z] = CuDiff::unwrap(uv);
+
     uint32_t width   = _texture->getSpecification().width;
     uint32_t height  = _texture->getSpecification().height;
     uint32_t depth   = _texture->getSpecification().depth;
-    uint32_t texel_x = (uint32_t)(uv.x * width);
-    uint32_t texel_y = (uint32_t)(uv.y * height);
-    uint32_t texel_z = (uint32_t)(uv.z * depth);
+    uint32_t texel_x = (uint32_t)(uv_x * width);
+    uint32_t texel_y = (uint32_t)(uv_y * height);
+    uint32_t texel_z = (uint32_t)(uv_z * depth);
 
-    return _texture->fetchTexel(glm::ivec3(texel_x, texel_y, texel_z));
+    T value = _texture->fetchTexel(glm::ivec3(texel_x, texel_y, texel_z));
+
+    if constexpr(CuDiff::is_dual_v<uv_t>)
+    {
+        return CuDiff::Dual<CuDiff::dual_component_count<uv_t>::num_variables, T>(value);
+    }
+    else
+    {
+        return value;
+    }
 }
 
 template<typename T>
 template<typename uv_t>
 ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::LINEAR>::operator()(const uv_t& uv) const
 {
-    if constexpr(std::is_same_v<uv_t, glm::vec2>)
+    if constexpr(std::is_same_v<CuDiff::dual_value_type_t<uv_t>, glm::vec2>)
     {
         return _read_2d(uv);
     }
-    else /*if constexpr(std::is_same_v<uv_t, glm::vec3>)*/
+    else if constexpr(std::is_same_v<CuDiff::dual_value_type_t<uv_t>, glm::vec3>)
     {
         return _read_3d(uv);
+    }
+    else
+    {
+        if constexpr(CuDiff::is_dual_v<uv_t>)
+        {
+            return CuDiff::Dual<CuDiff::dual_component_count<uv_t>::num_variables, T>(T(0));
+        }
+        else
+        {
+            return T(0);
+        }
     }
 }
 
@@ -222,10 +269,12 @@ template<typename T>
 template<typename uv_t>
 ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::LINEAR>::_read_2d(const uv_t& uv) const
 {
+    auto [uv_x, uv_y] = CuDiff::unwrap(uv);
+
     uint32_t width  = _texture->getSpecification().width;
     uint32_t height = _texture->getSpecification().height;
-    float fx        = uv.x * (width - 1);
-    float fy        = uv.y * (height - 1);
+    auto fx         = uv_x * (width - 1);
+    auto fy         = uv_y * (height - 1);
 
     int x0 = static_cast<int>(glm::floor(fx));
     int y0 = static_cast<int>(glm::floor(fy));
@@ -251,12 +300,14 @@ template<typename T>
 template<typename uv_t>
 ATCG_HOST_DEVICE auto InterpolationReader<T, TextureFilterMode::LINEAR>::_read_3d(const uv_t& uv) const
 {
+    auto [uv_x, uv_y, uv_z] = CuDiff::unwrap(uv);
+
     uint32_t width  = _texture->getSpecification().width;
     uint32_t height = _texture->getSpecification().height;
     uint32_t depth  = _texture->getSpecification().depth;
-    float fx        = uv.x * (width - 1);
-    float fy        = uv.y * (height - 1);
-    float fz        = uv.z * (depth - 1);
+    auto fx         = uv_x * (width - 1);
+    auto fy         = uv_y * (height - 1);
+    auto fz         = uv_z * (depth - 1);
 
     int x0 = static_cast<int>(glm::floor(fx));
     int y0 = static_cast<int>(glm::floor(fy));
@@ -319,11 +370,11 @@ template<typename uv_t>
 ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::NEAREST>::operator()(const T& val,
                                                                                                  const uv_t& texel)
 {
-    if constexpr(std::is_same_v<uv_t, glm::vec2>)
+    if constexpr(std::is_same_v<CuDiff::dual_value_type_t<uv_t>, glm::vec2>)
     {
         _write_2d(val, texel);
     }
-    else /*if constexpr(std::is_same_v<uv_t, glm::vec3>)*/
+    else /*if constexpr(std::is_same_v<CuDiff::dual_value_type_t<uv_t>, glm::vec3>)*/
     {
         _write_3d(val, texel);
     }
@@ -362,11 +413,11 @@ template<typename uv_t>
 ATCG_HOST_DEVICE void InterpolationWriter<T, write_mode, TextureFilterMode::LINEAR>::operator()(const T& val,
                                                                                                 const uv_t& texel)
 {
-    if constexpr(std::is_same_v<uv_t, glm::vec2>)
+    if constexpr(std::is_same_v<CuDiff::dual_value_type_t<uv_t>, glm::vec2>)
     {
         _write_2d(val, texel);
     }
-    else /*if constexpr(std::is_same_v<uv_t, glm::vec3>)*/
+    else /*if constexpr(std::is_same_v<CuDiff::dual_value_type_t<uv_t>, glm::vec3>)*/
     {
         _write_3d(val, texel);
     }
@@ -459,7 +510,7 @@ ATCG_INLINE ATCG_DEVICE void TexelUpdater<TexelWriteMode::ATOMIC_ADD>::operator(
     }
     else if constexpr(std::is_floating_point_v<T>)
     {
-        atomicAdd((float*)data, (float)val);
+        atcg::globalAtomicAdd((float*)data, (float)val);
     }
     else
     {
