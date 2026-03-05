@@ -10,7 +10,7 @@ struct HomogeneousMediumData
     float* density;       // sigma_t
     glm::vec3 Le;
 
-    glm::vec3* albdeo_grad;
+    float* albedo_grad;
     float* density_grad;
 
     bool optimize_albedo  = false;

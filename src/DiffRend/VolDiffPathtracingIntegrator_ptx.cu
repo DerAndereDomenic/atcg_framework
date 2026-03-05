@@ -291,10 +291,20 @@ extern "C" __global__ void __raygen__backward()
         {
             float max_distance =
                 si.valid ? glm::length(si.position - ray.origin) : std::numeric_limits<float>::infinity();
+
+            auto rng_copy = rng;
             atcg::MediumSamplingResult result =
                 ray.current_medium->sampleMediumEvent(ray.origin, ray.direction, max_distance, wavelengths, rng);
 
-            ray.radiance -= ray.throughput * result.radiance_weight;
+            ray.radiance -=
+                ray.throughput * result.radiance_weight;    // TODO: Check if backward step should be done before or
+                                                            // after updating the radiance. Corrently Le = 0
+
+            glm::vec3 grad_out = ray.delta_y * ray.radiance / glm::vec3(result.transmittance_value);
+
+            ray.current_medium
+                ->sampleMediumEventBackward(ray.origin, ray.direction, max_distance, wavelengths, rng_copy, grad_out);
+
             ray.throughput *= glm::vec3(result.transmittance_weight);
 
             // Check if a medium event was sampled. Otherwise, skip to surface rendering

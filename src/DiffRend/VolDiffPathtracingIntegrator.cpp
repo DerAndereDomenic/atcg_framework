@@ -83,10 +83,19 @@ void VolDiffPathtracingIntegrator::initializePipeline(const Dictionary& dict)
     _differentiable_components.clear();
     for(auto shape: _optix_scene->getShapes())
     {
-        auto diff = std::dynamic_pointer_cast<Differentiable>(shape->getBSDF());
-        if(diff)
+        auto bsdf_diff = std::dynamic_pointer_cast<Differentiable>(shape->getBSDF());
+        if(bsdf_diff)
         {
-            _differentiable_components.push_back(diff.get());
+            _differentiable_components.push_back(bsdf_diff.get());
+        }
+
+        if(shape->getInsideMedium())
+        {
+            auto medium_diff = std::dynamic_pointer_cast<Differentiable>(shape->getInsideMedium());
+            if(medium_diff)
+            {
+                _differentiable_components.push_back(medium_diff.get());
+            }
         }
     }
 

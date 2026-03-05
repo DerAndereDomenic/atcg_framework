@@ -38,14 +38,19 @@ void HomogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         pipeline->addCallableShader({ptx_filename, "__direct_callable__homogeneousMedium_evalTransmittance"});
     OptixProgramGroup sample_medium_event_prog_group =
         pipeline->addCallableShader({ptx_filename, "__direct_callable__homogeneousMedium_sampleMediumEvent"});
+    OptixProgramGroup sample_medium_event_backward_prog_group =
+        pipeline->addCallableShader({ptx_filename, "__direct_callable__homogeneousMedium_sampleMediumEventBackward"});
 
     uint32_t eval_transmittance_index  = sbt->addCallableEntry(eval_transmittance_prog_group, _data_buffer.get());
     uint32_t sample_medium_event_index = sbt->addCallableEntry(sample_medium_event_prog_group, _data_buffer.get());
+    uint32_t sample_medium_event_backward_index =
+        sbt->addCallableEntry(sample_medium_event_backward_prog_group, _data_buffer.get());
 
     MediumVPtrTable vptr_table_data;
-    vptr_table_data.evalCallIndex   = eval_transmittance_index;
-    vptr_table_data.sampleCallIndex = sample_medium_event_index;
-    vptr_table_data.phase_function  = phase_function ? phase_function->getVPtrTable() : nullptr;
+    vptr_table_data.evalCallIndex           = eval_transmittance_index;
+    vptr_table_data.sampleCallIndex         = sample_medium_event_index;
+    vptr_table_data.sampleBackwardCallIndex = sample_medium_event_backward_index;
+    vptr_table_data.phase_function          = phase_function ? phase_function->getVPtrTable() : nullptr;
 
     _vptr_table.upload(&vptr_table_data);
 
@@ -66,7 +71,7 @@ void HomogeneousMedium::onImGuiRender()
 
         data.albedo = (glm::vec3*)_albedo_tensor.data_ptr();
 
-        data.albdeo_grad = (glm::vec3*)_albedo_grad_tensor.data_ptr();
+        data.albedo_grad = (float*)_albedo_grad_tensor.data_ptr();
 
         data.optimize_albedo = true;
 
@@ -131,7 +136,7 @@ void HomogeneousMedium::markOptimizable()
     data.albedo  = (glm::vec3*)_albedo_tensor.data_ptr();
     data.density = (float*)_density_tensor.data_ptr();
 
-    data.albdeo_grad  = (glm::vec3*)_albedo_grad_tensor.data_ptr();
+    data.albedo_grad  = (float*)_albedo_grad_tensor.data_ptr();
     data.density_grad = (float*)_density_grad_tensor.data_ptr();
 
     data.optimize_albedo  = true;

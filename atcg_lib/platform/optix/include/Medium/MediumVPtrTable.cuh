@@ -11,6 +11,9 @@ struct MediumSamplingResult
     MediumInteraction interaction;
     SampledSpectrum transmittance_weight;
     SampledSpectrum radiance_weight;
+
+    SampledSpectrum transmittance_value;
+    float transmittance_pdf;
 };
 
 struct MediumVPtrTable
@@ -19,6 +22,7 @@ struct MediumVPtrTable
 
     uint32_t evalCallIndex;
     uint32_t sampleCallIndex;
+    uint32_t sampleBackwardCallIndex;
 
 #ifdef __CUDACC__
 
@@ -46,6 +50,28 @@ struct MediumVPtrTable
                                float,
                                const atcg::SampledWavelengths&,
                                PCG32&>(sampleCallIndex, origin, direction, max_distance, wavelengths, rng);
+    }
+
+    __device__ void sampleMediumEventBackward(const glm::vec3& origin,
+                                              const glm::vec3& direction,
+                                              float max_distance,
+                                              const atcg::SampledWavelengths& wavelengths,
+                                              PCG32& rng,
+                                              const glm::vec3& out_grad) const
+    {
+        optixDirectCall<void,
+                        const glm::vec3&,
+                        const glm::vec3&,
+                        float,
+                        const atcg::SampledWavelengths&,
+                        PCG32&,
+                        const glm::vec3&>(sampleBackwardCallIndex,
+                                          origin,
+                                          direction,
+                                          max_distance,
+                                          wavelengths,
+                                          rng,
+                                          out_grad);
     }
 
 #endif    // __CUDACC__

@@ -6,6 +6,7 @@
 
 #include <Medium/HomogeneousMediumData.cuh>
 #include <Medium/MediumVPtrTable.cuh>
+#include <Core/GlobalAtomicAdd.h>
 
 namespace detail
 {
@@ -70,6 +71,7 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
 
     // Scalar projection of scattering coefficient, used to sample the next medium scattering event.
     float sigma_t_scalar = *(sbt_data->density);
+    glm::vec3 sigma_s    = albedo_ * sigma_t_scalar;
 
     atcg::MediumSamplingResult result;
     // Dummy implementation:
@@ -98,6 +100,10 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
         //     detail::transmittance(sampled_distance, sigma_t - atcg::SampledSpectrum(sigma_t_scalar));
         // Transmittance will be equal to 1
         result.transmittance_weight = albedo;
+        result.transmittance_value =
+            atcg::SampledSpectrum(sigma_s * detail::transmittance(sampled_distance, sigma_t_scalar));
+        result.transmittance_pdf =
+            detail::warp_1d_sample_to_medium_event_distance_pdf(sampled_distance, sigma_t_scalar);
 
         // ? Attenuate by absorption albedo?
         result.radiance_weight = /*(1.0f - sbt_data->sigma_s / sigma_t_scalar) */ Le;
@@ -114,8 +120,61 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
         // float sampling_pdf = transmittance(max_distance, sigma_s_scalar);
         // result.transmittance_weight = transmittance(max_distance, sigma_t) / sampling_pdf;
         result.transmittance_weight = atcg::SampledSpectrum(1.0f);
+        result.transmittance_value  = atcg::SampledSpectrum(detail::transmittance(max_distance, sigma_t_scalar));
+        result.transmittance_pdf    = detail::transmittance(max_distance, sigma_t_scalar);
         // detail::transmittance(max_distance, sigma_t - atcg::SampledSpectrum(sigma_t_scalar));
     }
 
     return result;
+}
+
+extern "C" __device__ void
+__direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& origin,
+                                                               const glm::vec3& direction,
+                                                               float max_distance,
+                                                               const atcg::SampledWavelengths& wavelengths,
+                                                               atcg::PCG32& rng,
+                                                               const glm::vec3& output_grad)
+{
+    const atcg::HomogeneousMediumData* sbt_data =
+        *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
+
+    if(!sbt_data->optimize_albedo && !sbt_data->optimize_density)
+    {
+        // Nothing to do
+        return;
+    }
+
+    // Absorbtion, scattering and extinction coefficients...
+    glm::vec3 albedo_            = *(sbt_data->albedo);
+    atcg::SampledSpectrum albedo = atcg::SampledSpectrum::fromRGB(albedo_, wavelengths);
+
+    // Scalar projection of scattering coefficient, used to sample the next medium scattering event.
+    float sigma_t_scalar = *(sbt_data->density);
+    glm::vec3 sigma_s    = albedo_ * sigma_t_scalar;
+
+
+    // Sample the free-flight distance proportional to sigma_s_scalar.
+    float sampled_distance = detail::warp_1d_sample_to_medium_event_distance(rng.next1d(), sigma_t_scalar);
+
+    if(sampled_distance < max_distance)
+    {
+        // Medium event!
+
+        glm::vec3 gradient = sigma_t_scalar * detail::transmittance(sampled_distance, sigma_t_scalar) * output_grad;
+
+        if(sbt_data->optimize_albedo)
+        {
+            atcg::globalAtomicAdd(sbt_data->albedo_grad + 0, gradient.x);
+            atcg::globalAtomicAdd(sbt_data->albedo_grad + 1, gradient.y);
+            atcg::globalAtomicAdd(sbt_data->albedo_grad + 2, gradient.z);
+        }
+    }
+    else
+    {
+        // No emission, no absorption, no scattering
+        // No medium event...
+        // The sampling did not succeed, and there is no scattering event *before* the max_distance.
+        // This is independent of the volume albedo and density, so no gradients to those parameters.
+    }
 }
