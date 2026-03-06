@@ -161,13 +161,27 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
     {
         // Medium event!
 
-        glm::vec3 gradient = sigma_t_scalar * detail::transmittance(sampled_distance, sigma_t_scalar) * output_grad;
+        float T = detail::transmittance(sampled_distance, sigma_t_scalar);
+
+        glm::vec3 albedo_gradient = sigma_t_scalar * T * output_grad;
+        float density_gradient    = glm::dot((1.0f - sampled_distance * sigma_t_scalar) * albedo_ * T, output_grad);
 
         if(sbt_data->optimize_albedo)
         {
-            atcg::globalAtomicAdd(sbt_data->albedo_grad + 0, gradient.x);
-            atcg::globalAtomicAdd(sbt_data->albedo_grad + 1, gradient.y);
-            atcg::globalAtomicAdd(sbt_data->albedo_grad + 2, gradient.z);
+            if(isfinite(albedo_gradient.x) && isfinite(albedo_gradient.y) && isfinite(albedo_gradient.z))
+            {
+                atcg::globalAtomicAdd(sbt_data->albedo_grad + 0, albedo_gradient.x);
+                atcg::globalAtomicAdd(sbt_data->albedo_grad + 1, albedo_gradient.y);
+                atcg::globalAtomicAdd(sbt_data->albedo_grad + 2, albedo_gradient.z);
+            }
+        }
+
+        if(sbt_data->optimize_density)
+        {
+            if(isfinite(density_gradient))
+            {
+                atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
+            }
         }
     }
     else
@@ -176,5 +190,12 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
         // No medium event...
         // The sampling did not succeed, and there is no scattering event *before* the max_distance.
         // This is independent of the volume albedo and density, so no gradients to those parameters.
+        if(sbt_data->optimize_density)
+        {
+            float density_gradient =
+                glm::dot(glm::vec3(-max_distance * detail::transmittance(max_distance, sigma_t_scalar)), output_grad);
+
+            atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
+        }
     }
 }
