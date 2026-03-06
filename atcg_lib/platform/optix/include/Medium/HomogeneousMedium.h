@@ -5,6 +5,7 @@
 
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
+#include <DataStructure/Statistics.h>
 
 namespace atcg
 {
@@ -62,6 +63,11 @@ private:
 
     bool _optimize_albedo  = false;
     bool _optimize_density = false;
+
+    atcg::CyclicCollection<float> time_collection    = atcg::CyclicCollection<float>("Time Collection", 35 * 60 / 5);
+    atcg::CyclicCollection<float> density_collection = atcg::CyclicCollection<float>("Density Collection", 35 * 60 / 5);
+    atcg::CyclicCollection<float> density_grad_collection =
+        atcg::CyclicCollection<float>("Density grad Collection", 35 * 60 / 5);
 };
 
 }    // namespace atcg

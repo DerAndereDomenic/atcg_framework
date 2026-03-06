@@ -4,6 +4,7 @@
 
 #ifndef ATCG_HEADLESS
     #include <imgui.h>
+    #include <implot.h>
 #endif
 
 namespace atcg
@@ -97,6 +98,45 @@ void HomogeneousMedium::onImGuiRender()
 
         _optimizable      = true;
         _optimize_density = true;
+    }
+
+    if(_optimize_density)
+    {
+        float density      = _density_tensor.item<float>();
+        float density_grad = _density_tensor.grad().defined() ? _density_tensor.grad().item<float>() : 0.0f;
+
+        static int iteration_count = 0;
+
+        time_collection.addSample((float)iteration_count);
+        density_collection.addSample(density);
+        density_grad_collection.addSample(density_grad);
+        iteration_count++;
+
+        if(ImPlot::BeginPlot("Density"))
+        {
+            ImPlot::SetupAxes("Iteration", "Density", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+            ImPlot::PlotLine("Density",
+                             time_collection.get(),
+                             density_collection.get(),
+                             density_collection.count(),
+                             0,
+                             density_collection.index(),
+                             sizeof(float));
+            ImPlot::EndPlot();
+        }
+
+        if(ImPlot::BeginPlot("Density Gradient"))
+        {
+            ImPlot::SetupAxes("Iteration", "Density Gradient", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+            ImPlot::PlotLine("Density Gradient",
+                             time_collection.get(),
+                             density_grad_collection.get(),
+                             density_grad_collection.count(),
+                             0,
+                             density_grad_collection.index(),
+                             sizeof(float));
+            ImPlot::EndPlot();
+        }
     }
 }
 
