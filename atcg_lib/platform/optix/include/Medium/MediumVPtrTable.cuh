@@ -11,9 +11,6 @@ struct MediumSamplingResult
     MediumInteraction interaction;
     SampledSpectrum transmittance_weight;
     SampledSpectrum radiance_weight;
-
-    SampledSpectrum transmittance_value;
-    float transmittance_pdf;
 };
 
 struct MediumVPtrTable

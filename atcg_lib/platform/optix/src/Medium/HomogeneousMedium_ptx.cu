@@ -100,10 +100,10 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
         //     detail::transmittance(sampled_distance, sigma_t - atcg::SampledSpectrum(sigma_t_scalar));
         // Transmittance will be equal to 1
         result.transmittance_weight = albedo;
-        result.transmittance_value =
-            atcg::SampledSpectrum(sigma_s * detail::transmittance(sampled_distance, sigma_t_scalar));
-        result.transmittance_pdf =
-            detail::warp_1d_sample_to_medium_event_distance_pdf(sampled_distance, sigma_t_scalar);
+        // result.transmittance_value =
+        //     atcg::SampledSpectrum(sigma_s * detail::transmittance(sampled_distance, sigma_t_scalar));
+        // result.transmittance_pdf =
+        //     detail::warp_1d_sample_to_medium_event_distance_pdf(sampled_distance, sigma_t_scalar);
 
         // ? Attenuate by absorption albedo?
         result.radiance_weight = /*(1.0f - sbt_data->sigma_s / sigma_t_scalar) */ Le;
@@ -120,8 +120,8 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
         // float sampling_pdf = transmittance(max_distance, sigma_s_scalar);
         // result.transmittance_weight = transmittance(max_distance, sigma_t) / sampling_pdf;
         result.transmittance_weight = atcg::SampledSpectrum(1.0f);
-        result.transmittance_value  = atcg::SampledSpectrum(detail::transmittance(max_distance, sigma_t_scalar));
-        result.transmittance_pdf    = detail::transmittance(max_distance, sigma_t_scalar);
+        // result.transmittance_value  = atcg::SampledSpectrum(detail::transmittance(max_distance, sigma_t_scalar));
+        // result.transmittance_pdf    = detail::transmittance(max_distance, sigma_t_scalar);
         // detail::transmittance(max_distance, sigma_t - atcg::SampledSpectrum(sigma_t_scalar));
     }
 
@@ -163,8 +163,10 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
 
         float T = detail::transmittance(sampled_distance, sigma_t_scalar);
 
-        glm::vec3 albedo_gradient = sigma_t_scalar * T * output_grad;
-        float density_gradient    = glm::dot((1.0f - sampled_distance * sigma_t_scalar) * albedo_ * T, output_grad);
+        // sigma_t_scalar * T * output_grad / sigma_s * T
+        glm::vec3 albedo_gradient = sigma_t_scalar / sigma_s * output_grad;    // / (sigma_s * T);
+        // glm::dot((1.0f - sampled_distance * sigma_t_scalar) * albedo_ * T, output_grad) / (sigma_s * T)
+        float density_gradient = glm::dot((1.0f - sampled_distance * sigma_t_scalar) * albedo_ / sigma_s, output_grad);
 
         if(sbt_data->optimize_albedo)
         {
@@ -192,8 +194,8 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
         // This is independent of the volume albedo and density, so no gradients to those parameters.
         if(sbt_data->optimize_density)
         {
-            float density_gradient =
-                glm::dot(glm::vec3(-max_distance * detail::transmittance(max_distance, sigma_t_scalar)), output_grad);
+            // glm::dot(glm::vec3(-max_distance * detail::transmittance(max_distance, sigma_t_scalar)), output_grad) / T
+            float density_gradient = glm::dot(glm::vec3(-max_distance), output_grad);
 
             atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
         }

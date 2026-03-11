@@ -300,7 +300,7 @@ extern "C" __global__ void __raygen__backward()
                 ray.throughput * result.radiance_weight;    // TODO: Check if backward step should be done before or
                                                             // after updating the radiance. Corrently Le = 0
 
-            glm::vec3 grad_out = ray.delta_y * ray.radiance / glm::vec3(result.transmittance_value);
+            glm::vec3 grad_out = ray.delta_y * ray.radiance;    // / glm::vec3(result.transmittance_value);
 
             ray.current_medium
                 ->sampleMediumEventBackward(ray.origin, ray.direction, max_distance, wavelengths, rng_copy, grad_out);
