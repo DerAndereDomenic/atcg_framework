@@ -52,16 +52,18 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleEnvironment
     if(ai.is_surface())
     {
         atcg::SurfaceInteraction si = ai;
-        random_dir                  = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
-        pdf                         = atcg::warp_square_to_hemisphere_cosine_pdf(random_dir);
-        atcg::Frame frame           = atcg::Frame(si.normal);
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_COSINE> strategy;
+        random_dir        = strategy.sample(rng.next2d());
+        pdf               = strategy.pdf(random_dir);
+        atcg::Frame frame = atcg::Frame(si.normal);
 
         random_dir = frame.toWorld(random_dir);
     }
     else if(ai.is_medium())
     {
-        random_dir = atcg::warp_square_to_sphere(rng.next2d());
-        pdf        = atcg::warp_square_to_sphere_pdf();
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::SPHERE_UNIFORM> strategy;
+        random_dir = strategy.sample(rng.next2d());
+        pdf        = strategy.pdf(random_dir);
     }
     else
     {
@@ -103,11 +105,13 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalEnvironmentEmitterSamplingPdf(const
     {
         atcg::Frame frame            = atcg::Frame(last_si.si.normal);
         glm::vec3 local_dir_to_light = frame.toLocal(si.incoming_direction);
-        return atcg::warp_square_to_hemisphere_cosine_pdf(local_dir_to_light);
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_COSINE> strategy;
+        return strategy.pdf(local_dir_to_light);
     }
     else if(last_si.is_medium())
     {
-        return atcg::warp_square_to_sphere_pdf();
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::SPHERE_UNIFORM> strategy;
+        return strategy.pdf(si.incoming_direction);
     }
     else
     {
