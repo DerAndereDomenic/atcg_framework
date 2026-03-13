@@ -20,7 +20,6 @@ extern "C" __global__ void __closesthit__mesh()
     glm::vec3 ray_dir         = glm::make_vec3((float*)&optix_world_dir);
     float tmax                = optixGetRayTmax();
 
-    si->valid              = true;
     si->incoming_distance  = tmax;
     si->incoming_direction = ray_dir;
     si->primitive_idx      = optixGetPrimitiveIndex();

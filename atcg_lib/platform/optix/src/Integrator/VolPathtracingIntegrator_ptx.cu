@@ -35,7 +35,7 @@ extern "C" __global__ void __raygen__rg()
     bool next_ray_valid = true;
 
     atcg::SurfaceInteraction last_si;
-    float last_bsdf_pdf = 1.0f;
+    last_si.pdf = 1.0f;
 
     for(int n = 0; n < 512; ++n)
     {
@@ -61,11 +61,11 @@ extern "C" __global__ void __raygen__rg()
                                                              1e16f,
                                                              &si,
                                                              params.surface_trace_params);
-        if(si.valid &&
+        if(si.isValid() &&
            camera_ray.ray.current_medium)    // For now, we only allow media inside objects. So if si not valid, reject
         {
-            float max_distance =
-                si.valid ? glm::length(si.position - camera_ray.ray.origin) : std::numeric_limits<float>::infinity();
+            float max_distance = si.isValid() ? glm::length(si.position - camera_ray.ray.origin)
+                                              : std::numeric_limits<float>::infinity();
             atcg::MediumSamplingResult result =
                 camera_ray.ray.current_medium->sampleMediumEvent(camera_ray.ray.origin,
                                                                  camera_ray.ray.direction,
@@ -77,7 +77,7 @@ extern "C" __global__ void __raygen__rg()
             camera_ray.importance *= result.transmittance_weight;
 
             // Check if a medium event was sampled. Otherwise, skip to surface rendering
-            if(result.interaction.valid)
+            if(result.interaction.isValid())
             {
                 atcg::MediumInteraction mi = result.interaction;
 
@@ -102,16 +102,16 @@ extern "C" __global__ void __raygen__rg()
             }
         }
 
-        if(!si.valid)
+        if(!si.isValid())
         {
             if(params.environment_emitter)
             {
-                bool mis_valid              = last_si.valid;
+                bool mis_valid              = last_si.isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
                     mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
                               : 0.0f;
-                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                float mis_weight = last_si.pdf / (last_si.pdf + emitter_sampling_pdf);
                 radiance += mis_weight * camera_ray.importance * params.environment_emitter->evalLight(si, wavelengths);
             }
             next_ray_valid = false;
@@ -126,9 +126,9 @@ extern "C" __global__ void __raygen__rg()
         // Check for light source
         if(si.emitter)
         {
-            bool mis_valid             = last_si.valid;
+            bool mis_valid             = last_si.isValid();
             float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-            float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+            float mis_weight           = last_si.pdf / (last_si.pdf + emitter_sampling_pdf);
             radiance += mis_weight * camera_ray.importance * si.emitter->evalLight(si, wavelengths);
         }
 
@@ -187,8 +187,8 @@ extern "C" __global__ void __raygen__rg()
                 camera_ray.importance *= result.bsdf_weight;
                 next_ray_valid = true;
 
-                last_si       = si;
-                last_bsdf_pdf = result.sample_probability;
+                last_si     = si;
+                last_si.pdf = result.sample_probability;
 
                 // Check if we are entering the geometry or leaving the geometry and assign si.inside_medium or
                 // si.outside_medium, respectively.
@@ -202,7 +202,7 @@ extern "C" __global__ void __raygen__rg()
 
                 if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                 {
-                    last_si.valid = false;
+                    last_si.setInvalid();    // Invalidate last_si to prevent NEE for delta interactions
                 }
             }
         }
@@ -222,8 +222,7 @@ extern "C" __global__ void __miss__ms()
     float3 optix_world_dir       = optixGetWorldRayDirection();
     glm::vec3 ray_dir            = glm::make_vec3((float*)&optix_world_dir);
 
-    si->valid              = false;
-    si->incoming_distance  = std::numeric_limits<float>::infinity();
+    si->setInvalid();
     si->incoming_direction = ray_dir;
 }
 

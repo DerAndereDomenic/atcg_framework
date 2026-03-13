@@ -146,9 +146,8 @@ __direct_callable__heterogeneousMedium_sampleMediumEvent(const glm::vec3& origin
     result.interaction.incoming_distance  = sample.distance;
     result.transmittance_weight           = sample.transmittance_weight;
     result.radiance_weight                = sample.emission_weight;
-    if(!glm::isnan(result.interaction.incoming_distance))
+    if(result.interaction.isValid())
     {
-        result.interaction.valid    = true;
         result.interaction.position = origin + result.interaction.incoming_distance * direction;
     }
     return result;

@@ -77,7 +77,6 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
     result.interaction.incoming_direction = direction;
     result.transmittance_weight           = atcg::SampledSpectrum(1);
     result.radiance_weight                = atcg::SampledSpectrum(0);
-    result.interaction.valid              = true;
 
     // Sample the free-flight distance proportional to sigma_s_scalar.
     float sampled_distance = detail::warp_1d_sample_to_medium_event_distance(rng.next1d(), sigma_t_scalar);
@@ -106,7 +105,7 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
         // No emission, no absorption, no scattering
         // No medium event...
         // The sampling did not succeed, and there is no scattering event *before* the max_distance.
-        result.interaction.valid = false;
+        result.interaction.setInvalid();
 
         // All no medium events are *the same* event, so we need to compute the transmittance and sampling_pdf for
         // *any* such case, i.e. marginalize over all sampled distances >= max_distance.
