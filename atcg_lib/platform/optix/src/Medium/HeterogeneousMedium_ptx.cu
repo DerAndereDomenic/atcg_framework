@@ -153,3 +153,64 @@ __direct_callable__heterogeneousMedium_sampleMediumEvent(const glm::vec3& origin
     }
     return result;
 }
+
+extern "C" __device__ void
+__direct_callable__heterogeneousMedium_sampleMediumEventBackward(const glm::vec3& origin,
+                                                                 const glm::vec3& direction,
+                                                                 float max_distance,
+                                                                 const atcg::SampledWavelengths& wavelengths,
+                                                                 atcg::PCG32& rng,
+                                                                 const glm::vec3& output_grad)
+{
+    atcg::HeterogeneousMediumData* sbt_data =
+        *reinterpret_cast<atcg::HeterogeneousMediumData**>(optixGetSbtDataPointer());
+
+    if(!sbt_data->optimize_density)
+    {
+        return;
+    }
+    // Arbitrarily clamp max_distance.
+    // If max_distance would be (close to) infinite, the loop below might not terminate.
+    max_distance = glm::clamp(max_distance, 0.0f, 1e6f);
+
+    float distance = 0.0f;
+    while(distance < max_distance)
+    {
+        float step =
+            detail::warp_1d_sample_to_homogeneous_medium_event_distance(rng.next1d(), sbt_data->density_majorant);
+        distance += step;
+        glm::vec3 step_position = origin + distance * direction;
+        float step_density      = sbt_data->density_grid.eval(step_position);
+
+        if(distance >= max_distance) break;
+
+        // Russian-roulette-style acceptance of sample.
+        if(rng.next1d() < step_density / sbt_data->density_majorant)
+        {
+            // Scattering or absorbtion event case.
+            atcg::SampledSpectrum albedo =
+                atcg::SampledSpectrum::fromRGB(sbt_data->albedo_grid.eval(step_position), wavelengths);
+
+            float Pt           = step_density / sbt_data->density_majorant;
+            float density_grad = glm::dot(output_grad, glm::vec3(1.0f / (Pt * sbt_data->density_majorant + 1e-6f)));
+
+            if(isfinite(density_grad))
+            {
+                sbt_data->density_grid.write(step_position, density_grad);
+            }
+
+            break;
+        }
+        else
+        {
+            // Null-scattering event case.
+            float Pn           = 1.0f - step_density / sbt_data->density_majorant;
+            float density_grad = glm::dot(output_grad / Pn, glm::vec3(-1.0f / sbt_data->density_majorant));
+
+            if(isfinite(density_grad))
+            {
+                sbt_data->density_grid.write(step_position, density_grad);
+            }
+        }
+    }
+}

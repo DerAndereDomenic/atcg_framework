@@ -41,6 +41,7 @@ template<typename T>
 struct TextureSamplerStorage
 {
     atcg::TextureSampler<T> sampler;
+    atcg::TextureWriter<T> writer;
 
     ATCG_INLINE ATCG_DEVICE bool is_valid() const
     {
@@ -48,6 +49,11 @@ struct TextureSamplerStorage
     }
 
     ATCG_INLINE ATCG_DEVICE T eval(const glm::vec3& uv) const { return sampler.read(uv); }
+
+    ATCG_INLINE ATCG_DEVICE void write(const glm::vec3& uv, const T& value)
+    {
+        writer.write<glm::vec3, atcg::TexelWriteMode::ATOMIC_ADD>(value, uv);
+    }
 };
 
 template<typename T, typename TextureStorageType>
@@ -74,6 +80,18 @@ struct GridData
 
         return scale * value;
     }
+
+    ATCG_DEVICE ATCG_INLINE void write(const glm::vec3& world_pos, const T& value)
+    {
+        if(!is_valid())
+        {
+            return;
+        }
+
+        glm::vec4 local_pos_hom = to_uvw * glm::vec4(world_pos, 1);
+        glm::vec3 local_pos     = glm::xyz(local_pos_hom) / local_pos_hom.w;
+        storage.write(local_pos, value);
+    }
 #endif
 };
 
@@ -82,12 +100,13 @@ namespace atcg
 
 struct HeterogeneousMediumData
 {
-    GridData<glm::vec3, CUDATextureStorage<glm::vec3>> albedo_grid;
+    GridData<glm::vec3, TextureSamplerStorage<glm::vec3>> albedo_grid;
     float density_majorant;
-    GridData<float, CUDATextureStorage<float>> density_grid;
-    GridData<glm::vec3, CUDATextureStorage<glm::vec3>> emission_grid;
+    GridData<float, TextureSamplerStorage<float>> density_grid;
+    GridData<glm::vec3, TextureSamplerStorage<glm::vec3>> emission_grid;
 
-    TextureSampler<float> density_sampler;
+    bool optimize_density = false;
+    bool optimize_albedo  = false;
 };
 
 }    // namespace atcg

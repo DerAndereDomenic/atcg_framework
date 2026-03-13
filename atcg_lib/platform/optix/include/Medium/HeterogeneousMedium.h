@@ -12,7 +12,7 @@
 
 namespace atcg
 {
-class HeterogeneousMedium : public Medium
+class HeterogeneousMedium : public Medium, public Differentiable
 {
 public:
     HeterogeneousMedium(const Dictionary& dict);
@@ -21,7 +21,7 @@ public:
     /**
      * @brief A callback to display debug information in imgui
      */
-    virtual void onImGuiRender() override {}
+    virtual void onImGuiRender() override;
 
     /**
      * @brief Initialize the pipeline
@@ -32,10 +32,30 @@ public:
     virtual void initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                     const atcg::ref_ptr<ShaderBindingTable>& sbt);
 
+    virtual std::vector<torch::Tensor> getParameters() const override;
+
+    virtual std::vector<torch::Tensor> getParameterGradients() const override;
+
+    virtual void zeroGrad() override;
+
+    virtual void markOptimizable() override;
+
+    virtual void clampParameters() override;
+
 private:
-    atcg::ref_ptr<Texture3D> _density_texture;
-    atcg::ref_ptr<Texture3D> _albedo_texture;
-    atcg::ref_ptr<Texture3D> _emission_texture;
+    torch::Tensor _albedo_tensor;
+    torch::Tensor _density_tensor;
+    torch::Tensor _emission_tensor;
+
+    torch::Tensor _albedo_grad_tensor;
+    torch::Tensor _density_grad_tensor;
+
+    atcg::ref_ptr<Texture2D> _density_texture;
+    atcg::ref_ptr<Texture2D> _density_grad_texture;
+    int _layer = 0;
+
+    bool _optimize_albedo  = false;
+    bool _optimize_density = false;
 
     atcg::dref_ptr<HeterogeneousMediumData> _data_buffer;
 };

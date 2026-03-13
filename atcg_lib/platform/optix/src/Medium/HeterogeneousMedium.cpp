@@ -17,20 +17,21 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
     glm::mat4 world_to_local = glm::inverse(to_world);
 
     auto density_grid     = dict.getValue<GridComponent>("density_grid");
-    auto density_texture  = AssetManager::getAsset<Texture3D>(density_grid.handle)->clone();
-    _density_texture      = std::static_pointer_cast<Texture3D>(density_texture);
+    auto density_texture  = AssetManager::getAsset<Texture3D>(density_grid.handle);
+    _density_tensor       = density_texture ? density_texture->getData(atcg::GPU) : torch::Tensor();
     auto emission_grid    = dict.getValue<GridComponent>("emission_grid");
     auto emission_texture = AssetManager::getAsset<Texture3D>(emission_grid.handle);
-    _emission_texture     = emission_texture ? std::static_pointer_cast<Texture3D>(emission_texture->clone()) : nullptr;
+    _emission_tensor      = emission_texture ? emission_texture->getData(atcg::GPU) : torch::Tensor();
     auto albedo_grid      = dict.getValue<GridComponent>("albedo_grid");
     auto albedo_texture   = AssetManager::getAsset<Texture3D>(albedo_grid.handle);
-    _albedo_texture       = albedo_texture ? std::static_pointer_cast<Texture3D>(albedo_texture->clone()) : nullptr;
+    _albedo_tensor        = albedo_texture ? albedo_texture->getData(atcg::GPU) : torch::Tensor();
 
-    auto density_majorant = _density_texture->getData(atcg::GPU).max().item<float>();
+    auto density_majorant = _density_tensor.max().item<float>();
 
-    data.density_grid.storage.texture = _density_texture->getTextureObject();
-    data.density_grid.scale           = density_grid.scale;
-    data.density_majorant             = density_majorant * data.density_grid.scale;
+    data.density_grid.storage.sampler =
+        TextureSampler<float>((std::byte*)_density_tensor.data_ptr(), density_texture->getSpecification());
+    data.density_grid.scale = density_grid.scale;
+    data.density_majorant   = density_majorant * data.density_grid.scale;
     {
         glm::mat4 to_uvw         = glm::mat4(1);
         glm::vec3 scale          = density_grid.bbox.max - density_grid.bbox.min;
@@ -40,9 +41,12 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
         data.density_grid.to_uvw = to_uvw;
     }
 
-    data.emission_grid.storage.texture = _emission_texture ? _emission_texture->getTextureObject() : 0;
-    data.emission_grid.default_value   = glm::vec3(0);
-    data.emission_grid.scale           = emission_grid.scale;
+    data.emission_grid.storage.sampler =
+        emission_texture
+            ? TextureSampler<glm::vec3>((std::byte*)_emission_tensor.data_ptr(), emission_texture->getSpecification())
+            : TextureSampler<glm::vec3>();
+    data.emission_grid.default_value = glm::vec3(0);
+    data.emission_grid.scale         = emission_grid.scale;
     {
         glm::mat4 to_uvw          = glm::mat4(1);
         glm::vec3 scale           = emission_grid.bbox.max - emission_grid.bbox.min;
@@ -52,7 +56,9 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
         data.emission_grid.to_uvw = to_uvw;
     }
 
-    data.albedo_grid.storage.texture = false ? _albedo_texture->getTextureObject() : 0;
+    data.albedo_grid.storage.sampler = albedo_texture ? TextureSampler<glm::vec3>((std::byte*)_albedo_tensor.data_ptr(),
+                                                                                  albedo_texture->getSpecification())
+                                                      : TextureSampler<glm::vec3>();
     data.albedo_grid.scale           = albedo_grid.scale;
     {
         glm::mat4 to_uvw        = glm::mat4(1);
@@ -66,12 +72,7 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
     _data_buffer.upload(&data);
 }
 
-HeterogeneousMedium::~HeterogeneousMedium()
-{
-    _density_texture->unmapDevicePointers();
-    if(_albedo_texture) _albedo_texture->unmapDevicePointers();
-    if(_emission_texture) _emission_texture->unmapDevicePointers();
-}
+HeterogeneousMedium::~HeterogeneousMedium() {}
 
 void HeterogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                              const atcg::ref_ptr<ShaderBindingTable>& sbt)
@@ -85,16 +86,154 @@ void HeterogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipel
         pipeline->addCallableShader({ptx_filename, "__direct_callable__heterogeneousMedium_evalTransmittance"});
     OptixProgramGroup sample_medium_event_prog_group =
         pipeline->addCallableShader({ptx_filename, "__direct_callable__heterogeneousMedium_sampleMediumEvent"});
+    OptixProgramGroup sample_medium_event_backward_prog_group =
+        pipeline->addCallableShader({ptx_filename, "__direct_callable__heterogeneousMedium_sampleMediumEventBackward"});
 
     uint32_t eval_transmittance_index  = sbt->addCallableEntry(eval_transmittance_prog_group, _data_buffer.get());
     uint32_t sample_medium_event_index = sbt->addCallableEntry(sample_medium_event_prog_group, _data_buffer.get());
+    uint32_t sample_medium_event_backward_index =
+        sbt->addCallableEntry(sample_medium_event_backward_prog_group, _data_buffer.get());
 
     MediumVPtrTable vptr_table_data;
-    vptr_table_data.evalCallIndex   = eval_transmittance_index;
-    vptr_table_data.sampleCallIndex = sample_medium_event_index;
-    vptr_table_data.phase_function  = phase_function ? phase_function->getVPtrTable() : nullptr;
+    vptr_table_data.evalCallIndex           = eval_transmittance_index;
+    vptr_table_data.sampleCallIndex         = sample_medium_event_index;
+    vptr_table_data.sampleBackwardCallIndex = sample_medium_event_backward_index;
+    vptr_table_data.phase_function          = phase_function ? phase_function->getVPtrTable() : nullptr;
 
     _vptr_table.upload(&vptr_table_data);
     markInitialized();
+}
+
+void HeterogeneousMedium::onImGuiRender()
+{
+    if(ImGui::Button("Optimize Albedo"))
+    {
+        _optimize_albedo = true;
+    }
+
+    if(ImGui::Button("Optimize Density"))
+    {
+        atcg::TextureSpecification spec;
+        spec.width             = 256;
+        spec.height            = 256;
+        spec.depth             = 256;
+        spec.format            = TextureFormat::RFLOAT;
+        spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+
+        _optimize_density = true;
+        _optimizable      = true;
+
+        _density_tensor = torch::ones({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        _density_grad_tensor = torch::zeros({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions());
+
+        HeterogeneousMediumData data;
+        _data_buffer.download(&data);
+
+        data.optimize_density             = true;
+        data.density_majorant             = 1.0f;
+        data.density_grid.storage.sampler = TextureSampler<float>((std::byte*)_density_tensor.data_ptr(), spec);
+        data.density_grid.storage.writer  = TextureWriter<float>((std::byte*)_density_grad_tensor.data_ptr(), spec);
+
+        _data_buffer.upload(&data);
+
+        spec.depth            = 0;
+        spec.format           = TextureFormat::RGFLOAT;
+        _density_texture      = atcg::Texture2D::create(spec);
+        _density_grad_texture = atcg::Texture2D::create(spec);
+    }
+
+    auto normalize = [](torch::Tensor inp) -> torch::Tensor
+    {
+        auto min = torch::amin(inp);
+        auto max = torch::amax(inp);
+        auto y   = (inp - min) / (max - min);
+
+        return y;
+    };
+
+    auto pos_neg = [normalize](torch::Tensor inp) -> torch::Tensor
+    {
+        torch::Tensor pos = torch::relu(inp);
+
+        torch::Tensor neg = torch::relu(-inp);
+
+        torch::Tensor y = torch::concat({pos, neg}, /*dim=*/-1);
+
+        return normalize(y);
+    };
+
+    if(_optimize_density)
+    {
+        ImGui::SliderInt("Layer", &_layer, 0, 255);
+
+        if(_density_tensor.defined())
+        {
+            auto density_slice = _density_tensor.index({torch::indexing::Slice(), torch::indexing::Slice(), _layer})
+                                     .unsqueeze(-1)
+                                     .contiguous();
+            _density_texture->setData(pos_neg(density_slice));
+            ImGui::Image((ImTextureID)_density_texture->getID(), ImVec2(256, 256), ImVec2 {0, 1}, ImVec2 {1, 0});
+        }
+
+        if(_density_tensor.grad().defined())
+        {
+            auto density_grad_slice = _density_tensor.grad()
+                                          .index({torch::indexing::Slice(), torch::indexing::Slice(), _layer})
+                                          .unsqueeze(-1)
+                                          .contiguous();
+
+            _density_grad_texture->setData(pos_neg(density_grad_slice));
+
+            ImGui::Image((ImTextureID)_density_grad_texture->getID(), ImVec2(256, 256), ImVec2 {0, 1}, ImVec2 {1, 0});
+        }
+    }
+}
+
+std::vector<torch::Tensor> HeterogeneousMedium::getParameters() const
+{
+    std::vector<torch::Tensor> params;
+
+    if(_optimize_albedo) params.push_back(_albedo_tensor);
+    if(_optimize_density) params.push_back(_density_tensor);
+
+    return params;
+}
+
+std::vector<torch::Tensor> HeterogeneousMedium::getParameterGradients() const
+{
+    std::vector<torch::Tensor> gradients;
+
+    if(_optimize_albedo) gradients.push_back(_albedo_grad_tensor);
+    if(_optimize_density) gradients.push_back(_density_grad_tensor);
+
+    return gradients;
+}
+
+void HeterogeneousMedium::zeroGrad()
+{
+    if(_optimize_albedo) _albedo_grad_tensor.zero_();
+    if(_optimize_density) _density_grad_tensor.zero_();
+}
+
+void HeterogeneousMedium::HeterogeneousMedium::markOptimizable()
+{
+    // TODO
+    _optimize_albedo  = true;
+    _optimize_density = true;
+    _optimizable      = true;
+}
+
+void HeterogeneousMedium::clampParameters()
+{
+    if(_optimize_density)
+    {
+        // Clamp density to be non-negative.
+        _density_tensor.clamp_(0.0f);
+
+        HeterogeneousMediumData data;
+        _data_buffer.download(&data);
+        data.density_majorant = _density_tensor.max().item<float>();
+        _data_buffer.upload(&data);
+    }
 }
 }    // namespace atcg
