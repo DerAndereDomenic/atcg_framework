@@ -101,4 +101,33 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_normal_to_reflected_direction_pdf(
 {
     return 1 / glm::abs(4 * glm::dot(reflected_dir, normal));
 }
+
+/**
+ * @brief Sample a direction on the sphere uniformly
+ *
+ * @param uv The random numbers used for sampling
+ *
+ * @return The sampled direction
+ */
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_sphere(const glm::vec2& uv)
+{
+    float z   = 1.0f - 2.0f * uv.x;
+    float r   = glm::sqrt(glm::max(0.0f, 1.0f - z * z));
+    float phi = 2.0f * glm::pi<float>() * uv.y;
+
+    float x = r * glm::cos(phi);
+    float y = r * glm::sin(phi);
+
+    return glm::vec3(x, y, z);
+}
+
+/**
+ * @brief Evaluate the pdf of sampling a direction uniformly on the sphere
+ *
+ * @return The pdf result
+ */
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_square_to_sphere_pdf()
+{
+    return 1.0f / (4.0f * glm::pi<float>());
+}
 }    // namespace atcg

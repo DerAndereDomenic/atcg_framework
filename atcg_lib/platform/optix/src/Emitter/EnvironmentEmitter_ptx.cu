@@ -10,35 +10,10 @@
 #include <Emitter/EnvironmentEmitterData.cuh>
 
 #include <DataStructure/Frame.h>
+#include <BSDF/Sampling.h>
 
 namespace detail
 {
-
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 warp_square_to_hemisphere_cosine(const glm::vec2& uv)
-{
-    // Sample disk uniformly
-    float r   = glm::sqrt(uv.x);
-    float phi = 2.0f * glm::pi<float>() * uv.y;
-
-    // Project disk sample onto hemisphere
-    float x = r * glm::cos(phi);
-    float y = r * glm::sin(phi);
-    float z = glm::sqrt(glm::max(0.0f, 1 - uv.x));
-
-    return glm::vec3(x, y, z);
-}
-
-/**
- * @brief Evaluate the pdf of sampling a direction according to a cosine weighted distribution
- *
- * @param result The direction
- *
- * @return The pdf result
- */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float warp_square_to_hemisphere_cosine_pdf(const glm::vec3& result)
-{
-    return glm::max(0.0f, result.z) / glm::pi<float>();
-}
 
 /**
  * @brief Evaluate an environment emitter
@@ -67,16 +42,33 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec2 evalEnvironmentEmitter(const atcg::
  *
  * @return The sampling result
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult
-sampleEnvironmentEmitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleEnvironmentEmitter(const atcg::AnyInteraction& ai,
+                                                                                        atcg::PCG32& rng)
 {
     atcg::EmitterSamplingResult result;
 
-    glm::vec3 random_dir = warp_square_to_hemisphere_cosine(rng.next2d());
-    float pdf            = warp_square_to_hemisphere_cosine_pdf(random_dir);
-    atcg::Frame frame    = atcg::Frame(si.normal);
+    glm::vec3 random_dir;
+    float pdf;
+    if(ai.is_surface())
+    {
+        atcg::SurfaceInteraction si = ai;
+        random_dir                  = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
+        pdf                         = atcg::warp_square_to_hemisphere_cosine_pdf(random_dir);
+        atcg::Frame frame           = atcg::Frame(si.normal);
 
-    random_dir = frame.toWorld(random_dir);
+        random_dir = frame.toWorld(random_dir);
+    }
+    else if(ai.is_medium())
+    {
+        random_dir = atcg::warp_square_to_sphere(rng.next2d());
+        pdf        = atcg::warp_square_to_sphere_pdf();
+    }
+    else
+    {
+        printf("Evaluated environment emitter with invalid interaction type. This should not happen.\n");
+        return result;
+    }
+
 
     glm::vec3 ray_dir = random_dir;
 
@@ -101,21 +93,32 @@ sampleEnvironmentEmitter(const atcg::SurfaceInteraction& si, atcg::PCG32& rng)
  *
  * @return The pdf
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalEnvironmentEmitterSamplingPdf(const atcg::SurfaceInteraction& last_si,
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalEnvironmentEmitterSamplingPdf(const atcg::AnyInteraction& last_si,
                                                                            const atcg::SurfaceInteraction& si)
 {
     // We can assume that outgoing ray dir actually intersects the light source.
 
     // Probability of sampling this direction via light source sampling
-    atcg::Frame frame         = atcg::Frame(last_si.normal);
-    glm::vec3 local_direction = frame.toLocal(si.incoming_direction);
-
-    return warp_square_to_hemisphere_cosine_pdf(local_direction);
+    if(last_si.is_surface())
+    {
+        atcg::Frame frame            = atcg::Frame(last_si.si.normal);
+        glm::vec3 local_dir_to_light = frame.toLocal(si.incoming_direction);
+        return atcg::warp_square_to_hemisphere_cosine_pdf(local_dir_to_light);
+    }
+    else if(last_si.is_medium())
+    {
+        return atcg::warp_square_to_sphere_pdf();
+    }
+    else
+    {
+        printf("Evaluated environment emitter sampling pdf with invalid interaction type. This should not happen.\n");
+        return 0.0f;
+    }
 }
 }    // namespace detail
 
 extern "C" __device__ atcg::EmitterSamplingResult
-__direct_callable__sample_environmentemitter(const atcg::SurfaceInteraction& si,
+__direct_callable__sample_environmentemitter(const atcg::AnyInteraction& si,
                                              const atcg::SampledWavelengths& wavelengths,
                                              atcg::PCG32& rng)
 {
@@ -146,7 +149,7 @@ __direct_callable__eval_environmentemitter(const atcg::SurfaceInteraction& si,
                                           wavelengths);
 }
 
-extern "C" __device__ float __direct_callable__evalpdf_environmentemitter(const atcg::SurfaceInteraction& last_si,
+extern "C" __device__ float __direct_callable__evalpdf_environmentemitter(const atcg::AnyInteraction& last_si,
                                                                           const atcg::SurfaceInteraction& si)
 {
     const atcg::EnvironmentEmitterData* sbt_data =

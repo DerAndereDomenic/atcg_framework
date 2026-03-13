@@ -41,7 +41,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec3 evalMeshEmitter(const glm::vec3& em
  *
  * @return The sampling result
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleMeshEmitter(const atcg::SurfaceInteraction& si,
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleMeshEmitter(const atcg::AnyInteraction& si,
                                                                                  const float* mesh_cdf,
                                                                                  const glm::vec3* positions,
                                                                                  const glm::vec3* uvs,
@@ -99,9 +99,9 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleMeshEmitter
     result.sampling_pdf = 0;    // initialize with invalid sample
 
     // light source sampling
-    result.direction_to_light       = glm::normalize(light_position - si.position);
-    float distance_to_light_squared = glm::length2(light_position - si.position) + 1e-5f;
-    result.distance_to_light        = glm::length(light_position - si.position) + 1e-5f;
+    result.direction_to_light       = glm::normalize(light_position - si->position);
+    float distance_to_light_squared = glm::length2(light_position - si->position) + 1e-5f;
+    result.distance_to_light        = glm::length(light_position - si->position) + 1e-5f;
     result.normal_at_light          = light_normal;
 
     float one_over_light_position_pdf  = total_area;
@@ -125,14 +125,14 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleMeshEmitter
  * @return The pdf
  */
 ATCG_HOST_DEVICE ATCG_FORCE_INLINE float
-evalMeshEmitterPDF(const atcg::SurfaceInteraction& last_si, const float total_area, const atcg::SurfaceInteraction& si)
+evalMeshEmitterPDF(const atcg::AnyInteraction& last_si, const float total_area, const atcg::SurfaceInteraction& si)
 {
     // We can assume that outgoing ray dir actually intersects the light source.
 
     // Some useful quantities
     glm::vec3 light_normal         = si.normal;
-    glm::vec3 light_ray_dir        = glm::normalize(si.position - last_si.position);
-    float light_ray_length_squared = glm::length2(si.position - last_si.position);
+    glm::vec3 light_ray_dir        = glm::normalize(si.position - last_si->position);
+    float light_ray_length_squared = glm::length2(si.position - last_si->position);
 
     // The probability of sampling any position on the surface of the mesh is the reciprocal of its surface area.
     float light_position_pdf = 1 / total_area;
@@ -146,7 +146,7 @@ evalMeshEmitterPDF(const atcg::SurfaceInteraction& last_si, const float total_ar
 }    // namespace detail
 
 extern "C" __device__ atcg::EmitterSamplingResult
-__direct_callable__sample_meshemitter(const atcg::SurfaceInteraction& si,
+__direct_callable__sample_meshemitter(const atcg::AnyInteraction& si,
                                       const atcg::SampledWavelengths& wavelengths,
                                       atcg::PCG32& rng)
 {
@@ -180,7 +180,7 @@ __direct_callable__eval_meshemitter(const atcg::SurfaceInteraction& si, const at
     return atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling * emissive_color, wavelengths);
 }
 
-extern "C" __device__ float __direct_callable__evalpdf_meshemitter(const atcg::SurfaceInteraction& last_si,
+extern "C" __device__ float __direct_callable__evalpdf_meshemitter(const atcg::AnyInteraction& last_si,
                                                                    const atcg::SurfaceInteraction& si)
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
