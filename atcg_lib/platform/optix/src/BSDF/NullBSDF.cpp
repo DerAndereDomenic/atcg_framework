@@ -8,7 +8,7 @@ namespace atcg
 
 NullBSDF::NullBSDF(const Dictionary& dict)
 {
-    _flags = BSDFComponentType::IdealTransmission;
+    _flags = BSDFComponentType::NullTransmission;
 }
 
 NullBSDF::~NullBSDF() {}
