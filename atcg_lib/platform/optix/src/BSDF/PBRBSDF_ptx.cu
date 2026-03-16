@@ -62,6 +62,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         glm::vec3 local_outgoing_ray_dir = strategy.sample(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
         result.out_dir = local_frame.toWorld(local_outgoing_ray_dir);
+        result.flags   = atcg::BSDFComponentType::DiffuseReflection;
     }
     else
     {
@@ -71,6 +72,9 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         // Transform local halfway vector from tangent space to world space
         glm::vec3 halfway = local_frame.toWorld(local_halfway);
         result.out_dir    = glm::reflect(si.incoming_direction, halfway);
+
+        result.flags =
+            (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection);
     }
 
     // It is possible that light directions below the horizon are sampled..
@@ -118,8 +122,6 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
 
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.sample_probability + 1e-5f);
-    result.flags =
-        result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
 
     return result;
 }
@@ -178,7 +180,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
     result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.flags =
-        result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
+        (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection
+                          : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
 
     return result;
 }

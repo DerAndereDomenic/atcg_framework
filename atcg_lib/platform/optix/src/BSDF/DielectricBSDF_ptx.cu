@@ -89,6 +89,9 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
         result.sample_probability = light_dir_pdf;
         NdotL                     = glm::dot(interface_normal, wo);
         HdotL                     = glm::dot(halfway, wo);
+
+        result.flags =
+            roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
     }
     else
     {
@@ -104,6 +107,9 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
 
         result.sample_probability = light_dir_pdf;
         NdotL                     = -glm::dot(interface_normal, wo);
+
+        result.flags =
+            roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
     }
 
     if(NdotL <= 0)
@@ -118,9 +124,6 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
     float G            = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
     result.bsdf_weight = reflectance_color * G * glm::abs(HdotL) / (NdotV * NdotH);
     result.out_dir     = wo;
-    result.flags       = roughness < 0.1f
-                             ? atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealTransmission
-                             : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::GlossyTransmission;
 
     return result;
 }
@@ -131,6 +134,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
                                                                        const float roughness,
                                                                        const float ior)
 {
+    atcg::BSDFEvalResult result;
+
     glm::vec3 wo = outgoing_dir;
     glm::vec3 wi = -si.incoming_direction;
 
@@ -175,6 +180,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
                 halfway);
 
         specular_bsdf = reflectance_color * D * G * F / (4.0f * NdotV * NdotL + 1e-5f);
+        result.flags =
+            roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
     }
     else
     {
@@ -209,14 +216,13 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
                 eta);
 
         specular_bsdf = reflectance_color * numerator / (denom * NdotL * NdotV + 1e-5f);
+
+        result.flags =
+            roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
     }
 
-    atcg::BSDFEvalResult result;
     result.bsdf_value         = specular_bsdf * glm::abs(glm::dot(si.normal, wo));
     result.sample_probability = light_dir_pdf;
-    result.flags              = roughness < 0.1f
-                                    ? atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealTransmission
-                                    : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::GlossyTransmission;
     return result;
 }
 
