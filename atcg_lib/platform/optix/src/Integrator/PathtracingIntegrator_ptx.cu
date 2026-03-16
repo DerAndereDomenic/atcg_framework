@@ -63,9 +63,11 @@ extern "C" __global__ void __raygen__rg()
             // Check for light source
             if(si.emitter)
             {
-                bool mis_valid             = last_si.isValid();
-                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                float mis_weight           = last_si.pdf / (last_si.pdf + emitter_sampling_pdf);
+                bool mis_valid              = last_si.isValid();
+                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                float emitter_sampling_pdf =
+                    mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf : 0.0f;
+                float mis_weight = last_si.pdf / (last_si.pdf + emitter_sampling_pdf);
                 radiance += mis_weight * camera_ray.importance * si.emitter->evalLight(si, wavelengths);
             }
 
