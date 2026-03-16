@@ -92,6 +92,7 @@ extern "C" __global__ void __raygen__rg()
                     if(emitter_sampling.sampling_pdf == 0) break;
 
                     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
                     bool occluded = traceOcclusion(params.handle,
                                                    si.position,
@@ -108,7 +109,8 @@ extern "C" __global__ void __raygen__rg()
                     atcg::BSDFEvalResult bsdf_result =
                         si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
-                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
+                                             (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                            ? 0.0f
                                            : bsdf_result.sample_probability;
                     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
