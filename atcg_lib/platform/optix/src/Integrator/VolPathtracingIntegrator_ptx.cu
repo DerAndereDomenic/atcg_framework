@@ -131,12 +131,11 @@ extern "C" __global__ void __raygen__rg()
                         break;
                     }
 
-                    float transmittance_to_light = camera_ray.ray.current_medium
-                                                       ->evalTransmittance(mi.position,
-                                                                           emitter_sampling.direction_to_light,
-                                                                           si_dummy.incoming_distance,
-                                                                           rng)
-                                                       .x;    // TODO
+                    float transmittance_to_light =
+                        camera_ray.ray.current_medium->evalTransmittance(mi.position,
+                                                                         emitter_sampling.direction_to_light,
+                                                                         si_dummy.incoming_distance,
+                                                                         rng);
 
                     auto phase_result = camera_ray.ray.current_medium->phase_function->evalPhaseFunction(
                         mi,

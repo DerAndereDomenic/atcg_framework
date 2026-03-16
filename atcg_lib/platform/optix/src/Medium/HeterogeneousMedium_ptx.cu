@@ -116,12 +116,12 @@ __device__ DeltaTrackingWeights sample_free_flight_distance_delta_tracking(const
 }
 }    // namespace detail
 
-extern "C" __device__ glm::vec3 __direct_callable__heterogeneousMedium_evalTransmittance(const glm::vec3& origin,
-                                                                                         const glm::vec3& direction,
-                                                                                         float distance,
-                                                                                         atcg::PCG32& rng)
+extern "C" __device__ float __direct_callable__heterogeneousMedium_evalTransmittance(const glm::vec3& origin,
+                                                                                     const glm::vec3& direction,
+                                                                                     float distance,
+                                                                                     atcg::PCG32& rng)
 {
-    return glm::vec3(detail::estimate_transmittance(origin, direction, distance, rng));
+    return detail::estimate_transmittance(origin, direction, distance, rng);
 }
 
 extern "C" __device__ atcg::MediumSamplingResult

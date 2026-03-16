@@ -39,16 +39,16 @@ __forceinline__ __device__ float rgb_to_scalar_weight_max(const glm::vec3& rgb)
 }
 }    // namespace detail
 
-extern "C" __device__ glm::vec3 __direct_callable__homogeneousMedium_evalTransmittance(const glm::vec3& origin,
-                                                                                       const glm::vec3& direction,
-                                                                                       float distance,
-                                                                                       atcg::PCG32& unused_rng)
+extern "C" __device__ float __direct_callable__homogeneousMedium_evalTransmittance(const glm::vec3& origin,
+                                                                                   const glm::vec3& direction,
+                                                                                   float distance,
+                                                                                   atcg::PCG32& unused_rng)
 {
     const atcg::HomogeneousMediumData* sbt_data =
         *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
 
     // Evaluate the probability of the light *not* interacting with the medium.
-    return glm::vec3(detail::transmittance(distance, sbt_data->density));
+    return detail::transmittance(distance, sbt_data->density);
 }
 
 extern "C" __device__ atcg::MediumSamplingResult

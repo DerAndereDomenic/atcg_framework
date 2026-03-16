@@ -23,14 +23,14 @@ struct MediumVPtrTable
 #ifdef __CUDACC__
 
     // Evaluate the transmittance over a certain distance inside of this medium starting at the (medium) interaction.
-    __device__ glm::vec3
+    __device__ float
     evalTransmittance(const glm::vec3& origin, const glm::vec3& direction, float distance, PCG32& rng) const
     {
-        return optixDirectCall<glm::vec3, const glm::vec3&, const glm::vec3&, float, PCG32&>(evalCallIndex,
-                                                                                             origin,
-                                                                                             direction,
-                                                                                             distance,
-                                                                                             rng);
+        return optixDirectCall<float, const glm::vec3&, const glm::vec3&, float, PCG32&>(evalCallIndex,
+                                                                                         origin,
+                                                                                         direction,
+                                                                                         distance,
+                                                                                         rng);
     }
 
     // Sample the position of a new medium event starting at the given (medium) interaction.
