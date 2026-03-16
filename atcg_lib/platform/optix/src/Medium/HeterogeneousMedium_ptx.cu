@@ -144,6 +144,7 @@ __direct_callable__heterogeneousMedium_sampleMediumEvent(const glm::vec3& origin
     // Set incoming ray direction
     result.interaction.incoming_direction = direction;
     result.interaction.incoming_distance  = sample.distance;
+    result.interaction.position           = origin + sample.distance * direction;
     result.transmittance_weight           = sample.transmittance_weight;
     result.radiance_weight                = sample.emission_weight;
     if(result.interaction.isValid())
