@@ -162,7 +162,7 @@ __direct_callable__sample_meshemitter(const atcg::AnyInteraction& si,
                                                                    sbt_data->world_to_local,
                                                                    rng);
 
-    glm::vec3 emissive_color = sbt_data->emissive_texture.read(result.uvs);
+    glm::vec3 emissive_color = sbt_data->emissive_texture.read(glm::vec2(result.uvs));
 
     result.radiance_weight_at_receiver =
         atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling * emissive_color, wavelengths) / result.sampling_pdf;
