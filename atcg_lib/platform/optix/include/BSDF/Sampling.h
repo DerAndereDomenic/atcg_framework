@@ -10,6 +10,7 @@ enum class SamplingStrategyType
     HEMISPHERE_GGX,
     HEMISPHERE_COSINE,
     SPHERE_UNIFORM,
+    EXPONENTIAL_SAMPLING
 };
 
 template<SamplingStrategyType strategy>

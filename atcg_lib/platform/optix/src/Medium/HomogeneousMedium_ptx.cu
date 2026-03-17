@@ -6,38 +6,8 @@
 
 #include <Medium/HomogeneousMediumData.cuh>
 #include <Medium/MediumVPtrTable.cuh>
+#include <Medium/Transmittance.h>
 
-namespace detail
-{
-template<typename T>
-__forceinline__ __device__ T transmittance(float t, T sigma_t)
-{
-    return glm::exp(-sigma_t * t);
-}
-
-template<>
-__forceinline__ __device__ atcg::SampledSpectrum transmittance(float t, atcg::SampledSpectrum sigma_t)
-{
-    return atcg::SampledSpectrum::exp(-sigma_t * t);
-}
-
-__forceinline__ __device__ float warp_1d_sample_to_medium_event_distance(float u, float sigma_t)
-{
-    float t = -glm::log(u) / sigma_t;
-    return t;
-}
-
-__forceinline__ __device__ float warp_1d_sample_to_medium_event_distance_pdf(float t, float sigma_t)
-{
-    float pdf = sigma_t * glm::exp(-sigma_t * t);
-    return pdf;
-}
-
-__forceinline__ __device__ float rgb_to_scalar_weight_max(const glm::vec3& rgb)
-{
-    return glm::max(glm::max(rgb.x, rgb.y), rgb.z);
-}
-}    // namespace detail
 
 extern "C" __device__ float __direct_callable__homogeneousMedium_evalTransmittance(const glm::vec3& origin,
                                                                                    const glm::vec3& direction,
@@ -48,7 +18,10 @@ extern "C" __device__ float __direct_callable__homogeneousMedium_evalTransmittan
         *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
 
     // Evaluate the probability of the light *not* interacting with the medium.
-    return detail::transmittance(distance, sbt_data->density);
+    atcg::TransmittanceEstimator<atcg::TransmittanceSamplingStrategyType::HOMOGENEOUS_TRACKING> estimator(
+        sbt_data->density);
+    atcg::Ray ray(origin, direction, 0.0f, distance);
+    return estimator.estimate(ray);
 }
 
 extern "C" __device__ atcg::MediumSamplingResult
@@ -79,7 +52,8 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
     result.radiance_weight                = atcg::SampledSpectrum(0);
 
     // Sample the free-flight distance proportional to sigma_s_scalar.
-    float sampled_distance = detail::warp_1d_sample_to_medium_event_distance(rng.next1d(), sigma_t_scalar);
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(sigma_t_scalar);
+    float sampled_distance = sampling_strategy.sample(rng.next1d());
 
     if(sampled_distance < max_distance)
     {
