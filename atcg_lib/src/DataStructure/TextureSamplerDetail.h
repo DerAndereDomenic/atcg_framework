@@ -125,7 +125,7 @@ ATCG_INLINE ATCG_HOST_DEVICE size_t TextureInterface<T>::toIndex(const glm::ivec
         if(x < 0) x += _spec.width;
         if(y < 0) y += _spec.height;
         if(z < 0) z += _spec.depth;
-        return size_t((texel.x + texel.y * _spec.width + texel.z * _spec.width * _spec.height) * _spec.numChannels());
+        return size_t((x + y * _spec.width + z * _spec.width * _spec.height) * _spec.numChannels());
     }
     else /*if(_spec.sampler.wrap_mode == TextureWrapMode::CLAMP_TO_EDGE)*/
     {

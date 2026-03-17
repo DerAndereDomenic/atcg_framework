@@ -7,50 +7,23 @@
 #include <Medium/HomogeneousMediumData.cuh>
 #include <Medium/MediumVPtrTable.cuh>
 #include <Core/GlobalAtomicAdd.h>
+#include <Medium/Transmittance.h>
 
-namespace detail
-{
-template<typename T>
-__forceinline__ __device__ T transmittance(float t, T sigma_t)
-{
-    return glm::exp(-sigma_t * t);
-}
 
-template<>
-__forceinline__ __device__ atcg::SampledSpectrum transmittance(float t, atcg::SampledSpectrum sigma_t)
-{
-    return atcg::SampledSpectrum::exp(-sigma_t * t);
-}
-
-__forceinline__ __device__ float warp_1d_sample_to_medium_event_distance(float u, float sigma_t)
-{
-    float t = -glm::log(u) / sigma_t;
-    return t;
-}
-
-__forceinline__ __device__ float warp_1d_sample_to_medium_event_distance_pdf(float t, float sigma_t)
-{
-    float pdf = sigma_t * glm::exp(-sigma_t * t);
-    return pdf;
-}
-
-__forceinline__ __device__ float rgb_to_scalar_weight_max(const glm::vec3& rgb)
-{
-    return glm::max(glm::max(rgb.x, rgb.y), rgb.z);
-}
-}    // namespace detail
-
-extern "C" __device__ glm::vec3 __direct_callable__homogeneousMedium_evalTransmittance(const glm::vec3& origin,
-                                                                                       const glm::vec3& direction,
-                                                                                       float distance,
-                                                                                       atcg::PCG32& unused_rng)
+extern "C" __device__ float __direct_callable__homogeneousMedium_evalTransmittance(const glm::vec3& origin,
+                                                                                   const glm::vec3& direction,
+                                                                                   float distance,
+                                                                                   atcg::PCG32& unused_rng)
 {
     const atcg::HomogeneousMediumData* sbt_data =
         *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
 
     // Evaluate the probability of the light *not* interacting with the medium.
     float density = *(sbt_data->density);
-    return glm::vec3(detail::transmittance(distance, density));
+
+    atcg::TransmittanceEstimator<atcg::TransmittanceSamplingStrategyType::HOMOGENEOUS_TRACKING> estimator(density);
+    atcg::Ray ray(origin, direction, 0.0f, distance);
+    return estimator.estimate(ray);
 }
 
 extern "C" __device__ atcg::MediumSamplingResult
@@ -80,10 +53,10 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
     result.interaction.incoming_direction = direction;
     result.transmittance_weight           = atcg::SampledSpectrum(1);
     result.radiance_weight                = atcg::SampledSpectrum(0);
-    result.interaction.valid              = true;
 
     // Sample the free-flight distance proportional to sigma_s_scalar.
-    float sampled_distance = detail::warp_1d_sample_to_medium_event_distance(rng.next1d(), sigma_t_scalar);
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(sigma_t_scalar);
+    float sampled_distance = sampling_strategy.sample(rng.next1d());
 
     if(sampled_distance < max_distance)
     {
@@ -113,7 +86,7 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
         // No emission, no absorption, no scattering
         // No medium event...
         // The sampling did not succeed, and there is no scattering event *before* the max_distance.
-        result.interaction.valid = false;
+        result.interaction.setInvalid();
 
         // All no medium events are *the same* event, so we need to compute the transmittance and sampling_pdf for
         // *any* such case, i.e. marginalize over all sampled distances >= max_distance.
@@ -155,13 +128,16 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
 
 
     // Sample the free-flight distance proportional to sigma_s_scalar.
-    float sampled_distance = detail::warp_1d_sample_to_medium_event_distance(rng.next1d(), sigma_t_scalar);
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(sigma_t_scalar);
+    float sampled_distance = sampling_strategy.sample(rng.next1d());
 
     if(sampled_distance < max_distance)
     {
         // Medium event!
 
-        float T = detail::transmittance(sampled_distance, sigma_t_scalar);
+        atcg::TransmittanceEstimator<atcg::TransmittanceSamplingStrategyType::HOMOGENEOUS_TRACKING> estimator(
+            sigma_t_scalar);
+        float T = estimator.estimate(atcg::Ray(origin, direction, 0.0f, sampled_distance));
 
         // sigma_t_scalar * T * output_grad / sigma_s * T
         glm::vec3 albedo_gradient = sigma_t_scalar / sigma_s * output_grad;    // / (sigma_s * T);

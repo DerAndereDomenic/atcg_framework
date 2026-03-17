@@ -11,7 +11,7 @@
 
 
 extern "C" __device__ atcg::EmitterSamplingResult
-__direct_callable__sample_pointemitter(const atcg::SurfaceInteraction& si,
+__direct_callable__sample_pointemitter(const atcg::AnyInteraction& si,
                                        const atcg::SampledWavelengths& wavelengths,
                                        atcg::PCG32& rng)
 {
@@ -20,7 +20,7 @@ __direct_callable__sample_pointemitter(const atcg::SurfaceInteraction& si,
 
     atcg::EmitterSamplingResult result;
 
-    glm::vec3 dir_to_light = sbt_data->position - si.position;
+    glm::vec3 dir_to_light = sbt_data->position - si->position;
     float distance         = glm::length(dir_to_light);
 
     result.direction_to_light = dir_to_light / (1e-5f + distance);
@@ -41,7 +41,7 @@ __direct_callable__eval_pointemitter(const atcg::SurfaceInteraction& si, const a
     return atcg::SampledSpectrum::fromRGB(sbt_data->color, wavelengths) * sbt_data->intensity;
 }
 
-extern "C" __device__ float __direct_callable__evalpdf_pointemitter(const atcg::SurfaceInteraction& last_si,
+extern "C" __device__ float __direct_callable__evalpdf_pointemitter(const atcg::AnyInteraction& last_si,
                                                                     const atcg::SurfaceInteraction& si)
 {
     const atcg::PointEmitterData* sbt_data =

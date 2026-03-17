@@ -43,8 +43,9 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
 
     atcg::Frame local_frame = atcg::Frame(interface_normal);
 
-    glm::vec3 local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
-    float halfway_pdf       = atcg::warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX> strategy(roughness);
+    glm::vec3 local_halfway = strategy.sample(rng.next2d());
+    float halfway_pdf       = strategy.pdf(local_halfway);
     // Transform local halfway vector from tangent space to world space
     glm::vec3 halfway = local_frame.toWorld(local_halfway);
 
@@ -80,21 +81,36 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
     {
         wo = reflected_ray_dir;
         float light_dir_pdf =
-            halfway_pdf * atcg::warp_normal_to_reflected_direction_pdf(wo, halfway) * reflection_probability;
+            halfway_pdf *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                wo,
+                halfway) *
+            reflection_probability;
 
         result.sample_probability = light_dir_pdf;
         NdotL                     = glm::dot(interface_normal, wo);
         HdotL                     = glm::dot(halfway, wo);
+
+        result.flags =
+            roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
     }
     else
     {
         wo    = transmitted_ray_dir;
         HdotL = glm::dot(halfway, wo);
         float light_dir_pdf =
-            halfway_pdf * atcg::warp_normal_to_refracted_direction_pdf(HdotV, HdotL, eta) * transmission_probability;
+            halfway_pdf *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
+                HdotV,
+                HdotL,
+                eta) *
+            transmission_probability;
 
         result.sample_probability = light_dir_pdf;
         NdotL                     = -glm::dot(interface_normal, wo);
+
+        result.flags =
+            roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
     }
 
     if(NdotL <= 0)
@@ -109,9 +125,6 @@ sampleRefractive(const atcg::SurfaceInteraction& si,
     float G            = atcg::G_SmithJointGGX(NdotL, NdotV, roughness);
     result.bsdf_weight = reflectance_color * G * glm::abs(HdotL) / (NdotV * NdotH);
     result.out_dir     = wo;
-    result.flags       = roughness < 0.1f
-                             ? atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealTransmission
-                             : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::GlossyTransmission;
 
     return result;
 }
@@ -122,6 +135,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
                                                                        const float roughness,
                                                                        const float ior)
 {
+    atcg::BSDFEvalResult result;
+
     glm::vec3 wo = outgoing_dir;
     glm::vec3 wi = -si.incoming_direction;
 
@@ -159,9 +174,15 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
         }
         float reflection_probability = F;
 
-        light_dir_pdf = D * NdotH * reflection_probability * atcg::warp_normal_to_reflected_direction_pdf(wo, halfway);
+        light_dir_pdf =
+            D * NdotH * reflection_probability *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                wo,
+                halfway);
 
         specular_bsdf = reflectance_color * D * G * F / (4.0f * NdotV * NdotL + 1e-5f);
+        result.flags =
+            roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection;
     }
     else
     {
@@ -188,17 +209,21 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalRefractive(const atc
 
         float numerator = eta * eta * T * D * G * glm::abs(LdotH) * glm::abs(VdotH);
 
-        light_dir_pdf = D * NdotH * transmission_pdf * atcg::warp_normal_to_refracted_direction_pdf(VdotH, LdotH, eta);
+        light_dir_pdf =
+            D * NdotH * transmission_pdf *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
+                VdotH,
+                LdotH,
+                eta);
 
         specular_bsdf = reflectance_color * numerator / (denom * NdotL * NdotV + 1e-5f);
+
+        result.flags =
+            roughness < 0.1f ? atcg::BSDFComponentType::IdealTransmission : atcg::BSDFComponentType::GlossyTransmission;
     }
 
-    atcg::BSDFEvalResult result;
     result.bsdf_value         = specular_bsdf * glm::abs(glm::dot(si.normal, wo));
     result.sample_probability = light_dir_pdf;
-    result.flags              = roughness < 0.1f
-                                    ? atcg::BSDFComponentType::IdealReflection | atcg::BSDFComponentType::IdealTransmission
-                                    : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::GlossyTransmission;
     return result;
 }
 
@@ -261,10 +286,11 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
 
     auto local_frame = atcg::Frame(interface_normal);
 
-    auto local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX, decltype(roughness)> strategy(roughness);
+    auto local_halfway = strategy.sample(rng.next2d());
     // Transform local halfway vector from tangent space to world space
     auto halfway     = local_frame.toWorld(local_halfway);
-    auto halfway_pdf = atcg::warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
+    auto halfway_pdf = strategy.pdf(local_halfway);
 
     // Compute outgoing ray directions
     auto transmitted_ray_dir = CuDiff::refract(-wi, halfway, eta);
@@ -298,7 +324,11 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
     {
         wo = reflected_ray_dir;
         auto light_dir_pdf =
-            halfway_pdf * atcg::warp_normal_to_reflected_direction_pdf(wo, halfway) * reflection_probability;
+            halfway_pdf *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                wo,
+                halfway) *
+            reflection_probability;
 
         result.sample_probability = light_dir_pdf;
         NdotL                     = CuDiff::dot(interface_normal, wo);
@@ -309,7 +339,12 @@ __direct_callable__sample_forward_dielectricbsdf(const atcg::DualSurfaceInteract
         wo    = transmitted_ray_dir;
         HdotL = CuDiff::dot(halfway, wo);
         auto light_dir_pdf =
-            halfway_pdf * atcg::warp_normal_to_refracted_direction_pdf(HdotV, HdotL, eta) * transmission_probability;
+            halfway_pdf *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
+                HdotV,
+                HdotL,
+                eta) *
+            transmission_probability;
 
         result.sample_probability = light_dir_pdf;
         NdotL                     = -CuDiff::dot(interface_normal, wo);
@@ -375,8 +410,9 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
 
     atcg::Frame<glm::vec3> local_frame = atcg::Frame(interface_normal);
 
-    auto local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
-    auto halfway_pdf   = atcg::warp_square_to_hemisphere_ggx_pdf(local_halfway, roughness);
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX, decltype(roughness)> strategy(roughness);
+    auto local_halfway = strategy.sample(rng.next2d());
+    auto halfway_pdf   = strategy.pdf(local_halfway);
     // Transform local halfway vector from tangent space to world space
     auto halfway = local_frame.toWorld(local_halfway);
 
@@ -408,7 +444,11 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
     {
         wo = reflected_ray_dir;
         auto light_dir_pdf =
-            halfway_pdf * atcg::warp_normal_to_reflected_direction_pdf(wo, halfway) * reflection_probability;
+            halfway_pdf *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                wo,
+                halfway) *
+            reflection_probability;
 
         NdotL = CuDiff::dot(interface_normal, wo);
         HdotL = CuDiff::dot(halfway, wo);
@@ -418,7 +458,12 @@ extern "C" __device__ void __direct_callable__sample_backward_dielectricbsdf(con
         wo    = transmitted_ray_dir;
         HdotL = CuDiff::dot(halfway, wo);
         auto light_dir_pdf =
-            halfway_pdf * atcg::warp_normal_to_refracted_direction_pdf(HdotV, HdotL, eta) * transmission_probability;
+            halfway_pdf *
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_refracted_direction_pdf(
+                HdotV,
+                HdotL,
+                eta) *
+            transmission_probability;
 
         NdotL = -CuDiff::dot(interface_normal, wo);
     }

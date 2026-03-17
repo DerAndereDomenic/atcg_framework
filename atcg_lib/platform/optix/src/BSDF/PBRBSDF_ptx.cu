@@ -63,17 +63,23 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
     if(rng.next1d() < diffuse_probability)
     {
         // Sample light direction from diffuse bsdf
-        glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_COSINE> strategy;
+        glm::vec3 local_outgoing_ray_dir = strategy.sample(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
         result.out_dir = local_frame.toWorld(local_outgoing_ray_dir);
+        result.flags   = atcg::BSDFComponentType::DiffuseReflection;
     }
     else
     {
         // Sample light direction from specular bsdf
-        glm::vec3 local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), fixed_roughness);
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX> strategy(fixed_roughness);
+        glm::vec3 local_halfway = strategy.sample(rng.next2d());
         // Transform local halfway vector from tangent space to world space
         glm::vec3 halfway = local_frame.toWorld(local_halfway);
         result.out_dir    = glm::reflect(si.incoming_direction, halfway);
+
+        result.flags =
+            (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection);
     }
 
     // It is possible that light directions below the horizon are sampled..
@@ -113,14 +119,14 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
 
         float halfway_pdf = atcg::D_GGX(NdotH, fixed_roughness) * NdotH;
         float halfway_to_outgoing_pdf =
-            atcg::warp_normal_to_reflected_direction_pdf(result.out_dir, halfway);    // 1 / (4*HdotV)
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                result.out_dir,
+                halfway);    // 1 / (4*HdotV)
         specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
     }
 
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.sample_probability + 1e-5f);
-    result.flags =
-        result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
 
     return result;
 }
@@ -166,17 +172,21 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
     atcg::SampledSpectrum kS = F;
     atcg::SampledSpectrum kD = atcg::SampledSpectrum(1.0) - kS;
 
-    float diffuse_probability     = diffuse_color.sum() / (diffuse_color.sum() + metallic_color.sum() + 1e-5f);
-    float specular_probability    = 1 - diffuse_probability;
-    float diffuse_pdf             = NdotL / glm::pi<float>();
-    float halfway_pdf             = NDF * NdotH;
-    float halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(outgoing_dir, H);    // 1 / (4*HdotV)
-    float specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
+    float diffuse_probability  = diffuse_color.sum() / (diffuse_color.sum() + metallic_color.sum() + 1e-5f);
+    float specular_probability = 1 - diffuse_probability;
+    float diffuse_pdf          = NdotL / glm::pi<float>();
+    float halfway_pdf          = NDF * NdotH;
+    float halfway_to_outgoing_pdf =
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+            outgoing_dir,
+            H);    // 1 / (4*HdotV)
+    float specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
 
     result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.flags =
-        result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
+        (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection
+                          : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
 
     return result;
 }
@@ -271,14 +281,16 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
     if(rng.next1d() < diffuse_probability)
     {
         // Sample light direction from diffuse bsdf
-        glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_COSINE> strategy;
+        glm::vec3 local_outgoing_ray_dir = strategy.sample(rng.next2d());
         // Transform local outgoing direction from tangent space to world space
         result.out_dir = local_frame.toWorld(local_outgoing_ray_dir);
     }
     else
     {
         // Sample light direction from specular bsdf
-        auto local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX, decltype(roughness)> strategy(roughness);
+        auto local_halfway = strategy.sample(rng.next2d());
         // Transform local halfway vector from tangent space to world space
         auto halfway   = local_frame.toWorld(local_halfway);
         result.out_dir = CuDiff::reflect(si.incoming_direction, halfway);
@@ -319,9 +331,12 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
 
         specular_bsdf = NDF * V * F;
 
-        auto halfway_pdf             = NDF * NdotH;
-        auto halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(result.out_dir, halfway);
-        specular_pdf                 = halfway_pdf * halfway_to_outgoing_pdf;
+        auto halfway_pdf = NDF * NdotH;
+        auto halfway_to_outgoing_pdf =
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                result.out_dir,
+                halfway);
+        specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
     }
 
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
@@ -381,11 +396,14 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
     float diffuse_probability =
         glm::dot(diffuse_color.val(), glm::vec3(1.0f)) /
         (glm::dot(diffuse_color.val(), glm::vec3(1.0f)) + glm::dot(metallic_color.val(), glm::vec3(1.0f)) + 1e-5f);
-    float specular_probability    = 1 - diffuse_probability;
-    float diffuse_pdf             = NdotL / glm::pi<float>();
-    float halfway_pdf             = NDF * NdotH;
-    float halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(outgoing_dir, H);    // 1 / (4*HdotV)
-    float specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
+    float specular_probability = 1 - diffuse_probability;
+    float diffuse_pdf          = NdotL / glm::pi<float>();
+    float halfway_pdf          = NDF * NdotH;
+    float halfway_to_outgoing_pdf =
+        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+            outgoing_dir.val(),
+            H.val());
+    float specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
 
     result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
@@ -526,14 +544,16 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
         if(rng.next1d() < diffuse_probability)
         {
             // Sample light direction from diffuse bsdf
-            glm::vec3 local_outgoing_ray_dir = atcg::warp_square_to_hemisphere_cosine(rng.next2d());
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_COSINE> strategy;
+            glm::vec3 local_outgoing_ray_dir = strategy.sample(rng.next2d());
             // Transform local outgoing direction from tangent space to world space
             out_dir = CuDiff::Dual<5, glm::vec3>(local_frame.toWorld(local_outgoing_ray_dir));
         }
         else
         {
             // Sample light direction from specular bsdf
-            auto local_halfway = atcg::warp_square_to_hemisphere_ggx(rng.next2d(), roughness);
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX, decltype(roughness)> strategy(roughness);
+            auto local_halfway = strategy.sample(rng.next2d());
             // Transform local halfway vector from tangent space to world space
             auto halfway = local_frame.toWorld(local_halfway);
             out_dir      = CuDiff::reflect(si.incoming_direction, halfway);
@@ -581,9 +601,12 @@ extern "C" __device__ void __direct_callable__sample_backward_pbrbsdf(const atcg
 
         auto specular_bsdf = NDF * V * F;
 
-        auto halfway_pdf             = NDF * NdotH;
-        auto halfway_to_outgoing_pdf = atcg::warp_normal_to_reflected_direction_pdf(view_dir, H);    // 1 / (4*HdotV)
-        auto specular_pdf            = halfway_pdf * halfway_to_outgoing_pdf;
+        auto halfway_pdf = NDF * NdotH;
+        auto halfway_to_outgoing_pdf =
+            atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_GGX>::warp_halfway_to_reflected_direction_pdf(
+                out_dir.val(),
+                H.val());
+        auto specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
 
         auto sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
         auto bsdf_value         = (specular_bsdf + kD * diffuse_bsdf) * NdotL;

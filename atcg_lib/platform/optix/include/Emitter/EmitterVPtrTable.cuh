@@ -78,14 +78,15 @@ struct EmitterVPtrTable
                                const atcg::SampledWavelengths&>(evalForwardCallIndex, si, wavelengths);
     }
 
-    __device__ EmitterSamplingResult sampleLight(const SurfaceInteraction& si,
+    __device__ EmitterSamplingResult sampleLight(const AnyInteraction& si,
                                                  const atcg::SampledWavelengths& wavelengths,
                                                  PCG32& rng) const
     {
-        return optixDirectCall<EmitterSamplingResult,
-                               const SurfaceInteraction&,
-                               const atcg::SampledWavelengths&,
-                               PCG32&>(sampleCallIndex, si, wavelengths, rng);
+        return optixDirectCall<EmitterSamplingResult, const AnyInteraction&, const atcg::SampledWavelengths&, PCG32&>(
+            sampleCallIndex,
+            si,
+            wavelengths,
+            rng);
     }
 
     __device__ DualEmitterSamplingResult sampleLightForward(const DualSurfaceInteraction& si,
@@ -109,11 +110,9 @@ struct EmitterVPtrTable
             rng);
     }
 
-    __device__ float evalLightSamplingPdf(const SurfaceInteraction& last_si, const SurfaceInteraction& si) const
+    __device__ float evalLightSamplingPdf(const AnyInteraction& last_si, const SurfaceInteraction& si) const
     {
-        return optixDirectCall<float, const SurfaceInteraction&, const SurfaceInteraction&>(evalPdfCallIndex,
-                                                                                            last_si,
-                                                                                            si);
+        return optixDirectCall<float, const AnyInteraction&, const SurfaceInteraction&>(evalPdfCallIndex, last_si, si);
     }
 
 #endif

@@ -6,55 +6,10 @@
 
 #include <Medium/HeterogeneousMediumData.cuh>
 #include <Medium/MediumVPtrTable.cuh>
+#include <Medium/Transmittance.h>
 
 namespace detail
 {
-__forceinline__ __device__ float warp_1d_sample_to_homogeneous_medium_event_distance(float u, float sigma_t)
-{
-    float t = -glm::log(u) / sigma_t;
-    return t;
-}
-
-__device__ float estimate_transmittance_ratio_tracking(const glm::vec3& origin,
-                                                       const glm::vec3& direction,
-                                                       float max_distance,
-                                                       atcg::PCG32& rng)
-{
-    const atcg::HeterogeneousMediumData* sbt_data =
-        *reinterpret_cast<const atcg::HeterogeneousMediumData**>(optixGetSbtDataPointer());
-
-    float distance      = 0;
-    float transmittance = 1;
-    while(distance < max_distance)
-    {
-        float step = warp_1d_sample_to_homogeneous_medium_event_distance(rng.next1d(), sbt_data->density_majorant);
-        distance += step;
-        glm::vec3 step_position = origin + distance * direction;
-        float step_density      = sbt_data->density_grid.eval(step_position);
-
-        if(distance >= max_distance) break;
-        // multiply sigma_n / \bar{sigma}_t
-        transmittance *= glm::clamp(1.0f - step_density / sbt_data->density_majorant, 0.0f, 1.0f);
-    }
-    return transmittance;
-}
-
-__device__ float
-estimate_transmittance(const glm::vec3& origin, const glm::vec3& direction, float max_distance, atcg::PCG32& rng)
-{
-    /* Implement:
-     * - Evaluate the transmittance over a given distance along the ray, i.e. the transmittance between origin and
-     * origin+max_distance*direction.
-     * - Implement either the delta-tracking based algorithm or ratio-tracking algorithm.
-     * Hint: Use the functions above to sample the medium density and sample distances in homogeneous media.
-     */
-
-    //<solution>
-    return estimate_transmittance_ratio_tracking(origin, direction, max_distance, rng);
-    //</solution>
-
-    return 1;
-}
 
 struct DeltaTrackingWeights
 {
@@ -82,9 +37,11 @@ __device__ DeltaTrackingWeights sample_free_flight_distance_delta_tracking(const
 
     //<solution>
     float distance = 0.0f;
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(
+        sbt_data->density_majorant);
     while(distance < max_distance)
     {
-        float step = warp_1d_sample_to_homogeneous_medium_event_distance(rng.next1d(), sbt_data->density_majorant);
+        float step = sampling_strategy.sample(rng.next1d());
         distance += step;
         glm::vec3 step_position = origin + distance * direction;
         float step_density      = sbt_data->density_grid.eval(step_position);
@@ -116,12 +73,18 @@ __device__ DeltaTrackingWeights sample_free_flight_distance_delta_tracking(const
 }
 }    // namespace detail
 
-extern "C" __device__ glm::vec3 __direct_callable__heterogeneousMedium_evalTransmittance(const glm::vec3& origin,
-                                                                                         const glm::vec3& direction,
-                                                                                         float distance,
-                                                                                         atcg::PCG32& rng)
+extern "C" __device__ float __direct_callable__heterogeneousMedium_evalTransmittance(const glm::vec3& origin,
+                                                                                     const glm::vec3& direction,
+                                                                                     float distance,
+                                                                                     atcg::PCG32& rng)
 {
-    return glm::vec3(detail::estimate_transmittance(origin, direction, distance, rng));
+    const atcg::HeterogeneousMediumData* sbt_data =
+        *reinterpret_cast<const atcg::HeterogeneousMediumData**>(optixGetSbtDataPointer());
+    atcg::TransmittanceEstimator<atcg::TransmittanceSamplingStrategyType::RATIO_TRACKING,
+                                 decltype(sbt_data->density_grid)>
+        estimator(sbt_data->density_majorant, sbt_data->density_grid);
+    atcg::Ray ray(origin, direction, 0.0f, distance);
+    return estimator.estimate(ray, rng);
 }
 
 extern "C" __device__ atcg::MediumSamplingResult
@@ -144,11 +107,11 @@ __direct_callable__heterogeneousMedium_sampleMediumEvent(const glm::vec3& origin
     // Set incoming ray direction
     result.interaction.incoming_direction = direction;
     result.interaction.incoming_distance  = sample.distance;
+    result.interaction.position           = origin + sample.distance * direction;
     result.transmittance_weight           = sample.transmittance_weight;
     result.radiance_weight                = sample.emission_weight;
-    if(!glm::isnan(result.interaction.incoming_distance))
+    if(result.interaction.isValid())
     {
-        result.interaction.valid    = true;
         result.interaction.position = origin + result.interaction.incoming_distance * direction;
     }
     return result;
@@ -174,10 +137,11 @@ __direct_callable__heterogeneousMedium_sampleMediumEventBackward(const glm::vec3
     max_distance = glm::clamp(max_distance, 0.0f, 1e6f);
 
     float distance = 0.0f;
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(
+        sbt_data->density_majorant);
     while(distance < max_distance)
     {
-        float step =
-            detail::warp_1d_sample_to_homogeneous_medium_event_distance(rng.next1d(), sbt_data->density_majorant);
+        float step = sampling_strategy.sample(rng.next1d());
         distance += step;
         glm::vec3 step_position = origin + distance * direction;
         float step_density      = sbt_data->density_grid.eval(step_position);
