@@ -89,8 +89,11 @@ public:
             float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
             atcg::CameraIntrinsics intrinsics;
             intrinsics.setAspectRatio(aspect_ratio);
+            atcg::CameraExtrinsics extrinsics;
+            extrinsics.setPosition(glm::vec3(0, 1, 3));
+            extrinsics.setTarget(glm::vec3(0, 1, 0));
             camera_controller = atcg::make_ref<atcg::FirstPersonController>(
-                atcg::make_ref<atcg::PerspectiveCamera>(atcg::CameraExtrinsics(), intrinsics));
+                atcg::make_ref<atcg::PerspectiveCamera>(extrinsics, intrinsics));
         }
 
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
