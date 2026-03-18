@@ -87,8 +87,7 @@ extern "C" __global__ void __raygen__forward()
         if(si.isValid() &&
            ray.current_medium)    // For now, we only allow media inside objects. So if si not valid, reject
         {
-            float max_distance =
-                si.isValid() ? glm::length(si.position - ray.origin) : std::numeric_limits<float>::infinity();
+            float max_distance = si.incoming_distance;
             atcg::MediumSamplingResult result =
                 ray.current_medium->sampleMediumEvent(ray.origin, ray.direction, max_distance, wavelengths, rng);
 
@@ -140,9 +139,11 @@ extern "C" __global__ void __raygen__forward()
         // Check for light source
         if(si.emitter)
         {
-            bool mis_valid             = last_si.isValid();
-            float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-            float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+            bool mis_valid              = last_si.isValid();
+            float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+            float emitter_sampling_pdf =
+                mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf : 0.0f;
+            float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
             ray.radiance += mis_weight * ray.throughput * si.emitter->evalLight(si, wavelengths);
         }
 
@@ -167,6 +168,7 @@ extern "C" __global__ void __raygen__forward()
                 if(emitter_sampling.sampling_pdf == 0) break;
 
                 emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
                 bool occluded = traceOcclusion(params.handle,
                                                si.position,
@@ -183,7 +185,8 @@ extern "C" __global__ void __raygen__forward()
                 atcg::BSDFEvalResult bsdf_result =
                     si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
-                float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
+                                         (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                        ? 0.0f
                                        : bsdf_result.sample_probability;
                 float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
@@ -300,7 +303,7 @@ extern "C" __global__ void __raygen__backward()
 
             ray.radiance -=
                 ray.throughput * result.radiance_weight;    // TODO: Check if backward step should be done before or
-                                                            // after updating the radiance. Corrently Le = 0
+                                                            // after updating the radiance. Currently Le = 0
 
             glm::vec3 grad_out = ray.delta_y * ray.radiance;    // / glm::vec3(result.transmittance_value);
 
@@ -354,10 +357,11 @@ extern "C" __global__ void __raygen__backward()
         // Check for light source
         if(si.emitter)
         {
-            bool mis_valid             = last_si.isValid();
-            float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-            float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-            // float mis_weight = 1.0f;
+            bool mis_valid              = last_si.isValid();
+            float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+            float emitter_sampling_pdf =
+                mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf : 0.0f;
+            float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
             ray.radiance -= mis_weight * ray.throughput * si.emitter->evalLight(si, wavelengths);
         }
 
@@ -382,6 +386,7 @@ extern "C" __global__ void __raygen__backward()
                 if(emitter_sampling.sampling_pdf == 0) break;
 
                 emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
                 bool occluded = traceOcclusion(params.handle,
                                                si.position,
@@ -398,7 +403,8 @@ extern "C" __global__ void __raygen__backward()
                 atcg::BSDFEvalResult bsdf_result =
                     si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
-                float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
+                                         (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                        ? 0.0f
                                        : bsdf_result.sample_probability;
                 float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
