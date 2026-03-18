@@ -142,7 +142,8 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
         // sigma_t_scalar * T * output_grad / sigma_s * T
         glm::vec3 albedo_gradient = sigma_t_scalar / sigma_s * output_grad;    // / (sigma_s * T);
         // glm::dot((1.0f - sampled_distance * sigma_t_scalar) * albedo_ * T, output_grad) / (sigma_s * T)
-        float density_gradient = glm::dot((1.0f - sampled_distance * sigma_t_scalar) * albedo_ / sigma_s, output_grad);
+        float density_gradient =
+            glm::dot(glm::vec3((1.0f - sampled_distance * sigma_t_scalar) / sigma_t_scalar), output_grad);
 
         if(sbt_data->optimize_albedo)
         {
