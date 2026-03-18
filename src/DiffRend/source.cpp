@@ -74,7 +74,7 @@ public:
     {
         atcg::Application::get()->enableDockSpace(true);
 
-        atcg::Project::load("../DiffRendTest/Project.json");
+        atcg::Project::load("../DiffRendTest_old/Project.json");
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -612,7 +612,7 @@ private:
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
     const char* integrator_labels[4]  = {"Attached", "Detached", "Finite Difference", "VolDetached"};
-    uint32_t current_integrator_index = 3;
+    uint32_t current_integrator_index = 1;
     torch::Tensor target;
     torch::Tensor accumulated_output;
     bool optimize          = false;

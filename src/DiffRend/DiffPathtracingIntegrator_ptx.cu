@@ -56,7 +56,7 @@ extern "C" __global__ void __raygen__forward()
     glm::vec3 next_dir;
 
     atcg::SurfaceInteraction last_si;
-    float last_bsdf_pdf = 1.0f;
+    last_si.pdf = 1.0f;
 
     for(int n = 0; n < 8; ++n)
     {
@@ -81,15 +81,16 @@ extern "C" __global__ void __raygen__forward()
                                                              1e16f,
                                                              &si,
                                                              params.surface_trace_params);
-
-        if(si.valid)
+        if(si.isValid())
         {
             // Check for light source
             if(si.emitter)
             {
-                bool mis_valid             = last_si.valid;
-                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                bool mis_valid              = last_si.isValid();
+                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                float emitter_sampling_pdf =
+                    mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf : 0.0f;
+                float mis_weight = last_si.pdf / (last_si.pdf + emitter_sampling_pdf);
                 ray.radiance += mis_weight * ray.throughput * si.emitter->evalLight(si, wavelengths);
             }
 
@@ -114,6 +115,7 @@ extern "C" __global__ void __raygen__forward()
                     if(emitter_sampling.sampling_pdf == 0) break;
 
                     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
                     bool occluded = traceOcclusion(params.handle,
                                                    si.position,
@@ -130,7 +132,8 @@ extern "C" __global__ void __raygen__forward()
                     atcg::BSDFEvalResult bsdf_result =
                         si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
-                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
+                                             (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                            ? 0.0f
                                            : bsdf_result.sample_probability;
                     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
@@ -150,12 +153,12 @@ extern "C" __global__ void __raygen__forward()
                     ray.throughput *= glm::vec3(result.bsdf_weight);
                     ray.valid = true;
 
-                    last_si       = si;
-                    last_bsdf_pdf = result.sample_probability;
+                    last_si     = si;
+                    last_si.pdf = result.sample_probability;
 
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
-                        last_si.valid = false;
+                        last_si.setInvalid();
                     }
                 }
             }
@@ -164,12 +167,12 @@ extern "C" __global__ void __raygen__forward()
         {
             if(params.environment_emitter)
             {
-                bool mis_valid              = last_si.valid;
+                bool mis_valid              = last_si.isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
                     mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
                               : 0.0f;
-                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                float mis_weight = last_si.pdf / (last_si.pdf + emitter_sampling_pdf);
                 ray.radiance += mis_weight * ray.throughput * params.environment_emitter->evalLight(si, wavelengths);
             }
         }
@@ -213,7 +216,7 @@ extern "C" __global__ void __raygen__backward()
     glm::vec3 next_dir;
 
     atcg::SurfaceInteraction last_si;
-    float last_bsdf_pdf = 1.0f;
+    last_si.pdf = 1.0f;
 
     for(int n = 0; n < 8; ++n)
     {
@@ -239,15 +242,16 @@ extern "C" __global__ void __raygen__backward()
                                                              &si,
                                                              params.surface_trace_params);
 
-        if(si.valid)
+        if(si.isValid())
         {
             // Check for light source
             if(si.emitter)
             {
-                bool mis_valid             = last_si.valid;
-                float emitter_sampling_pdf = mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) : 0.0f;
-                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                // float mis_weight = 1.0f;
+                bool mis_valid              = last_si.isValid();
+                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                float emitter_sampling_pdf =
+                    mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf : 0.0f;
+                float mis_weight = last_si.pdf / (last_si.pdf + emitter_sampling_pdf);
                 ray.radiance -= mis_weight * ray.throughput * si.emitter->evalLight(si, wavelengths);
             }
 
@@ -272,6 +276,7 @@ extern "C" __global__ void __raygen__backward()
                     if(emitter_sampling.sampling_pdf == 0) break;
 
                     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
 
                     bool occluded = traceOcclusion(params.handle,
                                                    si.position,
@@ -288,7 +293,8 @@ extern "C" __global__ void __raygen__backward()
                     atcg::BSDFEvalResult bsdf_result =
                         si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
-                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
+                                             (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                            ? 0.0f
                                            : bsdf_result.sample_probability;
                     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
@@ -319,12 +325,12 @@ extern "C" __global__ void __raygen__backward()
                     ray.throughput *= glm::vec3(result.bsdf_weight);
                     ray.valid = true;
 
-                    last_si       = si;
-                    last_bsdf_pdf = result.sample_probability;
+                    last_si     = si;
+                    last_si.pdf = result.sample_probability;
 
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
-                        last_si.valid = false;
+                        last_si.setInvalid();
                     }
                 }
             }
@@ -333,12 +339,12 @@ extern "C" __global__ void __raygen__backward()
         {
             if(params.environment_emitter)
             {
-                bool mis_valid              = last_si.valid;
+                bool mis_valid              = last_si.isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
                     mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
                               : 0.0f;
-                float mis_weight = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
+                float mis_weight = last_si.pdf / (last_si.pdf + emitter_sampling_pdf);
                 ray.radiance -= mis_weight * ray.throughput * params.environment_emitter->evalLight(si, wavelengths);
             }
         }
@@ -354,8 +360,7 @@ extern "C" __global__ void __miss__ms()
     float3 optix_world_dir       = optixGetWorldRayDirection();
     glm::vec3 ray_dir            = glm::make_vec3((float*)&optix_world_dir);
 
-    si->valid              = false;
-    si->incoming_distance  = std::numeric_limits<float>::infinity();
+    si->setInvalid();
     si->incoming_direction = ray_dir;
 }
 

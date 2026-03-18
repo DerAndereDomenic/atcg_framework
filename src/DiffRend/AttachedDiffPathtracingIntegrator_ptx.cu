@@ -63,7 +63,7 @@ extern "C" __global__ void __raygen__forward()
     ray.JL                  = glm::mat4x3(0);
 
     atcg::SurfaceInteraction si0;
-    si0.valid              = true;
+    si0.incoming_distance  = 0.0f;    // To mark as valid
     si0.position           = ray_origin;
     si0.normal             = ray_direction;
     si0.incoming_direction = ray_direction;
@@ -88,7 +88,7 @@ extern "C" __global__ void __raygen__forward()
     ray.last_normal = dsi1.normal;
     ray.last_uv     = dsi1.uv;
 
-    if(si1.valid)
+    if(si1.isValid())
     {
         ray.valid = true;
     }
@@ -126,7 +126,7 @@ extern "C" __global__ void __raygen__forward()
             glm::mat4x3 JLe = glm::mat4x3(0);
             if(ray.si1.emitter)
             {
-                bool mis_valid             = last_si.valid;
+                bool mis_valid             = last_si.isValid();
                 float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) : 0.0f;
                 float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
                 Le                         = mis_weight * ray.si1.emitter->evalLightForward(dsi, wavelengths);
@@ -312,7 +312,7 @@ extern "C" __global__ void __raygen__forward()
 
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
-                        last_si.valid = false;
+                        last_si.setInvalid();
                     }
 
                     ray.si0         = ray.si1;
@@ -377,7 +377,7 @@ extern "C" __global__ void __raygen__backward()
     ray.delta_y             = params.adjoint_y[pixel_index];
 
     atcg::SurfaceInteraction si0;
-    si0.valid              = true;
+    si0.incoming_distance  = 0.0f;    // To mark as valid
     si0.position           = ray_origin;
     si0.normal             = ray_direction;
     si0.incoming_direction = ray_direction;
@@ -401,7 +401,7 @@ extern "C" __global__ void __raygen__backward()
     ray.last_normal = dsi1.normal;
     ray.last_uv     = dsi1.uv;
 
-    if(si1.valid)
+    if(si1.isValid())
     {
         ray.valid = true;
     }
@@ -438,7 +438,7 @@ extern "C" __global__ void __raygen__backward()
             glm::mat4x3 JLe = glm::mat4x3(0);
             if(ray.si1.emitter)
             {
-                bool mis_valid             = last_si.valid;
+                bool mis_valid             = last_si.isValid();
                 float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) : 0.0f;
                 float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
                 Le                         = mis_weight * ray.si1.emitter->evalLightForward(dsi, wavelengths);
@@ -634,7 +634,7 @@ extern "C" __global__ void __raygen__backward()
 
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
-                        last_si.valid = false;
+                        last_si.setInvalid();
                     }
 
                     ray.si0         = ray.si1;
@@ -669,8 +669,7 @@ extern "C" __global__ void __miss__ms()
     float3 optix_world_dir       = optixGetWorldRayDirection();
     glm::vec3 ray_dir            = glm::make_vec3((float*)&optix_world_dir);
 
-    si->valid              = false;
-    si->incoming_distance  = std::numeric_limits<float>::infinity();
+    si->setInvalid();
     si->incoming_direction = ray_dir;
 }
 
