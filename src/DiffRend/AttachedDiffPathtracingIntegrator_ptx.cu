@@ -63,13 +63,9 @@ extern "C" __global__ void __raygen__forward()
     ray.JL                  = glm::mat4x3(0);
 
     atcg::SurfaceInteraction si0;
-    si0.incoming_distance  = 0.0f;    // To mark as valid
     si0.position           = ray_origin;
     si0.normal             = ray_direction;
     si0.incoming_direction = ray_direction;
-
-    atcg::SurfaceInteraction last_si;
-    float last_bsdf_pdf = 1.0f;
 
     glm::mat4x3 Jb = glm::mat4x3(0);
     glm::mat4 Jray = glm::mat4(1);
@@ -93,8 +89,9 @@ extern "C" __global__ void __raygen__forward()
         ray.valid = true;
     }
 
-    ray.si0 = si0;
-    ray.si1 = si1;
+    ray.si0     = si0;
+    ray.si0.pdf = 1.0f;
+    ray.si1     = si1;
 
     for(int n = 0; n < 8; ++n)
     {
@@ -126,10 +123,12 @@ extern "C" __global__ void __raygen__forward()
             glm::mat4x3 JLe = glm::mat4x3(0);
             if(ray.si1.emitter)
             {
-                bool mis_valid             = last_si.isValid();
-                float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) : 0.0f;
-                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                Le                         = mis_weight * ray.si1.emitter->evalLightForward(dsi, wavelengths);
+                bool mis_valid              = ray.si0.isValid();
+                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                float emitter_sampling_pdf =
+                    mis_valid ? ray.si1.emitter->evalLightSamplingPdf(ray.si0, ray.si1) * emitter_selection_pdf : 0.0f;
+                float mis_weight = ray.si0.pdf / (ray.si0.pdf + emitter_sampling_pdf);
+                Le               = mis_weight * ray.si1.emitter->evalLightForward(dsi, wavelengths);
                 ray.radiance += ray.throughput * Le.val();
 
                 glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
@@ -170,6 +169,8 @@ extern "C" __global__ void __raygen__forward()
                     if(emitter_sampling.sampling_pdf == 0) break;
 
                     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.radiance_weight_at_receiver =
+                        emitter_sampling.radiance_weight_at_receiver / emitter_selection_pdf;
 
                     bool occluded = traceOcclusion(params.handle,
                                                    ray.si1.position,
@@ -186,7 +187,8 @@ extern "C" __global__ void __raygen__forward()
                     atcg::BSDFDualEvalResult bsdf_result =
                         ray.si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
 
-                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
+                                             (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                            ? 0.0f
                                            : bsdf_result.sample_probability;
                     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
@@ -307,12 +309,11 @@ extern "C" __global__ void __raygen__forward()
                     // {
                     //     printf("%f\n", glm::determinant(Jray_));
                     // }
-                    last_si       = ray.si1;
-                    last_bsdf_pdf = result.sample_probability;
+                    ray.si1.pdf = result.sample_probability;
 
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
-                        last_si.setInvalid();
+                        ray.si1.setInvalid();
                     }
 
                     ray.si0         = ray.si1;
@@ -377,13 +378,9 @@ extern "C" __global__ void __raygen__backward()
     ray.delta_y             = params.adjoint_y[pixel_index];
 
     atcg::SurfaceInteraction si0;
-    si0.incoming_distance  = 0.0f;    // To mark as valid
     si0.position           = ray_origin;
     si0.normal             = ray_direction;
     si0.incoming_direction = ray_direction;
-
-    atcg::SurfaceInteraction last_si;
-    float last_bsdf_pdf = 1.0f;
 
     glm::mat4 Jray = glm::mat4(1);
 
@@ -406,8 +403,9 @@ extern "C" __global__ void __raygen__backward()
         ray.valid = true;
     }
 
-    ray.si0 = si0;
-    ray.si1 = si1;
+    ray.si0     = si0;
+    ray.si0.pdf = 1.0f;
+    ray.si1     = si1;
 
     for(int n = 0; n < 8; ++n)
     {
@@ -438,10 +436,12 @@ extern "C" __global__ void __raygen__backward()
             glm::mat4x3 JLe = glm::mat4x3(0);
             if(ray.si1.emitter)
             {
-                bool mis_valid             = last_si.isValid();
-                float emitter_sampling_pdf = mis_valid ? ray.si1.emitter->evalLightSamplingPdf(last_si, ray.si1) : 0.0f;
-                float mis_weight           = last_bsdf_pdf / (last_bsdf_pdf + emitter_sampling_pdf);
-                Le                         = mis_weight * ray.si1.emitter->evalLightForward(dsi, wavelengths);
+                bool mis_valid              = ray.si0.isValid();
+                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                float emitter_sampling_pdf =
+                    mis_valid ? ray.si1.emitter->evalLightSamplingPdf(ray.si0, ray.si1) * emitter_selection_pdf : 0.0f;
+                float mis_weight = ray.si0.pdf / (ray.si0.pdf + emitter_sampling_pdf);
+                Le               = mis_weight * ray.si1.emitter->evalLightForward(dsi, wavelengths);
                 ray.radiance -= ray.throughput * Le.val();
 
                 glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
@@ -480,6 +480,8 @@ extern "C" __global__ void __raygen__backward()
                     if(emitter_sampling.sampling_pdf == 0) break;
 
                     emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                    emitter_sampling.radiance_weight_at_receiver =
+                        emitter_sampling.radiance_weight_at_receiver / emitter_selection_pdf;
 
                     bool occluded = traceOcclusion(params.handle,
                                                    ray.si1.position,
@@ -496,7 +498,8 @@ extern "C" __global__ void __raygen__backward()
                     atcg::BSDFDualEvalResult bsdf_result =
                         ray.si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
 
-                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0
+                    float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
+                                             (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                            ? 0.0f
                                            : bsdf_result.sample_probability;
                     float mis_weight = emitter_sampling.sampling_pdf / (emitter_sampling.sampling_pdf + bsdf_pdf);
@@ -629,13 +632,12 @@ extern "C" __global__ void __raygen__backward()
 
                     ray.si1.bsdf->sampleBSDFBackward(ray.si1, rng_copy, dLdbsdf, dLdwo);
 
-                    last_si       = ray.si1;
-                    last_bsdf_pdf = result.sample_probability;
-
+                    ray.si1.pdf = result.sample_probability;
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
-                        last_si.setInvalid();
+                        ray.si1.setInvalid();
                     }
+
 
                     ray.si0         = ray.si1;
                     ray.si1         = next_dsi.toSi();
@@ -679,7 +681,7 @@ extern "C" __global__ void __miss__dual()
     float3 optix_world_dir           = optixGetWorldRayDirection();
 
     si->valid             = false;
-    si->incoming_distance = CuDiff::Dual<6, float>(std::numeric_limits<float>::infinity());
+    si->incoming_distance = CuDiff::Dual<6, float>(std::numeric_limits<float>::signaling_NaN());
 }
 
 extern "C" __global__ void __miss__occlusion()
