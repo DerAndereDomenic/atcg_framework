@@ -343,7 +343,8 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
     result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.sample_probability + 1e-5f);
 
     result.flags =
-        result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
+        (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection
+                          : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
 
     return result;
 }
@@ -408,7 +409,8 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
     result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.flags =
-        result.flags | (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::Any);
+        (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection
+                          : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
 
     return result;
 }
