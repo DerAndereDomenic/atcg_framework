@@ -20,6 +20,7 @@ struct MediumVPtrTable
     uint32_t evalCallIndex;
     uint32_t sampleCallIndex;
     uint32_t sampleBackwardCallIndex;
+    uint32_t evalTransmittanceBackwardCallIndex;
 
 #ifdef __CUDACC__
 
@@ -69,6 +70,21 @@ struct MediumVPtrTable
                                           wavelengths,
                                           rng,
                                           out_grad);
+    }
+
+    __device__ void evalTransmittanceBackward(const glm::vec3& origin,
+                                              const glm::vec3& direction,
+                                              float distance,
+                                              PCG32& rng,
+                                              const glm::vec3& out_grad) const
+    {
+        optixDirectCall<void, const glm::vec3&, const glm::vec3&, float, PCG32&, const glm::vec3&>(
+            evalTransmittanceBackwardCallIndex,
+            origin,
+            direction,
+            distance,
+            rng,
+            out_grad);
     }
 
 #endif    // __CUDACC__

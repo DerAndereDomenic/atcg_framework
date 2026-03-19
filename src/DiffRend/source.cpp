@@ -307,6 +307,7 @@ public:
                     {
                         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
                         initializePathtracer();
+                        frame_counter = 0;
                     }
                     atcg::RevisionStack::clearChache();
 
@@ -430,7 +431,8 @@ public:
 
         if(ImGui::Button("Toggle Optimization"))
         {
-            optimize = !optimize;
+            frame_counter = 0;
+            optimize      = !optimize;
             if(optimize)
             {
                 // integrator->markOptimizable();
@@ -643,8 +645,8 @@ public:
 atcg::Application* atcg::createApplication()
 {
     atcg::WindowProps props;
-    props.width  = 3000;
-    props.height = 1800;
-    props.vsync  = true;
+    // props.width  = 3000;
+    // props.height = 1800;
+    props.vsync = true;
     return new DiffRend(props);
 }

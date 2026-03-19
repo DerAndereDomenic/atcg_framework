@@ -178,3 +178,41 @@ __direct_callable__heterogeneousMedium_sampleMediumEventBackward(const glm::vec3
         }
     }
 }
+
+extern "C" __device__ void
+__direct_callable__heterogeneousMedium_evalTransmittanceBackward(const glm::vec3& origin,
+                                                                 const glm::vec3& direction,
+                                                                 float distance,
+                                                                 atcg::PCG32& rng,
+                                                                 const glm::vec3& output_grad)
+{
+    atcg::HeterogeneousMediumData* sbt_data =
+        *reinterpret_cast<atcg::HeterogeneousMediumData**>(optixGetSbtDataPointer());
+
+    if(!sbt_data->optimize_density)
+    {
+        return;
+    }
+
+    float t = 0.0f;
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(
+        sbt_data->density_majorant);
+    while(t < distance)
+    {
+        float sampled_distance = sampling_strategy.sample(rng.next1d());
+        t += sampled_distance;
+        if(t < distance)
+        {
+            float density = sbt_data->density_grid.eval(origin + t * direction);
+
+            float Pn = 1.0f - density / sbt_data->density_majorant;
+
+            float density_grad = glm::dot(output_grad / Pn, glm::vec3(-1.0f / sbt_data->density_majorant));
+
+            if(isfinite(density_grad))
+            {
+                sbt_data->density_grid.write(origin + t * direction, density_grad);
+            }
+        }
+    }
+}

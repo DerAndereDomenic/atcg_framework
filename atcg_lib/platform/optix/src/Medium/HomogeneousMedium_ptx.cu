@@ -178,3 +178,39 @@ __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& 
         }
     }
 }
+
+extern "C" __device__ void __direct_callable__homogeneousMedium_evalTransmittanceBackward(const glm::vec3& origin,
+                                                                                          const glm::vec3& direction,
+                                                                                          float distance,
+                                                                                          atcg::PCG32& rng,
+                                                                                          const glm::vec3& out_grad)
+{
+    const atcg::HomogeneousMediumData* sbt_data =
+        *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
+
+    if(!sbt_data->optimize_density)
+    {
+        // Nothing to do
+        return;
+    }
+
+    // Evaluate the probability of the light *not* interacting with the medium.
+    float density = *(sbt_data->density);
+
+    // atcg::TransmittanceEstimator<atcg::TransmittanceSamplingStrategyType::HOMOGENEOUS_TRACKING> estimator(density);
+    // atcg::Ray ray(origin, direction, 0.0f, distance);
+    //  float transmittance = estimator.estimate(ray);
+
+    // The transmittance is effectively exp(-sigma_t_scalar * distance), so the gradient w.r.t. sigma_t_scalar is
+    // -distance * exp(-sigma_t_scalar * distance) = -distance * transmittance
+    // From pbr: grad = dT / transmittance
+    float density_gradient =
+        -distance *
+        glm::dot(glm::vec3(1.0f),
+                 out_grad);    // -distance * transmittance * glm::dot(glm::vec3(1.0f), out_grad) / transmittance;
+
+    if(isfinite(density_gradient))
+    {
+        atcg::globalAtomicAdd(sbt_data->density_grad, density_gradient);
+    }
+}
