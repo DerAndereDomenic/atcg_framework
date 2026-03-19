@@ -5,6 +5,8 @@ if(ATCG_ENABLE_OPTIX)
     file(GLOB_RECURSE source "**.h*" "**.c*")
 endif()
 
+list(REMOVE_ITEM source "${CMAKE_CURRENT_SOURCE_DIR}/source_diffrend.cpp")
+
 # Retrieve target name from current folder name
 get_filename_component(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 
@@ -15,10 +17,12 @@ if(ATCG_ENABLE_OPTIX)
 endif()
 
 # Add target executable
-ATCG_add_executable(${TARGET_NAME} target_name "${source}")
+ATCG_add_executable(DiffRend target_name "${source}" source_diffrend.cpp)
+ATCG_add_executable(DiffRend_Multiview target_name "${source}" source_multiview.cpp)
 
 if(ATCG_ENABLE_OPTIX)
     set(ptx_target "${TARGET_NAME}_ptxmodules")
 
-    add_dependencies(${TARGET_NAME} ${ptx_target} ${ptx_target}-copy)
+    add_dependencies(DiffRend ${ptx_target} ${ptx_target}-copy)
+    add_dependencies(DiffRend_Multiview ${ptx_target} ${ptx_target}-copy)
 endif()
