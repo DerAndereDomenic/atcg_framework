@@ -223,9 +223,37 @@ void HeterogeneousMedium::zeroGrad()
 void HeterogeneousMedium::HeterogeneousMedium::markOptimizable()
 {
     // TODO
-    _optimize_albedo  = true;
+    // _optimize_albedo  = true;
+    // _optimize_density = true;
+    // _optimizable      = true;
+
+    atcg::TextureSpecification spec;
+    spec.width             = 256;
+    spec.height            = 256;
+    spec.depth             = 256;
+    spec.format            = TextureFormat::RFLOAT;
+    spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+
     _optimize_density = true;
     _optimizable      = true;
+
+    _density_tensor      = torch::ones({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+    _density_grad_tensor = torch::zeros({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions());
+
+    HeterogeneousMediumData data;
+    _data_buffer.download(&data);
+
+    data.optimize_density             = true;
+    data.density_majorant             = 1.0f;
+    data.density_grid.storage.sampler = TextureSampler<float>((std::byte*)_density_tensor.data_ptr(), spec);
+    data.density_grid.storage.writer  = TextureWriter<float>((std::byte*)_density_grad_tensor.data_ptr(), spec);
+
+    _data_buffer.upload(&data);
+
+    spec.depth            = 0;
+    spec.format           = TextureFormat::RGFLOAT;
+    _density_texture      = atcg::Texture2D::create(spec);
+    _density_grad_texture = atcg::Texture2D::create(spec);
 }
 
 void HeterogeneousMedium::clampParameters()
