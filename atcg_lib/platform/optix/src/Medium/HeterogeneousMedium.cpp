@@ -247,6 +247,7 @@ void HeterogeneousMedium::HeterogeneousMedium::markOptimizable()
     data.density_majorant             = 1.0f;
     data.density_grid.storage.sampler = TextureSampler<float>((std::byte*)_density_tensor.data_ptr(), spec);
     data.density_grid.storage.writer  = TextureWriter<float>((std::byte*)_density_grad_tensor.data_ptr(), spec);
+    data.density_grid.scale           = 1.0f;
 
     _data_buffer.upload(&data);
 
