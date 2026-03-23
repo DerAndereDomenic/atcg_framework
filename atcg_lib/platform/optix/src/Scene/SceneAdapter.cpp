@@ -81,6 +81,7 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
         medium->initializePipeline(_pipeline, _sbt);
 
         new_entity.addComponent<MediumComponent>(medium);
+        new_entity.addComponent<PhaseFunctionComponent>(phase);
     }
 
     if(entity.hasComponent<HeterogeneousMediumComponent>())
@@ -105,6 +106,7 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
             medium->initializePipeline(_pipeline, _sbt);
 
             new_entity.addComponent<MediumComponent>(medium);
+            new_entity.addComponent<PhaseFunctionComponent>(phase);
         }
     }
 

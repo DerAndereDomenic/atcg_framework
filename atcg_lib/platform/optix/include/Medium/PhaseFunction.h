@@ -5,6 +5,10 @@
 #include <DataStructure/Dictionary.h>
 #include <Medium/PhaseFunctionVPtrTable.cuh>
 
+#ifndef __CUDACC__
+    #include <Scene/ComponentGUIHandler.h>
+#endif
+
 namespace atcg
 {
 class PhaseFunction : public OptixComponent
@@ -26,4 +30,28 @@ public:
 protected:
     atcg::dref_ptr<PhaseFunctionVPtrTable> _vptr_table;
 };
+
+struct PhaseFunctionComponent
+{
+    PhaseFunctionComponent() = default;
+    PhaseFunctionComponent(const atcg::ref_ptr<PhaseFunction>& phase_function) : phase_function(phase_function) {}
+
+    atcg::ref_ptr<PhaseFunction> phase_function;
+
+    static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "PhaseFunctionComponent"; }
+};
+
+#ifndef __CUDACC__
+
+namespace GUI
+{
+template<>
+struct is_gui_addable<PhaseFunctionComponent> : std::false_type
+{
+};
+
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(PhaseFunctionComponent);
+}    // namespace GUI
+
+#endif
 }    // namespace atcg
