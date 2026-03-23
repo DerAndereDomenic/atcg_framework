@@ -6,6 +6,7 @@ if(ATCG_ENABLE_OPTIX)
 endif()
 
 list(REMOVE_ITEM source "${CMAKE_CURRENT_SOURCE_DIR}/source_diffrend.cpp")
+list(REMOVE_ITEM source "${CMAKE_CURRENT_SOURCE_DIR}/source_multiview.cpp")
 
 # Retrieve target name from current folder name
 get_filename_component(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
@@ -17,8 +18,13 @@ if(ATCG_ENABLE_OPTIX)
 endif()
 
 # Add target executable
-ATCG_add_executable(DiffRend target_name "${source}" source_diffrend.cpp)
-ATCG_add_executable(DiffRend_Multiview target_name "${source}" source_multiview.cpp)
+set(source_diffrend ${source})
+list(APPEND source_diffrend source_diffrend.cpp)
+
+set(source_multiview ${source})
+list(APPEND source_multiview source_multiview.cpp)
+ATCG_add_executable(DiffRend target_name "${source_diffrend}")
+ATCG_add_executable(DiffRend_Multiview target_name "${source_multiview}")
 
 if(ATCG_ENABLE_OPTIX)
     set(ptx_target "${TARGET_NAME}_ptxmodules")
