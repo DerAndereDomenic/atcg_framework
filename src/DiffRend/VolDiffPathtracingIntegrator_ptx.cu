@@ -474,6 +474,10 @@ extern "C" __global__ void __raygen__backward()
                                                                   rng_copy,
                                                                   grad_out);
 
+                    ray.current_medium->phase_function->evalPhaseFunctionBackward(mi,
+                                                                                  emitter_sampling.direction_to_light,
+                                                                                  grad_out);
+
                     ray.radiance -= radiance_nee;
                 } while(false);
 
@@ -484,6 +488,10 @@ extern "C" __global__ void __raygen__backward()
                     ray.valid = false;
                     break;
                 }
+
+                phase_function->evalPhaseFunctionBackward(mi,
+                                                          phase_result.outgoing_ray_dir,
+                                                          ray.delta_y * ray.throughput);
 
                 ray.origin    = mi.position;
                 ray.direction = glm::normalize(phase_result.outgoing_ray_dir);

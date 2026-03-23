@@ -96,6 +96,13 @@ void VolDiffPathtracingIntegrator::initializePipeline(const Dictionary& dict)
             {
                 _differentiable_components.push_back(medium_diff.get());
             }
+
+            auto phase_function =
+                std::dynamic_pointer_cast<Differentiable>(shape->getInsideMedium()->getPhaseFunction());
+            if(phase_function)
+            {
+                _differentiable_components.push_back(phase_function.get());
+            }
         }
     }
 

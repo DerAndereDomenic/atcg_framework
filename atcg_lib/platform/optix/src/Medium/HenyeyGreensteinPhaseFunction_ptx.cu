@@ -1,6 +1,7 @@
 #pragma cuda_source_property_format = PTX
 
 #include <Core/CUDA.h>
+#include <Core/GlobalAtomicAdd.h>
 
 #include <Math/Random.h>
 
@@ -74,13 +75,14 @@ __direct_callable__eval_hgphase(const atcg::MediumInteraction& interaction, cons
     const atcg::HenyeyGreensteinPhaseFunctionData* sbt_data =
         *reinterpret_cast<const atcg::HenyeyGreensteinPhaseFunctionData**>(optixGetSbtDataPointer());
 
+    float g = *(sbt_data->g);
+
     atcg::PhaseFunctionEvalResult result;
     // Since we can sample the phase function exactly, the sampling pdf is equal to the phase function itself.
     // The difference is that the phase function is in general allowed to return a "chromatic" value, and the sampling
     // pdf returns a scalar value.
     result.sampling_pdf =
-        detail::henyey_greenstein_phase_function(glm::dot(interaction.incoming_direction, outgoing_ray_dir),
-                                                 sbt_data->g);
+        detail::henyey_greenstein_phase_function(glm::dot(interaction.incoming_direction, outgoing_ray_dir), g);
     result.phase_function_value = result.sampling_pdf;
     return result;
 }
@@ -91,15 +93,50 @@ __direct_callable__sample_hgphase(const atcg::MediumInteraction& interaction, at
     const atcg::HenyeyGreensteinPhaseFunctionData* sbt_data =
         *reinterpret_cast<const atcg::HenyeyGreensteinPhaseFunctionData**>(optixGetSbtDataPointer());
 
+    float g = *(sbt_data->g);
+
     atcg::Frame local_frame          = atcg::Frame(interaction.incoming_direction);
-    glm::vec3 local_outgoing_ray_dir = detail::warp_square_to_sphere_henyey_greenstein(rng.next2d(), sbt_data->g);
+    glm::vec3 local_outgoing_ray_dir = detail::warp_square_to_sphere_henyey_greenstein(rng.next2d(), g);
 
     atcg::PhaseFunctionSamplingResult result;
     result.outgoing_ray_dir = local_frame.toWorld(local_outgoing_ray_dir);
-    result.sampling_pdf     = detail::warp_square_to_sphere_henyey_greenstein_pdf(local_outgoing_ray_dir, sbt_data->g);
-    // result.phase_function_weight = glm::vec3(henyey_greenstein_phase_function(local_outgoing_ray_dir.z, sbt_data->g))
+    result.sampling_pdf     = detail::warp_square_to_sphere_henyey_greenstein_pdf(local_outgoing_ray_dir, g);
+    // result.phase_function_weight = glm::vec3(henyey_greenstein_phase_function(local_outgoing_ray_dir.z, g))
     // / result.sampling_pdf;
     result.phase_function_weight = 1.0f;
 
     return result;
+}
+
+extern "C" __device__ void __direct_callable__eval_hgphase_backward(const atcg::MediumInteraction& interaction,
+                                                                    const glm::vec3& outgoing_ray_dir,
+                                                                    const glm::vec3& output_grad)
+{
+    const atcg::HenyeyGreensteinPhaseFunctionData* sbt_data =
+        *reinterpret_cast<const atcg::HenyeyGreensteinPhaseFunctionData**>(optixGetSbtDataPointer());
+
+    if(!sbt_data->optimize_g)
+    {
+        return;
+    }
+
+    float g = *(sbt_data->g);
+
+    float cos_theta   = glm::dot(interaction.incoming_direction, outgoing_ray_dir);
+    float phase_value = detail::henyey_greenstein_phase_function(cos_theta, g);
+
+    // dphase_dg
+    float g2        = g * g;
+    float denom     = 1 + g2 - 2 * g * cos_theta;
+    float dphase_dg = (-2.0f * g * glm::pow(denom, -1.5f) -
+                       1.5f * (1.0f - g2) * (2.0f * g - 2.0f * cos_theta) * glm::pow(denom, -2.5f)) /
+                      (4.0f * glm::pi<float>());
+
+
+    float g_grad = glm::dot(glm::vec3(1.0f), dphase_dg * output_grad / phase_value);
+
+    if(isfinite(g_grad))
+    {
+        atcg::globalAtomicAdd(sbt_data->g_grad, g_grad);
+    }
 }
