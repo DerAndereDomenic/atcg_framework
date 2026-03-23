@@ -52,7 +52,10 @@ private:
 
     atcg::ref_ptr<Texture2D> _density_texture;
     atcg::ref_ptr<Texture2D> _density_grad_texture;
-    int _layer = 0;
+    atcg::ref_ptr<Texture2D> _albedo_texture;
+    atcg::ref_ptr<Texture2D> _albedo_grad_texture;
+    int _layer_density = 0;
+    int _layer_albedo  = 0;
 
     bool _optimize_albedo  = false;
     bool _optimize_density = false;

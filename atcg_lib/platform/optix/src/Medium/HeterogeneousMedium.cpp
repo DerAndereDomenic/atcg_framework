@@ -111,11 +111,6 @@ void HeterogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipel
 
 void HeterogeneousMedium::onImGuiRender()
 {
-    if(ImGui::Button("Optimize Albedo"))
-    {
-        _optimize_albedo = true;
-    }
-
     if(ImGui::Button("Optimize Density"))
     {
         atcg::TextureSpecification spec;
@@ -147,6 +142,38 @@ void HeterogeneousMedium::onImGuiRender()
         _density_grad_texture = atcg::Texture2D::create(spec);
     }
 
+    if(ImGui::Button("Optimize Albedo"))
+    {
+        atcg::TextureSpecification spec;
+        spec.width             = 256;
+        spec.height            = 256;
+        spec.depth             = 256;
+        spec.format            = TextureFormat::RGBFLOAT;
+        spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+
+        _optimize_albedo = true;
+        _optimizable     = true;
+
+        _albedo_tensor =
+            torch::ones({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        _albedo_grad_tensor = torch::zeros({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions());
+
+        HeterogeneousMediumData data;
+        _data_buffer.download(&data);
+
+        data.optimize_albedo             = true;
+        data.albedo_grid.storage.sampler = TextureSampler<glm::vec3>((std::byte*)_albedo_tensor.data_ptr(), spec);
+        data.albedo_grid.storage.writer  = TextureWriter<glm::vec3>((std::byte*)_albedo_grad_tensor.data_ptr(), spec);
+        data.albedo_grid.scale           = 1.0f;
+
+        _data_buffer.upload(&data);
+
+        spec.depth           = 0;
+        spec.format          = TextureFormat::RGBFLOAT;
+        _albedo_texture      = atcg::Texture2D::create(spec);
+        _albedo_grad_texture = atcg::Texture2D::create(spec);
+    }
+
     auto normalize = [](torch::Tensor inp) -> torch::Tensor
     {
         auto min = torch::amin(inp);
@@ -169,13 +196,14 @@ void HeterogeneousMedium::onImGuiRender()
 
     if(_optimize_density)
     {
-        ImGui::SliderInt("Layer", &_layer, 0, 255);
+        ImGui::SliderInt("Layer##density", &_layer_density, 0, 255);
 
         if(_density_tensor.defined())
         {
-            auto density_slice = _density_tensor.index({torch::indexing::Slice(), torch::indexing::Slice(), _layer})
-                                     .unsqueeze(-1)
-                                     .contiguous();
+            auto density_slice =
+                _density_tensor.index({torch::indexing::Slice(), torch::indexing::Slice(), _layer_density})
+                    .unsqueeze(-1)
+                    .contiguous();
             _density_texture->setData(pos_neg(density_slice));
             ImGui::Image((ImTextureID)_density_texture->getID(), ImVec2(256, 256), ImVec2 {0, 1}, ImVec2 {1, 0});
         }
@@ -183,13 +211,42 @@ void HeterogeneousMedium::onImGuiRender()
         if(_density_tensor.grad().defined())
         {
             auto density_grad_slice = _density_tensor.grad()
-                                          .index({torch::indexing::Slice(), torch::indexing::Slice(), _layer})
+                                          .index({torch::indexing::Slice(), torch::indexing::Slice(), _layer_density})
                                           .unsqueeze(-1)
                                           .contiguous();
 
             _density_grad_texture->setData(pos_neg(density_grad_slice));
 
             ImGui::Image((ImTextureID)_density_grad_texture->getID(), ImVec2(256, 256), ImVec2 {0, 1}, ImVec2 {1, 0});
+        }
+    }
+
+    if(_optimize_albedo)
+    {
+        ImGui::SliderInt("Layer##albedo", &_layer_albedo, 0, 255);
+
+        if(_albedo_tensor.defined())
+        {
+            auto albedo_slice =
+                _albedo_tensor
+                    .index(
+                        {torch::indexing::Slice(), torch::indexing::Slice(), _layer_albedo, torch::indexing::Slice()})
+                    .contiguous();
+            _albedo_texture->setData(albedo_slice);
+            ImGui::Image((ImTextureID)_albedo_texture->getID(), ImVec2(256, 256), ImVec2 {0, 1}, ImVec2 {1, 0});
+        }
+
+        if(_albedo_tensor.grad().defined())
+        {
+            auto albedo_grad_slice =
+                _albedo_tensor.grad()
+                    .index(
+                        {torch::indexing::Slice(), torch::indexing::Slice(), _layer_albedo, torch::indexing::Slice()})
+                    .contiguous();
+
+            _albedo_grad_texture->setData(albedo_grad_slice);
+
+            ImGui::Image((ImTextureID)_albedo_grad_texture->getID(), ImVec2(256, 256), ImVec2 {0, 1}, ImVec2 {1, 0});
         }
     }
 }
@@ -263,6 +320,7 @@ void HeterogeneousMedium::clampParameters()
     {
         // Clamp density to be non-negative.
         _density_tensor.clamp_(0.0f);
+        _albedo_tensor.clamp_(0.0f, 1.0f);
 
         HeterogeneousMediumData data;
         _data_buffer.download(&data);

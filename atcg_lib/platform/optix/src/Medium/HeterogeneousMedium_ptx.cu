@@ -128,7 +128,7 @@ __direct_callable__heterogeneousMedium_sampleMediumEventBackward(const glm::vec3
     atcg::HeterogeneousMediumData* sbt_data =
         *reinterpret_cast<atcg::HeterogeneousMediumData**>(optixGetSbtDataPointer());
 
-    if(!sbt_data->optimize_density)
+    if(!sbt_data->optimize_density && !sbt_data->optimize_albedo)
     {
         return;
     }
@@ -152,28 +152,44 @@ __direct_callable__heterogeneousMedium_sampleMediumEventBackward(const glm::vec3
         if(rng.next1d() < step_density / sbt_data->density_majorant)
         {
             // Scattering or absorbtion event case.
-            atcg::SampledSpectrum albedo =
-                atcg::SampledSpectrum::fromRGB(sbt_data->albedo_grid.eval(step_position), wavelengths);
+            glm::vec3 albedo = sbt_data->albedo_grid.eval(step_position);
 
-            float Pt           = step_density / sbt_data->density_majorant;
-            float density_grad = glm::dot(output_grad, glm::vec3(1.0f / (Pt * sbt_data->density_majorant + 1e-6f)));
+            float Pt = step_density / sbt_data->density_majorant;
 
-            if(isfinite(density_grad))
+            if(sbt_data->optimize_density)
             {
-                sbt_data->density_grid.write(step_position, density_grad);
+                float density_grad = glm::dot(glm::vec3(1.0f), output_grad / (Pt * sbt_data->density_majorant + 1e-6f));
+
+                if(isfinite(density_grad))
+                {
+                    sbt_data->density_grid.write(step_position, density_grad);
+                }
+            }
+
+            if(sbt_data->optimize_albedo)
+            {
+                glm::vec3 albedo_grad = output_grad / (albedo + 1e-6f);
+
+                if(isfinite(albedo_grad.x) && isfinite(albedo_grad.y) && isfinite(albedo_grad.z))
+                {
+                    sbt_data->albedo_grid.write(step_position, albedo_grad);
+                }
             }
 
             break;
         }
         else
         {
-            // Null-scattering event case.
-            float Pn           = 1.0f - step_density / sbt_data->density_majorant;
-            float density_grad = glm::dot(output_grad / Pn, glm::vec3(-1.0f / sbt_data->density_majorant));
-
-            if(isfinite(density_grad))
+            if(sbt_data->optimize_density)
             {
-                sbt_data->density_grid.write(step_position, density_grad);
+                // Null-scattering event case.
+                float Pn           = 1.0f - step_density / sbt_data->density_majorant;
+                float density_grad = glm::dot(output_grad / Pn, glm::vec3(-1.0f / sbt_data->density_majorant));
+
+                if(isfinite(density_grad))
+                {
+                    sbt_data->density_grid.write(step_position, density_grad);
+                }
             }
         }
     }
