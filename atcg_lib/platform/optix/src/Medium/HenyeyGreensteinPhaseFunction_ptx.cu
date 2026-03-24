@@ -23,7 +23,7 @@ __direct_callable__eval_hgphase(const atcg::MediumInteraction& interaction, cons
     // The difference is that the phase function is in general allowed to return a "chromatic" value, and the sampling
     // pdf returns a scalar value.
     atcg::SamplingStrategy<atcg::SamplingStrategyType::HG_PHASE> sampling_strategy(sbt_data->g);
-    result.sampling_pdf         = sampling_strategy.pdf(outgoing_ray_dir);
+    result.sampling_pdf         = sampling_strategy.pdf(glm::dot(interaction.incoming_direction, outgoing_ray_dir));
     result.phase_function_value = result.sampling_pdf;
     return result;
 }
@@ -41,7 +41,7 @@ __direct_callable__sample_hgphase(const atcg::MediumInteraction& interaction, at
 
     atcg::PhaseFunctionSamplingResult result;
     result.outgoing_ray_dir = local_frame.toWorld(local_outgoing_ray_dir);
-    result.sampling_pdf     = sampling_strategy.pdf(local_outgoing_ray_dir);
+    result.sampling_pdf     = sampling_strategy.pdf(local_outgoing_ray_dir.z);
     // result.phase_function_weight = glm::vec3(henyey_greenstein_phase_function(local_outgoing_ray_dir.z, sbt_data->g))
     // / result.sampling_pdf;
     result.phase_function_weight = 1.0f;
