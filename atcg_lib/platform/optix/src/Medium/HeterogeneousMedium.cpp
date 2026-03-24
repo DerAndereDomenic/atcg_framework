@@ -279,39 +279,73 @@ void HeterogeneousMedium::zeroGrad()
 
 void HeterogeneousMedium::HeterogeneousMedium::markOptimizable()
 {
-    // TODO
-    // _optimize_albedo  = true;
-    // _optimize_density = true;
-    // _optimizable      = true;
+    {
+        atcg::TextureSpecification spec;
+        spec.width             = 256;
+        spec.height            = 256;
+        spec.depth             = 256;
+        spec.format            = TextureFormat::RFLOAT;
+        spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
 
-    atcg::TextureSpecification spec;
-    spec.width             = 256;
-    spec.height            = 256;
-    spec.depth             = 256;
-    spec.format            = TextureFormat::RFLOAT;
-    spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+        _optimize_density = true;
+        _optimizable      = true;
 
-    _optimize_density = true;
-    _optimizable      = true;
+        _density_tensor = torch::ones({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        _density_grad_tensor = torch::zeros({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions());
 
-    _density_tensor      = torch::ones({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
-    _density_grad_tensor = torch::zeros({256, 256, 256}, atcg::TensorOptions::floatDeviceOptions());
+        HeterogeneousMediumData data;
+        _data_buffer.download(&data);
 
-    HeterogeneousMediumData data;
-    _data_buffer.download(&data);
+        data.optimize_density             = true;
+        data.density_majorant             = 1.0f;
+        data.density_grid.storage.sampler = TextureSampler<float>((std::byte*)_density_tensor.data_ptr(), spec);
+        data.density_grid.storage.writer  = TextureWriter<float>((std::byte*)_density_grad_tensor.data_ptr(), spec);
+        data.density_grid.scale           = 1.0f;
 
-    data.optimize_density             = true;
-    data.density_majorant             = 1.0f;
-    data.density_grid.storage.sampler = TextureSampler<float>((std::byte*)_density_tensor.data_ptr(), spec);
-    data.density_grid.storage.writer  = TextureWriter<float>((std::byte*)_density_grad_tensor.data_ptr(), spec);
-    data.density_grid.scale           = 1.0f;
+        _data_buffer.upload(&data);
 
-    _data_buffer.upload(&data);
+        spec.depth            = 0;
+        spec.format           = TextureFormat::RGFLOAT;
+        _density_texture      = atcg::Texture2D::create(spec);
+        _density_grad_texture = atcg::Texture2D::create(spec);
+    }
 
-    spec.depth            = 0;
-    spec.format           = TextureFormat::RGFLOAT;
-    _density_texture      = atcg::Texture2D::create(spec);
-    _density_grad_texture = atcg::Texture2D::create(spec);
+    {
+        atcg::TextureSpecification spec;
+        spec.width             = 256;
+        spec.height            = 256;
+        spec.depth             = 256;
+        spec.format            = TextureFormat::RGBFLOAT;
+        spec.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
+
+        _optimize_albedo = true;
+        _optimizable     = true;
+
+        _albedo_tensor =
+            torch::ones({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+        _albedo_grad_tensor = torch::zeros({256, 256, 256, 3}, atcg::TensorOptions::floatDeviceOptions());
+
+        HeterogeneousMediumData data;
+        _data_buffer.download(&data);
+
+        data.optimize_albedo             = true;
+        data.albedo_grid.storage.sampler = TextureSampler<glm::vec3>((std::byte*)_albedo_tensor.data_ptr(), spec);
+        data.albedo_grid.storage.writer  = TextureWriter<glm::vec3>((std::byte*)_albedo_grad_tensor.data_ptr(), spec);
+        data.albedo_grid.scale           = 1.0f;
+
+        _data_buffer.upload(&data);
+
+        spec.depth           = 0;
+        spec.format          = TextureFormat::RGBFLOAT;
+        _albedo_texture      = atcg::Texture2D::create(spec);
+        _albedo_grad_texture = atcg::Texture2D::create(spec);
+    }
+
+    auto phase = std::dynamic_pointer_cast<Differentiable>(_phase_function);
+    if(phase)
+    {
+        phase->markOptimizable();
+    }
 }
 
 void HeterogeneousMedium::clampParameters()

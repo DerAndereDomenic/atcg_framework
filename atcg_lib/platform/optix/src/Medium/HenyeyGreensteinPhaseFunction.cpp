@@ -129,7 +129,21 @@ void HenyeyGreensteinPhaseFunction::zeroGrad()
 
 void HenyeyGreensteinPhaseFunction::markOptimizable()
 {
-    // TODO
+    _g_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions()).requires_grad_(true);
+
+    _g_grad_tensor = torch::zeros({1}, atcg::TensorOptions::floatDeviceOptions());
+
+    HenyeyGreensteinPhaseFunctionData data;
+    _data_buffer.download(&data);
+
+    data.g          = (float*)_g_tensor.data_ptr();
+    data.g_grad     = (float*)_g_grad_tensor.data_ptr();
+    data.optimize_g = true;
+
+    _data_buffer.upload(&data);
+
+    _optimize_g  = true;
+    _optimizable = true;
 }
 
 void HenyeyGreensteinPhaseFunction::clampParameters()
