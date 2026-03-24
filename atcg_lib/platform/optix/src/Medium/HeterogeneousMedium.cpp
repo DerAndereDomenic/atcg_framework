@@ -52,7 +52,7 @@ HeterogeneousMedium::HeterogeneousMedium(const Dictionary& dict) : Medium(dict)
         data.emission_grid.to_uvw = to_uvw;
     }
 
-    data.albedo_grid.storage.texture = false ? _albedo_texture->getTextureObject() : 0;
+    data.albedo_grid.storage.texture = _albedo_texture ? _albedo_texture->getTextureObject() : 0;
     data.albedo_grid.scale           = albedo_grid.scale;
     {
         glm::mat4 to_uvw        = glm::mat4(1);
