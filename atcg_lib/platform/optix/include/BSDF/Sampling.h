@@ -11,7 +11,8 @@ enum class SamplingStrategyType
     HEMISPHERE_COSINE,
     SPHERE_UNIFORM,
     EXPONENTIAL_SAMPLING,
-    HG_PHASE
+    HG_PHASE,
+    RAYLEIGH_PHASE
 };
 
 template<SamplingStrategyType strategy, typename T = float>
