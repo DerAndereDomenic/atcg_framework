@@ -43,7 +43,7 @@ public:
     {
         atcg::Application::get()->enableDockSpace(true);
 
-        atcg::Project::load("../HetTest/Project.json");
+        atcg::Project::load("../HetTest2/Project.json");
 
         const auto& window = atcg::Application::get()->getWindow();
         float aspect_ratio = (float)window->getWidth() / (float)window->getHeight();
@@ -125,7 +125,7 @@ public:
 
         atcg::Scripting::handleScriptUpdates(atcg::Project::getActive()->getActiveScene(), delta_time);
 
-        if(enable_pathtracing)
+        if(enable_pathtracing && !pause)
         {
 #ifdef ATCG_ENABLE_OPTIX
 
@@ -200,7 +200,7 @@ public:
             atcg::GraphicsCommand::endRenderPass();
 #endif
         }
-        else
+        // else
         {
             atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera(),
                                                                atcg::Renderer::getFramebuffer());
@@ -447,6 +447,11 @@ public:
         {
             current_operation = ImGuizmo::OPERATION::SCALE;
         }
+
+        if(event->getKeyCode() == ATCG_KEY_P)
+        {
+            pause = !pause;
+        }
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;
@@ -498,6 +503,7 @@ private:
     bool show_render_settings = true;
     bool vsync                = true;
     bool debug                = false;
+    bool pause                = true;
 
     bool enable_pathtracing = true;
 
