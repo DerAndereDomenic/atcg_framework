@@ -108,6 +108,11 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
     // Actual rendering of component
     MeshRenderComponent renderer = entity.getComponent<MeshRenderComponent>();
 
+    if(renderer.material()->getMaterialType() == MaterialType::MATERIAL_TYPE_NULL)
+    {
+        return;
+    }
+
     auto scene = entity.scene();
 
     atcg::ref_ptr<atcg::Shader> shader =

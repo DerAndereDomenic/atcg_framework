@@ -262,6 +262,9 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("image_display");
     impl->shader_manager->addShaderFromName("emissive");
     impl->shader_manager->addShaderFromName("tonemap");
+    impl->shader_manager->addShaderFromName("volume_hom");
+    impl->shader_manager->addShaderFromName("volume_het");
+    impl->shader_manager->addShaderFromName("depth_pass_simple");
 }
 
 void RendererSystem::use()
