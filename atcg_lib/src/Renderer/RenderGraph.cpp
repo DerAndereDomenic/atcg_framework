@@ -5,6 +5,7 @@
 #include <Renderer/RenderPasses/ForwardPass.h>
 #include <Renderer/RenderPasses/ShadowPass.h>
 #include <Renderer/RenderPasses/TonemapPass.h>
+#include <Renderer/RenderPasses/VolumePass.h>
 
 namespace atcg
 {
@@ -170,12 +171,15 @@ atcg::ref_ptr<RenderGraph> createStandardGraph()
     auto shadow_handle  = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
     auto forward_handle = _render_graph->addRenderPass(
         atcg::make_ref<ForwardPass>(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER)));
+    auto volume_handle = _render_graph->addRenderPass(
+        atcg::make_ref<VolumePass>(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER)));
     auto tonemap_handle = _render_graph->addRenderPass(atcg::make_ref<TonemapPass>());
 
     _render_graph->addDependency(skybox_handle, "skybox", forward_handle, "skybox");
     _render_graph->addDependency(skybox_handle, "framebuffer", forward_handle, "framebuffer");
     _render_graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
-    _render_graph->addDependency(forward_handle, "framebuffer", tonemap_handle, "hdr");
+    _render_graph->addDependency(forward_handle, "framebuffer", volume_handle, "framebuffer");
+    _render_graph->addDependency(volume_handle, "framebuffer", tonemap_handle, "hdr");
 
     return _render_graph;
 }
@@ -220,13 +224,16 @@ atcg::ref_ptr<RenderGraph> createMSAAGraph(uint32_t num_samples)
     auto shadow_handle  = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
     auto forward_handle = _render_graph->addRenderPass(
         atcg::make_ref<ForwardPass>(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER)));
+    auto volume_handle = _render_graph->addRenderPass(
+        atcg::make_ref<VolumePass>(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER)));
     auto screen_handle  = _render_graph->addRenderPass(atcg::make_ref<BlitPass>(render_desc_blit));
     auto tonemap_handle = _render_graph->addRenderPass(atcg::make_ref<TonemapPass>());
 
     _render_graph->addDependency(skybox_handle, "skybox", forward_handle, "skybox");
     _render_graph->addDependency(skybox_handle, "framebuffer", forward_handle, "framebuffer");
     _render_graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
-    _render_graph->addDependency(forward_handle, "framebuffer", screen_handle, "framebuffer");
+    _render_graph->addDependency(forward_handle, "framebuffer", volume_handle, "framebuffer");
+    _render_graph->addDependency(volume_handle, "framebuffer", screen_handle, "framebuffer");
     _render_graph->addDependency(screen_handle, "framebuffer", tonemap_handle, "hdr");
 
     return _render_graph;
