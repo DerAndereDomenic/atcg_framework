@@ -21,7 +21,6 @@ set(CMAKE_CXX_STANDARD 17)
 # Manage options
 option(ATCG_CUDA_BACKEND "Compile cuda backend" ON)
 option(ATCG_PYTHON_MODULE "Build atcg_lib as python binding" OFF)
-option(ATCG_OPTIX_PATHTRACING "Build the Optix Pathtracer" ON)
 option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
 option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
@@ -48,16 +47,6 @@ endif()
 # Check for CUDA
 if(ATCG_CUDA_BACKEND AND NOT CMAKE_CUDA_COMPILER)
     enable_language(CUDA)
-endif()
-
-if(ATCG_OPTIX_PATHTRACING AND CMAKE_CUDA_COMPILER)
-    find_package(OptiX)
-    if(OptiX_INCLUDE)
-        message("FOUND OPTIX --- building with OptiX pathtracing")
-        set(ATCG_ENABLE_OPTIX ON)
-    else()
-        message("Could not find OptiX --- building without pathtracing")
-    endif()
 endif()
 
 #
@@ -207,6 +196,12 @@ set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
 if(NOT TARGET sfml)
     add_subdirectory(external/sfml)
+endif()
+
+if(CMAKE_CUDA_COMPILER)
+    add_library(atcg_optix INTERFACE)
+    target_include_directories(atcg_optix INTERFACE "external/OptiX/include")
+    add_library(atcg::optix ALIAS atcg_optix)
 endif()
 
 #
