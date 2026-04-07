@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for multiple ray types in pathtracing backend
 - Added possibility to customize and add closest hit programs for arbitrary shapes
 - Added simple camera exposure model
+- Added optix as submodule. The pathtracing backend is now always built when CUDA is available
 
 ### Changed
 

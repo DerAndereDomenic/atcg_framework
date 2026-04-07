@@ -18,10 +18,7 @@ if(ATCG_CUDA_BACKEND)
 
     target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-    if(ATCG_ENABLE_OPTIX)
-        target_include_directories(atcg_lib PUBLIC ${OptiX_INCLUDE})
-        target_compile_definitions(atcg_lib PUBLIC ATCG_ENABLE_OPTIX)
-    endif()
+    target_compile_definitions(atcg_lib PUBLIC ATCG_ENABLE_OPTIX)
 
     if(ATCG_SPECTRAL_RENDERING)
         target_compile_definitions(atcg_lib PUBLIC ATCG_SPECTRAL_RENDERING)
@@ -30,6 +27,7 @@ if(ATCG_CUDA_BACKEND)
     target_compile_definitions(atcg_lib PUBLIC ATCG_CUDA_BACKEND)
     target_link_libraries(atcg_lib PUBLIC CUDA::cudart_static)
     target_link_libraries(atcg_lib PUBLIC CUDA::nvjpeg)
+    target_link_libraries(atcg_lib PUBLIC atcg::optix)
 else()
     set(ATCG_BACKEND "cpu")
 endif()
@@ -60,7 +58,7 @@ file (GLOB_RECURSE atcg_renderer_files LIST_DIRECTORIES false "${ATCG_PROJECT_RO
 file (GLOB_RECURSE atcg_window_files LIST_DIRECTORIES false "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.c*"
                                                             "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/${ATCG_CONTEXT}/**.h")
 
-if(ATCG_ENABLE_OPTIX)
+if(ATCG_CUDA_BACKEND)
     list(APPEND CMAKE_MODULE_PATH "${ATCG_PROJECT_ROOT_DIR}/cmake")
     include(FilterPTX)
 
