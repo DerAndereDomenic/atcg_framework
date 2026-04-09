@@ -18,6 +18,500 @@ namespace atcg
 namespace GUI
 {
 
+namespace detail
+{
+void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const std::string& key, bool& updated)
+{
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+    {
+        auto spec        = material->getDiffuseTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto diffuse = material->getDiffuseTexture()->getData(atcg::CPU);
+
+            float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 1}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 2}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 3}).item<float>() / 255.0f};
+
+            if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
+            {
+                glm::vec4 new_color = glm::make_vec4(color);
+                material->setDiffuseColor(new_color);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##diffuse" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                            pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                            pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0], 2.2f);
+                    auto texture = atcg::Texture2D::create(img);
+                    material->setDiffuseTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("Diffuse Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##diffuse" + key).c_str()))
+            {
+                material->setDiffuseColor(glm::vec4(1));
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material->getDiffuseTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+
+    {
+        auto spec        = material->getNormalTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            ImGui::Text("Normals");
+            ImGui::SameLine();
+            if(ImGui::Button(("...##normals" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                            pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                            pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
+                    material->setNormalTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("Normal Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##normal" + key).c_str()))
+            {
+                material->removeNormalMap();
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material->getNormalTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+
+    {
+        auto spec        = material->getRoughnessTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto data       = material->getRoughnessTexture()->getData(atcg::CPU);
+            float roughness = data.item<float>();
+
+            if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
+            {
+                material->setRoughness(roughness);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##roughness" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                            pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                            pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
+                    material->setRoughnessTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("Roughness Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##roughness" + key).c_str()))
+            {
+                material->setRoughness(1.0f);
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material->getRoughnessTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+
+    {
+        auto spec        = material->getMetallicTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto data      = material->getMetallicTexture()->getData(atcg::CPU);
+            float metallic = data.item<float>();
+
+            if(ImGui::DragFloat(("Metallic##" + key).c_str(), &metallic, 0.005f, 0.0f, 1.0f))
+            {
+                material->setMetallic(metallic);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##metallic" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                            pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                            pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
+                    material->setMetallicTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("Metallic Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##metallic" + key).c_str()))
+            {
+                material->setMetallic(0.0f);
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material->getMetallicTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+
+    {
+        auto spec        = material->getIorTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto data = material->getIorTexture()->getData(atcg::CPU);
+            float ior = data.item<float>();
+
+            if(ImGui::DragFloat(("IoR##" + key).c_str(), &ior, 0.005f, 1.0f, 2.5f))
+            {
+                material->setIor(ior);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##ior" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                            pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                            pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
+                    material->setIorTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("IoR Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##ior" + key).c_str()))
+            {
+                material->setIor(1.5f);
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material->getIorTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+}
+
+void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material, const std::string& key, bool& updated)
+{
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+    {
+        auto spec        = material->getDiffuseTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto diffuse = material->getDiffuseTexture()->getData(atcg::CPU);
+
+            float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 1}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 2}).item<float>() / 255.0f,
+                              diffuse.index({0, 0, 3}).item<float>() / 255.0f};
+
+            if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
+            {
+                glm::vec4 new_color = glm::make_vec4(color);
+                material->setDiffuseColor(new_color);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##diffuse" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                            pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                            pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0], 2.2f);
+                    auto texture = atcg::Texture2D::create(img);
+                    material->setDiffuseTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("Diffuse Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##diffuse" + key).c_str()))
+            {
+                material->setDiffuseColor(glm::vec4(1));
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material->getDiffuseTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+
+    {
+        auto spec        = material->getRoughnessTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto data       = material->getRoughnessTexture()->getData(atcg::CPU);
+            float roughness = data.item<float>();
+
+            if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
+            {
+                material->setRoughness(roughness);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##roughness" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                            pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                            pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
+                    material->setRoughnessTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("Roughness Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##roughness" + key).c_str()))
+            {
+                material->setRoughness(1.0f);
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material->getRoughnessTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+
+    {
+        auto spec        = material->getIorTexture()->getSpecification();
+        bool useTextures = spec.width != 1 || spec.height != 1;
+
+        if(!useTextures)
+        {
+            auto data = material->getIorTexture()->getData(atcg::CPU);
+            float ior = data.item<float>();
+
+            if(ImGui::DragFloat(("IoR##" + key).c_str(), &ior, 0.005f, 1.0f, 2.5f))
+            {
+                material->setIor(ior);
+                updated = true;
+            }
+
+            ImGui::SameLine();
+
+            if(ImGui::Button(("...##ior" + key).c_str()))
+            {
+                auto f     = pfd::open_file("Choose files to read",
+                                            pfd::path::home(),
+                                            {"All Files",
+                                             "*",
+                                             "PNG Files (.png)",
+                                             "*.png",
+                                             "JPG Files (.jpg, .jpeg)",
+                                             "*jpg, *jpeg",
+                                             "BMP Files (.bmp)",
+                                             "*.bmp",
+                                             "HDR Files (.hdr)",
+                                             "*.hdr"},
+                                            pfd::opt::none);
+                auto files = f.result();
+                if(!files.empty())
+                {
+                    auto img     = IO::imread(files[0]);
+                    auto texture = atcg::Texture2D::create(img);
+                    material->setIorTexture(texture);
+                    updated = true;
+                }
+            }
+        }
+        else
+        {
+            ImGui::Text("IoR Texture");
+            ImGui::SameLine();
+
+            if(ImGui::Button(("X##ior" + key).c_str()))
+            {
+                material->setIor(1.5f);
+                updated = true;
+            }
+            else
+                ImGui::Image((ImTextureID)material->getIorTexture()->getID(),
+                             ImVec2(content_scale * 128, content_scale * 128),
+                             ImVec2 {0, 1},
+                             ImVec2 {1, 0});
+        }
+    }
+}
+
+void displayNullMaterial(const atcg::ref_ptr<NullMaterial>& material, const std::string& key, bool& updated) {}
+}    // namespace detail
+
 AssetPanel::AssetPanel()
 {
     {
@@ -54,8 +548,6 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     if(!material_) return;
 
-    atcg::Material material = *material_.get();
-
     bool updated = false;
 
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
@@ -63,11 +555,13 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     ImGui::Text("Material");
 
-    int currentIndex = static_cast<int>(material.getMaterialType());
+    int currentIndex = static_cast<int>(material_->getMaterialType());
 
-    constexpr const char* materialTypeLabels[] = {"Opaque", "Glass", "Null"};
+    constexpr const char* materialTypeLabels[] = {"Opaque", "Dielectric", "Null"};
 
-    if(ImGui::BeginCombo("Material Type", materialTypeToString(material.getMaterialType())))
+    atcg::ref_ptr<Material> material = material_->clone();
+    material->handle                 = material_->handle;
+    if(ImGui::BeginCombo("Material Type", materialTypeToString(material_->getMaterialType())))
     {
         for(int i = 0; i < IM_ARRAYSIZE(materialTypeLabels); ++i)
         {
@@ -75,7 +569,21 @@ void AssetPanel::displayMaterial(AssetHandle handle)
             if(ImGui::Selectable(materialTypeLabels[i], isSelected))
             {
                 auto new_type = static_cast<MaterialType>(i);
-                material.setMaterialType(new_type);
+                switch(new_type)
+                {
+                    case MaterialType::MATERIAL_TYPE_OPAQUE:
+                        material         = atcg::make_ref<OpaqueMaterial>();
+                        material->handle = handle;
+                        break;
+                    case MaterialType::MATERIAL_TYPE_DIELECTRIC:
+                        material         = atcg::make_ref<DielectricMaterial>();
+                        material->handle = handle;
+                        break;
+                    case MaterialType::MATERIAL_TYPE_NULL:
+                        material         = atcg::make_ref<NullMaterial>();
+                        material->handle = handle;
+                        break;
+                }
                 updated = true;
             }
             if(isSelected) ImGui::SetItemDefaultFocus();
@@ -83,313 +591,23 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         ImGui::EndCombo();
     }
 
-    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
+    switch(material->getMaterialType())
     {
-        auto spec        = material.getDiffuseTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
-
-        if(!useTextures)
-        {
-            auto diffuse = material.getDiffuseTexture()->getData(atcg::CPU);
-
-            float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
-                              diffuse.index({0, 0, 1}).item<float>() / 255.0f,
-                              diffuse.index({0, 0, 2}).item<float>() / 255.0f,
-                              diffuse.index({0, 0, 3}).item<float>() / 255.0f};
-
-            if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
-            {
-                glm::vec4 new_color = glm::make_vec4(color);
-                material.setDiffuseColor(new_color);
-                updated = true;
-            }
-
-            ImGui::SameLine();
-
-            if(ImGui::Button(("...##diffuse" + key).c_str()))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0], 2.2f);
-                    auto texture = atcg::Texture2D::create(img);
-                    material.setDiffuseTexture(texture);
-                    updated = true;
-                }
-            }
-        }
-        else
-        {
-            ImGui::Text("Diffuse Texture");
-            ImGui::SameLine();
-
-            if(ImGui::Button(("X##diffuse" + key).c_str()))
-            {
-                material.setDiffuseColor(glm::vec4(1));
-                updated = true;
-            }
-            else
-                ImGui::Image((ImTextureID)material.getDiffuseTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-        }
-    }
-
-    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
-    {
-        auto spec        = material.getNormalTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
-
-        if(!useTextures)
-        {
-            ImGui::Text("Normals");
-            ImGui::SameLine();
-            if(ImGui::Button(("...##normals" + key).c_str()))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0]);
-                    auto texture = atcg::Texture2D::create(img);
-                    material.setNormalTexture(texture);
-                    updated = true;
-                }
-            }
-        }
-        else
-        {
-            ImGui::Text("Normal Texture");
-            ImGui::SameLine();
-
-            if(ImGui::Button(("X##normal" + key).c_str()))
-            {
-                material.removeNormalMap();
-                updated = true;
-            }
-            else
-                ImGui::Image((ImTextureID)material.getNormalTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-        }
-    }
-
-    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
-    {
-        auto spec        = material.getRoughnessTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
-
-        if(!useTextures)
-        {
-            auto data       = material.getRoughnessTexture()->getData(atcg::CPU);
-            float roughness = data.item<float>();
-
-            if(ImGui::DragFloat(("Roughness##" + key).c_str(), &roughness, 0.005f, 0.0f, 1.0f))
-            {
-                material.setRoughness(roughness);
-                updated = true;
-            }
-
-            ImGui::SameLine();
-
-            if(ImGui::Button(("...##roughness" + key).c_str()))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0]);
-                    auto texture = atcg::Texture2D::create(img);
-                    material.setRoughnessTexture(texture);
-                    updated = true;
-                }
-            }
-        }
-        else
-        {
-            ImGui::Text("Roughness Texture");
-            ImGui::SameLine();
-
-            if(ImGui::Button(("X##roughness" + key).c_str()))
-            {
-                material.setRoughness(1.0f);
-                updated = true;
-            }
-            else
-                ImGui::Image((ImTextureID)material.getRoughnessTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-        }
-    }
-
-
-    if(material.getMaterialType() == MaterialType::MATERIAL_TYPE_OPAQUE)
-    {
-        auto spec        = material.getMetallicTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
-
-        if(!useTextures)
-        {
-            auto data      = material.getMetallicTexture()->getData(atcg::CPU);
-            float metallic = data.item<float>();
-
-            if(ImGui::DragFloat(("Metallic##" + key).c_str(), &metallic, 0.005f, 0.0f, 1.0f))
-            {
-                material.setMetallic(metallic);
-                updated = true;
-            }
-
-            ImGui::SameLine();
-
-            if(ImGui::Button(("...##metallic" + key).c_str()))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0]);
-                    auto texture = atcg::Texture2D::create(img);
-                    material.setMetallicTexture(texture);
-                    updated = true;
-                }
-            }
-        }
-        else
-        {
-            ImGui::Text("Metallic Texture");
-            ImGui::SameLine();
-
-            if(ImGui::Button(("X##metallic" + key).c_str()))
-            {
-                material.setMetallic(0.0f);
-                updated = true;
-            }
-            else
-                ImGui::Image((ImTextureID)material.getMetallicTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-        }
-    }
-
-    if(material.getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
-    {
-        auto spec        = material.getIorTexture()->getSpecification();
-        bool useTextures = spec.width != 1 || spec.height != 1;
-
-        if(!useTextures)
-        {
-            auto data = material.getIorTexture()->getData(atcg::CPU);
-            float ior = data.item<float>();
-
-            if(ImGui::DragFloat(("IoR##" + key).c_str(), &ior, 0.005f, 1.0f, 2.5f))
-            {
-                material.setIor(ior);
-                updated = true;
-            }
-
-            ImGui::SameLine();
-
-            if(ImGui::Button(("...##ior" + key).c_str()))
-            {
-                auto f     = pfd::open_file("Choose files to read",
-                                        pfd::path::home(),
-                                            {"All Files",
-                                             "*",
-                                             "PNG Files (.png)",
-                                             "*.png",
-                                             "JPG Files (.jpg, .jpeg)",
-                                             "*jpg, *jpeg",
-                                             "BMP Files (.bmp)",
-                                             "*.bmp",
-                                             "HDR Files (.hdr)",
-                                             "*.hdr"},
-                                        pfd::opt::none);
-                auto files = f.result();
-                if(!files.empty())
-                {
-                    auto img     = IO::imread(files[0]);
-                    auto texture = atcg::Texture2D::create(img);
-                    material.setIorTexture(texture);
-                    updated = true;
-                }
-            }
-        }
-        else
-        {
-            ImGui::Text("IoR Texture");
-            ImGui::SameLine();
-
-            if(ImGui::Button(("X##ior" + key).c_str()))
-            {
-                material.setIor(1.5f);
-                updated = true;
-            }
-            else
-                ImGui::Image((ImTextureID)material.getIorTexture()->getID(),
-                             ImVec2(content_scale * 128, content_scale * 128),
-                             ImVec2 {0, 1},
-                             ImVec2 {1, 0});
-        }
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+            detail::displayOpaqueMaterial(std::dynamic_pointer_cast<OpaqueMaterial>(material), key, updated);
+            break;
+        case MaterialType::MATERIAL_TYPE_DIELECTRIC:
+            detail::displayDielectricMaterial(std::dynamic_pointer_cast<DielectricMaterial>(material), key, updated);
+            break;
+        case MaterialType::MATERIAL_TYPE_NULL:
+            detail::displayNullMaterial(std::dynamic_pointer_cast<NullMaterial>(material), key, updated);
+            break;
     }
 
     if(updated)
     {
         atcg::RevisionStack::startRecording<AssetEditedRevision>(material_->handle);
-        atcg::ref_ptr<Material> new_material = atcg::make_ref<Material>(material);
-        AssetManager::registerAsset(new_material, AssetManager::getMetaData(new_material->handle).name);
+        AssetManager::registerAsset(material, AssetManager::getMetaData(material_->handle).name);
         atcg::RevisionStack::endRecording();
     }
 #endif
@@ -494,9 +712,9 @@ void AssetPanel::displayShader(AssetHandle handle)
     if(ImGui::Button("Load Fragment Shader"))
     {
         auto f     = pfd::open_file("Choose files to read",
-                                pfd::path::home(),
+                                    pfd::path::home(),
                                     {"Fragment Shader (.fs)", "*.fs"},
-                                pfd::opt::none);
+                                    pfd::opt::none);
         auto files = f.result();
         if(!files.empty())
         {
@@ -511,9 +729,9 @@ void AssetPanel::displayShader(AssetHandle handle)
     if(ImGui::Button("Load Geometry Shader"))
     {
         auto f     = pfd::open_file("Choose files to read",
-                                pfd::path::home(),
+                                    pfd::path::home(),
                                     {"Geometry Shader (.gs)", "*.gs"},
-                                pfd::opt::none);
+                                    pfd::opt::none);
         auto files = f.result();
         if(!files.empty())
         {
@@ -528,9 +746,9 @@ void AssetPanel::displayShader(AssetHandle handle)
     if(ImGui::Button("Load Compute Shader"))
     {
         auto f     = pfd::open_file("Choose files to read",
-                                pfd::path::home(),
+                                    pfd::path::home(),
                                     {"Compute Shader (.glsl)", "*.glsl"},
-                                pfd::opt::none);
+                                    pfd::opt::none);
         auto files = f.result();
         if(!files.empty())
         {
@@ -625,7 +843,7 @@ void AssetPanel::displayTexture2D(AssetHandle handle)
     if(ImGui::Button(("Load Image##tex2dasset")))
     {
         auto f     = pfd::open_file("Choose files to read",
-                                pfd::path::home(),
+                                    pfd::path::home(),
                                     {"All Files",
                                      "*",
                                      "PNG Files (.png)",
@@ -636,7 +854,7 @@ void AssetPanel::displayTexture2D(AssetHandle handle)
                                      "*.bmp",
                                      "HDR Files (.hdr)",
                                      "*.hdr"},
-                                pfd::opt::none);
+                                    pfd::opt::none);
         auto files = f.result();
         if(!files.empty())
         {
@@ -700,9 +918,9 @@ void AssetPanel::displayTexture3D(AssetHandle handle)
     if(ImGui::Button("Path##Texture3D"))
     {
         auto f     = pfd::open_file("Choose files to read",
-                                pfd::path::home(),
+                                    pfd::path::home(),
                                     {"Compute Shader (.bin)", "*.bin"},
-                                pfd::opt::none);
+                                    pfd::opt::none);
         auto files = f.result();
         if(!files.empty())
         {
@@ -1083,7 +1301,7 @@ void AssetPanel::drawAdd()
         }
         if(_panel_state == AssetType::Material)
         {
-            new_asset = AssetManager::registerAsset(atcg::make_ref<Material>(), "material");
+            new_asset = AssetManager::registerAsset(atcg::make_ref<OpaqueMaterial>(), "material");
         }
         if(_panel_state == AssetType::Script)
         {

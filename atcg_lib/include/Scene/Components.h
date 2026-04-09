@@ -234,7 +234,7 @@ struct EditorCameraComponent : public CameraComponent
 
 struct RenderComponent
 {
-    RenderComponent() { default_material = atcg::make_ref<Material>(); }
+    RenderComponent() { default_material = atcg::make_ref<OpaqueMaterial>(); }
 
     bool visible = true;
 
