@@ -5,7 +5,8 @@ import numpy as np
 
 import os
 
-os.environ["ATCG_BUILD_TYPE"] = "Debug"
+os.environ["ATCG_BUILD_TYPE"] = "RelWithDebInfo"
+os.environ["ATCG_CUDA_BACKEND"] = "Off"
 
 import pyatcg as atcg
 
