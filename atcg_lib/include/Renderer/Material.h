@@ -12,7 +12,7 @@ class Shader;
 enum class MaterialType
 {
     MATERIAL_TYPE_OPAQUE,
-    MATERIAL_TYPE_GLASS,
+    MATERIAL_TYPE_DIELECTRIC,
     MATERIAL_TYPE_NULL
 };
 
@@ -22,8 +22,8 @@ ATCG_INLINE const char* materialTypeToString(MaterialType type)
     {
         case MaterialType::MATERIAL_TYPE_OPAQUE:
             return "Opaque";
-        case MaterialType::MATERIAL_TYPE_GLASS:
-            return "Glass";
+        case MaterialType::MATERIAL_TYPE_DIELECTRIC:
+            return "Dielectric";
         case MaterialType::MATERIAL_TYPE_NULL:
             return "Null";
         default:
@@ -37,9 +37,13 @@ ATCG_INLINE MaterialType stringToMaterialType(const char* str)
     {
         return MaterialType::MATERIAL_TYPE_OPAQUE;
     }
-    else if(strcmp(str, "Glass") == 0)
+    else if(strcmp(str, "Glass") == 0)    // Backwards compatibility
     {
-        return MaterialType::MATERIAL_TYPE_GLASS;
+        return MaterialType::MATERIAL_TYPE_DIELECTRIC;
+    }
+    else if(strcmp(str, "Dielectric") == 0)
+    {
+        return MaterialType::MATERIAL_TYPE_DIELECTRIC;
     }
     else if(strcmp(str, "Null") == 0)
     {
@@ -61,6 +65,45 @@ struct Material : public Asset
      */
     Material(MaterialType type = MaterialType::MATERIAL_TYPE_OPAQUE);
 
+    virtual ~Material() {}
+
+    /**
+     * @brief Upload the material to a shader
+     *
+     * @param renderer The renderer
+     * @param shader The shader
+     */
+    virtual void uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader) = 0;
+
+    /**
+     * @brief Release used texture units after an upload.
+     * Should only be called after uploadMaterial was called
+     *
+     * @param renderer The renderer
+     */
+    void releaseTextureIDs(RendererSystem* renderer);
+
+    virtual atcg::ref_ptr<Material> clone() const = 0;
+
+    ATCG_INLINE static AssetType getStaticType() { return AssetType::Material; }
+
+    ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
+
+    ATCG_INLINE MaterialType getMaterialType() const { return _material_type; }
+
+
+protected:
+    std::array<uint32_t, 5> _used_texture_ids;
+    bool _uploaded = false;
+
+    MaterialType _material_type = MaterialType::MATERIAL_TYPE_OPAQUE;
+};
+
+class MicrofacetMaterial : public Material
+{
+public:
+    MicrofacetMaterial(MaterialType type);
+
     /**
      * @brief Get the diffuse texture.
      *
@@ -68,12 +111,6 @@ struct Material : public Asset
      */
     ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getDiffuseTexture() const { return _diffuse_texture; }
 
-    /**
-     * @brief Get the normal texture.
-     *
-     * @return The normal texture
-     */
-    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getNormalTexture() const { return _normal_texture; }
 
     /**
      * @brief Get the roughness texture.
@@ -81,13 +118,6 @@ struct Material : public Asset
      * @return The roughness texture
      */
     ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getRoughnessTexture() const { return _roughness_texture; }
-
-    /**
-     * @brief Get the metallic texture.
-     *
-     * @return The metallic texture
-     */
-    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getMetallicTexture() const { return _metallic_texture; }
 
     /**
      * @brief Get the ior texture.
@@ -104,13 +134,6 @@ struct Material : public Asset
     ATCG_INLINE void setDiffuseTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _diffuse_texture = texture; }
 
     /**
-     * @brief Set the normal texture.
-     *
-     * @param texture The normal texture
-     */
-    ATCG_INLINE void setNormalTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _normal_texture = texture; }
-
-    /**
      * @brief Set the roughness texture.
      *
      * @param texture The roughness texture
@@ -119,13 +142,6 @@ struct Material : public Asset
     {
         _roughness_texture = texture;
     }
-
-    /**
-     * @brief Set the metallic texture.
-     *
-     * @param texture The metallic texture
-     */
-    ATCG_INLINE void setMetallicTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _metallic_texture = texture; }
 
     /**
      * @brief Set the ior texture.
@@ -156,18 +172,57 @@ struct Material : public Asset
     void setRoughness(const float roughness);
 
     /**
+     * @brief Set the ior value.
+     *
+     * @param ior The ior value
+     */
+    void setIor(const float ior);
+
+protected:
+    atcg::ref_ptr<atcg::Texture2D> _diffuse_texture;
+    atcg::ref_ptr<atcg::Texture2D> _roughness_texture;
+    atcg::ref_ptr<atcg::Texture2D> _ior_texture;
+};
+
+class OpaqueMaterial : public MicrofacetMaterial
+{
+public:
+    OpaqueMaterial();
+
+    /**
+     * @brief Get the normal texture.
+     *
+     * @return The normal texture
+     */
+    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getNormalTexture() const { return _normal_texture; }
+
+    /**
+     * @brief Get the metallic texture.
+     *
+     * @return The metallic texture
+     */
+    ATCG_INLINE atcg::ref_ptr<atcg::Texture2D> getMetallicTexture() const { return _metallic_texture; }
+
+    /**
+     * @brief Set the normal texture.
+     *
+     * @param texture The normal texture
+     */
+    ATCG_INLINE void setNormalTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _normal_texture = texture; }
+
+    /**
+     * @brief Set the metallic texture.
+     *
+     * @param texture The metallic texture
+     */
+    ATCG_INLINE void setMetallicTexture(const atcg::ref_ptr<atcg::Texture2D>& texture) { _metallic_texture = texture; }
+
+    /**
      * @brief The the metallic value.
      *
      * @param metallic The metallic value
      */
     void setMetallic(const float metallic);
-
-    /**
-     * @brief Set the ior value.
-     * 
-     * @param ior The ior value
-     */
-    void setIor(const float ior);
 
     /**
      * @brief Remove the normal map
@@ -180,34 +235,49 @@ struct Material : public Asset
      * @param renderer The renderer
      * @param shader The shader
      */
-    void uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader);
+    virtual void uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader) override;
 
-    /**
-     * @brief Release used texture units after an upload.
-     * Should only be called after uploadMaterial was called
-     *
-     * @param renderer The renderer
-     */
-    void releaseTextureIDs(RendererSystem* renderer);
-
-    ATCG_INLINE static AssetType getStaticType() { return AssetType::Material; }
-
-    ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
-
-    ATCG_INLINE void setMaterialType(MaterialType type) { _material_type = type; }
-
-    ATCG_INLINE MaterialType getMaterialType() const { return _material_type; }
+    virtual atcg::ref_ptr<Material> clone() const override;
 
 private:
-    atcg::ref_ptr<atcg::Texture2D> _diffuse_texture;
     atcg::ref_ptr<atcg::Texture2D> _normal_texture;
-    atcg::ref_ptr<atcg::Texture2D> _roughness_texture;
     atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
-    atcg::ref_ptr<atcg::Texture2D> _ior_texture;
-
-    std::array<uint32_t, 5> _used_texture_ids;
-    bool _uploaded = false;
-
-    MaterialType _material_type = MaterialType::MATERIAL_TYPE_OPAQUE;
 };
+
+class DielectricMaterial : public MicrofacetMaterial
+{
+public:
+    DielectricMaterial();
+
+    /**
+     * @brief Upload the material to a shader
+     *
+     * @param renderer The renderer
+     * @param shader The shader
+     */
+    virtual void uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader) override;
+
+    virtual atcg::ref_ptr<Material> clone() const override;
+
+private:
+};
+
+class NullMaterial : public Material
+{
+public:
+    NullMaterial();
+
+    /**
+     * @brief Upload the material to a shader
+     *
+     * @param renderer The renderer
+     * @param shader The shader
+     */
+    virtual void uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader) override;
+
+    virtual atcg::ref_ptr<Material> clone() const override;
+
+private:
+};
+
 }    // namespace atcg

@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for multiple ray types in pathtracing backend
 - Added possibility to customize and add closest hit programs for arbitrary shapes
 - Added simple camera exposure model
+- Added optix as submodule. The pathtracing backend is now always built when CUDA is available
 
 ### Changed
 
@@ -93,6 +94,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - RayTracingPipeline and ShaderBindingTable are no longer exposed to the client and are owned by the corresponding integrator used.
 - evalBSDF and sampleBSDF are now expected to return f * cos (divided by p for sampling) instead of just the bsdf value
 - Density scaling for heterogeneous media is already applied in the eval function
+- Materials now use inheritance but static material types are still available
+- MaterialType::GLASS was changed to MaterialType::Dielectric
 
 ### Fixed
 

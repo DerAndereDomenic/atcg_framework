@@ -15,7 +15,8 @@ namespace atcg
 
 PBRBSDF::PBRBSDF(const Dictionary& dict)
 {
-    atcg::ref_ptr<Material> material = dict.getValue<atcg::ref_ptr<Material>>("material");
+    atcg::ref_ptr<OpaqueMaterial> material =
+        std::dynamic_pointer_cast<atcg::OpaqueMaterial>(dict.getValue<atcg::ref_ptr<Material>>("material"));
 
     _diffuse_texture         = material->getDiffuseTexture()->getData(atcg::GPU);
     _metallic_texture        = material->getMetallicTexture()->getData(atcg::GPU);

@@ -107,7 +107,7 @@ private:
     atcg::ref_ptr<atcg::Graph> mesh;
     atcg::ref_ptr<atcg::TriMesh> trimesh;
 
-    atcg::Material diffuse_material;
+    atcg::OpaqueMaterial diffuse_material;
 
     bool show_render_settings = false;
 };

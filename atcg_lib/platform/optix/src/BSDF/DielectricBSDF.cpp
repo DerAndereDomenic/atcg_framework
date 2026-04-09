@@ -11,7 +11,8 @@ namespace atcg
 
 DielectricBSDF::DielectricBSDF(const Dictionary& dict)
 {
-    auto material = dict.getValue<atcg::ref_ptr<Material>>("material");
+    auto material = std::dynamic_pointer_cast<atcg::DielectricMaterial>(dict.getValue<atcg::ref_ptr<Material>>("materia"
+                                                                                                               "l"));
 
     _diffuse_texture   = material->getDiffuseTexture()->getData(atcg::GPU);
     _roughness_texture = material->getRoughnessTexture()->getData(atcg::GPU);
@@ -20,7 +21,7 @@ DielectricBSDF::DielectricBSDF(const Dictionary& dict)
     DielectricBSDFData data;
 
     data.diffuse_texture   = TextureSampler<glm::vec3>((std::byte*)_diffuse_texture.data_ptr(),
-                                                     material->getDiffuseTexture()->getSpecification());
+                                                       material->getDiffuseTexture()->getSpecification());
     data.roughness_texture = TextureSampler<float>((std::byte*)_roughness_texture.data_ptr(),
                                                    material->getRoughnessTexture()->getSpecification());
     data.ior_texture =
@@ -261,10 +262,10 @@ void DielectricBSDF::markOptimizable()
     spec_float.format = TextureFormat::RFLOAT;
 
     _diffuse_texture   = torch::ones({spec_diffuse.height, spec_diffuse.width, 3},
-                                   TensorOptions::floatDeviceOptions().requires_grad(true));
+                                     TensorOptions::floatDeviceOptions().requires_grad(true));
     _ior_texture       = torch::full({spec_float.height, spec_float.height, 1},
-                               1.5f,
-                               TensorOptions::floatDeviceOptions().requires_grad(true));
+                                     1.5f,
+                                     TensorOptions::floatDeviceOptions().requires_grad(true));
     _roughness_texture = torch::zeros({spec_float.height, spec_float.height, 1},
                                       TensorOptions::floatDeviceOptions().requires_grad(true));    // TODO
 
@@ -311,5 +312,5 @@ void DielectricBSDF::clampParameters()
     if(_optimize_ior) _ior_texture.clamp_(1.0f, 2.5f);
 }
 
-ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_GLASS, DielectricBSDF);
+ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_DIELECTRIC, DielectricBSDF);
 }    // namespace atcg

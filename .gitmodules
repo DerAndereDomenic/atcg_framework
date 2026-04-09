@@ -47,3 +47,6 @@
 [submodule "external/CuDiff"]
 	path = external/CuDiff
 	url = https://github.com/DerAndereDomenic/CuDiff.git
+[submodule "external/OptiX"]
+	path = external/OptiX
+	url = https://github.com/NVIDIA/optix-dev.git
