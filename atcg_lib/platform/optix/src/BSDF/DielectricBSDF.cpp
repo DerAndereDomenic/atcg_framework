@@ -11,8 +11,8 @@ namespace atcg
 
 DielectricBSDF::DielectricBSDF(const Dictionary& dict)
 {
-    auto material = dict.getValue<atcg::ref_ptr<Material>>("material");
-
+    auto material = std::dynamic_pointer_cast<atcg::DielectricMaterial>(dict.getValue<atcg::ref_ptr<Material>>("materia"
+                                                                                                               "l"));
     _diffuse_texture   = std::dynamic_pointer_cast<Texture2D>(material->getDiffuseTexture()->clone());
     _roughness_texture = std::dynamic_pointer_cast<Texture2D>(material->getRoughnessTexture()->clone());
     _ior_texture       = std::dynamic_pointer_cast<Texture2D>(material->getIorTexture()->clone());
@@ -57,5 +57,5 @@ void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>&
     markInitialized();
 }
 
-ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_GLASS, DielectricBSDF);
+ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_DIELECTRIC, DielectricBSDF);
 }    // namespace atcg

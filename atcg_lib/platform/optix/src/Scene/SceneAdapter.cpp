@@ -393,7 +393,7 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
     }
 
     // Insert default material
-    atcg::ref_ptr<Material> material = atcg::make_ref<Material>();
+    atcg::ref_ptr<Material> material = atcg::make_ref<OpaqueMaterial>();
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
     atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
