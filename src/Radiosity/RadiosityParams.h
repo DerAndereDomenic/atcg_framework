@@ -3,7 +3,7 @@
 #include <optix.h>
 #include <Core/glm.h>
 #include <Core/TraceParameters.h>
-#include <Shape/MeshShape.h>
+#include <Shape/MeshShapeData.cuh>
 
 struct RadiosityParams
 {
