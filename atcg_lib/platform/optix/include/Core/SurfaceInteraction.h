@@ -58,9 +58,10 @@ struct MediumInteraction : public Interaction
     ATCG_HOST_DEVICE MediumInteraction() : Interaction() {}
 };
 
-struct DualSurfaceInteraction
+struct DualSurfaceInteraction : public SurfaceInteraction
 {
-    bool valid = false;
+    ATCG_HOST_DEVICE DualSurfaceInteraction() : SurfaceInteraction() {}
+
     // Output
     CuDiff::Dual<6, glm::vec3> position;
     CuDiff::Dual<6, glm::vec3> normal;
@@ -71,14 +72,6 @@ struct DualSurfaceInteraction
     // Input
     CuDiff::Dual<6, glm::vec3> incoming_direction;
     CuDiff::Dual<6, glm::vec3> incoming_position;
-
-    uint32_t primitive_idx;
-    uint32_t entity_id;
-
-    const BSDFVPtrTable *bsdf;
-    const EmitterVPtrTable *emitter;
-    const MediumVPtrTable *inside_medium;
-    const MediumVPtrTable *outside_medium;
 
     ATCG_DEVICE ATCG_INLINE SurfaceInteraction toSi() const
     {
@@ -98,6 +91,20 @@ struct DualSurfaceInteraction
 
         return si;
     }
+
+    ATCG_INLINE ATCG_HOST_DEVICE bool isValid() const { return !glm::isnan(incoming_distance.val()); }
+
+    ATCG_INLINE ATCG_HOST_DEVICE void setInvalid()
+    {
+        incoming_distance = CuDiff::Dual<6, float>(std::numeric_limits<float>::signaling_NaN());
+    }
+
+    ATCG_INLINE ATCG_HOST_DEVICE bool isFinite() const { return glm::isfinite(incoming_distance.val()); }
+
+    ATCG_INLINE ATCG_HOST_DEVICE void setInfinite()
+    {
+        incoming_distance = CuDiff::Dual<6, float>(std::numeric_limits<float>::infinity());
+    }
 };
 struct AnyInteraction
 {
@@ -105,7 +112,8 @@ struct AnyInteraction
     {
         InteractionType,
         SurfaceInteractionType,
-        MediumInteractionType
+        MediumInteractionType,
+        DualSurfaceInteractionType
     };
     Type type;
 
@@ -114,6 +122,7 @@ struct AnyInteraction
         Interaction it;
         SurfaceInteraction si;
         MediumInteraction mi;
+        DualSurfaceInteraction dsi;
     };
 
     ATCG_INLINE ATCG_HOST_DEVICE AnyInteraction() : type(InteractionType), it(Interaction()) {}
@@ -131,6 +140,12 @@ struct AnyInteraction
     ATCG_INLINE ATCG_HOST_DEVICE AnyInteraction(const MediumInteraction &medium)
         : type(MediumInteractionType),
           mi(medium)
+    {
+    }
+
+    ATCG_INLINE ATCG_HOST_DEVICE AnyInteraction(const DualSurfaceInteraction &dsi)
+        : type(DualSurfaceInteractionType),
+          dsi(dsi)
     {
     }
 
@@ -154,6 +169,11 @@ struct AnyInteraction
                 this->si = ai.si;
                 break;
             }
+            case DualSurfaceInteractionType:
+            {
+                this->dsi = ai.dsi;
+                break;
+            }
         }
     }
 
@@ -163,12 +183,15 @@ struct AnyInteraction
     ATCG_INLINE ATCG_HOST_DEVICE operator const SurfaceInteraction &() const { return si; }
     ATCG_INLINE ATCG_HOST_DEVICE operator MediumInteraction &() { return mi; }
     ATCG_INLINE ATCG_HOST_DEVICE operator const MediumInteraction &() const { return mi; }
+    ATCG_INLINE ATCG_HOST_DEVICE operator DualSurfaceInteraction &() { return dsi; }
+    ATCG_INLINE ATCG_HOST_DEVICE operator const DualSurfaceInteraction &() const { return dsi; }
 
     ATCG_INLINE ATCG_HOST_DEVICE Interaction *operator->() { return &it; }
     ATCG_INLINE ATCG_HOST_DEVICE const Interaction *operator->() const { return &it; }
 
     ATCG_INLINE ATCG_HOST_DEVICE bool is_surface() const { return type == SurfaceInteractionType; }
     ATCG_INLINE ATCG_HOST_DEVICE bool is_medium() const { return type == MediumInteractionType; }
+    ATCG_INLINE ATCG_HOST_DEVICE bool is_dual_surface() const { return type == DualSurfaceInteractionType; }
 
     ATCG_INLINE ATCG_HOST_DEVICE AnyInteraction &operator=(const Interaction &it)
     {
@@ -191,6 +214,13 @@ struct AnyInteraction
         return *this;
     }
 
+    ATCG_INLINE ATCG_HOST_DEVICE AnyInteraction &operator=(const DualSurfaceInteraction &dsi)
+    {
+        this->type = DualSurfaceInteractionType;
+        this->dsi  = dsi;
+        return *this;
+    }
+
     ATCG_INLINE ATCG_HOST_DEVICE AnyInteraction &operator=(const AnyInteraction &ai)
     {
         this->type = ai.type;
@@ -209,6 +239,11 @@ struct AnyInteraction
             case SurfaceInteractionType:
             {
                 this->si = ai.si;
+                break;
+            }
+            case DualSurfaceInteractionType:
+            {
+                this->dsi = ai.dsi;
                 break;
             }
         }

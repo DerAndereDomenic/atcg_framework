@@ -39,7 +39,6 @@ extern "C" __global__ void __closesthit__dual_mesh()
     auto tmax = (CuDiff::dot((P0 - xi), geometry_normal)) / (CuDiff::dot(wi, geometry_normal));
     auto xo   = xi + tmax * wi;
 
-    si->valid             = true;
     si->position          = xo;
     si->incoming_distance = tmax;
     // float2 optix_barys     = optixGetTriangleBarycentrics();

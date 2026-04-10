@@ -23,8 +23,8 @@ extern "C"
 struct RayContext
 {
     bool valid;
-    atcg::SurfaceInteraction si0;
-    atcg::SurfaceInteraction si1;
+    atcg::AnyInteraction si0;
+    atcg::AnyInteraction si1;
     CuDiff::Dual<6, glm::vec3> last_normal;
     CuDiff::Dual<6, glm::vec2> last_uv;
 
@@ -33,6 +33,8 @@ struct RayContext
 
     glm::vec3 delta_y;
     glm::mat4x3 JL;
+
+    atcg::MediumVPtrTable* current_medium = nullptr;
 };
 
 extern "C" __global__ void __raygen__forward()
@@ -90,29 +92,31 @@ extern "C" __global__ void __raygen__forward()
         ray.valid = true;
     }
 
-    ray.si0     = si0;
-    ray.si0.pdf = 1.0f;
-    ray.si1     = si1;
+    ray.si0      = si0;
+    ray.si0->pdf = 1.0f;
+    ray.si1      = si1;
 
     for(int n = 0; n < 8; ++n)
     {
         if(!ray.valid) break;
         ray.valid = false;
 
-        auto [x0, x1] = CuDiff::make_variables<6>(ray.si0.position, ray.si1.position);
+        atcg::SurfaceInteraction si0 = ray.si0;
+        atcg::SurfaceInteraction si1 = ray.si1;
+
+        auto [x0, x1] = CuDiff::make_variables<6>(si0.position, si1.position);
         auto distance = CuDiff::length(x1 - x0);
         auto w        = (x1 - x0) / CuDiff::max(distance, 1e-5f);
 
         atcg::DualSurfaceInteraction dsi;
-        dsi.valid              = true;
         dsi.position           = x1;
         dsi.incoming_direction = w;
         dsi.incoming_distance  = distance;
         dsi.normal             = ray.last_normal;
         dsi.uv                 = ray.last_uv;
 
-        auto frame0_ = atcg::Frame(ray.si0.normal);
-        auto frame1_ = atcg::Frame(ray.si1.normal);
+        auto frame0_ = atcg::Frame(si0.normal);
+        auto frame1_ = atcg::Frame(si1.normal);
 
         glm::mat2x3 frame0 = glm::mat2x3(frame0_.localX(), frame0_.localY());
         glm::mat2x3 frame1 = glm::mat2x3(frame1_.localX(), frame1_.localY());
@@ -122,14 +126,14 @@ extern "C" __global__ void __raygen__forward()
             // Check for light source
             CuDiff::Dual<6, glm::vec3> Le;
             glm::mat4x3 JLe = glm::mat4x3(0);
-            if(ray.si1.emitter)
+            if(si1.emitter)
             {
-                bool mis_valid              = ray.si0.isValid();
+                bool mis_valid              = si0.isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
-                    mis_valid ? ray.si1.emitter->evalLightSamplingPdf(ray.si0, ray.si1) * emitter_selection_pdf : 0.0f;
-                float mis_weight = atcg::PowerHeuristic<1>::apply(ray.si0.pdf, emitter_sampling_pdf);
-                Le               = mis_weight * ray.si1.emitter->evalLightForward(dsi, wavelengths);
+                    mis_valid ? si1.emitter->evalLightSamplingPdf(si0, si1) * emitter_selection_pdf : 0.0f;
+                float mis_weight = atcg::PowerHeuristic<1>::apply(si0.pdf, emitter_sampling_pdf);
+                Le               = mis_weight * si1.emitter->evalLightForward(dsi, wavelengths);
                 ray.radiance += ray.throughput * Le.val();
 
                 glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
@@ -149,7 +153,7 @@ extern "C" __global__ void __raygen__forward()
             ray.JL += diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
 
             // PBR Sampling
-            if(ray.si1.bsdf)
+            if(si1.bsdf)
             {
                 // Next-event estimation
                 do
@@ -162,7 +166,7 @@ extern "C" __global__ void __raygen__forward()
 
                     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-                    if(ray.si1.emitter == emitter) break;
+                    if(si1.emitter == emitter) break;
 
                     atcg::DualEmitterSamplingResult emitter_sampling =
                         emitter->sampleLightForward(dsi, wavelengths, rng);
@@ -174,7 +178,7 @@ extern "C" __global__ void __raygen__forward()
                         emitter_sampling.radiance_weight_at_receiver / emitter_selection_pdf;
 
                     bool occluded = traceOcclusion(params.handle,
-                                                   ray.si1.position,
+                                                   si1.position,
                                                    emitter_sampling.direction_to_light,
                                                    1e-3f,
                                                    emitter_sampling.distance_to_light - 1e-3f,
@@ -186,10 +190,10 @@ extern "C" __global__ void __raygen__forward()
                     }
 
                     atcg::BSDFDualEvalResult bsdf_result =
-                        ray.si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
+                        si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
 
                     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
-                                             (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
+                                               (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                            ? 0.0f
                                            : bsdf_result.sample_probability;
                     float mis_weight = atcg::PowerHeuristic<1>::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
@@ -239,7 +243,7 @@ extern "C" __global__ void __raygen__forward()
 
                 } while(false);
 
-                auto result = ray.si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
+                auto result = si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
@@ -248,14 +252,14 @@ extern "C" __global__ void __raygen__forward()
                     next_dsi.incoming_direction = result.out_dir;
 
                     atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
-                                                                             ray.si1.position,
+                                                                             si1.position,
                                                                              result.out_dir.val(),
                                                                              0.001f,
                                                                              1e16f,
                                                                              &next_dsi,
                                                                              params.dual_trace_params);
 
-                    if(!next_dsi.valid)
+                    if(!next_dsi.isValid())
                     {
                         ray.valid = false;
                         continue;
@@ -306,24 +310,20 @@ extern "C" __global__ void __raygen__forward()
 
                     Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
 
-                    // if(params.debug)
-                    // {
-                    //     printf("%f\n", glm::determinant(Jray_));
-                    // }
-                    ray.si1.pdf = result.sample_probability;
+                    si1.pdf = result.sample_probability;
 
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
-                        ray.si1.setInvalid();
+                        si1.setInvalid();
                     }
 
-                    ray.si0         = ray.si1;
+                    ray.si0         = si1;
                     ray.si1         = next_dsi.toSi();
                     ray.last_normal = next_dsi.normal;
                     ray.last_uv     = next_dsi.uv;
 
                     ray.throughput *= result.bsdf_weight.val();
-                    ray.valid = next_dsi.valid;
+                    ray.valid = next_dsi.isValid();
                 }
             }
         }
@@ -404,29 +404,31 @@ extern "C" __global__ void __raygen__backward()
         ray.valid = true;
     }
 
-    ray.si0     = si0;
-    ray.si0.pdf = 1.0f;
-    ray.si1     = si1;
+    ray.si0      = si0;
+    ray.si0->pdf = 1.0f;
+    ray.si1      = si1;
 
     for(int n = 0; n < 8; ++n)
     {
         if(!ray.valid) break;
         ray.valid = false;
 
-        auto [x0, x1] = CuDiff::make_variables<6>(ray.si0.position, ray.si1.position);
+        atcg::SurfaceInteraction si0 = ray.si0;
+        atcg::SurfaceInteraction si1 = ray.si1;
+
+        auto [x0, x1] = CuDiff::make_variables<6>(si0.position, si1.position);
         auto distance = CuDiff::length(x1 - x0);
         auto w        = (x1 - x0) / CuDiff::max(distance, 1e-5f);
 
         atcg::DualSurfaceInteraction dsi;
-        dsi.valid              = true;
         dsi.position           = x1;
         dsi.incoming_direction = w;
         dsi.incoming_distance  = distance;
         dsi.normal             = ray.last_normal;
         dsi.uv                 = ray.last_uv;
 
-        auto frame0_ = atcg::Frame(ray.si0.normal);
-        auto frame1_ = atcg::Frame(ray.si1.normal);
+        auto frame0_ = atcg::Frame(si0.normal);
+        auto frame1_ = atcg::Frame(si1.normal);
 
         glm::mat2x3 frame0 = glm::mat2x3(frame0_.localX(), frame0_.localY());
         glm::mat2x3 frame1 = glm::mat2x3(frame1_.localX(), frame1_.localY());
@@ -435,14 +437,14 @@ extern "C" __global__ void __raygen__backward()
             // Check for light source
             CuDiff::Dual<6, glm::vec3> Le;
             glm::mat4x3 JLe = glm::mat4x3(0);
-            if(ray.si1.emitter)
+            if(si1.emitter)
             {
-                bool mis_valid              = ray.si0.isValid();
+                bool mis_valid              = si0.isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
-                    mis_valid ? ray.si1.emitter->evalLightSamplingPdf(ray.si0, ray.si1) * emitter_selection_pdf : 0.0f;
-                float mis_weight = atcg::PowerHeuristic<1>::apply(ray.si0.pdf, emitter_sampling_pdf);
-                Le               = mis_weight * ray.si1.emitter->evalLightForward(dsi, wavelengths);
+                    mis_valid ? si1.emitter->evalLightSamplingPdf(si0, si1) * emitter_selection_pdf : 0.0f;
+                float mis_weight = atcg::PowerHeuristic<1>::apply(si0.pdf, emitter_sampling_pdf);
+                Le               = mis_weight * si1.emitter->evalLightForward(dsi, wavelengths);
                 ray.radiance -= ray.throughput * Le.val();
 
                 glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
@@ -460,7 +462,7 @@ extern "C" __global__ void __raygen__backward()
             }
 
             // PBR Sampling
-            if(ray.si1.bsdf)
+            if(si1.bsdf)
             {
                 // Next-event estimation
                 do
@@ -473,7 +475,7 @@ extern "C" __global__ void __raygen__backward()
 
                     const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
 
-                    if(ray.si1.emitter == emitter) break;
+                    if(si1.emitter == emitter) break;
 
                     atcg::DualEmitterSamplingResult emitter_sampling =
                         emitter->sampleLightForward(dsi, wavelengths, rng);
@@ -485,7 +487,7 @@ extern "C" __global__ void __raygen__backward()
                         emitter_sampling.radiance_weight_at_receiver / emitter_selection_pdf;
 
                     bool occluded = traceOcclusion(params.handle,
-                                                   ray.si1.position,
+                                                   si1.position,
                                                    emitter_sampling.direction_to_light,
                                                    1e-3f,
                                                    emitter_sampling.distance_to_light - 1e-3f,
@@ -497,10 +499,10 @@ extern "C" __global__ void __raygen__backward()
                     }
 
                     atcg::BSDFDualEvalResult bsdf_result =
-                        ray.si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
+                        si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
 
                     float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
-                                             (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
+                                               (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                            ? 0.0f
                                            : bsdf_result.sample_probability;
                     float mis_weight = atcg::PowerHeuristic<1>::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
@@ -547,12 +549,12 @@ extern "C" __global__ void __raygen__backward()
 
                     glm::vec3 grad_out =
                         (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) + 1e-4f);
-                    ray.si1.bsdf->evalBSDFBackward(ray.si1, emitter_sampling.direction_to_light.val(), grad_out);
+                    si1.bsdf->evalBSDFBackward(si1, emitter_sampling.direction_to_light.val(), grad_out);
 
                 } while(false);
 
                 auto rng_copy = rng;
-                auto result   = ray.si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
+                auto result   = si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
@@ -561,14 +563,14 @@ extern "C" __global__ void __raygen__backward()
                     next_dsi.incoming_direction = result.out_dir;
 
                     atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
-                                                                             ray.si1.position,
+                                                                             si1.position,
                                                                              result.out_dir.val(),
                                                                              0.001f,
                                                                              1e16f,
                                                                              &next_dsi,
                                                                              params.dual_trace_params);
 
-                    if(!next_dsi.valid)
+                    if(!next_dsi.isValid())
                     {
                         ray.valid = false;
                         continue;
@@ -631,22 +633,22 @@ extern "C" __global__ void __raygen__backward()
                     glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight.val() + 1e-4f);
                     glm::vec3 dLdwo   = ray.delta_y * (JL_ * du1v1u2v2dw);
 
-                    ray.si1.bsdf->sampleBSDFBackward(ray.si1, rng_copy, dLdbsdf, dLdwo);
+                    si1.bsdf->sampleBSDFBackward(si1, rng_copy, dLdbsdf, dLdwo);
 
-                    ray.si1.pdf = result.sample_probability;
+                    si1.pdf = result.sample_probability;
                     if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                     {
-                        ray.si1.setInvalid();
+                        si1.setInvalid();
                     }
 
 
-                    ray.si0         = ray.si1;
+                    ray.si0         = si1;
                     ray.si1         = next_dsi.toSi();
                     ray.last_normal = next_dsi.normal;
                     ray.last_uv     = next_dsi.uv;
 
                     ray.throughput *= result.bsdf_weight.val();
-                    ray.valid = next_dsi.valid;
+                    ray.valid = next_dsi.isValid();
                 }
             }
         }
@@ -681,8 +683,7 @@ extern "C" __global__ void __miss__dual()
     atcg::DualSurfaceInteraction* si = getPayloadDataPointer<atcg::DualSurfaceInteraction>();
     float3 optix_world_dir           = optixGetWorldRayDirection();
 
-    si->valid             = false;
-    si->incoming_distance = CuDiff::Dual<6, float>(std::numeric_limits<float>::signaling_NaN());
+    si->setInvalid();
 }
 
 extern "C" __global__ void __miss__occlusion()
