@@ -642,7 +642,14 @@ void ComponentSerializer<ScriptComponent>::deserialize_component(const std::stri
 
     script.script_handle = (AssetHandle)j[SCRIPT_KEY];
 
-    script.script()->onAttach(scene, entity);
+    if(!script.script())
+    {
+        return;
+    }
+
+    auto behavior = script.behavior(scene, entity);
+
+    if(behavior) behavior->onAttach();
 }
 
 void ComponentSerializer<HomogeneousMediumComponent>::serialize_component(const std::string& file_path,

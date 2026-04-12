@@ -12,6 +12,7 @@
 #include <Scripting/Script.h>
 #include <Asset/AssetManagerSystem.h>
 #include <DataStructure/BoundingBox.h>
+#include <Scripting/Behavior.h>
 
 #include <vector>
 
@@ -482,7 +483,11 @@ struct ScriptComponent
 {
     ScriptComponent() = default;
 
-    ScriptComponent(const atcg::ref_ptr<Script>& script)
+    ScriptComponent(const atcg::ref_ptr<Script>& script) { setScript(script); }
+
+    ATCG_INLINE atcg::ref_ptr<Script> script() const { return AssetManager::getAsset<Script>(script_handle); }
+
+    ATCG_INLINE void setScript(const atcg::ref_ptr<Script>& script)
     {
         if(AssetManager::isAssetHandleValid(script->handle))
         {
@@ -492,14 +497,31 @@ struct ScriptComponent
         {
             script_handle = AssetManager::registerAsset(script, "script");
         }
+        _behavior = nullptr;
     }
 
-    ATCG_INLINE atcg::ref_ptr<Script> script() const { return AssetManager::getAsset<Script>(script_handle); }
+    ATCG_INLINE atcg::ref_ptr<Behavior>
+    behavior(const atcg::ref_ptr<Scene>& scene, atcg::Entity entity, bool recreate = false)
+    {
+        auto scr = script();
 
+        if(!scr) return nullptr;
+
+        if(recreate || !_behavior)
+        {
+            ATCG_DEBUG("Create new behavior");
+            _behavior = scr->createBehavior(scene, entity);
+        }
+
+        return _behavior;
+    }
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Script"; }
 
     AssetHandle script_handle = 0;
+
+private:
+    atcg::ref_ptr<Behavior> _behavior = nullptr;
 };
 
 struct HomogeneousMediumComponent
