@@ -563,9 +563,23 @@ void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<S
     if(updated)
     {
         RevisionStack::startRecording<ComponentEditedRevision<ScriptComponent>>(scene, entity);
-        if(_component.script()) _component.script()->onDetach(scene, entity);
+        if(_component.script())
+        {
+            auto behavior = _component.behavior(scene, entity);
+            if(behavior)
+            {
+                behavior->onDetach();
+            }
+        }
         _component.script_handle = new_handle;
-        if(_component.script()) _component.script()->onAttach(scene, entity);
+        if(_component.script())
+        {
+            auto behavior = _component.behavior(scene, entity, true);
+            if(behavior)
+            {
+                behavior->onAttach();
+            }
+        }
         atcg::RevisionStack::endRecording();
     }
 }

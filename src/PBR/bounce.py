@@ -2,72 +2,61 @@ import torch
 import numpy as np
 import pyatcg as atcg
 
-position = np.zeros(3, dtype=np.float32)
-velocity = np.zeros(3, dtype=np.float32)
 
-start = True
+class bounce(atcg.Behavior):
 
+    def onAttach(self):
+        self.position = np.zeros(3, dtype=np.float32)
+        self.velocity = np.zeros(3, dtype=np.float32)
 
-def onAttach(scene: atcg.Scene, ent: atcg.Entity):
-    global position
-    global velocity
-    velocity = np.zeros(3, dtype=np.float32)
-    transform = ent.getTransformComponent()
-    position = np.array([0.0, 5.0, 0.0], dtype=np.float32)
-    transform.setPosition(atcg.vec3(position))
-    ent.replaceTransformComponent(transform)
+        self.start = True
 
+        transform = self.entity.getTransformComponent()
+        self.position = np.array([0.0, 5.0, 0.0], dtype=np.float32)
+        transform.setPosition(atcg.vec3(self.position))
+        self.entity.replaceTransformComponent(transform)
 
-def onUpdate(dt: float, scene: atcg.Scene, ent: atcg.Entity):
-    global position
-    global velocity
-    global start
+    def onUpdate(self, dt: float):
+        if not self.start:
+            return
 
-    if not start:
-        return
+        self.velocity += dt * np.array([0.0, -9.81, 0.0], dtype=np.float32)
+        self.position += dt * self.velocity
 
-    velocity += dt * np.array([0.0, -9.81, 0.0], dtype=np.float32)
-    position += dt * velocity
+        if self.position[1] < 0.0:
+            # Estimate time of collision during the timestep
+            t_hit = (
+                dt
+                * (self.position[1] - 0.0)
+                / (self.position[1] - (self.position[1] - self.velocity[1] * dt) + 1e-5)
+            )
 
-    if position[1] < 0.0:
-        # Estimate time of collision during the timestep
-        t_hit = (
-            dt
-            * (position[1] - 0.0)
-            / (position[1] - (position[1] - velocity[1] * dt) + 1e-5)
-        )
+            # Backtrack to self.position at collision
+            self.position[1] -= self.velocity[1] * (dt - t_hit)
 
-        # Backtrack to position at collision
-        position[1] -= velocity[1] * (dt - t_hit)
+            # Reflect self.velocity
+            self.velocity[1] = -self.velocity[1]
 
-        # Reflect velocity
-        velocity[1] = -velocity[1]
+            # Forward integrate the rest of the timestep after bounce
+            self.position[1] += self.velocity[1] * (dt - t_hit)
 
-        # Forward integrate the rest of the timestep after bounce
-        position[1] += velocity[1] * (dt - t_hit)
+        transform = self.entity.getTransformComponent()
+        transform.setPosition(atcg.vec3(self.position))
+        self.entity.replaceTransformComponent(transform)
 
-    transform = ent.getTransformComponent()
-    transform.setPosition(atcg.vec3(position))
-    ent.replaceTransformComponent(transform)
+    def onEvent(self, event: atcg.Event):
+        if event.getName() == "KeyPressed":
+            if event.getKeyCode() == 66:  # B
+                self.start = not self.start
 
+                if self.start:
+                    self.velocity = np.zeros(3, dtype=np.float32)
+                    transform = self.entity.getTransformComponent()
+                    self.position = np.array([0.0, 5.0, 0.0], dtype=np.float32)
+                    transform.setPosition(atcg.vec3(self.position))
+                    self.entity.replaceTransformComponent(transform)
 
-def onEvent(event: atcg.Event, scene: atcg.Scene, ent: atcg.Entity):
-    global start
-    global velocity
-    global position
-    if event.getName() == "KeyPressed":
-        if event.getKeyCode() == 66:  # B
-            start = not start
-
-            if start:
-                velocity = np.zeros(3, dtype=np.float32)
-                transform = ent.getTransformComponent()
-                position = np.array([0.0, 5.0, 0.0], dtype=np.float32)
-                transform.setPosition(atcg.vec3(position))
-                ent.replaceTransformComponent(transform)
-
-
-def onDetach(scene: atcg.Scene, ent: atcg.Entity):
-    transform = ent.getTransformComponent()
-    transform.setPosition(atcg.vec3(0, 0, 0))
-    ent.replaceTransformComponent(transform)
+    def onDetach(self):
+        transform = self.entity.getTransformComponent()
+        transform.setPosition(atcg.vec3(0, 0, 0))
+        self.entity.replaceTransformComponent(transform)

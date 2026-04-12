@@ -65,7 +65,12 @@ public:
             auto& script = sphere.addComponent<atcg::ScriptComponent>(atcg::make_ref<atcg::PythonScript>("./src/PBR/"
                                                                                                          "bounce.py"));
             script.script()->init();
-            script.script()->onAttach(atcg::Project::getActive()->getActiveScene(), sphere);
+            auto behavior = script.behavior(atcg::Project::getActive()->getActiveScene(), sphere);
+
+            if(behavior)
+            {
+                behavior->onAttach();
+            }
         }
 
         if(atcg::VR::isVRAvailable())
@@ -284,9 +289,9 @@ public:
             if(ImGui::MenuItem("Load"))
             {
                 auto f     = pfd::open_file("Choose project file",
-                                        pfd::path::home(),
+                                            pfd::path::home(),
                                             {"Project file (.json)", "*.json"},
-                                        pfd::opt::none);
+                                            pfd::opt::none);
                 auto files = f.result();
 
                 if(!files.empty())
