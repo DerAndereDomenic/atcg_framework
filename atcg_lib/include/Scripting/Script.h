@@ -12,6 +12,8 @@
 
 namespace atcg
 {
+class Behavior;
+
 /**
  * @brief The interface to model a script
  */
@@ -36,38 +38,14 @@ public:
     virtual void init() = 0;
 
     /**
-     * @brief The function that is called when the script gets attached
+     * @brief Create a new behavior from the script
      *
      * @param scene The scene
-     * @param entity The entity
-     */
-    virtual void onAttach(const atcg::ref_ptr<Scene>& scene, Entity entity) = 0;
-
-    /**
-     * @brief The function that is called in the update loop
+     * @param entity The entity this script is attached to
      *
-     * @param scene The scene
-     * @param entity The entity
-     * @param delta_time The time between consecutive frames in secodns.
+     * @return The behavior
      */
-    virtual void onUpdate(const atcg::ref_ptr<Scene>& scene, Entity entity, const float delta_time) = 0;
-
-    /**
-     * @brief The function that is called on events
-     *
-     * @param scene The scene
-     * @param entity The entity
-     * @param event The event to handle
-     */
-    virtual void onEvent(const atcg::ref_ptr<Scene>& scene, Entity entity, atcg::Event* event) = 0;
-
-    /**
-     * @brief The function that is called if the script is detached
-     *
-     * @param scene The scene
-     * @param entity The entity
-     */
-    virtual void onDetach(const atcg::ref_ptr<Scene>& scene, Entity entity) = 0;
+    virtual atcg::ref_ptr<Behavior> createBehavior(const atcg::ref_ptr<Scene>& scene, atcg::Entity entity) = 0;
 
     /**
      * @brief Reloads the script
@@ -128,38 +106,14 @@ public:
     virtual void init() override;
 
     /**
-     * @brief The function that is called when the script gets attached
+     * @brief Create a new behavior from the script
      *
      * @param scene The scene
-     * @param entity The entity
-     */
-    virtual void onAttach(const atcg::ref_ptr<Scene>& scene, Entity entity) override;
-
-    /**
-     * @brief The function that is called in the update loop
+     * @param entity The entity this script is attached to
      *
-     * @param scene The scene
-     * @param entity The entity
-     * @param delta_time The time between consecutive frames in secodns.
+     * @return The behavior
      */
-    virtual void onUpdate(const atcg::ref_ptr<Scene>& scene, Entity entity, const float delta_time) override;
-
-    /**
-     * @brief The function that is called on events
-     *
-     * @param scene The scene
-     * @param entity The entity
-     * @param event The event to handle
-     */
-    virtual void onEvent(const atcg::ref_ptr<Scene>& scene, Entity entity, atcg::Event* event) override;
-
-    /**
-     * @brief The function that is called if the script is detached
-     *
-     * @param scene The scene
-     * @param entity The entity
-     */
-    virtual void onDetach(const atcg::ref_ptr<Scene>& scene, Entity entity) override;
+    virtual atcg::ref_ptr<Behavior> createBehavior(const atcg::ref_ptr<Scene>& scene, atcg::Entity entity) override;
 
     /**
      * @brief Reloads the script

@@ -52,67 +52,27 @@ void PythonScript::init()
     ATCG_INFO("Initialized Script {}", module_name);
 }
 
-void PythonScript::onAttach(const atcg::ref_ptr<Scene>& scene, Entity entity)
+atcg::ref_ptr<Behavior> PythonScript::createBehavior(const atcg::ref_ptr<Scene>& scene, atcg::Entity entity)
 {
-    try
-    {
-        impl->script.attr("onAttach")(py::cast(scene), py::cast(entity));
-    }
-    catch(const py::error_already_set& e)
-    {
-        ATCG_ERROR(e.what());
-    }
-    catch(const std::exception& e)
-    {
-        ATCG_ERROR(e.what());
-    }
-}
+    std::string module_name = _file_path.stem().string();
 
-void PythonScript::onUpdate(const atcg::ref_ptr<Scene>& scene, Entity entity, const float delta_time)
-{
     try
     {
-        impl->script.attr("onUpdate")(delta_time, py::cast(scene), py::cast(entity));
-    }
-    catch(const py::error_already_set& e)
-    {
-        ATCG_ERROR(e.what());
-    }
-    catch(const std::exception& e)
-    {
-        ATCG_ERROR(e.what());
-    }
-}
+        auto behavior_class = impl->script.attr(module_name.c_str());
+        auto instance       = behavior_class();
 
-void PythonScript::onEvent(const atcg::ref_ptr<Scene>& scene, Entity entity, atcg::Event* event)
-{
-    try
-    {
-        impl->script.attr("onEvent")(py::cast(event), py::cast(scene), py::cast(entity));
-    }
-    catch(const py::error_already_set& e)
-    {
-        ATCG_ERROR(e.what());
-    }
-    catch(const std::exception& e)
-    {
-        ATCG_ERROR(e.what());
-    }
-}
+        instance.attr("entity") = py::cast(entity);
+        instance.attr("scene")  = py::cast(scene);
 
-void PythonScript::onDetach(const atcg::ref_ptr<Scene>& scene, Entity entity)
-{
-    try
-    {
-        impl->script.attr("onDetach")(py::cast(scene), py::cast(entity));
-    }
-    catch(const py::error_already_set& e)
-    {
-        ATCG_ERROR(e.what());
+        atcg::ref_ptr<PythonBehavior> py_behavior = instance.cast<atcg::ref_ptr<PythonBehavior>>();
+        py_behavior->setSelf(instance);
+
+        return py_behavior;
     }
     catch(const std::exception& e)
     {
         ATCG_ERROR(e.what());
+        return nullptr;
     }
 }
 
@@ -142,12 +102,17 @@ void Scripting::handleScriptReloads(const atcg::ref_ptr<atcg::Scene>& scene)
 
         auto& script = entity.getComponent<atcg::ScriptComponent>();
 
-        if(script.script() != nullptr)
+        if(!script.script())
         {
-            script.script()->onDetach(scene, entity);
-            script.script()->reload();
-            script.script()->onAttach(scene, entity);
+            continue;
         }
+
+        auto behavior = script.behavior(scene, entity);
+
+        if(behavior) behavior->onDetach();
+        script.script()->reload();
+        behavior = script.behavior(scene, entity, true);
+        if(behavior) behavior->onAttach();
     }
 
     ATCG_INFO("Reloaded Scripts");
@@ -163,10 +128,14 @@ void Scripting::handleScriptEvents(const atcg::ref_ptr<atcg::Scene>& scene, atcg
 
         auto& script = entity.getComponent<atcg::ScriptComponent>();
 
-        if(script.script() != nullptr)
+        if(!script.script())
         {
-            script.script()->onEvent(scene, entity, event);
+            continue;
         }
+
+        auto behavior = script.behavior(scene, entity);
+
+        if(behavior) behavior->onEvent(event);
     }
 }
 
@@ -180,10 +149,14 @@ void Scripting::handleScriptUpdates(const atcg::ref_ptr<atcg::Scene>& scene, con
 
         auto& script = entity.getComponent<atcg::ScriptComponent>();
 
-        if(script.script() != nullptr)
+        if(!script.script())
         {
-            script.script()->onUpdate(scene, entity, dt);
+            continue;
         }
+
+        auto behavior = script.behavior(scene, entity);
+
+        if(behavior) behavior->onUpdate(dt);
     }
 }
 
