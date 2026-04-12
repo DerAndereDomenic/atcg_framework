@@ -65,55 +65,61 @@ VRSystem::Impl::Impl() {}
 
 void VRSystem::Impl::init()
 {
-    bool hmd_present       = vr::VR_IsHmdPresent();
-    bool runtime_installed = vr::VR_IsRuntimeInstalled();
-
-    if(hmd_present && runtime_installed)
+    bool hmd_present = vr::VR_IsHmdPresent();
+    if(!hmd_present)
     {
-        vr::EVRInitError error = vr::VRInitError_None;
-        vr_pointer             = vr::VR_Init(&error, vr::VRApplication_Scene);
-
-        if(error != vr::VRInitError_None || vr_pointer == NULL)
-        {
-            vr_pointer = NULL;
-            ATCG_WARN("Unable to init VR runtime: {0}", std::string(vr::VR_GetVRInitErrorAsEnglishDescription(error)));
-            return;
-        }
-        vr_available = true;
-        vr_pointer->GetRecommendedRenderTargetSize(&width, &height);
-
-
-        render_target_left = atcg::make_ref<Framebuffer>(width, height);
-        render_target_left->attachColor();
-        render_target_left->attachDepth();
-        render_target_left->complete();
-
-        render_target_right = atcg::make_ref<Framebuffer>(width, height);
-        render_target_right->attachColor();
-        render_target_right->attachDepth();
-        render_target_right->complete();
-
-        {
-            std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
-                                                  atcg::Vertex(glm::vec3(1, -1, 0)),
-                                                  atcg::Vertex(glm::vec3(1, 1, 0)),
-                                                  atcg::Vertex(glm::vec3(-1, 1, 0))};
-
-            std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
-
-            quad = atcg::Graph::createTriangleMesh(vertices, edges);
-        }
-
-        {
-            std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(0)), atcg::Vertex(glm::vec3(0))};
-
-            std::vector<atcg::Edge> edges = {atcg::Edge {glm::vec2(0, 1), glm::vec3(1), 1.0f}};
-
-            movement_line = atcg::Graph::createGraph(vertices, edges);
-        }
-
-        ATCG_INFO("Initialized VR runtime with resolution: {0}x{1}", width, height);
+        return;
     }
+
+    bool runtime_installed = vr::VR_IsRuntimeInstalled();
+    if(!runtime_installed)
+    {
+        return;
+    }
+
+    vr::EVRInitError error = vr::VRInitError_None;
+    vr_pointer             = vr::VR_Init(&error, vr::VRApplication_Scene);
+
+    if(error != vr::VRInitError_None || vr_pointer == NULL)
+    {
+        vr_pointer = NULL;
+        ATCG_WARN("Unable to init VR runtime: {0}", std::string(vr::VR_GetVRInitErrorAsEnglishDescription(error)));
+        return;
+    }
+    vr_available = true;
+    vr_pointer->GetRecommendedRenderTargetSize(&width, &height);
+
+
+    render_target_left = atcg::make_ref<Framebuffer>(width, height);
+    render_target_left->attachColor();
+    render_target_left->attachDepth();
+    render_target_left->complete();
+
+    render_target_right = atcg::make_ref<Framebuffer>(width, height);
+    render_target_right->attachColor();
+    render_target_right->attachDepth();
+    render_target_right->complete();
+
+    {
+        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
+                                              atcg::Vertex(glm::vec3(1, -1, 0)),
+                                              atcg::Vertex(glm::vec3(1, 1, 0)),
+                                              atcg::Vertex(glm::vec3(-1, 1, 0))};
+
+        std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+
+        quad = atcg::Graph::createTriangleMesh(vertices, edges);
+    }
+
+    {
+        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(0)), atcg::Vertex(glm::vec3(0))};
+
+        std::vector<atcg::Edge> edges = {atcg::Edge {glm::vec2(0, 1), glm::vec3(1), 1.0f}};
+
+        movement_line = atcg::Graph::createGraph(vertices, edges);
+    }
+
+    ATCG_INFO("Initialized VR runtime with resolution: {0}x{1}", width, height);
 }
 
 void VRSystem::Impl::deinit()
