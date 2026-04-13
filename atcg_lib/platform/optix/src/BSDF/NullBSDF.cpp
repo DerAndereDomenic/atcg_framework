@@ -18,18 +18,32 @@ void NullBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipel
 {
     const std::string ptx_bsdf_filename = "./bin/NullBSDF_ptx.ptx";
     auto sample_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_nullbsdf"});
-    auto eval_prog_group   = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_nullbsdf"});
+    auto sample_backward_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_backward_nullbsdf"});
+    auto sample_forward_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_forward_nullbsdf"});
+    auto eval_prog_group = pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_nullbsdf"});
     auto eval_backward_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_backward_nullbsdf"});
-    uint32_t sample_idx        = sbt->addCallableEntry(sample_prog_group);
-    uint32_t eval_idx          = sbt->addCallableEntry(eval_prog_group);
-    uint32_t eval_backward_idx = sbt->addCallableEntry(eval_backward_prog_group);
+    auto eval_forward_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_forward_nullbsdf"});
+
+    uint32_t sample_idx          = sbt->addCallableEntry(sample_prog_group);
+    uint32_t sample_backward_idx = sbt->addCallableEntry(sample_backward_prog_group);
+    uint32_t sample_forward_idx  = sbt->addCallableEntry(sample_forward_prog_group);
+    uint32_t eval_idx            = sbt->addCallableEntry(eval_prog_group);
+    uint32_t eval_backward_idx   = sbt->addCallableEntry(eval_backward_prog_group);
+    uint32_t eval_forward_idx    = sbt->addCallableEntry(eval_forward_prog_group);
 
     BSDFVPtrTable table;
-    table.sampleCallIndex       = sample_idx;
-    table.evalCallIndex         = eval_idx;
-    table.evalBackwardCallIndex = eval_backward_idx;
-    table.flags                 = _flags;
+    table.sampleCallIndex         = sample_idx;
+    table.sampleBackwardCallIndex = sample_backward_idx;
+    table.sampleForwardCallIndex  = sample_forward_idx;
+    table.evalCallIndex           = eval_idx;
+    table.evalBackwardCallIndex   = eval_backward_idx;
+    table.evalForwardCallIndex    = eval_forward_idx;
+
+    table.flags = _flags;
 
     _vptr_table.upload(&table);
 
