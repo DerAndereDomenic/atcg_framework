@@ -13,9 +13,9 @@ struct SamplingStrategy<SamplingStrategyType::EXPONENTIAL_SAMPLING, T>
     {
     }
 
-    ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto sample(const T u) { return -glm::log(u) / _density; }
+    ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto sample(const T u) { return -CuDiff::log(u) / _density; }
 
-    ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto pdf(const T t) { return _density * glm::exp(-_density * t); }
+    ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto pdf(const T t) { return _density * CuDiff::exp(-_density * t); }
 };
 
 template<typename T>
@@ -49,11 +49,12 @@ struct SamplingStrategy<SamplingStrategyType::HG_PHASE, T>
         return glm::vec3(x, y, z);
     }
 
-    ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto pdf(const float cos_theta)
+    template<typename U>
+    ATCG_HOST_DEVICE ATCG_FORCE_INLINE auto pdf(const U cos_theta)
     {
-        float g2    = _g * _g;
-        float area  = 4 * glm::pi<float>();    // area of sphere
-        float phase = (1 - g2) / area * glm::pow((1 + g2 - 2 * _g * cos_theta), -1.5f);
+        T g2       = _g * _g;
+        float area = 4 * glm::pi<float>();    // area of sphere
+        auto phase = (1 - g2) / area * CuDiff::pow((1 + g2 - 2 * _g * cos_theta), -1.5f);
         return phase;
     }
 };
