@@ -107,10 +107,10 @@ extern "C" __global__ void __raygen__forward()
         if(!ray.valid) break;
         ray.valid = false;
 
-        atcg::SurfaceInteraction si0 = ray.si0;
+        atcg::AnyInteraction si0     = ray.si0;
         atcg::SurfaceInteraction si1 = ray.si1;
 
-        auto [x0, x1] = CuDiff::make_variables<6>(si0.position, si1.position);
+        auto [x0, x1] = CuDiff::make_variables<6>(si0->position, si1.position);
         auto distance = CuDiff::length(x1 - x0);
         auto w        = (x1 - x0) / CuDiff::max(distance, 1e-5f);
 
@@ -121,7 +121,7 @@ extern "C" __global__ void __raygen__forward()
         dsi.normal             = ray.last_normal;
         dsi.uv                 = ray.last_uv;
 
-        glm::mat2x3 frame0 = glm::mat2x3(si0.reference_frame.localX(), si0.reference_frame.localY());
+        glm::mat2x3 frame0 = glm::mat2x3(si0->reference_frame.localX(), si0->reference_frame.localY());
         glm::mat2x3 frame1 = glm::mat2x3(si1.reference_frame.localX(), si1.reference_frame.localY());
 
         // si is valid by contruction if(si.valid)
@@ -131,11 +131,11 @@ extern "C" __global__ void __raygen__forward()
             glm::mat4x3 JLe = glm::mat4x3(0);
             if(si1.emitter)
             {
-                bool mis_valid              = si0.isValid();
+                bool mis_valid              = si0->isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
                     atcg::select(mis_valid, si1.emitter->evalLightSamplingPdf(si0, si1) * emitter_selection_pdf, 0.0f);
-                float mis_weight = atcg::PowerHeuristic<1>::apply(si0.pdf, emitter_sampling_pdf);
+                float mis_weight = atcg::PowerHeuristic<1>::apply(si0->pdf, emitter_sampling_pdf);
                 Le               = mis_weight * si1.emitter->evalLightForward(dsi, wavelengths);
 
                 if(params.diff_mode == atcg::DiffMode::FORWARD)
