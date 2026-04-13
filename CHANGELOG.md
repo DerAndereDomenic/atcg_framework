@@ -92,10 +92,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed pipeline behavior of pathtracing backend. This is no longer done using the PipelineInitializer struct but going back to an inheritance-based system
 - Shapes are no longer responsible to define closest hit programs, this has to be done on a pipeline level now
 - RayTracingPipeline and ShaderBindingTable are no longer exposed to the client and are owned by the corresponding integrator used.
-- evalBSDF and sampleBSDF are now expected to return f * cos (divided by p for sampling) instead of just the bsdf value
+- evalBSDF and sampleBSDF are now expected to return f \* cos (divided by p for sampling) instead of just the bsdf value
 - Density scaling for heterogeneous media is already applied in the eval function
 - Materials now use inheritance but static material types are still available
 - MaterialType::GLASS was changed to MaterialType::Dielectric
+- Changed the way scripting works. Now an instance of a script class represents the python code itself and is used to instatiate a behavior which controls the actual behavior of the entity. This way, the script can be used for multiple entities with separate instances of the same behavior
 
 ### Fixed
 

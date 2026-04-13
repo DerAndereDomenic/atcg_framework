@@ -130,3 +130,4 @@
 //-------- Scripting ------------
 #include <Scripting/ScriptEngine.h>
 #include <Scripting/Script.h>
+#include <Scripting/Behavior.h>

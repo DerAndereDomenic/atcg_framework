@@ -88,7 +88,9 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     py::class_<atcg::Application>(m, "Application");                                                                     \
     auto m_application = py::class_<PythonApplication, atcg::Application>(m, "PythonApplication");                       \
     auto m_layer       = py::class_<atcg::Layer, PythonLayer, std::unique_ptr<atcg::Layer, py::nodelete>>(m, "Layer");   \
-    auto m_event       = py::class_<atcg::Event>(m, "Event");                                                            \
+    auto m_behavior =                                                                                                    \
+        py::class_<atcg::Behavior, atcg::PythonBehavior, std::shared_ptr<atcg::Behavior>>(m, "Behavior");                \
+    auto m_event = py::class_<atcg::Event>(m, "Event");                                                                  \
     auto m_camera =                                                                                                      \
         py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");             \
     auto m_extrinsics   = py::class_<atcg::CameraExtrinsics>(m, "CameraExtrinsics");                                     \
@@ -260,6 +262,11 @@ inline void defineBindings(py::module_& m)
         .def("onUpdate", &atcg::Layer::onUpdate, "delta_time"_a)
         .def("onImGuiRender", &atcg::Layer::onImGuiRender)
         .def("onEvent", &atcg::Layer::onEvent, "event"_a);
+    m_behavior.def(py::init<>())
+        .def("onAttach", &atcg::Behavior::onAttach)
+        .def("onUpdate", &atcg::Behavior::onUpdate, "delta_time"_a)
+        .def("onImGuiRender", &atcg::Behavior::onImGuiRender)
+        .def("onEvent", &atcg::Behavior::onEvent, "event"_a);
 
     m_event.def("getName", &atcg::Event::getName).def_readwrite("handled", &atcg::Event::handled);
 
@@ -1365,7 +1372,8 @@ inline void defineBindings(py::module_& m)
         .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
         .def("getInstanceRenderComponent", &atcg::Entity::getComponent<atcg::InstanceRenderComponent>)
         .def("getScriptComponent", &atcg::Entity::getComponent<atcg::ScriptComponent>)
-        .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>);
+        .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>)
+        .def("handle", &atcg::Entity::entity_handle);
 
     m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
         .def(
@@ -1649,10 +1657,7 @@ inline void defineBindings(py::module_& m)
 
     m_script.def(py::init<const std::filesystem::path&>())
         .def("init", &atcg::PythonScript::init)
-        .def("onAttach", &atcg::PythonScript::onAttach)
-        .def("onUpdate", &atcg::PythonScript::onUpdate)
-        .def("onEvent", &atcg::PythonScript::onEvent)
-        .def("onDetach", &atcg::PythonScript::onDetach)
+        .def("createBehavior", &atcg::PythonScript::createBehavior)
         .def("reload", &atcg::PythonScript::reload);
 
     m.def("handleScriptReloads", &atcg::Scripting::handleScriptReloads);
