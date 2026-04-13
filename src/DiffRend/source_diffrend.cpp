@@ -18,6 +18,7 @@
 #include "DiffPathtracingIntegrator.h"
 #include "FiniteDiffPathIntegrator.h"
 #include "VolDiffPathtracingIntegrator.h"
+#include "VolAttachedDiffPathtracingIntegrator.h"
 
 #ifndef ATCG_HEADLESS
     #include <implot.h>
@@ -63,6 +64,10 @@ public:
         else if(current_integrator_index == 3)
         {
             integrator = atcg::make_ref<atcg::VolDiffPathtracingIntegrator>(optx_context, dict);
+        }
+        else if(current_integrator_index == 4)
+        {
+            integrator = atcg::make_ref<atcg::VolAttachedDiffPathtracingIntegrator>(optx_context, dict);
         }
 #endif
     }
@@ -613,8 +618,8 @@ private:
 #ifdef ATCG_ENABLE_OPTIX
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
-    const char* integrator_labels[4]  = {"Attached", "Detached", "Finite Difference", "VolDetached"};
-    uint32_t current_integrator_index = 1;
+    const char* integrator_labels[5]  = {"Attached", "Detached", "Finite Difference", "VolDetached", "VolAttached"};
+    uint32_t current_integrator_index = 4;
     torch::Tensor target;
     torch::Tensor accumulated_output;
     bool optimize          = false;
