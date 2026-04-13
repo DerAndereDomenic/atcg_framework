@@ -67,7 +67,7 @@ extern "C" __global__ void __raygen__forward()
 
     atcg::SurfaceInteraction si0;
     si0.position           = ray_origin;
-    si0.normal             = ray_direction;
+    si0.reference_frame    = atcg::Frame<glm::vec3>(ray_direction);
     si0.incoming_direction = ray_direction;
 
     glm::mat4x3 Jb = glm::mat4x3(0);
@@ -115,11 +115,8 @@ extern "C" __global__ void __raygen__forward()
         dsi.normal             = ray.last_normal;
         dsi.uv                 = ray.last_uv;
 
-        auto frame0_ = atcg::Frame(si0.normal);
-        auto frame1_ = atcg::Frame(si1.normal);
-
-        glm::mat2x3 frame0 = glm::mat2x3(frame0_.localX(), frame0_.localY());
-        glm::mat2x3 frame1 = glm::mat2x3(frame1_.localX(), frame1_.localY());
+        glm::mat2x3 frame0 = glm::mat2x3(si0.reference_frame.localX(), si0.reference_frame.localY());
+        glm::mat2x3 frame1 = glm::mat2x3(si1.reference_frame.localX(), si1.reference_frame.localY());
 
         // si is valid by contruction if(si.valid)
         {
@@ -265,9 +262,8 @@ extern "C" __global__ void __raygen__forward()
                         continue;
                     }
 
-                    auto frame2_ = atcg::Frame(next_dsi.normal.val());
-
-                    glm::mat2x3 frame2 = glm::mat2x3(frame2_.localX(), frame2_.localY());
+                    glm::mat2x3 frame2 =
+                        glm::mat2x3(next_dsi.reference_frame.localX(), next_dsi.reference_frame.localY());
 
                     glm::mat3 dx1_dx0 = glm::mat3(0);
                     glm::mat3 dx2_dx0 = glm::mat3(next_dsi.position.derivative(0),
@@ -380,7 +376,7 @@ extern "C" __global__ void __raygen__backward()
 
     atcg::SurfaceInteraction si0;
     si0.position           = ray_origin;
-    si0.normal             = ray_direction;
+    si0.reference_frame    = atcg::Frame<glm::vec3>(ray_direction);
     si0.incoming_direction = ray_direction;
 
     glm::mat4 Jray = glm::mat4(1);
@@ -427,11 +423,8 @@ extern "C" __global__ void __raygen__backward()
         dsi.normal             = ray.last_normal;
         dsi.uv                 = ray.last_uv;
 
-        auto frame0_ = atcg::Frame(si0.normal);
-        auto frame1_ = atcg::Frame(si1.normal);
-
-        glm::mat2x3 frame0 = glm::mat2x3(frame0_.localX(), frame0_.localY());
-        glm::mat2x3 frame1 = glm::mat2x3(frame1_.localX(), frame1_.localY());
+        glm::mat2x3 frame0 = glm::mat2x3(si0.reference_frame.localX(), si0.reference_frame.localY());
+        glm::mat2x3 frame1 = glm::mat2x3(si1.reference_frame.localX(), si1.reference_frame.localY());
 
         {
             // Check for light source
@@ -576,9 +569,8 @@ extern "C" __global__ void __raygen__backward()
                         continue;
                     }
 
-                    auto frame2_ = atcg::Frame(next_dsi.normal.val());
-
-                    glm::mat2x3 frame2 = glm::mat2x3(frame2_.localX(), frame2_.localY());
+                    glm::mat2x3 frame2 =
+                        glm::mat2x3(next_dsi.reference_frame.localX(), next_dsi.reference_frame.localY());
 
                     glm::mat3 dx1_dx0 = glm::mat3(0);
                     glm::mat3 dx2_dx0 = glm::mat3(next_dsi.position.derivative(0),

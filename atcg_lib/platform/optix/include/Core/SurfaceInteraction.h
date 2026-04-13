@@ -4,6 +4,7 @@
 #include <CuDiff/CuDiff.h>
 #include <Core/Platform.h>
 #include <Core/CUDA.h>
+#include <DataStructure/Frame.h>
 
 namespace atcg
 {
@@ -16,12 +17,14 @@ struct Interaction
 {
     glm::vec3 position;
     glm::vec3 incoming_direction;
+    atcg::Frame<glm::vec3> reference_frame;
     float incoming_distance;
     float pdf;
 
     ATCG_HOST_DEVICE Interaction()
         : position(glm::vec3(std::numeric_limits<float>::signaling_NaN())),
           incoming_direction(glm::vec3(std::numeric_limits<float>::signaling_NaN())),
+          reference_frame(atcg::Frame<glm::vec3>()),
           incoming_distance(std::numeric_limits<float>::signaling_NaN()),
           pdf(0.0f)
     {

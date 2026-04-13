@@ -69,10 +69,11 @@ extern "C" __global__ void __closesthit__dual_mesh()
     const float3 N2_ = glm2cuda(sbt_data.normals[triangle.z]);
 
     // TODO: Kind of inefficient
-    const glm::vec3 N0 = cuda2glm(optixTransformNormalFromObjectToWorldSpace(N0_));
-    const glm::vec3 N1 = cuda2glm(optixTransformNormalFromObjectToWorldSpace(N1_));
-    const glm::vec3 N2 = cuda2glm(optixTransformNormalFromObjectToWorldSpace(N2_));
-    si->normal         = CuDiff::normalize(alpha * N0 + beta * N1 + gamma * N2);
+    const glm::vec3 N0  = cuda2glm(optixTransformNormalFromObjectToWorldSpace(N0_));
+    const glm::vec3 N1  = cuda2glm(optixTransformNormalFromObjectToWorldSpace(N1_));
+    const glm::vec3 N2  = cuda2glm(optixTransformNormalFromObjectToWorldSpace(N2_));
+    si->normal          = CuDiff::normalize(alpha * N0 + beta * N1 + gamma * N2);
+    si->reference_frame = atcg::Frame<glm::vec3>(si->normal.val());
 
     const glm::vec2 UV0 = sbt_data.uvs[triangle.x];
     const glm::vec2 UV1 = sbt_data.uvs[triangle.y];
