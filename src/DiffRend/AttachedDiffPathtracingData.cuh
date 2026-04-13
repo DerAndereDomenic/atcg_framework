@@ -7,17 +7,6 @@
 #include <BSDF/BSDFVPtrTable.cuh>
 #include "DiffMode.h"
 
-ATCG_INLINE ATCG_DEVICE glm::mat3 diag(const glm::vec3& v)
-{
-    glm::mat3 M = glm::mat3(0);
-
-    M[0][0] = v.x;
-    M[1][1] = v.y;
-    M[2][2] = v.z;
-
-    return M;
-}
-
 namespace atcg
 {
 struct AttachedDiffPathtracingParams

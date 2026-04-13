@@ -163,7 +163,7 @@ extern "C" __global__ void __raygen__forward()
 
             if(params.diff_mode == atcg::DiffMode::FORWARD)
             {
-                ray.JL += diag(ray.throughput) * JLe + diag(Le.val()) * Jb;
+                ray.JL += atcg::diag(ray.throughput) * JLe + atcg::diag(Le.val()) * Jb;
             }
 
             // PBR Sampling
@@ -259,15 +259,17 @@ extern "C" __global__ void __raygen__forward()
 
                     if(params.diff_mode == atcg::DiffMode::FORWARD)
                     {
-                        glm::mat4x3 Jb_nee = diag(bsdf_result.bsdf_value.val()) * Jb + diag(ray.throughput) * Jbsdf_nee;
+                        glm::mat4x3 Jb_nee =
+                            atcg::diag(bsdf_result.bsdf_value.val()) * Jb + atcg::diag(ray.throughput) * Jbsdf_nee;
 
-                        ray.JL += mis_weight * (diag(emitter_sampling.radiance_weight_at_receiver.val()) * Jb_nee +
-                                                diag(throughput_nee) * JLe_nee);
+                        ray.JL +=
+                            mis_weight * (atcg::diag(emitter_sampling.radiance_weight_at_receiver.val()) * Jb_nee +
+                                          atcg::diag(throughput_nee) * JLe_nee);
                     }
                     else
                     {
-                        ray.JL -= (diag(radiance_nee / bsdf_result.bsdf_value.val()) * Jbsdf_nee +
-                                   mis_weight * diag(ray.throughput * bsdf_result.bsdf_value.val()) * JLe_nee);
+                        ray.JL -= (atcg::diag(radiance_nee / bsdf_result.bsdf_value.val()) * Jbsdf_nee +
+                                   mis_weight * atcg::diag(ray.throughput * bsdf_result.bsdf_value.val()) * JLe_nee);
 
                         glm::vec3 grad_out =
                             (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) + 1e-4f);
@@ -344,11 +346,12 @@ extern "C" __global__ void __raygen__forward()
 
                     if(params.diff_mode == atcg::DiffMode::FORWARD)
                     {
-                        Jb = diag(result.bsdf_weight.val()) * Jb + diag(ray.throughput) * Jbsdf;
+                        Jb = atcg::diag(result.bsdf_weight.val()) * Jb + atcg::diag(ray.throughput) * Jbsdf;
                     }
                     else
                     {
-                        ray.JL -= (diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf + diag(ray.throughput) * JLe);
+                        ray.JL -= (atcg::diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf +
+                                   atcg::diag(ray.throughput) * JLe);
 
                         auto Jrayinv            = glm::inverse(Jray);
                         glm::mat4x3 JL_         = ray.JL * Jrayinv;    // dL/d(du1v1, du2v2)
