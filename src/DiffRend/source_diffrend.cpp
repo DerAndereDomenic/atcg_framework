@@ -294,9 +294,9 @@ public:
             if(ImGui::MenuItem("Load"))
             {
                 auto f     = pfd::open_file("Choose project file",
-                                        pfd::path::home(),
+                                            pfd::path::home(),
                                             {"Project file (.json)", "*.json"},
-                                        pfd::opt::none);
+                                            pfd::opt::none);
                 auto files = f.result();
 
                 if(!files.empty())
@@ -645,8 +645,8 @@ public:
 atcg::Application* atcg::createApplication()
 {
     atcg::WindowProps props;
-    // props.width  = 3000;
-    // props.height = 1800;
-    props.vsync = true;
+    props.width  = 3000;
+    props.height = 1800;
+    props.vsync  = true;
     return new DiffRend(props);
 }
