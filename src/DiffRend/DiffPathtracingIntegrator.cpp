@@ -64,15 +64,12 @@ void DiffPathtracingIntegrator::initializePipeline(const Dictionary& dict)
     const std::string ptx_raygen_filename = "./bin/DiffPathtracingIntegrator_ptx.ptx";
     OptixProgramGroup raygen_prog_group_forward =
         _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__forward"});
-    OptixProgramGroup raygen_prog_group_backward =
-        _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__backward"});
     OptixProgramGroup miss_prog_group = _pipeline->addMissShader({ptx_raygen_filename, "__miss__ms"});
     OptixProgramGroup occl_prog_group = _pipeline->addMissShader({ptx_raygen_filename, "__miss__occlusion"});
 
-    _raygen_index_forward  = _sbt->addRaygenEntry(raygen_prog_group_forward);
-    _raygen_index_backward = _sbt->addRaygenEntry(raygen_prog_group_backward);
-    _surface_miss_index    = _sbt->addMissEntry(miss_prog_group);
-    _occlusion_miss_index  = _sbt->addMissEntry(occl_prog_group);
+    _raygen_index_forward = _sbt->addRaygenEntry(raygen_prog_group_forward);
+    _surface_miss_index   = _sbt->addMissEntry(miss_prog_group);
+    _occlusion_miss_index = _sbt->addMissEntry(occl_prog_group);
 
     _optix_scene = SceneAdapter(_context, _pipeline, _sbt)
                        .apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
@@ -144,6 +141,8 @@ torch::Tensor DiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictio
     params.occlusion_trace_params.SBTstride = 1;
     params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
 
+    params.diff_mode = DiffMode::FORWARD;
+
     _launch_params.upload(&params);
 
     auto stream = at::cuda::getCurrentCUDAStream();
@@ -204,6 +203,8 @@ void DiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
     params.occlusion_trace_params.SBTstride = 2;
     params.occlusion_trace_params.missSBTIndex = _occlusion_miss_index;
 
+    params.diff_mode = DiffMode::BACKWARD;
+
     _launch_params.upload(&params);
 
     auto stream = at::cuda::getCurrentCUDAStream();
@@ -212,7 +213,7 @@ void DiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
                             stream,
                             (CUdeviceptr)_launch_params.get(),
                             sizeof(DiffPathtracingParams),
-                            _sbt->getSBT(_raygen_index_backward),
+                            _sbt->getSBT(_raygen_index_forward),
                             width,
                             height,
                             1));    // depth

@@ -5,6 +5,7 @@
 #include <Core/TraceParameters.h>
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
+#include "DiffMode.h"
 
 ATCG_INLINE ATCG_DEVICE glm::mat3 diag(const glm::vec3& v)
 {
@@ -21,6 +22,8 @@ namespace atcg
 {
 struct AttachedDiffPathtracingParams
 {
+    DiffMode diff_mode;
+
     glm::vec3* current_sample;
     glm::vec3* adjoint_y;
     glm::mat4x3* JL_buffer;

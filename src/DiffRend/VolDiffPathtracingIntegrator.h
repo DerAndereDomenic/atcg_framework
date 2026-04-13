@@ -84,7 +84,6 @@ private:
 
 private:
     uint32_t _raygen_index_forward;
-    uint32_t _raygen_index_backward;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
 

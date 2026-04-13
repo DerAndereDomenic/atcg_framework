@@ -5,6 +5,7 @@
 #include <Core/TraceParameters.h>
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
+#include "DiffMode.h"
 
 namespace atcg
 {
@@ -35,5 +36,7 @@ struct DiffPathtracingParams
     const EmitterVPtrTable** emitters;
 
     const EmitterVPtrTable* environment_emitter;
+
+    DiffMode diff_mode;
 };
 }    // namespace atcg

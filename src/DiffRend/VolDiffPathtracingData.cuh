@@ -6,6 +6,7 @@
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <Medium/MediumVPtrTable.cuh>
+#include "DiffMode.h"
 
 namespace atcg
 {
@@ -36,5 +37,7 @@ struct VolDiffPathtracingParams
     const EmitterVPtrTable** emitters;
 
     const EmitterVPtrTable* environment_emitter;
+
+    DiffMode diff_mode;
 };
 }    // namespace atcg
