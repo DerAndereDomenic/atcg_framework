@@ -90,6 +90,7 @@
 
 //-------- Utils -----------
 #include <Utils/Utils.h>
+#include <Utils/HostDevice.h>
 
 //-------- Network ------------
 #include <Network/TCPServer.h>
