@@ -4,6 +4,7 @@
 #include <Core/SurfaceInteraction.h>
 #include <Math/Random.h>
 #include <optix.h>
+#include <CuDiff/ext/glm.h>
 
 namespace atcg
 {
@@ -12,6 +13,13 @@ struct PhaseFunctionSamplingResult
     glm::vec3 outgoing_ray_dir;
     float phase_function_weight;
     float sampling_pdf;
+};
+
+struct DualPhaseFunctionSamplingResult
+{
+    CuDiff::Dual<6, glm::vec3> outgoing_ray_dir;
+    CuDiff::Dual<6, float> phase_function_weight;
+    CuDiff::Dual<6, float> sampling_pdf;
 };
 
 struct PhaseFunctionEvalResult
@@ -25,6 +33,7 @@ struct PhaseFunctionVPtrTable
     uint32_t evalCallIndex;
     uint32_t evalBackwardCallIndex;
     uint32_t sampleCallIndex;
+    uint32_t sampleForwardCallIndex;
 
 #ifdef __CUDACC__
 
@@ -51,6 +60,15 @@ struct PhaseFunctionVPtrTable
         return optixDirectCall<PhaseFunctionSamplingResult, const MediumInteraction&, PCG32&>(sampleCallIndex,
                                                                                               interaction,
                                                                                               rng);
+    }
+
+    __device__ DualPhaseFunctionSamplingResult samplePhaseFunctionForward(const DualSurfaceInteraction& interaction,
+                                                                          PCG32& rng) const
+    {
+        return optixDirectCall<DualPhaseFunctionSamplingResult, const DualSurfaceInteraction&, PCG32&>(
+            sampleForwardCallIndex,
+            interaction,
+            rng);
     }
 
 #endif

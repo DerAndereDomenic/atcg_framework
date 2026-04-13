@@ -54,6 +54,29 @@ __direct_callable__sample_hgphase(const atcg::MediumInteraction& interaction, at
     return result;
 }
 
+extern "C" __device__ atcg::DualPhaseFunctionSamplingResult
+__direct_callable__sample_hgphase_forward(const atcg::DualSurfaceInteraction& interaction, atcg::PCG32& rng)
+{
+    const atcg::HenyeyGreensteinPhaseFunctionData* sbt_data =
+        *reinterpret_cast<const atcg::HenyeyGreensteinPhaseFunctionData**>(optixGetSbtDataPointer());
+
+    float g = *(sbt_data->g);
+
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::HG_PHASE> sampling_strategy(g);
+
+    atcg::Frame local_frame          = atcg::Frame(interaction.incoming_direction);
+    glm::vec3 local_outgoing_ray_dir = sampling_strategy.sample(rng.next2d());
+
+    atcg::DualPhaseFunctionSamplingResult result;
+    result.outgoing_ray_dir = local_frame.toWorld(local_outgoing_ray_dir);
+    result.sampling_pdf     = CuDiff::Dual<6, float>(sampling_strategy.pdf(local_outgoing_ray_dir.z));
+    // result.phase_function_weight = glm::vec3(henyey_greenstein_phase_function(local_outgoing_ray_dir.z, sbt_data->g))
+    // / result.sampling_pdf;
+    result.phase_function_weight = CuDiff::Dual<6, float>(1.0f);
+
+    return result;
+}
+
 extern "C" __device__ void __direct_callable__eval_hgphase_backward(const atcg::MediumInteraction& interaction,
                                                                     const glm::vec3& outgoing_ray_dir,
                                                                     const glm::vec3& output_grad)

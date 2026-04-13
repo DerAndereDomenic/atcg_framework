@@ -101,6 +101,62 @@ __direct_callable__homogeneousMedium_sampleMediumEvent(const glm::vec3& origin,
     return result;
 }
 
+extern "C" __device__ atcg::DualMediumSamplingResult
+__direct_callable__homogeneousMedium_sampleMediumEventForward(const CuDiff::Dual<6, glm::vec3>& origin,
+                                                              const CuDiff::Dual<6, glm::vec3>& direction,
+                                                              float max_distance,
+                                                              const atcg::SampledWavelengths& wavelengths,
+                                                              atcg::PCG32& rng)
+{
+    const atcg::HomogeneousMediumData* sbt_data =
+        *reinterpret_cast<const atcg::HomogeneousMediumData**>(optixGetSbtDataPointer());
+
+
+    // Absorbtion, scattering and extinction coefficients...
+    glm::vec3 albedo_ = *(sbt_data->albedo);
+    glm::vec3 albedo  = albedo_;
+    glm::vec3 Le      = sbt_data->Le;
+
+    // Scalar projection of scattering coefficient, used to sample the next medium scattering event.
+    float sigma_t_scalar = *(sbt_data->density);
+    glm::vec3 sigma_s    = albedo_ * sigma_t_scalar;
+
+    atcg::DualMediumSamplingResult result;
+    // Dummy implementation:
+    // Effectively no medium event.
+    result.interaction                    = atcg::DualSurfaceInteraction();
+    result.interaction.incoming_direction = direction;
+    result.transmittance_weight           = CuDiff::Dual<6, glm::vec3>(glm::vec3(1));
+    result.radiance_weight                = CuDiff::Dual<6, glm::vec3>(glm::vec3(0));
+
+    // Sample the free-flight distance proportional to sigma_s_scalar.
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(sigma_t_scalar);
+    auto sampled_distance = sampling_strategy.sample(rng.next1d());
+
+    if(sampled_distance < max_distance)
+    {
+        // Medium event!
+        // The sampling succeeded and a scattering event was found at the given distance
+        result.interaction.incoming_distance = CuDiff::Dual<6, float>(sampled_distance);
+
+        result.interaction.position = origin + result.interaction.incoming_distance * direction;
+
+
+        result.transmittance_weight = CuDiff::Dual<6, glm::vec3>(albedo);
+    }
+    else
+    {
+        // No emission, no absorption, no scattering
+        // No medium event...
+        // The sampling did not succeed, and there is no scattering event *before* the max_distance.
+        result.interaction.setInvalid();
+
+        result.transmittance_weight = CuDiff::Dual<6, glm::vec3>(glm::vec3(1.0f));
+    }
+
+    return result;
+}
+
 extern "C" __device__ void
 __direct_callable__homogeneousMedium_sampleMediumEventBackward(const glm::vec3& origin,
                                                                const glm::vec3& direction,

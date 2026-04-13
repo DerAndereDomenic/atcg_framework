@@ -43,6 +43,8 @@ void HomogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         pipeline->addCallableShader({ptx_filename, "__direct_callable__homogeneousMedium_sampleMediumEventBackward"});
     OptixProgramGroup eval_transmittance_backward_prog_group =
         pipeline->addCallableShader({ptx_filename, "__direct_callable__homogeneousMedium_evalTransmittanceBackward"});
+    OptixProgramGroup sample_medium_event_forward_prog_group =
+        pipeline->addCallableShader({ptx_filename, "__direct_callable__homogeneousMedium_sampleMediumEventForward"});
 
     uint32_t eval_transmittance_index  = sbt->addCallableEntry(eval_transmittance_prog_group, _data_buffer.get());
     uint32_t sample_medium_event_index = sbt->addCallableEntry(sample_medium_event_prog_group, _data_buffer.get());
@@ -50,6 +52,8 @@ void HomogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
         sbt->addCallableEntry(sample_medium_event_backward_prog_group, _data_buffer.get());
     uint32_t eval_transmittance_backward_index =
         sbt->addCallableEntry(eval_transmittance_backward_prog_group, _data_buffer.get());
+    uint32_t sample_medium_event_forward_index =
+        sbt->addCallableEntry(sample_medium_event_forward_prog_group, _data_buffer.get());
 
     MediumVPtrTable vptr_table_data;
     vptr_table_data.evalCallIndex                      = eval_transmittance_index;
@@ -57,6 +61,7 @@ void HomogeneousMedium::initializePipeline(const atcg::ref_ptr<RayTracingPipelin
     vptr_table_data.sampleBackwardCallIndex            = sample_medium_event_backward_index;
     vptr_table_data.phase_function                     = phase_function ? phase_function->getVPtrTable() : nullptr;
     vptr_table_data.evalTransmittanceBackwardCallIndex = eval_transmittance_backward_index;
+    vptr_table_data.sampleForwardCallIndex             = sample_medium_event_forward_index;
 
     _vptr_table.upload(&vptr_table_data);
 

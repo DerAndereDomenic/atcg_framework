@@ -13,6 +13,13 @@ struct MediumSamplingResult
     SampledSpectrum radiance_weight;
 };
 
+struct DualMediumSamplingResult
+{
+    DualSurfaceInteraction interaction;
+    CuDiff::Dual<6, glm::vec3> transmittance_weight;
+    CuDiff::Dual<6, glm::vec3> radiance_weight;
+};
+
 struct MediumVPtrTable
 {
     const PhaseFunctionVPtrTable* phase_function;
@@ -21,6 +28,7 @@ struct MediumVPtrTable
     uint32_t sampleCallIndex;
     uint32_t sampleBackwardCallIndex;
     uint32_t evalTransmittanceBackwardCallIndex;
+    uint32_t sampleForwardCallIndex;
 
 #ifdef __CUDACC__
 
@@ -48,6 +56,20 @@ struct MediumVPtrTable
                                float,
                                const atcg::SampledWavelengths&,
                                PCG32&>(sampleCallIndex, origin, direction, max_distance, wavelengths, rng);
+    }
+
+    __device__ DualMediumSamplingResult sampleMediumEventForward(const CuDiff::Dual<6, glm::vec3>& origin,
+                                                                 const CuDiff::Dual<6, glm::vec3>& direction,
+                                                                 float max_distance,
+                                                                 const atcg::SampledWavelengths& wavelengths,
+                                                                 PCG32& rng) const
+    {
+        return optixDirectCall<DualMediumSamplingResult,
+                               const CuDiff::Dual<6, glm::vec3>&,
+                               const CuDiff::Dual<6, glm::vec3>&,
+                               float,
+                               const atcg::SampledWavelengths&,
+                               PCG32&>(sampleForwardCallIndex, origin, direction, max_distance, wavelengths, rng);
     }
 
     __device__ void sampleMediumEventBackward(const glm::vec3& origin,
