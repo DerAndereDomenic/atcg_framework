@@ -125,6 +125,11 @@ ATCG_HOST_DEVICE ATCG_INLINE mat6x3 operator*(const glm::mat3& A, const mat6x3& 
     return mat6x3(A * B.m00, A * B.m01);
 }
 
+ATCG_HOST_DEVICE ATCG_INLINE mat6x3 operator/(const mat6x3& A, const float s)
+{
+    return mat6x3(A.m00 / s, A.m01 / s);
+}
+
 ATCG_HOST_DEVICE ATCG_INLINE mat4x6 operator*(const mat6& A, const mat4x6& B)
 {
     return mat4x6(A.m00 * B.m00 + A.m01 * B.m10,
