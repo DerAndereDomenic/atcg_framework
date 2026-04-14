@@ -33,7 +33,7 @@ struct RayContext
     glm::vec3 radiance;
 
     glm::vec3 delta_y;
-    glm::mat4x3 JL;
+    atcg::mat6x3 JL;
 
     atcg::MediumVPtrTable* current_medium = nullptr;
 };
@@ -67,7 +67,8 @@ extern "C" __global__ void __raygen__forward()
         atcg::select(params.diff_mode == atcg::DiffMode::FORWARD, glm::vec3(0), params.current_sample[pixel_index]);
     ray.throughput = glm::vec3(1);
     ray.valid      = false;
-    ray.JL = atcg::select(params.diff_mode == atcg::DiffMode::FORWARD, glm::mat4x3(0), params.JL_buffer[pixel_index]);
+    ray.JL =
+        atcg::select(params.diff_mode == atcg::DiffMode::FORWARD, atcg::mat6x3(0.0f), params.JL_buffer[pixel_index]);
     ray.delta_y =
         atcg::select(params.diff_mode == atcg::DiffMode::FORWARD, glm::vec3(0), params.adjoint_y[pixel_index]);
 
@@ -76,8 +77,8 @@ extern "C" __global__ void __raygen__forward()
     si0.reference_frame    = atcg::Frame<glm::vec3>(ray_direction);
     si0.incoming_direction = ray_direction;
 
-    glm::mat4x3 Jb = glm::mat4x3(0);
-    glm::mat4 Jray = glm::mat4(1);
+    atcg::mat6x3 Jb = atcg::mat6x3(0);
+    atcg::mat6 Jray = atcg::mat6(1);
 
     atcg::DualSurfaceInteraction dsi1;
     dsi1.incoming_position  = CuDiff::Dual<6, glm::vec3>(ray_origin);
@@ -93,6 +94,7 @@ extern "C" __global__ void __raygen__forward()
     ray.last_normal = dsi1.normal;
     ray.last_uv     = dsi1.uv;
 
+
     if(si1.isValid())
     {
         ray.valid = true;
@@ -101,6 +103,11 @@ extern "C" __global__ void __raygen__forward()
     ray.si0      = si0;
     ray.si0->pdf = 1.0f;
     ray.si1      = si1;
+
+    atcg::mat4x6 frame_ray_0 = atcg::mat4x6(glm::mat2x3(si0.reference_frame.localX(), si0.reference_frame.localY()),
+                                            glm::mat2x3(0.0f),
+                                            glm::mat2x3(0.0f),
+                                            glm::mat2x3(si1.reference_frame.localX(), si1.reference_frame.localY()));
 
     for(int n = 0; n < 8; ++n)
     {
@@ -121,14 +128,14 @@ extern "C" __global__ void __raygen__forward()
         dsi.normal             = ray.last_normal;
         dsi.uv                 = ray.last_uv;
 
-        glm::mat2x3 frame0 = glm::mat2x3(si0->reference_frame.localX(), si0->reference_frame.localY());
+        // glm::mat2x3 frame0 = glm::mat2x3(si0->reference_frame.localX(), si0->reference_frame.localY());
         glm::mat2x3 frame1 = glm::mat2x3(si1.reference_frame.localX(), si1.reference_frame.localY());
 
         // si is valid by contruction if(si.valid)
         {
             // Check for light source
             CuDiff::Dual<6, glm::vec3> Le;
-            glm::mat4x3 JLe = glm::mat4x3(0);
+            atcg::mat6x3 JLe = atcg::mat6x3(0.0f);
             if(si1.emitter)
             {
                 bool mis_valid              = si0->isValid();
@@ -150,13 +157,15 @@ extern "C" __global__ void __raygen__forward()
                 glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
                 glm::mat3 JLe_dx1 = glm::mat3(Le.derivative(3), Le.derivative(4), Le.derivative(5));
 
-                glm::mat2x3 JLe_du0v0 = JLe_dx0 * frame0;
-                glm::mat2x3 JLe_du1v1 = JLe_dx1 * frame1;
+                JLe = atcg::mat6x3(JLe_dx0, JLe_dx1);
 
-                JLe = glm::mat4x3(glm::vec3(JLe_du0v0[0]),
-                                  glm::vec3(JLe_du0v0[1]),
-                                  glm::vec3(JLe_du1v1[0]),
-                                  glm::vec3(JLe_du1v1[1]));
+                // glm::mat2x3 JLe_du0v0 = JLe_dx0 * frame0;
+                // glm::mat2x3 JLe_du1v1 = JLe_dx1 * frame1;
+
+                // JLe = glm::mat4x3(glm::vec3(JLe_du0v0[0]),
+                //                   glm::vec3(JLe_du0v0[1]),
+                //                   glm::vec3(JLe_du1v1[0]),
+                //                   glm::vec3(JLe_du1v1[1]));
 
                 JLe = JLe * Jray;
             }
@@ -230,13 +239,15 @@ extern "C" __global__ void __raygen__forward()
                     glm::mat3 JLe_nee_dx0 = glm::mat3(Le_nee.derivative(0), Le_nee.derivative(1), Le_nee.derivative(2));
                     glm::mat3 JLe_nee_dx1 = glm::mat3(Le_nee.derivative(3), Le_nee.derivative(4), Le_nee.derivative(5));
 
-                    glm::mat2x3 JLe_du0v0 = JLe_nee_dx0 * frame0;
-                    glm::mat2x3 JLe_du1v1 = JLe_nee_dx1 * frame1;
+                    atcg::mat6x3 JLe_nee = atcg::mat6x3(JLe_nee_dx0, JLe_nee_dx1);
 
-                    glm::mat4x3 JLe_nee = glm::mat4x3(glm::vec3(JLe_du0v0[0]),
-                                                      glm::vec3(JLe_du0v0[1]),
-                                                      glm::vec3(JLe_du1v1[0]),
-                                                      glm::vec3(JLe_du1v1[1]));
+                    // glm::mat2x3 JLe_du0v0 = JLe_nee_dx0 * frame0;
+                    // glm::mat2x3 JLe_du1v1 = JLe_nee_dx1 * frame1;
+
+                    // glm::mat4x3 JLe_nee = glm::mat4x3(glm::vec3(JLe_du0v0[0]),
+                    //                                   glm::vec3(JLe_du0v0[1]),
+                    //                                   glm::vec3(JLe_du1v1[0]),
+                    //                                   glm::vec3(JLe_du1v1[1]));
 
                     JLe_nee = JLe_nee * Jray;
 
@@ -247,19 +258,21 @@ extern "C" __global__ void __raygen__forward()
                                                     bsdf_result.bsdf_value.derivative(4),
                                                     bsdf_result.bsdf_value.derivative(5));
 
-                    glm::mat2x3 Jbsdf_du0v0 = Jbsdf_dx0 * frame0;
-                    glm::mat2x3 Jbsdf_du1v1 = Jbsdf_dx1 * frame1;
+                    atcg::mat6x3 Jbsdf_nee = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
 
-                    glm::mat4x3 Jbsdf_nee = glm::mat4x3(glm::vec3(Jbsdf_du0v0[0]),
-                                                        glm::vec3(Jbsdf_du0v0[1]),
-                                                        glm::vec3(Jbsdf_du1v1[0]),
-                                                        glm::vec3(Jbsdf_du1v1[1]));
+                    // glm::mat2x3 Jbsdf_du0v0 = Jbsdf_dx0 * frame0;
+                    // glm::mat2x3 Jbsdf_du1v1 = Jbsdf_dx1 * frame1;
+
+                    // glm::mat4x3 Jbsdf_nee = glm::mat4x3(glm::vec3(Jbsdf_du0v0[0]),
+                    //                                     glm::vec3(Jbsdf_du0v0[1]),
+                    //                                     glm::vec3(Jbsdf_du1v1[0]),
+                    //                                     glm::vec3(Jbsdf_du1v1[1]));
 
                     Jbsdf_nee = Jbsdf_nee * Jray;
 
                     if(params.diff_mode == atcg::DiffMode::FORWARD)
                     {
-                        glm::mat4x3 Jb_nee =
+                        atcg::mat6x3 Jb_nee =
                             atcg::diag(bsdf_result.bsdf_value.val()) * Jb + atcg::diag(ray.throughput) * Jbsdf_nee;
 
                         ray.JL +=
@@ -314,16 +327,18 @@ extern "C" __global__ void __raygen__forward()
                                                   next_dsi.position.derivative(4),
                                                   next_dsi.position.derivative(5));
 
-                    glm::mat2 du1v1_du0v0 = glm::transpose(frame1) * dx1_dx0 * frame0;
-                    glm::mat2 du2v2_du0v0 = glm::transpose(frame2) * dx2_dx0 * frame0;
-                    glm::mat2 du1v1_du1v1 = glm::transpose(frame1) * dx1_dx1 * frame1;
-                    glm::mat2 du2v2_du1v1 = glm::transpose(frame2) * dx2_dx1 * frame1;
+                    // glm::mat2 du1v1_du0v0 = glm::transpose(frame1) * dx1_dx0 * frame0;
+                    // glm::mat2 du2v2_du0v0 = glm::transpose(frame2) * dx2_dx0 * frame0;
+                    // glm::mat2 du1v1_du1v1 = glm::transpose(frame1) * dx1_dx1 * frame1;
+                    // glm::mat2 du2v2_du1v1 = glm::transpose(frame2) * dx2_dx1 * frame1;
 
-                    // Construct 4x4 Jacobian ((du1v1_du0v0, du1v1_du1v1), (du2v2_du0v0, du2v2_du1v1))
-                    glm::mat4 Jray_ = glm::mat4(glm::vec4(du1v1_du0v0[0], du2v2_du0v0[0]),
-                                                glm::vec4(du1v1_du0v0[1], du2v2_du0v0[1]),
-                                                glm::vec4(du1v1_du1v1[0], du2v2_du1v1[0]),
-                                                glm::vec4(du1v1_du1v1[1], du2v2_du1v1[1]));
+                    // // Construct 4x4 Jacobian ((du1v1_du0v0, du1v1_du1v1), (du2v2_du0v0, du2v2_du1v1))
+                    // glm::mat4 Jray_ = glm::mat4(glm::vec4(du1v1_du0v0[0], du2v2_du0v0[0]),
+                    //                             glm::vec4(du1v1_du0v0[1], du2v2_du0v0[1]),
+                    //                             glm::vec4(du1v1_du1v1[0], du2v2_du1v1[0]),
+                    //                             glm::vec4(du1v1_du1v1[1], du2v2_du1v1[1]));
+
+                    atcg::mat6 Jray_ = atcg::mat6(dx1_dx0, dx1_dx1, dx2_dx0, dx2_dx1);
 
                     glm::mat3 Jbsdf_dx0 = glm::mat3(result.bsdf_weight.derivative(0),
                                                     result.bsdf_weight.derivative(1),
@@ -332,17 +347,19 @@ extern "C" __global__ void __raygen__forward()
                                                     result.bsdf_weight.derivative(4),
                                                     result.bsdf_weight.derivative(5));
 
-                    glm::mat2x3 Jbsdf_du0v0 = Jbsdf_dx0 * frame0;
-                    glm::mat2x3 Jbsdf_du1v1 = Jbsdf_dx1 * frame1;
+                    atcg::mat6x3 Jbsdf = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
 
-                    glm::mat4x3 Jbsdf = glm::mat4x3(glm::vec3(Jbsdf_du0v0[0]),
-                                                    glm::vec3(Jbsdf_du0v0[1]),
-                                                    glm::vec3(Jbsdf_du1v1[0]),
-                                                    glm::vec3(Jbsdf_du1v1[1]));
+                    // glm::mat2x3 Jbsdf_du0v0 = Jbsdf_dx0 * frame0;
+                    // glm::mat2x3 Jbsdf_du1v1 = Jbsdf_dx1 * frame1;
+
+                    // glm::mat4x3 Jbsdf = glm::mat4x3(glm::vec3(Jbsdf_du0v0[0]),
+                    //                                 glm::vec3(Jbsdf_du0v0[1]),
+                    //                                 glm::vec3(Jbsdf_du1v1[0]),
+                    //                                 glm::vec3(Jbsdf_du1v1[1]));
 
                     Jbsdf = Jbsdf * Jray;
                     Jray  = Jray_ * Jray;
-                    Jray += 0.01f * glm::mat4(1) * glm::sign(rng.nextFloat() - 0.5f);    // Regularization
+                    Jray += atcg::mat6(0.01f * glm::sign(rng.nextFloat() - 0.5f));    // Regularization
 
                     if(params.diff_mode == atcg::DiffMode::FORWARD)
                     {
@@ -353,8 +370,15 @@ extern "C" __global__ void __raygen__forward()
                         ray.JL -= (atcg::diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf +
                                    atcg::diag(ray.throughput) * JLe);
 
-                        auto Jrayinv            = glm::inverse(Jray);
-                        glm::mat4x3 JL_         = ray.JL * Jrayinv;    // dL/d(du1v1, du2v2)
+
+                        atcg::mat4x6 frame_ray_n = atcg::mat4x6(frame1, glm::mat2x3(0.0f), glm::mat2x3(0.0f), frame2);
+
+                        auto J_ray_uv = atcg::transpose(frame_ray_n) * (Jray * frame_ray_0);
+
+                        auto JL = ray.JL * frame_ray_0;
+
+                        auto Jrayinv            = glm::inverse(J_ray_uv);
+                        glm::mat4x3 JL_         = JL * Jrayinv;    // dL/d(du1v1, du2v2)
                         glm::mat3x2 du2v2dwo    = glm::transpose(frame2) * next_dsi.dxdw;
                         glm::mat3x4 du1v1u2v2dw = glm::mat3x4(glm::vec4(glm::vec2(0), du2v2dwo[0]),
                                                               glm::vec4(glm::vec2(0), du2v2dwo[1]),

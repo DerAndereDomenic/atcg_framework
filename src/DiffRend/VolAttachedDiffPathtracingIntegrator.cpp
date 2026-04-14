@@ -119,7 +119,7 @@ VolAttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionar
     uint32_t rng_index = in_out_dictionary.getValue<uint32_t>("rng_index");
 
     torch::Tensor current_sample = torch::zeros({height, width, 3}, atcg::TensorOptions::floatDeviceOptions());
-    torch::Tensor current_JL     = torch::zeros({height, width, 3 * 4}, atcg::TensorOptions::floatDeviceOptions());
+    torch::Tensor current_JL     = torch::zeros({height, width, 3 * 6}, atcg::TensorOptions::floatDeviceOptions());
 
     VolAttachedDiffPathtracingParams params;
 
@@ -135,7 +135,7 @@ VolAttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionar
     params.handle       = _optix_scene->getIAS()->getTraversableHandle();
 
     params.current_sample = (glm::vec3*)current_sample.data_ptr();
-    params.JL_buffer      = (glm::mat4x3*)current_JL.data_ptr();
+    params.JL_buffer      = (atcg::mat6x3*)current_JL.data_ptr();
 
     params.rng_index = rng_index;
 
@@ -194,7 +194,7 @@ void VolAttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dic
 
     params.current_sample = (glm::vec3*)sample.data_ptr();       // Input sample from forward pass
     params.adjoint_y      = (glm::vec3*)adjoint_y.data_ptr();    // Input 𝛿L
-    params.JL_buffer      = (glm::mat4x3*)JL.data_ptr();         // Input JL from forward pass
+    params.JL_buffer      = (atcg::mat6x3*)JL.data_ptr();        // Input JL from forward pass
 
     params.rng_index = rng_index;
 
