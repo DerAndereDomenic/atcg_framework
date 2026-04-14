@@ -159,14 +159,6 @@ extern "C" __global__ void __raygen__forward()
 
                 JLe = atcg::mat6x3(JLe_dx0, JLe_dx1);
 
-                // glm::mat2x3 JLe_du0v0 = JLe_dx0 * frame0;
-                // glm::mat2x3 JLe_du1v1 = JLe_dx1 * frame1;
-
-                // JLe = glm::mat4x3(glm::vec3(JLe_du0v0[0]),
-                //                   glm::vec3(JLe_du0v0[1]),
-                //                   glm::vec3(JLe_du1v1[0]),
-                //                   glm::vec3(JLe_du1v1[1]));
-
                 JLe = JLe * Jray;
             }
 
@@ -241,14 +233,6 @@ extern "C" __global__ void __raygen__forward()
 
                     atcg::mat6x3 JLe_nee = atcg::mat6x3(JLe_nee_dx0, JLe_nee_dx1);
 
-                    // glm::mat2x3 JLe_du0v0 = JLe_nee_dx0 * frame0;
-                    // glm::mat2x3 JLe_du1v1 = JLe_nee_dx1 * frame1;
-
-                    // glm::mat4x3 JLe_nee = glm::mat4x3(glm::vec3(JLe_du0v0[0]),
-                    //                                   glm::vec3(JLe_du0v0[1]),
-                    //                                   glm::vec3(JLe_du1v1[0]),
-                    //                                   glm::vec3(JLe_du1v1[1]));
-
                     JLe_nee = JLe_nee * Jray;
 
                     glm::mat3 Jbsdf_dx0 = glm::mat3(bsdf_result.bsdf_value.derivative(0),
@@ -259,14 +243,6 @@ extern "C" __global__ void __raygen__forward()
                                                     bsdf_result.bsdf_value.derivative(5));
 
                     atcg::mat6x3 Jbsdf_nee = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
-
-                    // glm::mat2x3 Jbsdf_du0v0 = Jbsdf_dx0 * frame0;
-                    // glm::mat2x3 Jbsdf_du1v1 = Jbsdf_dx1 * frame1;
-
-                    // glm::mat4x3 Jbsdf_nee = glm::mat4x3(glm::vec3(Jbsdf_du0v0[0]),
-                    //                                     glm::vec3(Jbsdf_du0v0[1]),
-                    //                                     glm::vec3(Jbsdf_du1v1[0]),
-                    //                                     glm::vec3(Jbsdf_du1v1[1]));
 
                     Jbsdf_nee = Jbsdf_nee * Jray;
 
@@ -327,16 +303,6 @@ extern "C" __global__ void __raygen__forward()
                                                   next_dsi.position.derivative(4),
                                                   next_dsi.position.derivative(5));
 
-                    // glm::mat2 du1v1_du0v0 = glm::transpose(frame1) * dx1_dx0 * frame0;
-                    // glm::mat2 du2v2_du0v0 = glm::transpose(frame2) * dx2_dx0 * frame0;
-                    // glm::mat2 du1v1_du1v1 = glm::transpose(frame1) * dx1_dx1 * frame1;
-                    // glm::mat2 du2v2_du1v1 = glm::transpose(frame2) * dx2_dx1 * frame1;
-
-                    // // Construct 4x4 Jacobian ((du1v1_du0v0, du1v1_du1v1), (du2v2_du0v0, du2v2_du1v1))
-                    // glm::mat4 Jray_ = glm::mat4(glm::vec4(du1v1_du0v0[0], du2v2_du0v0[0]),
-                    //                             glm::vec4(du1v1_du0v0[1], du2v2_du0v0[1]),
-                    //                             glm::vec4(du1v1_du1v1[0], du2v2_du1v1[0]),
-                    //                             glm::vec4(du1v1_du1v1[1], du2v2_du1v1[1]));
 
                     atcg::mat6 Jray_ = atcg::mat6(dx1_dx0, dx1_dx1, dx2_dx0, dx2_dx1);
 
@@ -349,13 +315,6 @@ extern "C" __global__ void __raygen__forward()
 
                     atcg::mat6x3 Jbsdf = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
 
-                    // glm::mat2x3 Jbsdf_du0v0 = Jbsdf_dx0 * frame0;
-                    // glm::mat2x3 Jbsdf_du1v1 = Jbsdf_dx1 * frame1;
-
-                    // glm::mat4x3 Jbsdf = glm::mat4x3(glm::vec3(Jbsdf_du0v0[0]),
-                    //                                 glm::vec3(Jbsdf_du0v0[1]),
-                    //                                 glm::vec3(Jbsdf_du1v1[0]),
-                    //                                 glm::vec3(Jbsdf_du1v1[1]));
 
                     Jbsdf = Jbsdf * Jray;
                     Jray  = Jray_ * Jray;
