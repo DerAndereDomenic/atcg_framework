@@ -114,10 +114,10 @@ extern "C" __global__ void __raygen__forward()
         if(!ray.valid) break;
         ray.valid = false;
 
-        atcg::AnyInteraction si0     = ray.si0;
-        atcg::SurfaceInteraction si1 = ray.si1;
+        atcg::AnyInteraction si0  = ray.si0;
+        atcg::AnyInteraction si1_ = ray.si1;
 
-        auto [x0, x1] = CuDiff::make_variables<6>(si0->position, si1.position);
+        auto [x0, x1] = CuDiff::make_variables<6>(si0->position, si1_->position);
         auto distance = CuDiff::length(x1 - x0);
         auto w        = (x1 - x0) / CuDiff::max(distance, 1e-5f);
 
@@ -128,13 +128,10 @@ extern "C" __global__ void __raygen__forward()
         dsi.normal             = ray.last_normal;
         dsi.uv                 = ray.last_uv;
 
-        // glm::mat2x3 frame0 = glm::mat2x3(si0->reference_frame.localX(), si0->reference_frame.localY());
-        glm::mat2x3 frame1 = glm::mat2x3(si1.reference_frame.localX(), si1.reference_frame.localY());
-
-        // si is valid by contruction if(si.valid)
+        if(si1_.is_surface())
         {
+            si1 = si1_;
             // Check for light source
-            glm::vec3 Le(0.0f);
             atcg::mat6x3 JLe = atcg::mat6x3(0.0f);
             if(si1.emitter)
             {
@@ -144,7 +141,7 @@ extern "C" __global__ void __raygen__forward()
                     atcg::select(mis_valid, si1.emitter->evalLightSamplingPdf(si0, si1) * emitter_selection_pdf, 0.0f);
                 float mis_weight  = atcg::PowerHeuristic<1>::apply(si0->pdf, emitter_sampling_pdf);
                 auto light_result = si1.emitter->evalLightForward(dsi, wavelengths);
-                Le                = mis_weight * light_result.radiance_weight_at_receiver;
+                glm::vec3 Le      = mis_weight * light_result.radiance_weight_at_receiver;
 
                 if(params.diff_mode == atcg::DiffMode::FORWARD)
                 {
@@ -158,184 +155,187 @@ extern "C" __global__ void __raygen__forward()
                 JLe = light_result.dLe_dx0x1;
 
                 JLe = JLe * Jray;
+
+                if(params.diff_mode == atcg::DiffMode::FORWARD)
+                {
+                    ray.JL += atcg::diag(ray.throughput) * JLe + atcg::diag(Le) * Jb;
+                }
             }
+
+
+            // PBR Sampling
+            if(!si1.bsdf)
+            {
+                continue;
+            }
+
+            // Next-event estimation
+            do
+            {
+                if(params.num_emitters == 0) break;
+
+                uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+
+                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+
+                const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+
+                if(si1.emitter == emitter) break;
+
+                atcg::EmitterDualSamplingResult emitter_sampling = emitter->sampleLightForward(dsi, wavelengths, rng);
+
+                if(emitter_sampling.sampling_pdf == 0) break;
+
+                emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                emitter_sampling.radiance_weight_at_receiver =
+                    emitter_sampling.radiance_weight_at_receiver / emitter_selection_pdf;
+
+                bool occluded = traceOcclusion(params.handle,
+                                               si1.position,
+                                               emitter_sampling.direction_to_light,
+                                               1e-3f,
+                                               emitter_sampling.distance_to_light - 1e-3f,
+                                               params.occlusion_trace_params);
+
+                if(occluded)
+                {
+                    break;
+                }
+
+                atcg::BSDFDualEvalResult bsdf_result =
+                    si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
+
+                float bsdf_pdf   = atcg::select((int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
+                                                    (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0,
+                                                0.0f,
+                                                bsdf_result.sample_probability);
+                float mis_weight = atcg::PowerHeuristic<1>::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
+
+                glm::vec3 throughput_nee = ray.throughput * bsdf_result.bsdf_value;
+
+                glm::vec3 radiance_nee = mis_weight * throughput_nee * emitter_sampling.radiance_weight_at_receiver;
+
+                if(params.diff_mode == atcg::DiffMode::FORWARD)
+                {
+                    ray.radiance += radiance_nee;
+                }
+                else
+                {
+                    ray.radiance -= radiance_nee;
+                }
+
+                auto JLe_nee = emitter_sampling.dLe_dx0x1 / emitter_selection_pdf;
+
+                JLe_nee = JLe_nee * Jray;
+
+                auto Jbsdf_nee = bsdf_result.dbsdf_dx0x1;
+
+                Jbsdf_nee = Jbsdf_nee * Jray;
+
+                if(params.diff_mode == atcg::DiffMode::FORWARD)
+                {
+                    atcg::mat6x3 Jb_nee =
+                        atcg::diag(bsdf_result.bsdf_value) * Jb + atcg::diag(ray.throughput) * Jbsdf_nee;
+
+                    ray.JL += mis_weight * (atcg::diag(emitter_sampling.radiance_weight_at_receiver) * Jb_nee +
+                                            atcg::diag(throughput_nee) * JLe_nee);
+                }
+                else
+                {
+                    ray.JL -= (atcg::diag(radiance_nee / bsdf_result.bsdf_value) * Jbsdf_nee +
+                               mis_weight * atcg::diag(ray.throughput * bsdf_result.bsdf_value) * JLe_nee);
+
+                    glm::vec3 grad_out =
+                        (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) + 1e-4f);
+                    si1.bsdf->evalBSDFBackward(si1, emitter_sampling.direction_to_light.val(), grad_out);
+                }
+
+
+            } while(false);
+
+            auto rng_copy = rng;
+            auto result   = si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
+
+            if(result.sample_probability <= 0.0f)
+            {
+                continue;
+            }
+
+            atcg::DualSurfaceInteraction next_dsi;
+            next_dsi.incoming_position  = x1;
+            next_dsi.incoming_direction = result.out_dir;
+
+            atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
+                                                                     si1.position,
+                                                                     result.out_dir.val(),
+                                                                     0.001f,
+                                                                     1e16f,
+                                                                     &next_dsi,
+                                                                     params.dual_trace_params);
+
+            if(!next_dsi.isValid())
+            {
+                ray.valid = false;
+                continue;
+            }
+
+            auto Jray_ = next_dsi.dx1x2_dx0x1;
+
+            auto Jbsdf = result.dbsdf_dx0x1;
+
+
+            Jbsdf = Jbsdf * Jray;
+            Jray  = Jray_ * Jray;
+            Jray += atcg::mat6(0.01f * glm::sign(rng.nextFloat() - 0.5f));    // Regularization
 
             if(params.diff_mode == atcg::DiffMode::FORWARD)
             {
-                ray.JL += atcg::diag(ray.throughput) * JLe + atcg::diag(Le) * Jb;
+                Jb = atcg::diag(result.bsdf_weight) * Jb + atcg::diag(ray.throughput) * Jbsdf;
             }
-
-            // PBR Sampling
-            if(si1.bsdf)
+            else
             {
-                // Next-event estimation
-                do
-                {
-                    if(params.num_emitters == 0) break;
+                ray.JL -= (atcg::diag(ray.radiance / result.bsdf_weight) * Jbsdf + atcg::diag(ray.throughput) * JLe);
 
-                    uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+                glm::mat2x3 frame1 = glm::mat2x3(si1.reference_frame.localX(), si1.reference_frame.localY());
+                glm::mat2x3 frame2 = glm::mat2x3(next_dsi.reference_frame.localX(), next_dsi.reference_frame.localY());
 
-                    float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+                atcg::mat4x6 frame_ray_n = atcg::mat4x6(frame1, glm::mat2x3(0.0f), glm::mat2x3(0.0f), frame2);
 
-                    const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+                auto J_ray_uv = atcg::transpose(frame_ray_n) * (Jray * frame_ray_0);
 
-                    if(si1.emitter == emitter) break;
+                auto JL = ray.JL * frame_ray_0;
 
-                    atcg::EmitterDualSamplingResult emitter_sampling =
-                        emitter->sampleLightForward(dsi, wavelengths, rng);
+                auto Jrayinv             = glm::inverse(J_ray_uv);
+                glm::mat4x3 JL_          = JL * Jrayinv;    // dL/d(du1v1, du2v2)
+                glm::mat3x2 du2v2_dwo    = glm::transpose(frame2) * next_dsi.dxdw;
+                glm::mat3x4 du1v1u2v2_dw = glm::mat3x4(glm::vec4(glm::vec2(0), du2v2_dwo[0]),
+                                                       glm::vec4(glm::vec2(0), du2v2_dwo[1]),
+                                                       glm::vec4(glm::vec2(0), du2v2_dwo[2]));
 
-                    if(emitter_sampling.sampling_pdf == 0) break;
+                // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
+                // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
+                glm::vec3 dL_dbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight + 1e-4f);
+                glm::vec3 dL_dwo   = ray.delta_y * (JL_ * du1v1u2v2_dw);
 
-                    emitter_sampling.sampling_pdf *= emitter_selection_pdf;
-                    emitter_sampling.radiance_weight_at_receiver =
-                        emitter_sampling.radiance_weight_at_receiver / emitter_selection_pdf;
-
-                    bool occluded = traceOcclusion(params.handle,
-                                                   si1.position,
-                                                   emitter_sampling.direction_to_light,
-                                                   1e-3f,
-                                                   emitter_sampling.distance_to_light - 1e-3f,
-                                                   params.occlusion_trace_params);
-
-                    if(occluded)
-                    {
-                        break;
-                    }
-
-                    atcg::BSDFDualEvalResult bsdf_result =
-                        si1.bsdf->evalBSDFForward(dsi, emitter_sampling.direction_to_light, wavelengths);
-
-                    float bsdf_pdf = atcg::select((int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
-                                                      (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0,
-                                                  0.0f,
-                                                  bsdf_result.sample_probability);
-                    float mis_weight = atcg::PowerHeuristic<1>::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
-
-                    glm::vec3 throughput_nee = ray.throughput * bsdf_result.bsdf_value;
-
-                    glm::vec3 radiance_nee = mis_weight * throughput_nee * emitter_sampling.radiance_weight_at_receiver;
-
-                    if(params.diff_mode == atcg::DiffMode::FORWARD)
-                    {
-                        ray.radiance += radiance_nee;
-                    }
-                    else
-                    {
-                        ray.radiance -= radiance_nee;
-                    }
-
-                    auto JLe_nee = emitter_sampling.dLe_dx0x1 / emitter_selection_pdf;
-
-                    JLe_nee = JLe_nee * Jray;
-
-                    auto Jbsdf_nee = bsdf_result.dbsdf_dx0x1;
-
-                    Jbsdf_nee = Jbsdf_nee * Jray;
-
-                    if(params.diff_mode == atcg::DiffMode::FORWARD)
-                    {
-                        atcg::mat6x3 Jb_nee =
-                            atcg::diag(bsdf_result.bsdf_value) * Jb + atcg::diag(ray.throughput) * Jbsdf_nee;
-
-                        ray.JL += mis_weight * (atcg::diag(emitter_sampling.radiance_weight_at_receiver) * Jb_nee +
-                                                atcg::diag(throughput_nee) * JLe_nee);
-                    }
-                    else
-                    {
-                        ray.JL -= (atcg::diag(radiance_nee / bsdf_result.bsdf_value) * Jbsdf_nee +
-                                   mis_weight * atcg::diag(ray.throughput * bsdf_result.bsdf_value) * JLe_nee);
-
-                        glm::vec3 grad_out =
-                            (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) + 1e-4f);
-                        si1.bsdf->evalBSDFBackward(si1, emitter_sampling.direction_to_light.val(), grad_out);
-                    }
-
-
-                } while(false);
-
-                auto rng_copy = rng;
-                auto result   = si1.bsdf->sampleBSDFForward(dsi, wavelengths, rng);
-
-                if(result.sample_probability > 0.0f)
-                {
-                    atcg::DualSurfaceInteraction next_dsi;
-                    next_dsi.incoming_position  = x1;
-                    next_dsi.incoming_direction = result.out_dir;
-
-                    atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
-                                                                             si1.position,
-                                                                             result.out_dir.val(),
-                                                                             0.001f,
-                                                                             1e16f,
-                                                                             &next_dsi,
-                                                                             params.dual_trace_params);
-
-                    if(!next_dsi.isValid())
-                    {
-                        ray.valid = false;
-                        continue;
-                    }
-
-                    auto Jray_ = next_dsi.dx1x2_dx0x1;
-
-                    auto Jbsdf = result.dbsdf_dx0x1;
-
-
-                    Jbsdf = Jbsdf * Jray;
-                    Jray  = Jray_ * Jray;
-                    Jray += atcg::mat6(0.01f * glm::sign(rng.nextFloat() - 0.5f));    // Regularization
-
-                    if(params.diff_mode == atcg::DiffMode::FORWARD)
-                    {
-                        Jb = atcg::diag(result.bsdf_weight) * Jb + atcg::diag(ray.throughput) * Jbsdf;
-                    }
-                    else
-                    {
-                        ray.JL -=
-                            (atcg::diag(ray.radiance / result.bsdf_weight) * Jbsdf + atcg::diag(ray.throughput) * JLe);
-
-
-                        glm::mat2x3 frame2 =
-                            glm::mat2x3(next_dsi.reference_frame.localX(), next_dsi.reference_frame.localY());
-
-                        atcg::mat4x6 frame_ray_n = atcg::mat4x6(frame1, glm::mat2x3(0.0f), glm::mat2x3(0.0f), frame2);
-
-                        auto J_ray_uv = atcg::transpose(frame_ray_n) * (Jray * frame_ray_0);
-
-                        auto JL = ray.JL * frame_ray_0;
-
-                        auto Jrayinv             = glm::inverse(J_ray_uv);
-                        glm::mat4x3 JL_          = JL * Jrayinv;    // dL/d(du1v1, du2v2)
-                        glm::mat3x2 du2v2_dwo    = glm::transpose(frame2) * next_dsi.dxdw;
-                        glm::mat3x4 du1v1u2v2_dw = glm::mat3x4(glm::vec4(glm::vec2(0), du2v2_dwo[0]),
-                                                               glm::vec4(glm::vec2(0), du2v2_dwo[1]),
-                                                               glm::vec4(glm::vec2(0), du2v2_dwo[2]));
-
-                        // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
-                        // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
-                        glm::vec3 dL_dbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight + 1e-4f);
-                        glm::vec3 dL_dwo   = ray.delta_y * (JL_ * du1v1u2v2_dw);
-
-                        si1.bsdf->sampleBSDFBackward(si1, rng_copy, dL_dbsdf, dL_dwo);
-                    }
-
-                    si1.pdf = result.sample_probability;
-
-                    if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
-                    {
-                        si1.setInvalid();
-                    }
-
-                    ray.si0         = si1;
-                    ray.si1         = next_dsi.toSi();
-                    ray.last_normal = next_dsi.normal;
-                    ray.last_uv     = next_dsi.uv;
-
-                    ray.throughput *= result.bsdf_weight;
-                    ray.valid = next_dsi.isValid();
-                }
+                si1.bsdf->sampleBSDFBackward(si1, rng_copy, dL_dbsdf, dL_dwo);
             }
+
+            si1.pdf = result.sample_probability;
+
+            if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
+            {
+                si1.setInvalid();
+            }
+
+            ray.si0         = si1;
+            ray.si1         = next_dsi.toSi();
+            ray.last_normal = next_dsi.normal;
+            ray.last_uv     = next_dsi.uv;
+
+            ray.throughput *= result.bsdf_weight;
+            ray.valid = next_dsi.isValid();
         }
+
         // TODO
         // else
         // {
