@@ -84,6 +84,7 @@ struct DualSurfaceInteraction : public SurfaceInteraction
         si.position           = position.val();
         si.normal             = normal.val();
         si.uv                 = uv.val();
+        si.reference_frame    = reference_frame;
         si.incoming_direction = incoming_direction.val();
         si.incoming_distance  = incoming_distance.val();
         si.primitive_idx      = primitive_idx;
