@@ -276,9 +276,6 @@ extern "C" __global__ void __raygen__forward()
                         continue;
                     }
 
-                    glm::mat2x3 frame2 =
-                        glm::mat2x3(next_dsi.reference_frame.localX(), next_dsi.reference_frame.localY());
-
                     auto Jray_ = next_dsi.dx1x2_dx0x1;
 
                     auto Jbsdf = result.dbsdf_dx0x1;
@@ -298,25 +295,28 @@ extern "C" __global__ void __raygen__forward()
                             (atcg::diag(ray.radiance / result.bsdf_weight) * Jbsdf + atcg::diag(ray.throughput) * JLe);
 
 
+                        glm::mat2x3 frame2 =
+                            glm::mat2x3(next_dsi.reference_frame.localX(), next_dsi.reference_frame.localY());
+
                         atcg::mat4x6 frame_ray_n = atcg::mat4x6(frame1, glm::mat2x3(0.0f), glm::mat2x3(0.0f), frame2);
 
                         auto J_ray_uv = atcg::transpose(frame_ray_n) * (Jray * frame_ray_0);
 
                         auto JL = ray.JL * frame_ray_0;
 
-                        auto Jrayinv            = glm::inverse(J_ray_uv);
-                        glm::mat4x3 JL_         = JL * Jrayinv;    // dL/d(du1v1, du2v2)
-                        glm::mat3x2 du2v2dwo    = glm::transpose(frame2) * next_dsi.dxdw;
-                        glm::mat3x4 du1v1u2v2dw = glm::mat3x4(glm::vec4(glm::vec2(0), du2v2dwo[0]),
-                                                              glm::vec4(glm::vec2(0), du2v2dwo[1]),
-                                                              glm::vec4(glm::vec2(0), du2v2dwo[2]));
+                        auto Jrayinv             = glm::inverse(J_ray_uv);
+                        glm::mat4x3 JL_          = JL * Jrayinv;    // dL/d(du1v1, du2v2)
+                        glm::mat3x2 du2v2_dwo    = glm::transpose(frame2) * next_dsi.dxdw;
+                        glm::mat3x4 du1v1u2v2_dw = glm::mat3x4(glm::vec4(glm::vec2(0), du2v2_dwo[0]),
+                                                               glm::vec4(glm::vec2(0), du2v2_dwo[1]),
+                                                               glm::vec4(glm::vec2(0), du2v2_dwo[2]));
 
                         // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
                         // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
-                        glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight + 1e-4f);
-                        glm::vec3 dLdwo   = ray.delta_y * (JL_ * du1v1u2v2dw);
+                        glm::vec3 dL_dbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight + 1e-4f);
+                        glm::vec3 dL_dwo   = ray.delta_y * (JL_ * du1v1u2v2_dw);
 
-                        si1.bsdf->sampleBSDFBackward(si1, rng_copy, dLdbsdf, dLdwo);
+                        si1.bsdf->sampleBSDFBackward(si1, rng_copy, dL_dbsdf, dL_dwo);
                     }
 
                     si1.pdf = result.sample_probability;
