@@ -6,6 +6,7 @@
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include "DiffMode.h"
+#include <Math/mat6.h>
 
 namespace atcg
 {
@@ -15,7 +16,7 @@ struct AttachedDiffPathtracingParams
 
     glm::vec3* current_sample;
     glm::vec3* adjoint_y;
-    glm::mat4x3* JL_buffer;
+    atcg::mat6x3* JL_buffer;
 
     uint32_t image_width;
     uint32_t image_height;
