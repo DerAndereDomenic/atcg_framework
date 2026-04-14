@@ -134,7 +134,7 @@ extern "C" __global__ void __raygen__forward()
         // si is valid by contruction if(si.valid)
         {
             // Check for light source
-            CuDiff::Dual<6, glm::vec3> Le;
+            glm::vec3 Le(0.0f);
             atcg::mat6x3 JLe = atcg::mat6x3(0.0f);
             if(si1.emitter)
             {
@@ -142,29 +142,27 @@ extern "C" __global__ void __raygen__forward()
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
                     atcg::select(mis_valid, si1.emitter->evalLightSamplingPdf(si0, si1) * emitter_selection_pdf, 0.0f);
-                float mis_weight = atcg::PowerHeuristic<1>::apply(si0->pdf, emitter_sampling_pdf);
-                Le               = mis_weight * si1.emitter->evalLightForward(dsi, wavelengths);
+                float mis_weight  = atcg::PowerHeuristic<1>::apply(si0->pdf, emitter_sampling_pdf);
+                auto light_result = si1.emitter->evalLightForward(dsi, wavelengths);
+                Le                = mis_weight * light_result.radiance_weight_at_receiver;
 
                 if(params.diff_mode == atcg::DiffMode::FORWARD)
                 {
-                    ray.radiance += ray.throughput * Le.val();
+                    ray.radiance += ray.throughput * Le;
                 }
                 else
                 {
-                    ray.radiance -= ray.throughput * Le.val();
+                    ray.radiance -= ray.throughput * Le;
                 }
 
-                glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
-                glm::mat3 JLe_dx1 = glm::mat3(Le.derivative(3), Le.derivative(4), Le.derivative(5));
-
-                JLe = atcg::mat6x3(JLe_dx0, JLe_dx1);
+                JLe = light_result.dLe_dx0x1;
 
                 JLe = JLe * Jray;
             }
 
             if(params.diff_mode == atcg::DiffMode::FORWARD)
             {
-                ray.JL += atcg::diag(ray.throughput) * JLe + atcg::diag(Le.val()) * Jb;
+                ray.JL += atcg::diag(ray.throughput) * JLe + atcg::diag(Le) * Jb;
             }
 
             // PBR Sampling
@@ -183,7 +181,7 @@ extern "C" __global__ void __raygen__forward()
 
                     if(si1.emitter == emitter) break;
 
-                    atcg::DualEmitterSamplingResult emitter_sampling =
+                    atcg::EmitterDualSamplingResult emitter_sampling =
                         emitter->sampleLightForward(dsi, wavelengths, rng);
 
                     if(emitter_sampling.sampling_pdf == 0) break;
@@ -213,7 +211,7 @@ extern "C" __global__ void __raygen__forward()
                                                   bsdf_result.sample_probability);
                     float mis_weight = atcg::PowerHeuristic<1>::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
 
-                    glm::vec3 throughput_nee = ray.throughput * bsdf_result.bsdf_value.val();
+                    glm::vec3 throughput_nee = ray.throughput * bsdf_result.bsdf_value;
 
                     glm::vec3 radiance_nee = mis_weight * throughput_nee * emitter_sampling.radiance_weight_at_receiver;
 
@@ -226,39 +224,26 @@ extern "C" __global__ void __raygen__forward()
                         ray.radiance -= radiance_nee;
                     }
 
-                    // Update JL
-                    auto Le_nee           = emitter_sampling.radiance_weight_at_receiver;
-                    glm::mat3 JLe_nee_dx0 = glm::mat3(Le_nee.derivative(0), Le_nee.derivative(1), Le_nee.derivative(2));
-                    glm::mat3 JLe_nee_dx1 = glm::mat3(Le_nee.derivative(3), Le_nee.derivative(4), Le_nee.derivative(5));
-
-                    atcg::mat6x3 JLe_nee = atcg::mat6x3(JLe_nee_dx0, JLe_nee_dx1);
+                    auto JLe_nee = emitter_sampling.dLe_dx0x1 / emitter_selection_pdf;
 
                     JLe_nee = JLe_nee * Jray;
 
-                    glm::mat3 Jbsdf_dx0 = glm::mat3(bsdf_result.bsdf_value.derivative(0),
-                                                    bsdf_result.bsdf_value.derivative(1),
-                                                    bsdf_result.bsdf_value.derivative(2));
-                    glm::mat3 Jbsdf_dx1 = glm::mat3(bsdf_result.bsdf_value.derivative(3),
-                                                    bsdf_result.bsdf_value.derivative(4),
-                                                    bsdf_result.bsdf_value.derivative(5));
-
-                    atcg::mat6x3 Jbsdf_nee = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
+                    auto Jbsdf_nee = bsdf_result.dbsdf_dx0x1;
 
                     Jbsdf_nee = Jbsdf_nee * Jray;
 
                     if(params.diff_mode == atcg::DiffMode::FORWARD)
                     {
                         atcg::mat6x3 Jb_nee =
-                            atcg::diag(bsdf_result.bsdf_value.val()) * Jb + atcg::diag(ray.throughput) * Jbsdf_nee;
+                            atcg::diag(bsdf_result.bsdf_value) * Jb + atcg::diag(ray.throughput) * Jbsdf_nee;
 
-                        ray.JL +=
-                            mis_weight * (atcg::diag(emitter_sampling.radiance_weight_at_receiver.val()) * Jb_nee +
-                                          atcg::diag(throughput_nee) * JLe_nee);
+                        ray.JL += mis_weight * (atcg::diag(emitter_sampling.radiance_weight_at_receiver) * Jb_nee +
+                                                atcg::diag(throughput_nee) * JLe_nee);
                     }
                     else
                     {
-                        ray.JL -= (atcg::diag(radiance_nee / bsdf_result.bsdf_value.val()) * Jbsdf_nee +
-                                   mis_weight * atcg::diag(ray.throughput * bsdf_result.bsdf_value.val()) * JLe_nee);
+                        ray.JL -= (atcg::diag(radiance_nee / bsdf_result.bsdf_value) * Jbsdf_nee +
+                                   mis_weight * atcg::diag(ray.throughput * bsdf_result.bsdf_value) * JLe_nee);
 
                         glm::vec3 grad_out =
                             (ray.delta_y * (radiance_nee + 1e-4f)) / (glm::vec3(bsdf_result.bsdf_value) + 1e-4f);
@@ -274,7 +259,7 @@ extern "C" __global__ void __raygen__forward()
                 if(result.sample_probability > 0.0f)
                 {
                     atcg::DualSurfaceInteraction next_dsi;
-                    next_dsi.incoming_position  = dsi.position;
+                    next_dsi.incoming_position  = x1;
                     next_dsi.incoming_direction = result.out_dir;
 
                     atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
@@ -294,26 +279,9 @@ extern "C" __global__ void __raygen__forward()
                     glm::mat2x3 frame2 =
                         glm::mat2x3(next_dsi.reference_frame.localX(), next_dsi.reference_frame.localY());
 
-                    glm::mat3 dx1_dx0 = glm::mat3(0);
-                    glm::mat3 dx2_dx0 = glm::mat3(next_dsi.position.derivative(0),
-                                                  next_dsi.position.derivative(1),
-                                                  next_dsi.position.derivative(2));
-                    glm::mat3 dx1_dx1 = glm::mat3(1);
-                    glm::mat3 dx2_dx1 = glm::mat3(next_dsi.position.derivative(3),
-                                                  next_dsi.position.derivative(4),
-                                                  next_dsi.position.derivative(5));
+                    auto Jray_ = next_dsi.dx1x2_dx0x1;
 
-
-                    atcg::mat6 Jray_ = atcg::mat6(dx1_dx0, dx1_dx1, dx2_dx0, dx2_dx1);
-
-                    glm::mat3 Jbsdf_dx0 = glm::mat3(result.bsdf_weight.derivative(0),
-                                                    result.bsdf_weight.derivative(1),
-                                                    result.bsdf_weight.derivative(2));
-                    glm::mat3 Jbsdf_dx1 = glm::mat3(result.bsdf_weight.derivative(3),
-                                                    result.bsdf_weight.derivative(4),
-                                                    result.bsdf_weight.derivative(5));
-
-                    atcg::mat6x3 Jbsdf = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
+                    auto Jbsdf = result.dbsdf_dx0x1;
 
 
                     Jbsdf = Jbsdf * Jray;
@@ -322,12 +290,12 @@ extern "C" __global__ void __raygen__forward()
 
                     if(params.diff_mode == atcg::DiffMode::FORWARD)
                     {
-                        Jb = atcg::diag(result.bsdf_weight.val()) * Jb + atcg::diag(ray.throughput) * Jbsdf;
+                        Jb = atcg::diag(result.bsdf_weight) * Jb + atcg::diag(ray.throughput) * Jbsdf;
                     }
                     else
                     {
-                        ray.JL -= (atcg::diag(ray.radiance / result.bsdf_weight.val()) * Jbsdf +
-                                   atcg::diag(ray.throughput) * JLe);
+                        ray.JL -=
+                            (atcg::diag(ray.radiance / result.bsdf_weight) * Jbsdf + atcg::diag(ray.throughput) * JLe);
 
 
                         atcg::mat4x6 frame_ray_n = atcg::mat4x6(frame1, glm::mat2x3(0.0f), glm::mat2x3(0.0f), frame2);
@@ -345,7 +313,7 @@ extern "C" __global__ void __raygen__forward()
 
                         // 𝛿𝜋 += backward_grad(bsdf_value, 𝛿𝐿 ∗ 𝐿 / bsdf_value)
                         // = 1/pi * dL * L / (albedo / pi) = dL * L / albedo
-                        glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight.val() + 1e-4f);
+                        glm::vec3 dLdbsdf = (ray.delta_y * (ray.radiance + 1e-4f)) / (result.bsdf_weight + 1e-4f);
                         glm::vec3 dLdwo   = ray.delta_y * (JL_ * du1v1u2v2dw);
 
                         si1.bsdf->sampleBSDFBackward(si1, rng_copy, dLdbsdf, dLdwo);
@@ -363,7 +331,7 @@ extern "C" __global__ void __raygen__forward()
                     ray.last_normal = next_dsi.normal;
                     ray.last_uv     = next_dsi.uv;
 
-                    ray.throughput *= result.bsdf_weight.val();
+                    ray.throughput *= result.bsdf_weight;
                     ray.valid = next_dsi.isValid();
                 }
             }

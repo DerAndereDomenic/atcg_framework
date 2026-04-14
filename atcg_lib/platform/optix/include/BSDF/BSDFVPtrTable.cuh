@@ -6,6 +6,7 @@
 #include <BSDF/BSDFFlags.h>
 #include <Spectrum/SampledSpectrum.h>
 #include <optix.h>
+#include <Math/mat6.h>
 
 #include <CuDiff/Dual.h>
 
@@ -22,8 +23,9 @@ struct BSDFSamplingResult
 struct BSDFDualSamplingResult
 {
     CuDiff::Dual<6, glm::vec3> out_dir;
-    CuDiff::Dual<6, glm::vec3> bsdf_weight;
-    CuDiff::Dual<6, float> sample_probability;
+    glm::vec3 bsdf_weight;
+    float sample_probability;
+    atcg::mat6x3 dbsdf_dx0x1;
     BSDFComponentType flags = BSDFComponentType::Any;
 };
 
@@ -36,8 +38,9 @@ struct BSDFEvalResult
 
 struct BSDFDualEvalResult
 {
-    CuDiff::Dual<6, glm::vec3> bsdf_value;
+    glm::vec3 bsdf_value;
     float sample_probability;
+    atcg::mat6x3 dbsdf_dx0x1;
     BSDFComponentType flags = BSDFComponentType::Any;
 };
 

@@ -165,7 +165,7 @@ extern "C" __device__ float __direct_callable__evalpdf_environmentemitter(const 
     return detail::evalEnvironmentEmitterSamplingPdf(last_si, si);
 }
 
-extern "C" __device__ CuDiff::Dual<6, glm::vec3>
+extern "C" __device__ atcg::EmitterDualEvalResult
 __direct_callable__eval_dual_environmentemitter(const atcg::DualSurfaceInteraction& si,
                                                 const atcg::SampledWavelengths& wavelengths)
 {
@@ -183,5 +183,15 @@ __direct_callable__eval_dual_environmentemitter(const atcg::DualSurfaceInteracti
 
     CuDiff::Dual<6, glm::vec3> emissive_color = sbt_data->environment_texture.read(uv);
 
-    return emissive_color;
+    atcg::EmitterDualEvalResult result;
+    result.radiance_weight_at_receiver = emissive_color.val();
+
+    glm::mat3 JLe_dx0 =
+        glm::mat3(emissive_color.derivative(0), emissive_color.derivative(1), emissive_color.derivative(2));
+    glm::mat3 JLe_dx1 =
+        glm::mat3(emissive_color.derivative(3), emissive_color.derivative(4), emissive_color.derivative(5));
+
+    result.dLe_dx0x1 = atcg::mat6x3(JLe_dx0, JLe_dx1);
+
+    return result;
 }

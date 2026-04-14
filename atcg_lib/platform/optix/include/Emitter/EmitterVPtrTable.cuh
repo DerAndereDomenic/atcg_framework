@@ -6,6 +6,7 @@
 #include <Emitter/EmitterFlags.h>
 #include <Spectrum/SampledSpectrum.h>
 #include <CuDiff/CuDiff.h>
+#include <Math/mat6.h>
 
 #include <optix.h>
 
@@ -21,12 +22,19 @@ struct EmitterSamplingResult
     glm::vec3 uvs;
 };
 
-struct DualEmitterSamplingResult
+struct EmitterDualSamplingResult
 {
     CuDiff::Dual<6, glm::vec3> direction_to_light;
     float distance_to_light;
-    CuDiff::Dual<6, glm::vec3> radiance_weight_at_receiver;
+    glm::vec3 radiance_weight_at_receiver;
+    atcg::mat6x3 dLe_dx0x1;
     float sampling_pdf;
+};
+
+struct EmitterDualEvalResult
+{
+    glm::vec3 radiance_weight_at_receiver;
+    atcg::mat6x3 dLe_dx0x1;
 };
 
 struct PhotonSamplingResult
@@ -70,12 +78,13 @@ struct EmitterVPtrTable
             wavelengths);
     }
 
-    __device__ CuDiff::Dual<6, glm::vec3> evalLightForward(const DualSurfaceInteraction& si,
-                                                           const atcg::SampledWavelengths& wavelengths) const
+    __device__ EmitterDualEvalResult evalLightForward(const DualSurfaceInteraction& si,
+                                                      const atcg::SampledWavelengths& wavelengths) const
     {
-        return optixDirectCall<CuDiff::Dual<6, glm::vec3>,
-                               const DualSurfaceInteraction&,
-                               const atcg::SampledWavelengths&>(evalForwardCallIndex, si, wavelengths);
+        return optixDirectCall<EmitterDualEvalResult, const DualSurfaceInteraction&, const atcg::SampledWavelengths&>(
+            evalForwardCallIndex,
+            si,
+            wavelengths);
     }
 
     __device__ EmitterSamplingResult sampleLight(const AnyInteraction& si,
@@ -89,11 +98,11 @@ struct EmitterVPtrTable
             rng);
     }
 
-    __device__ DualEmitterSamplingResult sampleLightForward(const DualSurfaceInteraction& si,
+    __device__ EmitterDualSamplingResult sampleLightForward(const DualSurfaceInteraction& si,
                                                             const atcg::SampledWavelengths& wavelengths,
                                                             PCG32& rng) const
     {
-        return optixDirectCall<DualEmitterSamplingResult,
+        return optixDirectCall<EmitterDualSamplingResult,
                                const DualSurfaceInteraction&,
                                const atcg::SampledWavelengths&,
                                PCG32&>(sampleForwardCallIndex, si, wavelengths, rng);

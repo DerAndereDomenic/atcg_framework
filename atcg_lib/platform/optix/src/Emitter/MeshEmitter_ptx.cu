@@ -152,15 +152,15 @@ __direct_callable__sample_meshemitter(const atcg::AnyInteraction& si,
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
     atcg::EmitterSamplingResult result    = detail::sampleMeshEmitter(si,
-                                                                   sbt_data->mesh_cdf,
-                                                                   sbt_data->positions,
-                                                                   sbt_data->uvs,
-                                                                   sbt_data->faces,
-                                                                   sbt_data->num_faces,
-                                                                   sbt_data->total_area,
-                                                                   sbt_data->local_to_world,
-                                                                   sbt_data->world_to_local,
-                                                                   rng);
+                                                                      sbt_data->mesh_cdf,
+                                                                      sbt_data->positions,
+                                                                      sbt_data->uvs,
+                                                                      sbt_data->faces,
+                                                                      sbt_data->num_faces,
+                                                                      sbt_data->total_area,
+                                                                      sbt_data->local_to_world,
+                                                                      sbt_data->world_to_local,
+                                                                      rng);
 
     glm::vec3 emissive_color = sbt_data->emissive_texture.read(glm::vec2(result.uvs));
 
@@ -180,7 +180,7 @@ __direct_callable__eval_meshemitter(const atcg::SurfaceInteraction& si, const at
     return atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling * emissive_color, wavelengths);
 }
 
-extern "C" __device__ CuDiff::Dual<6, glm::vec3>
+extern "C" __device__ atcg::EmitterDualEvalResult
 __direct_callable__eval_forward_meshemitter(const atcg::DualSurfaceInteraction& si,
                                             const atcg::SampledWavelengths& wavelengths)
 {
@@ -188,17 +188,26 @@ __direct_callable__eval_forward_meshemitter(const atcg::DualSurfaceInteraction& 
 
     CuDiff::Dual<6, glm::vec3> emissive_color = sbt_data->emissive_texture.read(si.uv);
 
-    return emissive_color * sbt_data->emitter_scaling;
+    auto Le = emissive_color * sbt_data->emitter_scaling;
+
+    atcg::EmitterDualEvalResult result;
+    result.radiance_weight_at_receiver = Le.val();
+
+    glm::mat3 JLe_dx0 = glm::mat3(Le.derivative(0), Le.derivative(1), Le.derivative(2));
+    glm::mat3 JLe_dx1 = glm::mat3(Le.derivative(3), Le.derivative(4), Le.derivative(5));
+
+    result.dLe_dx0x1 = atcg::mat6x3(JLe_dx0, JLe_dx1);
+    return result;
 }
 
-extern "C" __device__ atcg::DualEmitterSamplingResult
+extern "C" __device__ atcg::EmitterDualSamplingResult
 __direct_callable__sample_forward_meshemitter(const atcg::DualSurfaceInteraction& si,
                                               const atcg::SampledWavelengths& wavelengths,
                                               atcg::PCG32& rng)
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
 
-    atcg::DualEmitterSamplingResult result;
+    atcg::EmitterDualSamplingResult result;
 
     const float* mesh_cdf          = sbt_data->mesh_cdf;
     const glm::vec3* positions     = sbt_data->positions;
@@ -268,7 +277,18 @@ __direct_callable__sample_forward_meshemitter(const atcg::DualSurfaceInteraction
 
     auto emissive_color = sbt_data->emissive_texture.read(uv);
 
-    result.radiance_weight_at_receiver = sbt_data->emitter_scaling * emissive_color * one_over_light_direction_pdf;
+    auto radiance_weight_at_receiver = sbt_data->emitter_scaling * emissive_color * one_over_light_direction_pdf;
+
+    result.radiance_weight_at_receiver = radiance_weight_at_receiver.val();
+
+    glm::mat3 JLe_nee_dx0 = glm::mat3(radiance_weight_at_receiver.derivative(0),
+                                      radiance_weight_at_receiver.derivative(1),
+                                      radiance_weight_at_receiver.derivative(2));
+    glm::mat3 JLe_nee_dx1 = glm::mat3(radiance_weight_at_receiver.derivative(3),
+                                      radiance_weight_at_receiver.derivative(4),
+                                      radiance_weight_at_receiver.derivative(5));
+
+    result.dLe_dx0x1 = atcg::mat6x3(JLe_nee_dx0, JLe_nee_dx1);
 
     return result;
 }

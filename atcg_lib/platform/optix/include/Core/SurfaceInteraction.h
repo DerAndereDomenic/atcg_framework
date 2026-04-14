@@ -5,6 +5,7 @@
 #include <Core/Platform.h>
 #include <Core/CUDA.h>
 #include <DataStructure/Frame.h>
+#include <Math/mat6.h>
 
 namespace atcg
 {
@@ -70,6 +71,7 @@ struct DualSurfaceInteraction : public SurfaceInteraction
     CuDiff::Dual<6, glm::vec3> normal;
     CuDiff::Dual<6, glm::vec2> uv;
     CuDiff::Dual<6, float> incoming_distance;
+    atcg::mat6 dx1x2_dx0x1;
     glm::mat3 dxdw;
 
     // Input

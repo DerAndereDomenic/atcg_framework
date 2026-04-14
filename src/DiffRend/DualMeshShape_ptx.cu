@@ -96,4 +96,11 @@ extern "C" __global__ void __closesthit__dual_mesh()
 
     si->dxdw = tmax.val() * glm::mat3(1.0f) -
                tmax.val() / glm::dot(geometry_normal, wi.val()) * (glm::outerProduct(wi.val(), geometry_normal));
+
+    glm::mat3 dx1_dx0 = glm::mat3(0);
+    glm::mat3 dx2_dx0 = glm::mat3(xo.derivative(0), xo.derivative(1), xo.derivative(2));
+    glm::mat3 dx1_dx1 = glm::mat3(1);
+    glm::mat3 dx2_dx1 = glm::mat3(xo.derivative(3), xo.derivative(4), xo.derivative(5));
+
+    si->dx1x2_dx0x1 = atcg::mat6(dx1_dx0, dx1_dx1, dx2_dx0, dx2_dx1);
 }

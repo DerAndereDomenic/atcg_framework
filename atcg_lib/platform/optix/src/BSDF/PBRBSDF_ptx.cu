@@ -339,12 +339,20 @@ __direct_callable__sample_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si
         specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
     }
 
-    result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
-    result.bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (result.sample_probability + 1e-5f);
+    auto sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
+    auto bsdf_weight        = (specular_bsdf + kD * diffuse_bsdf) * NdotL / (sample_probability + 1e-5f);
+
+    result.sample_probability = sample_probability.val();
+    result.bsdf_weight        = bsdf_weight.val();
 
     result.flags =
         (roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection
                            : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
+
+    glm::mat3 Jbsdf_dx0 = glm::mat3(bsdf_weight.derivative(0), bsdf_weight.derivative(1), bsdf_weight.derivative(2));
+    glm::mat3 Jbsdf_dx1 = glm::mat3(bsdf_weight.derivative(3), bsdf_weight.derivative(4), bsdf_weight.derivative(5));
+
+    result.dbsdf_dx0x1 = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
 
     return result;
 }
@@ -406,11 +414,18 @@ __direct_callable__eval_forward_pbrbsdf(const atcg::DualSurfaceInteraction& si,
             H.val());
     float specular_pdf = halfway_pdf * halfway_to_outgoing_pdf;
 
-    result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
+    auto bsdf_value = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
+
+    result.bsdf_value         = bsdf_value.val();
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.flags =
         (roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection
                            : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
+
+    glm::mat3 Jbsdf_dx0 = glm::mat3(bsdf_value.derivative(0), bsdf_value.derivative(1), bsdf_value.derivative(2));
+    glm::mat3 Jbsdf_dx1 = glm::mat3(bsdf_value.derivative(3), bsdf_value.derivative(4), bsdf_value.derivative(5));
+
+    result.dbsdf_dx0x1 = atcg::mat6x3(Jbsdf_dx0, Jbsdf_dx1);
 
     return result;
 }
