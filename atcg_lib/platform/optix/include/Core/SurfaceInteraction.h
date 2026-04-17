@@ -93,9 +93,22 @@ struct DualSurfaceInteraction : public SurfaceInteraction
         si.emitter            = emitter;
         si.inside_medium      = inside_medium;
         si.outside_medium     = outside_medium;
+        si.pdf                = pdf;
         si.color              = glm::vec3(1);    // TODO
 
         return si;
+    }
+
+    ATCG_DEVICE ATCG_INLINE MediumInteraction toMi() const
+    {
+        MediumInteraction mi;
+        mi.position           = position.val();
+        mi.incoming_direction = incoming_direction.val();
+        mi.reference_frame    = reference_frame;
+        mi.incoming_distance  = incoming_distance.val();
+        mi.pdf                = pdf;
+
+        return mi;
     }
 
     ATCG_INLINE ATCG_HOST_DEVICE bool isValid() const { return !glm::isnan(incoming_distance.val()); }
