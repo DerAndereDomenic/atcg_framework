@@ -138,11 +138,19 @@ __direct_callable__homogeneousMedium_sampleMediumEventForward(const CuDiff::Dual
         // Medium event!
         // The sampling succeeded and a scattering event was found at the given distance
         result.interaction.incoming_distance = CuDiff::Dual<6, float>(sampled_distance);
+        result.interaction.position          = origin + result.interaction.incoming_distance * direction;
+        result.transmittance_weight          = CuDiff::Dual<6, glm::vec3>(albedo);
 
-        result.interaction.position = origin + result.interaction.incoming_distance * direction;
+        glm::mat3 dx1_dx0 = glm::mat3(0);
+        glm::mat3 dx2_dx0 = glm::mat3(result.interaction.position.derivative(0),
+                                      result.interaction.position.derivative(1),
+                                      result.interaction.position.derivative(2));
+        glm::mat3 dx1_dx1 = glm::mat3(1);
+        glm::mat3 dx2_dx1 = glm::mat3(result.interaction.position.derivative(3),
+                                      result.interaction.position.derivative(4),
+                                      result.interaction.position.derivative(5));
 
-
-        result.transmittance_weight = CuDiff::Dual<6, glm::vec3>(albedo);
+        result.interaction.dx1x2_dx0x1 = atcg::mat6(dx1_dx0, dx1_dx1, dx2_dx0, dx2_dx1);
     }
     else
     {
