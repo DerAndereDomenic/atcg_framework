@@ -198,7 +198,17 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
         py::class_<atcg::AssetManagerSystem, atcg::ref_ptr<atcg::AssetManagerSystem>>(m, "AssetManagerSystem");          \
     auto m_asset_manager = m.def_submodule("AssetManager");                                                              \
     auto m_asset_panel   = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");     \
-    auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project");
+    auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project")
+
+#define ATCG_CUDA_DEFINE_MODULES(m)                                                                                    \
+    auto m_raytracing_context_manager = m.def_submodule("RaytracingContextManager");                                   \
+    auto m_raytracing_context =                                                                                        \
+        py::class_<atcg::RaytracingContext, atcg::ref_ptr<atcg::RaytracingContext>>(m, "RaytracingContext");           \
+    auto m_path_integrator =                                                                                           \
+        py::class_<atcg::PathtracingIntegrator, atcg::ref_ptr<atcg::PathtracingIntegrator>>(m, "PathIntegrator");      \
+    auto m_volpath_integrator =                                                                                        \
+        py::class_<atcg::VolPathtracingIntegrator, atcg::ref_ptr<atcg::VolPathtracingIntegrator>>(m,                   \
+                                                                                                  "VolPathIntegrator")
 
 inline void defineBindings(py::module_& m)
 {
@@ -213,7 +223,12 @@ inline void defineBindings(py::module_& m)
     )pbdoc";
 
     // ---------------- CORE ---------------------
-    ATCG_DEFINE_MODULES(m)
+    ATCG_DEFINE_MODULES(m);
+
+#ifdef ATCG_CUDA_BACKEND
+    ATCG_CUDA_DEFINE_MODULES(m);
+#endif
+
 #ifndef ATCG_HEADLESS
     auto m_imgui            = m.def_submodule("ImGui");
     auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
@@ -253,7 +268,8 @@ inline void defineBindings(py::module_& m)
     m.def("shader_directory", []() { return atcg::shader_directory().string(); });
     m.def("resource_directory", []() { return atcg::resource_directory().string(); });
 
-    m_application.def(py::init<atcg::Layer*>())
+    m_application.def(py::init())
+        .def(py::init<atcg::Layer*>())
         .def(py::init<atcg::WindowProps>())
         .def(py::init<atcg::Layer*, atcg::WindowProps>())
         .def("run", &atcg::Application::run);
@@ -1442,7 +1458,9 @@ inline void defineBindings(py::module_& m)
             [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) { scene->removeEntity(entity); },
             "entity"_a)
         .def("removeAllEntities", &atcg::Scene::removeAllEntites)
-        .def("setCamera", &atcg::Scene::setCamera)
+        .def("setCamera",
+             [](const atcg::ref_ptr<atcg::Scene>& self, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+             { self->setCamera(camera); })
         .def("getCamera", &atcg::Scene::getCamera)
         .def("removeCamera", &atcg::Scene::removeCamera)
         .def(
@@ -1471,6 +1489,15 @@ inline void defineBindings(py::module_& m)
                 scene->draw(context);
             },
             "camera"_a,
+            "target"_a)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
+            {
+                atcg::Dictionary context;
+                context.setValue("target", framebuffer);
+                scene->draw(context);
+            },
             "target"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
@@ -1693,6 +1720,53 @@ inline void defineBindings(py::module_& m)
     m.def("handleScriptEvents", &atcg::Scripting::handleScriptEvents);
     m.def("handleScriptUpdates", &atcg::Scripting::handleScriptUpdates);
 
+    // ------------------- Pathtracing ---------------------------------
+    m_raytracing_context_manager.def("createContext", &atcg::RaytracingContextManager::createContext)
+        .def("destroyContext", &atcg::RaytracingContextManager::destroyContext);
+    m_path_integrator
+        .def(py::init(
+            [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const uint32_t width,
+               const uint32_t height)
+            {
+                atcg::Dictionary dict;
+                dict.setValue("scene", scene);
+                dict.setValue("width", width);
+                dict.setValue("height", height);
+                atcg::ref_ptr<atcg::PathtracingIntegrator> integrator =
+                    atcg::make_ref<atcg::PathtracingIntegrator>(context, dict);
+                return integrator;
+            }))
+        .def("generateRays",
+             [](const atcg::ref_ptr<atcg::PathtracingIntegrator>& self)
+             {
+                 atcg::Dictionary dict;
+                 self->generateRays(dict);
+                 return dict.getValue<torch::Tensor>("output");
+             });
+    m_volpath_integrator
+        .def(py::init(
+            [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const uint32_t width,
+               const uint32_t height)
+            {
+                atcg::Dictionary dict;
+                dict.setValue("scene", scene);
+                dict.setValue("width", width);
+                dict.setValue("height", height);
+                atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator =
+                    atcg::make_ref<atcg::VolPathtracingIntegrator>(context, dict);
+                return integrator;
+            }))
+        .def("generateRays",
+             [](const atcg::ref_ptr<atcg::VolPathtracingIntegrator>& self)
+             {
+                 atcg::Dictionary dict;
+                 self->generateRays(dict);
+                 return dict.getValue<torch::Tensor>("output");
+             });
     // IMGUI BINDINGS
 
 #ifndef ATCG_HEADLESS
