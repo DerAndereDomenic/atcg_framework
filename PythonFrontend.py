@@ -6,7 +6,7 @@ import numpy as np
 import os
 
 os.environ["ATCG_BUILD_TYPE"] = "RelWithDebInfo"
-os.environ["ATCG_CUDA_BACKEND"] = "Off"
+os.environ["ATCG_CUDA_BACKEND"] = "On"
 
 import pyatcg as atcg
 

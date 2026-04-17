@@ -11,6 +11,9 @@ namespace atcg
 
 namespace detail
 {
+// This maps egl handles to our custom context handles
+static std::unordered_map<uint64_t, uint64_t> context_map;
+
 static EGLDeviceEXT getDeviceFromIndex(const int device_id)
 {
     PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT = (PFNEGLQUERYDEVICESEXTPROC)eglGetProcAddress("eglQueryDevicesEX"
