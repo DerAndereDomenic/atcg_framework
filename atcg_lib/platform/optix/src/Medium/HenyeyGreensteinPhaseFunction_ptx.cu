@@ -69,10 +69,11 @@ __direct_callable__sample_hgphase_forward(const atcg::DualSurfaceInteraction& in
 
     atcg::DualPhaseFunctionSamplingResult result;
     result.outgoing_ray_dir = local_frame.toWorld(local_outgoing_ray_dir);
-    result.sampling_pdf     = CuDiff::Dual<6, float>(sampling_strategy.pdf(local_outgoing_ray_dir.z));
+    result.sampling_pdf     = sampling_strategy.pdf(local_outgoing_ray_dir.z);
     // result.phase_function_weight = glm::vec3(henyey_greenstein_phase_function(local_outgoing_ray_dir.z, sbt_data->g))
     // / result.sampling_pdf;
-    result.phase_function_weight = CuDiff::Dual<6, float>(1.0f);
+    result.phase_function_weight = 1.0f;
+    result.dweight_dx0x1         = atcg::mat6x3(0.0f);
 
     return result;
 }

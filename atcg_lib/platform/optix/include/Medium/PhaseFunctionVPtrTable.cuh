@@ -5,6 +5,7 @@
 #include <Math/Random.h>
 #include <optix.h>
 #include <CuDiff/ext/glm.h>
+#include <Math/mat6.h>
 
 namespace atcg
 {
@@ -18,8 +19,9 @@ struct PhaseFunctionSamplingResult
 struct DualPhaseFunctionSamplingResult
 {
     CuDiff::Dual<6, glm::vec3> outgoing_ray_dir;
-    CuDiff::Dual<6, float> phase_function_weight;
-    CuDiff::Dual<6, float> sampling_pdf;
+    float phase_function_weight;
+    float sampling_pdf;
+    atcg::mat6x3 dweight_dx0x1;
 };
 
 struct PhaseFunctionEvalResult
