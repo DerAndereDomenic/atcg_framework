@@ -251,6 +251,105 @@ extern "C" __global__ void __raygen__forward()
 
             } while(false);
         }
+        else
+        {
+            // Nee for volumes
+            atcg::MediumInteraction& mi = si1_;
+
+            // NEE
+            do
+            {
+                if(params.num_emitters == 0) break;
+
+                uint32_t emitter_index = rng.nextUint32() % params.num_emitters;
+
+                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
+
+                const atcg::EmitterVPtrTable* emitter = params.emitters[emitter_index];
+
+                atcg::EmitterSamplingResult emitter_sampling = emitter->sampleLight(mi, wavelengths, rng);
+
+                if(emitter_sampling.sampling_pdf == 0)
+                {
+                    break;
+                }
+                emitter_sampling.sampling_pdf *= emitter_selection_pdf;
+                emitter_sampling.radiance_weight_at_receiver /= emitter_selection_pdf;
+
+                atcg::SurfaceInteraction si_dummy;
+                atcg::traceWithDataPointer<atcg::SurfaceInteraction>(params.handle,
+                                                                     mi.position,
+                                                                     emitter_sampling.direction_to_light,
+                                                                     0.0f,
+                                                                     1e16f,
+                                                                     &si_dummy,
+                                                                     params.surface_trace_params);
+
+                if(!si_dummy.isValid())
+                {
+                    // Should not happen because we are inside the geometry
+                    break;
+                }
+
+                if(!si_dummy.bsdf || (int)(si_dummy.bsdf->flags & atcg::BSDFComponentType::NullTransmission) == 0)
+                {
+                    break;
+                }
+
+                bool occluded = traceOcclusion(params.handle,
+                                               si_dummy.position,
+                                               emitter_sampling.direction_to_light,
+                                               1e-3f,
+                                               emitter_sampling.distance_to_light - si_dummy.incoming_distance - 1e-3f,
+                                               params.occlusion_trace_params);
+
+                if(occluded)
+                {
+                    break;
+                }
+
+                float transmittance_to_light =
+                    ray.current_medium->evalTransmittance(mi.position,
+                                                          emitter_sampling.direction_to_light,
+                                                          si_dummy.incoming_distance,
+                                                          rng);
+
+                auto phase_result =
+                    ray.current_medium->phase_function->evalPhaseFunction(mi, emitter_sampling.direction_to_light);
+                float phase_pdf    = phase_result.sampling_pdf;
+                float sampling_pdf = atcg::select((int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0,
+                                                  0.0f,
+                                                  phase_pdf);    // * transmittance_to_light;
+
+                float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, sampling_pdf);
+
+                glm::vec3 radiance_nee = mis_weight * ray.throughput * transmittance_to_light *
+                                         phase_result.phase_function_value *
+                                         emitter_sampling.radiance_weight_at_receiver;
+
+                if(params.diff_mode == atcg::DiffMode::FORWARD)
+                {
+                    ray.radiance += radiance_nee;
+                }
+                else
+                {
+                    // TODO
+                    // glm::vec3 grad_out = ray.delta_y * radiance_nee;
+
+                    // ray.current_medium->evalTransmittanceBackward(mi.position,
+                    //                                               emitter_sampling.direction_to_light,
+                    //                                               si_dummy.incoming_distance,
+                    //                                               rng_copy,
+                    //                                               grad_out);
+
+                    // ray.current_medium->phase_function->evalPhaseFunctionBackward(mi,
+                    //                                                               emitter_sampling.direction_to_light,
+                    //                                                               grad_out);
+
+                    ray.radiance -= radiance_nee;
+                }
+            } while(false);
+        }
 
         // Sample new direction
         CuDiff::Dual<6, glm::vec3> out_dir;
@@ -284,10 +383,14 @@ extern "C" __global__ void __raygen__forward()
                 ray.current_medium = cos_theta_next_ray < 0 ? si1.inside_medium : si1.outside_medium;
             }
 
-
-            if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
+            if((int)(result.flags & atcg::BSDFComponentType::NullTransmission) == 0)
             {
-                si1_->setInvalid();
+                si1.pdf = sample_probability;
+
+                if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
+                {
+                    si1_->setInvalid();
+                }
             }
         }
         else
@@ -299,6 +402,8 @@ extern "C" __global__ void __raygen__forward()
             out_dir            = result.outgoing_ray_dir;
             throughput_weight  = glm::vec3(result.phase_function_weight);
             dweight_dx0x1      = result.dweight_dx0x1;
+
+            si1_->pdf = sample_probability;
         }
 
         if(sample_probability <= 0.0f)
@@ -408,14 +513,6 @@ extern "C" __global__ void __raygen__forward()
         {
             // Our current interaction is from a medium
         }
-
-        si1_->pdf = sample_probability;
-
-        // TODO
-        // if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
-        // {
-        //     si1.setInvalid();
-        // }
 
         ray.si0         = si1_;
         ray.si1         = next_si;
