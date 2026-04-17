@@ -389,7 +389,7 @@ extern "C" __global__ void __raygen__forward()
                 // Check if we are entering the geometry or leaving the geometry and assign si.inside_medium or
                 // si.outside_medium, respectively.
                 float cos_theta_curr_ray = glm::dot(si.normal, si.incoming_direction);
-                float cos_theta_next_ray = glm::dot(si.normal, ray.direction);
+                float cos_theta_next_ray = glm::dot(si.normal, next_dir);
                 // Only change the medium if we have a transmission...
                 if(cos_theta_curr_ray * cos_theta_next_ray > 0)
                 {

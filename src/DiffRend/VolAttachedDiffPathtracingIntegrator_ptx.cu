@@ -36,7 +36,7 @@ struct RayContext
     glm::vec3 delta_y;
     atcg::mat6x3 JL;
 
-    atcg::MediumVPtrTable* current_medium = nullptr;
+    const atcg::MediumVPtrTable* current_medium = nullptr;
 };
 
 extern "C" __global__ void __raygen__forward()
@@ -273,6 +273,17 @@ extern "C" __global__ void __raygen__forward()
             out_dir            = result.out_dir;
             throughput_weight  = result.bsdf_weight;
             dweight_dx0x1      = result.dbsdf_dx0x1;
+
+            // Medium transition
+            float cos_theta_curr_ray = glm::dot(si1.normal, si1.incoming_direction);
+            float cos_theta_next_ray = glm::dot(si1.normal, out_dir.val());
+
+            // Only change the medium if we have a transmission...
+            if(cos_theta_curr_ray * cos_theta_next_ray > 0)
+            {
+                ray.current_medium = cos_theta_next_ray < 0 ? si1.inside_medium : si1.outside_medium;
+            }
+
 
             if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
             {
