@@ -149,6 +149,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_texture_cube  = py::class_<atcg::TextureCube, atcg::ref_ptr<atcg::TextureCube>>(m, "TextureCube");            \
     auto m_framebuffer   = py::class_<atcg::Framebuffer, atcg::ref_ptr<atcg::Framebuffer>>(m, "Framebuffer");            \
     auto m_entity_handle = py::class_<entt::entity>(m, "EntityHandle");                                                  \
+    auto m_material_type = py::enum_<atcg::MaterialType>(m, "MaterialType");                                             \
     auto m_material      = py::class_<atcg::Material, atcg::Asset, atcg::ref_ptr<atcg::Material>>(m, "Material");        \
     auto m_opaque_material =                                                                                             \
         py::class_<atcg::OpaqueMaterial, atcg::Material, atcg::ref_ptr<atcg::OpaqueMaterial>>(m, "OpaqueMaterial");      \
@@ -1137,6 +1138,34 @@ inline void defineBindings(py::module_& m)
 
     // ------------------- Scene ---------------------------------
     m_entity_handle.def(py::init<uint32_t>(), "handle"_a);
+
+    m_material_type.value("MATERIAL_TYPE_OPAQUE", atcg::MaterialType::MATERIAL_TYPE_OPAQUE)
+        .value("MATERIAL_TYPE_DIELECTRIC", atcg::MaterialType::MATERIAL_TYPE_DIELECTRIC)
+        .value("MATERIAL_TYPE_NULL", atcg::MaterialType::MATERIAL_TYPE_NULL);
+
+    m_material
+        .def("asOpaque",
+             [](const atcg::ref_ptr<atcg::Material>& self)
+             {
+                 auto ptr = std::dynamic_pointer_cast<atcg::OpaqueMaterial>(self);
+                 if(!ptr) throw std::runtime_error("Not an OpaqueMaterial");
+                 return ptr;
+             })
+        .def("asDielectric",
+             [](const atcg::ref_ptr<atcg::Material>& self)
+             {
+                 auto ptr = std::dynamic_pointer_cast<atcg::DielectricMaterial>(self);
+                 if(!ptr) throw std::runtime_error("Not a DielectricMaterial");
+                 return ptr;
+             })
+        .def("asNull",
+             [](const atcg::ref_ptr<atcg::Material>& self)
+             {
+                 auto ptr = std::dynamic_pointer_cast<atcg::NullMaterial>(self);
+                 if(!ptr) throw std::runtime_error("Not a NullMaterial");
+                 return ptr;
+             })
+        .def("getMaterialType", &atcg::Material::getMaterialType);
 
     m_opaque_material.def(py::init<>())
         .def("getDiffuseTexture", &atcg::OpaqueMaterial::getDiffuseTexture)
