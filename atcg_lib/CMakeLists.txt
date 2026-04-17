@@ -70,6 +70,7 @@ if(ATCG_CUDA_BACKEND)
     add_ptx_module(atcg "${ptx_files}")
     set(ptx_target "atcg_ptxmodules")
     add_dependencies(atcg_lib ${ptx_target} ${ptx_target}-copy)
+    target_compile_options(${ptx_target} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 endif()
 
 target_sources(atcg_lib PRIVATE ${atcg_lib_files} 
