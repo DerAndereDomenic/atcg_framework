@@ -149,6 +149,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_texture_cube  = py::class_<atcg::TextureCube, atcg::ref_ptr<atcg::TextureCube>>(m, "TextureCube");            \
     auto m_framebuffer   = py::class_<atcg::Framebuffer, atcg::ref_ptr<atcg::Framebuffer>>(m, "Framebuffer");            \
     auto m_entity_handle = py::class_<entt::entity>(m, "EntityHandle");                                                  \
+    auto m_material_type = py::enum_<atcg::MaterialType>(m, "MaterialType");                                             \
     auto m_material      = py::class_<atcg::Material, atcg::Asset, atcg::ref_ptr<atcg::Material>>(m, "Material");        \
     auto m_opaque_material =                                                                                             \
         py::class_<atcg::OpaqueMaterial, atcg::Material, atcg::ref_ptr<atcg::OpaqueMaterial>>(m, "OpaqueMaterial");      \
@@ -197,7 +198,17 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
         py::class_<atcg::AssetManagerSystem, atcg::ref_ptr<atcg::AssetManagerSystem>>(m, "AssetManagerSystem");          \
     auto m_asset_manager = m.def_submodule("AssetManager");                                                              \
     auto m_asset_panel   = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");     \
-    auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project");
+    auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project")
+
+#define ATCG_CUDA_DEFINE_MODULES(m)                                                                                    \
+    auto m_raytracing_context_manager = m.def_submodule("RaytracingContextManager");                                   \
+    auto m_raytracing_context =                                                                                        \
+        py::class_<atcg::RaytracingContext, atcg::ref_ptr<atcg::RaytracingContext>>(m, "RaytracingContext");           \
+    auto m_path_integrator =                                                                                           \
+        py::class_<atcg::PathtracingIntegrator, atcg::ref_ptr<atcg::PathtracingIntegrator>>(m, "PathIntegrator");      \
+    auto m_volpath_integrator =                                                                                        \
+        py::class_<atcg::VolPathtracingIntegrator, atcg::ref_ptr<atcg::VolPathtracingIntegrator>>(m,                   \
+                                                                                                  "VolPathIntegrator")
 
 inline void defineBindings(py::module_& m)
 {
@@ -212,7 +223,12 @@ inline void defineBindings(py::module_& m)
     )pbdoc";
 
     // ---------------- CORE ---------------------
-    ATCG_DEFINE_MODULES(m)
+    ATCG_DEFINE_MODULES(m);
+
+#ifdef ATCG_CUDA_BACKEND
+    ATCG_CUDA_DEFINE_MODULES(m);
+#endif
+
 #ifndef ATCG_HEADLESS
     auto m_imgui            = m.def_submodule("ImGui");
     auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
@@ -252,7 +268,8 @@ inline void defineBindings(py::module_& m)
     m.def("shader_directory", []() { return atcg::shader_directory().string(); });
     m.def("resource_directory", []() { return atcg::resource_directory().string(); });
 
-    m_application.def(py::init<atcg::Layer*>())
+    m_application.def(py::init())
+        .def(py::init<atcg::Layer*>())
         .def(py::init<atcg::WindowProps>())
         .def(py::init<atcg::Layer*, atcg::WindowProps>())
         .def("run", &atcg::Application::run);
@@ -1138,6 +1155,34 @@ inline void defineBindings(py::module_& m)
     // ------------------- Scene ---------------------------------
     m_entity_handle.def(py::init<uint32_t>(), "handle"_a);
 
+    m_material_type.value("MATERIAL_TYPE_OPAQUE", atcg::MaterialType::MATERIAL_TYPE_OPAQUE)
+        .value("MATERIAL_TYPE_DIELECTRIC", atcg::MaterialType::MATERIAL_TYPE_DIELECTRIC)
+        .value("MATERIAL_TYPE_NULL", atcg::MaterialType::MATERIAL_TYPE_NULL);
+
+    m_material
+        .def("asOpaque",
+             [](const atcg::ref_ptr<atcg::Material>& self)
+             {
+                 auto ptr = std::dynamic_pointer_cast<atcg::OpaqueMaterial>(self);
+                 if(!ptr) throw std::runtime_error("Not an OpaqueMaterial");
+                 return ptr;
+             })
+        .def("asDielectric",
+             [](const atcg::ref_ptr<atcg::Material>& self)
+             {
+                 auto ptr = std::dynamic_pointer_cast<atcg::DielectricMaterial>(self);
+                 if(!ptr) throw std::runtime_error("Not a DielectricMaterial");
+                 return ptr;
+             })
+        .def("asNull",
+             [](const atcg::ref_ptr<atcg::Material>& self)
+             {
+                 auto ptr = std::dynamic_pointer_cast<atcg::NullMaterial>(self);
+                 if(!ptr) throw std::runtime_error("Not a NullMaterial");
+                 return ptr;
+             })
+        .def("getMaterialType", &atcg::Material::getMaterialType);
+
     m_opaque_material.def(py::init<>())
         .def("getDiffuseTexture", &atcg::OpaqueMaterial::getDiffuseTexture)
         .def("getNormalTexture", &atcg::OpaqueMaterial::getNormalTexture)
@@ -1413,7 +1458,9 @@ inline void defineBindings(py::module_& m)
             [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) { scene->removeEntity(entity); },
             "entity"_a)
         .def("removeAllEntities", &atcg::Scene::removeAllEntites)
-        .def("setCamera", &atcg::Scene::setCamera)
+        .def("setCamera",
+             [](const atcg::ref_ptr<atcg::Scene>& self, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+             { self->setCamera(camera); })
         .def("getCamera", &atcg::Scene::getCamera)
         .def("removeCamera", &atcg::Scene::removeCamera)
         .def(
@@ -1442,6 +1489,15 @@ inline void defineBindings(py::module_& m)
                 scene->draw(context);
             },
             "camera"_a,
+            "target"_a)
+        .def(
+            "draw",
+            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
+            {
+                atcg::Dictionary context;
+                context.setValue("target", framebuffer);
+                scene->draw(context);
+            },
             "target"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
@@ -1664,6 +1720,55 @@ inline void defineBindings(py::module_& m)
     m.def("handleScriptEvents", &atcg::Scripting::handleScriptEvents);
     m.def("handleScriptUpdates", &atcg::Scripting::handleScriptUpdates);
 
+// ------------------- Pathtracing ---------------------------------
+#ifdef ATCG_CUDA_BACKEND
+    m_raytracing_context_manager.def("createContext", &atcg::RaytracingContextManager::createContext)
+        .def("destroyContext", &atcg::RaytracingContextManager::destroyContext);
+    m_path_integrator
+        .def(py::init(
+            [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const uint32_t width,
+               const uint32_t height)
+            {
+                atcg::Dictionary dict;
+                dict.setValue("scene", scene);
+                dict.setValue("width", width);
+                dict.setValue("height", height);
+                atcg::ref_ptr<atcg::PathtracingIntegrator> integrator =
+                    atcg::make_ref<atcg::PathtracingIntegrator>(context, dict);
+                return integrator;
+            }))
+        .def("generateRays",
+             [](const atcg::ref_ptr<atcg::PathtracingIntegrator>& self)
+             {
+                 atcg::Dictionary dict;
+                 self->generateRays(dict);
+                 return dict.getValue<torch::Tensor>("output");
+             });
+    m_volpath_integrator
+        .def(py::init(
+            [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const uint32_t width,
+               const uint32_t height)
+            {
+                atcg::Dictionary dict;
+                dict.setValue("scene", scene);
+                dict.setValue("width", width);
+                dict.setValue("height", height);
+                atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator =
+                    atcg::make_ref<atcg::VolPathtracingIntegrator>(context, dict);
+                return integrator;
+            }))
+        .def("generateRays",
+             [](const atcg::ref_ptr<atcg::VolPathtracingIntegrator>& self)
+             {
+                 atcg::Dictionary dict;
+                 self->generateRays(dict);
+                 return dict.getValue<torch::Tensor>("output");
+             });
+#endif
     // IMGUI BINDINGS
 
 #ifndef ATCG_HEADLESS

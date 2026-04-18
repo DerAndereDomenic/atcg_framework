@@ -2,7 +2,7 @@
 
 #include <glm/ext/scalar_constants.hpp>
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     #include "RadiosityRayGenerator.h"
 #endif
 
@@ -13,7 +13,7 @@ using namespace torch::indexing;
 
 atcg::ref_ptr<atcg::TriMesh> solve_radiosity(const atcg::ref_ptr<atcg::TriMesh>& mesh, const torch::Tensor& emission)
 {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     return solve_radiosity_gpu(mesh, emission);
 #else
     return solve_radiosity_cpu(mesh, emission);
@@ -24,7 +24,7 @@ atcg::ref_ptr<atcg::TriMesh> solve_radiosity_gpu(const atcg::ref_ptr<atcg::TriMe
                                                  const torch::Tensor& emission)
 {
     atcg::ref_ptr<TriMesh> result = atcg::make_ref<TriMesh>();
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     auto optx_context = atcg::RaytracingContextManager::createContext();
 
     atcg::Dictionary dict;

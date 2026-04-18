@@ -148,7 +148,7 @@ template<typename T>
 template<typename uv_t>
 ATCG_HOST_DEVICE auto TextureSampler<T>::_read_interpolated(const uv_t& uv) const
 {
-    switch(_spec.sampler.filter_mode)
+    switch(this->_spec.sampler.filter_mode)
     {
         case TextureFilterMode::LINEAR:
         case TextureFilterMode::MIPMAP_LINEAR:
@@ -346,7 +346,7 @@ template<typename T>
 template<typename uv_t, TexelWriteMode write_mode>
 ATCG_HOST_DEVICE void TextureWriter<T>::write(const T& val, const uv_t& uv)
 {
-    switch(_spec.sampler.filter_mode)
+    switch(this->_spec.sampler.filter_mode)
     {
         case TextureFilterMode::LINEAR:
         case TextureFilterMode::MIPMAP_LINEAR:
@@ -504,6 +504,7 @@ ATCG_INLINE ATCG_HOST_DEVICE void TexelUpdater<TexelWriteMode::DEFAULT>::operato
 template<typename T>
 ATCG_INLINE ATCG_DEVICE void TexelUpdater<TexelWriteMode::ATOMIC_ADD>::operator()(T* data, const T& val) const
 {
+#ifdef __CUDA_ARCH__
     if constexpr(std::is_integral_v<T>)
     {
         atomicAdd((int*)data, (int)val);    // TODO?
@@ -516,6 +517,7 @@ ATCG_INLINE ATCG_DEVICE void TexelUpdater<TexelWriteMode::ATOMIC_ADD>::operator(
     {
         printf("Atomic add not supported for this type\n");
     }
+#endif
 }
 
 }    // namespace atcg

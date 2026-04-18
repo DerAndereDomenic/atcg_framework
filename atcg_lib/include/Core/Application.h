@@ -20,7 +20,7 @@
     #include <ImGui/ImGuiLayer.h>
 #endif
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     #include <Core/RaytracingContextManager.h>
 #endif
 namespace atcg
@@ -151,7 +151,7 @@ private:
 private:
     bool _running = false;
     atcg::ref_ptr<ContextManagerSystem> _context_manager;
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<RaytracingContextManagerSystem> _rt_context_manager;
 #endif
     atcg::scope_ptr<Window> _window;

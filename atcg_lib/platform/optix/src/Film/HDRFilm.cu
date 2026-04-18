@@ -119,7 +119,7 @@ void HDRFilm::clear()
 void HDRFilm::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                  const atcg::ref_ptr<ShaderBindingTable>& sbt)
 {
-    const std::string ptx_film_filename = "./bin/HDRFILM_ptx.ptx";
+    const std::string ptx_film_filename = "./bin/HDRFilm_ptx.ptx";
     auto add_sample_prog_group =
         pipeline->addCallableShader({ptx_film_filename, "__direct_callable__add_sample_hdrfilm"});
     auto get_width_prog_group =

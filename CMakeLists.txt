@@ -25,6 +25,7 @@ option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
 option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
 option(ATCG_BUILD_EXAMPLES "Build atcg examples" ON)
+option(ATCG_SPECTRAL_RENDERING "Use spectral renderer" OFF)
 
 # OpenMesh and OpenVR use Cmake < 3.10
 set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
@@ -193,7 +194,7 @@ add_library(atcg_json INTERFACE)
 target_include_directories(atcg_json INTERFACE "external/json")
 add_library(atcg::json ALIAS atcg_json)
 
-#sfml
+# sfml
 set(SFML_BUILD_WINDOW OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
@@ -201,6 +202,7 @@ if(NOT TARGET sfml)
     add_subdirectory(external/sfml)
 endif()
 
+# optix
 if(CMAKE_CUDA_COMPILER)
     add_library(atcg_optix INTERFACE)
     target_include_directories(atcg_optix INTERFACE "external/OptiX/include")

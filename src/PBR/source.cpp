@@ -18,7 +18,7 @@ class PBRLayer : public atcg::Layer
 public:
     void createOutputTexture(int width, int height)
     {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         atcg::TextureSpecification spec;
         spec.width     = width;
         spec.height    = height;
@@ -35,7 +35,7 @@ public:
 
     void initializePathtracer()
     {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         atcg::Dictionary dict;
         dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
@@ -144,7 +144,7 @@ public:
             instances.addInstanceBuffer(vbo_colors);
         }
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         optx_context = atcg::RaytracingContextManager::createContext();
 #endif
 
@@ -157,7 +157,7 @@ public:
         performance_panel.registerFrameTime(delta_time);
         bool updated = camera_controller->onUpdate(delta_time);
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         if(enable_pathtracing && updated)
         {
             integrator->reset();
@@ -216,7 +216,7 @@ public:
 
             if(enable_pathtracing)
             {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
                 atcg::Dictionary dict;
                 integrator->generateRays(dict);
                 torch::Tensor output_tensor   = dict.getValue<torch::Tensor>("output");
@@ -365,7 +365,7 @@ public:
                 }
             }
 
-    #ifdef ATCG_ENABLE_OPTIX
+    #ifdef ATCG_CUDA_BACKEND
             if(ImGui::Checkbox("Path Tracing", &enable_pathtracing))
             {
                 if(enable_pathtracing) initializePathtracer();
@@ -375,7 +375,7 @@ public:
             ImGui::End();
         }
 
-    #ifdef ATCG_ENABLE_OPTIX
+    #ifdef ATCG_CUDA_BACKEND
         if(enable_pathtracing) integrator->onImGuiRender();
     #endif
 
@@ -500,7 +500,7 @@ private:
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator;
 #endif

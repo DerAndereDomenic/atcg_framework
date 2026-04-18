@@ -120,7 +120,7 @@
 #include <DataStructure/TorchUtils.h>
 
 //-------- Optix ------------
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     #include <Core/RaytracingPipeline.h>
     #include <Core/ShaderBindingTable.h>
     #include <Integrator/PathtracingIntegrator.h>
