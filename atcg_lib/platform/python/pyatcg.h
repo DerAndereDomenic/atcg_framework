@@ -1720,7 +1720,8 @@ inline void defineBindings(py::module_& m)
     m.def("handleScriptEvents", &atcg::Scripting::handleScriptEvents);
     m.def("handleScriptUpdates", &atcg::Scripting::handleScriptUpdates);
 
-    // ------------------- Pathtracing ---------------------------------
+// ------------------- Pathtracing ---------------------------------
+#ifdef ATCG_CUDA_BACKEND
     m_raytracing_context_manager.def("createContext", &atcg::RaytracingContextManager::createContext)
         .def("destroyContext", &atcg::RaytracingContextManager::destroyContext);
     m_path_integrator
@@ -1767,6 +1768,7 @@ inline void defineBindings(py::module_& m)
                  self->generateRays(dict);
                  return dict.getValue<torch::Tensor>("output");
              });
+#endif
     // IMGUI BINDINGS
 
 #ifndef ATCG_HEADLESS
