@@ -52,7 +52,7 @@ struct TextureSamplerStorage
 
     ATCG_INLINE ATCG_DEVICE void write(const glm::vec3& uv, const T& value)
     {
-        writer.write<glm::vec3, atcg::TexelWriteMode::ATOMIC_ADD>(value, uv);
+        writer.template write<glm::vec3, atcg::TexelWriteMode::ATOMIC_ADD>(value, uv);
     }
 };
 

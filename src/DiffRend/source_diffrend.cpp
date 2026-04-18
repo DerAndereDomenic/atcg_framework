@@ -31,7 +31,7 @@ public:
     {
         int width  = width_ / 4;
         int height = height_ / 4;
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
 
         atcg::TextureSpecification spec;
         spec.width     = width;
@@ -43,7 +43,7 @@ public:
 
     void initializePathtracer()
     {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         atcg::Dictionary dict;
         dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width() / 4);
@@ -94,7 +94,7 @@ public:
 
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         optx_context = atcg::RaytracingContextManager::createContext();
         if(enable_pathtracing) initializePathtracer();
 #endif
@@ -110,7 +110,7 @@ public:
         performance_panel.registerFrameTime(delta_time);
         bool updated = camera_controller->onUpdate(delta_time);
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         if(enable_pathtracing && updated)
         {
             integrator->reset();
@@ -122,7 +122,7 @@ public:
 
         if(enable_pathtracing)
         {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
 
             if(optimize)
             {
@@ -376,7 +376,7 @@ public:
                 }
             }
 
-    #ifdef ATCG_ENABLE_OPTIX
+    #ifdef ATCG_CUDA_BACKEND
             if(ImGui::Checkbox("Path Tracing", &enable_pathtracing))
             {
                 if(enable_pathtracing) initializePathtracer();
@@ -615,7 +615,7 @@ private:
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
     const char* integrator_labels[5]  = {"Attached", "Detached", "Finite Difference", "VolDetached", "VolAttached"};

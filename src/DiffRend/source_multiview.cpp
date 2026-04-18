@@ -25,7 +25,7 @@ class DiffRendLayer : public atcg::Layer
 public:
     void initializePathtracer()
     {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         atcg::Dictionary dict;
         dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
         dict.setValue<uint32_t>("width", 256);
@@ -58,7 +58,7 @@ public:
 
         atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         optx_context = atcg::RaytracingContextManager::createContext();
         if(enable_pathtracing) initializePathtracer();
 #endif
@@ -115,7 +115,7 @@ public:
         performance_panel.registerFrameTime(delta_time);
         bool updated = camera_controller->onUpdate(delta_time);
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         if(enable_pathtracing && updated)
         {
             integrator->reset();
@@ -127,7 +127,7 @@ public:
 
         if(enable_pathtracing && !pause)
         {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
 
             optimizer->zero_grad(false);
             // integrator->zeroGrad();
@@ -260,9 +260,9 @@ public:
             if(ImGui::MenuItem("Load"))
             {
                 auto f     = pfd::open_file("Choose project file",
-                                        pfd::path::home(),
+                                            pfd::path::home(),
                                             {"Project file (.json)", "*.json"},
-                                        pfd::opt::none);
+                                            pfd::opt::none);
                 auto files = f.result();
 
                 if(!files.empty())
@@ -337,7 +337,7 @@ public:
                 }
             }
 
-    #ifdef ATCG_ENABLE_OPTIX
+    #ifdef ATCG_CUDA_BACKEND
             if(ImGui::Checkbox("Path Tracing", &enable_pathtracing))
             {
                 if(enable_pathtracing) initializePathtracer();
@@ -515,7 +515,7 @@ private:
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
     std::vector<torch::Tensor> targets;
