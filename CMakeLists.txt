@@ -190,7 +190,7 @@ add_library(atcg_json INTERFACE)
 target_include_directories(atcg_json INTERFACE "external/json")
 add_library(atcg::json ALIAS atcg_json)
 
-#sfml
+# sfml
 set(SFML_BUILD_WINDOW OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
@@ -198,6 +198,7 @@ if(NOT TARGET sfml)
     add_subdirectory(external/sfml)
 endif()
 
+# optix
 if(CMAKE_CUDA_COMPILER)
     add_library(atcg_optix INTERFACE)
     target_include_directories(atcg_optix INTERFACE "external/OptiX/include")

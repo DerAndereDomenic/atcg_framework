@@ -40,7 +40,7 @@ void Application::init(const WindowProps& props)
     _context_manager = atcg::make_ref<ContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_context_manager.get());
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     _rt_context_manager = atcg::make_ref<RaytracingContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_rt_context_manager.get());
 #endif

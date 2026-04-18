@@ -97,6 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Materials now use inheritance but static material types are still available
 - MaterialType::GLASS was changed to MaterialType::Dielectric
 - Changed the way scripting works. Now an instance of a script class represents the python code itself and is used to instatiate a behavior which controls the actual behavior of the entity. This way, the script can be used for multiple entities with separate instances of the same behavior
+- Removed ATCG_ENABLE_OPTIX
 
 ### Fixed
 

@@ -18,8 +18,6 @@ if(ATCG_CUDA_BACKEND)
 
     target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-    target_compile_definitions(atcg_lib PUBLIC ATCG_ENABLE_OPTIX)
-
     if(ATCG_SPECTRAL_RENDERING)
         target_compile_definitions(atcg_lib PUBLIC ATCG_SPECTRAL_RENDERING)
     endif()
