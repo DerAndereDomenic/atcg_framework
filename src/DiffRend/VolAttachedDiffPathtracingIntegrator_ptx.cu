@@ -111,10 +111,20 @@ extern "C" __global__ void __raygen__forward()
                      glm::mat2x3(0.0f),
                      glm::mat2x3(init_si1.reference_frame.localX(), init_si1.reference_frame.localY()));
 
-    for(int n = 0; n < 8; ++n)
+    for(int n = 0; n < 512; ++n)
     {
         if(!ray.valid) break;
         ray.valid = false;
+
+        float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
+        if(rng.nextFloat() < rr_prob)
+        {
+            ray.throughput /= rr_prob;
+        }
+        else
+        {
+            break;
+        }
 
         atcg::AnyInteraction si0  = ray.si0;
         atcg::AnyInteraction si1_ = ray.si1;
