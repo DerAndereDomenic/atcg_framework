@@ -1,6 +1,7 @@
 #include <Utils/Utils.h>
 
 #include <Asset/Project.h>
+#include <Renderer/Renderer.h>
 
 #include <fstream>
 

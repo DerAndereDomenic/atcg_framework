@@ -1,6 +1,7 @@
 #include <Scene/ComponentRenderer.h>
 
 #include <Core/Assert.h>
+#include <Renderer/Renderer.h>
 
 #include <glad/glad.h>
 
