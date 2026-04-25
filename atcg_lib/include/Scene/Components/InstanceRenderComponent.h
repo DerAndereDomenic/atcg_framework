@@ -3,6 +3,7 @@
 #include <Asset/AssetManagerSystem.h>
 #include <Scene/Components/RenderComponent.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
@@ -33,6 +34,8 @@ struct InstanceRenderComponent : public RenderComponent
     AssetHandle material_handle = 0;
     AssetHandle shader_handle;
 };
+
+ATCG_DECLARE_COMPONENT_RENDERER(InstanceRenderComponent);
 
 namespace GUI
 {

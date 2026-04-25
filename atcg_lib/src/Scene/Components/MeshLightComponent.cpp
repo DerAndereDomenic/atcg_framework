@@ -3,6 +3,42 @@
 
 namespace atcg
 {
+void ComponentRenderer<MeshLightComponent>::renderComponent(atcg::RendererSystem* _renderer,
+                                                            Entity entity,
+                                                            const atcg::ref_ptr<Camera>& camera,
+                                                            atcg::Dictionary& auxiliary) const
+{
+    uint32_t entity_id           = entity.entity_handle();
+    TransformComponent transform = entity.getComponent<TransformComponent>();
+    GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    // Actual rendering of component
+    MeshLightComponent renderer = entity.getComponent<MeshLightComponent>();
+
+    auto scene = entity.scene();
+
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader",
+                                                    _renderer->getShaderManager()->getShader("emissive"));
+
+    // if(renderer.visible)
+    {
+        auto emissive_id = _renderer->popTextureID();
+        GraphicsCommand::bindTexture(emissive_id, renderer.getEmissiveTexture());
+        shader->setInt("texture_emissive", emissive_id);
+        shader->setFloat("emissive_scaling", renderer.intensity);
+        shader->setInt("entityID", entity.entity_handle());
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+        _renderer->drawVAO(geometry.graph()->getVerticesArray(),
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           geometry.graph()->n_vertices());
+
+        _renderer->pushTextureID(emissive_id);
+    }
+}
+
 namespace GUI
 {
 void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,

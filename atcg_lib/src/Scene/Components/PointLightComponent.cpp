@@ -3,6 +3,20 @@
 
 namespace atcg
 {
+
+void ComponentRenderer<PointLightComponent>::renderComponent(atcg::RendererSystem* _renderer,
+                                                             Entity entity,
+                                                             const atcg::ref_ptr<Camera>& camera,
+                                                             atcg::Dictionary& auxiliary) const
+{
+    auto& transform   = entity.getComponent<atcg::TransformComponent>();
+    auto& point_light = entity.getComponent<atcg::PointLightComponent>();
+
+    const auto& shader = _renderer->getShaderManager()->getShader("circle");
+    shader->setInt("entityID", entity.entity_handle());
+    _renderer->drawCircle(transform.getPosition(), 0.1f, 1.0f, point_light.color, camera);
+}
+
 namespace GUI
 {
 void ComponentGUIRenderer<PointLightComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,

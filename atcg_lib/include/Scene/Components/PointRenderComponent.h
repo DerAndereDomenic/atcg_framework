@@ -6,6 +6,7 @@
 #include <Renderer/ShaderManager.h>
 #include <Scene/Components/RenderComponent.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
@@ -48,6 +49,9 @@ struct PointRenderComponent : public RenderComponent
 
     AssetHandle shader_handle = 0;
 };
+
+ATCG_DECLARE_COMPONENT_RENDERER(PointRenderComponent);
+
 namespace GUI
 {
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(PointRenderComponent);

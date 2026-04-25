@@ -2,6 +2,7 @@
 
 #include <Scene/Components/RenderComponent.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
@@ -15,6 +16,7 @@ struct EdgeRenderComponent : public RenderComponent
     // TODO Edge radius?
 };
 
+ATCG_DECLARE_COMPONENT_RENDERER(EdgeRenderComponent);
 namespace GUI
 {
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(EdgeRenderComponent);

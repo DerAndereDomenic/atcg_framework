@@ -129,6 +129,35 @@ torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<
  * @return The picked entity
  */
 Entity pickEntity(const glm::vec2& mouse_pos);
+
+/**
+ * @brief Set the sky light of the shader based on the given skybox. This will bind the irradiance map of the skybox to
+ * the shader and set the according uniform. The function returns the id of the bound texture,
+ *
+ * @param renderer The renderer
+ * @param shader The shader
+ * @param skybox The skybox
+ *
+ * @return The id of the bound texture
+ */
+uint32_t setLights(atcg::RendererSystem* renderer,
+                   Scene* scene,
+                   const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
+                   const atcg::ref_ptr<Shader>& shader);
+
+/**
+ * @brief Set the sky light of the shader based on the given skybox. This will bind the irradiance map of the skybox to
+ * the shader and set the according uniform. The function returns the id of the bound texture,
+ *
+ * @param renderer The renderer
+ * @param shader The shader
+ * @param skybox The skybox
+ *
+ * @return The id of the bound texture
+ * @return The id of the bound prefiltered map
+ */
+std::pair<uint32_t, uint32_t>
+setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const atcg::ref_ptr<Skybox>& skybox);
 }    // namespace Utils
 
 }    // namespace atcg

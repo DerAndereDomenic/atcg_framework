@@ -1,8 +1,107 @@
 #include <Scene/Components/EdgeCylinderRenderComponent.h>
 #include <Scene/ComponentRegistry.h>
+#include <Utils/Utils.h>
 
 namespace atcg
 {
+
+void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::RendererSystem* _renderer,
+                                                                     Entity entity,
+                                                                     const atcg::ref_ptr<Camera>& camera,
+                                                                     atcg::Dictionary& auxiliary) const
+{
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
+
+    uint32_t entity_id           = entity.entity_handle();
+    TransformComponent transform = entity.getComponent<TransformComponent>();
+    GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
+
+    // Actual rendering of component
+    EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
+
+    auto scene = entity.scene();
+
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader",
+                                                    _renderer->getShaderManager()->getShader("cylinder_edge"));
+
+    auto point_light_depth_maps =
+        auxiliary.getValueOr<atcg::ref_ptr<atcg::TextureCubeArray>>("point_light_depth_maps", nullptr);
+
+    auto skybox     = auxiliary.getValueOr<atcg::ref_ptr<Skybox>>("skybox", AssetManager::getDummySkybox());
+    auto has_skybox = auxiliary.getValueOr<bool>("has_skybox", false);
+
+    if(renderer.visible)
+    {
+        uint32_t id          = Utils::setLights(_renderer, scene, point_light_depth_maps, shader);
+        auto [ir_id, pre_id] = Utils::setSkyLight(_renderer, shader, skybox);
+        shader->setInt("use_ibl", has_skybox);
+        shader->setFloat("edge_radius", renderer.radius);
+        shader->setInt("entityID", entity.entity_handle());
+        shader->setVec3("flat_color", glm::vec3(1));
+        renderer.material()->uploadMaterial(_renderer, shader);
+        uint32_t lut_id = _renderer->popTextureID();
+        shader->setInt("lut", lut_id);
+        GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
+
+        auto points  = geometry.graph()->getVerticesBuffer();
+        auto indices = geometry.graph()->getEdgesBuffer();
+
+        GraphicsCommand::bindStorageBuffer(0, points);
+
+        auto cylinder_mesh = AssetManager::getCylinderMesh();
+        auto vao_cylinder  = cylinder_mesh->getVerticesArray();
+
+        vao_cylinder->pushInstanceBuffer(indices);
+
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+
+        _renderer->drawVAO(vao_cylinder,
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           cylinder_mesh->n_vertices(),
+                           geometry.graph()->n_edges());
+        vao_cylinder->popVertexBuffer();
+        if(id != -1)
+        {
+            _renderer->pushTextureID(id);
+        }
+        if(ir_id != -1)
+        {
+            _renderer->pushTextureID(ir_id);
+        }
+        if(pre_id != -1)
+        {
+            _renderer->pushTextureID(pre_id);
+        }
+        if(lut_id != -1)
+        {
+            _renderer->pushTextureID(lut_id);
+        }
+        renderer.material()->releaseTextureIDs(_renderer);
+    }
+}
+
 namespace GUI
 {
 void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,

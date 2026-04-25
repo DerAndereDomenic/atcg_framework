@@ -7,6 +7,7 @@
 #include <Renderer/PerspectiveCamera.h>
 #include <Scene/Components/TransformComponent.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
@@ -43,6 +44,8 @@ struct CameraComponent
     AssetHandle image_handle;
     bool render_preview = false;
 };
+
+ATCG_DECLARE_COMPONENT_RENDERER(CameraComponent);
 
 namespace GUI
 {
