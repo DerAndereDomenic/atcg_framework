@@ -2,6 +2,9 @@
 #include <Scene/ComponentRegistry.h>
 #include <Utils/Utils.h>
 
+#define EDGE_RENDERER_KEY "EdgeRenderer"
+#define COLOR_KEY         "Color"
+
 namespace atcg
 {
 
@@ -94,6 +97,36 @@ void ComponentRenderer<EdgeRenderComponent>::renderComponent(atcg::RendererSyste
         renderer.default_material->releaseTextureIDs(_renderer);
     }
 }
+
+namespace Serialization
+{
+void ComponentSerializer<EdgeRenderComponent>::serialize_component(const std::string& file_path,
+                                                                   const atcg::ref_ptr<Scene>& scene,
+                                                                   Entity entity,
+                                                                   EdgeRenderComponent& component,
+                                                                   nlohmann::json& j) const
+{
+    j[EDGE_RENDERER_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
+}
+
+void ComponentSerializer<EdgeRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                     const atcg::ref_ptr<Scene>& scene,
+                                                                     Entity entity,
+                                                                     nlohmann::json& j) const
+{
+    if(!j.contains(EDGE_RENDERER_KEY))
+    {
+        return;
+    }
+
+    auto& renderer           = j[EDGE_RENDERER_KEY];
+    auto& renderComponent    = entity.addComponent<EdgeRenderComponent>();
+    std::vector<float> color = renderer.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
+    renderComponent.color    = glm::make_vec3(color.data());
+}
+
+}    // namespace Serialization
+
 
 namespace GUI
 {

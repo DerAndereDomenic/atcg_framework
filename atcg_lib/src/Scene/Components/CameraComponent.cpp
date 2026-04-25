@@ -4,6 +4,20 @@
 #include <Core/Application.h>
 #include <Utils/Utils.h>
 
+#define PERSPECTIVE_CAMERA_KEY "PerspectiveCamera"
+#define CAMERA_IMAGE_KEY       "Image"
+#define ASPECT_RATIO_KEY       "AspectRatio"
+#define FOVY_KEY               "FoVy"
+#define LOOKAT_KEY             "LookAt"
+#define NEAR_KEY               "Near"
+#define FAR_KEY                "Far"
+#define WIDTH_KEY              "width"
+#define HEIGHT_KEY             "height"
+#define PREVIEW_KEY            "preview"
+#define OPTICAL_CENTER_KEY     "OpticalCenter"
+#define RENDER_SCALE_KEY       "Scale"
+#define POSITION_KEY           "Position"
+
 namespace atcg
 {
 
@@ -80,6 +94,78 @@ void ComponentRenderer<CameraComponent>::renderComponent(atcg::RendererSystem* _
     }
 }
 
+namespace Serialization
+{
+void ComponentSerializer<CameraComponent>::serialize_component(const std::string& file_path,
+                                                               const atcg::ref_ptr<Scene>& scene,
+                                                               Entity entity,
+                                                               CameraComponent& component,
+                                                               nlohmann::json& j) const
+{
+    atcg::ref_ptr<PerspectiveCamera> cam = std::dynamic_pointer_cast<PerspectiveCamera>(component.camera);
+
+    glm::vec3 position = cam->getPosition();
+    glm::vec3 look_at  = cam->getLookAt();
+    glm::vec2 offset   = cam->getIntrinsics().opticalCenter();
+    float n            = cam->getNear();
+    float f            = cam->getFar();
+
+    j[PERSPECTIVE_CAMERA_KEY][ASPECT_RATIO_KEY]   = cam->getAspectRatio();
+    j[PERSPECTIVE_CAMERA_KEY][FOVY_KEY]           = cam->getFOV();
+    j[PERSPECTIVE_CAMERA_KEY][POSITION_KEY]       = nlohmann::json::array({position.x, position.y, position.z});
+    j[PERSPECTIVE_CAMERA_KEY][LOOKAT_KEY]         = nlohmann::json::array({look_at.x, look_at.y, look_at.z});
+    j[PERSPECTIVE_CAMERA_KEY][NEAR_KEY]           = n;
+    j[PERSPECTIVE_CAMERA_KEY][FAR_KEY]            = f;
+    j[PERSPECTIVE_CAMERA_KEY][WIDTH_KEY]          = component.width;
+    j[PERSPECTIVE_CAMERA_KEY][HEIGHT_KEY]         = component.height;
+    j[PERSPECTIVE_CAMERA_KEY][PREVIEW_KEY]        = component.render_preview;
+    j[PERSPECTIVE_CAMERA_KEY][OPTICAL_CENTER_KEY] = nlohmann::json::array({offset.x, offset.y});
+    j[PERSPECTIVE_CAMERA_KEY][RENDER_SCALE_KEY]   = component.render_scale;
+
+    if(component.image())
+    {
+        j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY] = (uint64_t)component.image_handle;
+    }
+}
+
+void ComponentSerializer<CameraComponent>::deserialize_component(const std::string& file_path,
+                                                                 const atcg::ref_ptr<Scene>& scene,
+                                                                 Entity entity,
+                                                                 nlohmann::json& j) const
+{
+    if(!j.contains(PERSPECTIVE_CAMERA_KEY))
+    {
+        return;
+    }
+
+    float aspect_ratio          = j[PERSPECTIVE_CAMERA_KEY].value(ASPECT_RATIO_KEY, 1.0f);
+    float fov                   = j[PERSPECTIVE_CAMERA_KEY].value(FOVY_KEY, 60.0f);
+    float n                     = j[PERSPECTIVE_CAMERA_KEY].value(NEAR_KEY, 0.01f);
+    float f                     = j[PERSPECTIVE_CAMERA_KEY].value(FAR_KEY, 1000.0f);
+    std::vector<float> position = j[PERSPECTIVE_CAMERA_KEY].value(POSITION_KEY, std::vector<float> {0.0f, 0.0f, -1.0f});
+    std::vector<float> lookat   = j[PERSPECTIVE_CAMERA_KEY].value(LOOKAT_KEY, std::vector<float> {0.0f, 0.0f, 0.0f});
+    std::vector<float> offset   = j[PERSPECTIVE_CAMERA_KEY].value(OPTICAL_CENTER_KEY, std::vector<float> {0.0f, 0.0f});
+
+    CameraExtrinsics extrinsics(glm::make_vec3(position.data()), glm::make_vec3(lookat.data()));
+    CameraIntrinsics intrinsics(aspect_ratio, fov, n, f);
+    intrinsics.setOpticalCenter(glm::make_vec2(offset.data()));
+
+    auto cam = atcg::make_ref<atcg::PerspectiveCamera>(extrinsics, intrinsics);
+
+    auto& component          = entity.addComponent<CameraComponent>(cam);
+    component.width          = j[PERSPECTIVE_CAMERA_KEY].value(WIDTH_KEY, 1024);
+    component.height         = j[PERSPECTIVE_CAMERA_KEY].value(HEIGHT_KEY, 1024);
+    component.render_preview = j[PERSPECTIVE_CAMERA_KEY].value(PREVIEW_KEY, false);
+    component.render_scale   = j[PERSPECTIVE_CAMERA_KEY].value(RENDER_SCALE_KEY, 1.0f);
+
+
+    if(j[PERSPECTIVE_CAMERA_KEY].contains(CAMERA_IMAGE_KEY))
+    {
+        component.image_handle = (AssetHandle)j[PERSPECTIVE_CAMERA_KEY][CAMERA_IMAGE_KEY];
+    }
+}
+
+}    // namespace Serialization
 namespace GUI
 {
 void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<Scene>& scene,

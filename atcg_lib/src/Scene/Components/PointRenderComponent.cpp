@@ -2,6 +2,11 @@
 #include <Scene/ComponentRegistry.h>
 #include <Utils/Utils.h>
 
+#define POINT_RENDERER_KEY "PointRenderer"
+#define COLOR_KEY          "Color"
+#define POINT_SIZE_KEY     "PointSize"
+#define SHADER_KEY         "Shader"
+
 namespace atcg
 {
 
@@ -90,6 +95,47 @@ void ComponentRenderer<PointRenderComponent>::renderComponent(atcg::RendererSyst
         renderer.default_material->releaseTextureIDs(_renderer);
     }
 }
+
+namespace Serialization
+{
+void ComponentSerializer<PointRenderComponent>::serialize_component(const std::string& file_path,
+                                                                    const atcg::ref_ptr<Scene>& scene,
+                                                                    Entity entity,
+                                                                    PointRenderComponent& component,
+                                                                    nlohmann::json& j) const
+{
+    j[POINT_RENDERER_KEY][COLOR_KEY] = nlohmann::json::array({component.color.x, component.color.y, component.color.z});
+    j[POINT_RENDERER_KEY][POINT_SIZE_KEY] = component.point_size;
+    if(AssetManager::isAssetHandleValid(component.shader_handle))
+    {
+        j[POINT_RENDERER_KEY][SHADER_KEY] = (uint64_t)component.shader_handle;
+    }
+}
+
+void ComponentSerializer<PointRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                      const atcg::ref_ptr<Scene>& scene,
+                                                                      Entity entity,
+                                                                      nlohmann::json& j) const
+{
+    if(!j.contains(POINT_RENDERER_KEY))
+    {
+        return;
+    }
+
+    auto& renderer             = j[POINT_RENDERER_KEY];
+    auto& renderComponent      = entity.addComponent<PointRenderComponent>();
+    std::vector<float> color   = renderer.value(COLOR_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
+    renderComponent.color      = glm::make_vec3(color.data());
+    renderComponent.point_size = renderer.value(POINT_SIZE_KEY, 1.0f);
+
+    if(j[POINT_RENDERER_KEY].contains(SHADER_KEY))
+    {
+        renderComponent.shader_handle = (AssetHandle)j[POINT_RENDERER_KEY][SHADER_KEY];
+    }
+}
+
+}    // namespace Serialization
+
 
 namespace GUI
 {

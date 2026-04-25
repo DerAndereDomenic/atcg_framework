@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Scene/Scene.h>
-#include <Scene/Components.h>
 
 #include <json.hpp>
 
@@ -100,22 +99,6 @@ struct ComponentSerializer
                                    nlohmann::json& j) const;                                                           \
     }
 
-ATCG_DECLARE_COMPONENT_SERIALIZER(IDComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(NameComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(TransformComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(CameraComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(GeometryComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(MeshRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(PointRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(PointSphereRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(EdgeRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(EdgeCylinderRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(InstanceRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(PointLightComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(MeshLightComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(ScriptComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(HomogeneousMediumComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(HeterogeneousMediumComponent);
 
 template<typename ComponentType>
 ATCG_INLINE void

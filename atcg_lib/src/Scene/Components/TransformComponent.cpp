@@ -1,6 +1,11 @@
 #include <Scene/Components/TransformComponent.h>
 #include <Scene/ComponentRegistry.h>
 
+#define TRANSFORM_KEY    "Transform"
+#define POSITION_KEY     "Position"
+#define SCALE_KEY        "Scale"
+#define EULER_ANGLES_KEY "EulerAngles"
+
 namespace atcg
 {
 void TransformComponent::calculateModelMatrix()
@@ -22,6 +27,43 @@ void TransformComponent::decomposeModelMatrix()
     _scale        = glm::vec3(scale_x, scale_y, scale_z);
     glm::extractEulerAngleXYZ(glm::mat4(RS * glm::scale(1.0f / _scale)), _rotation.x, _rotation.y, _rotation.z);
 }
+
+namespace Serialization
+{
+void ComponentSerializer<TransformComponent>::serialize_component(const std::string& file_path,
+                                                                  const atcg::ref_ptr<Scene>& scene,
+                                                                  Entity entity,
+                                                                  TransformComponent& component,
+                                                                  nlohmann::json& j) const
+{
+    glm::vec3 position                 = component.getPosition();
+    glm::vec3 scale                    = component.getScale();
+    glm::vec3 rotation                 = component.getRotation();
+    j[TRANSFORM_KEY][POSITION_KEY]     = nlohmann::json::array({position.x, position.y, position.z});
+    j[TRANSFORM_KEY][SCALE_KEY]        = nlohmann::json::array({scale.x, scale.y, scale.z});
+    j[TRANSFORM_KEY][EULER_ANGLES_KEY] = nlohmann::json::array({rotation.x, rotation.y, rotation.z});
+}
+
+void ComponentSerializer<TransformComponent>::deserialize_component(const std::string& file_path,
+                                                                    const atcg::ref_ptr<Scene>& scene,
+                                                                    Entity entity,
+                                                                    nlohmann::json& j) const
+{
+    if(!j.contains(TRANSFORM_KEY))
+    {
+        return;
+    }
+
+    std::vector<float> position = j[TRANSFORM_KEY].value(POSITION_KEY, std::vector<float> {0.0f, 0.0f, 0.0f});
+    std::vector<float> scale    = j[TRANSFORM_KEY].value(SCALE_KEY, std::vector<float> {1.0f, 1.0f, 1.0f});
+    std::vector<float> rotation = j[TRANSFORM_KEY].value(EULER_ANGLES_KEY, std::vector<float> {0.0f, 0.0f, 0.0f});
+
+    entity.addComponent<atcg::TransformComponent>(glm::make_vec3(position.data()),
+                                                  glm::make_vec3(scale.data()),
+                                                  glm::make_vec3(rotation.data()));
+}
+
+}    // namespace Serialization
 
 namespace GUI
 {

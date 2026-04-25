@@ -3,6 +3,7 @@
 #include <Scene/Components/RenderComponent.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -17,6 +18,12 @@ struct EdgeRenderComponent : public RenderComponent
 };
 
 ATCG_DECLARE_COMPONENT_RENDERER(EdgeRenderComponent);
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(EdgeRenderComponent);
+}
+
 namespace GUI
 {
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(EdgeRenderComponent);

@@ -2,6 +2,11 @@
 #include <Scene/ComponentRegistry.h>
 #include <Utils/Utils.h>
 
+#define MESH_RENDERER_KEY   "MeshRenderer"
+#define SHADER_KEY          "Shader"
+#define MATERIAL_KEY        "Material"
+#define RECEIVE_SHADOWS_KEY "ReceiveShadow"
+
 namespace atcg
 {
 
@@ -92,6 +97,51 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
         renderer.material()->releaseTextureIDs(_renderer);
     }
 }
+
+namespace Serialization
+{
+void ComponentSerializer<MeshRenderComponent>::serialize_component(const std::string& file_path,
+                                                                   const atcg::ref_ptr<Scene>& scene,
+                                                                   Entity entity,
+                                                                   MeshRenderComponent& component,
+                                                                   nlohmann::json& j) const
+{
+    if(AssetManager::isAssetHandleValid(component.shader_handle))
+    {
+        j[MESH_RENDERER_KEY][SHADER_KEY] = (uint64_t)component.shader_handle;
+    }
+    j[MESH_RENDERER_KEY][RECEIVE_SHADOWS_KEY] = component.receive_shadow;
+
+    j[MESH_RENDERER_KEY][MATERIAL_KEY] = (uint64_t)component.material_handle;
+}
+
+void ComponentSerializer<MeshRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                     const atcg::ref_ptr<Scene>& scene,
+                                                                     Entity entity,
+                                                                     nlohmann::json& j) const
+{
+    if(!j.contains(MESH_RENDERER_KEY))
+    {
+        return;
+    }
+
+    auto& renderer        = j[MESH_RENDERER_KEY];
+    auto& renderComponent = entity.addComponent<MeshRenderComponent>();
+
+    if(j[MESH_RENDERER_KEY].contains(SHADER_KEY))
+    {
+        renderComponent.shader_handle = (AssetHandle)j[MESH_RENDERER_KEY][SHADER_KEY];
+    }
+
+
+    if(renderer.contains(MATERIAL_KEY))
+    {
+        renderComponent.material_handle = (AssetHandle)renderer[MATERIAL_KEY];
+    }
+
+    renderComponent.receive_shadow = renderer.value(RECEIVE_SHADOWS_KEY, true);
+}
+}    // namespace Serialization
 
 namespace GUI
 {

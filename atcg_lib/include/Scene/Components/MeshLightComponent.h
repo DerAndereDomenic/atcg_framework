@@ -4,6 +4,7 @@
 #include <Renderer/Texture.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -51,6 +52,11 @@ private:
 };
 
 ATCG_DECLARE_COMPONENT_RENDERER(MeshLightComponent);
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(MeshLightComponent);
+}
 
 namespace GUI
 {

@@ -2,6 +2,10 @@
 #include <Scene/ComponentRegistry.h>
 #include <Utils/Utils.h>
 
+#define EDGE_CYLINDER_RENDERER_KEY "EdgeCylinderRenderer"
+#define MATERIAL_KEY               "Material"
+#define RADIUS_KEY                 "Radius"
+
 namespace atcg
 {
 
@@ -101,6 +105,43 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
         renderer.material()->releaseTextureIDs(_renderer);
     }
 }
+
+namespace Serialization
+{
+void ComponentSerializer<EdgeCylinderRenderComponent>::serialize_component(const std::string& file_path,
+                                                                           const atcg::ref_ptr<Scene>& scene,
+                                                                           Entity entity,
+                                                                           EdgeCylinderRenderComponent& component,
+                                                                           nlohmann::json& j) const
+{
+    j[EDGE_CYLINDER_RENDERER_KEY][RADIUS_KEY] = component.radius;
+
+    j[EDGE_CYLINDER_RENDERER_KEY][MATERIAL_KEY] = (uint64_t)component.material_handle;
+}
+
+void ComponentSerializer<EdgeCylinderRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                             const atcg::ref_ptr<Scene>& scene,
+                                                                             Entity entity,
+                                                                             nlohmann::json& j) const
+{
+    if(!j.contains(EDGE_CYLINDER_RENDERER_KEY))
+    {
+        return;
+    }
+
+    auto& renderer         = j[EDGE_CYLINDER_RENDERER_KEY];
+    auto& renderComponent  = entity.addComponent<EdgeCylinderRenderComponent>();
+    renderComponent.radius = renderer.value(RADIUS_KEY, 0.001f);
+
+
+    if(renderer.contains(MATERIAL_KEY))
+    {
+        renderComponent.material_handle = (AssetHandle)renderer[MATERIAL_KEY];
+    }
+}
+
+}    // namespace Serialization
+
 
 namespace GUI
 {

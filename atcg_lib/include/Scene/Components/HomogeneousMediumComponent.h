@@ -2,6 +2,7 @@
 
 #include <Core/glm.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -17,6 +18,11 @@ struct HomogeneousMediumComponent
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Homogeneous Medium"; }
 };
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(HomogeneousMediumComponent);
+}
 
 namespace GUI
 {

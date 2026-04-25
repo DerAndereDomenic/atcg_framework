@@ -3,6 +3,7 @@
 #include <Core/glm.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -22,6 +23,11 @@ struct PointLightComponent
 };
 
 ATCG_DECLARE_COMPONENT_RENDERER(PointLightComponent);
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(PointLightComponent);
+}
 
 namespace GUI
 {

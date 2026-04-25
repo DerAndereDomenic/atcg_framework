@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/UUID.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -14,4 +15,10 @@ struct IDComponent
 private:
     UUID _ID;
 };
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(IDComponent);
+}
+
 }    // namespace atcg

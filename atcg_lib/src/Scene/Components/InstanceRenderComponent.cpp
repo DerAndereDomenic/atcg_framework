@@ -2,6 +2,13 @@
 #include <Scene/ComponentRegistry.h>
 #include <Utils/Utils.h>
 
+#define INSTANCE_RENDERER_KEY "InstanceRenderer"
+#define INSTANCES_KEY         "Instances"
+#define SHADER_KEY            "Shader"
+#define MATERIAL_KEY          "Material"
+#define LAYOUT_KEY            "Layout"
+#define PATH_KEY              "Path"
+
 namespace atcg
 {
 
@@ -102,6 +109,81 @@ void ComponentRenderer<InstanceRenderComponent>::renderComponent(atcg::RendererS
         }
     }
 }
+
+namespace Serialization
+{
+void ComponentSerializer<InstanceRenderComponent>::serialize_component(const std::string& file_path,
+                                                                       const atcg::ref_ptr<Scene>& scene,
+                                                                       Entity entity,
+                                                                       InstanceRenderComponent& component,
+                                                                       nlohmann::json& j) const
+{
+    auto shader = component.shader() ? component.shader() : atcg::ShaderManager::getShader("instanced");
+    if(AssetManager::isAssetHandleValid(component.shader_handle))
+    {
+        j[INSTANCE_RENDERER_KEY][SHADER_KEY] = (uint64_t)component.shader_handle;
+    }
+    j[INSTANCE_RENDERER_KEY][MATERIAL_KEY] = (uint64_t)component.material_handle;
+
+    IDComponent& id = entity.getComponent<IDComponent>();
+    nlohmann::json::array_t buffers;
+    for(int i = 0; i < component.instance_vbos.size(); ++i)
+    {
+        const char* buffer      = component.instance_vbos[i]->getHostPointer<char>();
+        std::string buffer_name = file_path + "." + std::to_string(id.ID()) + ".instance_" + std::to_string(i);
+        serializeBuffer(buffer_name, buffer, component.instance_vbos[i]->size());
+        nlohmann::json json_buffer;
+        json_buffer[PATH_KEY]   = buffer_name;
+        json_buffer[LAYOUT_KEY] = serializeLayout(component.instance_vbos[i]->getLayout());
+        buffers.push_back(json_buffer);
+        component.instance_vbos[i]->unmapHostPointers();
+    }
+
+    j[INSTANCE_RENDERER_KEY][INSTANCES_KEY] = buffers;
+}
+
+void ComponentSerializer<InstanceRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                         const atcg::ref_ptr<Scene>& scene,
+                                                                         Entity entity,
+                                                                         nlohmann::json& j) const
+{
+    if(!j.contains(INSTANCE_RENDERER_KEY))
+    {
+        return;
+    }
+
+    auto& renderer        = j[INSTANCE_RENDERER_KEY];
+    auto& renderComponent = entity.addComponent<InstanceRenderComponent>();
+    if(j[INSTANCE_RENDERER_KEY].contains(SHADER_KEY))
+    {
+        renderComponent.shader_handle = (AssetHandle)j[INSTANCE_RENDERER_KEY][SHADER_KEY];
+    }
+
+
+    if(renderer.contains(MATERIAL_KEY))
+    {
+        renderComponent.material_handle = (AssetHandle)renderer[MATERIAL_KEY];
+    }
+
+    if(renderer.contains(INSTANCES_KEY))
+    {
+        nlohmann::json::array_t instances = renderer[INSTANCES_KEY];
+        renderComponent.instance_vbos.reserve(instances.size());
+
+        for(auto instance: instances)
+        {
+            std::string path                      = instance[PATH_KEY];
+            atcg::BufferLayout layout             = deserializeLayout(instance[LAYOUT_KEY]);
+            std::vector<uint8_t> buffer           = deserializeBuffer(path);
+            atcg::ref_ptr<atcg::VertexBuffer> vbo = atcg::make_ref<atcg::VertexBuffer>(buffer.data(), buffer.size());
+            vbo->setLayout(layout);
+            renderComponent.addInstanceBuffer(vbo);
+        }
+    }
+}
+
+}    // namespace Serialization
+
 
 namespace GUI
 {

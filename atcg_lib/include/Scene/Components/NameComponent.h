@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -14,4 +15,10 @@ struct NameComponent
 private:
     std::string _name;
 };
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(NameComponent);
+}
+
 }    // namespace atcg

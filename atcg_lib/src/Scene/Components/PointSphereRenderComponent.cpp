@@ -2,6 +2,12 @@
 #include <Scene/ComponentRegistry.h>
 #include <Utils/Utils.h>
 
+#define POINT_SPHERE_RENDERER_KEY "PointSphereRenderer"
+#define POINT_SIZE_KEY            "PointSize"
+#define POINT_SIZE_KEY            "PointSize"
+#define SHADER_KEY                "Shader"
+#define MATERIAL_KEY              "Material"
+
 namespace atcg
 {
 
@@ -98,6 +104,52 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
         renderer.material()->releaseTextureIDs(_renderer);
     }
 }
+
+namespace Serialization
+{
+void ComponentSerializer<PointSphereRenderComponent>::serialize_component(const std::string& file_path,
+                                                                          const atcg::ref_ptr<Scene>& scene,
+                                                                          Entity entity,
+                                                                          PointSphereRenderComponent& component,
+                                                                          nlohmann::json& j) const
+{
+    j[POINT_SPHERE_RENDERER_KEY][POINT_SIZE_KEY] = component.point_size;
+    if(AssetManager::isAssetHandleValid(component.shader_handle))
+    {
+        j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY] = (uint64_t)component.shader_handle;
+    }
+
+    j[POINT_SPHERE_RENDERER_KEY][MATERIAL_KEY] = (uint64_t)component.material_handle;
+}
+
+void ComponentSerializer<PointSphereRenderComponent>::deserialize_component(const std::string& file_path,
+                                                                            const atcg::ref_ptr<Scene>& scene,
+                                                                            Entity entity,
+                                                                            nlohmann::json& j) const
+{
+    if(!j.contains(POINT_SPHERE_RENDERER_KEY))
+    {
+        return;
+    }
+
+    auto& renderer             = j[POINT_SPHERE_RENDERER_KEY];
+    auto& renderComponent      = entity.addComponent<PointSphereRenderComponent>();
+    renderComponent.point_size = renderer.value(POINT_SIZE_KEY, 0.1f);
+
+    if(j[POINT_SPHERE_RENDERER_KEY].contains(SHADER_KEY))
+    {
+        renderComponent.shader_handle = (AssetHandle)j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY];
+    }
+
+
+    if(renderer.contains(MATERIAL_KEY))
+    {
+        renderComponent.material_handle = (AssetHandle)renderer[MATERIAL_KEY];
+    }
+}
+
+}    // namespace Serialization
+
 
 namespace GUI
 {

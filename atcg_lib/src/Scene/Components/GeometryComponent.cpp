@@ -1,8 +1,38 @@
 #include <Scene/Components/GeometryComponent.h>
 #include <Scene/ComponentRegistry.h>
 
+#define GEOMETRY_KEY "Geometry"
+
 namespace atcg
 {
+
+namespace Serialization
+{
+void ComponentSerializer<GeometryComponent>::serialize_component(const std::string& file_path,
+                                                                 const atcg::ref_ptr<Scene>& scene,
+                                                                 Entity entity,
+                                                                 GeometryComponent& component,
+                                                                 nlohmann::json& j) const
+{
+    j[GEOMETRY_KEY] = (uint64_t)component.graph_handle;
+}
+
+void ComponentSerializer<GeometryComponent>::deserialize_component(const std::string& file_path,
+                                                                   const atcg::ref_ptr<Scene>& scene,
+                                                                   Entity entity,
+                                                                   nlohmann::json& j) const
+{
+    if(!j.contains(GEOMETRY_KEY))
+    {
+        return;
+    }
+
+    auto& geometry        = entity.addComponent<GeometryComponent>();
+    geometry.graph_handle = (AssetHandle)j[GEOMETRY_KEY];
+}
+
+
+}    // namespace Serialization
 
 namespace GUI
 {

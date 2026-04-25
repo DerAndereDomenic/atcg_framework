@@ -2,6 +2,7 @@
 
 #include <Core/glm.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -125,6 +126,10 @@ private:
     uint64_t _revision      = 0;
 };
 
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(TransformComponent);
+}
 namespace GUI
 {
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(TransformComponent);

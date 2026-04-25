@@ -6,6 +6,7 @@
 #include <Scene/Components/RenderComponent.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -44,6 +45,11 @@ struct MeshRenderComponent : public RenderComponent
     AssetHandle material_handle = 0;
     AssetHandle shader_handle   = 0;
 };
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(MeshRenderComponent);
+}
 
 ATCG_DECLARE_COMPONENT_RENDERER(MeshRenderComponent);
 

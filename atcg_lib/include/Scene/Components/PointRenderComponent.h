@@ -7,6 +7,7 @@
 #include <Scene/Components/RenderComponent.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -51,6 +52,11 @@ struct PointRenderComponent : public RenderComponent
 };
 
 ATCG_DECLARE_COMPONENT_RENDERER(PointRenderComponent);
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(PointRenderComponent);
+}
 
 namespace GUI
 {

@@ -8,6 +8,7 @@
 #include <Scene/Components/TransformComponent.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentRenderer.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -46,6 +47,11 @@ struct CameraComponent
 };
 
 ATCG_DECLARE_COMPONENT_RENDERER(CameraComponent);
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(CameraComponent);
+}
 
 namespace GUI
 {

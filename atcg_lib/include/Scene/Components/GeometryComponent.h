@@ -3,6 +3,7 @@
 #include <Asset/AssetManagerSystem.h>
 #include <DataStructure/Graph.h>
 #include <Scene/ComponentGUIHandler.h>
+#include <Scene/ComponentSerializer.h>
 
 namespace atcg
 {
@@ -28,6 +29,11 @@ struct GeometryComponent
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Geometry"; }
 };
+
+namespace Serialization
+{
+ATCG_DECLARE_COMPONENT_SERIALIZER(GeometryComponent);
+}
 
 namespace GUI
 {
