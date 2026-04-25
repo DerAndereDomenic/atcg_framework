@@ -2,6 +2,7 @@
 
 #include <Asset/AssetManagerSystem.h>
 #include <DataStructure/Graph.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -27,4 +28,9 @@ struct GeometryComponent
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Geometry"; }
 };
+
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(GeometryComponent);
+}
 }    // namespace atcg

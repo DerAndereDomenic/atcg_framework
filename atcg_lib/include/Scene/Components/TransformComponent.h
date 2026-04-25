@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/glm.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -123,4 +124,12 @@ private:
     glm::vec3 _rotation     = glm::vec3(0);    // Euler Angles
     uint64_t _revision      = 0;
 };
+
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(TransformComponent);
+
+bool displayTransform(const std::string& id, TransformComponent& component);
+}    // namespace GUI
+
 }    // namespace atcg

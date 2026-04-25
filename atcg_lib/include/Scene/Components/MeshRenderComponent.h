@@ -4,6 +4,7 @@
 #include <Renderer/Shader.h>
 #include <Renderer/ShaderManager.h>
 #include <Scene/Components/RenderComponent.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -42,4 +43,9 @@ struct MeshRenderComponent : public RenderComponent
     AssetHandle material_handle = 0;
     AssetHandle shader_handle   = 0;
 };
+
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(MeshRenderComponent);
+}
 }    // namespace atcg

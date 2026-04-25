@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/glm.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -16,4 +17,10 @@ struct HomogeneousMediumComponent
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Homogeneous Medium"; }
 };
+
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(HomogeneousMediumComponent);
+}
+
 }    // namespace atcg

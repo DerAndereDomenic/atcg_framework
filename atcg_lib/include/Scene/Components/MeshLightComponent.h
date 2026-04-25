@@ -2,6 +2,7 @@
 
 #include <Asset/AssetManagerSystem.h>
 #include <Renderer/Texture.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -47,4 +48,10 @@ struct MeshLightComponent
 private:
     atcg::ref_ptr<atcg::Texture2D> _emissive_texture;
 };
+
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(MeshLightComponent);
+}
+
 }    // namespace atcg

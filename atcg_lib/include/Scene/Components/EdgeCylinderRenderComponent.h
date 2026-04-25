@@ -3,6 +3,7 @@
 #include <Asset/AssetManagerSystem.h>
 #include <Renderer/Material.h>
 #include <Scene/Components/RenderComponent.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -22,4 +23,10 @@ struct EdgeCylinderRenderComponent : public RenderComponent
 
     AssetHandle material_handle = 0;
 };
+
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(EdgeCylinderRenderComponent);
+}
+
 }    // namespace atcg

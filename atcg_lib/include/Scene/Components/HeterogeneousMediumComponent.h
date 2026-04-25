@@ -3,6 +3,7 @@
 #include <Asset/AssetManagerSystem.h>
 #include <DataStructure/BoundingBox.h>
 #include <Renderer/Texture.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -59,4 +60,10 @@ private:
     atcg::ref_ptr<Texture3D> _default_emission_texture;
     atcg::ref_ptr<Texture3D> _default_albedo_texture;
 };
+
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(HeterogeneousMediumComponent);
+}
+
 }    // namespace atcg

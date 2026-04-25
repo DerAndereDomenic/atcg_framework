@@ -3,6 +3,7 @@
 #include <Asset/AssetManagerSystem.h>
 #include <Scripting/Behavior.h>
 #include <Scripting/Script.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -50,4 +51,8 @@ struct ScriptComponent
 private:
     atcg::ref_ptr<Behavior> _behavior = nullptr;
 };
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(ScriptComponent);
+}
 }    // namespace atcg

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/glm.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -18,5 +19,10 @@ struct PointLightComponent
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Point Light"; }
 };
+
+namespace GUI
+{
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(PointLightComponent);
+}
 
 }    // namespace atcg

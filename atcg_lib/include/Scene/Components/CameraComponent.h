@@ -5,6 +5,8 @@
 #include <Renderer/Camera.h>
 #include <Renderer/Framebuffer.h>
 #include <Renderer/PerspectiveCamera.h>
+#include <Scene/Components/TransformComponent.h>
+#include <Scene/ComponentGUIHandler.h>
 
 namespace atcg
 {
@@ -41,4 +43,34 @@ struct CameraComponent
     AssetHandle image_handle;
     bool render_preview = false;
 };
+
+namespace GUI
+{
+
+template<>
+ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<atcg::Scene>& scene, Entity entity)
+{
+#ifndef ATCG_HEADLESS
+    if(!entity.hasComponent<CameraComponent>())
+    {
+        if(ImGui::MenuItem(CameraComponent::toString()))
+        {
+            atcg::RevisionStack::startRecording<ComponentAddedRevision<CameraComponent>>(scene, entity);
+            auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>());
+            if(entity.hasComponent<TransformComponent>())
+            {
+                atcg::ref_ptr<PerspectiveCamera> cam =
+                    std::dynamic_pointer_cast<PerspectiveCamera>(camera_component.camera);
+                cam->setView(glm::inverse(entity.getComponent<TransformComponent>().getModel()));
+            }
+            ImGui::CloseCurrentPopup();
+            atcg::RevisionStack::endRecording();
+        }
+    }
+#endif
+}
+
+ATCG_DECLARE_COMPONENT_GUI_RENDERER(CameraComponent);
+}    // namespace GUI
+
 }    // namespace atcg
