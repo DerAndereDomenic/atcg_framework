@@ -24,7 +24,10 @@ struct ScriptComponent
         }
         else
         {
-            script_handle = AssetManager::registerAsset(script, "script");
+            auto script_path = script->getFilePath();
+            // Get the filename without extension as name
+            auto script_name = script_path.stem().string();
+            script_handle    = AssetManager::registerAsset(script, script_name);
         }
         _behavior = nullptr;
     }
