@@ -119,17 +119,5 @@ ATCG_INLINE void displayAddComponentEntry(const atcg::ref_ptr<atcg::Scene>& scen
     }
 #endif
 }
-
-AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle);
 }    // namespace GUI
 }    // namespace atcg

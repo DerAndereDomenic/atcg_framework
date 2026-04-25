@@ -2,6 +2,7 @@
 #include <Scene/ComponentRegistry.h>
 #include <Scene/Components/TransformComponent.h>
 #include <Scene/Components/GeometryComponent.h>
+#include <Utils/Utils.h>
 
 #define MESH_LIGHT_KEY       "MeshLight"
 #define EMISSIVE_SCALE_KEY   "EmissiveScale"
@@ -137,7 +138,7 @@ void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_pt
 
         ImGui::Separator();
 
-        auto new_handle = displayTexture2DSelection("meshlight", component.emissive_handle);
+        auto new_handle = Utils::displayTexture2DSelection("meshlight", component.emissive_handle);
 
         updated                   = (new_handle != component.emissive_handle) || updated;
         component.emissive_handle = new_handle;

@@ -166,7 +166,7 @@ void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atc
     // Material
     auto material_handle = component.material_handle;
 
-    auto new_handle           = displayMaterialSelection("edgecylinder", material_handle);
+    auto new_handle           = Utils::displayMaterialSelection("edgecylinder", material_handle);
     updated                   = (new_handle != material_handle) || updated;
     component.material_handle = new_handle;
 

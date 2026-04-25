@@ -1,5 +1,6 @@
 #include <Scene/Components/ScriptComponent.h>
 #include <Scene/ComponentRegistry.h>
+#include <Utils/Utils.h>
 
 #define SCRIPT_KEY "Script"
 
@@ -49,7 +50,7 @@ void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<S
                                                            ScriptComponent& _component) const
 {
 #ifndef ATCG_HEADLESS
-    auto new_handle = displayScriptSelection("script", _component.script_handle);
+    auto new_handle = Utils::displayScriptSelection("script", _component.script_handle);
     bool updated    = (new_handle != _component.script_handle);
 
     if(updated)

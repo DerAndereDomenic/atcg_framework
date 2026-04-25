@@ -1,5 +1,6 @@
 #include <Scene/Components/GeometryComponent.h>
 #include <Scene/ComponentRegistry.h>
+#include <Utils/Utils.h>
 
 #define GEOMETRY_KEY "Geometry"
 
@@ -41,7 +42,7 @@ void ComponentGUIRenderer<GeometryComponent>::draw_component(const atcg::ref_ptr
                                                              GeometryComponent& component) const
 {
 #ifndef ATCG_HEADLESS
-    auto new_handle = displayGraphSelection("geometry", component.graph_handle);
+    auto new_handle = Utils::displayGraphSelection("geometry", component.graph_handle);
     bool updated    = (new_handle != component.graph_handle);
 
     if(updated)

@@ -168,7 +168,7 @@ void ComponentGUIRenderer<PointRenderComponent>::draw_component(const atcg::ref_
     }
 
     auto shader_handle      = component.shader_handle;
-    auto new_handle         = displayShaderSelection("point", shader_handle);
+    auto new_handle         = Utils::displayShaderSelection("point", shader_handle);
     updated                 = (new_handle != shader_handle) || updated;
     component.shader_handle = new_handle;
 

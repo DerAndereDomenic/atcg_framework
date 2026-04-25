@@ -117,41 +117,5 @@ deserializeComponent(const std::string& file_name, const atcg::ref_ptr<Scene>& s
 {
     ComponentSerializer<ComponentType>().deserialize_component(file_name, scene, entity, j);
 }
-
-/**
- * @brief Serialize a buffer
- *
- * @param file_name The file name
- * @param data The buffer data
- * @param byte_size The buffer size in bytes
- */
-void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size);
-
-/**
- * @brief Deserialize a buffer
- *
- * @param file_name The file name
- *
- * @return The deserialized data
- */
-std::vector<uint8_t> deserializeBuffer(const std::string& file_name);
-
-/**
- * @brief Serialize a layout
- *
- * @param layout The buffer layout
- *
- * @return The json object representing the layout
- */
-nlohmann::json serializeLayout(const atcg::BufferLayout& layout);
-
-/**
- * @brief Deserialize a layout
- *
- * @param layout_node The json node containing the Layout data
- *
- * @return The BufferLayout
- */
-atcg::BufferLayout deserializeLayout(nlohmann::json& layout_node);
 }    // namespace Serialization
 }    // namespace atcg

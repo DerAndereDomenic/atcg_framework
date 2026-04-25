@@ -131,10 +131,10 @@ void ComponentSerializer<InstanceRenderComponent>::serialize_component(const std
     {
         const char* buffer      = component.instance_vbos[i]->getHostPointer<char>();
         std::string buffer_name = file_path + "." + std::to_string(id.ID()) + ".instance_" + std::to_string(i);
-        serializeBuffer(buffer_name, buffer, component.instance_vbos[i]->size());
+        Utils::serializeBuffer(buffer_name, buffer, component.instance_vbos[i]->size());
         nlohmann::json json_buffer;
         json_buffer[PATH_KEY]   = buffer_name;
-        json_buffer[LAYOUT_KEY] = serializeLayout(component.instance_vbos[i]->getLayout());
+        json_buffer[LAYOUT_KEY] = Utils::serializeLayout(component.instance_vbos[i]->getLayout());
         buffers.push_back(json_buffer);
         component.instance_vbos[i]->unmapHostPointers();
     }
@@ -173,8 +173,8 @@ void ComponentSerializer<InstanceRenderComponent>::deserialize_component(const s
         for(auto instance: instances)
         {
             std::string path                      = instance[PATH_KEY];
-            atcg::BufferLayout layout             = deserializeLayout(instance[LAYOUT_KEY]);
-            std::vector<uint8_t> buffer           = deserializeBuffer(path);
+            atcg::BufferLayout layout             = Utils::deserializeLayout(instance[LAYOUT_KEY]);
+            std::vector<uint8_t> buffer           = Utils::deserializeBuffer(path);
             atcg::ref_ptr<atcg::VertexBuffer> vbo = atcg::make_ref<atcg::VertexBuffer>(buffer.data(), buffer.size());
             vbo->setLayout(layout);
             renderComponent.addInstanceBuffer(vbo);
@@ -198,13 +198,13 @@ void ComponentGUIRenderer<InstanceRenderComponent>::draw_component(const atcg::r
     // Material
     auto material_handle = component.material_handle;
 
-    auto new_handle           = displayMaterialSelection("instance", material_handle);
+    auto new_handle           = Utils::displayMaterialSelection("instance", material_handle);
     updated                   = (new_handle != material_handle) || updated;
     component.material_handle = new_handle;
     updated = ImGui::Checkbox("Receive Shadows##InstanceRenderComponent", &component.receive_shadow) || updated;
 
     auto shader_handle      = component.shader_handle;
-    new_handle              = displayShaderSelection("instance", shader_handle);
+    new_handle              = Utils::displayShaderSelection("instance", shader_handle);
     updated                 = (new_handle != shader_handle) || updated;
     component.shader_handle = new_handle;
 

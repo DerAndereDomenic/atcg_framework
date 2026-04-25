@@ -157,11 +157,11 @@ void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_p
     auto material_handle = component_copy.material_handle;
     auto shader_handle   = component_copy.shader_handle;
 
-    auto new_handle                = displayMaterialSelection("mesh", material_handle);
+    auto new_handle                = Utils::displayMaterialSelection("mesh", material_handle);
     updated                        = (new_handle != material_handle) || updated;
     component_copy.material_handle = new_handle;
 
-    new_handle                   = displayShaderSelection("mesh", shader_handle);
+    new_handle                   = Utils::displayShaderSelection("mesh", shader_handle);
     updated                      = (new_handle != shader_handle) || updated;
     component_copy.shader_handle = new_handle;
 

@@ -1,5 +1,6 @@
 #include <Scene/Components/HeterogeneousMediumComponent.h>
 #include <Scene/ComponentRegistry.h>
+#include <Utils/Utils.h>
 
 #define HETEROGENEOUS_MEDIUM_KEY "Heterogeneous Medium"
 #define DENSITY_GRID_KEY         "density_grid"
@@ -128,8 +129,8 @@ void ComponentGUIRenderer<HeterogeneousMediumComponent>::draw_component(const at
     bool updated = false;
 
     ImGui::Text("Density");
-    auto new_handle                = displayTexture3DSelection("densitytexture3d", _component.density_grid.handle);
-    updated                        = updated || (new_handle != _component.density_grid.handle);
+    auto new_handle = Utils::displayTexture3DSelection("densitytexture3d", _component.density_grid.handle);
+    updated         = updated || (new_handle != _component.density_grid.handle);
     _component.density_grid.handle = new_handle;
     updated =
         ImGui::DragFloat("Desity Scale##texture3d", &_component.density_grid.scale, 0.01f, 0.0f, 10.0f) || updated;
@@ -139,7 +140,7 @@ void ComponentGUIRenderer<HeterogeneousMediumComponent>::draw_component(const at
 
     ImGui::Separator();
     ImGui::Text("Albedo");
-    new_handle                    = displayTexture3DSelection("albedotexture3d", _component.albedo_grid.handle);
+    new_handle                    = Utils::displayTexture3DSelection("albedotexture3d", _component.albedo_grid.handle);
     updated                       = updated || (new_handle != _component.albedo_grid.handle);
     _component.albedo_grid.handle = new_handle;
     updated = ImGui::DragFloat("Albedo Scale##texture3d", &_component.albedo_grid.scale, 0.01f, 0.0f, 1.0f) || updated;
@@ -149,8 +150,8 @@ void ComponentGUIRenderer<HeterogeneousMediumComponent>::draw_component(const at
 
     ImGui::Separator();
     ImGui::Text("Emission");
-    new_handle                      = displayTexture3DSelection("emissiontexture3d", _component.emission_grid.handle);
-    updated                         = updated || (new_handle != _component.emission_grid.handle);
+    new_handle = Utils::displayTexture3DSelection("emissiontexture3d", _component.emission_grid.handle);
+    updated    = updated || (new_handle != _component.emission_grid.handle);
     _component.emission_grid.handle = new_handle;
     updated =
         ImGui::DragFloat("Emission Scale##texture3d", &_component.emission_grid.scale, 0.01f, 0.0f, 10.0f) || updated;

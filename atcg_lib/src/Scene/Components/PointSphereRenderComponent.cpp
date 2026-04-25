@@ -4,7 +4,6 @@
 
 #define POINT_SPHERE_RENDERER_KEY "PointSphereRenderer"
 #define POINT_SIZE_KEY            "PointSize"
-#define POINT_SIZE_KEY            "PointSize"
 #define SHADER_KEY                "Shader"
 #define MATERIAL_KEY              "Material"
 
@@ -175,12 +174,12 @@ void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg
     // Material
     auto material_handle = component.material_handle;
 
-    auto new_handle           = displayMaterialSelection("pointsphere", material_handle);
+    auto new_handle           = Utils::displayMaterialSelection("pointsphere", material_handle);
     updated                   = (new_handle != material_handle) || updated;
     component.material_handle = new_handle;
 
     auto shader_handle      = component.shader_handle;
-    new_handle              = displayShaderSelection("pointsphere", shader_handle);
+    new_handle              = Utils::displayShaderSelection("pointsphere", shader_handle);
     updated                 = (new_handle != shader_handle) || updated;
     component.shader_handle = new_handle;
 
