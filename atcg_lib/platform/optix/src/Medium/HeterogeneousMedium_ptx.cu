@@ -117,6 +117,70 @@ __direct_callable__heterogeneousMedium_sampleMediumEvent(const glm::vec3& origin
     return result;
 }
 
+// extern "C" __device__ atcg::MediumSamplingResult
+// __direct_callable__heterogeneousMedium_sampleMediumEventForward(const CuDiff::Dual<6, glm::vec3>& origin,
+//                                                                 const CuDiff::Dual<6, glm::vec3>& direction,
+//                                                                 float max_distance,
+//                                                                 const atcg::SampledWavelengths& wavelengths,
+//                                                                 atcg::PCG32& rng)
+// {
+//     const atcg::HeterogeneousMediumData* sbt_data =
+//         *reinterpret_cast<const atcg::HeterogeneousMediumData**>(optixGetSbtDataPointer());
+//     // Arbitrarily clamp max_distance.
+//     // If max_distance would be (close to) infinite, the loop below might not terminate.
+//     max_distance = glm::clamp(max_distance, 0.0f, 1e6f);
+
+//     {
+//         /* Implement:
+//          * - Sample the distance of a medium event in the inverval [0, max_distance] along the given ray in the
+//          medium
+//          * using the delta-tracking algorithm. Hint: Use the functions above to sample the medium density and sample
+//          * distances in homogeneous media.
+//          */
+
+//         //<solution>
+//         float distance = 0.0f;
+//         atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(
+//             sbt_data->density_majorant);
+//         while(distance < max_distance)
+//         {
+//             float step = sampling_strategy.sample(rng.next1d());
+//             distance += step;
+//             CuDiff::Dual<6, glm::vec3> step_position = origin + distance * direction;
+//             float step_density                       = sbt_data->density_grid.eval(step_position);
+
+//             // Russian-roulette-style acceptance of sample.
+//             if(rng.next1d() < step_density / sbt_data->density_majorant)
+//             {
+//                 // Scattering or absorbtion event case.
+//                 auto albedo          = sbt_data->albedo_grid.eval(step_position);
+//                 transmittance_weight = albedo;
+//                 break;
+//             }
+//             else
+//             {
+//                 // Null-scattering event case.
+//             }
+//         }
+//         // Indicate no medium event if max_distance is exceeded.
+//         if(distance >= max_distance) distance = std::numeric_limits<float>::signaling_NaN();
+//         //</solution>
+//     }
+
+//     atcg::MediumSamplingResult result;
+//     // Set incoming ray direction
+//     result.interaction.incoming_direction = direction;
+//     result.interaction.incoming_distance  = sample.distance;
+//     result.interaction.position           = origin + sample.distance * direction;
+//     result.transmittance_weight           = sample.transmittance_weight;
+//     result.radiance_weight                = sample.emission_weight;
+//     if(result.interaction.isValid())
+//     {
+//         result.interaction.position = origin + result.interaction.incoming_distance * direction;
+//     }
+//     return result;
+// }
+
 extern "C" __device__ void
 __direct_callable__heterogeneousMedium_sampleMediumEventBackward(const glm::vec3& origin,
                                                                  const glm::vec3& direction,

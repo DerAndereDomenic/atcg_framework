@@ -81,8 +81,16 @@ void VolAttachedDiffPathtracingIntegrator::initializePipeline(const Dictionary& 
     _dual_miss_index      = _sbt->addMissEntry(dual_miss_prog_group);
     _occlusion_miss_index = _sbt->addMissEntry(occl_prog_group);
 
-    _optix_scene = SceneAdapter(_context, _pipeline, _sbt)
-                       .apply(scene, dict.getValue<uint32_t>("width"), dict.getValue<uint32_t>("height"));
+    uint32_t width  = dict.getValue<uint32_t>("width");
+    uint32_t height = dict.getValue<uint32_t>("height");
+
+    _optix_scene = SceneAdapter(_context, _pipeline, _sbt).apply(scene, width, height);
+
+    TextureSpecification spec;
+    spec.width       = width;
+    spec.height      = height;
+    spec.format      = TextureFormat::RGFLOAT;
+    _last_JL_texture = Texture2D::create(spec);
 
     _pipeline->createPipeline();
     _sbt->createSBT();
@@ -90,10 +98,26 @@ void VolAttachedDiffPathtracingIntegrator::initializePipeline(const Dictionary& 
     _differentiable_components.clear();
     for(auto shape: _optix_scene->getShapes())
     {
-        auto diff = std::dynamic_pointer_cast<Differentiable>(shape->getBSDF());
-        if(diff)
+        auto bsdf_diff = std::dynamic_pointer_cast<Differentiable>(shape->getBSDF());
+        if(bsdf_diff)
         {
-            _differentiable_components.push_back(diff.get());
+            _differentiable_components.push_back(bsdf_diff.get());
+        }
+
+        if(shape->getInsideMedium())
+        {
+            auto medium_diff = std::dynamic_pointer_cast<Differentiable>(shape->getInsideMedium());
+            if(medium_diff)
+            {
+                _differentiable_components.push_back(medium_diff.get());
+            }
+
+            auto phase_function =
+                std::dynamic_pointer_cast<Differentiable>(shape->getInsideMedium()->getPhaseFunction());
+            if(phase_function)
+            {
+                _differentiable_components.push_back(phase_function.get());
+            }
         }
     }
 
@@ -103,11 +127,58 @@ void VolAttachedDiffPathtracingIntegrator::initializePipeline(const Dictionary& 
 void VolAttachedDiffPathtracingIntegrator::onImGuiRender()
 {
     _panel.renderPanel(_optix_scene);
+
+    ImGui::Begin("Derivative");
+
+    if(_last_JL.defined())
+    {
+        ImGui::SliderInt("Derivative Channel", &_derivative_channel, 0, 17);
+
+        auto normalize = [](torch::Tensor inp) -> torch::Tensor
+        {
+            auto min = torch::amin(inp);
+            auto max = torch::amax(inp);
+            auto y   = (inp - min) / (max - min);
+
+            // auto y = torch::where(inp == 0.0f, 0.0f, torch::sigmoid(inp));
+
+            return y;
+        };
+
+        auto pos_neg = [normalize](torch::Tensor inp) -> torch::Tensor
+        {
+            torch::Tensor pos = torch::relu(inp);
+
+            torch::Tensor neg = torch::relu(-inp);
+
+            torch::Tensor y = torch::concat({pos, neg}, /*dim=*/-1);
+
+            return normalize(y);
+        };
+
+        auto slice =
+            _last_JL.index({torch::indexing::Slice(), torch::indexing::Slice(), _derivative_channel}).unsqueeze(-1);
+        auto data = pos_neg(slice);
+        _last_JL_texture->setData(data);
+
+        ImGui::Image((ImTextureID)_last_JL_texture->getID(),
+                     ImVec2((int)(4 * _last_JL_texture->width()), (int)(4 * _last_JL_texture->height())),
+                     ImVec2 {0, 1},
+                     ImVec2 {1, 0});
+        auto mini = torch::amin(slice).item<float>();
+        auto maxi = torch::amax(slice).item<float>();
+        auto mean = torch::mean(torch::abs(slice)).item<float>();
+
+        ImGui::Text("Min: %.6f, Max: %.6f, Mean: %.6f", mini, maxi, mean);
+    }
+
+    ImGui::End();
 }
 
 void VolAttachedDiffPathtracingIntegrator::reset()
 {
     // _frame_counter = 0;
+    _last_JL.zero_();
 }
 
 std::tuple<torch::Tensor, torch::Tensor>
@@ -237,6 +308,19 @@ torch::Tensor VolAttachedDiffPathtracingIntegrator::sample(Dictionary& in_out_di
         torch::NoGradGuard no_grad;
         std::tie(result, JL) = _forwardTrace(in_out_dictionary);
     }
+
+    static int counter = 0;
+    counter++;
+    if(_last_JL.defined() && _last_JL.sizes() == JL.sizes())
+    {
+        _last_JL = JL / counter + _last_JL * (counter - 1) / counter;
+    }
+    else
+    {
+        _last_JL = JL;
+        counter  = 1;
+    }
+    _last_JL = torch::where(torch::isfinite(_last_JL), _last_JL, 0.0f);
 
     if(is_executable)
     {
