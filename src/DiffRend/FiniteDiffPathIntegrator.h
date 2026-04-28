@@ -2,6 +2,7 @@
 
 #include "DiffPathtracingIntegrator.h"
 #include "DifferentiableIntegrator.h"
+#include "VolAttachedDiffPathtracingIntegrator.h"
 
 #include <torch/torch.h>
 
@@ -9,7 +10,7 @@ namespace atcg
 {
 struct FiniteDiffPathNode : public torch::autograd::Node
 {
-    DiffPathtracingIntegrator* integrator;
+    VolAttachedDiffPathtracingIntegrator* integrator;
     uint32_t rng_index;
     uint32_t width, height;
     atcg::ref_ptr<PerspectiveCamera> camera;
@@ -18,7 +19,7 @@ struct FiniteDiffPathNode : public torch::autograd::Node
     virtual void release_variables() override;
 };
 
-class FiniteDiffPathtracingIntegrator : public DiffPathtracingIntegrator
+class FiniteDiffPathtracingIntegrator : public VolAttachedDiffPathtracingIntegrator
 {
 public:
     FiniteDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context, const Dictionary& dict);

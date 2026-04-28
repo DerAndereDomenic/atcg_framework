@@ -49,7 +49,7 @@ void FiniteDiffPathNode::release_variables()
 
 FiniteDiffPathtracingIntegrator::FiniteDiffPathtracingIntegrator(const atcg::ref_ptr<RaytracingContext>& context,
                                                                  const Dictionary& dict)
-    : DiffPathtracingIntegrator(context, dict)
+    : VolAttachedDiffPathtracingIntegrator(context, dict)
 {
 }
 
@@ -65,7 +65,7 @@ torch::Tensor FiniteDiffPathtracingIntegrator::sample(Dictionary& in_out_diction
     torch::Tensor result;
     {
         torch::NoGradGuard no_grad;
-        result = DiffPathtracingIntegrator::sample(in_out_dictionary);
+        result = VolAttachedDiffPathtracingIntegrator::sample(in_out_dictionary);
     }
 
     if(is_executable)
