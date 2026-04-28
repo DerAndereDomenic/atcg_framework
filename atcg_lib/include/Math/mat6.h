@@ -98,6 +98,22 @@ ATCG_HOST_DEVICE ATCG_INLINE mat6 operator*(const mat6& A, const mat6& B)
                 A.m10 * B.m01 + A.m11 * B.m11);
 }
 
+ATCG_HOST_DEVICE ATCG_INLINE mat6 inverse(const mat6& A)
+{
+    // Compute the inverse of a 6x6 matrix using block matrix inversion
+    glm::mat3 A00_inv              = glm::inverse(A.m00);
+    glm::mat3 Schur_complement     = A.m11 - A.m10 * A00_inv * A.m01;
+    glm::mat3 Schur_complement_inv = glm::inverse(Schur_complement);
+
+    mat6 A_inv;
+    A_inv.m00 = A00_inv + A00_inv * A.m01 * Schur_complement_inv * A.m10 * A00_inv;
+    A_inv.m01 = -A00_inv * A.m01 * Schur_complement_inv;
+    A_inv.m10 = -Schur_complement_inv * A.m10 * A00_inv;
+    A_inv.m11 = Schur_complement_inv;
+
+    return A_inv;
+}
+
 ATCG_HOST_DEVICE ATCG_INLINE mat6x3 operator+(const mat6x3& A, const mat6x3& B)
 {
     return mat6x3(A.m00 + B.m00, A.m01 + B.m01);
