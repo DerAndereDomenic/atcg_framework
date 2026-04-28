@@ -527,6 +527,7 @@ public:
         atcg::WindowResizeEvent resize_event(event->getWidth(), event->getHeight());
         camera_controller->onEvent(&resize_event);
         createOutputTexture(event->getWidth(), event->getHeight());
+        initializePathtracer();
         frame_counter = 0;
         return false;
     }
