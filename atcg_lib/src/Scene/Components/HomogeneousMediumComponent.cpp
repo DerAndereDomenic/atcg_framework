@@ -1,5 +1,8 @@
 #include <Scene/Components/HomogeneousMediumComponent.h>
 #include <Scene/ComponentRegistry.h>
+#include <Scene/Components/TransformComponent.h>
+#include <Scene/Components/GeometryComponent.h>
+#include <Scene/Components/MeshRenderComponent.h>
 
 #define HOMOGENEOUS_MEDIUM_KEY "Homogeneous Medium"
 #define ALBEDO_KEY             "albedo"
@@ -10,6 +13,91 @@
 
 namespace atcg
 {
+
+void ComponentRenderer<HomogeneousMediumComponent>::renderComponent(atcg::RendererSystem* _renderer,
+                                                                    Entity entity,
+                                                                    const atcg::ref_ptr<Camera>& camera,
+                                                                    atcg::Dictionary& auxiliary) const
+{
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
+    if(!entity.hasComponent<MeshRenderComponent>())
+    {
+        ATCG_WARN("Entity does not have mesh render component!");
+        return;
+    }
+
+    uint32_t entity_id           = entity.entity_handle();
+    TransformComponent transform = entity.getComponent<TransformComponent>();
+    GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
+
+    // Actual rendering of component
+    HomogeneousMediumComponent& medium = entity.getComponent<HomogeneousMediumComponent>();
+    MeshRenderComponent& mesh_renderer = entity.getComponent<MeshRenderComponent>();
+
+    if(mesh_renderer.material()->getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
+    {
+        return;
+    }
+
+    auto scene = entity.scene();
+
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader",
+                                                    _renderer->getShaderManager()->getShader("volume_hom"));
+
+    auto depth_map = auxiliary.getValueOr<atcg::ref_ptr<atcg::Texture>>("depth_map", nullptr);
+
+    if(!depth_map)
+    {
+        ATCG_WARN("No depth map provided for volume rendering, skipping homogeneous medium component");
+        return;
+    }
+
+    if(mesh_renderer.visible)
+    {
+        uint32_t id = _renderer->popTextureID();
+        GraphicsCommand::bindTexture(id, depth_map);
+        shader->setInt("back_depth", id);
+        shader->setVec3("albedo", medium.albedo);
+        shader->setFloat("density", medium.density);
+        shader->setInt("entityID", entity.entity_handle());
+        shader->setMat4("invView", glm::inverse(camera->getView()));
+        shader->setMat4("invProj", glm::inverse(camera->getProjection()));
+        shader->setFloat("g", medium.g);
+        shader->setFloat("Le", medium.Le);
+        shader->setVec3("Le_color", medium.Le_color);
+
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
+            RasterizerState().enableCulling(true).setCullMode(CullMode::ATCG_BACK_FACE_CULLING));
+
+        _renderer->drawVAO(geometry.graph()->getVerticesArray(),
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           geometry.graph()->n_vertices());
+
+        _renderer->pushTextureID(id);
+    }
+}
 
 namespace Serialization
 {
@@ -81,7 +169,5 @@ void ComponentGUIRenderer<HomogeneousMediumComponent>::draw_component(const atcg
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT_DRAW(HomogeneousMediumComponent);
-ATCG_REGISTER_COMPONENT_STORE(HomogeneousMediumComponent);
-ATCG_REGISTER_COMPONENT_SERIALIZATION(HomogeneousMediumComponent);
+ATCG_REGISTER_COMPONENT(HomogeneousMediumComponent);
 }    // namespace atcg

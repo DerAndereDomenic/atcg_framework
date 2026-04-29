@@ -5,6 +5,7 @@
 #include <Renderer/Texture.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
@@ -61,6 +62,8 @@ private:
     atcg::ref_ptr<Texture3D> _default_emission_texture;
     atcg::ref_ptr<Texture3D> _default_albedo_texture;
 };
+
+ATCG_DECLARE_COMPONENT_RENDERER(HeterogeneousMediumComponent);
 
 namespace Serialization
 {

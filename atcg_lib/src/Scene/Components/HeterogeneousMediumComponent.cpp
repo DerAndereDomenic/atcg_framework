@@ -1,6 +1,9 @@
 #include <Scene/Components/HeterogeneousMediumComponent.h>
 #include <Scene/ComponentRegistry.h>
 #include <Utils/Utils.h>
+#include <Scene/Components/TransformComponent.h>
+#include <Scene/Components/GeometryComponent.h>
+#include <Scene/Components/MeshRenderComponent.h>
 
 #define HETEROGENEOUS_MEDIUM_KEY "Heterogeneous Medium"
 #define DENSITY_GRID_KEY         "density_grid"
@@ -15,6 +18,134 @@
 
 namespace atcg
 {
+
+void ComponentRenderer<HeterogeneousMediumComponent>::renderComponent(atcg::RendererSystem* _renderer,
+                                                                      Entity entity,
+                                                                      const atcg::ref_ptr<Camera>& camera,
+                                                                      atcg::Dictionary& auxiliary) const
+{
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
+    if(!entity.hasComponent<MeshRenderComponent>())
+    {
+        ATCG_WARN("Entity does not have mesh render component!");
+        return;
+    }
+
+    uint32_t entity_id           = entity.entity_handle();
+    TransformComponent transform = entity.getComponent<TransformComponent>();
+    GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
+
+    // Actual rendering of component
+    HeterogeneousMediumComponent& medium = entity.getComponent<HeterogeneousMediumComponent>();
+    MeshRenderComponent& mesh_renderer   = entity.getComponent<MeshRenderComponent>();
+
+    if(mesh_renderer.material()->getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
+    {
+        return;
+    }
+
+    auto scene = entity.scene();
+
+    atcg::ref_ptr<atcg::Shader> shader =
+        auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader",
+                                                    _renderer->getShaderManager()->getShader("volume_het"));
+
+    auto depth_map = auxiliary.getValueOr<atcg::ref_ptr<atcg::Texture>>("depth_map", nullptr);
+
+    if(!depth_map)
+    {
+        ATCG_WARN("No depth map provided for volume rendering, skipping heterogeneous medium component");
+        return;
+    }
+
+    if(mesh_renderer.visible)
+    {
+        uint32_t id = _renderer->popTextureID();
+        GraphicsCommand::bindTexture(id, depth_map);
+        shader->setInt("back_depth", id);
+        shader->setInt("entityID", entity.entity_handle());
+        shader->setMat4("invView", glm::inverse(camera->getView()));
+        shader->setMat4("invProj", glm::inverse(camera->getProjection()));
+        shader->setFloat("g", medium.g);
+
+        uint32_t density_id  = _renderer->popTextureID();
+        uint32_t albedo_id   = _renderer->popTextureID();
+        uint32_t emission_id = _renderer->popTextureID();
+
+        // Bind density, albedo and emission textures
+        if(medium.density())
+        {
+            shader->setInt("density_grid", density_id);
+            shader->setFloat("density_scale", medium.density_grid.scale);
+            glm::mat4 to_uvw = glm::mat4(1);
+            glm::vec3 scale  = medium.density_grid.bbox.max - medium.density_grid.bbox.min;
+            to_uvw           = to_uvw * glm::scale(1.0f / scale);
+            to_uvw           = to_uvw * glm::translate(-medium.density_grid.bbox.min);
+            to_uvw           = to_uvw * glm::inverse(entity.getComponent<atcg::TransformComponent>().getModel());
+            shader->setMat4("density_to_uvw", to_uvw);
+            GraphicsCommand::bindTexture(density_id, medium.density());
+        }
+
+        if(medium.albedo())
+        {
+            shader->setInt("albedo_grid", albedo_id);
+            shader->setFloat("albedo_scale", medium.albedo_grid.scale);
+            glm::mat4 to_uvw = glm::mat4(1);
+            glm::vec3 scale  = medium.albedo_grid.bbox.max - medium.albedo_grid.bbox.min;
+            to_uvw           = to_uvw * glm::scale(1.0f / scale);
+            to_uvw           = to_uvw * glm::translate(-medium.albedo_grid.bbox.min);
+            to_uvw           = to_uvw * glm::inverse(entity.getComponent<atcg::TransformComponent>().getModel());
+            shader->setMat4("albedo_to_uvw", to_uvw);
+            GraphicsCommand::bindTexture(albedo_id, medium.albedo());
+        }
+
+        if(medium.emission())
+        {
+            shader->setInt("emission_grid", emission_id);
+            shader->setFloat("emission_scale", medium.emission_grid.scale);
+            glm::mat4 to_uvw = glm::mat4(1);
+            glm::vec3 scale  = medium.emission_grid.bbox.max - medium.emission_grid.bbox.min;
+            to_uvw           = to_uvw * glm::scale(1.0f / scale);
+            to_uvw           = to_uvw * glm::translate(-medium.emission_grid.bbox.min);
+            to_uvw           = to_uvw * glm::inverse(entity.getComponent<atcg::TransformComponent>().getModel());
+            shader->setMat4("emission_to_uvw", to_uvw);
+            GraphicsCommand::bindTexture(emission_id, medium.emission());
+        }
+
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
+            RasterizerState().enableCulling(true).setCullMode(CullMode::ATCG_BACK_FACE_CULLING));
+
+        _renderer->drawVAO(geometry.graph()->getVerticesArray(),
+                           camera,
+                           transform.getModel(),
+                           pipeline,
+                           geometry.graph()->n_vertices());
+
+        _renderer->pushTextureID(id);
+        _renderer->pushTextureID(density_id);
+        _renderer->pushTextureID(albedo_id);
+        _renderer->pushTextureID(emission_id);
+    }
+}
 
 namespace Serialization
 {
@@ -170,7 +301,5 @@ void ComponentGUIRenderer<HeterogeneousMediumComponent>::draw_component(const at
 }
 }    // namespace GUI
 
-ATCG_REGISTER_COMPONENT_DRAW(HeterogeneousMediumComponent);
-ATCG_REGISTER_COMPONENT_STORE(HeterogeneousMediumComponent);
-ATCG_REGISTER_COMPONENT_SERIALIZATION(HeterogeneousMediumComponent);
+ATCG_REGISTER_COMPONENT(HeterogeneousMediumComponent);
 }    // namespace atcg
