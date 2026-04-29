@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Scene/Scene.h>
+#include <Scene/Entity.h>
 
 #include <json.hpp>
 
