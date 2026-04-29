@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added possibility to customize and add closest hit programs for arbitrary shapes
 - Added simple camera exposure model
 - Added optix as submodule. The pathtracing backend is now always built when CUDA is available
+- Added depth pass for meshes
 
 ### Changed
 
@@ -98,6 +99,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MaterialType::GLASS was changed to MaterialType::Dielectric
 - Changed the way scripting works. Now an instance of a script class represents the python code itself and is used to instatiate a behavior which controls the actual behavior of the entity. This way, the script can be used for multiple entities with separate instances of the same behavior
 - Removed ATCG_ENABLE_OPTIX
+- Separated Components into separate file for each component.
+- Removed VolumePass
 
 ### Fixed
 
