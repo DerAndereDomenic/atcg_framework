@@ -6,6 +6,7 @@
 
 namespace atcg
 {
+
 ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "ForwardPass")
 {
     registerOutput("framebuffer", atcg::make_ref<atcg::ref_ptr<Framebuffer>>(nullptr));
@@ -80,6 +81,7 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
                 }
             }
 
+            this->_transparent_entities.clear();
             for(auto e: view)
             {
                 Entity entity(e, scene.get());
@@ -89,7 +91,38 @@ ForwardPass::ForwardPass(const RenderTargetDesc& desc) : RenderPass(desc, "Forwa
                     renderer.callback(entity, camera);
                 }
 
+                if(entity.hasAnyComponent<TransparencyComponent>() &&
+                   entity.getComponent<TransparencyComponent>().transparent)
+                {
+                    TransformComponent& transform = entity.getComponent<TransformComponent>();
+                    glm::vec3 position            = transform.getPosition();
+                    if(entity.hasComponent<GeometryComponent>())
+                    {
+                        GeometryComponent& geometry = entity.getComponent<GeometryComponent>();
+
+                        BoundingBox bbox = geometry.graph()->getBoundingBox();
+                        bbox             = Utils::transformBoundingBox(bbox, transform.getModel());
+
+                        position = (bbox.min + bbox.max) * 0.5f;
+                    }
+
+                    float distance_to_camera = glm::length(camera->getPosition() - position);
+
+                    this->_transparent_entities.push_back({entity, distance_to_camera});
+                    continue;
+                }
+
                 ComponentRegistry::renderAllComponents(renderer, entity, camera, auxiliary);
+            }
+
+            std::sort(this->_transparent_entities.begin(),
+                      this->_transparent_entities.end(),
+                      [](const TransparentRenderData& a, const TransparentRenderData& b)
+                      { return a.distance_to_camera > b.distance_to_camera; });
+
+            for(const auto& data: this->_transparent_entities)
+            {
+                ComponentRegistry::renderAllComponents(renderer, data.entity, camera, auxiliary);
             }
 
             GraphicsCommand::endRenderPass();
