@@ -45,6 +45,12 @@ ATCG_INLINE glm::mat4 boundingBoxToModelMatrix(const BoundingBox& bbox)
     return model;
 }
 
+ATCG_INLINE bool insideBoundingBox(const glm::vec3& point, const BoundingBox& bbox)
+{
+    return (point.x >= bbox.min.x && point.x <= bbox.max.x) && (point.y >= bbox.min.y && point.y <= bbox.max.y) &&
+           (point.z >= bbox.min.z && point.z <= bbox.max.z);
+}
+
 ATCG_INLINE std::array<glm::vec3, 8> getBoundingBoxCorners(const BoundingBox& bbox)
 {
     std::array<glm::vec3, 8> corners;
@@ -63,6 +69,11 @@ ATCG_INLINE std::array<glm::vec3, 8> getBoundingBoxCorners(const BoundingBox& bb
 
 ATCG_INLINE bool isVisible(const atcg::ref_ptr<Camera>& camera, const BoundingBox& bbox)
 {
+    if(insideBoundingBox(camera->getPosition(), bbox))
+    {
+        return true;
+    }
+
     std::array<glm::vec3, 8> corners = getBoundingBoxCorners(bbox);
     for(int i = 0; i < 8; ++i)
     {
@@ -73,5 +84,6 @@ ATCG_INLINE bool isVisible(const atcg::ref_ptr<Camera>& camera, const BoundingBo
     }
     return false;
 }
+
 }    // namespace Utils
 }    // namespace atcg
