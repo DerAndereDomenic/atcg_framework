@@ -85,7 +85,8 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
 
         vao_cylinder->pushInstanceBuffer(indices);
 
-        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
+            RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true).enableCulling(true));
 
         _renderer->drawVAO(vao_cylinder,
                            camera,

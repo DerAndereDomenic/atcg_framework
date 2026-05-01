@@ -79,7 +79,8 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
         shader->setInt("lut", lut_id);
         GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
 
-        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
+            RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true).enableCulling(true));
 
         _renderer->drawVAO(geometry.graph()->getVerticesArray(),
                            camera,

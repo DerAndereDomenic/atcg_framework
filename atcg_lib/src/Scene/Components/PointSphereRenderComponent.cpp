@@ -82,7 +82,8 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
 
         vao_sphere->pushInstanceBuffer(vbo);
 
-        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
+            RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true).enableCulling(true));
 
         // _renderer->setPointSize(renderer.point_size);
         _renderer->drawVAO(vao_sphere,
