@@ -48,8 +48,8 @@ void ComponentRenderer<GeometryComponent>::renderComponent(atcg::RendererSystem*
     GraphicsCommand::bindStorageBuffer(0, points);
 
     BoundingBox bbox = comp.graph()->getBoundingBox();
-    bbox             = transformBoundingBox(bbox, model);
-    model            = boundingBoxToModelMatrix(bbox);
+    bbox             = Utils::transformBoundingBox(bbox, model);
+    model            = Utils::boundingBoxToModelMatrix(bbox);
 
     _renderer->drawVAO(cube->getEdgesArray(), camera, model, pipeline, cube->n_edges());
 }

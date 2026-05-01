@@ -40,6 +40,14 @@ void ComponentRenderer<PointRenderComponent>::renderComponent(atcg::RendererSyst
 
     geometry.graph()->unmapAllPointers();
 
+    BoundingBox bbox = geometry.graph()->getBoundingBox();
+    bbox             = Utils::transformBoundingBox(bbox, transform.getModel());
+
+    if(!Utils::isVisible(camera, bbox))
+    {
+        return;
+    }
+
     // Actual rendering of component
     PointRenderComponent renderer = entity.getComponent<PointRenderComponent>();
 
