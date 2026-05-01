@@ -20,3 +20,4 @@
 #include <Scene/Components/RenderComponent.h>
 #include <Scene/Components/ScriptComponent.h>
 #include <Scene/Components/TransformComponent.h>
+#include <Scene/Components/TransparencyComponent.h>
