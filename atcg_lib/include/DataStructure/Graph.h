@@ -12,7 +12,7 @@
 #include <DataStructure/GraphDefinitions.h>
 #include <DataStructure/GraphLoader.h>
 #include <Asset/Asset.h>
-#include <DataStructure/Boundingbox.h>
+#include <DataStructure/BoundingBox.h>
 
 namespace atcg
 {
