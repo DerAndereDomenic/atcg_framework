@@ -1,6 +1,5 @@
 #include <DataStructure/Graph.h>
 #include <DataStructure/TorchUtils.h>
-#include <DataStructure/Boundingbox.h>
 
 namespace atcg
 {
