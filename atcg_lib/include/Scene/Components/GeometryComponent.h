@@ -4,6 +4,7 @@
 #include <DataStructure/Graph.h>
 #include <Scene/ComponentGUIHandler.h>
 #include <Scene/ComponentSerializer.h>
+#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
@@ -25,10 +26,14 @@ struct GeometryComponent
 
     ATCG_INLINE atcg::ref_ptr<Graph> graph() const { return AssetManager::getAsset<Graph>(graph_handle); }
 
+    bool draw_bounding_box = false;
+
     AssetHandle graph_handle;
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Geometry"; }
 };
+
+ATCG_DECLARE_COMPONENT_RENDERER(GeometryComponent);
 
 namespace Serialization
 {

@@ -51,6 +51,30 @@ public:
      */
     virtual atcg::ref_ptr<Camera> copy() const = 0;
 
+    /**
+     * @brief Transform a point from world space to camera space
+     *
+     * @param point The point in world space
+     * @return The point in camera space
+     */
+    virtual glm::vec3 transformToCameraSpace(const glm::vec3& point) const = 0;
+
+    /**
+     * @brief Transform a point from world space to normalized device coordinates (NDC)
+     *
+     * @param point The point in world space
+     * @return The point in NDC
+     */
+    virtual glm::vec3 transformToNormalizedDeviceCoordinates(const glm::vec3& point) const = 0;
+
+    /**
+     * @brief Check if a point is inside the camera frustum
+     *
+     * @param point The point in world space
+     * @return true if the point is inside the frustum, false otherwise
+     */
+    virtual bool isPointInFrustum(const glm::vec3& point) const = 0;
+
     ATCG_INLINE const CameraExtrinsics& getExtrinsics() const { return _extrinsics; }
 
     ATCG_INLINE const CameraIntrinsics& getIntrinsics() const { return _intrinsics; }

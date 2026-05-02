@@ -40,6 +40,14 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
 
     geometry.graph()->unmapAllPointers();
 
+    BoundingBox bbox = geometry.graph()->getBoundingBox();
+    bbox             = Utils::transformBoundingBox(bbox, transform.getModel());
+
+    if(!Utils::isVisible(camera, bbox))
+    {
+        return;
+    }
+
     // Actual rendering of component
     PointSphereRenderComponent renderer = entity.getComponent<PointSphereRenderComponent>();
 
@@ -74,7 +82,8 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
 
         vao_sphere->pushInstanceBuffer(vbo);
 
-        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
+            RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true).enableCulling(true));
 
         // _renderer->setPointSize(renderer.point_size);
         _renderer->drawVAO(vao_sphere,

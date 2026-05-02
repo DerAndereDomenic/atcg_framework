@@ -39,6 +39,14 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
 
     geometry.graph()->unmapAllPointers();
 
+    BoundingBox bbox = geometry.graph()->getBoundingBox();
+    bbox             = Utils::transformBoundingBox(bbox, transform.getModel());
+
+    if(!Utils::isVisible(camera, bbox))
+    {
+        return;
+    }
+
     // Actual rendering of component
     EdgeCylinderRenderComponent renderer = entity.getComponent<EdgeCylinderRenderComponent>();
 
@@ -77,7 +85,8 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
 
         vao_cylinder->pushInstanceBuffer(indices);
 
-        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
+        GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
+            RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true).enableCulling(true));
 
         _renderer->drawVAO(vao_cylinder,
                            camera,

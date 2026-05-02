@@ -43,5 +43,11 @@ public:
     ForwardPass(const RenderTargetDesc& desc = {});
 
 private:
+    struct TransparentRenderData
+    {
+        atcg::Entity entity;
+        float distance_to_camera;
+    };
+    std::vector<TransparentRenderData> _transparent_entities;
 };
 }    // namespace atcg

@@ -43,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added simple camera exposure model
 - Added optix as submodule. The pathtracing backend is now always built when CUDA is available
 - Added depth pass for meshes
+- Added bounding boxes to geometries
+- Added Transparency component to mark transparent objects
+- Added order dependent transparency rendering (sorting of transparent objects)
+- Added frustum culling based on bounding boxes
 
 ### Changed
 
