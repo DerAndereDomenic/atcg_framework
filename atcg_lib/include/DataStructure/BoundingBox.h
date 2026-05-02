@@ -69,20 +69,33 @@ ATCG_INLINE std::array<glm::vec3, 8> getBoundingBoxCorners(const BoundingBox& bb
 
 ATCG_INLINE bool isVisible(const atcg::ref_ptr<Camera>& camera, const BoundingBox& bbox)
 {
-    if(insideBoundingBox(camera->getPosition(), bbox))
-    {
-        return true;
-    }
+    glm::mat4 view_projection = glm::transpose(camera->getViewProjection());
+    std::array<glm::vec4, 6> planes;
+    planes[0] = view_projection[3] + view_projection[0];    // left
+    planes[1] = view_projection[3] - view_projection[0];    // right
+    planes[2] = view_projection[3] + view_projection[1];    // bottom
+    planes[3] = view_projection[3] - view_projection[1];    // top
+    planes[4] = view_projection[3] + view_projection[2];    // near
+    planes[5] = view_projection[3] - view_projection[2];    // far
 
-    std::array<glm::vec3, 8> corners = getBoundingBoxCorners(bbox);
-    for(int i = 0; i < 8; ++i)
+    for(const auto& plane: planes)
     {
-        if(camera->isPointInFrustum(corners[i]))
+        glm::vec3 normal = glm::vec3(plane);
+        float length     = glm::length(normal);
+        float distance   = plane.w / length;
+        normal           = normal / length;
+
+        glm::vec3 positive_vertex = bbox.min;
+        if(normal.x >= 0) positive_vertex.x = bbox.max.x;
+        if(normal.y >= 0) positive_vertex.y = bbox.max.y;
+        if(normal.z >= 0) positive_vertex.z = bbox.max.z;
+
+        if((glm::dot(normal, positive_vertex) + distance) < 0)
         {
-            return true;
+            return false;
         }
     }
-    return false;
+    return true;
 }
 
 }    // namespace Utils
