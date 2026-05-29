@@ -121,8 +121,10 @@ class PythonLayer(atcg.Layer):
 
         atcg.handleScriptUpdates(atcg.Project.getActive().getActiveScene(), dt)
 
-        atcg.Project.getActive().getActiveScene().draw(
-            self.camera_controller.getCamera(), atcg.Renderer.getFramebuffer()
+        atcg.SceneRenderer.render(
+            atcg.Project.getActive().getActiveScene(),
+            self.camera_controller.getCamera(),
+            atcg.Renderer.getFramebuffer(),
         )
 
         atcg.GraphicsCommand.beginRenderPass(atcg.Renderer.getFramebuffer())

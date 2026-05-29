@@ -19,6 +19,7 @@ if torch.cuda.is_available() and "Linux" in platform.platform():
 
 import pyatcg as atcg
 
+
 def main():
 
     width = 1024
@@ -33,12 +34,14 @@ def main():
 
     scene = atcg.read_scene(f"{atcg.resource_directory()}/test_scene.obj")
 
-    skybox = atcg.Texture2D.create(atcg.imread(f"{atcg.resource_directory()}/pbr/skybox.hdr", 1.0))
+    skybox = atcg.Texture2D.create(
+        atcg.imread(f"{atcg.resource_directory()}/pbr/skybox.hdr", 1.0)
+    )
     scene.setSkybox(skybox)
 
     extrinsics = atcg.CameraExtrinsics()
-    extrinsics.setPosition(atcg.vec3(7., 3., 7.))
-    extrinsics.setTarget(atcg.vec3(0.,0.,0.))
+    extrinsics.setPosition(atcg.vec3(7.0, 3.0, 7.0))
+    extrinsics.setTarget(atcg.vec3(0.0, 0.0, 0.0))
     instrinsics = atcg.CameraIntrinsics()
     camera = atcg.PerspectiveCamera(extrinsics, instrinsics)
     scene.setCamera(camera)
@@ -48,7 +51,7 @@ def main():
     framebuffer.attachDepth()
     framebuffer.complete()
 
-    scene.draw(framebuffer)
+    atcg.SceneRenderer.render(scene, camera, framebuffer)
 
     img = framebuffer.getColorAttachement(0).getData(torch.device("cpu"), 0)
 
