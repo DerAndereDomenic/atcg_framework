@@ -117,6 +117,7 @@ struct TextureSpecification
     uint32_t width                      = 0;
     uint32_t height                     = 0;
     uint32_t depth                      = 0;
+    uint32_t num_samples                = 1;
 
     ATCG_INLINE ATCG_HOST_DEVICE std::size_t pixelSize() const
     {
