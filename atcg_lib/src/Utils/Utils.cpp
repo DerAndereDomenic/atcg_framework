@@ -2,6 +2,7 @@
 
 #include <Asset/Project.h>
 #include <Renderer/Renderer.h>
+#include <Scene/SceneRenderer.h>
 
 #include <fstream>
 
@@ -190,10 +191,7 @@ void screenshot(const atcg::ref_ptr<Scene>& scene,
     screenshot_buffer->attachDepth();
     screenshot_buffer->complete();
 
-    atcg::Dictionary context;
-    context.setValue("camera", camera);
-    context.setValue("target", screenshot_buffer);
-    scene->draw(context);
+    SceneRenderer::render(scene, camera, screenshot_buffer);
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
@@ -210,10 +208,7 @@ torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<
     screenshot_buffer->attachDepth();
     screenshot_buffer->complete();
 
-    atcg::Dictionary context;
-    context.setValue("camera", camera);
-    context.setValue("target", screenshot_buffer);
-    scene->draw(context);
+    SceneRenderer::render(scene, camera, screenshot_buffer);
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
@@ -259,7 +254,7 @@ uint32_t setLights(atcg::RendererSystem* renderer,
     }
 
     shader->setInt("num_lights", num_lights);
-    if(point_light_depth_maps)
+    if(point_light_depth_maps && num_lights > 0)
     {
         uint32_t shadow_map_id = renderer->popTextureID();
         shader->setInt("shadow_maps", shadow_map_id);

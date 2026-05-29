@@ -126,11 +126,7 @@ public:
     {
         camera_controller->onUpdate(delta_time);
 
-        atcg::GraphicsCommand::clear();
-
-        atcg::Dictionary context;
-        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
-        scene->draw(context);
+        atcg::SceneRenderer::render(scene, camera_controller->getCamera(), atcg::Renderer::getFramebuffer());
     }
 
     virtual void onImGuiRender() override {}

@@ -1,5 +1,6 @@
 #include <Scene/Components/CameraComponent.h>
 #include <Scene/ComponentRegistry.h>
+#include <Scene/SceneRenderer.h>
 
 #include <Core/Application.h>
 #include <Utils/Utils.h>
@@ -287,11 +288,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
         // updated = true;
     }
 
-    atcg::Dictionary context;
-    context.setValue("camera", component.camera);
-    context.setValue("target", component.preview);
-    context.setValue("draw_cameras", false);
-    scene->draw(context);
+    atcg::SceneRenderer::render(scene, component.camera, component.preview, false);
 
     updated = ImGui::Checkbox("Show Preview##cam", &component.render_preview) || updated;
 
@@ -354,7 +351,6 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 
     if(updated)
     {
-        ATCG_DEBUG("Updated");
         atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(scene, entity);
         _component = component;
         camera->setIntrinsics(intrinsics);
