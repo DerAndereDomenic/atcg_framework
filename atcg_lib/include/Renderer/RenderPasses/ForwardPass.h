@@ -9,30 +9,8 @@ namespace atcg
 {
 
 /**
- * @brief A RenderPass that performs a simple forward rendering step.
- *
- * This pass reads the following variables from the context:
- * * context<RendererSystem*>["renderer"] - The renderer
- * * context<atcg::ref_ptr<Scene>>["scene"] - The scene
- * * context<ref_ptr<Camera>>["camera"] - The camera
- * * context<bool>["has_skybox"] - If a skybox should be used for ibl (default: false)
- *
- * data:
- * * data<atcg::ref_ptr<ref_ptr<Framebuffer>>>["target"] - The target framebuffer (if this renderpass owns a
- * framebuffer)
- * * data<atcg::ref_ptr<Skybox>>["dummy_skybox"] - A dummy skybox to use if no skybox is passed from a previous render
- * pass.
- *
- * inputs:
- * * inputs<ref_ptr<ref_ptr<TextureCubeArray>>>["point_light_depth_maps"] - A cube map array with one cube map per
- * light source. This is a double pointer because depending on the (dynamic) number of light sources, this has to be
- * recreated on the fly. If this is not present, no shadow mapping will be performed.
- * * inputs<ref_ptr<ref_ptr<Skybox>>>["skybox"] - The optional skybox to use for lighting
- * * inputs<ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The target framebuffer used if the RenderTargetMode is set
- * to RENDER_TARGET_INPUT_FRAMEBUFFER
- *
- * outputs:
- * * outputs<ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The output framebuffer
+ * @brief A RenderPass that renders the scene using a forward rendering approach. This is used as the main render pass
+ * in the render graph.
  */
 class ForwardPass : public RenderPass
 {
@@ -40,7 +18,25 @@ public:
     /**
      * @brief Constructor.
      */
-    ForwardPass(const RenderTargetDesc& desc = {});
+    ForwardPass();
+
+    /**
+     * @brief Reflect the render pass. This function describes the inputs, outputs and framebuffer data of this render
+     * pass. This is used by the render graph to generate the resource tables and framebuffers for this render pass.
+     *
+     * @param ctx The compile data
+     * @return The reflection data of this render pass
+     */
+    virtual RenderPassReflection reflect(const CompileData& ctx) override;
+
+    /**
+     * @brief Execute the render pass. This function is called by the render graph to execute this render pass. The
+     * resources used by this render pass are passed in the resource table.
+     *
+     * @param ctx The render context holding per-frame data
+     * @param resources The resource table holding the resources for this render pass
+     */
+    virtual void execute(const RenderContext& ctx, const ResourceTable& resources) override;
 
 private:
     struct TransparentRenderData

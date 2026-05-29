@@ -7,103 +7,77 @@
 namespace atcg
 {
 
-TonemapPass::TonemapPass(const RenderTargetDesc& desc) : RenderPass(desc, "TonemapPass")
+TonemapPass::TonemapPass() : RenderPass("TonemapPass")
 {
-    initRenderPass();
+    std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
+                                          atcg::Vertex(glm::vec3(1, -1, 0)),
+                                          atcg::Vertex(glm::vec3(1, 1, 0)),
+                                          atcg::Vertex(glm::vec3(-1, 1, 0))};
+
+    std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+
+    _screen_quad = atcg::Graph::createTriangleMesh(vertices, edges);
 }
 
-void TonemapPass::initRenderPass()
+RenderPassReflection TonemapPass::reflect(const CompileData& ctx)
 {
-    registerOutput("framebuffer", atcg::make_ref<atcg::ref_ptr<Framebuffer>>(nullptr));
-    setSetupFunction(
-        [this](Dictionary& context, Dictionary& data, Dictionary& output)
-        {
-            if(_render_target.mode == RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER)
-            {
-                data.setValue("target", atcg::make_ref<atcg::ref_ptr<Framebuffer>>(nullptr));
-            }
+    RenderPassReflection reflection;
 
-            atcg::ref_ptr<Graph> quad;
-            {
-                std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
-                                                      atcg::Vertex(glm::vec3(1, -1, 0)),
-                                                      atcg::Vertex(glm::vec3(1, 1, 0)),
-                                                      atcg::Vertex(glm::vec3(-1, 1, 0))};
+    reflection.addInput("hdr");
 
-                std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
+    ResourceDescription out_desc;
+    out_desc.type           = ResourceType::Texture;
+    out_desc.texture.type   = TextureType::TEXTURE_2D;
+    out_desc.texture.format = TextureFormat::RGBA;
+    uint32_t output_handle  = reflection.addOutput("output_color", out_desc);
 
-                quad = atcg::Graph::createTriangleMesh(vertices, edges);
-            }
+    reflection.addInput("in_stencil_buffer");
 
-            data.setValue("screen_quad", quad);
-        });
+    reflection.setOutputFramebufferData(TextureSizeHint::FULL_FRAMEBUFFER,
+                                        TextureSizeHint::FULL_FRAMEBUFFER,
+                                        {output_handle});
 
-
-    setRenderFunction(
-        [this](Dictionary& context, const Dictionary& inputs, Dictionary& data, Dictionary& outputs)
-        {
-            auto renderer =
-                context.getValueOr("renderer", atcg::SystemRegistry::instance()->getSystem<RendererSystem>());
-
-            auto scene  = context.getValue<atcg::ref_ptr<Scene>>("scene");
-            auto hdr    = *inputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("hdr");
-            auto target = prepareFramebuffer(context, inputs, data, outputs);
-
-            auto output_framebuffer = outputs.getValue<atcg::ref_ptr<atcg::ref_ptr<Framebuffer>>>("framebuffer");
-            *output_framebuffer     = target;
-
-            GraphicsCommand::beginRenderPass(target);
-            if(_render_target.clear)
-            {
-                GraphicsCommand::clear();
-
-                // We assume that this is an entity buffer, better solution?
-                if(target->numColorAttachements() > 1 &&
-                   target->getColorAttachement(1)->getSpecification().format == TextureFormat::RINT)
-                {
-                    int value = -1;
-                    target->getColorAttachement(1)->fill(&value);
-                }
-
-                if(target->numColorAttachements() > 2 &&
-                   target->getColorAttachement(2)->getSpecification().format == TextureFormat::RINT8)
-                {
-                    uint8_t value = 0;
-                    target->getColorAttachement(2)->fill(&value);
-                }
-            }
-
-            target->blit(hdr, false, true);    // Copy depth
-
-            auto shader = renderer->getShaderManager()->getShader("tonemap");
-
-            GraphicsPipeline pipeline =
-                GraphicsPipeline()
-                    .setShader(shader)
-                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
-                    .setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthTesting(false)));
-
-            uint32_t screen_id  = renderer->popTextureID();
-            uint32_t entity_id  = renderer->popTextureID();
-            uint32_t stencil_id = renderer->popTextureID();
-
-            shader->setInt("screen_texture", screen_id);
-            shader->setInt("entity_texture", entity_id);
-            shader->setInt("stencil_texture", stencil_id);
-            shader->setFloat("exposure", scene->getCamera() ? scene->getCamera()->getIntrinsics().getExposure() : 1.0f);
-
-            GraphicsCommand::bindTexture(screen_id, hdr->getColorAttachement(0));
-            GraphicsCommand::bindTexture(entity_id, hdr->getColorAttachement(1));
-            GraphicsCommand::bindTexture(stencil_id, hdr->getColorAttachement(2));
-
-            auto screen_quad = data.getValue<atcg::ref_ptr<Graph>>("screen_quad");
-            renderer->drawVAO(screen_quad->getVerticesArray(), {}, glm::mat4(1), pipeline, screen_quad->n_vertices());
-
-            renderer->pushTextureID(screen_id);
-            renderer->pushTextureID(entity_id);
-            renderer->pushTextureID(stencil_id);
-
-            GraphicsCommand::endRenderPass();
-        });
+    return reflection;
 }
+
+void TonemapPass::execute(const RenderContext& ctx, const ResourceTable& resources)
+{
+    auto renderer = ctx.renderer;
+
+    auto scene      = ctx.scene;
+    auto hdr        = resources.getTexture<Texture2D>("hdr");
+    auto in_stencil = resources.getTexture<Texture2D>("in_stencil_buffer");
+
+    auto target = resources.getTargetFBO();
+
+    GraphicsCommand::beginRenderPass(target);
+    GraphicsCommand::clear();
+    // target->blit(hdr, false, true);    // Copy depth
+
+    auto shader = renderer->getShaderManager()->getShader("tonemap");
+
+    GraphicsPipeline pipeline =
+        GraphicsPipeline()
+            .setShader(shader)
+            .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+            .setRasterizerState(RasterizerState().setDepthState(DepthState().enableDepthTesting(false)));
+
+    uint32_t screen_id  = renderer->popTextureID();
+    uint32_t stencil_id = renderer->popTextureID();
+
+    shader->setInt("screen_texture", screen_id);
+    shader->setInt("stencil_texture", stencil_id);
+    shader->setFloat("exposure", scene->getCamera() ? scene->getCamera()->getIntrinsics().getExposure() : 1.0f);
+
+    GraphicsCommand::bindTexture(screen_id, hdr);
+    GraphicsCommand::bindTexture(stencil_id, in_stencil);
+
+    renderer->drawVAO(_screen_quad->getVerticesArray(), {}, glm::mat4(1), pipeline, _screen_quad->n_vertices());
+
+    renderer->pushTextureID(screen_id);
+    renderer->pushTextureID(stencil_id);
+
+    GraphicsCommand::endRenderPass();
+}
+
 }    // namespace atcg
