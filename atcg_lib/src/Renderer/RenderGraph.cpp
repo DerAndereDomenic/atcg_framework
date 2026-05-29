@@ -1,7 +1,7 @@
 #include <Renderer/RenderGraph.h>
 
+#include <Core/Assert.h>
 #include <Renderer/RenderPasses/BlitPass.h>
-#include <Renderer/RenderPasses/SkyboxPass.h>
 #include <Renderer/RenderPasses/ForwardPass.h>
 #include <Renderer/RenderPasses/ShadowPass.h>
 #include <Renderer/RenderPasses/TonemapPass.h>
@@ -10,24 +10,17 @@
 namespace atcg
 {
 
-std::pair<RenderGraph::RenderPassHandle, atcg::ref_ptr<RenderPass>> RenderGraph::addRenderPass(std::string_view name)
+RenderGraph::RenderGraph()
 {
-    return addRenderPass(RenderTargetDesc(), name);
-}
-
-std::pair<RenderGraph::RenderPassHandle, atcg::ref_ptr<RenderPass>>
-RenderGraph::addRenderPass(const RenderTargetDesc& desc, std::string_view name)
-{
-    auto builder            = atcg::make_ref<RenderPass>(desc, name);
-    RenderPassHandle handle = (RenderPassHandle)_passes.size();
-    _passes.push_back(builder);
-    return std::make_pair(handle, builder);
+    _output_pass        = atcg::make_ref<OutputPass>(nullptr);
+    _output_pass_handle = addRenderPass(_output_pass);
 }
 
 RenderGraph::RenderPassHandle RenderGraph::addRenderPass(const atcg::ref_ptr<RenderPass>& pass)
 {
-    RenderPassHandle handle = (RenderPassHandle)_passes.size();
-    _passes.push_back(pass);
+    RenderPassHandle handle = (RenderPassHandle)_nodes.size();
+    RenderPassNode node {handle, pass};
+    _nodes.push_back(atcg::make_ref<RenderPassNode>(node));
     return handle;
 }
 
@@ -39,18 +32,24 @@ void RenderGraph::addDependency(const RenderPassHandle& source,
     _edges.push_back(PortEdge {source, target, std::string(source_name), std::string(target_name)});
 }
 
-void RenderGraph::compile(Dictionary& ctx)
+void RenderGraph::compile(const CompileData& ctx)
 {
     _compiled_passes.clear();
+    _resource_map.clear();
 
-    size_t node_size = _passes.size();
+    topologicalSort();
+
+    reflect(ctx);
+
+    _compiled     = true;
+    _compile_data = ctx;
+}
+
+void RenderGraph::RenderGraph::topologicalSort()
+{
+    size_t node_size = _nodes.size();
     std::vector<int> inDegree(node_size, 0);
     std::vector<std::vector<RenderPassHandle>> adj(node_size);
-
-    for(auto pass: _passes)
-    {
-        pass->setup(ctx);
-    }
 
     std::set<std::pair<RenderPassHandle, RenderPassHandle>> uniqueEdges;
     for(const auto& edge: _edges)
@@ -63,15 +62,6 @@ void RenderGraph::compile(Dictionary& ctx)
             adj[from].push_back(to);
             ++inDegree[to];
         }
-
-        const auto& outputs = _passes[from]->getOutputs();
-        if(!outputs.contains(edge.from_port))
-        {
-            ATCG_ERROR("Error while compiling Render Graph: {} does not exist as an output", edge.from_port);
-            continue;
-        }
-
-        _passes[to]->addInput(edge.to_port, outputs.getValueRaw(edge.from_port));
     }
 
     std::queue<RenderPassHandle> zeroInDegree;
@@ -88,7 +78,7 @@ void RenderGraph::compile(Dictionary& ctx)
         RenderPassHandle handle = zeroInDegree.front();
         zeroInDegree.pop();
 
-        _compiled_passes.push_back(_passes[handle]);
+        _compiled_passes.push_back(_nodes[handle]);
 
         for(int neighbor: adj[handle])
         {
@@ -103,15 +93,184 @@ void RenderGraph::compile(Dictionary& ctx)
     {
         throw std::runtime_error("Graph has a cycle. Topological sorting is not possible.");
     }
-
-    _compiled = true;
 }
 
-void RenderGraph::execute(Dictionary& ctx)
+void RenderGraph::reflect(const CompileData& ctx)
 {
-    for(auto pass: _compiled_passes)
+    for(auto& node: _nodes)
     {
-        pass->execute(ctx);
+        node->reflection = node->pass->reflect(ctx);
+    }
+}
+
+void RenderGraph::allocateResources(RenderGraphResources& resources, const RenderContext& ctx)
+{
+    resources.physical_resources.clear();
+    resources.logicalToPhysicalResourceMap.clear();
+    resources.render_pass_resource_tables.clear();
+
+    auto output_fbo = _output_pass->outputFBO();
+
+    if(!output_fbo)
+    {
+        ATCG_ERROR("Output pass does not have a valid output FBO set. Make sure to call setOutputFramebuffer() with a "
+                   "valid FBO before executing the graph.");
+        return;
+    }
+
+    // Create resource for each output
+    for(const auto& node: _compiled_passes)
+    {
+        // Write relative texture sizes to outputs
+        if(node->reflection.framebuffer_data.valid)
+        {
+            for(auto& handle: node->reflection.framebuffer_data.handles)
+            {
+                node->reflection.outputs[handle].desc.texture.width =
+                    node->reflection.framebuffer_data.width.convert(output_fbo->width());
+                node->reflection.outputs[handle].desc.texture.height =
+                    node->reflection.framebuffer_data.height.convert(output_fbo->height());
+            }
+        }
+
+        for(const auto& output: node->reflection.outputs)
+        {
+            std::string name                            = node->pass->name() + "." + output.name;
+            auto& desc                                  = output.desc;
+            RenderGraphResources::ResourceHandle handle = resources.physical_resources.size();
+            resources.physical_resources.push_back(createResource(_compile_data, desc));
+            resources.logicalToPhysicalResourceMap[name] = handle;
+        }
+    }
+
+
+    for(const auto& edge: _edges)
+    {
+        std::string producerKey = _nodes[edge.from]->pass->name() + "." + edge.from_port;
+        std::string consumerKey = _nodes[edge.to]->pass->name() + "." + edge.to_port;
+
+        auto it = resources.logicalToPhysicalResourceMap.find(producerKey);
+        if(it == resources.logicalToPhysicalResourceMap.end())
+        {
+            ATCG_ERROR("Producer resource {0} not found for edge from pass {1} to pass {2}",
+                       producerKey,
+                       _nodes[edge.from]->pass->name(),
+                       _nodes[edge.to]->pass->name());
+            continue;
+        }
+
+        resources.logicalToPhysicalResourceMap[consumerKey] = it->second;
+    }
+}
+
+void RenderGraph::generateResourceTables(RenderGraphResources& resources, const RenderContext& ctx)
+{
+    auto output_fbo = _output_pass->outputFBO();
+
+    if(!output_fbo)
+    {
+        ATCG_ERROR("Output pass does not have a valid output FBO set. Make sure to call setOutputFramebuffer() with a "
+                   "valid FBO before executing the graph.");
+        return;
+    }
+
+    // Generate resource tables
+    for(auto node: _compiled_passes)
+    {
+        ResourceTable table;
+
+        for(auto& input: node->reflection.inputs)
+        {
+            std::string key = node->pass->name() + "." + input.name;
+            auto it         = resources.logicalToPhysicalResourceMap.find(key);
+            if(it == resources.logicalToPhysicalResourceMap.end())
+            {
+                ATCG_WARN("No physical resource found for input {0} of pass {1}", input.name, node->pass->name());
+                continue;
+            }
+
+            table.set(input.name, resources.physical_resources[it->second]);
+        }
+
+        if(node->reflection.framebuffer_data.valid)
+        {
+            uint32_t output_width  = node->reflection.framebuffer_data.width.convert(output_fbo->width());
+            uint32_t output_height = node->reflection.framebuffer_data.height.convert(output_fbo->height());
+
+            ATCG_ASSERT(output_width > 0 && output_height > 0,
+                        "Failed to create framebuffer for pass" + node->pass->name());
+
+            atcg::ref_ptr<Framebuffer> target_fbo = atcg::make_ref<Framebuffer>(output_width, output_height);
+
+            for(auto& handle: node->reflection.framebuffer_data.handles)
+            {
+                const auto& output = node->reflection.outputs[handle];
+                std::string key    = node->pass->name() + "." + output.name;
+                auto resource      = resources.physical_resources[resources.logicalToPhysicalResourceMap[key]];
+                table.set(output.name, resource);
+
+                if(target_fbo == nullptr)
+                {
+                    ATCG_ERROR("Output {0} of pass {1} is a framebuffer attachement but no target FBO was created",
+                               output.name,
+                               node->pass->name());
+                    continue;
+                }
+
+                auto texture = std::get<atcg::ref_ptr<Texture>>(resource);
+
+                if(output.desc.texture.format == TextureFormat::DEPTH)
+                {
+                    target_fbo->attachDepth(texture);
+                }
+                else
+                {
+                    target_fbo->attachTexture(texture);
+                }
+            }
+
+            target_fbo->complete();
+            table.setTargetFBO(target_fbo);
+        }
+
+        resources.render_pass_resource_tables.insert(std::make_pair(node->handle, table));
+    }
+}
+
+RenderGraph::RenderGraphResources& RenderGraph::getResources(const RenderContext& ctx)
+{
+    auto output_fbo = _output_pass->outputFBO();
+
+    FramebufferResolution resolution {output_fbo->width(), output_fbo->height()};
+    auto it = _resource_map.find(resolution);
+    if(it == _resource_map.end())
+    {
+        if(_resource_map.size() > _max_cached_resolutions)
+        {
+            ATCG_WARN("More than {0} different framebuffer resolutions detected in render graph. Cache is cleared. "
+                      "This setting can be changed with render_graph->setMaxCachedResolutions()",
+                      _max_cached_resolutions);
+            _resource_map.clear();
+        }
+
+        RenderGraphResources new_resources;
+
+        allocateResources(new_resources, ctx);
+        generateResourceTables(new_resources, ctx);
+
+        _resource_map[resolution] = new_resources;
+        it                        = _resource_map.find(resolution);
+    }
+    return it->second;
+}
+
+void RenderGraph::execute(const RenderContext& ctx)
+{
+    auto& resources = getResources(ctx);
+
+    for(auto node: _compiled_passes)
+    {
+        node->pass->execute(ctx, resources.render_pass_resource_tables.at(node->handle));
     }
 }
 
@@ -121,9 +280,9 @@ void RenderGraph::exportToDOT(const std::string& path) const
     out << "digraph RenderGraph {\n";
     out << "    rankdir=LR;\n";    // optional: makes the graph left-to-right instead of top-down
 
-    for(RenderPassHandle i = 0; i < _passes.size(); ++i)
+    for(RenderPassHandle i = 0; i < _nodes.size(); ++i)
     {
-        out << "    " << i << " [label=\"" << _passes[i]->name() << "\"];\n";
+        out << "    " << i << " [label=\"" << _nodes[i]->pass->name() << "\"];\n";
     }
 
     for(const auto& edge: _edges)
@@ -135,130 +294,55 @@ void RenderGraph::exportToDOT(const std::string& path) const
     out << "}\n";
 }
 
-void RenderGraph::garbageCollect()
+atcg::ref_ptr<RenderGraph> createRenderGraph(const CompileData& ctx)
 {
-    for(auto& pass: _passes)
+    auto graph = atcg::make_ref<RenderGraph>();
+
+    atcg::ref_ptr<ForwardPass> forward_pass = atcg::make_ref<ForwardPass>();
+    atcg::ref_ptr<TonemapPass> tonemap_pass = atcg::make_ref<TonemapPass>();
+    atcg::ref_ptr<DepthPass> depth_pass     = atcg::make_ref<DepthPass>(CullMode::ATCG_FRONT_FACE_CULLING);
+    atcg::ref_ptr<ShadowPass> shadow_pass   = atcg::make_ref<ShadowPass>();
+
+    auto forward_handle = graph->addRenderPass(forward_pass);
+    auto tonemap_handle = graph->addRenderPass(tonemap_pass);
+    auto depth_handle   = graph->addRenderPass(depth_pass);
+    auto shadow_handle  = graph->addRenderPass(shadow_pass);
+    auto output_handle  = graph->outputPassHandle();
+
+    graph->addDependency(depth_handle, "depth_buffer", forward_handle, "depth_buffer");
+    graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
+
+    if(ctx.num_samples > 1)
     {
-        pass->garbageCollect();
+        atcg::ref_ptr<BlitPass> blit_pass = atcg::make_ref<BlitPass>();
+
+        auto blit_handle = graph->addRenderPass(blit_pass);
+
+        graph->addDependency(forward_handle, "output", blit_handle, "input_color_buffer");
+        graph->addDependency(forward_handle, "out_depth_buffer", blit_handle, "input_depth_buffer");
+        graph->addDependency(forward_handle, "entity_buffer", blit_handle, "input_entity_buffer");
+        graph->addDependency(forward_handle, "stencil_buffer", blit_handle, "input_stencil_buffer");
+
+        graph->addDependency(blit_handle, "out_color_buffer", tonemap_handle, "hdr");
+        graph->addDependency(blit_handle, "out_stencil_buffer", tonemap_handle, "in_stencil_buffer");
+        graph->addDependency(blit_handle, "out_entity_buffer", output_handle, "entities");
+        graph->addDependency(blit_handle, "out_stencil_buffer", output_handle, "stencil");
+        graph->addDependency(blit_handle, "out_depth_buffer", output_handle, "depth");
     }
-}
+    else
+    {
+        graph->addDependency(forward_handle, "output", tonemap_handle, "hdr");
+        graph->addDependency(forward_handle, "stencil_buffer", tonemap_handle, "in_stencil_buffer");
+        graph->addDependency(forward_handle, "entity_buffer", output_handle, "entities");
+        graph->addDependency(forward_handle, "stencil_buffer", output_handle, "stencil");
+        graph->addDependency(forward_handle, "out_depth_buffer", output_handle, "depth");
+    }
 
-atcg::ref_ptr<RenderGraph> createStandardGraph()
-{
-    auto _render_graph = atcg::make_ref<atcg::RenderGraph>();
+    graph->addDependency(tonemap_handle, "output_color", output_handle, "color");
 
-    TextureSpecification stencil;
-    stencil.format              = TextureFormat::RINT8;
-    stencil.sampler.filter_mode = TextureFilterMode::NEAREST;
+    graph->compile(ctx);
 
-    RenderTargetDesc render_desc;
-    render_desc.clear = true;
-
-    render_desc.mode = RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER;
-    render_desc.target_spec =
-        FramebufferSpecification(1,
-                                 1,
-                                 0,
-                                 {
-                                     {TextureFormat::RGBAFLOAT},                                           // Color
-                                     {TextureFormat::RINT},                                                // Entity ids
-                                     {stencil},                                                            // Stencil
-                                     {TextureFormat::DEPTH, FramebufferTextureFormat::TEXTURE_2D, true}    // Depth
-                                 });
-    render_desc.clear = true;
-
-    RenderTargetDesc render_desc_depth;
-    render_desc_depth.mode = RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER;
-    render_desc_depth.target_spec =
-        FramebufferSpecification(1,
-                                 1,
-                                 0,
-                                 {
-                                     {TextureFormat::DEPTH, FramebufferTextureFormat::TEXTURE_2D, true}    // Depth
-                                 });
-    render_desc_depth.clear = true;
-
-    auto skybox_handle  = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(render_desc));
-    auto shadow_handle  = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
-    auto forward_handle = _render_graph->addRenderPass(
-        atcg::make_ref<ForwardPass>(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER)));
-    auto depth_handle =
-        _render_graph->addRenderPass(atcg::make_ref<DepthPass>(CullMode::ATCG_FRONT_FACE_CULLING, render_desc_depth));
-    auto tonemap_handle = _render_graph->addRenderPass(atcg::make_ref<TonemapPass>());
-
-    _render_graph->addDependency(skybox_handle, "skybox", forward_handle, "skybox");
-    _render_graph->addDependency(skybox_handle, "framebuffer", forward_handle, "framebuffer");
-    _render_graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
-    _render_graph->addDependency(depth_handle, "framebuffer", forward_handle, "depth_buffer");
-    _render_graph->addDependency(forward_handle, "framebuffer", tonemap_handle, "hdr");
-
-    return _render_graph;
-}
-
-atcg::ref_ptr<RenderGraph> createMSAAGraph(uint32_t num_samples)
-{
-    auto _render_graph = atcg::make_ref<atcg::RenderGraph>();
-
-    TextureSpecification stencil;
-    stencil.format              = TextureFormat::RINT8;
-    stencil.sampler.filter_mode = TextureFilterMode::NEAREST;
-
-    RenderTargetDesc render_desc_ms;
-    render_desc_ms.mode        = RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER;
-    render_desc_ms.target_spec = FramebufferSpecification(
-        1,
-        1,
-        num_samples,
-        {
-            {TextureFormat::RGBAFLOAT, FramebufferTextureFormat::TEXTURE_2D_MULTISAMPLE},     // Color
-            {TextureFormat::RINT, FramebufferTextureFormat::TEXTURE_2D_MULTISAMPLE},          // Entity ids
-            {stencil, FramebufferTextureFormat::TEXTURE_2D_MULTISAMPLE},                      // Stencil
-            {TextureFormat::DEPTH, FramebufferTextureFormat::TEXTURE_2D_MULTISAMPLE, true}    // Depth
-        });
-    render_desc_ms.clear = true;
-
-    RenderTargetDesc render_desc_blit;
-    render_desc_blit.mode = RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER;
-    render_desc_blit.target_spec =
-        FramebufferSpecification(1,
-                                 1,
-                                 num_samples,
-                                 {
-                                     {TextureFormat::RGBAFLOAT},                                           // Color
-                                     {TextureFormat::RINT},                                                // Entity ids
-                                     {stencil},                                                            // Stencil
-                                     {TextureFormat::DEPTH, FramebufferTextureFormat::TEXTURE_2D, true}    // Depth
-                                 });
-    render_desc_blit.clear = true;
-
-    RenderTargetDesc render_desc_depth;
-    render_desc_depth.mode = RenderTargetMode::RENDER_TARGET_OWN_FRAMEBUFFER;
-    render_desc_depth.target_spec =
-        FramebufferSpecification(1,
-                                 1,
-                                 0,
-                                 {
-                                     {TextureFormat::DEPTH, FramebufferTextureFormat::TEXTURE_2D, true}    // Depth
-                                 });
-    render_desc_depth.clear = true;
-
-    auto skybox_handle  = _render_graph->addRenderPass(atcg::make_ref<SkyboxPass>(render_desc_ms));
-    auto shadow_handle  = _render_graph->addRenderPass(atcg::make_ref<ShadowPass>());
-    auto forward_handle = _render_graph->addRenderPass(
-        atcg::make_ref<ForwardPass>(RenderTargetDesc(RenderTargetMode::RENDER_TARGET_INPUT_FRAMEBUFFER)));
-    auto depth_handle =
-        _render_graph->addRenderPass(atcg::make_ref<DepthPass>(CullMode::ATCG_FRONT_FACE_CULLING, render_desc_depth));
-    auto screen_handle  = _render_graph->addRenderPass(atcg::make_ref<BlitPass>(render_desc_blit));
-    auto tonemap_handle = _render_graph->addRenderPass(atcg::make_ref<TonemapPass>());
-
-    _render_graph->addDependency(skybox_handle, "skybox", forward_handle, "skybox");
-    _render_graph->addDependency(skybox_handle, "framebuffer", forward_handle, "framebuffer");
-    _render_graph->addDependency(shadow_handle, "point_light_depth_maps", forward_handle, "point_light_depth_maps");
-    _render_graph->addDependency(depth_handle, "framebuffer", forward_handle, "depth_buffer");
-    _render_graph->addDependency(forward_handle, "framebuffer", screen_handle, "framebuffer");
-    _render_graph->addDependency(screen_handle, "framebuffer", tonemap_handle, "hdr");
-
-    return _render_graph;
+    return graph;
 }
 
 }    // namespace atcg
