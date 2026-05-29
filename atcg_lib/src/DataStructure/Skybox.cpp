@@ -42,13 +42,13 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
     {
         atcg::ref_ptr<Shader> equirect_shader = Renderer::getShaderManager()->getShader("equirectangularToCubemap");
         GraphicsPipeline pipeline             = GraphicsPipeline()
-                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
-                                        .setShader(equirect_shader)
-                                        .setRasterizerState(RasterizerState().enableCulling(false));
+                                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                                    .setShader(equirect_shader)
+                                                    .setRasterizerState(RasterizerState().enableCulling(false));
 
         float width                           = _skybox_cubemap->width();
         float height                          = _skybox_cubemap->height();
-        atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(width, height);
+        atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>((uint32_t)width, (uint32_t)height);
         captureFBO->attachDepth();
         GraphicsCommand::beginRenderPass(captureFBO);
 
@@ -72,13 +72,13 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
     {
         atcg::ref_ptr<Shader> cubeconv_shader = Renderer::getShaderManager()->getShader("cubeMapConvolution");
         GraphicsPipeline pipeline             = GraphicsPipeline()
-                                        .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
-                                        .setShader(cubeconv_shader)
-                                        .setRasterizerState(RasterizerState().enableCulling(false));
+                                                    .setPrimitiveTopology(PrimitiveTopology::ATCG_TRIANGLES)
+                                                    .setShader(cubeconv_shader)
+                                                    .setRasterizerState(RasterizerState().enableCulling(false));
 
         float width                           = _irradiance_cubemap->width();
         float height                          = _irradiance_cubemap->height();
-        atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(width, height);
+        atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>((uint32_t)width, (uint32_t)height);
         captureFBO->attachDepth();
 
         GraphicsCommand::beginRenderPass(captureFBO);
@@ -111,7 +111,8 @@ void Skybox::setSkyboxTexture(const atcg::ref_ptr<atcg::Texture2D>& skybox_textu
             unsigned int mip_height = _prefiltered_cubemap->height() * std::pow(0.5, mip);
 
             // Recreate captureFBO with new resolution
-            atcg::ref_ptr<Framebuffer> captureFBO = atcg::make_ref<Framebuffer>(mip_width, mip_height);
+            atcg::ref_ptr<Framebuffer> captureFBO =
+                atcg::make_ref<Framebuffer>((uint32_t)mip_width, (uint32_t)mip_height);
             captureFBO->attachDepth();
 
             GraphicsPipeline pipeline = GraphicsPipeline()
