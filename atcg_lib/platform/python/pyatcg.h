@@ -132,6 +132,7 @@ PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
     auto m_graph                 = py::class_<atcg::Graph, atcg::Asset, atcg::ref_ptr<atcg::Graph>>(m, "Graph");         \
     auto m_serializer            = py::class_<atcg::Serialization::SceneSerializer>(m, "SceneSerializer");               \
     auto m_renderer              = m.def_submodule("Renderer");                                                          \
+    auto m_scene_renderer        = m.def_submodule("SceneRenderer");                                                     \
     auto m_graphics_api          = m.def_submodule("GraphicsCommand");                                                   \
     auto m_renderer_system =                                                                                             \
         py::class_<atcg::RendererSystem, atcg::ref_ptr<atcg::RendererSystem>>(m, "RendererSystem");                      \
@@ -1476,29 +1477,13 @@ inline void defineBindings(py::module_& m)
         .def("hasSkybox", &atcg::Scene::hasSkybox)
         .def("removeSkybox", &atcg::Scene::removeSkybox)
         .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-               const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-            {
-                atcg::Dictionary context;
-                context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera);
-                context.setValue("target", framebuffer);
-                scene->draw(context);
-            },
-            "camera"_a,
-            "target"_a)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-            {
-                atcg::Dictionary context;
-                context.setValue("target", framebuffer);
-                scene->draw(context);
-            },
-            "target"_a);
+        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap);
+
+    m_scene_renderer.def("render",
+                         [](const atcg::ref_ptr<atcg::Scene>& scene,
+                            const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+                            const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
+                         { atcg::SceneRenderer::render(scene, camera, framebuffer); });
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())

@@ -2,15 +2,13 @@
 
 #include <Renderer/RenderPass.h>
 #include <Renderer/Texture.h>
-#include <DataStructure/Skybox.h>
-#include <Scene/ComponentRenderer.h>
 
 namespace atcg
 {
 /**
- * @brief A RenderPass that renders the depth of the scene (only MeshRenderComponents)
+ * @brief A RenderPass that attaches the input to an output framebuffer.
  */
-class DepthPass : public RenderPass
+class OutputPass : public RenderPass
 {
 public:
     /**
@@ -18,7 +16,7 @@ public:
      *
      * @param properties A dictionary of properties that can be used to configure the render pass
      */
-    DepthPass(Dictionary& properties);
+    OutputPass(Dictionary& properties);
 
     /**
      * @brief Reflect the render pass. This function describes the inputs, outputs and framebuffer data of this render
@@ -38,7 +36,21 @@ public:
      */
     virtual void execute(const RenderContext& ctx, const ResourceTable& resources) override;
 
+    /**
+     * @brief Get the output framebuffer
+     *
+     * @return The output framebuffer
+     */
+    ATCG_INLINE const atcg::ref_ptr<Framebuffer>& outputFBO() const { return _output_fbo; }
+
+    /**
+     * @brief Set the output framebuffer
+     *
+     * @param fbo The output framebuffer
+     */
+    ATCG_INLINE void setOutputFBO(const atcg::ref_ptr<Framebuffer>& fbo) { _output_fbo = fbo; }
+
 private:
-    CullMode _cull_mode;
+    atcg::ref_ptr<Framebuffer> _output_fbo;
 };
 }    // namespace atcg

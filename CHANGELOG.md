@@ -47,6 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added Transparency component to mark transparent objects
 - Added order dependent transparency rendering (sorting of transparent objects)
 - Added frustum culling based on bounding boxes
+- Added Texture creation function for arbitrary types of textures
+- Added functions to swap textures
+- Added functions to detach textures from framebuffers
+- Added SceneRenderer class
 
 ### Changed
 
@@ -105,6 +109,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed ATCG_ENABLE_OPTIX
 - Separated Components into separate file for each component.
 - Removed VolumePass
+- Number of multi sampled texture samples are now stored in TextureSpecification
+- Bind texture 0 when creating a new texture
+- Removed Deferred Rendering Sample
+- Changed RenderGraph and RenderPass API to use a reflection model with explicit input output declaration
+- Overhauled render passes and removed Skybox Pass (now handled in forward pass)
+- Scene class no longer holds a RenderGraph. Rendering of scenes is now handled by the new SceneRenderer class
 
 ### Fixed
 
