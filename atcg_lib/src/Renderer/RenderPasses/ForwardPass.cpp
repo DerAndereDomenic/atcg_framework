@@ -7,7 +7,7 @@
 namespace atcg
 {
 
-ForwardPass::ForwardPass() : RenderPass("ForwardPass") {}
+ForwardPass::ForwardPass(Dictionary& properties) : RenderPass(properties, "ForwardPass") {}
 
 RenderPassReflection ForwardPass::reflect(const CompileData& ctx)
 {

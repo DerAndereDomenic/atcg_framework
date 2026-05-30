@@ -16,9 +16,9 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param cull_mode The cull mode to use for this depth pass
+     * @param properties A dictionary of properties that can be used to configure the render pass
      */
-    DepthPass(const CullMode cull_mode);
+    DepthPass(Dictionary& properties);
 
     /**
      * @brief Reflect the render pass. This function describes the inputs, outputs and framebuffer data of this render

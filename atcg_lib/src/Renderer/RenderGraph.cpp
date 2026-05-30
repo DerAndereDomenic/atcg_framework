@@ -12,7 +12,8 @@ namespace atcg
 
 RenderGraph::RenderGraph()
 {
-    _output_pass        = atcg::make_ref<OutputPass>(nullptr);
+    Dictionary output_pass_properties;
+    _output_pass        = atcg::make_ref<OutputPass>(output_pass_properties);
     _output_pass_handle = addRenderPass(_output_pass);
 }
 
@@ -298,10 +299,15 @@ atcg::ref_ptr<RenderGraph> createRenderGraph(const CompileData& ctx)
 {
     auto graph = atcg::make_ref<RenderGraph>();
 
-    atcg::ref_ptr<ForwardPass> forward_pass = atcg::make_ref<ForwardPass>();
-    atcg::ref_ptr<TonemapPass> tonemap_pass = atcg::make_ref<TonemapPass>();
-    atcg::ref_ptr<DepthPass> depth_pass     = atcg::make_ref<DepthPass>(CullMode::ATCG_FRONT_FACE_CULLING);
-    atcg::ref_ptr<ShadowPass> shadow_pass   = atcg::make_ref<ShadowPass>();
+    Dictionary forward_pass_properties;
+    atcg::ref_ptr<ForwardPass> forward_pass = atcg::make_ref<ForwardPass>(forward_pass_properties);
+    Dictionary tonemap_pass_properties;
+    atcg::ref_ptr<TonemapPass> tonemap_pass = atcg::make_ref<TonemapPass>(tonemap_pass_properties);
+    Dictionary depth_pass_properties;
+    depth_pass_properties.setValue("cull_mode", CullMode::ATCG_FRONT_FACE_CULLING);
+    atcg::ref_ptr<DepthPass> depth_pass = atcg::make_ref<DepthPass>(depth_pass_properties);
+    Dictionary shadow_pass_properties;
+    atcg::ref_ptr<ShadowPass> shadow_pass = atcg::make_ref<ShadowPass>(shadow_pass_properties);
 
     auto forward_handle = graph->addRenderPass(forward_pass);
     auto tonemap_handle = graph->addRenderPass(tonemap_pass);
@@ -314,7 +320,8 @@ atcg::ref_ptr<RenderGraph> createRenderGraph(const CompileData& ctx)
 
     if(ctx.num_samples > 1)
     {
-        atcg::ref_ptr<BlitPass> blit_pass = atcg::make_ref<BlitPass>();
+        Dictionary blit_pass_properties;
+        atcg::ref_ptr<BlitPass> blit_pass = atcg::make_ref<BlitPass>(blit_pass_properties);
 
         auto blit_handle = graph->addRenderPass(blit_pass);
 

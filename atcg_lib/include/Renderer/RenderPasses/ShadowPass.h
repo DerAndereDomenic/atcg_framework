@@ -12,8 +12,10 @@ class ShadowPass : public RenderPass
 public:
     /**
      * @brief Constructor
+     *
+     * @param properties A dictionary of properties that can be used to configure the render pass
      */
-    ShadowPass();
+    ShadowPass(Dictionary& properties);
 
     /**
      * @brief Reflect the render pass. This function describes the inputs, outputs and framebuffer data of this render

@@ -25,9 +25,10 @@ public:
     /**
      * @brief Default constructor
      *
+     * @param properties A dictionary of properties that can be used to configure the render pass
      * @param name The name of the render pass (has to be unique within a render graph)
      */
-    RenderPass(std::string_view name = "RenderPass") : _name(name) {}
+    RenderPass(Dictionary& properties, std::string_view name = "RenderPass") : _name(name) {}
 
     /**
      * @brief Destructor

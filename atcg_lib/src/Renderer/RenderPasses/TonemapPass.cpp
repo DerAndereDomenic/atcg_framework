@@ -7,7 +7,7 @@
 namespace atcg
 {
 
-TonemapPass::TonemapPass() : RenderPass("TonemapPass")
+TonemapPass::TonemapPass(Dictionary& properties) : RenderPass(properties, "TonemapPass")
 {
     std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
                                           atcg::Vertex(glm::vec3(1, -1, 0)),

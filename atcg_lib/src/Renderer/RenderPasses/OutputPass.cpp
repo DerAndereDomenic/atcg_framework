@@ -3,8 +3,9 @@
 namespace atcg
 {
 
-OutputPass::OutputPass(const atcg::ref_ptr<Framebuffer>& output_fbo) : RenderPass("OutputPass"), _output_fbo(output_fbo)
+OutputPass::OutputPass(Dictionary& properties) : RenderPass(properties, "OutputPass")
 {
+    _output_fbo = properties.getValueOr<atcg::ref_ptr<Framebuffer>>("output_fbo", nullptr);
 }
 
 RenderPassReflection OutputPass::reflect(const CompileData& ctx)

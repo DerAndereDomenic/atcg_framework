@@ -7,7 +7,7 @@
 namespace atcg
 {
 
-BlitPass::BlitPass() : RenderPass("BlitPass")
+BlitPass::BlitPass(Dictionary& properties) : RenderPass(properties, "BlitPass")
 {
     std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
                                           atcg::Vertex(glm::vec3(1, -1, 0)),

@@ -18,9 +18,9 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param desc The Render target description
+     * @param properties A dictionary of properties that can be used to configure the render pass
      */
-    TonemapPass();
+    TonemapPass(Dictionary& properties);
 
     /**
      * @brief Reflect the render pass. This function describes the inputs, outputs and framebuffer data of this render

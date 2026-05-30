@@ -6,7 +6,7 @@
 
 namespace atcg
 {
-ShadowPass::ShadowPass() : RenderPass("ShadowPass") {}
+ShadowPass::ShadowPass(Dictionary& properties) : RenderPass(properties, "ShadowPass") {}
 
 RenderPassReflection ShadowPass::reflect(const CompileData& ctx)
 {

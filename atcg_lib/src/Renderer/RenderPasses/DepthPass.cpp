@@ -6,7 +6,10 @@
 
 namespace atcg
 {
-DepthPass::DepthPass(const CullMode cull_mode) : RenderPass("DepthPass"), _cull_mode(cull_mode) {}
+DepthPass::DepthPass(Dictionary& properties) : RenderPass(properties, "DepthPass")
+{
+    _cull_mode = properties.getValueOr<CullMode>("cull_mode", CullMode::ATCG_BACK_FACE_CULLING);
+}
 
 RenderPassReflection DepthPass::reflect(const CompileData& ctx)
 {
