@@ -111,6 +111,14 @@ public:
     ATCG_INLINE static Application* get() { return s_instance; }
 
     /**
+     * @brief Set the application instance. This should not be used by the client, it is used to initialize plugin
+     * libraries
+     *
+     * @param instance The application instance
+     */
+    ATCG_INLINE static void setApplicationInstance(Application* instance) { s_instance = instance; }
+
+    /**
      * @brief Enable or disable Dock spaces
      *
      * @param enable If dockspaces should be enabled
