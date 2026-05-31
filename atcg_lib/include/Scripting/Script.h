@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/Platform.h>
 #include <Events/Event.h>
@@ -17,7 +18,7 @@ class Behavior;
 /**
  * @brief The interface to model a script
  */
-class Script : public Asset
+class ATCG_API Script : public Asset
 {
 public:
     /**
@@ -85,7 +86,7 @@ protected:
  * @brief A class to model a python script.
  * An instance of this function can only be used if a ScriptEngine exists and is initialized.
  */
-class PythonScript : public Script
+class ATCG_API PythonScript : public Script
 {
 public:
     /**
@@ -132,7 +133,7 @@ namespace Scripting
  *
  * @param scene The scene
  */
-void handleScriptReloads(const atcg::ref_ptr<atcg::Scene>& scene);
+ATCG_API void handleScriptReloads(const atcg::ref_ptr<atcg::Scene>& scene);
 
 /**
  * @brief This function should be called inside the main event loop and passes it to the scripts bound to entities
@@ -141,7 +142,7 @@ void handleScriptReloads(const atcg::ref_ptr<atcg::Scene>& scene);
  * @param scene The scene
  * @param event The event to handle
  */
-void handleScriptEvents(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Event* event);
+ATCG_API void handleScriptEvents(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Event* event);
 
 /**
  * @brief This function should be called inside the main update loop and calls the update function to all scripts bound
@@ -150,7 +151,7 @@ void handleScriptEvents(const atcg::ref_ptr<atcg::Scene>& scene, atcg::Event* ev
  * @param scene The scene
  * @param dt The time between two frames in seconds
  */
-void handleScriptUpdates(const atcg::ref_ptr<atcg::Scene>& scene, const float dt);
+ATCG_API void handleScriptUpdates(const atcg::ref_ptr<atcg::Scene>& scene, const float dt);
 }    // namespace Scripting
 
 }    // namespace atcg

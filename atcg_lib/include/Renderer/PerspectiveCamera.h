@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/glm.h>
 
 #include <Renderer/Camera.h>
@@ -9,7 +10,7 @@ namespace atcg
 /**
  * @brief A class to model a camera
  */
-class PerspectiveCamera : public Camera
+class ATCG_API PerspectiveCamera : public Camera
 {
 public:
     /**

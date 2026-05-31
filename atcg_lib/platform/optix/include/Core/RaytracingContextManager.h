@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/SystemRegistry.h>
 #include <Core/RaytracingContext.h>
 
@@ -8,7 +9,7 @@ namespace atcg
 /**
  * @brief A system that handles ray tracing contexts
  */
-class RaytracingContextManagerSystem
+class ATCG_API RaytracingContextManagerSystem
 {
 public:
     /**
@@ -23,14 +24,14 @@ public:
 
     /**
      * @brief Create a context on a specific device
-     * 
+     *
      * @param device_id The device id
      */
     atcg::ref_ptr<atcg::RaytracingContext> createContext(const int device_id = 0);
 
     /**
      * @brief Destroy a context
-     * 
+     *
      * @param context The context
      */
     void destroyContext(atcg::ref_ptr<atcg::RaytracingContext>& context);
@@ -44,7 +45,7 @@ namespace RaytracingContextManager
 {
 /**
  * @brief Create a context on a specific device
- * 
+ *
  * @param device_id The device id
  */
 ATCG_INLINE atcg::ref_ptr<atcg::RaytracingContext> createContext(const int device_id = 0)
@@ -54,7 +55,7 @@ ATCG_INLINE atcg::ref_ptr<atcg::RaytracingContext> createContext(const int devic
 
 /**
  * @brief Destroy a context
- * 
+ *
  * @param context The context
  */
 ATCG_INLINE void destroyContext(atcg::ref_ptr<atcg::RaytracingContext>& context)

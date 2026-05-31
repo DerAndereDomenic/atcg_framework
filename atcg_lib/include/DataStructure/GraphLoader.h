@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/API.h>
+
 namespace atcg
 {
 
@@ -20,7 +22,7 @@ namespace IO
  *
  * @return The geometry representation
  */
-atcg::ref_ptr<Graph> read_any(const std::string& path);
+ATCG_API atcg::ref_ptr<Graph> read_any(const std::string& path);
 
 /**
  * @brief Read an obj (triangle) mesh.
@@ -31,7 +33,7 @@ atcg::ref_ptr<Graph> read_any(const std::string& path);
  *
  * @return The mesh representation
  */
-atcg::ref_ptr<Graph> read_mesh(const std::string& path);
+ATCG_API atcg::ref_ptr<Graph> read_mesh(const std::string& path);
 
 /**
  * @brief Read an obj triangle cloud.
@@ -43,7 +45,7 @@ atcg::ref_ptr<Graph> read_mesh(const std::string& path);
  *
  * @return The point cloud representation
  */
-atcg::ref_ptr<Graph> read_pointcloud(const std::string& path);
+ATCG_API atcg::ref_ptr<Graph> read_pointcloud(const std::string& path);
 
 /**
  * @brief Read an obj file representing a line collection.
@@ -55,7 +57,7 @@ atcg::ref_ptr<Graph> read_pointcloud(const std::string& path);
  *
  * @return The line representation
  */
-atcg::ref_ptr<Graph> read_lines(const std::string& path);
+ATCG_API atcg::ref_ptr<Graph> read_lines(const std::string& path);
 
 /**
  * @brief Read a scene representation from an obj file.
@@ -76,6 +78,6 @@ atcg::ref_ptr<Graph> read_lines(const std::string& path);
  *
  * @return The line representation
  */
-atcg::ref_ptr<Scene> read_scene(const std::string& path);
+ATCG_API atcg::ref_ptr<Scene> read_scene(const std::string& path);
 }    // namespace IO
 }    // namespace atcg

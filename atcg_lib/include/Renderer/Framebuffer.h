@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Renderer/Texture.h>
 
 #include <vector>
@@ -16,7 +17,7 @@ class GraphicsAPI;
  * * If the texture is a depth map
  * * The format of the texture
  */
-struct FramebufferTextureSpecification
+struct ATCG_API FramebufferTextureSpecification
 {
     FramebufferTextureSpecification() = default;
     FramebufferTextureSpecification(TextureSpecification spec, TextureType type = TextureType::TEXTURE_2D)
@@ -35,7 +36,7 @@ struct FramebufferTextureSpecification
  * * number of samples if MSAA is enabled
  * * The specifications of the attachements
  */
-struct FramebufferSpecification
+struct ATCG_API FramebufferSpecification
 {
     FramebufferSpecification() = default;
     FramebufferSpecification(uint32_t width,
@@ -73,7 +74,7 @@ struct FramebufferSpecification
 /**
  * @brief Class to model a framebuffer
  */
-class Framebuffer : public std::enable_shared_from_this<Framebuffer>
+class ATCG_API Framebuffer : public std::enable_shared_from_this<Framebuffer>
 {
 public:
     Framebuffer();

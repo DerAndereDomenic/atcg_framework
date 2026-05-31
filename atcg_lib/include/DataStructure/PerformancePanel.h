@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <DataStructure/Statistics.h>
 
 namespace atcg
@@ -10,7 +11,7 @@ namespace GUI
 /**
  * @brief A debug panel to display frame times
  */
-class PerformancePanel
+class ATCG_API PerformancePanel
 {
 public:
     /**

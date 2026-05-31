@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <DataStructure/GPUResource.h>
 
 #include <unordered_map>
@@ -9,7 +10,7 @@ namespace atcg
 /**
  * @brief A class to model the resource table passed to the render passes.
  */
-class ResourceTable
+class ATCG_API ResourceTable
 {
 public:
     /**

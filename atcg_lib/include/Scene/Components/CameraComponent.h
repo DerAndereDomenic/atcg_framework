@@ -12,7 +12,7 @@
 
 namespace atcg
 {
-struct CameraComponent
+struct ATCG_API CameraComponent
 {
     CameraComponent() = default;
     CameraComponent(const atcg::ref_ptr<Camera>& camera, const uint32_t width = 1024, const uint32_t height = 1024)

@@ -39,6 +39,7 @@ int atcg_main()
     atcg::SystemRegistry::init();
     atcg::SystemRegistry::instance()->registerSystem(logger.get());
     atcg::Application* app = atcg::createApplication();
+    ImGui::SetCurrentContext(app->getImGuiLayer()->getImGuiContext());
     app->run();
     delete app;
     atcg::print_statistics();

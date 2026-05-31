@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Scene/Entity.h>
 
@@ -14,7 +15,7 @@ namespace Serialization
 /**
  * @brief A class that handles scene serialization
  */
-class SceneSerializer
+class ATCG_API SceneSerializer
 {
 public:
     /**

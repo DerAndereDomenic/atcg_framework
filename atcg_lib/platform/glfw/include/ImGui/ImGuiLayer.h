@@ -1,7 +1,10 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Layer.h>
 #include <Core/glm.h>
+
+#include <imgui.h>
 
 namespace atcg
 {
@@ -9,7 +12,7 @@ namespace atcg
  * @brief This layer handles imgui context and is pushed as an overlay at the start of the application.
  * This is not meant to be used by the client
  */
-class ImGuiLayer : public Layer
+class ATCG_API ImGuiLayer : public Layer
 {
 public:
     /**
@@ -88,6 +91,8 @@ public:
      * @return The viewport position
      */
     glm::ivec2 getViewportPosition() const { return _viewport_position; }
+
+    ImGuiContext* getImGuiContext() const;
 
 private:
     bool _block_events            = true;

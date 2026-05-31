@@ -8,7 +8,7 @@ namespace atcg
 /**
  * @brief Henyey Greenstein Phase function
  */
-class HenyeyGreensteinPhaseFunction : public PhaseFunction
+class ATCG_API HenyeyGreensteinPhaseFunction : public PhaseFunction
 {
 public:
     /**

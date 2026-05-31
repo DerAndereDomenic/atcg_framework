@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/LayerStack.h>
 #include <Core/Window.h>
@@ -38,7 +39,7 @@ namespace atcg
 /**
  * @brief A class to model an application
  */
-class Application
+class ATCG_API Application
 {
 public:
     /**

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <DataStructure/GPUResource.h>
 
 namespace atcg
@@ -13,7 +14,7 @@ namespace atcg
  * For textures, a output size can be specified explicitely. However, if the handle of a texture input is passed to
  * setOutputFramebufferData, it is overwritten with the size of the framebuffer.
  */
-struct RenderPassReflection
+struct ATCG_API RenderPassReflection
 {
     RenderPassReflection() = default;
 

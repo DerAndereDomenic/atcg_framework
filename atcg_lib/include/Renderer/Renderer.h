@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/glm.h>
 #include <Core/Memory.h>
 #include <Renderer/Context.h>
@@ -23,7 +24,7 @@ class Scene;
  * @brief This class models a renderer. This should be used if you are trying to create multiple renderer instances
  * (e.g. for multi threading). Per default, use atcg::Renderer to use the default renderer.
  */
-class RendererSystem
+class ATCG_API RendererSystem
 {
 public:
     /**

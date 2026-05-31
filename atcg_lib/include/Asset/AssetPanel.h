@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Asset/Asset.h>
 #include <Renderer/Material.h>
 
@@ -10,7 +11,7 @@ namespace GUI
 /**
  * @brief Class to model an asset panel
  */
-class AssetPanel
+class ATCG_API AssetPanel
 {
 public:
     /**

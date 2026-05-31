@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <Core/API.h>
 #include <Core/glm.h>
 #include <Core/Memory.h>
 #include <Events/Event.h>
@@ -16,7 +16,7 @@
 namespace atcg
 {
 
-struct WindowProps
+struct ATCG_API WindowProps
 {
     std::string title;
     uint32_t width;
@@ -51,7 +51,7 @@ struct WindowProps
  * @brief Class to model a window
  *
  */
-class Window
+class ATCG_API Window
 {
 public:
     // A function pointer that is used on event

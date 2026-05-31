@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
@@ -9,7 +10,7 @@ namespace atcg
 /**
  * @brief An Optix component is a part of a raytracing pipeline
  */
-class OptixComponent
+class ATCG_API OptixComponent
 {
 public:
     /**

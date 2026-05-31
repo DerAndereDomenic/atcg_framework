@@ -10,7 +10,7 @@ namespace atcg
 /**
  * @brief A class to model a triangle mesh
  */
-class MeshShape : public Shape
+class ATCG_API MeshShape : public Shape
 {
 public:
     /**

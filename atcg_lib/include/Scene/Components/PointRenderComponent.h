@@ -11,7 +11,7 @@
 
 namespace atcg
 {
-struct PointRenderComponent : public RenderComponent
+struct ATCG_API PointRenderComponent : public RenderComponent
 {
     PointRenderComponent(const glm::vec3& color = glm::vec3(1), const float& point_size = 1.0f)
         : RenderComponent(),

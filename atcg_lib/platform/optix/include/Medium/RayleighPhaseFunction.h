@@ -4,7 +4,7 @@
 
 namespace atcg
 {
-class RayleighPhaseFunction : public PhaseFunction
+class ATCG_API RayleighPhaseFunction : public PhaseFunction
 {
 public:
     RayleighPhaseFunction(const atcg::Dictionary& dict);

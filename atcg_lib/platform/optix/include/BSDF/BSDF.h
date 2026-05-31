@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <DataStructure/Dictionary.h>
 #include <Core/OptixComponent.h>
@@ -14,7 +15,7 @@ namespace atcg
 /**
  * @brief A class to model a BSDF
  */
-class BSDF : public OptixComponent
+class ATCG_API BSDF : public OptixComponent
 {
 public:
     /**
@@ -58,7 +59,7 @@ protected:
     BSDFComponentType _flags;
 };
 
-struct BSDFComponent
+struct ATCG_API BSDFComponent
 {
     BSDFComponent() = default;
     BSDFComponent(const atcg::ref_ptr<BSDF>& bsdf) : bsdf(bsdf) {}

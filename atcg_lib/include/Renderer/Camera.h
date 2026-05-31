@@ -1,12 +1,13 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/glm.h>
 
 #include <Renderer/CameraUtils.h>
 
 namespace atcg
 {
-class Camera
+class ATCG_API Camera
 {
 public:
     /**
