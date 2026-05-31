@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/SystemRegistry.h>
 
@@ -17,7 +18,7 @@ class Shader;
  * use addShaderFromPath to also handle direct shader loading. This class can be used if custom shader systems are to be
  * used (e.g. for multi threaded rendering). The default Shadermanager can be accessed using atcg::ShaderManager.
  */
-class ShaderManagerSystem
+class ATCG_API ShaderManagerSystem
 {
 public:
     ShaderManagerSystem();

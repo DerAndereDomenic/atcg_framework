@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/UUID.h>
 
 #include <Core/Platform.h>
@@ -28,7 +29,7 @@ enum class AssetType : uint16_t
 /**
  * @brief A class to model an asset
  */
-class Asset
+class ATCG_API Asset
 {
 public:
     AssetHandle handle;
@@ -44,7 +45,7 @@ public:
 /**
  * @brief A class to model asset meta data
  */
-struct AssetMetaData
+struct ATCG_API AssetMetaData
 {
     AssetType type   = AssetType::None;
     std::string name = "Asset";

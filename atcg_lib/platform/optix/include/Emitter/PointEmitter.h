@@ -10,7 +10,7 @@ namespace atcg
 /**
  * @brief A class to model a point emitter
  */
-class PointEmitter : public Emitter
+class ATCG_API PointEmitter : public Emitter
 {
 public:
     /**

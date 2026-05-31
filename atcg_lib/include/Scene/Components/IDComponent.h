@@ -5,7 +5,7 @@
 
 namespace atcg
 {
-struct IDComponent
+struct ATCG_API IDComponent
 {
     IDComponent() : _ID(UUID()) {}
     IDComponent(uint64_t id) : _ID(UUID(id)) {}

@@ -5,7 +5,7 @@
 
 namespace atcg
 {
-struct TransparencyComponent
+struct ATCG_API TransparencyComponent
 {
     TransparencyComponent() = default;
 

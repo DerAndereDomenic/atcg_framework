@@ -4,7 +4,7 @@
 
 namespace atcg
 {
-struct RenderComponent
+struct ATCG_API RenderComponent
 {
     RenderComponent() { default_material = atcg::make_ref<OpaqueMaterial>(); }
 

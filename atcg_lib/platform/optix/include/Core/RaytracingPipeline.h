@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/RaytracingContext.h>
 #include <Core/TraceParameters.h>
 #include <optix.h>
@@ -13,7 +14,7 @@ struct ShaderEntryPointDesc
     std::string entrypoint_name;
 };
 
-class RayTracingPipeline
+class ATCG_API RayTracingPipeline
 {
 public:
     /**

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Core/Memory.h>
 #include <Core/SystemRegistry.h>
@@ -15,7 +16,7 @@
 namespace atcg
 {
 
-class Revision
+class ATCG_API Revision
 {
 public:
     /**
@@ -44,7 +45,7 @@ public:
 /**
  * @brief This class models a revision of a scene element
  */
-class EntityRevision : public Revision
+class ATCG_API EntityRevision : public Revision
 {
 public:
     /**
@@ -69,7 +70,7 @@ protected:
  * versions. The default Revision System (atcg::RevisionStack) tracks the standard components of the engine (see
  * Components.h). It is used to implement Redo and Undo functionality in the editor.
  */
-class RevisionSystem
+class ATCG_API RevisionSystem
 {
 public:
     /**
@@ -222,7 +223,7 @@ private:
 /**
  * @brief Revision if an entity was added to the scene
  */
-class EntityAddedRevision : public EntityRevision
+class ATCG_API EntityAddedRevision : public EntityRevision
 {
 public:
     /**
@@ -268,7 +269,7 @@ private:
 /**
  * @brief Revision if an entity was removed from the scene
  */
-class EntityRemovedRevision : public EntityRevision
+class ATCG_API EntityRemovedRevision : public EntityRevision
 {
 public:
     /**
@@ -335,7 +336,7 @@ private:
  * @tparam Component The type of the component that was added
  */
 template<typename Component>
-class ComponentAddedRevision : public EntityRevision
+class ATCG_API ComponentAddedRevision : public EntityRevision
 {
 public:
     /**
@@ -391,7 +392,7 @@ private:
  * @tparam Component The type of the component that was removed
  */
 template<typename Component>
-class ComponentRemovedRevision : public EntityRevision
+class ATCG_API ComponentRemovedRevision : public EntityRevision
 {
 public:
     /**
@@ -448,7 +449,7 @@ private:
  * @tparam Component The type of the component that was edited
  */
 template<typename Component>
-class ComponentEditedRevision : public EntityRevision
+class ATCG_API ComponentEditedRevision : public EntityRevision
 {
 public:
     /**
@@ -516,7 +517,7 @@ private:
  * @tparam RevisionType2 The revision type of the second revision
  */
 template<typename RevisionType1, typename RevisionType2>
-class UnionRevision : public EntityRevision
+class ATCG_API UnionRevision : public EntityRevision
 {
 public:
     /**
@@ -582,7 +583,7 @@ protected:
     AssetHandle _asset;
 };
 
-class AssetAddedRevision : public AssetRevision
+class ATCG_API AssetAddedRevision : public AssetRevision
 {
 public:
     AssetAddedRevision(AssetHandle asset) : AssetRevision(asset) {}
@@ -628,7 +629,7 @@ private:
     AssetMetaData _new_data;
 };
 
-class AssetRemovedRevision : public AssetRevision
+class ATCG_API AssetRemovedRevision : public AssetRevision
 {
 public:
     AssetRemovedRevision(AssetHandle asset) : AssetRevision(asset) {}
@@ -674,7 +675,7 @@ private:
     AssetMetaData _old_data;
 };
 
-class AssetEditedRevision : public AssetRevision
+class ATCG_API AssetEditedRevision : public AssetRevision
 {
 public:
     AssetEditedRevision(AssetHandle asset) : AssetRevision(asset) {}

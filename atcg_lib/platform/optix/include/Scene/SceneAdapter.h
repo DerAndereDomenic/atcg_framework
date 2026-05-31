@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Scene/OptixScene.h>
 #include <Scene/Scene.h>
 #include <Core/RaytracingPipeline.h>
@@ -11,7 +12,7 @@ namespace atcg
 /**
  * @brief A class to convert all scene elements into the optix representation
  */
-class SceneAdapter
+class ATCG_API SceneAdapter
 {
 public:
     /**

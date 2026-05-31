@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Core/OptixComponent.h>
 #include <Emitter/EmitterVPtrTable.cuh>
@@ -14,7 +15,7 @@ namespace atcg
 /**
  * @brief A class to model an emitter
  */
-class Emitter : public OptixComponent
+class ATCG_API Emitter : public OptixComponent
 {
 public:
     /**
@@ -58,7 +59,7 @@ protected:
     EmitterFlags _flags;
 };
 
-struct EmitterComponent
+struct ATCG_API EmitterComponent
 {
     EmitterComponent() = default;
     EmitterComponent(const atcg::ref_ptr<Emitter>& emitter) : emitter(emitter) {}

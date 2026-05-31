@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Renderer/Texture.h>
 #include <DataStructure/JPEGConfig.h>
@@ -15,7 +16,7 @@ namespace atcg
  * @brief A wrapper around nvjpeg for fast jpeg compression.
  * @note This is only built with the CUDA backend
  */
-class JPEGEncoder
+class ATCG_API JPEGEncoder
 {
 public:
     /**

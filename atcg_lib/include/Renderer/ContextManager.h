@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Core/Memory.h>
 #include <Core/SystemRegistry.h>
@@ -11,7 +12,7 @@ namespace atcg
 /**
  * @brief A context manager system is used to manage contexts over several threads.
  */
-class ContextManagerSystem
+class ATCG_API ContextManagerSystem
 {
 public:
     /**

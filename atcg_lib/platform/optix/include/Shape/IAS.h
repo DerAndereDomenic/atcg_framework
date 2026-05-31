@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/RaytracingContext.h>
 #include <Shape/ShapeInstance.h>
 
@@ -8,7 +9,7 @@ namespace atcg
 /**
  * @brief A class to model an acceleration structure for multiple instances
  */
-class InstanceAccelerationStructure
+class ATCG_API InstanceAccelerationStructure
 {
 public:
     /**

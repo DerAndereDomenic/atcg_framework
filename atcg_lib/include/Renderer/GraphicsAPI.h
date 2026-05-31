@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/SystemRegistry.h>
 #include <Renderer/Buffer.h>
 #include <Renderer/Framebuffer.h>
@@ -12,7 +13,7 @@ namespace atcg
 /**
  * @brief This class models the rendering API
  */
-class GraphicsAPI
+class ATCG_API GraphicsAPI
 {
 public:
     /**

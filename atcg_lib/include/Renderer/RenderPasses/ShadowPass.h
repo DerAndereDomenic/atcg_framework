@@ -7,7 +7,7 @@ namespace atcg
 /**
  * @brief A RenderPass that renders cube map shadow maps for each point light source in the scene
  */
-class ShadowPass : public RenderPass
+class ATCG_API ShadowPass : public RenderPass
 {
 public:
     /**

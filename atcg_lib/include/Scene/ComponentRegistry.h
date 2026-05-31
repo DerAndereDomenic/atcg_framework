@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/SystemRegistry.h>
 #include <Scene/Entity.h>
 #include <Scene/ComponentSerializer.h>
@@ -154,7 +155,7 @@ ATCG_INLINE std::vector<ComponentRenderEntry>& getRenderEntries()
  * }
  * @endcode
  */
-class ComponentRegistrySystem
+class ATCG_API ComponentRegistrySystem
 {
 public:
     /**
@@ -375,10 +376,7 @@ ATCG_INLINE void renderAllComponents(RendererSystem* renderer,
 #define ATCG_REGISTER_COMPONENT_RENDER(ComponentType)                                                                  \
     struct RenderFactory_##ComponentType                                                                               \
     {                                                                                                                  \
-        RenderFactory_##ComponentType()                                                                                \
-        {                                                                                                              \
-            getRenderEntries().emplace_back(&renderComponent<ComponentType>);                                          \
-        }                                                                                                              \
+        RenderFactory_##ComponentType() { getRenderEntries().emplace_back(&renderComponent<ComponentType>); }          \
         static RenderFactory_##ComponentType instance;                                                                 \
     };                                                                                                                 \
     RenderFactory_##ComponentType RenderFactory_##ComponentType::instance

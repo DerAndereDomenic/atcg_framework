@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Asset/Asset.h>
 #include <DataStructure/Image.h>
@@ -26,7 +27,7 @@ enum class TextureType
 /**
  * @brief A class to model a texture
  */
-class Texture
+class ATCG_API Texture
 {
 public:
     /**
@@ -269,7 +270,7 @@ protected:
 /**
  * @brief A class to model a texture
  */
-class Texture2D : public Texture, public Asset
+class ATCG_API Texture2D : public Texture, public Asset
 {
 public:
     /**
@@ -411,7 +412,7 @@ protected:
 /**
  * @brief A class to model a texture
  */
-class Texture3D : public Texture, public Asset
+class ATCG_API Texture3D : public Texture, public Asset
 {
 public:
     /**
@@ -534,7 +535,7 @@ protected:
 /**
  * @brief A class to model a cube map
  */
-class TextureCube : public Texture
+class ATCG_API TextureCube : public Texture
 {
 public:
     /**
@@ -629,7 +630,7 @@ protected:
 /**
  * @brief A class to model a texture
  */
-class TextureArray : public Texture
+class ATCG_API TextureArray : public Texture
 {
 public:
     /**
@@ -748,7 +749,7 @@ protected:
 /**
  * @brief A class to model an array cube map
  */
-class TextureCubeArray : public Texture
+class ATCG_API TextureCubeArray : public Texture
 {
 public:
     /**
@@ -844,7 +845,7 @@ protected:
  * @brief This class is used to model a multi sampled texture used for anti aliasing.
  * It can only be manipulated by rendering to it. Setting or accessing data directly is not possible.
  */
-class Texture2DMultiSample : public Texture
+class ATCG_API Texture2DMultiSample : public Texture
 {
 public:
     /**

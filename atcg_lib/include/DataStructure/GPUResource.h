@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Renderer/TextureSpecification.h>
 #include <Renderer/Texture.h>
 #include <Renderer/Buffer.h>
@@ -164,5 +165,5 @@ struct ResourceDescription
  *
  * @return The created physical resource
  */
-PhysicalResource createResource(const CompileData& ctx, const ResourceDescription& desc);
+ATCG_API PhysicalResource createResource(const CompileData& ctx, const ResourceDescription& desc);
 }    // namespace atcg

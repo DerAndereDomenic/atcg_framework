@@ -6,7 +6,7 @@
 
 namespace atcg
 {
-struct TransformComponent
+struct ATCG_API TransformComponent
 {
     /**
      * @brief Create a transform component

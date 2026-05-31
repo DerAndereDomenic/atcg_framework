@@ -9,7 +9,7 @@
 
 namespace atcg
 {
-struct EdgeCylinderRenderComponent : public RenderComponent
+struct ATCG_API EdgeCylinderRenderComponent : public RenderComponent
 {
     EdgeCylinderRenderComponent(float radius = 0.001f) : RenderComponent(), radius(radius) {}
 

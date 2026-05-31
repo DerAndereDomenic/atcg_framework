@@ -1,10 +1,11 @@
 #pragma once
 
+#include <Core/API.h>
 #include <DataStructure/Worker.h>
 
 namespace atcg
 {
-class WorkerPool
+class ATCG_API WorkerPool
 {
 public:
     /**

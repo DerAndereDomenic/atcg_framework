@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Renderer/Texture.h>
 #include <DataStructure/JPEGConfig.h>
@@ -15,14 +16,9 @@ namespace atcg
  * @brief A wrapper around nvjpeg for fast jpeg decompression.
  * @note This is only built with the CUDA backend.
  */
-class JPEGDecoder
+class ATCG_API JPEGDecoder
 {
 public:
-    /**
-     * @brief Default constructor
-     */
-    JPEGDecoder() = default;
-
     /**
      * @brief Constructor
      * @note The vertically flip option is true per default. This means that the resulting tensor will be flipped with
