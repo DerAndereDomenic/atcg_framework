@@ -24,6 +24,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path)
     if(!handle)
     {
         // Handle error
+        ATCG_ERROR("Failed to load plugin: {0}", path.string());
         return false;
     }
 
@@ -33,9 +34,21 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path)
     if(!registerPlugin)
     {
         // Handle error
+        ATCG_ERROR("Failed to find registerPlugin function in plugin: {0}", path.string());
         FreeLibrary(static_cast<HMODULE>(handle));
         return false;
     }
+
+    using RegisterSystemsFunc = void (*)(atcg::Application*, atcg::SystemRegistry*, ImGuiContext*);
+    auto registerSystems =
+        reinterpret_cast<RegisterSystemsFunc>(GetProcAddress(static_cast<HMODULE>(handle), "registerSystems"));
+    if(!registerSystems)
+    {
+        ATCG_ERROR("Failed to find registerSystems function in plugin: {0}", path.string());
+        FreeLibrary(static_cast<HMODULE>(handle));
+        return false;
+    }
+    registerSystems(atcg::Application::get(), atcg::SystemRegistry::instance(), ImGui::GetCurrentContext());
 
     PluginRegistry registry(*this, handle);
     registerPlugin(registry);

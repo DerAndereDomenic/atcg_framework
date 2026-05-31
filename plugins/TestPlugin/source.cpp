@@ -10,12 +10,13 @@ public:
 
     static atcg::ref_ptr<atcg::DummyPluginBase> create() { return atcg::make_ref<TestPlugin>(); }
 
-    virtual void doStuff() override
+    virtual void doStuff(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera) override
     {
-        ImGui::Begin("Test Window Plugin");
-        ImGui::End();
+        // atcg::SceneRenderer::render(scene, camera, atcg::Renderer::getFramebuffer());
     }
 };
+
+ATCG_PLUGIN_LIBRARY();
 
 extern "C" __declspec(dllexport) void registerPlugin(atcg::PluginRegistry& registry)
 {

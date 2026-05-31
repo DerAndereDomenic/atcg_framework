@@ -1,6 +1,12 @@
 #pragma once
 
 #include <Core/Memory.h>
+#include <Core/Application.h>
+#include <Core/SystemRegistry.h>
+#include <Scene/Scene.h>
+#include <Renderer/Camera.h>
+#include <Renderer/GraphicsAPI.h>
+#include <imgui.h>
 
 #include <filesystem>
 #include <unordered_map>
@@ -135,6 +141,16 @@ public:                                                                         
         return pluginType;                                                                                             \
     }
 
+#define ATCG_PLUGIN_LIBRARY()                                                                                          \
+    extern "C" __declspec(dllexport) void registerSystems(atcg::Application* app,                                      \
+                                                          atcg::SystemRegistry* registry,                              \
+                                                          ImGuiContext* imgui_context)                                 \
+    {                                                                                                                  \
+        atcg::Application::setApplicationInstance(app);                                                                \
+        atcg::SystemRegistry::setInstance(registry);                                                                   \
+        ImGui::SetCurrentContext(imgui_context);                                                                       \
+        registry->getSystem<atcg::GraphicsAPI>()->init();                                                              \
+    }
 
 class DummyPluginBase
 {
@@ -142,7 +158,7 @@ public:
     using PluginCreate = std::function<std::shared_ptr<DummyPluginBase>()>;
     ATCG_PLUGIN_BASE_CLASS(DummyPluginBase);
 
-    virtual void doStuff() = 0;
+    virtual void doStuff(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera) = 0;
 };
 
 }    // namespace atcg
