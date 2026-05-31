@@ -132,3 +132,6 @@
 #include <Scripting/ScriptEngine.h>
 #include <Scripting/Script.h>
 #include <Scripting/Behavior.h>
+
+//-------- Plugin ------------
+#include <Plugin/Plugin.h>
