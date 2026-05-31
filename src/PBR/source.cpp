@@ -155,6 +155,11 @@ public:
         auto render_graph        = atcg::createRenderGraph(compile_data);
 
         atcg::SceneRenderer::setRenderGraph(render_graph);
+
+        plugin_manager.loadPlugin("bin/Debug/TestPlugin.dll");
+
+
+        plugin_obj = plugin_manager.createClass<atcg::DummyPluginBase>("TestPlugin");
     }
 
     // This gets called each frame
@@ -389,6 +394,8 @@ public:
 
         asset_panel.renderPanel();
 
+        plugin_obj->doStuff();
+
         atcg::drawGuizmo(atcg::Project::getActive()->getActiveScene(),
                          hovered_entity,
                          current_operation,
@@ -511,6 +518,9 @@ private:
 
     atcg::ref_ptr<atcg::Texture2D> output_texture;
     atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
+
+    atcg::PluginManager plugin_manager;
+    atcg::ref_ptr<atcg::DummyPluginBase> plugin_obj;
 
     uint32_t last_revision = 0;
 };
