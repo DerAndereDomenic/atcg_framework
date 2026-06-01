@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/Application.h>
 #include <Core/SystemRegistry.h>
@@ -14,7 +15,7 @@
 
 namespace atcg
 {
-class PluginManager
+class ATCG_API PluginManager
 {
 public:
     using SharedLibraryHandle = void*;
@@ -83,19 +84,19 @@ private:
             return;
         }
 
-        auto desc                        = std::make_unique<ClassDesc<BaseT>>(handle, type, create);
+        auto desc                        = std::make_shared<ClassDesc<BaseT>>(handle, type, create);
         _registered_classes[type.data()] = std::move(desc);
     }
 
 private:
     std::unordered_map<std::filesystem::path, SharedLibraryHandle> _loaded_plugins;
-    std::unordered_map<std::string, std::unique_ptr<ClassDescBase>> _registered_classes;
+    std::unordered_map<std::string, std::shared_ptr<ClassDescBase>> _registered_classes;
 
 
     friend class PluginRegistry;
 };
 
-class PluginRegistry
+class ATCG_API PluginRegistry
 {
 public:
     PluginRegistry(PluginManager& manager, PluginManager::SharedLibraryHandle handle)
@@ -142,17 +143,12 @@ public:                                                                         
     }
 
 #define ATCG_PLUGIN_LIBRARY()                                                                                          \
-    extern "C" __declspec(dllexport) void registerSystems(atcg::Application* app,                                      \
-                                                          atcg::SystemRegistry* registry,                              \
-                                                          ImGuiContext* imgui_context)                                 \
+    extern "C" __declspec(dllexport) void registerSystems(ImGuiContext* imgui_context)                                 \
     {                                                                                                                  \
-        atcg::Application::setApplicationInstance(app);                                                                \
-        atcg::SystemRegistry::setInstance(registry);                                                                   \
         ImGui::SetCurrentContext(imgui_context);                                                                       \
-        registry->getSystem<atcg::GraphicsAPI>()->init();                                                              \
     }
 
-class DummyPluginBase
+class ATCG_API DummyPluginBase
 {
 public:
     using PluginCreate = std::function<std::shared_ptr<DummyPluginBase>()>;

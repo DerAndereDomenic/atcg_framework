@@ -39,7 +39,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path)
         return false;
     }
 
-    using RegisterSystemsFunc = void (*)(atcg::Application*, atcg::SystemRegistry*, ImGuiContext*);
+    using RegisterSystemsFunc = void (*)(ImGuiContext*);
     auto registerSystems =
         reinterpret_cast<RegisterSystemsFunc>(GetProcAddress(static_cast<HMODULE>(handle), "registerSystems"));
     if(!registerSystems)
@@ -48,7 +48,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path)
         FreeLibrary(static_cast<HMODULE>(handle));
         return false;
     }
-    registerSystems(atcg::Application::get(), atcg::SystemRegistry::instance(), ImGui::GetCurrentContext());
+    registerSystems(ImGui::GetCurrentContext());
 
     PluginRegistry registry(*this, handle);
     registerPlugin(registry);

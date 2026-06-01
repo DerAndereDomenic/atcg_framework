@@ -243,10 +243,10 @@ public:
             }
             else
             {
-                atcg::SceneRenderer::render(atcg::Project::getActive()->getActiveScene(),
-                                            camera_controller->getCamera(),
-                                            atcg::Renderer::getFramebuffer());
-                // plugin_obj->doStuff(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
+                // atcg::SceneRenderer::render(atcg::Project::getActive()->getActiveScene(),
+                //                             camera_controller->getCamera(),
+                //                             atcg::Renderer::getFramebuffer());
+                plugin_obj->doStuff(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
 
                 atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
 

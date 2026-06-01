@@ -12,7 +12,7 @@ public:
 
     virtual void doStuff(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera) override
     {
-        // atcg::SceneRenderer::render(scene, camera, atcg::Renderer::getFramebuffer());
+        atcg::SceneRenderer::render(scene, camera, atcg::Renderer::getFramebuffer());
     }
 };
 
