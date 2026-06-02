@@ -3,8 +3,6 @@
 #include <Core/Common.h>
 #include <DataStructure/Graph.h>
 
-#include <optix_stubs.h>
-
 void RadiosityRayGenerator::initializePipeline()
 {
     _pipeline->addTrianglesHitGroupShader("MeshShape", 0, {"./bin/MeshShape_ptx.ptx", "__closesthit__mesh"}, {});
@@ -52,16 +50,12 @@ void RadiosityRayGenerator::generateRays(atcg::Dictionary& dict)
 
     _launch_params.upload(&params);
 
-    OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
-                            nullptr,
-                            (CUdeviceptr)_launch_params.get(),
-                            sizeof(RadiosityParams),
-                            _sbt->getSBT(_raygen_index),
-                            n_primitives,
-                            n_primitives,
-                            1));    // depth
-
-    CUDA_SAFE_CALL(cudaStreamSynchronize(nullptr));
+    _pipeline->launch((CUdeviceptr)_launch_params.get(),
+                      sizeof(RadiosityParams),
+                      _sbt->getSBT(_raygen_index),
+                      n_primitives,
+                      n_primitives,
+                      1);
 }
 
 void RadiosityRayGenerator::reset() {}
