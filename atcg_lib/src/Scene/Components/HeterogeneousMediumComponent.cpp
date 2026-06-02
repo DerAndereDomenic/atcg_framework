@@ -69,7 +69,7 @@ void ComponentRenderer<HeterogeneousMediumComponent>::renderComponent(atcg::Rend
         auxiliary.getValueOr<atcg::ref_ptr<Shader>>("override_shader",
                                                     _renderer->getShaderManager()->getShader("volume_het"));
 
-    auto depth_map = auxiliary.getValueOr<atcg::ref_ptr<atcg::Texture>>("depth_map", nullptr);
+    auto depth_map = auxiliary.getValueOr<atcg::ref_ptr<atcg::Texture2D>>("depth_map", nullptr);
 
     if(!depth_map)
     {

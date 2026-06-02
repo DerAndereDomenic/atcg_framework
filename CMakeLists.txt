@@ -11,10 +11,14 @@ list(PREPEND CMAKE_MODULE_PATH "${ATCG_PROJECT_ROOT_DIR}/cmake")
 
 include(ATCGFunctions)
 
+# Create bin and lib directories if not exist
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
+
 # Configure C++
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -60,10 +64,9 @@ find_package(OpenGL REQUIRED)
 
 # OpenMesh
 if(NOT TARGET OpenMeshCore AND NOT TARGET OpenMeshTools)
+    set(OPENMESH_BUILD_SHARED ON CACHE BOOL "Build as shared library(DLL)?" FORCE)
     add_subdirectory(external/openmesh)
 endif()
-target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
-target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 
 # stbimage
 if(NOT TARGET stb_image)

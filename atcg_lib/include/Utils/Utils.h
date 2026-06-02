@@ -58,7 +58,7 @@ ATCG_API void applyTransform(torch::Tensor& positions,
  * @return The host representation
  */
 template<typename T>
-T ntoh(T network);
+ATCG_API T ntoh(T network);
 
 /**
  * @brief Convert datatype from network to host byte order
