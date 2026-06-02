@@ -13,4 +13,12 @@ ATCG_DEVICE ATCG_INLINE void globalAtomicAdd(float* addr, float val)
     asm volatile("atom.global.add.f32 %0, [%1], %2;" : "=f"(val) : "l"(ptr), "f"(val) : "memory");
 #endif
 }
+
+ATCG_DEVICE ATCG_INLINE void globalAtomicAdd(int* addr, int val)
+{
+#ifdef __CUDACC__
+    unsigned long long ptr = (unsigned long long)__cvta_generic_to_global(addr);
+    asm volatile("atom.global.add.s32 %0, [%1], %2;" : "=r"(val) : "l"(ptr), "r"(val) : "memory");
+#endif
+}
 }    // namespace atcg
