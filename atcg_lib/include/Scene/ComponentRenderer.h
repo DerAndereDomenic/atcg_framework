@@ -2,9 +2,9 @@
 
 #include <Core/SystemRegistry.h>
 #include <Scene/Scene.h>
-#include <Scene/Components.h>
 #include <DataStructure/Dictionary.h>
 #include <DataStructure/Skybox.h>
+#include <Renderer/Renderer.h>
 
 namespace atcg
 {
@@ -69,15 +69,6 @@ struct ComponentRenderer
                              atcg::Dictionary& auxiliary) const;                                                       \
     };
 
-ATCG_DECLARE_COMPONENT_RENDERER(MeshRenderComponent);
-ATCG_DECLARE_COMPONENT_RENDERER(PointRenderComponent);
-ATCG_DECLARE_COMPONENT_RENDERER(PointSphereRenderComponent);
-ATCG_DECLARE_COMPONENT_RENDERER(EdgeRenderComponent);
-ATCG_DECLARE_COMPONENT_RENDERER(EdgeCylinderRenderComponent);
-ATCG_DECLARE_COMPONENT_RENDERER(InstanceRenderComponent);
-ATCG_DECLARE_COMPONENT_RENDERER(MeshLightComponent);
-ATCG_DECLARE_COMPONENT_RENDERER(CameraComponent);
-ATCG_DECLARE_COMPONENT_RENDERER(PointLightComponent);
 
 template<typename T>
 void renderComponent(atcg::RendererSystem* renderer,

@@ -303,6 +303,8 @@ void AssetManagerSystem::loadStandardAssets()
 
         _cube_mesh = atcg::Graph::createTriangleMesh(points, faces);
     }
+
+    _dummy_skybox = atcg::make_ref<Skybox>();
 }
 
 }    // namespace atcg

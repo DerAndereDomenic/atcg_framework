@@ -18,6 +18,7 @@ public:
     void updateVertexBuffer(const torch::Tensor& vertices);
     void updateEdgeBuffer(const torch::Tensor& edges);
     void updateFaceBuffer(const torch::Tensor& indices);
+    void updateBoundingBox(const torch::Tensor& positions);
     torch::Tensor edgesFromIndices(const torch::Tensor& face_indices);
 
     atcg::ref_ptr<VertexBuffer> vertices = nullptr;
@@ -32,6 +33,8 @@ public:
     uint32_t n_faces    = 0;
 
     GraphType type;
+
+    BoundingBox bbox;
 };
 
 Graph::Impl::Impl()
@@ -92,6 +95,9 @@ void Graph::Impl::updateVertexBuffer(const torch::Tensor& pvertices)
         vertices->setData(pvertices.data_ptr(), sizeof(atcg::Vertex) * n);
     }
     n_vertices = n;
+
+    torch::Tensor positions = pvertices.index({Slice(), Slice(0, 3)});
+    updateBoundingBox(positions);
 }
 
 void Graph::Impl::updateEdgeBuffer(const torch::Tensor& pedges)
@@ -147,6 +153,17 @@ void Graph::Impl::updateFaceBuffer(const torch::Tensor& pindices)
     }
 
     n_faces = n;
+}
+
+void Graph::Impl::updateBoundingBox(const torch::Tensor& positions)
+{
+    if(positions.size(0) == 0) return;
+
+    auto min = std::get<0>(positions.min(0));
+    auto max = std::get<0>(positions.max(0));
+
+    bbox.min = glm::vec3(min[0].item<float>(), min[1].item<float>(), min[2].item<float>());
+    bbox.max = glm::vec3(max[0].item<float>(), max[1].item<float>(), max[2].item<float>());
 }
 
 torch::Tensor Graph::Impl::edgesFromIndices(const torch::Tensor& indices)
@@ -611,6 +628,16 @@ torch::Tensor Graph::getFaces(const torch::Device& device) const
         uint32_t* face_pointer = impl->indices->getDevicePointer<uint32_t>();
         return atcg::createDeviceTensorFromPointer<uint32_t>(face_pointer, {n_faces(), 3});
     }
+}
+
+BoundingBox Graph::getBoundingBox() const
+{
+    return impl->bbox;
+}
+
+void Graph::updateBoundingBox()
+{
+    impl->updateBoundingBox(getPositions(atcg::GPU));
 }
 
 void Graph::unmapHostVertexPointer()

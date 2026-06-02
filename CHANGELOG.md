@@ -42,6 +42,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added possibility to customize and add closest hit programs for arbitrary shapes
 - Added simple camera exposure model
 - Added optix as submodule. The pathtracing backend is now always built when CUDA is available
+- Added depth pass for meshes
+- Added bounding boxes to geometries
+- Added Transparency component to mark transparent objects
+- Added order dependent transparency rendering (sorting of transparent objects)
+- Added frustum culling based on bounding boxes
+- Added Texture creation function for arbitrary types of textures
+- Added functions to swap textures
+- Added functions to detach textures from framebuffers
+- Added SceneRenderer class
 
 ### Changed
 
@@ -98,6 +107,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MaterialType::GLASS was changed to MaterialType::Dielectric
 - Changed the way scripting works. Now an instance of a script class represents the python code itself and is used to instatiate a behavior which controls the actual behavior of the entity. This way, the script can be used for multiple entities with separate instances of the same behavior
 - Removed ATCG_ENABLE_OPTIX
+- Separated Components into separate file for each component.
+- Removed VolumePass
+- Number of multi sampled texture samples are now stored in TextureSpecification
+- Bind texture 0 when creating a new texture
+- Removed Deferred Rendering Sample
+- Changed RenderGraph and RenderPass API to use a reflection model with explicit input output declaration
+- Overhauled render passes and removed Skybox Pass (now handled in forward pass)
+- Scene class no longer holds a RenderGraph. Rendering of scenes is now handled by the new SceneRenderer class
 
 ### Fixed
 

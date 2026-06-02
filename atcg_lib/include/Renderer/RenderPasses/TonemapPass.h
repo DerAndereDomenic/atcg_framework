@@ -9,23 +9,8 @@ namespace atcg
 {
 
 /**
- * @brief A RenderPass that applys tonemapping.
- *
- * This pass reads the following variables from the context:
- * * context<RendererSystem*>["renderer"] - The renderer
- *
- * data:
- * * data<atcg::ref_ptr<ref_ptr<Framebuffer>>>["target"] - The target if RenderTargetMode is set to
- * RENDER_TARGET_OWN_FRAMEBUFFER
- *
- * inputs:
- * * inputs<atcg::ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The target if RenderTargetMode is set to
- * RENDER_TARGET_INPUTFRAMEBUFFER
- * * inputs<atcg::ref_ptr<ref_ptr<Framebuffer>>>["hdr_buffer"] - The HDR buffer to apply tonemapping on
- *
- * outputs:
- * * outputs<ref_ptr<ref_ptr<Framebuffer>>>["framebuffer"] - The target framebuffer
- *
+ * @brief A RenderPass that performs tonemapping on the input color buffer and outputs the result to the output
+ * framebuffer.
  */
 class TonemapPass : public RenderPass
 {
@@ -33,11 +18,29 @@ public:
     /**
      * @brief Constructor.
      *
-     * @param desc The Render target description
+     * @param properties A dictionary of properties that can be used to configure the render pass
      */
-    TonemapPass(const RenderTargetDesc& desc = {});
+    TonemapPass(Dictionary& properties);
+
+    /**
+     * @brief Reflect the render pass. This function describes the inputs, outputs and framebuffer data of this render
+     * pass. This is used by the render graph to generate the resource tables and framebuffers for this render pass.
+     *
+     * @param ctx The compile data
+     * @return The reflection data of this render pass
+     */
+    virtual RenderPassReflection reflect(const CompileData& ctx) override;
+
+    /**
+     * @brief Execute the render pass. This function is called by the render graph to execute this render pass. The
+     * resources used by this render pass are passed in the resource table.
+     *
+     * @param ctx The render context holding per-frame data
+     * @param resources The resource table holding the resources for this render pass
+     */
+    virtual void execute(const RenderContext& ctx, const ResourceTable& resources) override;
 
 private:
-    void initRenderPass();
+    atcg::ref_ptr<Graph> _screen_quad;
 };
 }    // namespace atcg

@@ -2,6 +2,8 @@
 
 #include <Renderer/RenderPass.h>
 #include <DataStructure/Dictionary.h>
+#include <Renderer/CompileData.h>
+#include <Renderer/RenderPasses/OutputPass.h>
 
 #include <queue>
 
@@ -19,31 +21,7 @@ public:
     /**
      * @brief Create a Rendergraph
      */
-    RenderGraph() = default;
-
-    /**
-     * @brief Add a render pass to the graph.
-     * This functions returns a handle and a RenderPass. The handle can be used to access different render passes to add
-     * dependencies between them (by using addDependency()).
-     *
-     * @param name The name of the RenderPass
-     *
-     * @return A tuple with a RenderPassHandle and a RenderPass
-     */
-    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPass>> addRenderPass(std::string_view name = "");
-
-    /**
-     * @brief Add a render pass to the graph.
-     * This functions returns a handle and a RenderPass. The handle can be used to access different render passes to add
-     * dependencies between them (by using addDependency()).
-     *
-     * @param desc The Render target description
-     * @param name The name of the RenderPass
-     *
-     * @return A tuple with a RenderPassHandle and a RenderPass
-     */
-    std::pair<RenderPassHandle, atcg::ref_ptr<RenderPass>> addRenderPass(const RenderTargetDesc& desc,
-                                                                         std::string_view name = "");
+    RenderGraph();
 
     /**
      * @brief Add a render pass to the graph.
@@ -76,14 +54,14 @@ public:
      *
      * @param ctx The context
      */
-    void compile(Dictionary& ctx);
+    void compile(const CompileData& ctx);
 
     /**
      * @brief Execute the graph.
      *
      * @param ctx The context holding per-frame data
      */
-    void execute(Dictionary& ctx);
+    void execute(const RenderContext& ctx);
 
     /**
      * @brief Exports the graph into a DOT format txt file for debugging porpuses.
@@ -100,23 +78,57 @@ public:
     ATCG_INLINE bool isCompiled() const { return _compiled; }
 
     /**
-     * @brief Trigger the garbage collection for each render pass.
-     * This function increases the lifetime of garbage collected objects and destroys them if the maximum life time is
-     * reached.
-     */
-    void garbageCollect();
-
-    /**
      * @brief Compile the graph if it is not compiled, otherwise NOP
      *
      * @param ctx The compile context
      */
-    ATCG_INLINE void ensureCompiled(Dictionary& ctx)
+    ATCG_INLINE void ensureCompiled(const CompileData& ctx)
     {
         if(!_compiled) compile(ctx);
     }
 
+    /**
+     * @brief Get the output pass of the graph
+     *
+     * @return The output pass of the graph
+     */
+    ATCG_INLINE const atcg::ref_ptr<OutputPass>& outputPass() const { return _output_pass; }
+
+    /**
+     * @brief Get the output pass handle of the graph
+     *
+     * @return The output pass handle of the graph
+     */
+    ATCG_INLINE RenderPassHandle outputPassHandle() const { return _output_pass_handle; }
+
+    /**
+     * @brief Set the output framebuffer of the output pass
+     *
+     * @param fbo The output framebuffer
+     */
+    ATCG_INLINE void setOutputFramebuffer(const atcg::ref_ptr<Framebuffer>& fbo) { _output_pass->setOutputFBO(fbo); }
+
+    /**
+     * @brief Set the maximum number of different framebuffer resolutions that are cached by the render graph. If more
+     * different framebuffer resolutions are detected, the cache is cleared. This is used to prevent the render graph
+     * from consuming too much memory if the output resolution changes frequently (e.g. when resizing the window).
+     *
+     * @param max_cached_resolutions The maximum number of different framebuffer resolutions that are cached by the
+     * render graph
+     */
+    ATCG_INLINE void setMaxCachedResolutions(uint32_t max_cached_resolutions)
+    {
+        _max_cached_resolutions = max_cached_resolutions;
+    }
+
 private:
+    struct RenderPassNode
+    {
+        RenderPassHandle handle;
+        atcg::ref_ptr<RenderPass> pass;
+        RenderPassReflection reflection;
+    };
+
     struct PortEdge
     {
         RenderPassHandle from;
@@ -125,15 +137,64 @@ private:
         std::string to_port;
     };
 
+    struct FramebufferResolution
+    {
+        uint32_t width;
+        uint32_t height;
+
+        bool operator==(const FramebufferResolution& other) const noexcept
+        {
+            return width == other.width && height == other.height;
+        }
+    };
+
+    struct FramebufferResolutionHash
+    {
+        size_t operator()(const FramebufferResolution& r) const noexcept
+        {
+            size_t h1 = std::hash<uint32_t> {}(r.width);
+            size_t h2 = std::hash<uint32_t> {}(r.height);
+            return h1 ^ (h2 << 1);
+        }
+    };
+
+    struct RenderGraphResources
+    {
+        using ResourceHandle = uint32_t;
+        std::unordered_map<std::string, ResourceHandle> logicalToPhysicalResourceMap;
+        std::vector<PhysicalResource> physical_resources;
+        std::unordered_map<RenderPassHandle, ResourceTable> render_pass_resource_tables;
+    };
+
+    using ResourceMap = std::unordered_map<FramebufferResolution, RenderGraphResources, FramebufferResolutionHash>;
+
 private:
-    std::vector<atcg::ref_ptr<RenderPass>> _passes;
-    std::vector<atcg::ref_ptr<RenderPass>> _compiled_passes;    // Same data as _passes but topologically sorted
+    void topologicalSort();
+
+    void reflect(const CompileData& ctx);
+
+    void allocateResources(RenderGraphResources& resources, const RenderContext& ctx);
+
+    void generateResourceTables(RenderGraphResources& resources, const RenderContext& ctx);
+
+    RenderGraphResources& getResources(const RenderContext& ctx);
+
+private:
+    std::vector<atcg::ref_ptr<RenderPassNode>> _nodes;
+    std::vector<atcg::ref_ptr<RenderPassNode>> _compiled_passes;    // Same data as _passes but topologically sorted
+
     std::vector<PortEdge> _edges;
 
+    ResourceMap _resource_map;
+
+    CompileData _compile_data;
     bool _compiled = false;
+
+    atcg::ref_ptr<OutputPass> _output_pass;
+    uint32_t _output_pass_handle;
+
+    uint32_t _max_cached_resolutions = 8;
 };
 
-atcg::ref_ptr<RenderGraph> createStandardGraph();
-
-atcg::ref_ptr<RenderGraph> createMSAAGraph(uint32_t num_samples);
+atcg::ref_ptr<RenderGraph> createRenderGraph(const CompileData& ctx);
 }    // namespace atcg

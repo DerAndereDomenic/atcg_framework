@@ -12,6 +12,17 @@ namespace atcg
 
 class GraphicsAPI;
 
+enum class TextureType
+{
+    TEXTURE_2D,
+    TEXTURE_3D,
+    TEXTURE_CUBE,
+    TEXTURE_ARRAY,
+    TEXTURE_CUBE_ARRAY,
+    TEXTURE_2D_MULTISAMPLE
+
+};
+
 /**
  * @brief A class to model a texture
  */
@@ -27,6 +38,15 @@ public:
      *  @brief Destructor
      */
     virtual ~Texture();
+
+    /**
+     * @brief Create a new texture
+     *
+     * @param type The type of the texture
+     * @param spec The specification of the texture
+     * @return A pointer to the created texture
+     */
+    static atcg::ref_ptr<Texture> create(TextureType type, const TextureSpecification& spec);
 
     /**
      * @brief Set the data of the texture.
@@ -129,6 +149,12 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const = 0;
+
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) = 0;
 
     /**
      * @brief Get the underlying data as a cudaArray.
@@ -354,6 +380,12 @@ public:
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
 
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
+
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture2D; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
@@ -471,6 +503,12 @@ public:
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
 
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
+
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture3D; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
@@ -563,6 +601,12 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
 
 protected:
     /**
@@ -677,6 +721,12 @@ public:
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
 
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
+
 protected:
     /**
      * @brief Use this texture
@@ -766,6 +816,12 @@ public:
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
 
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
+
 protected:
     /**
      * @brief Use this texture
@@ -794,12 +850,11 @@ public:
     /**
      * @brief Create an empty multisampled 2D texture.
      *
-     * @param num_samples The number of samples
      * @param spec The texture specification
      *
      * @return The resulting texture
      */
-    static atcg::ref_ptr<Texture2DMultiSample> create(uint32_t num_samples, const TextureSpecification& spec);
+    static atcg::ref_ptr<Texture2DMultiSample> create(const TextureSpecification& spec);
 
     /**
      *  @brief Destructor
@@ -848,6 +903,12 @@ public:
      * @return nullptr
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
 
 protected:
     /**
