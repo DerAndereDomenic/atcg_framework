@@ -110,15 +110,15 @@ extern "C" __global__ void __raygen__forward()
         if(!ray.valid) break;
         ray.valid = false;
 
-        // float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
-        // if(rng.nextFloat() < rr_prob)
-        // {
-        //     ray.throughput /= rr_prob;
-        // }
-        // else
-        // {
-        //     break;
-        // }
+        float rr_prob = glm::max(glm::max(ray.throughput.r, ray.throughput.g), ray.throughput.b);
+        if(rng.nextFloat() < rr_prob)
+        {
+            ray.throughput /= rr_prob;
+        }
+        else
+        {
+            break;
+        }
 
         atcg::AnyInteraction si0  = ray.si0;
         atcg::AnyInteraction si1_ = ray.si1;
@@ -147,7 +147,7 @@ extern "C" __global__ void __raygen__forward()
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
                     atcg::select(mis_valid, si1.emitter->evalLightSamplingPdf(si0, si1) * emitter_selection_pdf, 0.0f);
-                float mis_weight  = 1.0f;    // TODO atcg::PowerHeuristic<1>::apply(si0->pdf, emitter_sampling_pdf);
+                float mis_weight  = atcg::PowerHeuristic<1>::apply(si0->pdf, emitter_sampling_pdf);
                 auto light_result = si1.emitter->evalLightForward(dsi, wavelengths);
                 Le                = mis_weight * light_result.radiance_weight_at_receiver;
 
@@ -173,7 +173,6 @@ extern "C" __global__ void __raygen__forward()
             // Next-event estimation
             do
             {
-                break;    // TODO
                 if(params.num_emitters == 0) break;
                 if(!si1.bsdf) break;
 
