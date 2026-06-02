@@ -5,33 +5,36 @@
 namespace atcg
 {
 /**
- * @brief A RenderPass that creates and renders shadow maps for all PointLightComponents in a scene
- *
- * This pass reads the following variables from the context:
- * * context<RendererSystem*>["renderer"] - The renderer
- * * context<atcg::ref_ptr<Scene>>["scene"] - The scene
- *
- * data:
- * * data<atcg::ref_ptr<Framebuffer>>["point_light_framebuffer"] - The internal framebuffer used for the depth passes
- *
- * inputs:
- * * None
- *
- * outputs:
- * * outputs<ref_ptr<ref_ptr<TextureCubeArray>>>["point_light_depth_maps"] - A cube map array with one cube map per
- * light source. This is a double pointer because depending on the (dynamic) number of light sources, this has to be
- * recreated on the fly.
- *
+ * @brief A RenderPass that renders cube map shadow maps for each point light source in the scene
  */
 class ShadowPass : public RenderPass
 {
 public:
     /**
      * @brief Constructor
+     *
+     * @param properties A dictionary of properties that can be used to configure the render pass
      */
-    ShadowPass();
+    ShadowPass(Dictionary& properties);
+
+    /**
+     * @brief Reflect the render pass. This function describes the inputs, outputs and framebuffer data of this render
+     * pass. This is used by the render graph to generate the resource tables and framebuffers for this render pass.
+     *
+     * @param ctx The compile data
+     * @return The reflection data of this render pass
+     */
+    virtual RenderPassReflection reflect(const CompileData& ctx) override;
+
+    /**
+     * @brief Execute the render pass. This function is called by the render graph to execute this render pass. The
+     * resources used by this render pass are passed in the resource table.
+     *
+     * @param ctx The render context holding per-frame data
+     * @param resources The resource table holding the resources for this render pass
+     */
+    virtual void execute(const RenderContext& ctx, const ResourceTable& resources) override;
 
 private:
-    void initRenderPass();
 };
 }    // namespace atcg

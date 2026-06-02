@@ -188,10 +188,10 @@ void RendererSystem::Impl::initFramebuffer(uint32_t width, uint32_t height)
                                   height,
                                   1,
                                   {
-                                      {TextureFormat::RGBA},          // Color
-                                      {TextureFormat::RINT},          // Entity ids
-                                      stencil,                        // Stencil mask
-                                      {TextureFormat::DEPTH, true}    // Depth
+                                      {TextureFormat::RGBA},    // Color
+                                      {TextureFormat::RINT},    // Entity ids
+                                      stencil,                  // Stencil mask
+                                      {TextureFormat::DEPTH}    // Depth
                                   });
 
     screen_fbo = Framebuffer::create(spec);
@@ -265,6 +265,7 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("volume_hom");
     impl->shader_manager->addShaderFromName("volume_het");
     impl->shader_manager->addShaderFromName("depth_pass_simple");
+    impl->shader_manager->addShaderFromName("blit");
 }
 
 void RendererSystem::use()

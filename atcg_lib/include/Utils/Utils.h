@@ -129,6 +129,138 @@ torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<
  * @return The picked entity
  */
 Entity pickEntity(const glm::vec2& mouse_pos);
+
+/**
+ * @brief Set the sky light of the shader based on the given skybox. This will bind the irradiance map of the skybox to
+ * the shader and set the according uniform. The function returns the id of the bound texture,
+ *
+ * @param renderer The renderer
+ * @param shader The shader
+ * @param skybox The skybox
+ *
+ * @return The id of the bound texture
+ */
+uint32_t setLights(atcg::RendererSystem* renderer,
+                   Scene* scene,
+                   const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
+                   const atcg::ref_ptr<Shader>& shader);
+
+/**
+ * @brief Set the sky light of the shader based on the given skybox. This will bind the irradiance map of the skybox to
+ * the shader and set the according uniform. The function returns the id of the bound texture,
+ *
+ * @param renderer The renderer
+ * @param shader The shader
+ * @param skybox The skybox
+ *
+ * @return The id of the bound texture
+ * @return The id of the bound prefiltered map
+ */
+std::pair<uint32_t, uint32_t>
+setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const atcg::ref_ptr<Skybox>& skybox);
+
+/**
+ * @brief Display a material selection dialog and return the selected material handle. This is used in the editor and
+ * returns the handle of the selected material or an invalid handle if no material was selected.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param handle The currently selected handle (can be invalid)
+ *
+ * @return The handle of the selected material or an invalid handle if no material was selected
+ */
+AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle);
+
+/**
+ * @brief Display a graph selection dialog and return the selected graph handle. This is used in the editor and returns
+ * the handle of the selected graph or an invalid handle if no graph was selected.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param handle The currently selected handle (can be invalid)
+ *
+ * @return The handle of the selected graph or an invalid handle if no graph was selected
+ */
+AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
+
+/**
+ * @brief Display a script selection dialog and return the selected script handle. This is used in the editor and
+ * returns the handle of the selected script or an invalid handle if no script was selected.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param handle The currently selected handle (can be invalid)
+ *
+ * @return The handle of the selected script or an invalid handle if no script was selected
+ */
+AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
+
+/**
+ * @brief Display a texture selection dialog and return the selected texture handle. This is used in the editor and
+ * returns the handle of the selected texture or an invalid handle if no texture was selected.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param handle The currently selected handle (can be invalid)
+ *
+ * @return The handle of the selected texture or an invalid handle if no texture was selected
+ */
+AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
+
+/**
+ * @brief Display a material selection dialog and return the selected material handle. This is used in the editor and
+ * returns the handle of the selected material or an invalid handle if no material was selected.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param handle The currently selected handle (can be invalid)
+ *
+ * @return The handle of the selected material or an invalid handle if no material was selected
+ */
+AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle);
+
+/**
+ * @brief Display a texture selection dialog and return the selected texture handle. This is used in the editor and
+ * returns the handle of the selected texture or an invalid handle if no texture was selected.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param handle The currently selected handle (can be invalid)
+ *
+ * @return The handle of the selected texture or an invalid handle if no texture was selected
+ */
+AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle);
+
+/**
+ * @brief Serialize a buffer
+ *
+ * @param file_name The file name
+ * @param data The buffer data
+ * @param byte_size The buffer size in bytes
+ */
+void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size);
+
+/**
+ * @brief Deserialize a buffer
+ *
+ * @param file_name The file name
+ *
+ * @return The deserialized data
+ */
+std::vector<uint8_t> deserializeBuffer(const std::string& file_name);
+
+/**
+ * @brief Serialize a layout
+ *
+ * @param layout The buffer layout
+ *
+ * @return The json object representing the layout
+ */
+nlohmann::json serializeLayout(const atcg::BufferLayout& layout);
+
+/**
+ * @brief Deserialize a layout
+ *
+ * @param layout_node The json node containing the Layout data
+ *
+ * @return The BufferLayout
+ */
+atcg::BufferLayout deserializeLayout(nlohmann::json& layout_node);
+
 }    // namespace Utils
 
 }    // namespace atcg

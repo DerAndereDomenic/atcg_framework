@@ -15,6 +15,7 @@
 #include <Asset/AssetManagerSystem.h>
 #include <Scene/ComponentRegistry.h>
 #include <Renderer/GraphicsAPI.h>
+#include <Scene/SceneRenderer.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
@@ -165,6 +166,7 @@ private:
     // Systems
     atcg::ref_ptr<AssetManagerSystem> _asset_manager;
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
+    atcg::ref_ptr<SceneRendererSystem> _scene_renderer;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
     atcg::ref_ptr<ScriptEngine> _script_engine;

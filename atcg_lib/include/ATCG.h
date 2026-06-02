@@ -53,7 +53,6 @@
 #include <Renderer/RenderGraph.h>
 
 //-------- Render Passes ------
-#include <Renderer/RenderPasses/SkyboxPass.h>
 #include <Renderer/RenderPasses/ShadowPass.h>
 #include <Renderer/RenderPasses/ForwardPass.h>
 
@@ -115,6 +114,7 @@
 #include <Scene/RevisionStack.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentRegistry.h>
+#include <Scene/SceneRenderer.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>

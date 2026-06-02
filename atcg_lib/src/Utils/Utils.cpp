@@ -1,6 +1,8 @@
 #include <Utils/Utils.h>
 
 #include <Asset/Project.h>
+#include <Renderer/Renderer.h>
+#include <Scene/SceneRenderer.h>
 
 #include <fstream>
 
@@ -189,10 +191,7 @@ void screenshot(const atcg::ref_ptr<Scene>& scene,
     screenshot_buffer->attachDepth();
     screenshot_buffer->complete();
 
-    atcg::Dictionary context;
-    context.setValue("camera", camera);
-    context.setValue("target", screenshot_buffer);
-    scene->draw(context);
+    SceneRenderer::render(scene, camera, screenshot_buffer);
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
@@ -209,10 +208,7 @@ torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<
     screenshot_buffer->attachDepth();
     screenshot_buffer->complete();
 
-    atcg::Dictionary context;
-    context.setValue("camera", camera);
-    context.setValue("target", screenshot_buffer);
-    scene->draw(context);
+    SceneRenderer::render(scene, camera, screenshot_buffer);
 
     auto data = screenshot_buffer->getColorAttachement(0)->getData(atcg::CPU);
 
@@ -229,6 +225,435 @@ Entity pickEntity(const glm::vec2& mouse_pos)
 
     return pixelData == -1 ? atcg::Entity()
                            : atcg::Entity((entt::entity)pixelData, atcg::Project::getActive()->getActiveScene().get());
+}
+
+uint32_t setLights(atcg::RendererSystem* renderer,
+                   Scene* scene,
+                   const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
+                   const atcg::ref_ptr<Shader>& shader)
+{
+    auto light_view = scene->getAllEntitiesWith<atcg::PointLightComponent, atcg::TransformComponent>();
+
+    uint32_t num_lights = 0;
+    for(auto e: light_view)
+    {
+        std::stringstream light_index;
+        light_index << "[" << num_lights << "]";
+        std::string light_index_str = light_index.str();
+
+        atcg::Entity light_entity(e, scene);
+
+        auto& point_light     = light_entity.getComponent<atcg::PointLightComponent>();
+        auto& light_transform = light_entity.getComponent<atcg::TransformComponent>();
+
+        shader->setVec3("light_colors" + light_index_str, point_light.color);
+        shader->setFloat("light_intensities" + light_index_str, point_light.intensity);
+        shader->setVec3("light_positions" + light_index_str, light_transform.getPosition());
+
+        ++num_lights;
+    }
+
+    shader->setInt("num_lights", num_lights);
+    if(point_light_depth_maps && num_lights > 0)
+    {
+        uint32_t shadow_map_id = renderer->popTextureID();
+        shader->setInt("shadow_maps", shadow_map_id);
+        shader->setInt("shadow_pass", 1);
+        GraphicsCommand::bindTexture(shadow_map_id, point_light_depth_maps);
+
+        return shadow_map_id;
+    }
+    else
+    {
+        shader->setInt("shadow_pass", 0);
+        //     ATCG_ASSERT(num_lights == 0, "Shadow map is not initialized but lights are present");
+    }
+
+    return -1;
+}
+
+std::pair<uint32_t, uint32_t>
+setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const atcg::ref_ptr<Skybox>& skybox)
+{
+    uint32_t irradiance_id = renderer->popTextureID();
+    GraphicsCommand::bindTexture(irradiance_id, skybox->getIrradianceMap());
+    shader->setInt("irradiance_map", irradiance_id);
+
+    uint32_t prefiltered_id = renderer->popTextureID();
+    GraphicsCommand::bindTexture(prefiltered_id, skybox->getPrefilteredMap());
+    shader->setInt("prefilter_map", prefiltered_id);
+
+    return std::make_pair(irradiance_id, prefiltered_id);
+}
+
+AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "Default Material";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Material##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("Default Material", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Material) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+#else
+    return 0;
+#endif
+}
+
+AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Graph";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Graph##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("No Graph", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Graph) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+#else
+    return 0;
+#endif
+}
+
+AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Script";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Script##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("No Script", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Script) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+#else
+    return 0;
+#endif
+}
+
+AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "Default Shader";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Shader##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("Default Shader", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Shader) continue;
+
+            auto shader = AssetManager::getAsset<Shader>(it->first);
+            if(shader && shader->isComputeShader()) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+#else
+    return 0;
+#endif
+}
+
+AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Image";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Image##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("No Image", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Texture2D) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+#else
+    return 0;
+#endif
+}
+
+AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle)
+{
+#ifndef ATCG_HEADLESS
+    const auto& data = AssetManager::getMetaData(handle);
+
+    std::string tag = AssetManager::isAssetHandleValid(handle) ? data.name : "No Image";
+
+    const auto& registry = AssetManager::getAssetRegistry();
+
+    AssetHandle current_item = handle;
+
+    if(ImGui::BeginCombo(("Select Image##" + key).c_str(), tag.c_str()))
+    {
+        // No Selection
+        {
+            bool is_selected = !AssetManager::isAssetHandleValid(current_item);
+
+            if(ImGui::Selectable("No Image", is_selected))
+            {
+                current_item = 0;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        for(auto it = registry.begin(); it != registry.end(); ++it)
+        {
+            if(it->second.type != AssetType::Texture3D) continue;
+
+            bool is_selected = it->first == current_item;
+
+            if(ImGui::Selectable((it->second.name + "##" + std::to_string(it->first)).c_str(), is_selected))
+            {
+                current_item = it->first;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return current_item;
+#else
+    return 0;
+#endif
+}
+
+void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
+{
+    std::ofstream summary_file(file_name, std::ios::out | std::ios::binary);
+    summary_file.write(data, byte_size);
+    summary_file.close();
+}
+
+std::vector<uint8_t> deserializeBuffer(const std::string& file_name)
+{
+    std::ifstream summary_file(file_name, std::ios::in | std::ios::binary);
+    std::vector<uint8_t> buffer_char(std::istreambuf_iterator<char>(summary_file), {});
+    summary_file.close();
+
+    return buffer_char;
+}
+
+nlohmann::json serializeLayout(const atcg::BufferLayout& layout)
+{
+    nlohmann::json::array_t json_layout;
+    for(auto element: layout)
+    {
+        nlohmann::json::array_t json_element;
+        json_element.push_back((int)element.type);
+        json_element.push_back(element.name);
+
+        json_layout.push_back(json_element);
+    }
+
+    return json_layout;
+}
+
+atcg::BufferLayout deserializeLayout(nlohmann::json& layout_node)
+{
+    std::vector<atcg::BufferElement> elements;
+    for(nlohmann::json::array_t element: layout_node)
+    {
+        atcg::BufferElement buffer_element((atcg::ShaderDataType)element[0], element[1]);
+        elements.push_back(buffer_element);
+    }
+
+    return atcg::BufferLayout(elements);
 }
 
 }    // namespace Utils

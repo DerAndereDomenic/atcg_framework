@@ -76,6 +76,9 @@ void Application::init(const WindowProps& props)
     _script_engine->init();
     SystemRegistry::instance()->registerSystem(_script_engine.get());
 
+    _scene_renderer = atcg::make_ref<SceneRendererSystem>(_renderer.get());
+    SystemRegistry::instance()->registerSystem(_scene_renderer.get());
+
     // Create an active project
     atcg::Project::create("./DefaultProject");
 

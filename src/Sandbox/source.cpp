@@ -152,10 +152,7 @@ public:
         atcg::ShaderManager::getShader("volume")->setFloat("sigma_a_base", sigma_a_base);
         atcg::ShaderManager::getShader("volume")->setFloat("g", g);
 
-        atcg::Dictionary context;
-        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
-        context.setValue<atcg::ref_ptr<atcg::Framebuffer>>("target", atcg::Renderer::getFramebuffer());
-        scene->draw(context);
+        atcg::SceneRenderer::render(scene, camera_controller->getCamera(), atcg::Renderer::getFramebuffer());
 
         dt = delta_time;
     }

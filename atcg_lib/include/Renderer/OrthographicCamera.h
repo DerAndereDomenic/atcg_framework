@@ -63,6 +63,30 @@ public:
     ATCG_INLINE virtual glm::vec3 getDirection() const override { return glm::vec3(0, 0, -1); }
 
     /**
+     * @brief Transform a point from world space to camera space
+     *
+     * @param point The point in world space
+     * @return The point in camera space
+     */
+    virtual glm::vec3 transformToCameraSpace(const glm::vec3& point) const override;
+
+    /**
+     * @brief Transform a point from world space to normalized device coordinates (NDC)
+     *
+     * @param point The point in world space
+     * @return The point in NDC
+     */
+    virtual glm::vec3 transformToNormalizedDeviceCoordinates(const glm::vec3& point) const override;
+
+    /**
+     * @brief Check if a point is inside the camera frustum
+     *
+     * @param point The point in world space
+     * @return true if the point is inside the frustum, false otherwise
+     */
+    virtual bool isPointInFrustum(const glm::vec3& point) const override;
+
+    /**
      * @brief Set the Projection
      *
      * @param left

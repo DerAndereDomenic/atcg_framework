@@ -2,7 +2,7 @@
 <img src="docs/_static/logo.png" width="400">
 </p>
 
-----
+---
 
 This repository contains a C++ 3D rendering framework for research applications and scientific computation/visualization. It combines the OpenGL rendering pipeline with high performance CUDA integration using torch.
 
@@ -34,11 +34,13 @@ From the main folder of this project (aka the folder where this file is located)
 cmake --build build --parallel --config <Debug|Release>
 ```
 
-to compile the project. The project uses your pytorch installation to link against libtorch. On Windows, you have to 
+to compile the project. The project uses your pytorch installation to link against libtorch. On Windows, you have to
 include
+
 ```
 <PATH_TO_PYTHON>/Lib/site-packages/torch/lib
 ```
+
 into your `PATH` variables because otherwise it will not find the necessary dlls.
 
 ### Building with CUDA Support
@@ -48,44 +50,52 @@ Per default the project is built with CUDA support enabled. You can disable this
 ```
 cmake . -B build -DATCG_CUDA_BACKEND=OFF
 ```
+
 If CUDA is not used, you should also use a pytorch version without CUDA.
 
 ### Build python bindings
 
 The project comes with python bindings which can be install via
+
 ```
 pip install -e .
 ```
+
 it requires [charonload](https://github.com/vc-bonn/charonload) as additional dependency. The python build can be configured using environment variables:
 
 ```python
 os.environ["ATCG_CUDA_BACKEND"] = "Off"
 import pyatcg
 ```
+
 turns off CUDA support (default = "On").
 
 ```python
 os.environ["ATCG_HEADLESS"] = "On"
 import pyatcg
 ```
+
 builds in headless mode (default = "Off", only with CUDA enabled and on Linux systems).
 
 ```python
 os.environ["ATCG_BUILD_TYPE"] = "Release"
 import pyatcg
 ```
+
 configures the build type (default = "RelWithDebInfo").
 
 ```python
 os.environ["ATCG_STUBS_DIR"] = "typings"
 import pyatcg
 ```
+
 set the sub directory (default = Root directory of this file).
 
 ```python
 os.environ["ATCG_VERBOSE"] = True
 import pyatcg
 ```
+
 builds in verbose mode (default = False).
 
 ### Python Scripting
@@ -195,7 +205,7 @@ public:
         //Any physics based updates and rendering is handled here
 
         //...
-        scene->draw(camera_controller->getCamera());
+        atcg::SceneRenderer::render(scene, camera_controller->getCameras(), atcg::Renderer::getFramebuffer());
     }
 
     //All draw calls to ImGui to create a user interface
@@ -272,6 +282,7 @@ atcg::Application* atcg::createApplication()
 ```
 
 To add your own executables, either create a folder in `src` similar to the other projects or add the framework into your CMake project like this:
+
 ```cmake
 cmake_minimum_required(VERSION 3.27)
 
@@ -354,7 +365,7 @@ There is also a CUDA API for textures. However, because textures work differentl
 - [charonload_cpp](https://github.com/vc-bonn/charonload) - For torch integration. This needs to be installed via pip if you want to use python bindings.
 - [openvr](https://github.com/ValveSoftware/openvr) - For VR support.
 - [googletest](https://github.com/google/googletest) - For testing.
-- [sfml](https://github.com/SFML/SFML) - For networking. (*Note: Might require additional dependencies on Linux, see SFML repositoriy.*) 
+- [sfml](https://github.com/SFML/SFML) - For networking. (_Note: Might require additional dependencies on Linux, see SFML repositoriy._)
 
 ## License
 

@@ -107,6 +107,12 @@ public:
 
         integrator->markOptimizable();
         optimizer = atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions(0.01));
+
+        atcg::CompileData compile_data;
+        compile_data.num_samples = msaa_samples[current_msaa_selection_index];
+        auto render_graph        = atcg::createRenderGraph(compile_data);
+
+        atcg::SceneRenderer::setRenderGraph(render_graph);
     }
 
     // This gets called each frame
@@ -195,15 +201,17 @@ public:
             // Main Viewport not really used here
             atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
             atcg::GraphicsCommand::clear();
-            atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera(),
-                                                               atcg::Renderer::getFramebuffer());
+            atcg::SceneRenderer::render(atcg::Project::getActive()->getActiveScene(),
+                                        camera_controller->getCamera(),
+                                        atcg::Renderer::getFramebuffer());
             atcg::GraphicsCommand::endRenderPass();
 #endif
         }
         // else
         {
-            atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera(),
-                                                               atcg::Renderer::getFramebuffer());
+            atcg::SceneRenderer::render(atcg::Project::getActive()->getActiveScene(),
+                                        camera_controller->getCamera(),
+                                        atcg::Renderer::getFramebuffer());
         }
 
         atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
@@ -309,13 +317,6 @@ public:
 
             const char* combo_preview_value = msaa_samples_str[current_msaa_selection_index];
 
-            if(ImGui::Checkbox("Enable MSAA", &msaa_enabled))
-            {
-                auto graph = msaa_enabled ? atcg::createMSAAGraph(msaa_samples[current_msaa_selection_index])
-                                          : atcg::createStandardGraph();
-                atcg::Project::getActive()->getActiveScene()->setRenderGraph(graph);
-            }
-
             if(msaa_enabled)
             {
                 if(ImGui::BeginCombo("MSAA Samples", combo_preview_value))
@@ -326,8 +327,10 @@ public:
                         if(ImGui::Selectable(msaa_samples_str[n], is_selected))
                         {
                             current_msaa_selection_index = n;
-                            atcg::Project::getActive()->getActiveScene()->setRenderGraph(
-                                atcg::createMSAAGraph(msaa_samples[current_msaa_selection_index]));
+                            atcg::CompileData compile_data;
+                            compile_data.num_samples = msaa_samples[current_msaa_selection_index];
+                            auto render_graph        = atcg::createRenderGraph(compile_data);
+                            atcg::SceneRenderer::setRenderGraph(render_graph);
                         }
 
                         // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)

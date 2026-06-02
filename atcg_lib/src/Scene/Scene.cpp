@@ -5,8 +5,6 @@
 #include <Scene/Entity.h>
 #include <Scene/Components.h>
 
-#include <Renderer/RenderGraph.h>
-
 namespace atcg
 {
 
@@ -21,8 +19,6 @@ public:
 
     atcg::ref_ptr<atcg::Camera> _camera = nullptr;
 
-    atcg::ref_ptr<atcg::RenderGraph> _render_graph;
-
     atcg::ref_ptr<Skybox> skybox;
     bool has_skybox = false;
 };
@@ -31,8 +27,6 @@ Scene::Impl::Impl()
 {
     // Skybox
     skybox = atcg::make_ref<Skybox>();
-
-    _render_graph = createMSAAGraph(16);
 }
 
 Scene::Scene()
@@ -135,43 +129,6 @@ void Scene::removeCamera()
     setCamera(nullptr);
 }
 
-void Scene::draw(Dictionary& context)
-{
-    if(!context.contains("camera") && impl->_camera)
-    {
-        context.setValue("camera", impl->_camera);
-    }
-
-    if(!context.contains("camera"))
-    {
-        ATCG_WARN("Scene render was issued without valid camera");
-        return;
-    }
-
-    if(!context.contains("target"))
-    {
-        ATCG_WARN("Scene render was issued without valid target");
-        return;
-    }
-
-    context.setValue("scene", shared_from_this());
-    context.setValue("has_skybox", impl->has_skybox);
-    context.setValue("skybox", impl->skybox);
-
-    impl->_render_graph->ensureCompiled(context);
-    impl->_render_graph->execute(context);
-    impl->_render_graph->garbageCollect();
-}
-
-void Scene::draw(const atcg::ref_ptr<Camera>& camera, const atcg::ref_ptr<Framebuffer>& target)
-{
-    Dictionary context;
-    context.setValue("camera", camera);
-    context.setValue("target", target);
-    context.setValue("skybox", impl->skybox);
-    draw(context);
-}
-
 void Scene::setSkybox(const atcg::ref_ptr<Image>& skybox)
 {
     setSkybox(atcg::Texture2D::create(skybox));
@@ -206,16 +163,6 @@ atcg::ref_ptr<TextureCube> Scene::getSkyboxCubemap() const
 atcg::ref_ptr<Skybox> Scene::getSkybox() const
 {
     return impl->skybox;
-}
-
-void Scene::setRenderGraph(const atcg::ref_ptr<RenderGraph>& graph)
-{
-    impl->_render_graph = graph;
-}
-
-atcg::ref_ptr<RenderGraph> Scene::getRenderGraph() const
-{
-    return impl->_render_graph;
 }
 
 void Scene::_updateEntityID(atcg::Entity entity, const UUID old_id, const UUID new_id)

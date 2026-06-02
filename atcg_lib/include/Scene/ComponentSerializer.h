@@ -1,7 +1,6 @@
 #pragma once
 
-#include <Scene/Scene.h>
-#include <Scene/Components.h>
+#include <Scene/Entity.h>
 
 #include <json.hpp>
 
@@ -100,22 +99,6 @@ struct ComponentSerializer
                                    nlohmann::json& j) const;                                                           \
     }
 
-ATCG_DECLARE_COMPONENT_SERIALIZER(IDComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(NameComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(TransformComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(CameraComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(GeometryComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(MeshRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(PointRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(PointSphereRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(EdgeRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(EdgeCylinderRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(InstanceRenderComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(PointLightComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(MeshLightComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(ScriptComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(HomogeneousMediumComponent);
-ATCG_DECLARE_COMPONENT_SERIALIZER(HeterogeneousMediumComponent);
 
 template<typename ComponentType>
 ATCG_INLINE void
@@ -134,41 +117,5 @@ deserializeComponent(const std::string& file_name, const atcg::ref_ptr<Scene>& s
 {
     ComponentSerializer<ComponentType>().deserialize_component(file_name, scene, entity, j);
 }
-
-/**
- * @brief Serialize a buffer
- *
- * @param file_name The file name
- * @param data The buffer data
- * @param byte_size The buffer size in bytes
- */
-void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size);
-
-/**
- * @brief Deserialize a buffer
- *
- * @param file_name The file name
- *
- * @return The deserialized data
- */
-std::vector<uint8_t> deserializeBuffer(const std::string& file_name);
-
-/**
- * @brief Serialize a layout
- *
- * @param layout The buffer layout
- *
- * @return The json object representing the layout
- */
-nlohmann::json serializeLayout(const atcg::BufferLayout& layout);
-
-/**
- * @brief Deserialize a layout
- *
- * @param layout_node The json node containing the Layout data
- *
- * @return The BufferLayout
- */
-atcg::BufferLayout deserializeLayout(nlohmann::json& layout_node);
 }    // namespace Serialization
 }    // namespace atcg

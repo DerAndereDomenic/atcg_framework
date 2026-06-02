@@ -6,7 +6,8 @@
 #include <Core/Assert.h>
 #include <Scene/Scene.h>
 #include <Scene/Entity.h>
-#include <Scene/Components.h>
+#include <Scene/Components/IDComponent.h>
+#include <Scene/Components/NameComponent.h>
 #include <Asset/AssetManagerSystem.h>
 
 #include <stack>

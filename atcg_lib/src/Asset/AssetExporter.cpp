@@ -83,14 +83,15 @@ ATCG_INLINE void serialize_opaque_material_ver1(const atcg::ref_ptr<OpaqueMateri
     else
     {
         auto data         = diffuse_texture->getData(atcg::CPU);
-        glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
+        glm::u8vec4 color = {data.index({0, 0, 0}).item<uint8_t>(),
                              data.index({0, 0, 1}).item<uint8_t>(),
-                             data.index({0, 0, 2}).item<uint8_t>()};
+                             data.index({0, 0, 2}).item<uint8_t>(),
+                             data.index({0, 0, 3}).item<uint8_t>()};
 
-        glm::vec3 c(color);
+        glm::vec4 c(color);
         c = c / 255.0f;
 
-        material_json[DIFFUSE_KEY] = nlohmann::json::array({c.x, c.y, c.z});
+        material_json[DIFFUSE_KEY] = nlohmann::json::array({c.x, c.y, c.z, c.w});
     }
 
     if(use_normal_texture)
@@ -181,14 +182,15 @@ ATCG_INLINE void serialize_dielectric_material_ver1(const atcg::ref_ptr<Dielectr
     else
     {
         auto data         = diffuse_texture->getData(atcg::CPU);
-        glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
+        glm::u8vec4 color = {data.index({0, 0, 0}).item<uint8_t>(),
                              data.index({0, 0, 1}).item<uint8_t>(),
-                             data.index({0, 0, 2}).item<uint8_t>()};
+                             data.index({0, 0, 2}).item<uint8_t>(),
+                             data.index({0, 0, 3}).item<uint8_t>()};
 
-        glm::vec3 c(color);
+        glm::vec4 c(color);
         c = c / 255.0f;
 
-        material_json[DIFFUSE_KEY] = nlohmann::json::array({c.x, c.y, c.z});
+        material_json[DIFFUSE_KEY] = nlohmann::json::array({c.x, c.y, c.z, c.w});
     }
 
     if(use_roughness_texture)

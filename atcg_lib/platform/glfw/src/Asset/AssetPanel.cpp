@@ -12,6 +12,7 @@
 #include <Asset/Project.h>
 #include <Scene/Scene.h>
 #include <Core/Path.h>
+#include <Utils/Utils.h>
 
 namespace atcg
 {
@@ -994,7 +995,7 @@ void AssetPanel::displayScene(AssetHandle handle)
     }
 
     ImGui::Text("Skybox:");
-    auto new_handle = displayTexture2DSelection("skybox", skybox_handle);
+    auto new_handle = Utils::displayTexture2DSelection("skybox", skybox_handle);
     bool updated    = (new_handle != skybox_handle);
 
     if(updated)

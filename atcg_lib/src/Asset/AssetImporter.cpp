@@ -40,7 +40,14 @@ atcg::ref_ptr<OpaqueMaterial> deserializeOpaqueMaterial_ver1(const std::filesyst
     if(material_node.contains(DIFFUSE_KEY))
     {
         std::vector<float> diffuse_color = material_node[DIFFUSE_KEY];
-        material->setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
+        if(diffuse_color.size() == 3)
+        {
+            material->setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
+        }
+        else if(diffuse_color.size() == 4)
+        {
+            material->setDiffuseColor(glm::make_vec4(diffuse_color.data()));
+        }
     }
     else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
     {
@@ -113,7 +120,14 @@ atcg::ref_ptr<DielectricMaterial> deserializeDielectricMaterial_ver1(const std::
     if(material_node.contains(DIFFUSE_KEY))
     {
         std::vector<float> diffuse_color = material_node[DIFFUSE_KEY];
-        material->setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
+        if(diffuse_color.size() == 3)
+        {
+            material->setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
+        }
+        else if(diffuse_color.size() == 4)
+        {
+            material->setDiffuseColor(glm::make_vec4(diffuse_color.data()));
+        }
     }
     else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
     {

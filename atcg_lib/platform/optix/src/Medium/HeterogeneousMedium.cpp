@@ -3,6 +3,7 @@
 #include <Renderer/Texture.h>
 
 #include <Scene/ComponentRegistry.h>
+#include <Scene/Components/HeterogeneousMediumComponent.h>
 
 namespace atcg
 {
