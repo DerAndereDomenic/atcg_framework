@@ -58,7 +58,7 @@ struct EdgeSamplingResult
 
 struct EmitterVPtrTable
 {
-    EmitterFlags flags;
+    EmitterFlags flags = EmitterFlags::None;
 
     uint32_t evalCallIndex;
     uint32_t evalForwardCallIndex;
