@@ -39,7 +39,8 @@ public:
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
         dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
 
-        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
+        integrator = plugin_manager.createClass<atcg::Integrator>("TestIntegrator", optx_context, dict);
+        // integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
 #endif
     }
 
@@ -155,9 +156,6 @@ public:
         atcg::SceneRenderer::setRenderGraph(render_graph);
 
         plugin_manager.loadPlugin("bin/Debug/TestPlugin.dll");
-
-
-        plugin_obj = plugin_manager.createClass<atcg::DummyPluginBase>("TestPlugin");
     }
 
     // This gets called each frame
@@ -243,10 +241,9 @@ public:
             }
             else
             {
-                // atcg::SceneRenderer::render(atcg::Project::getActive()->getActiveScene(),
-                //                             camera_controller->getCamera(),
-                //                             atcg::Renderer::getFramebuffer());
-                plugin_obj->doStuff(atcg::Project::getActive()->getActiveScene(), camera_controller->getCamera());
+                atcg::SceneRenderer::render(atcg::Project::getActive()->getActiveScene(),
+                                            camera_controller->getCamera(),
+                                            atcg::Renderer::getFramebuffer());
 
                 atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
 
@@ -510,7 +507,7 @@ private:
 
 #ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
-    atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator;
+    atcg::ref_ptr<atcg::Integrator> integrator;
 #endif
 
     atcg::ref_ptr<atcg::Texture2D> output_texture;
