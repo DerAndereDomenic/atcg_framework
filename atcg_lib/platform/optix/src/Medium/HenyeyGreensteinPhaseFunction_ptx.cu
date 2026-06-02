@@ -56,7 +56,7 @@ __direct_callable__sample_hgphase(const atcg::MediumInteraction& interaction, at
 }
 
 extern "C" __device__ atcg::DualPhaseFunctionSamplingResult
-__direct_callable__sample_hgphase_forward(const atcg::DualSurfaceInteraction& interaction, atcg::PCG32& rng)
+__direct_callable__sample_hgphase_forward(const atcg::DualMediumInteraction& interaction, atcg::PCG32& rng)
 {
     const atcg::HenyeyGreensteinPhaseFunctionData* sbt_data =
         *reinterpret_cast<const atcg::HenyeyGreensteinPhaseFunctionData**>(optixGetSbtDataPointer());

@@ -25,8 +25,8 @@ extern "C"
 struct RayContext
 {
     bool valid;
-    atcg::AnyInteraction si0;
-    atcg::AnyInteraction si1;
+    atcg::AnyInteraction ai0;
+    atcg::AnyInteraction ai1;
     CuDiff::Dual<6, glm::vec3> last_normal;
     CuDiff::Dual<6, glm::vec2> last_uv;
 
@@ -101,9 +101,9 @@ extern "C" __global__ void __raygen__forward()
         ray.valid = true;
     }
 
-    ray.si0      = si0;
-    ray.si0->pdf = 1.0f;
-    ray.si1      = init_si1;
+    ray.ai0      = si0;
+    ray.ai0->pdf = 1.0f;
+    ray.ai1      = init_si1;
 
     for(int n = 0; n < 8; ++n)
     {
@@ -120,34 +120,50 @@ extern "C" __global__ void __raygen__forward()
             break;
         }
 
-        atcg::AnyInteraction si0  = ray.si0;
-        atcg::AnyInteraction si1_ = ray.si1;
+        atcg::AnyInteraction ai0 = ray.ai0;
+        atcg::AnyInteraction ai1 = ray.ai1;
 
-        auto [x0, x1] = CuDiff::make_variables<6>(si0->position, si1_->position);
+        auto [x0, x1] = CuDiff::make_variables<6>(ai0->position, ai1->position);
         auto distance = CuDiff::length(x1 - x0);
         auto w        = (x1 - x0) / CuDiff::max(distance, 1e-5f);
 
-        atcg::DualSurfaceInteraction dsi;
-        dsi.position           = x1;
-        dsi.incoming_direction = w;
-        dsi.incoming_distance  = distance;
-        dsi.normal             = ray.last_normal;
-        dsi.uv                 = ray.last_uv;
+
+        atcg::AnyInteraction dai;
+        if(ai1.is_surface())
+        {
+            atcg::DualSurfaceInteraction dsi;
+            dsi.position           = x1;
+            dsi.incoming_direction = w;
+            dsi.incoming_distance  = distance;
+            dsi.normal             = ray.last_normal;
+            dsi.uv                 = ray.last_uv;
+            dai                    = dsi;
+        }
+        else
+        {
+            atcg::DualMediumInteraction dmi;
+            dmi.position           = x1;
+            dmi.incoming_direction = w;
+            dmi.incoming_distance  = distance;
+            dai                    = dmi;
+        }
+
 
         // Handle direct illumination
         glm::vec3 Le(0.0f);
         atcg::mat6x3 JLe = atcg::mat6x3(0.0f);
-        if(si1_.is_surface())
+        if(ai1.is_surface())
         {
-            atcg::SurfaceInteraction& si1 = si1_;
+            atcg::SurfaceInteraction& si1     = ai1;
+            atcg::DualSurfaceInteraction& dsi = dai;
             // Check for light source
             if(si1.emitter)
             {
-                bool mis_valid              = si0->isValid();
+                bool mis_valid              = ai0->isValid();
                 float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
                 float emitter_sampling_pdf =
-                    atcg::select(mis_valid, si1.emitter->evalLightSamplingPdf(si0, si1) * emitter_selection_pdf, 0.0f);
-                float mis_weight  = atcg::PowerHeuristic<1>::apply(si0->pdf, emitter_sampling_pdf);
+                    atcg::select(mis_valid, si1.emitter->evalLightSamplingPdf(ai0, ai1) * emitter_selection_pdf, 0.0f);
+                float mis_weight  = atcg::PowerHeuristic<1>::apply(ai0->pdf, emitter_sampling_pdf);
                 auto light_result = si1.emitter->evalLightForward(dsi, wavelengths);
                 Le                = mis_weight * light_result.radiance_weight_at_receiver;
 
@@ -364,9 +380,10 @@ extern "C" __global__ void __raygen__forward()
         atcg::mat6x3 dweight_dx0x1;
         float sample_probability;
         atcg::PCG32 rng_direction = rng;
-        if(si1_.is_surface())
+        if(ai1.is_surface())
         {
-            atcg::SurfaceInteraction& si1 = si1_;
+            atcg::SurfaceInteraction& si1     = ai1;
+            atcg::DualSurfaceInteraction& dsi = dai;
             if(!si1.bsdf)
             {
                 continue;
@@ -396,21 +413,22 @@ extern "C" __global__ void __raygen__forward()
 
                 if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
                 {
-                    si1_->setInvalid();
+                    ai1->setInvalid();
                 }
             }
         }
         else
         {
+            atcg::DualMediumInteraction& dmi = dai;
             // Sample new direction via phase function
-            auto result = ray.current_medium->phase_function->samplePhaseFunctionForward(dsi, rng);
+            auto result = ray.current_medium->phase_function->samplePhaseFunctionForward(dmi, rng);
 
             sample_probability = result.sampling_pdf;
             out_dir            = result.outgoing_ray_dir;
             bsdf_weight        = glm::vec3(result.phase_function_weight);
             dweight_dx0x1      = result.dweight_dx0x1;
 
-            si1_->pdf = sample_probability;
+            ai1->pdf = sample_probability;
         }
 
         if(sample_probability <= 0.0f)
@@ -426,7 +444,7 @@ extern "C" __global__ void __raygen__forward()
 
         // Might be a surface interaction...
         atcg::traceWithDataPointer<atcg::DualSurfaceInteraction>(params.handle,
-                                                                 si1_->position,
+                                                                 ai1->position,
                                                                  out_dir.val(),
                                                                  0.001f,
                                                                  1e16f,
@@ -444,7 +462,7 @@ extern "C" __global__ void __raygen__forward()
         auto next_uv     = next_dsi.uv;
         auto dxdw        = next_dsi.dxdw;
 
-        atcg::AnyInteraction next_si = next_dsi.toSi();
+        atcg::AnyInteraction next_ai = next_dsi.toSi();
 
         // ... or a volume interaction
         glm::vec3 sampling_weight = glm::vec3(1.0f);
@@ -468,7 +486,7 @@ extern "C" __global__ void __raygen__forward()
             // Check if medium event was valid
             if(medium_result.interaction.isValid())
             {
-                next_si = medium_result.interaction.toMi();
+                next_ai = medium_result.interaction.toMi();
                 Jray_   = medium_result.interaction.dx1x2_dx0x1;
                 dxdw    = medium_result.interaction.dxdw;
             }
@@ -479,10 +497,9 @@ extern "C" __global__ void __raygen__forward()
         // Update throughput derivatives: This happens for all interaction types
         auto Jweight = dweight_dx0x1;
 
-        auto P0 = glm::mat3(1.0f) - glm::outerProduct(si0->reference_frame.localZ(), si0->reference_frame.localZ());
-        auto P1 = glm::mat3(1.0f) - glm::outerProduct(si1_->reference_frame.localZ(), si1_->reference_frame.localZ());
-        auto P2 =
-            glm::mat3(1.0f) - glm::outerProduct(next_dsi.reference_frame.localZ(), next_dsi.reference_frame.localZ());
+        auto P0 = ai0->getProjection();
+        auto P1 = ai1->getProjection();
+        auto P2 = next_ai->getProjection();
 
         auto P = atcg::mat6(P0, glm::mat3(0.0f), glm::mat3(0.0f), P1);
         auto Q = atcg::mat6(P1, glm::mat3(0.0f), glm::mat3(0.0f), P2);
@@ -506,9 +523,9 @@ extern "C" __global__ void __raygen__forward()
             atcg::mat6x3 JL_ = ray.JL * Jray_inv;
 
             // Backpropagate derivatives through BSDF sampling
-            if(si1_.is_surface())
+            if(ai1.is_surface())
             {
-                atcg::SurfaceInteraction& si1 = si1_;
+                atcg::SurfaceInteraction& si1 = ai1;
 
                 if(!si1.bsdf)
                 {
@@ -551,13 +568,13 @@ extern "C" __global__ void __raygen__forward()
             }
         }
 
-        ray.si0         = si1_;
-        ray.si1         = next_si;
+        ray.ai0         = ai1;
+        ray.ai1         = next_ai;
         ray.last_normal = next_normal;
         ray.last_uv     = next_uv;
 
         ray.throughput *= bsdf_weight * sampling_weight;
-        ray.valid = next_si->isValid();
+        ray.valid = next_ai->isValid();
 
         // TODO
         // else

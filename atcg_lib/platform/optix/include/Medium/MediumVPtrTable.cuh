@@ -15,7 +15,7 @@ struct MediumSamplingResult
 
 struct DualMediumSamplingResult
 {
-    DualSurfaceInteraction interaction;
+    DualMediumInteraction interaction;
     CuDiff::Dual<6, glm::vec3> transmittance_weight;
     CuDiff::Dual<6, glm::vec3> radiance_weight;
 };

@@ -65,10 +65,10 @@ struct PhaseFunctionVPtrTable
                                                                                               rng);
     }
 
-    __device__ DualPhaseFunctionSamplingResult samplePhaseFunctionForward(const DualSurfaceInteraction& interaction,
+    __device__ DualPhaseFunctionSamplingResult samplePhaseFunctionForward(const DualMediumInteraction& interaction,
                                                                           PCG32& rng) const
     {
-        return optixDirectCall<DualPhaseFunctionSamplingResult, const DualSurfaceInteraction&, PCG32&>(
+        return optixDirectCall<DualPhaseFunctionSamplingResult, const DualMediumInteraction&, PCG32&>(
             sampleForwardCallIndex,
             interaction,
             rng);

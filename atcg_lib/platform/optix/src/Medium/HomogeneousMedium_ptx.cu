@@ -124,7 +124,7 @@ __direct_callable__homogeneousMedium_sampleMediumEventForward(const CuDiff::Dual
     atcg::DualMediumSamplingResult result;
     // Dummy implementation:
     // Effectively no medium event.
-    result.interaction                    = atcg::DualSurfaceInteraction();
+    result.interaction                    = atcg::DualMediumInteraction();
     result.interaction.incoming_direction = direction;
     result.transmittance_weight           = CuDiff::Dual<6, glm::vec3>(glm::vec3(1));
     result.radiance_weight                = CuDiff::Dual<6, glm::vec3>(glm::vec3(0));
