@@ -92,7 +92,7 @@ void applyTransform(torch::Tensor& vertices,
 }
 
 template<>
-int16_t ntoh<int16_t>(int16_t network)
+ATCG_API int16_t ntoh<int16_t>(int16_t network)
 {
     if(isLittleEndian())
     {
@@ -103,7 +103,7 @@ int16_t ntoh<int16_t>(int16_t network)
 }
 
 template<>
-uint16_t ntoh<uint16_t>(uint16_t network)
+ATCG_API uint16_t ntoh<uint16_t>(uint16_t network)
 {
     if(isLittleEndian())
     {
@@ -114,7 +114,7 @@ uint16_t ntoh<uint16_t>(uint16_t network)
 }
 
 template<>
-int32_t ntoh<int32_t>(int32_t network)
+ATCG_API int32_t ntoh<int32_t>(int32_t network)
 {
     if(isLittleEndian())
     {
@@ -125,7 +125,7 @@ int32_t ntoh<int32_t>(int32_t network)
 }
 
 template<>
-uint32_t ntoh<uint32_t>(uint32_t network)
+ATCG_API uint32_t ntoh<uint32_t>(uint32_t network)
 {
     if(isLittleEndian())
     {
@@ -136,7 +136,7 @@ uint32_t ntoh<uint32_t>(uint32_t network)
 }
 
 template<>
-int64_t ntoh<int64_t>(int64_t network)
+ATCG_API int64_t ntoh<int64_t>(int64_t network)
 {
     if(isLittleEndian())
     {
@@ -149,7 +149,7 @@ int64_t ntoh<int64_t>(int64_t network)
 }
 
 template<>
-uint64_t ntoh<uint64_t>(uint64_t network)
+ATCG_API uint64_t ntoh<uint64_t>(uint64_t network)
 {
     if(isLittleEndian())
     {
