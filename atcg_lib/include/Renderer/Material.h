@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Renderer/Texture.h>
 #include <Asset/Asset.h>
 
@@ -58,7 +59,7 @@ ATCG_INLINE MaterialType stringToMaterialType(const char* str)
 /**
  * @brief A class to model a material.
  */
-struct Material : public Asset
+struct ATCG_API Material : public Asset
 {
     /**
      * @brief Constructor
@@ -99,7 +100,7 @@ protected:
     MaterialType _material_type = MaterialType::MATERIAL_TYPE_OPAQUE;
 };
 
-class MicrofacetMaterial : public Material
+class ATCG_API MicrofacetMaterial : public Material
 {
 public:
     MicrofacetMaterial(MaterialType type);
@@ -184,7 +185,7 @@ protected:
     atcg::ref_ptr<atcg::Texture2D> _ior_texture;
 };
 
-class OpaqueMaterial : public MicrofacetMaterial
+class ATCG_API OpaqueMaterial : public MicrofacetMaterial
 {
 public:
     OpaqueMaterial();
@@ -244,7 +245,7 @@ private:
     atcg::ref_ptr<atcg::Texture2D> _metallic_texture;
 };
 
-class DielectricMaterial : public MicrofacetMaterial
+class ATCG_API DielectricMaterial : public MicrofacetMaterial
 {
 public:
     DielectricMaterial();
@@ -262,7 +263,7 @@ public:
 private:
 };
 
-class NullMaterial : public Material
+class ATCG_API NullMaterial : public Material
 {
 public:
     NullMaterial();

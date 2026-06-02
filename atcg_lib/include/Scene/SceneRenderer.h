@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/SystemRegistry.h>
 #include <Renderer/Renderer.h>
@@ -11,7 +12,7 @@ namespace atcg
 /**
  * @brief A system to render a scene using a render graph.
  */
-class SceneRendererSystem
+class ATCG_API SceneRendererSystem
 {
 public:
     /**

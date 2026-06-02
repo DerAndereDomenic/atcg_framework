@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Scene/Entity.h>
 #include <Renderer/PerspectiveCamera.h>
@@ -15,7 +16,7 @@ namespace GUI
 /**
  * @brief A Scene hierarchy panel
  */
-class SceneHierarchyPanel
+class ATCG_API SceneHierarchyPanel
 {
 public:
     /**

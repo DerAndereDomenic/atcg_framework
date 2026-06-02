@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <imgui.h>
 #include <ImGuizmo.h>
 
@@ -17,8 +18,8 @@ namespace atcg
  * @param operation The guizmo operation
  * @param camera The camera to draw from
  */
-void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
-                Entity entity,
-                ImGuizmo::OPERATION operation,
-                const atcg::ref_ptr<PerspectiveCamera>& camera);
+ATCG_API void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
+                         Entity entity,
+                         ImGuizmo::OPERATION operation,
+                         const atcg::ref_ptr<PerspectiveCamera>& camera);
 }    // namespace atcg

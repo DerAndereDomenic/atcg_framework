@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Scene/Scene.h>
 
@@ -16,7 +17,7 @@ struct NameComponent;
 /**
  * @brief A lightweight class to model an entity
  */
-class Entity
+class ATCG_API Entity
 {
 public:
     /**

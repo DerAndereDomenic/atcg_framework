@@ -201,4 +201,9 @@ void ImGuiLayer::end()
         glfwMakeContextCurrent(backup_current_context);
     }
 }
+
+ImGuiContext* ImGuiLayer::getImGuiContext() const
+{
+    return ImGui::GetCurrentContext();
+}
 }    // namespace atcg

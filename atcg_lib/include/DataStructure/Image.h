@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <torch/types.h>
 
@@ -12,7 +13,7 @@ namespace atcg
  * It does not support direct pixel/image manipulation other than gamma correction.
  * It should be passed to a texture for rendering porpurses.
  */
-class Image
+class ATCG_API Image
 {
 public:
     /**
@@ -176,7 +177,7 @@ namespace IO
  *
  * @return The image.
  */
-atcg::ref_ptr<Image> imread(const std::string& filename, const float gamma = 1.0f);
+ATCG_API atcg::ref_ptr<Image> imread(const std::string& filename, const float gamma = 1.0f);
 
 /**
  * @brief Store an image
@@ -186,7 +187,7 @@ atcg::ref_ptr<Image> imread(const std::string& filename, const float gamma = 1.0
  * @param gamma The gamma correction constant
  *
  */
-void imwrite(const atcg::ref_ptr<Image>& image, const std::string& filename, const float gamma = 1.0f);
+ATCG_API void imwrite(const atcg::ref_ptr<Image>& image, const std::string& filename, const float gamma = 1.0f);
 }    // namespace IO
 
 namespace Utils
@@ -202,9 +203,9 @@ namespace Utils
  *
  * @return A (B, H, W, {C|1}) tensor with error maps. C=1 if a reduction other than "none" was used.
  */
-torch::Tensor AEMap(const torch::Tensor& ground_truth,
-                    const torch::Tensor& prediction,
-                    const std::string& channel_reduction = "mean");
+ATCG_API torch::Tensor AEMap(const torch::Tensor& ground_truth,
+                             const torch::Tensor& prediction,
+                             const std::string& channel_reduction = "mean");
 
 /**
  * @brief Compute the relative absolute error maps between pairwise images.
@@ -219,10 +220,10 @@ torch::Tensor AEMap(const torch::Tensor& ground_truth,
  *
  * @return A (B, H, W, {C|1}) tensor with error maps. C=1 if a reduction other than "none" was used.
  */
-torch::Tensor relAEMap(const torch::Tensor& ground_truth,
-                       const torch::Tensor& prediction,
-                       const std::string& channel_reduction = "mean",
-                       const float delta                    = 1e-4f);
+ATCG_API torch::Tensor relAEMap(const torch::Tensor& ground_truth,
+                                const torch::Tensor& prediction,
+                                const std::string& channel_reduction = "mean",
+                                const float delta                    = 1e-4f);
 
 /**
  * @brief Compute the squared error maps between pairwise images.
@@ -235,9 +236,9 @@ torch::Tensor relAEMap(const torch::Tensor& ground_truth,
  *
  * @return A (B, H, W, {C|1}) tensor with error maps. C=1 if a reduction other than "none" was used.
  */
-torch::Tensor SEMap(const torch::Tensor& ground_truth,
-                    const torch::Tensor& prediction,
-                    const std::string& channel_reduction = "mean");
+ATCG_API torch::Tensor SEMap(const torch::Tensor& ground_truth,
+                             const torch::Tensor& prediction,
+                             const std::string& channel_reduction = "mean");
 
 /**
  * @brief Compute the relative squared error maps between pairwise images.
@@ -252,10 +253,10 @@ torch::Tensor SEMap(const torch::Tensor& ground_truth,
  *
  * @return A (B, H, W, {C|1}) tensor with error maps. C=1 if a reduction other than "none" was used.
  */
-torch::Tensor relSEMap(const torch::Tensor& ground_truth,
-                       const torch::Tensor& prediction,
-                       const std::string& channel_reduction = "mean",
-                       const float delta                    = 1e-4f);
+ATCG_API torch::Tensor relSEMap(const torch::Tensor& ground_truth,
+                                const torch::Tensor& prediction,
+                                const std::string& channel_reduction = "mean",
+                                const float delta                    = 1e-4f);
 
 /**
  * @brief Compute the pixelwise mean absolute error between pairwise images.
@@ -268,7 +269,7 @@ torch::Tensor relSEMap(const torch::Tensor& ground_truth,
  *
  * @return A (B, {C|1}) tensor with error values. C=1 if a reduction other than "none" was used.
  */
-torch::Tensor
+ATCG_API torch::Tensor
 MAE(const torch::Tensor& ground_truth, const torch::Tensor& prediction, const std::string& channel_reduction = "mean");
 
 /**
@@ -284,10 +285,10 @@ MAE(const torch::Tensor& ground_truth, const torch::Tensor& prediction, const st
  *
  * @return A (B, {C|1}) tensor with error values. C=1 if a reduction other than "none" was used.
  */
-torch::Tensor relMAE(const torch::Tensor& ground_truth,
-                     const torch::Tensor& prediction,
-                     const std::string& channel_reduction = "mean",
-                     const float delta                    = 1e-4f);
+ATCG_API torch::Tensor relMAE(const torch::Tensor& ground_truth,
+                              const torch::Tensor& prediction,
+                              const std::string& channel_reduction = "mean",
+                              const float delta                    = 1e-4f);
 /**
  * @brief Compute the pixelwise mean squared error between pairwise images.
  * The MSE is defined as sum_i |x_i - y_i|^2. All images are expected to be in a floating point representation.
@@ -299,7 +300,7 @@ torch::Tensor relMAE(const torch::Tensor& ground_truth,
  *
  * @return A (B, {C|1}) tensor with error values. C=1 if a reduction other than "none" was used.
  */
-torch::Tensor
+ATCG_API torch::Tensor
 MSE(const torch::Tensor& ground_truth, const torch::Tensor& prediction, const std::string& channel_reduction = "mean");
 
 /**
@@ -315,10 +316,10 @@ MSE(const torch::Tensor& ground_truth, const torch::Tensor& prediction, const st
  *
  * @return A (B, {C|1}) tensor with error values. C=1 if a reduction other than "none" was used.
  */
-torch::Tensor relMSE(const torch::Tensor& ground_truth,
-                     const torch::Tensor& prediction,
-                     const std::string& channel_reduction = "mean",
-                     const float delta                    = 1e-4f);
+ATCG_API torch::Tensor relMSE(const torch::Tensor& ground_truth,
+                              const torch::Tensor& prediction,
+                              const std::string& channel_reduction = "mean",
+                              const float delta                    = 1e-4f);
 
 }    // namespace Utils
 

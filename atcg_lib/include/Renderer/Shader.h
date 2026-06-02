@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Asset/Asset.h>
 #include <Core/glm.h>
 #include <Renderer/Buffer.h>
@@ -16,7 +17,7 @@ class GraphicsAPI;
 /**
  * @brief This class models a shader
  */
-class Shader : public Asset
+class ATCG_API Shader : public Asset
 {
 public:
     /**

@@ -12,7 +12,7 @@ namespace atcg
  * @brief A RenderPass that performs tonemapping on the input color buffer and outputs the result to the output
  * framebuffer.
  */
-class TonemapPass : public RenderPass
+class ATCG_API TonemapPass : public RenderPass
 {
 public:
     /**

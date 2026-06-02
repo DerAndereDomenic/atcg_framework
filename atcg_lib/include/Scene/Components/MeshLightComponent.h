@@ -8,7 +8,7 @@
 
 namespace atcg
 {
-struct MeshLightComponent
+struct ATCG_API MeshLightComponent
 {
     MeshLightComponent()
     {

@@ -8,7 +8,7 @@ namespace atcg
 /**
  * @brief A RenderPass that attaches the input to an output framebuffer.
  */
-class OutputPass : public RenderPass
+class ATCG_API OutputPass : public RenderPass
 {
 public:
     /**

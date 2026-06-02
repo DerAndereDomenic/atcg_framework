@@ -8,7 +8,7 @@
 
 namespace atcg
 {
-struct InstanceRenderComponent : public RenderComponent
+struct ATCG_API InstanceRenderComponent : public RenderComponent
 {
     InstanceRenderComponent() : RenderComponent() {}
 

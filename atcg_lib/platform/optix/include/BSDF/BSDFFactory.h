@@ -24,7 +24,7 @@ namespace BSDFFactory
  * @param type The material type
  * @param builder The builder
  */
-void registerBSDF(MaterialType type, BSDFBuilder builder);
+ATCG_API void registerBSDF(MaterialType type, BSDFBuilder builder);
 
 /**
  * @brief Create a BSDF based on the material type
@@ -36,10 +36,10 @@ void registerBSDF(MaterialType type, BSDFBuilder builder);
  *
  * @return The BSDF
  */
-atcg::ref_ptr<BSDF> createBSDF(MaterialType type,
-                               const Dictionary& dict,
-                               const atcg::ref_ptr<RayTracingPipeline>& pipeline,
-                               const atcg::ref_ptr<ShaderBindingTable>& sbt);
+ATCG_API atcg::ref_ptr<BSDF> createBSDF(MaterialType type,
+                                        const Dictionary& dict,
+                                        const atcg::ref_ptr<RayTracingPipeline>& pipeline,
+                                        const atcg::ref_ptr<ShaderBindingTable>& sbt);
 }    // namespace BSDFFactory
 
 #define ATCG_REGISTER_BSDF(MaterialType, BSDFClass)                                                                    \

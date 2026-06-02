@@ -1,9 +1,11 @@
 #pragma once
 
+#include <Core/API.h>
 #include <optix.h>
+
 namespace atcg
 {
-class ShaderBindingTable
+class ATCG_API ShaderBindingTable
 {
 public:
     /**

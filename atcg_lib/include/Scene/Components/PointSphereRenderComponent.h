@@ -11,7 +11,7 @@
 
 namespace atcg
 {
-struct PointSphereRenderComponent : public RenderComponent
+struct ATCG_API PointSphereRenderComponent : public RenderComponent
 {
     PointSphereRenderComponent(const float& point_size = 0.1f) : RenderComponent(), point_size(point_size) {}
 

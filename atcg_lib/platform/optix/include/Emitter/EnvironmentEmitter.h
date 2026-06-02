@@ -9,7 +9,7 @@ namespace atcg
 /**
  * @brief An environment emitter
  */
-class EnvironmentEmitter : public Emitter
+class ATCG_API EnvironmentEmitter : public Emitter
 {
 public:
     /**

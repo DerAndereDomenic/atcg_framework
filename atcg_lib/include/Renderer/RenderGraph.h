@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Renderer/RenderPass.h>
 #include <DataStructure/Dictionary.h>
 #include <Renderer/CompileData.h>
@@ -13,7 +14,7 @@ namespace atcg
 /**
  * @brief A class the model a RenderGraph.
  */
-class RenderGraph
+class ATCG_API RenderGraph
 {
 public:
     using RenderPassHandle = uint64_t;
@@ -196,5 +197,5 @@ private:
     uint32_t _max_cached_resolutions = 8;
 };
 
-atcg::ref_ptr<RenderGraph> createRenderGraph(const CompileData& ctx);
+ATCG_API atcg::ref_ptr<RenderGraph> createRenderGraph(const CompileData& ctx);
 }    // namespace atcg

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Events/Event.h>
 
 namespace atcg
@@ -11,7 +12,7 @@ namespace atcg
  * @brief The layer system is used to handle events and draw calls in a specific order
  * In most of our cases we only have 1 layer -> the application layer that is created by the user.
  */
-class Layer
+class ATCG_API Layer
 {
 public:
     /**

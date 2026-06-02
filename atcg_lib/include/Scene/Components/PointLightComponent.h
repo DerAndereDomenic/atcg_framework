@@ -7,7 +7,7 @@
 
 namespace atcg
 {
-struct PointLightComponent
+struct ATCG_API PointLightComponent
 {
     PointLightComponent(const float intensity = 1.0f, const glm::vec3& color = glm::vec3(1))
         : intensity(intensity),

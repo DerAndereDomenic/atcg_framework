@@ -10,7 +10,7 @@
 
 namespace atcg
 {
-struct MeshRenderComponent : public RenderComponent
+struct ATCG_API MeshRenderComponent : public RenderComponent
 {
     MeshRenderComponent() : RenderComponent() {}
     MeshRenderComponent(const atcg::ref_ptr<Shader>& shader) : RenderComponent()

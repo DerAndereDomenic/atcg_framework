@@ -8,7 +8,7 @@
 
 namespace atcg
 {
-class HomogeneousMedium : public Medium
+class ATCG_API HomogeneousMedium : public Medium
 {
 public:
     /**

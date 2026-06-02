@@ -14,7 +14,7 @@ namespace atcg
 /**
  * @brief A simple path tracer
  */
-class VolPathtracingIntegrator : public Integrator
+class ATCG_API VolPathtracingIntegrator : public Integrator
 {
 public:
     /**

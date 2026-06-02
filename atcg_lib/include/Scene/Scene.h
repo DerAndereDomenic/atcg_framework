@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <Core/API.h>
 #include <Asset/Asset.h>
 #include <Core/UUID.h>
 #include <Core/Memory.h>
@@ -23,7 +23,7 @@ class Entity;
 /**
  * @brief A class to model a scene.
  */
-class Scene : public Asset, public std::enable_shared_from_this<Scene>
+class ATCG_API Scene : public Asset, public std::enable_shared_from_this<Scene>
 {
 public:
     /**

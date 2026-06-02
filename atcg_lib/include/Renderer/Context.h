@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 
 namespace atcg
@@ -11,7 +12,7 @@ using ContextHandle = uint64_t;
 /**
  *   @brief A class to model a graphcis context
  */
-class Context
+class ATCG_API Context
 {
 public:
     /**

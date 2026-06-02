@@ -16,7 +16,7 @@ using AssetMap      = std::unordered_map<AssetHandle, atcg::ref_ptr<Asset>>;
 /**
  * @brief A class to model an asset manager
  */
-class AssetManagerSystem
+class ATCG_API AssetManagerSystem
 {
 public:
     /**

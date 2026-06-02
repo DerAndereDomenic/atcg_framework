@@ -3,12 +3,9 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
-#include <glad/glad.h>
-
 #include <algorithm>
 
 #include <random>
-#include <stb_image.h>
 #include <portable-file-dialogs.h>
 
 #include <Core/Common.h>

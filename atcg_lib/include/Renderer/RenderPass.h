@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Core/Memory.h>
 #include <DataStructure/Dictionary.h>
@@ -19,7 +20,7 @@ namespace atcg
  *
  * The output type of the RenderPass
  */
-class RenderPass
+class ATCG_API RenderPass
 {
 public:
     /**
