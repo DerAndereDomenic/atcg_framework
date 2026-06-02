@@ -151,6 +151,7 @@ __direct_callable__homogeneousMedium_sampleMediumEventForward(const CuDiff::Dual
                                       result.interaction.position.derivative(5));
 
         result.interaction.dx1x2_dx0x1 = atcg::mat6(dx1_dx0, dx1_dx1, dx2_dx0, dx2_dx1);
+        result.interaction.dxdw        = glm::mat3(result.interaction.incoming_distance.val());
     }
     else
     {

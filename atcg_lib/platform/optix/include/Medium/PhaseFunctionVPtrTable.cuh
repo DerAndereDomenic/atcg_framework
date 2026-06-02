@@ -36,6 +36,7 @@ struct PhaseFunctionVPtrTable
     uint32_t evalBackwardCallIndex;
     uint32_t sampleCallIndex;
     uint32_t sampleForwardCallIndex;
+    uint32_t sampleBackwardCallIndex;
 
 #ifdef __CUDACC__
 
@@ -71,6 +72,19 @@ struct PhaseFunctionVPtrTable
             sampleForwardCallIndex,
             interaction,
             rng);
+    }
+
+    __device__ void samplePhaseFunctionBackward(const MediumInteraction& interaction,
+                                                PCG32& rng,
+                                                const glm::vec3& dL_dweight,
+                                                const glm::vec3& dL_dwo) const
+    {
+        return optixDirectCall<void, const MediumInteraction&, PCG32&, const glm::vec3&, const glm::vec3&>(
+            sampleBackwardCallIndex,
+            interaction,
+            rng,
+            dL_dweight,
+            dL_dwo);
     }
 
 #endif

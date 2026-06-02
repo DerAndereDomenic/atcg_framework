@@ -11,7 +11,8 @@
 
 #include <DataStructure/Frame.h>
 #include <Medium/Sampling.h>
-
+#include <CuDiff/CuDiff.h>
+#include <CuDiff/ext/glm.h>
 
 extern "C" __device__ atcg::PhaseFunctionEvalResult
 __direct_callable__eval_hgphase(const atcg::MediumInteraction& interaction, const glm::vec3& outgoing_ray_dir)
@@ -76,6 +77,43 @@ __direct_callable__sample_hgphase_forward(const atcg::DualSurfaceInteraction& in
     result.dweight_dx0x1         = atcg::mat6x3(0.0f);
 
     return result;
+}
+
+extern "C" __device__ void __direct_callable__sample_hgphase_backward(const atcg::MediumInteraction& interaction,
+                                                                      atcg::PCG32& rng,
+                                                                      const glm::vec3& dL_dweight,
+                                                                      const glm::vec3& dL_dwo)
+{
+    const atcg::HenyeyGreensteinPhaseFunctionData* sbt_data =
+        *reinterpret_cast<const atcg::HenyeyGreensteinPhaseFunctionData**>(optixGetSbtDataPointer());
+
+    if(!sbt_data->optimize_g)
+    {
+        return;
+    }
+
+    float g_ = *(sbt_data->g);
+
+    CuDiff::Dual<1, float> g(g_);
+    g.setDerivative(0, 1.0f);
+
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::HG_PHASE, CuDiff::Dual<1, float>> sampling_strategy(g);
+
+    atcg::Frame local_frame     = atcg::Frame(interaction.incoming_direction);
+    auto local_outgoing_ray_dir = sampling_strategy.sample(rng.next2d());
+
+    auto outgoing_ray_dir = local_frame.toWorld(local_outgoing_ray_dir);
+
+    // dweight_dg = 0 because of perfect importance sampling, the weight is constant
+
+    glm::vec3 dwo_dg = outgoing_ray_dir.derivative(0);
+
+    float g_grad = glm::dot(dL_dwo, dwo_dg);
+
+    if(isfinite(g_grad))
+    {
+        atcg::globalAtomicAdd(sbt_data->g_grad, g_grad);
+    }
 }
 
 extern "C" __device__ void __direct_callable__eval_hgphase_backward(const atcg::MediumInteraction& interaction,

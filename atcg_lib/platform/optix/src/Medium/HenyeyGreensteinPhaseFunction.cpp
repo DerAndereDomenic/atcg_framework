@@ -31,17 +31,22 @@ void HenyeyGreensteinPhaseFunction::initializePipeline(const atcg::ref_ptr<RayTr
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__eval_hgphase_backward"});
     auto sample_forward_prog_group =
         pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_hgphase_forward"});
+    auto sample_backward_prog_group =
+        pipeline->addCallableShader({ptx_bsdf_filename, "__direct_callable__sample_hgphase_backward"});
 
-    uint32_t sample_idx         = sbt->addCallableEntry(sample_prog_group, _data_buffer.get());
-    uint32_t eval_idx           = sbt->addCallableEntry(eval_prog_group, _data_buffer.get());
-    uint32_t eval_backward_idx  = sbt->addCallableEntry(eval_backward_prog_group, _data_buffer.get());
-    uint32_t sample_forward_idx = sbt->addCallableEntry(sample_forward_prog_group, _data_buffer.get());
+    uint32_t sample_idx          = sbt->addCallableEntry(sample_prog_group, _data_buffer.get());
+    uint32_t eval_idx            = sbt->addCallableEntry(eval_prog_group, _data_buffer.get());
+    uint32_t eval_backward_idx   = sbt->addCallableEntry(eval_backward_prog_group, _data_buffer.get());
+    uint32_t sample_forward_idx  = sbt->addCallableEntry(sample_forward_prog_group, _data_buffer.get());
+    uint32_t sample_backward_idx = sbt->addCallableEntry(sample_backward_prog_group, _data_buffer.get());
+
 
     PhaseFunctionVPtrTable table;
-    table.sampleCallIndex        = sample_idx;
-    table.evalCallIndex          = eval_idx;
-    table.evalBackwardCallIndex  = eval_backward_idx;
-    table.sampleForwardCallIndex = sample_forward_idx;
+    table.sampleCallIndex         = sample_idx;
+    table.evalCallIndex           = eval_idx;
+    table.evalBackwardCallIndex   = eval_backward_idx;
+    table.sampleForwardCallIndex  = sample_forward_idx;
+    table.sampleBackwardCallIndex = sample_backward_idx;
 
     _vptr_table.upload(&table);
 
