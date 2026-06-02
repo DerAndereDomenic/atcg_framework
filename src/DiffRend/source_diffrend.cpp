@@ -38,6 +38,7 @@ public:
         spec.height    = height;
         spec.format    = atcg::TextureFormat::RGBA;
         output_texture = atcg::Texture2D::create(spec);
+        ATCG_DEBUG("Created output texture with size {}x{}", width, height);
 #endif
     }
 
@@ -128,7 +129,7 @@ public:
             {
                 optimizer->zero_grad(false);
                 // integrator->zeroGrad();
-                uint32_t num_samples = 128;
+                uint32_t num_samples = 16;
 
                 torch::Tensor result = torch::zeros({output_texture->height(), output_texture->width(), 3},
                                                     atcg::TensorOptions::floatDeviceOptions());
@@ -143,6 +144,7 @@ public:
                     dict.setValue("width", output_texture->width());
                     dict.setValue("height", output_texture->height());
                     dict.setValue("rng_index", iteration_count * num_samples + i);
+                    dict.setValue("debug", debug);
 
                     result = result + integrator->sample(dict) / (float)num_samples;
 
