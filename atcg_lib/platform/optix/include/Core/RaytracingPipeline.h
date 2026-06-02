@@ -110,6 +110,14 @@ public:
      */
     TraceParameters getRay(const uint32_t ray_type_index, const uint32_t miss_index, bool occlusion = false) const;
 
+    void launch(CUdeviceptr params,
+                size_t params_size,
+                const OptixShaderBindingTable* sbt,
+                size_t width,
+                size_t height,
+                size_t depth,
+                CUstream stream = nullptr);
+
 private:
     class Impl;
     std::unique_ptr<Impl> impl;
