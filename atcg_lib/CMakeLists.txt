@@ -106,7 +106,6 @@ target_include_directories(atcg_lib PUBLIC "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/in
 
 target_link_libraries(atcg_lib PUBLIC OpenMeshCore
                                       OpenMeshTools
-                                      stb_image
                                       atcg::tinyobjloader
                                       atcg::entt
                                       atcg::nanort
@@ -124,4 +123,5 @@ target_link_libraries(atcg_lib PUBLIC OpenMeshCore
 
 target_link_libraries(atcg_lib PRIVATE atcg::glad
                                        OpenGL::GL
+                                       stb_image
 )
