@@ -15,6 +15,7 @@ namespace atcg
 class ATCG_API PathtracingIntegrator : public Integrator
 {
 public:
+    ATCG_PLUGIN_CLASS(PathtracingIntegrator);
     /**
      * @brief Constructor
      *

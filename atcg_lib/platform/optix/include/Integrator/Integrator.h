@@ -11,6 +11,7 @@
 #include <Scene/Scene.h>
 #include <Renderer/PerspectiveCamera.h>
 #include <DataStructure/TorchUtils.h>
+#include <Plugin/Plugin.h>
 
 #include <vector>
 
@@ -22,6 +23,10 @@ namespace atcg
 class ATCG_API Integrator
 {
 public:
+    using PluginCreate =
+        std::function<std::shared_ptr<Integrator>(const atcg::ref_ptr<RaytracingContext>&, const atcg::Dictionary&)>;
+    ATCG_PLUGIN_BASE_CLASS(Integrator);
+
     /**
      * @brief Constructor
      *

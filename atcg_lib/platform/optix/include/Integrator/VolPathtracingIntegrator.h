@@ -17,6 +17,8 @@ namespace atcg
 class ATCG_API VolPathtracingIntegrator : public Integrator
 {
 public:
+    ATCG_PLUGIN_CLASS(VolPathtracingIntegrator);
+
     /**
      * @brief Constructor
      *
