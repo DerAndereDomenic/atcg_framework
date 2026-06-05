@@ -128,5 +128,5 @@ ATCG_PLUGIN_LIBRARY();
 
 extern "C" __declspec(dllexport) void registerPlugin(atcg::PluginRegistry& registry)
 {
-    registry.registerClass<atcg::Integrator>("TestIntegrator", &atcg::TestIntegrator::create);
+    registry.registerClass<atcg::Integrator, atcg::TestIntegrator>("TestIntegrator");
 }

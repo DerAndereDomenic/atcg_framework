@@ -15,6 +15,15 @@
 
 namespace atcg
 {
+
+struct PluginInfo
+{
+    const char* name;
+    const char* version;
+    const char* author;
+    const char* description;
+};
+
 class ATCG_API PluginManager
 {
 public:
@@ -65,17 +74,22 @@ private:
     {
         using PluginCreate = typename BaseT::PluginCreate;
 
-        ClassDesc(SharedLibraryHandle handle, std::string_view type, PluginCreate create)
+        ClassDesc(SharedLibraryHandle handle, std::string_view type, PluginCreate create, PluginInfo plugin_info)
             : ClassDescBase(handle, type),
-              create(create)
+              create(create),
+              plugin_info(plugin_info)
         {
         }
 
         PluginCreate create;
+        PluginInfo plugin_info;
     };
 
     template<typename BaseT>
-    void registerClass(SharedLibraryHandle handle, std::string_view type, typename BaseT::PluginCreate create)
+    void registerClass(SharedLibraryHandle handle,
+                       std::string_view type,
+                       typename BaseT::PluginCreate create,
+                       const PluginInfo& plugin_info)
     {
         auto it = _registered_classes.find(type.data());
         if(it != _registered_classes.end())
@@ -84,7 +98,14 @@ private:
             return;
         }
 
-        auto desc                        = std::make_shared<ClassDesc<BaseT>>(handle, type, create);
+        ATCG_INFO("Registering plugin class: {0} (Type: {1}, Version: {2}, Author: {3})\n\t Description: {4}",
+                  plugin_info.name,
+                  type,
+                  plugin_info.version,
+                  plugin_info.author,
+                  plugin_info.description);
+
+        auto desc                        = std::make_shared<ClassDesc<BaseT>>(handle, type, create, plugin_info);
         _registered_classes[type.data()] = std::move(desc);
     }
 
@@ -109,15 +130,15 @@ public:
     PluginRegistry& operator=(const PluginRegistry&) = delete;
 
     template<typename BaseT>
-    void registerClass(std::string_view type, typename BaseT::PluginCreate create)
+    void registerClass(std::string_view type, typename BaseT::PluginCreate create, const PluginInfo& plugin_info)
     {
-        _manager.registerClass<BaseT>(_handle, type, create);
+        _manager.registerClass<BaseT>(_handle, type, create, plugin_info);
     }
 
     template<typename BaseT, typename DerivedT>
     void registerClass(std::string_view type)
     {
-        registerClass<BaseT>(T::pluginType, T::create);
+        registerClass<BaseT>(DerivedT::pluginType, DerivedT::create, DerivedT::pluginInfo);
     }
 
 private:
@@ -132,14 +153,20 @@ public:                                                                         
         static std::string type(#base_class);                                                                          \
         return type;                                                                                                   \
     }                                                                                                                  \
+    virtual const PluginInfo& getPluginInfo() const  = 0;                                                              \
     virtual const std::string& getPluginType() const = 0;
 
-#define ATCG_PLUGIN_CLASS(class)                                                                                       \
+#define ATCG_PLUGIN_CLASS(class, version, author, description)                                                         \
 public:                                                                                                                \
+    static inline const PluginInfo pluginInfo  = {#class, version, author, description};                               \
     static inline const std::string pluginType = #class;                                                               \
     virtual const std::string& getPluginType() const final                                                             \
     {                                                                                                                  \
         return pluginType;                                                                                             \
+    }                                                                                                                  \
+    virtual const PluginInfo& getPluginInfo() const final                                                              \
+    {                                                                                                                  \
+        return pluginInfo;                                                                                             \
     }
 
 #define ATCG_PLUGIN_LIBRARY()                                                                                          \
