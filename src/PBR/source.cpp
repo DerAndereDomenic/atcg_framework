@@ -513,7 +513,6 @@ private:
     atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
 
     atcg::PluginManager plugin_manager;
-    atcg::ref_ptr<atcg::DummyPluginBase> plugin_obj;
 
     uint32_t last_revision = 0;
 };

@@ -148,13 +148,4 @@ public:                                                                         
         ImGui::SetCurrentContext(imgui_context);                                                                       \
     }
 
-class ATCG_API DummyPluginBase
-{
-public:
-    using PluginCreate = std::function<std::shared_ptr<DummyPluginBase>()>;
-    ATCG_PLUGIN_BASE_CLASS(DummyPluginBase);
-
-    virtual void doStuff(const atcg::ref_ptr<atcg::Scene>& scene, const atcg::ref_ptr<atcg::Camera>& camera) = 0;
-};
-
 }    // namespace atcg
