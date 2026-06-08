@@ -4,3 +4,5 @@ file(GLOB_RECURSE source "**.h*" "**.c*")
 get_filename_component(TARGET_NAME ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 # Add target executable
 ATCG_add_executable(${TARGET_NAME} target_name "${source}")
+
+add_dependencies(${TARGET_NAME} AllPlugins)
