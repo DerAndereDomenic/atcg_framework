@@ -98,14 +98,14 @@ struct EmitterVPtrTable
             rng);
     }
 
-    __device__ EmitterDualSamplingResult sampleLightForward(const DualSurfaceInteraction& si,
+    __device__ EmitterDualSamplingResult sampleLightForward(const AnyDualInteraction& ai,
                                                             const atcg::SampledWavelengths& wavelengths,
                                                             PCG32& rng) const
     {
         return optixDirectCall<EmitterDualSamplingResult,
-                               const DualSurfaceInteraction&,
+                               const AnyDualInteraction&,
                                const atcg::SampledWavelengths&,
-                               PCG32&>(sampleForwardCallIndex, si, wavelengths, rng);
+                               PCG32&>(sampleForwardCallIndex, ai, wavelengths, rng);
     }
 
     __device__ EdgeSamplingResult sampleEdge(const SurfaceInteraction& si,
