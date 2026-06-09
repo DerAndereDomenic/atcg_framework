@@ -26,6 +26,23 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE T select(bool condition, const T& option_true
  *
  * @return The diagonal matrix
  */
+ATCG_INLINE ATCG_DEVICE glm::mat3 diag(const float v)
+{
+    glm::mat3 M = glm::mat3(0);
+
+    M[0][0] = v;
+    M[1][1] = v;
+    M[2][2] = v;
+
+    return M;
+}
+
+/**
+ * @brief Create a diagonal matrix from a vector
+ * @param v The input vector
+ *
+ * @return The diagonal matrix
+ */
 ATCG_INLINE ATCG_DEVICE glm::mat3 diag(const glm::vec3& v)
 {
     glm::mat3 M = glm::mat3(0);
