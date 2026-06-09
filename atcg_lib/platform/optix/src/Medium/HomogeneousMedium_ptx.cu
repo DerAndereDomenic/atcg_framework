@@ -126,8 +126,7 @@ __direct_callable__homogeneousMedium_sampleMediumEventForward(const CuDiff::Dual
     // Effectively no medium event.
     result.interaction                    = atcg::DualMediumInteraction();
     result.interaction.incoming_direction = direction;
-    result.transmittance_weight           = CuDiff::Dual<6, glm::vec3>(glm::vec3(1));
-    result.radiance_weight                = CuDiff::Dual<6, glm::vec3>(glm::vec3(0));
+    result.transmittance_weight           = glm::vec3(1);
 
     // Sample the free-flight distance proportional to sigma_s_scalar.
     atcg::SamplingStrategy<atcg::SamplingStrategyType::EXPONENTIAL_SAMPLING> sampling_strategy(sigma_t_scalar);
@@ -139,7 +138,11 @@ __direct_callable__homogeneousMedium_sampleMediumEventForward(const CuDiff::Dual
         // The sampling succeeded and a scattering event was found at the given distance
         result.interaction.incoming_distance = CuDiff::Dual<6, float>(sampled_distance);
         result.interaction.position          = origin + result.interaction.incoming_distance * direction;
-        result.transmittance_weight          = CuDiff::Dual<6, glm::vec3>(albedo);
+        result.transmittance_weight          = albedo;
+
+        glm::mat3 dT_dx0            = glm::mat3(0);
+        glm::mat3 dT_dx1            = glm::mat3(0);
+        result.dtransmittance_dx0x1 = atcg::mat6x3(dT_dx0, dT_dx1);
 
         glm::mat3 dx1_dx0 = glm::mat3(0);
         glm::mat3 dx2_dx0 = glm::mat3(result.interaction.position.derivative(0),
@@ -355,7 +358,7 @@ __direct_callable__homogeneousMedium_evalTransmittanceForward(const CuDiff::Dual
                                  glm::vec3(transmittance.derivative(4)),
                                  glm::vec3(transmittance.derivative(5)));
 
-    result.dTransmittance_dx0x1 = atcg::mat6x3(dT_dx0, dT_dx1);
+    result.dtransmittance_dx0x1 = atcg::mat6x3(dT_dx0, dT_dx1);
     return result;
 }
 

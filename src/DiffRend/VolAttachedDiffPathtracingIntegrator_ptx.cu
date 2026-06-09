@@ -318,8 +318,8 @@ ATCG_INLINE ATCG_DEVICE void handleDirectIlluminationMedium(RayContext& ray,
         }
 
         auto JLe_nee        = emitter_sampling.dLe_dx0x1 * Jray;
-        auto Jphase         = phase_result.dvalue_dx0x1 * Jray;
-        auto Jtransmittance = transmittance_result.dTransmittance_dx0x1 * Jray;
+        auto Jphase         = phase_result.dphase_dx0x1 * Jray;
+        auto Jtransmittance = transmittance_result.dtransmittance_dx0x1 * Jray;
 
         auto Jweight_nee = atcg::diag(phase_result.phase_function_value) * Jtransmittance +
                            atcg::diag(transmittance_result.transmittance) * Jphase;
@@ -406,7 +406,7 @@ ATCG_INLINE ATCG_DEVICE DirectionSampleResult sampleDirection(RayContext& ray,
         result.sample_probability = phase_result.sampling_pdf;
         result.out_dir            = phase_result.outgoing_ray_dir;
         result.bsdf_weight        = glm::vec3(phase_result.phase_function_weight);
-        result.dbsdf_dx0x1        = phase_result.dweight_dx0x1;
+        result.dbsdf_dx0x1        = phase_result.dphase_dx0x1;
 
         ai1->pdf = result.sample_probability;
     }
@@ -452,14 +452,8 @@ ATCG_INLINE ATCG_DEVICE NextVertexResult traceNextVertex(RayContext& ray,
         float max_distance = next_dsi.incoming_distance.val();
         auto medium_result = ray.current_medium->sampleMediumEventForward(x1, out_dir, max_distance, wavelengths, rng);
 
-        result.transmittance_weight  = medium_result.transmittance_weight.val();
-        glm::mat3 dtransmittance_dx0 = glm::mat3(medium_result.transmittance_weight.derivative(0),
-                                                 medium_result.transmittance_weight.derivative(1),
-                                                 medium_result.transmittance_weight.derivative(2));
-        glm::mat3 dtransmittance_dx1 = glm::mat3(medium_result.transmittance_weight.derivative(3),
-                                                 medium_result.transmittance_weight.derivative(4),
-                                                 medium_result.transmittance_weight.derivative(5));
-        result.dtransmittance_dx0x1  = atcg::mat6x3(dtransmittance_dx0, dtransmittance_dx1);
+        result.transmittance_weight = medium_result.transmittance_weight;
+        result.dtransmittance_dx0x1 = medium_result.dtransmittance_dx0x1;
 
         if(medium_result.interaction.isValid())
         {

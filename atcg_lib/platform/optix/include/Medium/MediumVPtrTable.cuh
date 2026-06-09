@@ -16,14 +16,14 @@ struct MediumSamplingResult
 struct DualMediumSamplingResult
 {
     DualMediumInteraction interaction;
-    CuDiff::Dual<6, glm::vec3> transmittance_weight;
-    CuDiff::Dual<6, glm::vec3> radiance_weight;
+    glm::vec3 transmittance_weight;
+    atcg::mat6x3 dtransmittance_dx0x1;
 };
 
 struct DualTransmittanceEvalResult
 {
     float transmittance;
-    atcg::mat6x3 dTransmittance_dx0x1;
+    atcg::mat6x3 dtransmittance_dx0x1;
 };
 
 struct MediumVPtrTable

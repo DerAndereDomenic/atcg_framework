@@ -74,7 +74,7 @@ __direct_callable__sample_hgphase_forward(const atcg::DualMediumInteraction& int
     // result.phase_function_weight = glm::vec3(henyey_greenstein_phase_function(local_outgoing_ray_dir.z, sbt_data->g))
     // / result.sampling_pdf;
     result.phase_function_weight = 1.0f;
-    result.dweight_dx0x1         = atcg::mat6x3(0.0f);
+    result.dphase_dx0x1          = atcg::mat6x3(0.0f);
 
     return result;
 }
@@ -140,7 +140,7 @@ __direct_callable__eval_hgphase_forward(const atcg::DualMediumInteraction& inter
     glm::mat3 Jphase_dx1 = glm::mat3(glm::vec3(phase_value.derivative(3)),
                                      glm::vec3(phase_value.derivative(4)),
                                      glm::vec3(phase_value.derivative(5)));
-    result.dvalue_dx0x1  = atcg::mat6x3(Jphase_dx0, Jphase_dx1);
+    result.dphase_dx0x1  = atcg::mat6x3(Jphase_dx0, Jphase_dx1);
     return result;
 }
 

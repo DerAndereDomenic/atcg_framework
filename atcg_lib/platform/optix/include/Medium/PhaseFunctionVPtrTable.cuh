@@ -21,7 +21,7 @@ struct DualPhaseFunctionSamplingResult
     CuDiff::Dual<6, glm::vec3> outgoing_ray_dir;
     float phase_function_weight;
     float sampling_pdf;
-    atcg::mat6x3 dweight_dx0x1;
+    atcg::mat6x3 dphase_dx0x1;
 };
 
 struct PhaseFunctionEvalResult
@@ -34,7 +34,7 @@ struct DualPhaseFunctionEvalResult
 {
     float phase_function_value;
     float sampling_pdf;
-    atcg::mat6x3 dvalue_dx0x1;
+    atcg::mat6x3 dphase_dx0x1;
 };
 
 struct PhaseFunctionVPtrTable
