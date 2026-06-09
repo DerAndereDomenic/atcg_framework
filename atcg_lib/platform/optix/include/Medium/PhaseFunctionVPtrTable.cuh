@@ -30,9 +30,17 @@ struct PhaseFunctionEvalResult
     float sampling_pdf;
 };
 
+struct DualPhaseFunctionEvalResult
+{
+    float phase_function_value;
+    float sampling_pdf;
+    atcg::mat6x3 dvalue_dx0x1;
+};
+
 struct PhaseFunctionVPtrTable
 {
     uint32_t evalCallIndex;
+    uint32_t evalForwardCallIndex;
     uint32_t evalBackwardCallIndex;
     uint32_t sampleCallIndex;
     uint32_t sampleForwardCallIndex;
@@ -46,6 +54,15 @@ struct PhaseFunctionVPtrTable
         return optixDirectCall<PhaseFunctionEvalResult, const MediumInteraction&, const glm::vec3&>(evalCallIndex,
                                                                                                     interaction,
                                                                                                     outgoing_ray_dir);
+    }
+
+    __device__ DualPhaseFunctionEvalResult
+    evalPhaseFunctionForward(const DualMediumInteraction& interaction,
+                             const CuDiff::Dual<6, glm::vec3>& outgoing_ray_dir) const
+    {
+        return optixDirectCall<DualPhaseFunctionEvalResult,
+                               const DualMediumInteraction&,
+                               const CuDiff::Dual<6, glm::vec3>&>(evalForwardCallIndex, interaction, outgoing_ray_dir);
     }
 
     __device__ void evalPhaseFunctionBackward(const MediumInteraction& interaction,

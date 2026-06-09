@@ -20,6 +20,12 @@ struct DualMediumSamplingResult
     CuDiff::Dual<6, glm::vec3> radiance_weight;
 };
 
+struct DualTransmittanceEvalResult
+{
+    float transmittance;
+    atcg::mat6x3 dTransmittance_dx0x1;
+};
+
 struct MediumVPtrTable
 {
     const PhaseFunctionVPtrTable* phase_function;
@@ -27,6 +33,7 @@ struct MediumVPtrTable
     uint32_t evalCallIndex;
     uint32_t sampleCallIndex;
     uint32_t sampleBackwardCallIndex;
+    uint32_t evalTransmittanceForwardCallIndex;
     uint32_t evalTransmittanceBackwardCallIndex;
     uint32_t sampleForwardCallIndex;
     uint32_t sampleFullBackwardCallIndex;
@@ -42,6 +49,18 @@ struct MediumVPtrTable
                                                                                          direction,
                                                                                          distance,
                                                                                          rng);
+    }
+
+    __device__ DualTransmittanceEvalResult evalTransmittanceForward(const CuDiff::Dual<6, glm::vec3>& origin,
+                                                                    const CuDiff::Dual<6, glm::vec3>& direction,
+                                                                    const CuDiff::Dual<6, float>& distance,
+                                                                    PCG32& rng) const
+    {
+        return optixDirectCall<DualTransmittanceEvalResult,
+                               const CuDiff::Dual<6, glm::vec3>&,
+                               const CuDiff::Dual<6, glm::vec3>&,
+                               const CuDiff::Dual<6, float>&,
+                               PCG32&>(evalTransmittanceForwardCallIndex, origin, direction, distance, rng);
     }
 
     __device__ void evalTransmittanceBackward(const glm::vec3& origin,

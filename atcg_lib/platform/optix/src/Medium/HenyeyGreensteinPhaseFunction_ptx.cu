@@ -116,6 +116,34 @@ extern "C" __device__ void __direct_callable__sample_hgphase_backward(const atcg
     }
 }
 
+extern "C" __device__ atcg::DualPhaseFunctionEvalResult
+__direct_callable__eval_hgphase_forward(const atcg::DualMediumInteraction& interaction,
+                                        const CuDiff::Dual<6, glm::vec3>& outgoing_ray_dir)
+{
+    const atcg::HenyeyGreensteinPhaseFunctionData* sbt_data =
+        *reinterpret_cast<const atcg::HenyeyGreensteinPhaseFunctionData**>(optixGetSbtDataPointer());
+
+    float g = *(sbt_data->g);
+
+    atcg::DualPhaseFunctionEvalResult result;
+    // Since we can sample the phase function exactly, the sampling pdf is equal to the phase function itself.
+    // The difference is that the phase function is in general allowed to return a "chromatic" value, and the sampling
+    // pdf returns a scalar value.
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::HG_PHASE> sampling_strategy(g);
+    auto phase_value            = sampling_strategy.pdf(CuDiff::dot(interaction.incoming_direction, outgoing_ray_dir));
+    result.sampling_pdf         = phase_value.val();
+    result.phase_function_value = result.sampling_pdf;
+
+    glm::mat3 Jphase_dx0 = glm::mat3(glm::vec3(phase_value.derivative(0)),
+                                     glm::vec3(phase_value.derivative(1)),
+                                     glm::vec3(phase_value.derivative(2)));
+    glm::mat3 Jphase_dx1 = glm::mat3(glm::vec3(phase_value.derivative(3)),
+                                     glm::vec3(phase_value.derivative(4)),
+                                     glm::vec3(phase_value.derivative(5)));
+    result.dvalue_dx0x1  = atcg::mat6x3(Jphase_dx0, Jphase_dx1);
+    return result;
+}
+
 extern "C" __device__ void __direct_callable__eval_hgphase_backward(const atcg::MediumInteraction& interaction,
                                                                     const glm::vec3& outgoing_ray_dir,
                                                                     const glm::vec3& output_grad)
@@ -142,6 +170,7 @@ extern "C" __device__ void __direct_callable__eval_hgphase_backward(const atcg::
                       (4.0f * glm::pi<float>());
 
 
+    // We divide by the phase value here because output_grad still contains the phase value
     float g_grad = glm::dot(glm::vec3(1.0f), dphase_dg * output_grad / phase_value);
 
     if(isfinite(g_grad))

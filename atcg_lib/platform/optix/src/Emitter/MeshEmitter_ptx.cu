@@ -201,7 +201,7 @@ __direct_callable__eval_forward_meshemitter(const atcg::DualSurfaceInteraction& 
 }
 
 extern "C" __device__ atcg::EmitterDualSamplingResult
-__direct_callable__sample_forward_meshemitter(const atcg::DualSurfaceInteraction& si,
+__direct_callable__sample_forward_meshemitter(const atcg::AnyDualInteraction& si,
                                               const atcg::SampledWavelengths& wavelengths,
                                               atcg::PCG32& rng)
 {
@@ -262,8 +262,8 @@ __direct_callable__sample_forward_meshemitter(const atcg::DualSurfaceInteraction
     result.sampling_pdf = 0;    // initialize with invalid sample
 
     // light source sampling
-    result.direction_to_light = CuDiff::normalize(light_position - si.position);
-    auto light_distance       = CuDiff::length(light_position - si.position) + 1e-5f;
+    result.direction_to_light = CuDiff::normalize(light_position - si->position);
+    auto light_distance       = CuDiff::length(light_position - si->position) + 1e-5f;
     result.distance_to_light  = light_distance.val();
 
     float one_over_light_position_pdf = total_area;
