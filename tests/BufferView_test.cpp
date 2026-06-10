@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <Math/Functions.h>
+#include <Utils/HostDevice.h>
 #include <DataStructure/BufferView.h>
 
 TEST(BufferViewTest, SameType)
