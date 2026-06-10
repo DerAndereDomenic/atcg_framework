@@ -4,6 +4,7 @@
 #include <Core/SystemRegistry.h>
 #include <DataStructure/Graph.h>
 #include <Renderer/Texture.h>
+#include <DataStructure/Skybox.h>
 
 namespace atcg
 {
@@ -15,7 +16,7 @@ using AssetMap      = std::unordered_map<AssetHandle, atcg::ref_ptr<Asset>>;
 /**
  * @brief A class to model an asset manager
  */
-class AssetManagerSystem
+class ATCG_API AssetManagerSystem
 {
 public:
     /**
@@ -199,6 +200,13 @@ public:
      */
     ATCG_INLINE atcg::ref_ptr<Graph> getCubeMesh() const { return _cube_mesh; }
 
+    /**
+     * @brief Get the dummy skybox
+     *
+     * @return The dummy skybox
+     */
+    ATCG_INLINE atcg::ref_ptr<Skybox> getDummySkybox() const { return _dummy_skybox; }
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
@@ -210,6 +218,7 @@ private:
     atcg::ref_ptr<Graph> _camera_frustum;
     atcg::ref_ptr<Graph> _quad;
     atcg::ref_ptr<Graph> _cube_mesh;
+    atcg::ref_ptr<Skybox> _dummy_skybox;
 };
 
 namespace AssetManager
@@ -471,6 +480,16 @@ ATCG_INLINE atcg::ref_ptr<Graph> getQuadMesh()
 ATCG_INLINE atcg::ref_ptr<Graph> getCubeMesh()
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getCubeMesh();
+}
+
+/**
+ * @brief Get the dummy skybox
+ *
+ * @return The dummy skybox
+ */
+ATCG_INLINE atcg::ref_ptr<Skybox> getDummySkybox()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getDummySkybox();
 }
 
 }    // namespace AssetManager

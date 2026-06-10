@@ -1,7 +1,7 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Scene/Scene.h>
-#include <Scene/Components.h>
 
 #include <Renderer/Framebuffer.h>
 #include <Scene/RevisionStack.h>
@@ -57,20 +57,6 @@ struct is_gui_addable : std::true_type
         void draw_component(const atcg::ref_ptr<Scene>& scene, Entity entity, ComponentType& component) const;         \
     }
 
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(TransformComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(CameraComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(GeometryComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(MeshRenderComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(PointRenderComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(PointSphereRenderComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(EdgeRenderComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(EdgeCylinderRenderComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(InstanceRenderComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(PointLightComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(MeshLightComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(ScriptComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(HomogeneousMediumComponent);
-ATCG_DECLARE_COMPONENT_GUI_RENDERER(HeterogeneousMediumComponent);
 
 template<typename T>
 ATCG_INLINE void drawComponent(const atcg::ref_ptr<Scene>& scene, Entity entity)
@@ -134,42 +120,5 @@ ATCG_INLINE void displayAddComponentEntry(const atcg::ref_ptr<atcg::Scene>& scen
     }
 #endif
 }
-
-template<>
-ATCG_INLINE void displayAddComponentEntry<CameraComponent>(const atcg::ref_ptr<atcg::Scene>& scene, Entity entity)
-{
-#ifndef ATCG_HEADLESS
-    if(!entity.hasComponent<CameraComponent>())
-    {
-        if(ImGui::MenuItem(CameraComponent::toString()))
-        {
-            atcg::RevisionStack::startRecording<ComponentAddedRevision<CameraComponent>>(scene, entity);
-            auto& camera_component = entity.addComponent<CameraComponent>(atcg::make_ref<PerspectiveCamera>());
-            if(entity.hasComponent<TransformComponent>())
-            {
-                atcg::ref_ptr<PerspectiveCamera> cam =
-                    std::dynamic_pointer_cast<PerspectiveCamera>(camera_component.camera);
-                cam->setView(glm::inverse(entity.getComponent<TransformComponent>().getModel()));
-            }
-            ImGui::CloseCurrentPopup();
-            atcg::RevisionStack::endRecording();
-        }
-    }
-#endif
-}
-
-bool displayTransform(const std::string& id, TransformComponent& component);
-
-AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle);
-
-AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle);
 }    // namespace GUI
 }    // namespace atcg

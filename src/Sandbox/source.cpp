@@ -3,8 +3,6 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
-#include <glad/glad.h>
-
 #include <algorithm>
 
 
@@ -18,6 +16,26 @@ public:
         atcg::TransformComponent transform = entity.getComponent<atcg::TransformComponent>();
 
         atcg::Renderer::drawCircle(transform.getPosition(), 0.1f, 0.2f, glm::vec3(1), camera);
+    }
+
+    void drawVolume(atcg::Entity entity, const atcg::ref_ptr<atcg::Camera>& camera)
+    {
+        atcg::TransformComponent transform = entity.getComponent<atcg::TransformComponent>();
+
+        auto volume_shader = atcg::ShaderManager::getShader("volume");
+        uint32_t noise_id  = atcg::Renderer::popTextureID();
+        volume_shader->setInt("noise_texture", noise_id);
+
+        atcg::GraphicsPipeline pipeline =
+            atcg::GraphicsPipeline()
+                .setShader(volume_shader)
+                .setRasterizerState(
+                    atcg::RasterizerState().enableCulling(true).setCullMode(atcg::CullMode::ATCG_BACK_FACE_CULLING));
+
+        atcg::GraphicsCommand::bindTexture(noise_id, noise_texture);
+
+        atcg::Renderer::drawVAO(cube->getVerticesArray(), camera, transform.getModel(), pipeline, cube->n_vertices());
+        atcg::Renderer::pushTextureID(noise_id);
     }
 
     atcg::ref_ptr<atcg::Texture2D> createWhiteNoiseTexture2D(glm::ivec2 dim)
@@ -126,7 +144,8 @@ public:
         cube_entity = scene->createEntity();
         cube_entity.addComponent<atcg::TransformComponent>();
         cube_entity.addComponent<atcg::GeometryComponent>(cube);
-        cube_entity.addComponent<atcg::MeshRenderComponent>(atcg::ShaderManager::getShader("volume"));
+        cube_entity.addComponent<atcg::CustomRenderComponent>(ATCG_BIND_EVENT_FN(SandboxLayer::drawVolume));
+        // cube_entity.addComponent<atcg::MeshRenderComponent>(atcg::ShaderManager::getShader("volume"));
 
         light_entity = scene->createEntity();
         light_entity.addComponent<atcg::TransformComponent>();
@@ -146,16 +165,13 @@ public:
         atcg::GraphicsCommand::endRenderPass();
 
         glm::vec3 light_pos = light_entity.getComponent<atcg::TransformComponent>().getPosition();
-        atcg::ShaderManager::getShader("volume")->setInt("noise_texture", 0);
+        // atcg::ShaderManager::getShader("volume")->setInt("noise_texture", 0);
         atcg::ShaderManager::getShader("volume")->setVec3("light_position", light_pos);
         atcg::ShaderManager::getShader("volume")->setFloat("sigma_s_base", sigma_s_base);
         atcg::ShaderManager::getShader("volume")->setFloat("sigma_a_base", sigma_a_base);
         atcg::ShaderManager::getShader("volume")->setFloat("g", g);
 
-        atcg::Dictionary context;
-        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
-        context.setValue<atcg::ref_ptr<atcg::Framebuffer>>("target", atcg::Renderer::getFramebuffer());
-        scene->draw(context);
+        atcg::SceneRenderer::render(scene, camera_controller->getCamera(), atcg::Renderer::getFramebuffer());
 
         dt = delta_time;
     }

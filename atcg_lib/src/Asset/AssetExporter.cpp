@@ -52,13 +52,12 @@ serialize_texture2d_ver1(const atcg::ref_ptr<Texture2D>& texture, const std::fil
     return file_ending;
 }
 
-ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)
+ATCG_INLINE void serialize_opaque_material_ver1(const atcg::ref_ptr<OpaqueMaterial>& material,
+                                                const std::filesystem::path& path)
 {
     nlohmann::json material_json;
 
     material_json["Version"] = "1.0";
-
-    std::vector<nlohmann::json> serialized_registry;
 
     auto diffuse_texture   = material->getDiffuseTexture();
     auto normal_texture    = material->getNormalTexture();
@@ -84,14 +83,15 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
     else
     {
         auto data         = diffuse_texture->getData(atcg::CPU);
-        glm::u8vec3 color = {data.index({0, 0, 0}).item<uint8_t>(),
+        glm::u8vec4 color = {data.index({0, 0, 0}).item<uint8_t>(),
                              data.index({0, 0, 1}).item<uint8_t>(),
-                             data.index({0, 0, 2}).item<uint8_t>()};
+                             data.index({0, 0, 2}).item<uint8_t>(),
+                             data.index({0, 0, 3}).item<uint8_t>()};
 
-        glm::vec3 c(color);
+        glm::vec4 c(color);
         c = c / 255.0f;
 
-        material_json[DIFFUSE_KEY] = nlohmann::json::array({c.x, c.y, c.z});
+        material_json[DIFFUSE_KEY] = nlohmann::json::array({c.x, c.y, c.z, c.w});
     }
 
     if(use_normal_texture)
@@ -153,6 +153,113 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
 
     std::ofstream o(path);
     o << std::setw(4) << material_json << std::endl;
+}
+
+ATCG_INLINE void serialize_dielectric_material_ver1(const atcg::ref_ptr<DielectricMaterial>& material,
+                                                    const std::filesystem::path& path)
+{
+    nlohmann::json material_json;
+
+    material_json["Version"] = "1.0";
+
+    auto diffuse_texture   = material->getDiffuseTexture();
+    auto roughness_texture = material->getRoughnessTexture();
+    auto ior_texture       = material->getIorTexture();
+
+    bool use_diffuse_texture   = !(diffuse_texture->width() == 1 && diffuse_texture->height() == 1);
+    bool use_roughness_texture = !(roughness_texture->width() == 1 && roughness_texture->height() == 1);
+    bool use_ior_texture       = !(ior_texture->width() == 1 && ior_texture->height() == 1);
+
+    material_json[TYPE_KEY] = materialTypeToString(material->getMaterialType());
+    if(use_diffuse_texture)
+    {
+        std::filesystem::path img_path = path.parent_path() / "diffuse";
+
+        auto file_ending = serialize_texture2d_ver1(diffuse_texture, img_path, 1.0f / 2.2f);
+
+        material_json[DIFFUSE_TEXTURE_KEY] = "diffuse" + file_ending;
+    }
+    else
+    {
+        auto data         = diffuse_texture->getData(atcg::CPU);
+        glm::u8vec4 color = {data.index({0, 0, 0}).item<uint8_t>(),
+                             data.index({0, 0, 1}).item<uint8_t>(),
+                             data.index({0, 0, 2}).item<uint8_t>(),
+                             data.index({0, 0, 3}).item<uint8_t>()};
+
+        glm::vec4 c(color);
+        c = c / 255.0f;
+
+        material_json[DIFFUSE_KEY] = nlohmann::json::array({c.x, c.y, c.z, c.w});
+    }
+
+    if(use_roughness_texture)
+    {
+        std::filesystem::path img_path = path.parent_path() / "roughness";
+
+        auto file_ending = serialize_texture2d_ver1(roughness_texture, img_path);
+
+        material_json[ROUGHNESS_TEXTURE_KEY] = "roughness" + file_ending;
+    }
+    else
+    {
+        auto data   = roughness_texture->getData(atcg::CPU);
+        float color = data.item<float>();
+
+        material_json[ROUGHNESS_KEY] = color;
+    }
+
+    if(use_ior_texture)
+    {
+        std::filesystem::path img_path = path.parent_path() / "ior";
+
+        auto file_ending = serialize_texture2d_ver1(ior_texture, img_path);
+
+        material_json[IOR_TEXTURE_KEY] = "ior" + file_ending;
+    }
+    else
+    {
+        auto data   = ior_texture->getData(atcg::CPU);
+        float color = data.item<float>();
+
+        material_json[IOR_KEY] = color;
+    }
+
+    std::ofstream o(path);
+    o << std::setw(4) << material_json << std::endl;
+}
+
+ATCG_INLINE void serialize_null_material_ver1(const atcg::ref_ptr<NullMaterial>& material,
+                                              const std::filesystem::path& path)
+{
+    nlohmann::json material_json;
+
+    material_json["Version"] = "1.0";
+
+    material_json[TYPE_KEY] = materialTypeToString(material->getMaterialType());
+
+    std::ofstream o(path);
+    o << std::setw(4) << material_json << std::endl;
+}
+
+ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)
+{
+    MaterialType type = material->getMaterialType();
+
+    switch(type)
+    {
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+            serialize_opaque_material_ver1(std::dynamic_pointer_cast<OpaqueMaterial>(material), path);
+            break;
+        case MaterialType::MATERIAL_TYPE_DIELECTRIC:
+            serialize_dielectric_material_ver1(std::dynamic_pointer_cast<DielectricMaterial>(material), path);
+            break;
+        case MaterialType::MATERIAL_TYPE_NULL:
+            serialize_null_material_ver1(std::dynamic_pointer_cast<NullMaterial>(material), path);
+            break;
+        default:
+            break;
+    }
 }
 
 ATCG_INLINE void

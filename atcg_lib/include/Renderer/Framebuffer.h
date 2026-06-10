@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Renderer/Texture.h>
 
 #include <vector>
@@ -10,48 +11,23 @@ namespace atcg
 class GraphicsAPI;
 
 /**
- * @brief The type of framebuffer texture
- */
-enum class FramebufferTextureFormat
-{
-    TEXTURE_2D,
-    TEXTURE_3D,
-    TEXTURE_CUBE,
-    TEXTURE_ARRAY,
-    TEXTURE_CUBE_ARRAY,
-    TEXTURE_2D_MULTISAMPLE
-
-};
-
-/**
  * @brief A framebuffer texture specification.
  * This consists of
  * * The definition of the texture
  * * If the texture is a depth map
  * * The format of the texture
  */
-struct FramebufferTextureSpecification
+struct ATCG_API FramebufferTextureSpecification
 {
     FramebufferTextureSpecification() = default;
-    FramebufferTextureSpecification(TextureSpecification spec) : spec(spec) {}
-    FramebufferTextureSpecification(TextureSpecification spec, FramebufferTextureFormat format)
+    FramebufferTextureSpecification(TextureSpecification spec, TextureType type = TextureType::TEXTURE_2D)
         : spec(spec),
-          format(format)
-    {
-    }
-
-    FramebufferTextureSpecification(TextureSpecification spec, bool is_depth) : spec(spec), is_depth(is_depth) {}
-
-    FramebufferTextureSpecification(TextureSpecification spec, FramebufferTextureFormat format, bool is_depth)
-        : spec(spec),
-          format(format),
-          is_depth(is_depth)
+          type(type)
     {
     }
 
     TextureSpecification spec;
-    FramebufferTextureFormat format = FramebufferTextureFormat::TEXTURE_2D;
-    bool is_depth                   = false;
+    TextureType type = TextureType::TEXTURE_2D;
 };
 
 /**
@@ -60,7 +36,7 @@ struct FramebufferTextureSpecification
  * * number of samples if MSAA is enabled
  * * The specifications of the attachements
  */
-struct FramebufferSpecification
+struct ATCG_API FramebufferSpecification
 {
     FramebufferSpecification() = default;
     FramebufferSpecification(uint32_t width,
@@ -98,10 +74,10 @@ struct FramebufferSpecification
 /**
  * @brief Class to model a framebuffer
  */
-class Framebuffer : public std::enable_shared_from_this<Framebuffer>
+class ATCG_API Framebuffer : public std::enable_shared_from_this<Framebuffer>
 {
 public:
-    Framebuffer() = default;
+    Framebuffer();
 
     /**
      * @brief Create a framebuffer
@@ -179,6 +155,29 @@ public:
     void detachColor();
 
     /**
+     * @brief Detach the depth attachement
+     */
+    void detachDepth();
+
+    /**
+     * @brief Detach all attachements
+     */
+    ATCG_INLINE void detachAllAttachements()
+    {
+        bind();
+        while(_color_attachements.size() > 0)
+        {
+            detachColor();
+        }
+
+        if(_depth_attachement)
+        {
+            detachDepth();
+        }
+        bindDefault();
+    }
+
+    /**
      * @brief Blit two framebuffer together.
      * Copies the content of source into *this.
      *
@@ -237,7 +236,10 @@ public:
     /**
      * @brief Get the number of color attachements
      */
-    ATCG_INLINE uint32_t getNumberAttachements() const { return _color_attachements.size(); }
+    ATCG_INLINE uint32_t getNumberAttachements() const
+    {
+        return _color_attachements.size() + (_depth_attachement ? 1 : 0);
+    }
 
     /**
      * @brief Get the currently bound fbo

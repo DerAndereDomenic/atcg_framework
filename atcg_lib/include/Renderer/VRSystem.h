@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/glm.h>
 #include <Renderer/Framebuffer.h>
@@ -10,7 +11,7 @@
 
 namespace atcg
 {
-class VRSystem
+class ATCG_API VRSystem
 {
 public:
     enum class Eye

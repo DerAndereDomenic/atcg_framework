@@ -311,6 +311,42 @@ Texture::~Texture()
     if(impl->resource_ready) impl->deinitResource();
 }
 
+atcg::ref_ptr<Texture> Texture::create(TextureType type, const TextureSpecification& spec)
+{
+    switch(type)
+    {
+        case TextureType::TEXTURE_2D:
+        {
+            return Texture2D::create(spec);
+        }
+        case TextureType::TEXTURE_3D:
+        {
+            return Texture3D::create(spec);
+        }
+        case TextureType::TEXTURE_CUBE:
+        {
+            return TextureCube::create(spec);
+        }
+        case TextureType::TEXTURE_ARRAY:
+        {
+            return TextureArray::create(spec);
+        }
+        case TextureType::TEXTURE_CUBE_ARRAY:
+        {
+            return TextureCubeArray::create(spec);
+        }
+        case TextureType::TEXTURE_2D_MULTISAMPLE:
+        {
+            return Texture2DMultiSample::create(spec);
+        }
+        default:
+        {
+            ATCG_ERROR("Unknown TextureType {0}", (int)type);
+            return nullptr;
+        }
+    }
+}
+
 void Texture::Impl::initResource(GLuint ID, GLenum target)
 {
 #ifdef ATCG_CUDA_BACKEND
@@ -508,6 +544,8 @@ atcg::ref_ptr<Texture2D> Texture2D::create(const void* data, const TextureSpecif
     }
 
     if(result->_spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_2D);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     return result;
 }
@@ -768,6 +806,17 @@ atcg::ref_ptr<Texture> Texture2D::clone() const
     return result;
 }
 
+void Texture2D::swap(const atcg::ref_ptr<Texture>& _target)
+{
+    auto target = std::dynamic_pointer_cast<Texture2D>(_target);
+    if(target)
+    {
+        std::swap(_ID, target->_ID);
+        std::swap(_spec, target->_spec);
+        std::swap(impl, target->impl);
+    }
+}
+
 atcg::ref_ptr<Texture3D> Texture3D::create(const TextureSpecification& spec)
 {
     return create(nullptr, spec);
@@ -814,6 +863,8 @@ atcg::ref_ptr<Texture3D> Texture3D::create(const void* data, const TextureSpecif
     }
 
     if(result->_spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_3D);
+
+    glBindTexture(GL_TEXTURE_3D, 0);
 
     return result;
 }
@@ -1086,6 +1137,17 @@ atcg::ref_ptr<Texture> Texture3D::clone() const
     return result;
 }
 
+void Texture3D::swap(const atcg::ref_ptr<Texture>& _target)
+{
+    auto target = std::dynamic_pointer_cast<Texture3D>(_target);
+    if(target)
+    {
+        std::swap(_ID, target->_ID);
+        std::swap(_spec, target->_spec);
+        std::swap(impl, target->impl);
+    }
+}
+
 atcg::ref_ptr<TextureCube> TextureCube::create(const TextureSpecification& spec)
 {
     atcg::ref_ptr<TextureCube> result = atcg::make_ref<TextureCube>();
@@ -1120,6 +1182,8 @@ atcg::ref_ptr<TextureCube> TextureCube::create(const TextureSpecification& spec)
     {
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     }
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 
     return result;
 }
@@ -1313,6 +1377,17 @@ atcg::ref_ptr<Texture> TextureCube::clone() const
     return result;
 }
 
+void TextureCube::swap(const atcg::ref_ptr<Texture>& _target)
+{
+    auto target = std::dynamic_pointer_cast<TextureCube>(_target);
+    if(target)
+    {
+        std::swap(_ID, target->_ID);
+        std::swap(_spec, target->_spec);
+        std::swap(impl, target->impl);
+    }
+}
+
 atcg::ref_ptr<TextureArray> TextureArray::create(const TextureSpecification& spec)
 {
     return create(nullptr, spec);
@@ -1359,6 +1434,8 @@ atcg::ref_ptr<TextureArray> TextureArray::create(const void* data, const Texture
     }
 
     if(result->_spec.format != TextureFormat::DEPTH) result->impl->initResource(result->_ID, GL_TEXTURE_2D_ARRAY);
+
+    glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
     return result;
 }
@@ -1622,6 +1699,17 @@ atcg::ref_ptr<Texture> TextureArray::clone() const
     return result;
 }
 
+void TextureArray::swap(const atcg::ref_ptr<Texture>& _target)
+{
+    auto target = std::dynamic_pointer_cast<TextureArray>(_target);
+    if(target)
+    {
+        std::swap(_ID, target->_ID);
+        std::swap(_spec, target->_spec);
+        std::swap(impl, target->impl);
+    }
+}
+
 atcg::ref_ptr<TextureCubeArray> TextureCubeArray::create(const TextureSpecification& spec)
 {
     atcg::ref_ptr<TextureCubeArray> result = atcg::make_ref<TextureCubeArray>();
@@ -1654,6 +1742,8 @@ atcg::ref_ptr<TextureCubeArray> TextureCubeArray::create(const TextureSpecificat
     {
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP_ARRAY);
     }
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, 0);
 
     return result;
 }
@@ -1845,7 +1935,18 @@ atcg::ref_ptr<Texture> TextureCubeArray::clone() const
     return result;
 }
 
-atcg::ref_ptr<Texture2DMultiSample> Texture2DMultiSample::create(uint32_t num_samples, const TextureSpecification& spec)
+void TextureCubeArray::swap(const atcg::ref_ptr<Texture>& _target)
+{
+    auto target = std::dynamic_pointer_cast<TextureCubeArray>(_target);
+    if(target)
+    {
+        std::swap(_ID, target->_ID);
+        std::swap(_spec, target->_spec);
+        std::swap(impl, target->impl);
+    }
+}
+
+atcg::ref_ptr<Texture2DMultiSample> Texture2DMultiSample::create(const TextureSpecification& spec)
 {
     atcg::ref_ptr<Texture2DMultiSample> result = atcg::make_ref<Texture2DMultiSample>();
     result->_spec                              = spec;
@@ -1856,12 +1957,14 @@ atcg::ref_ptr<Texture2DMultiSample> Texture2DMultiSample::create(uint32_t num_sa
     glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, result->_ID);
 
     glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
-                            num_samples,
+                            result->_spec.num_samples,
                             detail::to2GLinternalFormat(result->_spec.format),
                             result->_spec.width,
                             result->_spec.height,
                             GL_TRUE);
     ATCG_LOG_ALLOCATION("Allocated Texture of size {} x {}", result->_spec.width, result->_spec.height);
+
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
     return result;
 }
@@ -1911,6 +2014,17 @@ atcg::ref_ptr<Texture> Texture2DMultiSample::clone() const
 {
     // No Op
     return nullptr;
+}
+
+void Texture2DMultiSample::swap(const atcg::ref_ptr<Texture>& _target)
+{
+    auto target = std::dynamic_pointer_cast<Texture2DMultiSample>(_target);
+    if(target)
+    {
+        std::swap(_ID, target->_ID);
+        std::swap(_spec, target->_spec);
+        std::swap(impl, target->impl);
+    }
 }
 
 }    // namespace atcg

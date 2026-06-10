@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/OptixComponent.h>
 #include <DataStructure/Dictionary.h>
@@ -18,7 +19,7 @@ class ShapeInstance;
 /**
  * @brief Class to model a shape
  */
-class Shape : public OptixComponent
+class ATCG_API Shape : public OptixComponent
 {
 public:
     /**

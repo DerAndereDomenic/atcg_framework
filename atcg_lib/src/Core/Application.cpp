@@ -40,7 +40,7 @@ void Application::init(const WindowProps& props)
     _context_manager = atcg::make_ref<ContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_context_manager.get());
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     _rt_context_manager = atcg::make_ref<RaytracingContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_rt_context_manager.get());
 #endif
@@ -75,6 +75,9 @@ void Application::init(const WindowProps& props)
     _script_engine = atcg::make_ref<PythonScriptEngine>();
     _script_engine->init();
     SystemRegistry::instance()->registerSystem(_script_engine.get());
+
+    _scene_renderer = atcg::make_ref<SceneRendererSystem>(_renderer.get());
+    SystemRegistry::instance()->registerSystem(_scene_renderer.get());
 
     // Create an active project
     atcg::Project::create("./DefaultProject");

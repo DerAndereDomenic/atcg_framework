@@ -11,10 +11,14 @@ list(PREPEND CMAKE_MODULE_PATH "${ATCG_PROJECT_ROOT_DIR}/cmake")
 
 include(ATCGFunctions)
 
+# Create bin and lib directories if not exist
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
+
 # Configure C++
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -25,6 +29,7 @@ option(ATCG_BUILD_DOCS "Build documentation" OFF)
 option(ATCG_BUILD_TESTS "Build tests" OFF)
 option(ATCG_HEADLESS "Build in headless mode (cuda and linux only)" OFF)
 option(ATCG_BUILD_EXAMPLES "Build atcg examples" ON)
+option(ATCG_SPECTRAL_RENDERING "Use spectral renderer" OFF)
 
 # OpenMesh and OpenVR use Cmake < 3.10
 set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
@@ -59,10 +64,9 @@ find_package(OpenGL REQUIRED)
 
 # OpenMesh
 if(NOT TARGET OpenMeshCore AND NOT TARGET OpenMeshTools)
+    set(OPENMESH_BUILD_SHARED ON CACHE BOOL "Build as shared library(DLL)?" FORCE)
     add_subdirectory(external/openmesh)
 endif()
-target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
-target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 
 # stbimage
 if(NOT TARGET stb_image)
@@ -190,7 +194,7 @@ add_library(atcg_json INTERFACE)
 target_include_directories(atcg_json INTERFACE "external/json")
 add_library(atcg::json ALIAS atcg_json)
 
-#sfml
+# sfml
 set(SFML_BUILD_WINDOW OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_GRAPHICS OFF CACHE BOOL "" FORCE)
 set(SFML_BUILD_AUDIO OFF CACHE BOOL "" FORCE)
@@ -198,6 +202,7 @@ if(NOT TARGET sfml)
     add_subdirectory(external/sfml)
 endif()
 
+# optix
 if(CMAKE_CUDA_COMPILER)
     add_library(atcg_optix INTERFACE)
     target_include_directories(atcg_optix INTERFACE "external/OptiX/include")

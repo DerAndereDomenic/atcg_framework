@@ -3,8 +3,6 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
-#include <glad/glad.h>
-
 #include <algorithm>
 
 #include <random>
@@ -120,10 +118,7 @@ public:
             geometry.graph()->getVerticesBuffer()->unmapPointers();
         }
 
-        atcg::Dictionary context;
-        context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera_controller->getCamera());
-        context.setValue<atcg::ref_ptr<atcg::Framebuffer>>("target", atcg::Renderer::getFramebuffer());
-        scene->draw(context);
+        atcg::SceneRenderer::render(scene, camera_controller->getCamera(), atcg::Renderer::getFramebuffer());
     }
 
 #ifndef ATCG_HEADLESS

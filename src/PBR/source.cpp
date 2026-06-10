@@ -3,12 +3,9 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
-#include <glad/glad.h>
-
 #include <algorithm>
 
 #include <random>
-#include <stb_image.h>
 #include <portable-file-dialogs.h>
 
 #include <Core/Common.h>
@@ -18,7 +15,7 @@ class PBRLayer : public atcg::Layer
 public:
     void createOutputTexture(int width, int height)
     {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         atcg::TextureSpecification spec;
         spec.width     = width;
         spec.height    = height;
@@ -35,7 +32,7 @@ public:
 
     void initializePathtracer()
     {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         atcg::Dictionary dict;
         dict.setValue<atcg::ref_ptr<atcg::Scene>>("scene", atcg::Project::getActive()->getActiveScene());
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
@@ -65,7 +62,12 @@ public:
             auto& script = sphere.addComponent<atcg::ScriptComponent>(atcg::make_ref<atcg::PythonScript>("./src/PBR/"
                                                                                                          "bounce.py"));
             script.script()->init();
-            script.script()->onAttach(atcg::Project::getActive()->getActiveScene(), sphere);
+            auto behavior = script.behavior(atcg::Project::getActive()->getActiveScene(), sphere);
+
+            if(behavior)
+            {
+                behavior->onAttach();
+            }
         }
 
         if(atcg::VR::isVRAvailable())
@@ -139,11 +141,17 @@ public:
             instances.addInstanceBuffer(vbo_colors);
         }
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         optx_context = atcg::RaytracingContextManager::createContext();
 #endif
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
+
+        atcg::CompileData compile_data;
+        compile_data.num_samples = msaa_samples[current_msaa_selection_index];
+        auto render_graph        = atcg::createRenderGraph(compile_data);
+
+        atcg::SceneRenderer::setRenderGraph(render_graph);
     }
 
     // This gets called each frame
@@ -152,7 +160,7 @@ public:
         performance_panel.registerFrameTime(delta_time);
         bool updated = camera_controller->onUpdate(delta_time);
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
         if(enable_pathtracing && updated)
         {
             integrator->reset();
@@ -178,7 +186,8 @@ public:
 
             // atcg::Renderer::clear();
 
-            atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraLeft(), t_left);
+            // TODO
+            // atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraLeft(), t_left);
 
             atcg::Renderer::drawCADGrid(controller->getCameraLeft());
 
@@ -191,7 +200,8 @@ public:
 
             // atcg::Renderer::clear();
 
-            atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraRight(), t_right);
+            // TODO
+            // atcg::Project::getActive()->getActiveScene()->draw(controller->getCameraRight(), t_right);
 
             atcg::Renderer::drawCADGrid(controller->getCameraRight());
 
@@ -211,7 +221,7 @@ public:
 
             if(enable_pathtracing)
             {
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
                 atcg::Dictionary dict;
                 integrator->generateRays(dict);
                 torch::Tensor output_tensor   = dict.getValue<torch::Tensor>("output");
@@ -227,8 +237,9 @@ public:
             }
             else
             {
-                atcg::Project::getActive()->getActiveScene()->draw(camera_controller->getCamera(),
-                                                                   atcg::Renderer::getFramebuffer());
+                atcg::SceneRenderer::render(atcg::Project::getActive()->getActiveScene(),
+                                            camera_controller->getCamera(),
+                                            atcg::Renderer::getFramebuffer());
 
                 atcg::GraphicsCommand::beginRenderPass(atcg::Renderer::getFramebuffer());
 
@@ -284,9 +295,9 @@ public:
             if(ImGui::MenuItem("Load"))
             {
                 auto f     = pfd::open_file("Choose project file",
-                                        pfd::path::home(),
+                                            pfd::path::home(),
                                             {"Project file (.json)", "*.json"},
-                                        pfd::opt::none);
+                                            pfd::opt::none);
                 auto files = f.result();
 
                 if(!files.empty())
@@ -332,13 +343,6 @@ public:
 
             const char* combo_preview_value = msaa_samples_str[current_msaa_selection_index];
 
-            if(ImGui::Checkbox("Enable MSAA", &msaa_enabled))
-            {
-                auto graph = msaa_enabled ? atcg::createMSAAGraph(msaa_samples[current_msaa_selection_index])
-                                          : atcg::createStandardGraph();
-                atcg::Project::getActive()->getActiveScene()->setRenderGraph(graph);
-            }
-
             if(msaa_enabled)
             {
                 if(ImGui::BeginCombo("MSAA Samples", combo_preview_value))
@@ -349,8 +353,10 @@ public:
                         if(ImGui::Selectable(msaa_samples_str[n], is_selected))
                         {
                             current_msaa_selection_index = n;
-                            atcg::Project::getActive()->getActiveScene()->setRenderGraph(
-                                atcg::createMSAAGraph(msaa_samples[current_msaa_selection_index]));
+                            atcg::CompileData compile_data;
+                            compile_data.num_samples = msaa_samples[current_msaa_selection_index];
+                            auto render_graph        = atcg::createRenderGraph(compile_data);
+                            atcg::SceneRenderer::setRenderGraph(render_graph);
                         }
 
                         // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -360,7 +366,7 @@ public:
                 }
             }
 
-    #ifdef ATCG_ENABLE_OPTIX
+    #ifdef ATCG_CUDA_BACKEND
             if(ImGui::Checkbox("Path Tracing", &enable_pathtracing))
             {
                 if(enable_pathtracing) initializePathtracer();
@@ -370,7 +376,7 @@ public:
             ImGui::End();
         }
 
-    #ifdef ATCG_ENABLE_OPTIX
+    #ifdef ATCG_CUDA_BACKEND
         if(enable_pathtracing) integrator->onImGuiRender();
     #endif
 
@@ -489,13 +495,13 @@ private:
 
     uint32_t msaa_samples[6]              = {1, 2, 4, 8, 16, 32};
     const char* msaa_samples_str[6]       = {"1", "2", "4", "8", "16", "32"};
-    uint32_t current_msaa_selection_index = 4;
+    uint32_t current_msaa_selection_index = 0;
     bool msaa_enabled                     = true;
 #ifndef ATCG_HEADLESS
     ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
 #endif
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator;
 #endif

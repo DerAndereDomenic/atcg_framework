@@ -84,110 +84,132 @@ atcg::Application* atcg::createApplication()
 
 
 PYBIND11_DECLARE_HOLDER_TYPE(T, atcg::ref_ptr<T>);
-#define ATCG_DEFINE_MODULES(m)                                                                                                  \
-    py::class_<atcg::Application>(m, "Application");                                                                            \
-    auto m_application = py::class_<PythonApplication, atcg::Application>(m, "PythonApplication");                              \
-    auto m_layer       = py::class_<atcg::Layer, PythonLayer, std::unique_ptr<atcg::Layer, py::nodelete>>(m, "Layer");          \
-    auto m_event       = py::class_<atcg::Event>(m, "Event");                                                                   \
-    auto m_camera =                                                                                                             \
-        py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");                    \
-    auto m_extrinsics          = py::class_<atcg::CameraExtrinsics>(m, "CameraExtrinsics");                                     \
-    auto m_intrinsics          = py::class_<atcg::CameraIntrinsics>(m, "CameraIntrinsics");                                     \
-    auto m_controller          = py::class_<atcg::FirstPersonController, atcg::ref_ptr<atcg::FirstPersonController>>(m,         \
-                                                                                                            "FirstPer" \
-                                                                                                                     "sonContr" \
-                                                                                                                     "oller");  \
-    auto m_asset               = py::class_<atcg::Asset, atcg::ref_ptr<atcg::Asset>>(m, "Asset");                               \
-    auto m_entity              = py::class_<atcg::Entity>(m, "Entity");                                                         \
-    auto m_scene               = py::class_<atcg::Scene, atcg::Asset, atcg::ref_ptr<atcg::Scene>>(m, "Scene");                  \
-    auto m_vec2                = py::class_<glm::vec2>(m, "vec2", py::buffer_protocol());                                       \
-    auto m_ivec2               = py::class_<glm::ivec2>(m, "ivec2", py::buffer_protocol());                                     \
-    auto m_vec3                = py::class_<glm::vec3>(m, "vec3", py::buffer_protocol());                                       \
-    auto m_ivec3               = py::class_<glm::ivec3>(m, "ivec3", py::buffer_protocol());                                     \
-    auto m_u32vec3             = py::class_<glm::u32vec3>(m, "u32vec3", py::buffer_protocol());                                 \
-    auto m_vec4                = py::class_<glm::vec4>(m, "vec4", py::buffer_protocol());                                       \
-    auto m_ivec4               = py::class_<glm::ivec4>(m, "ivec4", py::buffer_protocol());                                     \
-    auto m_mat3                = py::class_<glm::mat3>(m, "mat3", py::buffer_protocol());                                       \
-    auto m_mat4                = py::class_<glm::mat4>(m, "mat4", py::buffer_protocol());                                       \
-    auto m_window_props        = py::class_<atcg::WindowProps>(m, "WindowProps");                                               \
-    auto m_window_close_evnet  = py::class_<atcg::WindowCloseEvent, atcg::Event>(m, "WindowCloseEvent");                        \
-    auto m_window_resize_event = py::class_<atcg::WindowResizeEvent, atcg::Event>(m, "WindowResizeEvent");                      \
-    auto m_mouse_button_event  = py::class_<atcg::MouseButtonEvent, atcg::Event>(m, "MouseButtonEvent");                        \
-    auto m_mouse_button_pressed_event =                                                                                         \
-        py::class_<atcg::MouseButtonPressedEvent, atcg::MouseButtonEvent>(m, "MouseButtonPressedEvent");                        \
-    auto m_mouse_button_released_event =                                                                                        \
-        py::class_<atcg::MouseButtonReleasedEvent, atcg::MouseButtonEvent>(m, "MouseButtonReleasedEvent");                      \
-    auto m_mouse_moved_event     = py::class_<atcg::MouseMovedEvent, atcg::Event>(m, "MouseMovedEvent");                        \
-    auto m_mouse_scrolled_event  = py::class_<atcg::MouseScrolledEvent, atcg::Event>(m, "MouseScrolledEvent");                  \
-    auto m_key_event             = py::class_<atcg::KeyEvent, atcg::Event>(m, "KeyEvent");                                      \
-    auto m_key_pressed_event     = py::class_<atcg::KeyPressedEvent, atcg::KeyEvent>(m, "KeyPressedEvent");                     \
-    auto m_key_released_event    = py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent");                   \
-    auto m_key_typed_event       = py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent");                         \
-    auto m_viewport_resize_event = py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent");                \
-    auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");                                                         \
-    auto m_vertex_specification  = py::class_<atcg::VertexSpecification>(m, "VertexSpecification");                             \
-    auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");                                 \
-    auto m_graph                 = py::class_<atcg::Graph, atcg::Asset, atcg::ref_ptr<atcg::Graph>>(m, "Graph");                \
-    auto m_serializer            = py::class_<atcg::Serialization::SceneSerializer>(m, "SceneSerializer");                      \
-    auto m_renderer              = m.def_submodule("Renderer");                                                                 \
-    auto m_graphics_api          = m.def_submodule("GraphicsCommand");                                                          \
-    auto m_renderer_system =                                                                                                    \
-        py::class_<atcg::RendererSystem, atcg::ref_ptr<atcg::RendererSystem>>(m, "RendererSystem");                             \
-    auto m_shader         = py::class_<atcg::Shader, atcg::Asset, atcg::ref_ptr<atcg::Shader>>(m, "Shader");                    \
-    auto m_shader_manager = m.def_submodule("ShaderManager");                                                                   \
-    auto m_shader_manager_system =                                                                                              \
-        py::class_<atcg::ShaderManagerSystem, atcg::ref_ptr<atcg::ShaderManagerSystem>>(m, "ShaderManagerSystem");              \
-    auto m_texture_format        = py::enum_<atcg::TextureFormat>(m, "TextureFormat");                                          \
-    auto m_texture_wrap_mode     = py::enum_<atcg::TextureWrapMode>(m, "TextureWrapMode");                                      \
-    auto m_texture_filter_mode   = py::enum_<atcg::TextureFilterMode>(m, "TextureFilterMode");                                  \
-    auto m_texture_sampler       = py::class_<atcg::TextureSamplerSpecification>(m, "TextureSampler");                          \
-    auto m_texture_specification = py::class_<atcg::TextureSpecification>(m, "TextureSpecification");                           \
-    auto m_image          = py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image", py::buffer_protocol());             \
-    auto m_texture2d      = py::class_<atcg::Texture2D, atcg::Asset, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D");           \
-    auto m_texture_cube   = py::class_<atcg::TextureCube, atcg::ref_ptr<atcg::TextureCube>>(m, "TextureCube");                  \
-    auto m_framebuffer    = py::class_<atcg::Framebuffer, atcg::ref_ptr<atcg::Framebuffer>>(m, "Framebuffer");                  \
-    auto m_entity_handle  = py::class_<entt::entity>(m, "EntityHandle");                                                        \
-    auto m_material       = py::class_<atcg::Material, atcg::Asset, atcg::ref_ptr<atcg::Material>>(m, "Material");              \
-    auto m_transform      = py::class_<atcg::TransformComponent>(m, "TransformComponent");                                      \
-    auto m_geometry       = py::class_<atcg::GeometryComponent>(m, "GeometryComponent");                                        \
-    auto m_mesh_renderer  = py::class_<atcg::MeshRenderComponent>(m, "MeshRenderComponent");                                    \
-    auto m_point_renderer = py::class_<atcg::PointRenderComponent>(m, "PointRenderComponent");                                  \
-    auto m_point_sphere_renderer  = py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent");              \
-    auto m_edge_renderer          = py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent");                            \
-    auto m_edge_cylinder_renderer = py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent");            \
-    auto m_instance_renderer      = py::class_<atcg::InstanceRenderComponent>(m, "InstanceRenderComponent");                    \
-    auto m_vertex_buffer         = py::class_<atcg::VertexBuffer, atcg::ref_ptr<atcg::VertexBuffer>>(m, "VertexBuffer");        \
-    auto m_buffer_layout         = py::class_<atcg::BufferLayout>(m, "BufferLayout");                                           \
-    auto m_buffer_element        = py::class_<atcg::BufferElement>(m, "BufferElement");                                         \
-    auto m_shader_data_type      = py::enum_<atcg::ShaderDataType>(m, "ShaderDataType");                                        \
-    auto m_name                  = py::class_<atcg::NameComponent>(m, "NameComponent");                                         \
-    auto m_point_light           = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                             \
-    auto m_script_component      = py::class_<atcg::ScriptComponent>(m, "ScriptComponent");                                     \
-    auto m_scene_hierarchy_panel = py::class_<atcg::GUI::SceneHierarchyPanel>(m, "SceneHierarchyPanel");                        \
-    auto m_hit_info              = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                            \
-    auto m_utils                 = m.def_submodule("Utils");                                                                    \
-    auto m_cull_mode             = py::enum_<atcg::CullMode>(m, "CullMode");                                                    \
-    auto m_primitive_topology    = py::enum_<atcg::PrimitiveTopology>(m, "PrimitiveTopology");                                  \
-    auto m_depth_function        = py::enum_<atcg::DepthFunction>(m, "DepthFunction");                                          \
-    auto m_depth_state           = py::class_<atcg::DepthState>(m, "DepthState");                                               \
-    auto m_blend_state           = py::class_<atcg::BlendState>(m, "BlendState");                                               \
-    auto m_rasterizer_state      = py::class_<atcg::RasterizerState>(m, "RasterizerState");                                     \
-    auto m_graphics_pipeline     = py::class_<atcg::GraphicsPipeline>(m, "GraphicsPipeline");                                   \
-    auto m_network               = m.def_submodule("Network");                                                                  \
-    auto m_tcp_server            = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                         \
-    auto m_tcp_client            = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                         \
-    auto m_performance_panel     = py::class_<atcg::GUI::PerformancePanel>(m, "PerformancePanel");                              \
-    auto m_scriptengine =                                                                                                       \
-        py::class_<atcg::PythonScriptEngine, atcg::ref_ptr<atcg::PythonScriptEngine>>(m, "ScriptEngine");                       \
-    auto m_script      = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");                        \
-    auto m_assethandle = py::class_<atcg::AssetHandle>(m, "AssetHandle");                                                       \
-    auto m_asset_type  = py::enum_<atcg::AssetType>(m, "AssetType");                                                            \
-    auto m_asset_data  = py::class_<atcg::AssetMetaData>(m, "AssetMetaData");                                                   \
-    auto m_asset_manager_system =                                                                                               \
-        py::class_<atcg::AssetManagerSystem, atcg::ref_ptr<atcg::AssetManagerSystem>>(m, "AssetManagerSystem");                 \
-    auto m_asset_manager = m.def_submodule("AssetManager");                                                                     \
-    auto m_asset_panel   = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");            \
-    auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project");
+#define ATCG_DEFINE_MODULES(m)                                                                                           \
+    py::class_<atcg::Application>(m, "Application");                                                                     \
+    auto m_application = py::class_<PythonApplication, atcg::Application>(m, "PythonApplication");                       \
+    auto m_layer       = py::class_<atcg::Layer, PythonLayer, std::unique_ptr<atcg::Layer, py::nodelete>>(m, "Layer");   \
+    auto m_behavior =                                                                                                    \
+        py::class_<atcg::Behavior, atcg::PythonBehavior, std::shared_ptr<atcg::Behavior>>(m, "Behavior");                \
+    auto m_event = py::class_<atcg::Event>(m, "Event");                                                                  \
+    auto m_camera =                                                                                                      \
+        py::class_<atcg::PerspectiveCamera, atcg::ref_ptr<atcg::PerspectiveCamera>>(m, "PerspectiveCamera");             \
+    auto m_extrinsics   = py::class_<atcg::CameraExtrinsics>(m, "CameraExtrinsics");                                     \
+    auto m_intrinsics   = py::class_<atcg::CameraIntrinsics>(m, "CameraIntrinsics");                                     \
+    auto m_controller   = py::class_<atcg::FirstPersonController, atcg::ref_ptr<atcg::FirstPersonController>>(m,         \
+                                                                                                              "FirstPer" \
+                                                                                                              "sonContr" \
+                                                                                                              "oller");  \
+    auto m_asset        = py::class_<atcg::Asset, atcg::ref_ptr<atcg::Asset>>(m, "Asset");                               \
+    auto m_entity       = py::class_<atcg::Entity>(m, "Entity");                                                         \
+    auto m_scene        = py::class_<atcg::Scene, atcg::Asset, atcg::ref_ptr<atcg::Scene>>(m, "Scene");                  \
+    auto m_vec2         = py::class_<glm::vec2>(m, "vec2", py::buffer_protocol());                                       \
+    auto m_ivec2        = py::class_<glm::ivec2>(m, "ivec2", py::buffer_protocol());                                     \
+    auto m_vec3         = py::class_<glm::vec3>(m, "vec3", py::buffer_protocol());                                       \
+    auto m_ivec3        = py::class_<glm::ivec3>(m, "ivec3", py::buffer_protocol());                                     \
+    auto m_u32vec3      = py::class_<glm::u32vec3>(m, "u32vec3", py::buffer_protocol());                                 \
+    auto m_vec4         = py::class_<glm::vec4>(m, "vec4", py::buffer_protocol());                                       \
+    auto m_ivec4        = py::class_<glm::ivec4>(m, "ivec4", py::buffer_protocol());                                     \
+    auto m_mat3         = py::class_<glm::mat3>(m, "mat3", py::buffer_protocol());                                       \
+    auto m_mat4         = py::class_<glm::mat4>(m, "mat4", py::buffer_protocol());                                       \
+    auto m_window_props = py::class_<atcg::WindowProps>(m, "WindowProps");                                               \
+    auto m_window_close_evnet  = py::class_<atcg::WindowCloseEvent, atcg::Event>(m, "WindowCloseEvent");                 \
+    auto m_window_resize_event = py::class_<atcg::WindowResizeEvent, atcg::Event>(m, "WindowResizeEvent");               \
+    auto m_mouse_button_event  = py::class_<atcg::MouseButtonEvent, atcg::Event>(m, "MouseButtonEvent");                 \
+    auto m_mouse_button_pressed_event =                                                                                  \
+        py::class_<atcg::MouseButtonPressedEvent, atcg::MouseButtonEvent>(m, "MouseButtonPressedEvent");                 \
+    auto m_mouse_button_released_event =                                                                                 \
+        py::class_<atcg::MouseButtonReleasedEvent, atcg::MouseButtonEvent>(m, "MouseButtonReleasedEvent");               \
+    auto m_mouse_moved_event     = py::class_<atcg::MouseMovedEvent, atcg::Event>(m, "MouseMovedEvent");                 \
+    auto m_mouse_scrolled_event  = py::class_<atcg::MouseScrolledEvent, atcg::Event>(m, "MouseScrolledEvent");           \
+    auto m_key_event             = py::class_<atcg::KeyEvent, atcg::Event>(m, "KeyEvent");                               \
+    auto m_key_pressed_event     = py::class_<atcg::KeyPressedEvent, atcg::KeyEvent>(m, "KeyPressedEvent");              \
+    auto m_key_released_event    = py::class_<atcg::KeyReleasedEvent, atcg::KeyEvent>(m, "KeyReleasedEvent");            \
+    auto m_key_typed_event       = py::class_<atcg::KeyTypedEvent, atcg::KeyEvent>(m, "KeyTypedEvent");                  \
+    auto m_viewport_resize_event = py::class_<atcg::ViewportResizeEvent, atcg::Event>(m, "ViewportResizeEvent");         \
+    auto m_timer                 = py::class_<atcg::Timer>(m, "Timer");                                                  \
+    auto m_vertex_specification  = py::class_<atcg::VertexSpecification>(m, "VertexSpecification");                      \
+    auto m_edge_specification    = py::class_<atcg::EdgeSpecification>(m, "EdgeSpecification");                          \
+    auto m_graph                 = py::class_<atcg::Graph, atcg::Asset, atcg::ref_ptr<atcg::Graph>>(m, "Graph");         \
+    auto m_serializer            = py::class_<atcg::Serialization::SceneSerializer>(m, "SceneSerializer");               \
+    auto m_renderer              = m.def_submodule("Renderer");                                                          \
+    auto m_scene_renderer        = m.def_submodule("SceneRenderer");                                                     \
+    auto m_graphics_api          = m.def_submodule("GraphicsCommand");                                                   \
+    auto m_renderer_system =                                                                                             \
+        py::class_<atcg::RendererSystem, atcg::ref_ptr<atcg::RendererSystem>>(m, "RendererSystem");                      \
+    auto m_shader         = py::class_<atcg::Shader, atcg::Asset, atcg::ref_ptr<atcg::Shader>>(m, "Shader");             \
+    auto m_shader_manager = m.def_submodule("ShaderManager");                                                            \
+    auto m_shader_manager_system =                                                                                       \
+        py::class_<atcg::ShaderManagerSystem, atcg::ref_ptr<atcg::ShaderManagerSystem>>(m, "ShaderManagerSystem");       \
+    auto m_texture_format        = py::enum_<atcg::TextureFormat>(m, "TextureFormat");                                   \
+    auto m_texture_wrap_mode     = py::enum_<atcg::TextureWrapMode>(m, "TextureWrapMode");                               \
+    auto m_texture_filter_mode   = py::enum_<atcg::TextureFilterMode>(m, "TextureFilterMode");                           \
+    auto m_texture_sampler       = py::class_<atcg::TextureSamplerSpecification>(m, "TextureSampler");                   \
+    auto m_texture_specification = py::class_<atcg::TextureSpecification>(m, "TextureSpecification");                    \
+    auto m_image         = py::class_<atcg::Image, atcg::ref_ptr<atcg::Image>>(m, "Image", py::buffer_protocol());       \
+    auto m_texture2d     = py::class_<atcg::Texture2D, atcg::Asset, atcg::ref_ptr<atcg::Texture2D>>(m, "Texture2D");     \
+    auto m_texture_cube  = py::class_<atcg::TextureCube, atcg::ref_ptr<atcg::TextureCube>>(m, "TextureCube");            \
+    auto m_framebuffer   = py::class_<atcg::Framebuffer, atcg::ref_ptr<atcg::Framebuffer>>(m, "Framebuffer");            \
+    auto m_entity_handle = py::class_<entt::entity>(m, "EntityHandle");                                                  \
+    auto m_material_type = py::enum_<atcg::MaterialType>(m, "MaterialType");                                             \
+    auto m_material      = py::class_<atcg::Material, atcg::Asset, atcg::ref_ptr<atcg::Material>>(m, "Material");        \
+    auto m_opaque_material =                                                                                             \
+        py::class_<atcg::OpaqueMaterial, atcg::Material, atcg::ref_ptr<atcg::OpaqueMaterial>>(m, "OpaqueMaterial");      \
+    auto m_dielectric_material =                                                                                         \
+        py::class_<atcg::DielectricMaterial, atcg::Material, atcg::ref_ptr<atcg::DielectricMaterial>>(m,                 \
+                                                                                                      "DielectricMate"   \
+                                                                                                      "rial");           \
+    auto m_null_material =                                                                                               \
+        py::class_<atcg::NullMaterial, atcg::Material, atcg::ref_ptr<atcg::NullMaterial>>(m, "NullMaterial");            \
+    auto m_transform              = py::class_<atcg::TransformComponent>(m, "TransformComponent");                       \
+    auto m_geometry               = py::class_<atcg::GeometryComponent>(m, "GeometryComponent");                         \
+    auto m_mesh_renderer          = py::class_<atcg::MeshRenderComponent>(m, "MeshRenderComponent");                     \
+    auto m_point_renderer         = py::class_<atcg::PointRenderComponent>(m, "PointRenderComponent");                   \
+    auto m_point_sphere_renderer  = py::class_<atcg::PointSphereRenderComponent>(m, "PointSphereRenderComponent");       \
+    auto m_edge_renderer          = py::class_<atcg::EdgeRenderComponent>(m, "EdgeRenderComponent");                     \
+    auto m_edge_cylinder_renderer = py::class_<atcg::EdgeCylinderRenderComponent>(m, "EdgeCylinderRenderComponent");     \
+    auto m_instance_renderer      = py::class_<atcg::InstanceRenderComponent>(m, "InstanceRenderComponent");             \
+    auto m_vertex_buffer         = py::class_<atcg::VertexBuffer, atcg::ref_ptr<atcg::VertexBuffer>>(m, "VertexBuffer"); \
+    auto m_buffer_layout         = py::class_<atcg::BufferLayout>(m, "BufferLayout");                                    \
+    auto m_buffer_element        = py::class_<atcg::BufferElement>(m, "BufferElement");                                  \
+    auto m_shader_data_type      = py::enum_<atcg::ShaderDataType>(m, "ShaderDataType");                                 \
+    auto m_name                  = py::class_<atcg::NameComponent>(m, "NameComponent");                                  \
+    auto m_point_light           = py::class_<atcg::PointLightComponent>(m, "PointLightComponent");                      \
+    auto m_script_component      = py::class_<atcg::ScriptComponent>(m, "ScriptComponent");                              \
+    auto m_scene_hierarchy_panel = py::class_<atcg::GUI::SceneHierarchyPanel>(m, "SceneHierarchyPanel");                 \
+    auto m_hit_info              = py::class_<atcg::Tracing::HitInfo>(m, "HitInfo");                                     \
+    auto m_utils                 = m.def_submodule("Utils");                                                             \
+    auto m_cull_mode             = py::enum_<atcg::CullMode>(m, "CullMode");                                             \
+    auto m_primitive_topology    = py::enum_<atcg::PrimitiveTopology>(m, "PrimitiveTopology");                           \
+    auto m_depth_function        = py::enum_<atcg::DepthFunction>(m, "DepthFunction");                                   \
+    auto m_depth_state           = py::class_<atcg::DepthState>(m, "DepthState");                                        \
+    auto m_blend_state           = py::class_<atcg::BlendState>(m, "BlendState");                                        \
+    auto m_rasterizer_state      = py::class_<atcg::RasterizerState>(m, "RasterizerState");                              \
+    auto m_graphics_pipeline     = py::class_<atcg::GraphicsPipeline>(m, "GraphicsPipeline");                            \
+    auto m_network               = m.def_submodule("Network");                                                           \
+    auto m_tcp_server            = py::class_<atcg::TCPServer>(m_network, "TCPServer");                                  \
+    auto m_tcp_client            = py::class_<atcg::TCPClient>(m_network, "TCPClient");                                  \
+    auto m_performance_panel     = py::class_<atcg::GUI::PerformancePanel>(m, "PerformancePanel");                       \
+    auto m_scriptengine =                                                                                                \
+        py::class_<atcg::PythonScriptEngine, atcg::ref_ptr<atcg::PythonScriptEngine>>(m, "ScriptEngine");                \
+    auto m_script      = py::class_<atcg::PythonScript, atcg::ref_ptr<atcg::PythonScript>>(m, "Script");                 \
+    auto m_assethandle = py::class_<atcg::AssetHandle>(m, "AssetHandle");                                                \
+    auto m_asset_type  = py::enum_<atcg::AssetType>(m, "AssetType");                                                     \
+    auto m_asset_data  = py::class_<atcg::AssetMetaData>(m, "AssetMetaData");                                            \
+    auto m_asset_manager_system =                                                                                        \
+        py::class_<atcg::AssetManagerSystem, atcg::ref_ptr<atcg::AssetManagerSystem>>(m, "AssetManagerSystem");          \
+    auto m_asset_manager = m.def_submodule("AssetManager");                                                              \
+    auto m_asset_panel   = py::class_<atcg::GUI::AssetPanel, atcg::ref_ptr<atcg::GUI::AssetPanel>>(m, "AssetPanel");     \
+    auto m_project       = py::class_<atcg::Project, atcg::ref_ptr<atcg::Project>>(m, "Project")
+
+#define ATCG_CUDA_DEFINE_MODULES(m)                                                                                    \
+    auto m_raytracing_context_manager = m.def_submodule("RaytracingContextManager");                                   \
+    auto m_raytracing_context =                                                                                        \
+        py::class_<atcg::RaytracingContext, atcg::ref_ptr<atcg::RaytracingContext>>(m, "RaytracingContext");           \
+    auto m_path_integrator =                                                                                           \
+        py::class_<atcg::PathtracingIntegrator, atcg::ref_ptr<atcg::PathtracingIntegrator>>(m, "PathIntegrator");      \
+    auto m_volpath_integrator =                                                                                        \
+        py::class_<atcg::VolPathtracingIntegrator, atcg::ref_ptr<atcg::VolPathtracingIntegrator>>(m,                   \
+                                                                                                  "VolPathIntegrator")
 
 inline void defineBindings(py::module_& m)
 {
@@ -202,7 +224,12 @@ inline void defineBindings(py::module_& m)
     )pbdoc";
 
     // ---------------- CORE ---------------------
-    ATCG_DEFINE_MODULES(m)
+    ATCG_DEFINE_MODULES(m);
+
+#ifdef ATCG_CUDA_BACKEND
+    ATCG_CUDA_DEFINE_MODULES(m);
+#endif
+
 #ifndef ATCG_HEADLESS
     auto m_imgui            = m.def_submodule("ImGui");
     auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
@@ -242,7 +269,8 @@ inline void defineBindings(py::module_& m)
     m.def("shader_directory", []() { return atcg::shader_directory().string(); });
     m.def("resource_directory", []() { return atcg::resource_directory().string(); });
 
-    m_application.def(py::init<atcg::Layer*>())
+    m_application.def(py::init())
+        .def(py::init<atcg::Layer*>())
         .def(py::init<atcg::WindowProps>())
         .def(py::init<atcg::Layer*, atcg::WindowProps>())
         .def("run", &atcg::Application::run);
@@ -252,6 +280,11 @@ inline void defineBindings(py::module_& m)
         .def("onUpdate", &atcg::Layer::onUpdate, "delta_time"_a)
         .def("onImGuiRender", &atcg::Layer::onImGuiRender)
         .def("onEvent", &atcg::Layer::onEvent, "event"_a);
+    m_behavior.def(py::init<>())
+        .def("onAttach", &atcg::Behavior::onAttach)
+        .def("onUpdate", &atcg::Behavior::onUpdate, "delta_time"_a)
+        .def("onImGuiRender", &atcg::Behavior::onImGuiRender)
+        .def("onEvent", &atcg::Behavior::onEvent, "event"_a);
 
     m_event.def("getName", &atcg::Event::getName).def_readwrite("handled", &atcg::Event::handled);
 
@@ -1123,25 +1156,67 @@ inline void defineBindings(py::module_& m)
     // ------------------- Scene ---------------------------------
     m_entity_handle.def(py::init<uint32_t>(), "handle"_a);
 
-    m_material.def(py::init<>())
-        .def("getDiffuseTexture", &atcg::Material::getDiffuseTexture)
-        .def("getNormalTexture", &atcg::Material::getNormalTexture)
-        .def("getRoughnessTexture", &atcg::Material::getRoughnessTexture)
-        .def("getMetallicTexture", &atcg::Material::getMetallicTexture)
-        .def("getIorTexture", &atcg::Material::getIorTexture)
-        .def("setDiffuseTexture", &atcg::Material::setDiffuseTexture)
-        .def("setNormalTexture", &atcg::Material::setNormalTexture)
-        .def("setRoughnessTexture", &atcg::Material::setRoughnessTexture)
-        .def("setMetallicTexture", &atcg::Material::setMetallicTexture)
-        .def("setIorTexture", &atcg::Material::setIorTexture)
+    m_material_type.value("MATERIAL_TYPE_OPAQUE", atcg::MaterialType::MATERIAL_TYPE_OPAQUE)
+        .value("MATERIAL_TYPE_DIELECTRIC", atcg::MaterialType::MATERIAL_TYPE_DIELECTRIC)
+        .value("MATERIAL_TYPE_NULL", atcg::MaterialType::MATERIAL_TYPE_NULL);
+
+    m_material
+        .def("asOpaque",
+             [](const atcg::ref_ptr<atcg::Material>& self)
+             {
+                 auto ptr = std::dynamic_pointer_cast<atcg::OpaqueMaterial>(self);
+                 if(!ptr) throw std::runtime_error("Not an OpaqueMaterial");
+                 return ptr;
+             })
+        .def("asDielectric",
+             [](const atcg::ref_ptr<atcg::Material>& self)
+             {
+                 auto ptr = std::dynamic_pointer_cast<atcg::DielectricMaterial>(self);
+                 if(!ptr) throw std::runtime_error("Not a DielectricMaterial");
+                 return ptr;
+             })
+        .def("asNull",
+             [](const atcg::ref_ptr<atcg::Material>& self)
+             {
+                 auto ptr = std::dynamic_pointer_cast<atcg::NullMaterial>(self);
+                 if(!ptr) throw std::runtime_error("Not a NullMaterial");
+                 return ptr;
+             })
+        .def("getMaterialType", &atcg::Material::getMaterialType);
+
+    m_opaque_material.def(py::init<>())
+        .def("getDiffuseTexture", &atcg::OpaqueMaterial::getDiffuseTexture)
+        .def("getNormalTexture", &atcg::OpaqueMaterial::getNormalTexture)
+        .def("getRoughnessTexture", &atcg::OpaqueMaterial::getRoughnessTexture)
+        .def("getMetallicTexture", &atcg::OpaqueMaterial::getMetallicTexture)
+        .def("getIorTexture", &atcg::OpaqueMaterial::getIorTexture)
+        .def("setDiffuseTexture", &atcg::OpaqueMaterial::setDiffuseTexture)
+        .def("setNormalTexture", &atcg::OpaqueMaterial::setNormalTexture)
+        .def("setRoughnessTexture", &atcg::OpaqueMaterial::setRoughnessTexture)
+        .def("setMetallicTexture", &atcg::OpaqueMaterial::setMetallicTexture)
+        .def("setIorTexture", &atcg::OpaqueMaterial::setIorTexture)
         .def("setDiffuseColor",
-             [](atcg::Material& material, const glm::vec3& color) { material.setDiffuseColor(color); })
+             [](atcg::OpaqueMaterial& material, const glm::vec3& color) { material.setDiffuseColor(color); })
         .def("setDiffuseColor",
-             [](atcg::Material& material, const glm::vec4& color) { material.setDiffuseColor(color); })
-        .def("setRoughness", &atcg::Material::setRoughness)
-        .def("setMetallic", &atcg::Material::setMetallic)
-        .def("setIor", &atcg::Material::setIor)
-        .def("removeNormalMap", &atcg::Material::removeNormalMap);
+             [](atcg::OpaqueMaterial& material, const glm::vec4& color) { material.setDiffuseColor(color); })
+        .def("setRoughness", &atcg::OpaqueMaterial::setRoughness)
+        .def("setMetallic", &atcg::OpaqueMaterial::setMetallic)
+        .def("setIor", &atcg::OpaqueMaterial::setIor)
+        .def("removeNormalMap", &atcg::OpaqueMaterial::removeNormalMap);
+
+    m_dielectric_material.def(py::init<>())
+        .def("getDiffuseTexture", &atcg::DielectricMaterial::getDiffuseTexture)
+        .def("getRoughnessTexture", &atcg::DielectricMaterial::getRoughnessTexture)
+        .def("getIorTexture", &atcg::DielectricMaterial::getIorTexture)
+        .def("setDiffuseTexture", &atcg::DielectricMaterial::setDiffuseTexture)
+        .def("setRoughnessTexture", &atcg::DielectricMaterial::setRoughnessTexture)
+        .def("setIorTexture", &atcg::DielectricMaterial::setIorTexture)
+        .def("setDiffuseColor",
+             [](atcg::DielectricMaterial& material, const glm::vec3& color) { material.setDiffuseColor(color); })
+        .def("setDiffuseColor",
+             [](atcg::DielectricMaterial& material, const glm::vec4& color) { material.setDiffuseColor(color); })
+        .def("setRoughness", &atcg::DielectricMaterial::setRoughness)
+        .def("setIor", &atcg::DielectricMaterial::setIor);
 
     m_transform.def(py::init<glm::vec3, glm::vec3, glm::vec3>(), "position"_a, "scale"_a, "rotation"_a)
         .def(py::init<glm::mat4>(), "model"_a)
@@ -1343,7 +1418,8 @@ inline void defineBindings(py::module_& m)
         .def("getEdgeCylinderRenderComponent", &atcg::Entity::getComponent<atcg::EdgeCylinderRenderComponent>)
         .def("getInstanceRenderComponent", &atcg::Entity::getComponent<atcg::InstanceRenderComponent>)
         .def("getScriptComponent", &atcg::Entity::getComponent<atcg::ScriptComponent>)
-        .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>);
+        .def("getNameComponent", &atcg::Entity::getComponent<atcg::NameComponent>)
+        .def("handle", &atcg::Entity::entity_handle);
 
     m_scene.def(py::init<>([]() { return atcg::make_ref<atcg::Scene>(); }))
         .def(
@@ -1383,7 +1459,9 @@ inline void defineBindings(py::module_& m)
             [](const atcg::ref_ptr<atcg::Scene>& scene, atcg::Entity entity) { scene->removeEntity(entity); },
             "entity"_a)
         .def("removeAllEntities", &atcg::Scene::removeAllEntites)
-        .def("setCamera", &atcg::Scene::setCamera)
+        .def("setCamera",
+             [](const atcg::ref_ptr<atcg::Scene>& self, const atcg::ref_ptr<atcg::PerspectiveCamera>& camera)
+             { self->setCamera(camera); })
         .def("getCamera", &atcg::Scene::getCamera)
         .def("removeCamera", &atcg::Scene::removeCamera)
         .def(
@@ -1399,20 +1477,13 @@ inline void defineBindings(py::module_& m)
         .def("hasSkybox", &atcg::Scene::hasSkybox)
         .def("removeSkybox", &atcg::Scene::removeSkybox)
         .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
-        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap)
-        .def(
-            "draw",
-            [](const atcg::ref_ptr<atcg::Scene>& scene,
-               const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-               const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-            {
-                atcg::Dictionary context;
-                context.setValue<atcg::ref_ptr<atcg::Camera>>("camera", camera);
-                context.setValue("target", framebuffer);
-                scene->draw(context);
-            },
-            "camera"_a,
-            "target"_a);
+        .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap);
+
+    m_scene_renderer.def("render",
+                         [](const atcg::ref_ptr<atcg::Scene>& scene,
+                            const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+                            const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
+                         { atcg::SceneRenderer::render(scene, camera, framebuffer); });
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())
@@ -1627,16 +1698,62 @@ inline void defineBindings(py::module_& m)
 
     m_script.def(py::init<const std::filesystem::path&>())
         .def("init", &atcg::PythonScript::init)
-        .def("onAttach", &atcg::PythonScript::onAttach)
-        .def("onUpdate", &atcg::PythonScript::onUpdate)
-        .def("onEvent", &atcg::PythonScript::onEvent)
-        .def("onDetach", &atcg::PythonScript::onDetach)
+        .def("createBehavior", &atcg::PythonScript::createBehavior)
         .def("reload", &atcg::PythonScript::reload);
 
     m.def("handleScriptReloads", &atcg::Scripting::handleScriptReloads);
     m.def("handleScriptEvents", &atcg::Scripting::handleScriptEvents);
     m.def("handleScriptUpdates", &atcg::Scripting::handleScriptUpdates);
 
+// ------------------- Pathtracing ---------------------------------
+#ifdef ATCG_CUDA_BACKEND
+    m_raytracing_context_manager.def("createContext", &atcg::RaytracingContextManager::createContext)
+        .def("destroyContext", &atcg::RaytracingContextManager::destroyContext);
+    m_path_integrator
+        .def(py::init(
+            [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const uint32_t width,
+               const uint32_t height)
+            {
+                atcg::Dictionary dict;
+                dict.setValue("scene", scene);
+                dict.setValue("width", width);
+                dict.setValue("height", height);
+                atcg::ref_ptr<atcg::PathtracingIntegrator> integrator =
+                    atcg::make_ref<atcg::PathtracingIntegrator>(context, dict);
+                return integrator;
+            }))
+        .def("generateRays",
+             [](const atcg::ref_ptr<atcg::PathtracingIntegrator>& self)
+             {
+                 atcg::Dictionary dict;
+                 self->generateRays(dict);
+                 return dict.getValue<torch::Tensor>("output");
+             });
+    m_volpath_integrator
+        .def(py::init(
+            [](const atcg::ref_ptr<atcg::RaytracingContext>& context,
+               const atcg::ref_ptr<atcg::Scene>& scene,
+               const uint32_t width,
+               const uint32_t height)
+            {
+                atcg::Dictionary dict;
+                dict.setValue("scene", scene);
+                dict.setValue("width", width);
+                dict.setValue("height", height);
+                atcg::ref_ptr<atcg::VolPathtracingIntegrator> integrator =
+                    atcg::make_ref<atcg::VolPathtracingIntegrator>(context, dict);
+                return integrator;
+            }))
+        .def("generateRays",
+             [](const atcg::ref_ptr<atcg::VolPathtracingIntegrator>& self)
+             {
+                 atcg::Dictionary dict;
+                 self->generateRays(dict);
+                 return dict.getValue<torch::Tensor>("output");
+             });
+#endif
     // IMGUI BINDINGS
 
 #ifndef ATCG_HEADLESS

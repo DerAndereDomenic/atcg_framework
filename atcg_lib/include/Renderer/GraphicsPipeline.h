@@ -1,11 +1,12 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Renderer/Shader.h>
 #include <Renderer/RenderState.h>
 
 namespace atcg
 {
-struct GraphicsPipeline
+struct ATCG_API GraphicsPipeline
 {
     atcg::ref_ptr<Shader> shader;
     RasterizerState rasterizer_state;

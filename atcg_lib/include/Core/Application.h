@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/LayerStack.h>
 #include <Core/Window.h>
@@ -15,12 +16,13 @@
 #include <Asset/AssetManagerSystem.h>
 #include <Scene/ComponentRegistry.h>
 #include <Renderer/GraphicsAPI.h>
+#include <Scene/SceneRenderer.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
 #endif
 
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     #include <Core/RaytracingContextManager.h>
 #endif
 namespace atcg
@@ -37,7 +39,7 @@ namespace atcg
 /**
  * @brief A class to model an application
  */
-class Application
+class ATCG_API Application
 {
 public:
     /**
@@ -151,7 +153,7 @@ private:
 private:
     bool _running = false;
     atcg::ref_ptr<ContextManagerSystem> _context_manager;
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<RaytracingContextManagerSystem> _rt_context_manager;
 #endif
     atcg::scope_ptr<Window> _window;
@@ -165,6 +167,7 @@ private:
     // Systems
     atcg::ref_ptr<AssetManagerSystem> _asset_manager;
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
+    atcg::ref_ptr<SceneRendererSystem> _scene_renderer;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;
     atcg::ref_ptr<ScriptEngine> _script_engine;

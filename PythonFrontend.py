@@ -5,7 +5,8 @@ import numpy as np
 
 import os
 
-os.environ["ATCG_BUILD_TYPE"] = "Debug"
+os.environ["ATCG_BUILD_TYPE"] = "RelWithDebInfo"
+os.environ["ATCG_CUDA_BACKEND"] = "On"
 
 import pyatcg as atcg
 
@@ -120,8 +121,10 @@ class PythonLayer(atcg.Layer):
 
         atcg.handleScriptUpdates(atcg.Project.getActive().getActiveScene(), dt)
 
-        atcg.Project.getActive().getActiveScene().draw(
-            self.camera_controller.getCamera(), atcg.Renderer.getFramebuffer()
+        atcg.SceneRenderer.render(
+            atcg.Project.getActive().getActiveScene(),
+            self.camera_controller.getCamera(),
+            atcg.Renderer.getFramebuffer(),
         )
 
         atcg.GraphicsCommand.beginRenderPass(atcg.Renderer.getFramebuffer())

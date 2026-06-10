@@ -5,7 +5,7 @@
 
 namespace atcg
 {
-class PinholeCamera : public Sensor
+class ATCG_API PinholeCamera : public Sensor
 {
 public:
     /**

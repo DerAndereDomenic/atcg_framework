@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Asset/Asset.h>
 #include <DataStructure/Image.h>
@@ -12,10 +13,21 @@ namespace atcg
 
 class GraphicsAPI;
 
+enum class TextureType
+{
+    TEXTURE_2D,
+    TEXTURE_3D,
+    TEXTURE_CUBE,
+    TEXTURE_ARRAY,
+    TEXTURE_CUBE_ARRAY,
+    TEXTURE_2D_MULTISAMPLE
+
+};
+
 /**
  * @brief A class to model a texture
  */
-class Texture
+class ATCG_API Texture
 {
 public:
     /**
@@ -27,6 +39,15 @@ public:
      *  @brief Destructor
      */
     virtual ~Texture();
+
+    /**
+     * @brief Create a new texture
+     *
+     * @param type The type of the texture
+     * @param spec The specification of the texture
+     * @return A pointer to the created texture
+     */
+    static atcg::ref_ptr<Texture> create(TextureType type, const TextureSpecification& spec);
 
     /**
      * @brief Set the data of the texture.
@@ -129,6 +150,12 @@ public:
      * @return The copy
      */
     virtual atcg::ref_ptr<Texture> clone() const = 0;
+
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) = 0;
 
     /**
      * @brief Get the underlying data as a cudaArray.
@@ -243,7 +270,7 @@ protected:
 /**
  * @brief A class to model a texture
  */
-class Texture2D : public Texture, public Asset
+class ATCG_API Texture2D : public Texture, public Asset
 {
 public:
     /**
@@ -354,6 +381,12 @@ public:
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
 
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
+
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture2D; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
@@ -379,7 +412,7 @@ protected:
 /**
  * @brief A class to model a texture
  */
-class Texture3D : public Texture, public Asset
+class ATCG_API Texture3D : public Texture, public Asset
 {
 public:
     /**
@@ -471,6 +504,12 @@ public:
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
 
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
+
     ATCG_INLINE static AssetType getStaticType() { return AssetType::Texture3D; }
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
@@ -496,7 +535,7 @@ protected:
 /**
  * @brief A class to model a cube map
  */
-class TextureCube : public Texture
+class ATCG_API TextureCube : public Texture
 {
 public:
     /**
@@ -564,6 +603,12 @@ public:
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
 
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
+
 protected:
     /**
      * @brief Use this texture
@@ -585,7 +630,7 @@ protected:
 /**
  * @brief A class to model a texture
  */
-class TextureArray : public Texture
+class ATCG_API TextureArray : public Texture
 {
 public:
     /**
@@ -677,6 +722,12 @@ public:
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
 
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
+
 protected:
     /**
      * @brief Use this texture
@@ -698,7 +749,7 @@ protected:
 /**
  * @brief A class to model an array cube map
  */
-class TextureCubeArray : public Texture
+class ATCG_API TextureCubeArray : public Texture
 {
 public:
     /**
@@ -766,6 +817,12 @@ public:
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
 
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
+
 protected:
     /**
      * @brief Use this texture
@@ -788,18 +845,17 @@ protected:
  * @brief This class is used to model a multi sampled texture used for anti aliasing.
  * It can only be manipulated by rendering to it. Setting or accessing data directly is not possible.
  */
-class Texture2DMultiSample : public Texture
+class ATCG_API Texture2DMultiSample : public Texture
 {
 public:
     /**
      * @brief Create an empty multisampled 2D texture.
      *
-     * @param num_samples The number of samples
      * @param spec The texture specification
      *
      * @return The resulting texture
      */
-    static atcg::ref_ptr<Texture2DMultiSample> create(uint32_t num_samples, const TextureSpecification& spec);
+    static atcg::ref_ptr<Texture2DMultiSample> create(const TextureSpecification& spec);
 
     /**
      *  @brief Destructor
@@ -848,6 +904,12 @@ public:
      * @return nullptr
      */
     virtual atcg::ref_ptr<Texture> clone() const override;
+
+    /**
+     * @brief Swap textures
+     * @param target The target texture
+     */
+    virtual void swap(const atcg::ref_ptr<Texture>& target) override;
 
 protected:
     /**

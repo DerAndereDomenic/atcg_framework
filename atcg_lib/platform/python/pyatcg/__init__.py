@@ -22,6 +22,7 @@ cuda = os.getenv("ATCG_CUDA_BACKEND")
 build_type = os.getenv("ATCG_BUILD_TYPE")
 stubs_dir = os.getenv("ATCG_STUBS_DIR")
 verbose = os.getenv("ATCG_VERBOSE")
+spectral = os.getenv("ATCG_SPECTRAL_RENDERING")
 
 if not headless:
     headless = "Off"
@@ -38,6 +39,9 @@ if not stubs_dir:
 if not verbose:
     verbose = False
 
+if not spectral:
+    spectral = "Off"
+
 del os
 
 
@@ -49,6 +53,7 @@ charonload.module_config["_c_pyatcg"] = charonload.Config(
         "ATCG_BUILD_EXAMPLES": "Off",
         "ATCG_CUDA_BACKEND": cuda,
         "ATCG_HEADLESS": headless,
+        "ATCG_SPECTRAL_RENDERING": spectral
     },
     stubs_directory=stubs_dir,
     build_type=build_type,

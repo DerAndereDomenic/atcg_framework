@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/glm.h>
 
 #include <Renderer/Camera.h>
@@ -9,7 +10,7 @@ namespace atcg
 /**
  * @brief A class to model a camera
  */
-class PerspectiveCamera : public Camera
+class ATCG_API PerspectiveCamera : public Camera
 {
 public:
     /**
@@ -158,6 +159,30 @@ public:
      * @param far_plane The far plane
      */
     ATCG_INLINE void setFar(float far_plane) { _intrinsics.setFar(far_plane); }
+
+    /**
+     * @brief Transform a point from world space to camera space
+     *
+     * @param point The point in world space
+     * @return The point in camera space
+     */
+    virtual glm::vec3 transformToCameraSpace(const glm::vec3& point) const override;
+
+    /**
+     * @brief Transform a point from world space to normalized device coordinates (NDC)
+     *
+     * @param point The point in world space
+     * @return The point in NDC
+     */
+    virtual glm::vec3 transformToNormalizedDeviceCoordinates(const glm::vec3& point) const override;
+
+    /**
+     * @brief Check if a point is inside the camera frustum
+     *
+     * @param point The point in world space
+     * @return true if the point is inside the frustum, false otherwise
+     */
+    virtual bool isPointInFrustum(const glm::vec3& point) const override;
 
     /**
      * @brief Create a copy of the camera

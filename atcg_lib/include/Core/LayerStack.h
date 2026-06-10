@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Layer.h>
 
 #include <vector>
@@ -12,7 +13,7 @@ namespace atcg
 /**
  * @brief This class handles the layers of the application
  */
-class LayerStack
+class ATCG_API LayerStack
 {
 public:
     /**

@@ -8,7 +8,7 @@ namespace atcg
 /**
  * @brief A PBR BSDF
  */
-class NullBSDF : public BSDF
+class ATCG_API NullBSDF : public BSDF
 {
 public:
     /**

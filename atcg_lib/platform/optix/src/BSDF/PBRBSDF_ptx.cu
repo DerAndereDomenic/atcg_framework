@@ -4,7 +4,7 @@
 
 #include <Math/Random.h>
 
-#include <Math/Functions.h>
+#include <Utils/HostDevice.h>
 #include <Core/SurfaceInteraction.h>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <BSDF/PBRBSDFData.cuh>
@@ -74,7 +74,7 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFSamplingResult samplePBR(const atcg
         result.out_dir    = glm::reflect(si.incoming_direction, halfway);
 
         result.flags =
-            (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection);
+            (roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection : atcg::BSDFComponentType::GlossyReflection);
     }
 
     // It is possible that light directions below the horizon are sampled..
@@ -180,8 +180,8 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::BSDFEvalResult evalPBR(const atcg::Surf
     result.bsdf_value         = (specular + kD * diffuse_color / glm::pi<float>()) * NdotL;
     result.sample_probability = diffuse_probability * diffuse_pdf + specular_probability * specular_pdf;
     result.flags =
-        (roughness < 0.1f ? atcg::BSDFComponentType::IdealReflection
-                          : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
+        (roughness < 0.01f ? atcg::BSDFComponentType::IdealReflection
+                           : atcg::BSDFComponentType::GlossyReflection | atcg::BSDFComponentType::DiffuseReflection);
 
     return result;
 }

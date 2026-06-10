@@ -8,6 +8,11 @@
 namespace atcg
 {
 
+Framebuffer::Framebuffer() : _width(0), _height(0)
+{
+    glGenFramebuffers(1, &_ID);
+}
+
 Framebuffer::Framebuffer(uint32_t width, uint32_t height) : _width(width), _height(height)
 {
     glGenFramebuffers(1, &_ID);
@@ -19,47 +24,15 @@ atcg::ref_ptr<Framebuffer> Framebuffer::create(const FramebufferSpecification& s
 
     for(auto attachement: spec.attachements)
     {
-        atcg::ref_ptr<Texture> texture     = nullptr;
         TextureSpecification texture_specs = attachement.spec;
         texture_specs.width                = spec.width;
         texture_specs.height               = spec.height;
         texture_specs.depth                = spec.depth;
+        texture_specs.num_samples          = spec.num_samples;
 
-        switch(attachement.format)
-        {
-            case FramebufferTextureFormat::TEXTURE_2D:
-            {
-                texture = Texture2D::create(texture_specs);
-            }
-            break;
-            case FramebufferTextureFormat::TEXTURE_3D:
-            {
-                texture = Texture3D::create(texture_specs);
-            }
-            break;
-            case FramebufferTextureFormat::TEXTURE_CUBE:
-            {
-                texture = TextureCube::create(texture_specs);
-            }
-            break;
-            case FramebufferTextureFormat::TEXTURE_ARRAY:
-            {
-                texture = TextureArray::create(texture_specs);
-            }
-            break;
-            case FramebufferTextureFormat::TEXTURE_CUBE_ARRAY:
-            {
-                texture = TextureCubeArray::create(texture_specs);
-            }
-            break;
-            case FramebufferTextureFormat::TEXTURE_2D_MULTISAMPLE:
-            {
-                texture = Texture2DMultiSample::create(spec.num_samples, texture_specs);
-            }
-            break;
-        }
+        atcg::ref_ptr<Texture> texture = Texture::create(attachement.type, texture_specs);
 
-        if(attachement.is_depth)
+        if(attachement.spec.format == TextureFormat::DEPTH)
         {
             result->attachDepth(texture);
         }
@@ -125,7 +98,8 @@ void Framebuffer::attachColorMultiSample(uint32_t num_samples)
     TextureSpecification spec;
     spec.width                                  = _width;
     spec.height                                 = _height;
-    atcg::ref_ptr<Texture2DMultiSample> texture = Texture2DMultiSample::create(num_samples, spec);
+    spec.num_samples                            = num_samples;
+    atcg::ref_ptr<Texture2DMultiSample> texture = Texture2DMultiSample::create(spec);
     attachTexture(texture);
 }
 
@@ -166,7 +140,8 @@ void Framebuffer::attachDepthMultiSample(uint32_t num_samples)
     spec.width         = _width;
     spec.height        = _height;
     spec.format        = TextureFormat::DEPTH;
-    _depth_attachement = Texture2DMultiSample::create(num_samples, spec);
+    spec.num_samples   = num_samples;
+    _depth_attachement = Texture2DMultiSample::create(spec);
     attachDepth(_depth_attachement);
 }
 
@@ -189,6 +164,18 @@ void Framebuffer::detachColor()
     uint32_t last_index = static_cast<uint32_t>(_color_attachements.size() - 1);
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + last_index, 0, 0);
     _color_attachements.pop_back();
+}
+
+void Framebuffer::detachDepth()
+{
+    if(!_depth_attachement)
+    {
+        ATCG_WARN("No depth attachement to detach");
+        return;
+    }
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, 0, 0);
+    _depth_attachement = nullptr;
 }
 
 void Framebuffer::blit(const atcg::ref_ptr<Framebuffer>& source, bool color, bool depth)

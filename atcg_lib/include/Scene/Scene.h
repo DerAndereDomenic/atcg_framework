@@ -1,12 +1,11 @@
 #pragma once
 
-
+#include <Core/API.h>
 #include <Asset/Asset.h>
 #include <Core/UUID.h>
 #include <Core/Memory.h>
 #include <Renderer/Camera.h>
 #include <Renderer/Texture.h>
-#include <Renderer/RenderGraph.h>
 #include <DataStructure/Dictionary.h>
 #include <DataStructure/Image.h>
 #include <DataStructure/Skybox.h>
@@ -24,7 +23,7 @@ class Entity;
 /**
  * @brief A class to model a scene.
  */
-class Scene : public Asset, public std::enable_shared_from_this<Scene>
+class ATCG_API Scene : public Asset, public std::enable_shared_from_this<Scene>
 {
 public:
     /**
@@ -128,26 +127,6 @@ public:
     void removeCamera();
 
     /**
-     * @brief Render the scene
-     * The only manditory entry in the context is the "camera" key which should hold an atcg::ref_ptr<Camera>. If this
-     * is not given and the scene has a camera via setCamera, this camera is used instead. Otherwise, this is a NOP. The
-     * Dictionary will be changed by this method, in particular it will add the "scene" key with a pointer to this and
-     * "has_skybox" if the scene is equipped with a skybox.
-     *
-     * @param context The context (mutable, will be changed)
-     */
-    void draw(Dictionary& context);
-
-    /**
-     * @brief Render the scene
-     * A shortcut if the only thing inside the context is the camera.
-     *
-     * @param camera The camera
-     * @param target The target framebuffer
-     */
-    void draw(const atcg::ref_ptr<Camera>& camera, const atcg::ref_ptr<Framebuffer>& target);
-
-    /**
      * @brief Set a skybox
      *
      * @param skybox An equirectangular representation of the skybox
@@ -193,21 +172,6 @@ public:
      * @return The skybox
      */
     atcg::ref_ptr<Skybox> getSkybox() const;
-
-    /**
-     * @brief Set a new render graph.
-     * The graph needs to be compiled
-     *
-     * @param graph The new graph
-     */
-    void setRenderGraph(const atcg::ref_ptr<RenderGraph>& graph);
-
-    /**
-     * @brief Get the rendergraph
-     *
-     * @return The render graph
-     */
-    atcg::ref_ptr<RenderGraph> getRenderGraph() const;
 
     static AssetType getStaticType() { return AssetType::Scene; }
 

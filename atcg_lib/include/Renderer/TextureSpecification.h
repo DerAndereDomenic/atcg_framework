@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/CUDA.h>
 
 namespace atcg
@@ -32,9 +33,9 @@ enum class TextureFormat
     _NUM_FORMATS
 };
 
-const char* textureFormatToString(TextureFormat format);
+ATCG_API const char* textureFormatToString(TextureFormat format);
 
-TextureFormat stringToTextureFormat(const char* str);
+ATCG_API TextureFormat stringToTextureFormat(const char* str);
 
 /**
  * @brief The texture wrap mode.
@@ -49,9 +50,9 @@ enum class TextureWrapMode
     BORDER
 };
 
-const char* textureWrapModeToString(TextureWrapMode mode);
+ATCG_API const char* textureWrapModeToString(TextureWrapMode mode);
 
-TextureWrapMode stringToTextureWrapMode(const char* str);
+ATCG_API TextureWrapMode stringToTextureWrapMode(const char* str);
 
 /**
  * @brief The texture filter mode.
@@ -66,9 +67,9 @@ enum class TextureFilterMode
     MIPMAP_LINEAR
 };
 
-const char* textureFilterModeToString(TextureFilterMode mode);
+ATCG_API const char* textureFilterModeToString(TextureFilterMode mode);
 
-TextureFilterMode stringToTextureFilterMode(const char* str);
+ATCG_API TextureFilterMode stringToTextureFilterMode(const char* str);
 
 /**
  * @brief The texture sampler.
@@ -80,7 +81,7 @@ struct TextureSamplerSpecification
     bool mip_map                  = false;
 };
 
-struct TextureSpecification
+struct ATCG_API TextureSpecification
 {
     TextureSpecification() = default;
     TextureSpecification(TextureFormat format) : format(format) {}
@@ -117,6 +118,7 @@ struct TextureSpecification
     uint32_t width                      = 0;
     uint32_t height                     = 0;
     uint32_t depth                      = 0;
+    uint32_t num_samples                = 1;
 
     ATCG_INLINE ATCG_HOST_DEVICE std::size_t pixelSize() const
     {

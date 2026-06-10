@@ -5,7 +5,7 @@
 
 namespace atcg
 {
-class HDRFilm : public Film
+class ATCG_API HDRFilm : public Film
 {
 public:
     /**

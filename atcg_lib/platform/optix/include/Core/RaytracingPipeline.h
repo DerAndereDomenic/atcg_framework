@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/RaytracingContext.h>
 #include <Core/TraceParameters.h>
 #include <optix.h>
@@ -13,7 +14,7 @@ struct ShaderEntryPointDesc
     std::string entrypoint_name;
 };
 
-class RayTracingPipeline
+class ATCG_API RayTracingPipeline
 {
 public:
     /**
@@ -108,6 +109,14 @@ public:
      * @return The trace parameters
      */
     TraceParameters getRay(const uint32_t ray_type_index, const uint32_t miss_index, bool occlusion = false) const;
+
+    void launch(CUdeviceptr params,
+                size_t params_size,
+                const OptixShaderBindingTable* sbt,
+                size_t width,
+                size_t height,
+                size_t depth,
+                CUstream stream = nullptr);
 
 private:
     class Impl;

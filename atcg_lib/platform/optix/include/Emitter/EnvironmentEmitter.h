@@ -9,7 +9,7 @@ namespace atcg
 /**
  * @brief An environment emitter
  */
-class EnvironmentEmitter : public Emitter
+class ATCG_API EnvironmentEmitter : public Emitter
 {
 public:
     /**
@@ -42,6 +42,12 @@ private:
     atcg::ref_ptr<Texture2D> _environment_texture;
 
     atcg::dref_ptr<EnvironmentEmitterData> _environment_emitter_data;
+
+    torch::Tensor _col_pdfs;
+    torch::Tensor _col_cdfs;
+
+    torch::Tensor _row_pdf;
+    torch::Tensor _row_cdf;
 };
 
 }    // namespace atcg

@@ -1,5 +1,7 @@
 # Define the target
-charonload_add_torch_library(atcg_lib STATIC)
+charonload_add_torch_library(atcg_lib SHARED)
+
+target_compile_definitions(atcg_lib PRIVATE ATCG_EXPORT)
 
 # Link against cuda if requested
 if(ATCG_CUDA_BACKEND)
@@ -17,8 +19,6 @@ if(ATCG_CUDA_BACKEND)
     )
 
     target_include_directories(atcg_lib PUBLIC ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
-
-    target_compile_definitions(atcg_lib PUBLIC ATCG_ENABLE_OPTIX)
 
     if(ATCG_SPECTRAL_RENDERING)
         target_compile_definitions(atcg_lib PUBLIC ATCG_SPECTRAL_RENDERING)
@@ -38,8 +38,8 @@ if(ATCG_HEADLESS)
     target_link_libraries(atcg_lib PUBLIC OpenGL::EGL)
 else()
     set(ATCG_CONTEXT "glfw")
-    target_link_libraries(atcg_lib PUBLIC glfw
-                                          atcg::imgui
+    target_link_libraries(atcg_lib PRIVATE glfw)
+    target_link_libraries(atcg_lib PUBLIC atcg::imgui
                                           atcg::imguizmo
                                           atcg::implot)
 endif()
@@ -70,6 +70,7 @@ if(ATCG_CUDA_BACKEND)
     add_ptx_module(atcg "${ptx_files}")
     set(ptx_target "atcg_ptxmodules")
     add_dependencies(atcg_lib ${ptx_target} ${ptx_target}-copy)
+    target_compile_options(${ptx_target} PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 endif()
 
 target_sources(atcg_lib PRIVATE ${atcg_lib_files} 
@@ -103,11 +104,8 @@ target_include_directories(atcg_lib PUBLIC "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/in
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python"
 )
 
-target_link_libraries(atcg_lib PUBLIC atcg::glad
-                                      OpenGL::GL
-                                      OpenMeshCore
+target_link_libraries(atcg_lib PUBLIC OpenMeshCore
                                       OpenMeshTools
-                                      stb_image
                                       atcg::tinyobjloader
                                       atcg::entt
                                       atcg::nanort
@@ -121,4 +119,9 @@ target_link_libraries(atcg_lib PUBLIC atcg::glad
                                       Python::Python
                                       torch_python_interface
                                       atcg::openvr
+)
+
+target_link_libraries(atcg_lib PRIVATE atcg::glad
+                                       OpenGL::GL
+                                       stb_image
 )

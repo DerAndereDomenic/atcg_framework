@@ -3,7 +3,7 @@
 #include <Core/CUDA.h>
 
 #include <Math/Random.h>
-#include <Math/Functions.h>
+#include <Utils/HostDevice.h>
 #include <Core/SurfaceInteraction.h>
 
 #include <Emitter/EmitterVPtrTable.cuh>

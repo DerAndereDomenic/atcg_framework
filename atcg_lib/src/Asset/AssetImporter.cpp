@@ -31,17 +31,23 @@ namespace detail
 #define EDGES_KEY             "Edges"
 #define GEOMETRY_KEY          "Geometry"
 
-atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path, const nlohmann::json& material_node)
+atcg::ref_ptr<OpaqueMaterial> deserializeOpaqueMaterial_ver1(const std::filesystem::path& path,
+                                                             const nlohmann::json& material_node)
 {
-    std::string material_type_string = material_node.value(TYPE_KEY, "Opaque");
-
-    atcg::ref_ptr<Material> material = atcg::make_ref<Material>(stringToMaterialType(material_type_string.c_str()));
+    atcg::ref_ptr<OpaqueMaterial> material = atcg::make_ref<OpaqueMaterial>();
 
     // Diffuse
     if(material_node.contains(DIFFUSE_KEY))
     {
         std::vector<float> diffuse_color = material_node[DIFFUSE_KEY];
-        material->setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
+        if(diffuse_color.size() == 3)
+        {
+            material->setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
+        }
+        else if(diffuse_color.size() == 4)
+        {
+            material->setDiffuseColor(glm::make_vec4(diffuse_color.data()));
+        }
     }
     else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
     {
@@ -102,6 +108,95 @@ atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path,
         material->setIorTexture(ior_texture);
     }
 
+    return material;
+}
+
+atcg::ref_ptr<DielectricMaterial> deserializeDielectricMaterial_ver1(const std::filesystem::path& path,
+                                                                     const nlohmann::json& material_node)
+{
+    atcg::ref_ptr<DielectricMaterial> material = atcg::make_ref<DielectricMaterial>();
+
+    // Diffuse
+    if(material_node.contains(DIFFUSE_KEY))
+    {
+        std::vector<float> diffuse_color = material_node[DIFFUSE_KEY];
+        if(diffuse_color.size() == 3)
+        {
+            material->setDiffuseColor(glm::vec4(glm::make_vec3(diffuse_color.data()), 1.0f));
+        }
+        else if(diffuse_color.size() == 4)
+        {
+            material->setDiffuseColor(glm::make_vec4(diffuse_color.data()));
+        }
+    }
+    else if(material_node.contains(DIFFUSE_TEXTURE_KEY))
+    {
+        std::filesystem::path diffuse_path = path.parent_path() / material_node[DIFFUSE_TEXTURE_KEY];
+        auto img                           = IO::imread(diffuse_path.generic_string(), 2.2f);
+        auto diffuse_texture               = atcg::Texture2D::create(img);
+        material->setDiffuseTexture(diffuse_texture);
+    }
+
+    // Roughness
+    if(material_node.contains(ROUGHNESS_KEY))
+    {
+        float roughness = material_node[ROUGHNESS_KEY];
+        material->setRoughness(roughness);
+    }
+    else if(material_node.contains(ROUGHNESS_TEXTURE_KEY))
+    {
+        std::filesystem::path roughness_path = path.parent_path() / material_node[ROUGHNESS_TEXTURE_KEY];
+        auto img                             = IO::imread(roughness_path.generic_string());
+        auto roughness_texture               = atcg::Texture2D::create(img);
+        material->setRoughnessTexture(roughness_texture);
+    }
+
+    // IoR
+    if(material_node.contains(IOR_KEY))
+    {
+        float ior = material_node[IOR_KEY];
+        material->setIor(ior);
+    }
+    else if(material_node.contains(IOR_TEXTURE_KEY))
+    {
+        std::filesystem::path ior_path = path.parent_path() / material_node[IOR_TEXTURE_KEY];
+        auto img                       = IO::imread(ior_path.generic_string());
+        auto ior_texture               = atcg::Texture2D::create(img);
+        material->setIorTexture(ior_texture);
+    }
+
+    return material;
+}
+
+atcg::ref_ptr<NullMaterial> deserializeNullMaterial_ver1(const std::filesystem::path& path,
+                                                         const nlohmann::json& material_node)
+{
+    return atcg::make_ref<NullMaterial>();    // Nothing to do
+}
+
+atcg::ref_ptr<Material> deserializeMaterialType_ver1(const std::filesystem::path& path,
+                                                     const nlohmann::json& material_node)
+{
+    std::string material_type_string = material_node.value(TYPE_KEY, "Opaque");
+
+    MaterialType material_type = stringToMaterialType(material_type_string.c_str());
+
+    switch(material_type)
+    {
+        case MaterialType::MATERIAL_TYPE_OPAQUE:
+            return deserializeOpaqueMaterial_ver1(path, material_node);
+        case MaterialType::MATERIAL_TYPE_DIELECTRIC:
+            return deserializeDielectricMaterial_ver1(path, material_node);
+        case MaterialType::MATERIAL_TYPE_NULL:
+            return deserializeNullMaterial_ver1(path, material_node);
+        default:
+            return deserializeOpaqueMaterial_ver1(path, material_node);
+    }
+}
+
+atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path, const nlohmann::json& material_node)
+{
+    atcg::ref_ptr<Material> material = deserializeMaterialType_ver1(path, material_node);
     return material;
 }
 
@@ -205,8 +300,8 @@ atcg::ref_ptr<Asset> deserializeShader_ver1(const std::filesystem::path& path, c
         {
             auto geometry_path = path.parent_path() / j["Geometry"];
             asset              = atcg::make_ref<Shader>(vertex_path.generic_string(),
-                                           fragment_path.generic_string(),
-                                           geometry_path.generic_string());
+                                                        fragment_path.generic_string(),
+                                                        geometry_path.generic_string());
         }
         else
         {

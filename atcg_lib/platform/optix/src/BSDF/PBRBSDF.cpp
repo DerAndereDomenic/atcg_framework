@@ -9,7 +9,8 @@ namespace atcg
 
 PBRBSDF::PBRBSDF(const Dictionary& dict)
 {
-    atcg::ref_ptr<Material> material = dict.getValue<atcg::ref_ptr<Material>>("material");
+    atcg::ref_ptr<OpaqueMaterial> material =
+        std::dynamic_pointer_cast<atcg::OpaqueMaterial>(dict.getValue<atcg::ref_ptr<Material>>("material"));
 
     _diffuse_texture   = std::dynamic_pointer_cast<Texture2D>(material->getDiffuseTexture()->clone());
     _metallic_texture  = std::dynamic_pointer_cast<Texture2D>(material->getMetallicTexture()->clone());

@@ -53,7 +53,6 @@
 #include <Renderer/RenderGraph.h>
 
 //-------- Render Passes ------
-#include <Renderer/RenderPasses/SkyboxPass.h>
 #include <Renderer/RenderPasses/ShadowPass.h>
 #include <Renderer/RenderPasses/ForwardPass.h>
 
@@ -83,13 +82,14 @@
 
 //-------- Math -----------
 #include <Math/Constants.h>
-#include <Math/Functions.h>
+#include <Utils/HostDevice.h>
 #include <Math/Tracing.h>
 #include <Math/Color.h>
 
 
 //-------- Utils -----------
 #include <Utils/Utils.h>
+#include <Utils/HostDevice.h>
 
 //-------- Network ------------
 #include <Network/TCPServer.h>
@@ -114,12 +114,13 @@
 #include <Scene/RevisionStack.h>
 #include <Scene/ComponentRenderer.h>
 #include <Scene/ComponentRegistry.h>
+#include <Scene/SceneRenderer.h>
 
 //-------- Torch ------------
 #include <DataStructure/TorchUtils.h>
 
 //-------- Optix ------------
-#ifdef ATCG_ENABLE_OPTIX
+#ifdef ATCG_CUDA_BACKEND
     #include <Core/RaytracingPipeline.h>
     #include <Core/ShaderBindingTable.h>
     #include <Integrator/PathtracingIntegrator.h>
@@ -130,3 +131,4 @@
 //-------- Scripting ------------
 #include <Scripting/ScriptEngine.h>
 #include <Scripting/Script.h>
+#include <Scripting/Behavior.h>

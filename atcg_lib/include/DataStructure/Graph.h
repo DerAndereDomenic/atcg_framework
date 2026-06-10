@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/glm.h>
 #include <Renderer/Buffer.h>
@@ -12,6 +12,7 @@
 #include <DataStructure/GraphDefinitions.h>
 #include <DataStructure/GraphLoader.h>
 #include <Asset/Asset.h>
+#include <DataStructure/BoundingBox.h>
 
 namespace atcg
 {
@@ -19,7 +20,7 @@ namespace atcg
 /**
  * @brief A structure to model different geometries
  */
-class Graph : public Asset
+class ATCG_API Graph : public Asset
 {
 public:
     /**
@@ -366,6 +367,20 @@ public:
      * @return The type
      */
     GraphType type() const;
+
+    /**
+     * @brief Get the bounding box of the graph
+     *
+     * @return Bounding Box
+     */
+    BoundingBox getBoundingBox() const;
+
+    /**
+     * @brief Update the bounding box of the graph based on the vertex positions.
+     * This may be useful if the vertex positions are updated directly via the getPositions() function and the bounding
+     * box needs to be updated accordingly.
+     */
+    void updateBoundingBox();
 
     /**
      * @brief Get a tensor of vertex positions on the specified device.

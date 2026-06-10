@@ -11,7 +11,6 @@ namespace atcg
 Window::Window(const WindowProps& props)
 {
     _context = ContextManager::createContext();
-    _context->initGraphicsAPI();
 
     EGLint pbufferAttribs[] = {EGL_WIDTH,
                                (int)props.width,
