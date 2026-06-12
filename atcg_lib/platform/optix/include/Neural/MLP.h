@@ -38,7 +38,9 @@ public:
 
 private:
     DeviceBuffer<half> _weights_buffer;
+    DeviceBuffer<half> _weights_gradient_buffer;
     torch::Tensor _bias_buffer;
+    torch::Tensor _bias_gradient_buffer;
 
     atcg::dref_ptr<DeviceMLP_t> _device_mlp_buffer;
 };

@@ -13,6 +13,8 @@ struct DeviceMLP
 {
     CUdeviceptr _weights_buffer_ptr;
     CUdeviceptr _bias_buffer_ptr;
+    CUdeviceptr _weight_gradient_buffer_ptr;
+    CUdeviceptr _bias_gradient_buffer_ptr;
 
 #ifdef __CUDACC__
     ATCG_DEVICE
