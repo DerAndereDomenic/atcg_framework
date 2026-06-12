@@ -28,7 +28,10 @@ inline __device__ glm::vec3 albedo(const atcg::NeuralBSDFData* sbt_data, const g
     input[6] = __float2half(glm::sin(4.0f * glm::two_pi<float>() * uvs.x));
     input[7] = __float2half(glm::sin(4.0f * glm::two_pi<float>() * uvs.y));
 
-    auto result = sbt_data->_device_mlp->forward(input);
+    T_HIDDEN hidden_outputs[2];    // Assuming 2 hidden layers
+    T_HIDDEN activation_output[2];
+
+    auto result = sbt_data->_device_mlp->forward(input, hidden_outputs, activation_output);
 
     glm::vec3 alb =
         1.0f / (1.0f + glm::exp(-glm::vec3(__half2float(result[0]), __half2float(result[1]), __half2float(result[2]))));
