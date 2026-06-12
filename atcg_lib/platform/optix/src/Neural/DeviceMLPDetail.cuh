@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Neural/Linear.h>
+
 namespace atcg
 {
 #ifdef __CUDACC__
@@ -24,20 +26,7 @@ DeviceMLP<num_hidden, input_size, hidden_size, output_size>::forward(const Optix
                                                                OPTIX_COOP_VEC_MATRIX_LAYOUT_INFERENCING_OPTIMAL,
                                                                sizeof(half) * hidden_size>();
 
-    T_HIDDEN hidden = optixCoopVecMatMul<T_HIDDEN,
-                                         T_IN,
-                                         OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16,
-                                         OPTIX_COOP_VEC_MATRIX_LAYOUT_INFERENCING_OPTIMAL,
-                                         false,
-                                         hidden_size,
-                                         input_size,
-                                         OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16,
-                                         OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16>(input,
-                                                                           (CUdeviceptr)(_weights_buffer_ptr),
-                                                                           0,
-                                                                           (CUdeviceptr)(_bias_buffer_ptr),
-                                                                           0,
-                                                                           sizeof(half) * input_size);
+    T_HIDDEN hidden = coopVecMatMul<hidden_size, input_size>(input, _weights_buffer_ptr, 0, _bias_buffer_ptr, 0);
 
     hidden = optixCoopVecMax(hidden, half(0.0f));
 
@@ -45,20 +34,11 @@ DeviceMLP<num_hidden, input_size, hidden_size, output_size>::forward(const Optix
     size_t bias_offset    = sizeof(half) * hidden_size;
     for(int i = 0; i < num_hidden; ++i)
     {
-        hidden = optixCoopVecMatMul<T_HIDDEN,
-                                    T_HIDDEN,
-                                    OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16,
-                                    OPTIX_COOP_VEC_MATRIX_LAYOUT_INFERENCING_OPTIMAL,
-                                    false,
-                                    hidden_size,
-                                    hidden_size,
-                                    OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16,
-                                    OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16>(hidden,
-                                                                      (CUdeviceptr)(_weights_buffer_ptr),
-                                                                      weights_offset,
-                                                                      (CUdeviceptr)(_bias_buffer_ptr),
-                                                                      bias_offset,
-                                                                      sizeof(half) * hidden_size);
+        hidden = coopVecMatMul<hidden_size, hidden_size>(hidden,
+                                                         _weights_buffer_ptr,
+                                                         weights_offset,
+                                                         _bias_buffer_ptr,
+                                                         bias_offset);
 
         hidden = optixCoopVecMax(hidden, half(0.0f));
 
@@ -66,20 +46,11 @@ DeviceMLP<num_hidden, input_size, hidden_size, output_size>::forward(const Optix
         bias_offset += sizeof(half) * hidden_size;
     }
 
-    T_OUT result = optixCoopVecMatMul<T_OUT,
-                                      T_HIDDEN,
-                                      OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16,
-                                      OPTIX_COOP_VEC_MATRIX_LAYOUT_INFERENCING_OPTIMAL,
-                                      false,
-                                      output_size,
-                                      hidden_size,
-                                      OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16,
-                                      OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16>(hidden,
-                                                                        (CUdeviceptr)(_weights_buffer_ptr),
-                                                                        weights_offset,
-                                                                        (CUdeviceptr)(_bias_buffer_ptr),
-                                                                        bias_offset,
-                                                                        sizeof(half) * hidden_size);
+    T_OUT result = coopVecMatMul<output_size, hidden_size>(hidden,
+                                                           _weights_buffer_ptr,
+                                                           weights_offset,
+                                                           _bias_buffer_ptr,
+                                                           bias_offset);
     return result;
 }
 #endif
