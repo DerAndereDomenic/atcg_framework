@@ -34,7 +34,33 @@ public:
 
     MLP(const atcg::ref_ptr<RaytracingContext>& context, const torch::Tensor& weights, const torch::Tensor& bias);
 
+    void setWeights(const torch::Tensor& weights);
+
+    void setBias(const torch::Tensor& bias);
+
+    torch::Tensor getWeights();
+
+    torch::Tensor getBias() const;
+
+    void zeroGradients();
+
+    void setWeightGradients(const torch::Tensor& weight_gradients);
+
+    void setBiasGradients(const torch::Tensor& bias_gradients);
+
+    torch::Tensor getWeightGradients();
+
+    torch::Tensor getBiasGradients() const;
+
     ATCG_INLINE DeviceMLP_t* getDeviceMLP() const { return _device_mlp_buffer.get(); }
+
+private:
+    void _initializeLayerDescriptions();
+
+    template<OptixCoopVecMatrixLayout layout>
+    size_t _computeLayerSize(int layer_idx) const;
+
+    void _allocateBuffers();
 
 private:
     DeviceBuffer<half> _weights_buffer;
@@ -43,6 +69,14 @@ private:
     torch::Tensor _bias_gradient_buffer;
 
     atcg::dref_ptr<DeviceMLP_t> _device_mlp_buffer;
+    atcg::ref_ptr<RaytracingContext> _context;
+
+    std::vector<OptixCoopVecMatrixDescription> _input_layer_descs;
+    size_t _input_layer_size = 0;    // in bytes
+    std::vector<OptixCoopVecMatrixDescription> _output_layer_descs;
+    size_t _output_layer_size = 0;    // in bytes
+    std::vector<OptixCoopVecMatrixDescription> _gradient_layer_descs;
+    size_t _gradient_layer_size = 0;    // in bytes
 };
 #endif
 }    // namespace atcg
