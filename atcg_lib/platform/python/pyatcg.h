@@ -819,7 +819,8 @@ inline void defineBindings(py::module_& m)
         .def("endRenderPass", &atcg::GraphicsCommand::endRenderPass)
         .def("clear", &atcg::GraphicsCommand::clear)
         .def("bindTexture", &atcg::GraphicsCommand::bindTexture, "slot"_a, "texture"_a)
-        .def("bindStorageBuffer", &atcg::GraphicsCommand::bindStorageBuffer, "slot"_a, "buffer"_a);
+        .def("bindStorageBuffer", &atcg::GraphicsCommand::bindStorageBuffer, "slot"_a, "buffer"_a)
+        .def("setClearColor", &atcg::GraphicsCommand::setClearColor, "color"_a);
 
     m_renderer.def("init", &atcg::Renderer::init)
         .def("finishFrame", &atcg::Renderer::finishFrame)
