@@ -5,10 +5,15 @@
 
 namespace atcg
 {
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-MLP<num_hidden, input_size, hidden_size, output_size>::MLP(const atcg::ref_ptr<RaytracingContext>& context,
-                                                           const torch::Tensor& weights,
-                                                           const torch::Tensor& bias)
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::MLP(
+    const atcg::ref_ptr<RaytracingContext>& context,
+    const torch::Tensor& weights,
+    const torch::Tensor& bias)
     : _context(context)
 {
     _initializeLayerDescriptions();
@@ -21,8 +26,13 @@ MLP<num_hidden, input_size, hidden_size, output_size>::MLP(const atcg::ref_ptr<R
     uploadDeviceMLPData();
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-void MLP<num_hidden, input_size, hidden_size, output_size>::setWeights(const torch::Tensor& weights)
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::setWeights(
+    const torch::Tensor& weights)
 {
     OptixNetworkDescription inputNetworkDescription = {};
     inputNetworkDescription.layers                  = _input_layer_descs.data();
@@ -43,14 +53,22 @@ void MLP<num_hidden, input_size, hidden_size, output_size>::setWeights(const tor
                                           0));
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-void MLP<num_hidden, input_size, hidden_size, output_size>::setBias(const torch::Tensor& bias)
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::setBias(const torch::Tensor& bias)
 {
     _bias_buffer = bias;
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size>::getWeights()
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::getWeights()
 {
     torch::Tensor weights =
         torch::empty({(int)(_input_layer_size / sizeof(half))}, atcg::TensorOptions::halfDeviceOptions());
@@ -76,22 +94,35 @@ torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size>::getWeights(
     return weights;
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size>::getBias() const
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::getBias() const
 {
     return _bias_buffer;
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-void MLP<num_hidden, input_size, hidden_size, output_size>::zeroGradients()
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::zeroGradients()
 {
     setWeightGradients(
         torch::zeros({(int)(_input_layer_size / sizeof(half))}, atcg::TensorOptions::halfDeviceOptions()));
     setBiasGradients(torch::zeros_like(_bias_buffer));
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-void MLP<num_hidden, input_size, hidden_size, output_size>::setWeightGradients(const torch::Tensor& weights_gradients)
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::setWeightGradients(
+    const torch::Tensor& weights_gradients)
 {
     OptixNetworkDescription inputNetworkDescription = {};
     inputNetworkDescription.layers                  = _input_layer_descs.data();
@@ -112,14 +143,23 @@ void MLP<num_hidden, input_size, hidden_size, output_size>::setWeightGradients(c
                                           0));
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-void MLP<num_hidden, input_size, hidden_size, output_size>::setBiasGradients(const torch::Tensor& bias_gradients)
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::setBiasGradients(
+    const torch::Tensor& bias_gradients)
 {
     _bias_gradient_buffer = bias_gradients;
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size>::getWeightGradients()
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::getWeightGradients()
 {
     torch::Tensor gradients =
         torch::zeros({(int)(_input_layer_size / sizeof(half))}, atcg::TensorOptions::halfDeviceOptions());
@@ -145,14 +185,22 @@ torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size>::getWeightGr
     return gradients;
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size>::getBiasGradients() const
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::getBiasGradients() const
 {
     return _bias_gradient_buffer;
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-void MLP<num_hidden, input_size, hidden_size, output_size>::uploadDeviceMLPData()
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::uploadDeviceMLPData()
 {
     DeviceMLP_t device_mlp_data;
     device_mlp_data._weights_buffer_ptr          = (CUdeviceptr)_weights_buffer.get();
@@ -162,8 +210,12 @@ void MLP<num_hidden, input_size, hidden_size, output_size>::uploadDeviceMLPData(
     _device_mlp_buffer.upload(&device_mlp_data);
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-void MLP<num_hidden, input_size, hidden_size, output_size>::_initializeLayerDescriptions()
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::_initializeLayerDescriptions()
 {
     for(size_t i = 0; i < num_hidden + 2; ++i)
     {
@@ -210,9 +262,14 @@ void MLP<num_hidden, input_size, hidden_size, output_size>::_initializeLayerDesc
     }
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
 template<OptixCoopVecMatrixLayout layout>
-size_t MLP<num_hidden, input_size, hidden_size, output_size>::_computeLayerSize(int layer_idx) const
+size_t
+MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::_computeLayerSize(int layer_idx) const
 {
     size_t layer_size;
     OPTIX_CHECK(optixCoopVecMatrixComputeSize(_context->getContextHandle(),
@@ -225,8 +282,12 @@ size_t MLP<num_hidden, input_size, hidden_size, output_size>::_computeLayerSize(
     return layer_size;
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-void MLP<num_hidden, input_size, hidden_size, output_size>::_allocateBuffers()
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::_allocateBuffers()
 {
     _weights_buffer          = atcg::DeviceBuffer<half>(_output_layer_size / sizeof(half));
     _weights_gradient_buffer = atcg::DeviceBuffer<half>(_gradient_layer_size / sizeof(half));

@@ -4,6 +4,7 @@
 #include <Core/Memory.h>
 #include <Core/RaytracingContext.h>
 #include <Neural/DeviceMLP.cuh>
+#include <Neural/Activations.h>
 
 #include <optix.h>
 
@@ -13,7 +14,11 @@ namespace atcg
 
 
 #ifndef __CUDACC__
-template<int num_hidden, int input_size, int hidden_size, int output_size>
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function = ActivationFunction::ReLU>
 class MLP
 {
 public:
@@ -28,7 +33,7 @@ public:
     static_assert(hidden_size < 256, "Hidden layer size must be less than 256 for optimal memory layout");
     static_assert(output_size < 256, "Output size must be less than 256 for optimal memory layout");
 
-    using DeviceMLP_t = DeviceMLP<num_hidden, input_size, hidden_size, output_size>;
+    using DeviceMLP_t = DeviceMLP<num_hidden, input_size, hidden_size, output_size, activation_function>;
 
     MLP() = default;
 

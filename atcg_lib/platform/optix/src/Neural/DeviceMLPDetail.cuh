@@ -7,8 +7,13 @@ namespace atcg
 {
 #ifdef __CUDACC__
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
-ATCG_DEVICE OptixCoopVec<half, output_size> DeviceMLP<num_hidden, input_size, hidden_size, output_size>::forward(
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
+ATCG_DEVICE OptixCoopVec<half, output_size>
+DeviceMLP<num_hidden, input_size, hidden_size, output_size, activation_function>::forward(
     const OptixCoopVec<half, input_size>& input,
     OptixCoopVec<half, hidden_size>* hidden_outputs,
     OptixCoopVec<half, hidden_size>* activation_output) const
@@ -32,7 +37,7 @@ ATCG_DEVICE OptixCoopVec<half, output_size> DeviceMLP<num_hidden, input_size, hi
     T_HIDDEN hidden   = coopVecMatMul<hidden_size, input_size>(input, _weights_buffer_ptr, 0, _bias_buffer_ptr, 0);
     hidden_outputs[0] = hidden;
 
-    hidden               = optixCoopVecMax(hidden, half(0.0f));
+    hidden               = Activation<activation_function, hidden_size>::forward(hidden);
     activation_output[0] = hidden;
 
     size_t weights_offset = input_layer_size;
@@ -46,7 +51,7 @@ ATCG_DEVICE OptixCoopVec<half, output_size> DeviceMLP<num_hidden, input_size, hi
                                                                         bias_offset);
         hidden_outputs[i + 1] = hidden;
 
-        hidden                   = optixCoopVecMax(hidden, half(0.0f));
+        hidden                   = Activation<activation_function, hidden_size>::forward(hidden);
         activation_output[i + 1] = hidden;
 
         weights_offset += hidden_layer_size;
@@ -58,12 +63,19 @@ ATCG_DEVICE OptixCoopVec<half, output_size> DeviceMLP<num_hidden, input_size, hi
                                                            weights_offset,
                                                            _bias_buffer_ptr,
                                                            bias_offset);
+
+    // result = Activation<output_activation_function, output_size>::forward(result);
     return result;
 }
 
-template<int num_hidden, int input_size, int hidden_size, int output_size>
+template<int num_hidden,
+         int input_size,
+         int hidden_size,
+         int output_size,
+         enum class ActivationFunction activation_function>
 template<bool accumulate>
-ATCG_DEVICE OptixCoopVec<half, input_size> DeviceMLP<num_hidden, input_size, hidden_size, output_size>::backward(
+ATCG_DEVICE OptixCoopVec<half, input_size>
+DeviceMLP<num_hidden, input_size, hidden_size, output_size, activation_function>::backward(
     const OptixCoopVec<half, input_size>& input,
     const OptixCoopVec<half, output_size>& grad_output,
     const OptixCoopVec<half, hidden_size>* hidden_outputs,
@@ -128,11 +140,8 @@ ATCG_DEVICE OptixCoopVec<half, input_size> DeviceMLP<num_hidden, input_size, hid
         bias_offset_backward -= sizeof(half) * hidden_size;
 
         T_HIDDEN output_hidden = hidden_outputs[i + 1];
-        // Apply ReLU backward
-        for(int j = 0; j < hidden_size; ++j)
-        {
-            grad_hidden[j] = (output_hidden[j] > half(0.0f)) ? grad_hidden[j] : half(0.0f);
-        }
+        // Apply activation backward
+        grad_hidden = Activation<activation_function, hidden_size>::backward(output_hidden, grad_hidden);
 
         if constexpr(accumulate)
         {
@@ -150,10 +159,7 @@ ATCG_DEVICE OptixCoopVec<half, input_size> DeviceMLP<num_hidden, input_size, hid
 
     // 3. Differentiate through input layer
     T_HIDDEN output_hidden = hidden_outputs[0];
-    for(int j = 0; j < hidden_size; ++j)
-    {
-        grad_hidden[j] = (output_hidden[j] > half(0.0f)) ? grad_hidden[j] : half(0.0f);
-    }
+    grad_hidden            = Activation<activation_function, hidden_size>::backward(output_hidden, grad_hidden);
 
     if constexpr(accumulate)
     {
