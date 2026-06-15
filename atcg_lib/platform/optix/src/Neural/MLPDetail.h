@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Common.h>
+#include <Utils/Utils.h>
 
 namespace atcg
 {
@@ -15,15 +16,9 @@ MLP<num_hidden, input_size, hidden_size, output_size>::MLP(const atcg::ref_ptr<R
 
     setWeights(weights);
     setBias(bias);
-    setWeightGradients(torch::zeros_like(weights));
-    setBiasGradients(torch::zeros_like(bias));
+    zeroGradients();
 
-    DeviceMLP_t device_mlp_data;
-    device_mlp_data._weights_buffer_ptr         = (CUdeviceptr)_weights_buffer.get();
-    device_mlp_data._bias_buffer_ptr            = (CUdeviceptr)_bias_buffer.data_ptr();
-    device_mlp_data._weight_gradient_buffer_ptr = (CUdeviceptr)_weights_gradient_buffer.get();
-    device_mlp_data._bias_gradient_buffer_ptr   = (CUdeviceptr)_bias_gradient_buffer.data_ptr();
-    _device_mlp_buffer.upload(&device_mlp_data);
+    uploadDeviceMLPData();
 }
 
 template<int num_hidden, int input_size, int hidden_size, int output_size>
@@ -92,7 +87,7 @@ void MLP<num_hidden, input_size, hidden_size, output_size>::zeroGradients()
 {
     setWeightGradients(
         torch::zeros({(int)(_input_layer_size / sizeof(half))}, atcg::TensorOptions::halfDeviceOptions()));
-    setBiasGradients(torch::zeros_like(_bias_gradient_buffer));
+    setBiasGradients(torch::zeros_like(_bias_buffer));
 }
 
 template<int num_hidden, int input_size, int hidden_size, int output_size>
@@ -127,7 +122,7 @@ template<int num_hidden, int input_size, int hidden_size, int output_size>
 torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size>::getWeightGradients()
 {
     torch::Tensor gradients =
-        torch::empty({(int)(_input_layer_size / sizeof(half))}, atcg::TensorOptions::halfDeviceOptions());
+        torch::zeros({(int)(_input_layer_size / sizeof(half))}, atcg::TensorOptions::halfDeviceOptions());
 
     OptixNetworkDescription outputNetworkDescription = {};
     outputNetworkDescription.layers                  = _input_layer_descs.data();
@@ -157,10 +152,19 @@ torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size>::getBiasGrad
 }
 
 template<int num_hidden, int input_size, int hidden_size, int output_size>
+void MLP<num_hidden, input_size, hidden_size, output_size>::uploadDeviceMLPData()
+{
+    DeviceMLP_t device_mlp_data;
+    device_mlp_data._weights_buffer_ptr          = (CUdeviceptr)_weights_buffer.get();
+    device_mlp_data._bias_buffer_ptr             = (CUdeviceptr)_bias_buffer.data_ptr();
+    device_mlp_data._weights_gradient_buffer_ptr = (CUdeviceptr)_weights_gradient_buffer.get();
+    device_mlp_data._bias_gradient_buffer_ptr    = (CUdeviceptr)_bias_gradient_buffer.data_ptr();
+    _device_mlp_buffer.upload(&device_mlp_data);
+}
+
+template<int num_hidden, int input_size, int hidden_size, int output_size>
 void MLP<num_hidden, input_size, hidden_size, output_size>::_initializeLayerDescriptions()
 {
-    size_t offset = 0;
-
     for(size_t i = 0; i < num_hidden + 2; ++i)
     {
         size_t output_layer_size =
@@ -176,7 +180,7 @@ void MLP<num_hidden, input_size, hidden_size, output_size>::_initializeLayerDesc
         in_desc.layout                        = OptixCoopVecMatrixLayout::OPTIX_COOP_VEC_MATRIX_LAYOUT_ROW_MAJOR;
         in_desc.rowColumnStrideInBytes        = sizeof(half) * in_desc.K;
         in_desc.sizeInBytes                   = sizeof(half) * in_desc.N * in_desc.K;
-        in_desc.offsetInBytes                 = offset;
+        in_desc.offsetInBytes                 = _input_layer_size;
 
         OptixCoopVecMatrixDescription out_desc = {};
         out_desc.N                             = in_desc.N;
@@ -185,7 +189,7 @@ void MLP<num_hidden, input_size, hidden_size, output_size>::_initializeLayerDesc
         out_desc.layout                 = OptixCoopVecMatrixLayout::OPTIX_COOP_VEC_MATRIX_LAYOUT_INFERENCING_OPTIMAL;
         out_desc.rowColumnStrideInBytes = 0;    // Ignored
         out_desc.sizeInBytes            = output_layer_size;
-        out_desc.offsetInBytes          = offset;
+        out_desc.offsetInBytes          = _output_layer_size;
 
         OptixCoopVecMatrixDescription gradient_desc = {};
         gradient_desc.N                             = in_desc.N;
@@ -194,13 +198,11 @@ void MLP<num_hidden, input_size, hidden_size, output_size>::_initializeLayerDesc
         gradient_desc.layout                 = OptixCoopVecMatrixLayout::OPTIX_COOP_VEC_MATRIX_LAYOUT_TRAINING_OPTIMAL;
         gradient_desc.rowColumnStrideInBytes = 0;    // Ignored
         gradient_desc.sizeInBytes            = gradient_layer_size;
-        gradient_desc.offsetInBytes          = offset;
+        gradient_desc.offsetInBytes          = _gradient_layer_size;
 
         _input_layer_descs.push_back(in_desc);
         _output_layer_descs.push_back(out_desc);
         _gradient_layer_descs.push_back(gradient_desc);
-
-        offset += sizeof(half) * in_desc.N * in_desc.K;
 
         _input_layer_size += sizeof(half) * in_desc.N * in_desc.K;
         _output_layer_size += output_layer_size;

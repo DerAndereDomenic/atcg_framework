@@ -52,6 +52,8 @@ public:
 
     torch::Tensor getBiasGradients() const;
 
+    void uploadDeviceMLPData();
+
     ATCG_INLINE DeviceMLP_t* getDeviceMLP() const { return _device_mlp_buffer.get(); }
 
 private:
