@@ -31,6 +31,17 @@ subroutine(sr_image_based_lighting) vec3
 }
 
 subroutine(sr_image_based_lighting) vec3
+    image_based_lighting_diffuse(vec3 base_color, float metallic, float roughness, float ior, vec3 normal, vec3 view_dir)
+{
+    vec3 irradiance    = texture(irradiance_map, normal).rgb;
+    vec3 color_diffuse = base_color;
+    vec3 diffuse       = irradiance * color_diffuse;
+    vec3 ambient       = diffuse;
+
+    return ambient;
+}
+
+subroutine(sr_image_based_lighting) vec3
     image_based_lighting_glass(vec3 base_color, float metallic, float roughness, float ior, vec3 normal, vec3 view_dir)
 {
     float eta    = 1.0 / ior;

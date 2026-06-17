@@ -18,6 +18,7 @@
 #include <DataStructure/WorkerPool.h>
 #include <Emitter/MeshEmitter.h>
 #include <Scene/SceneAdapter.h>
+#include "TestMaterial.h"
 
 #ifndef ATCG_HEADLESS
     #include <imgui.h>
@@ -122,6 +123,93 @@ atcg::ref_ptr<Integrator> TestIntegrator::create(const atcg::ref_ptr<RaytracingC
     return atcg::make_ref<TestIntegrator>(context, dict);
 }
 
+DiffuseMaterial::DiffuseMaterial() : atcg::Material("Diffuse")
+{
+    atcg::TextureSpecification spec_diffuse;
+    spec_diffuse.width  = 1;
+    spec_diffuse.height = 1;
+    glm::u8vec4 white(255);
+    _diffuse_texture = atcg::Texture2D::create(&white, spec_diffuse);
+}
+
+void DiffuseMaterial::uploadMaterial(atcg::RendererSystem* renderer, const atcg::ref_ptr<atcg::Shader>& shader)
+{
+    ATCG_ASSERT(!_uploaded, "Material was already uploaded");
+
+    uint32_t diffuse_id = renderer->popTextureID();
+    atcg::GraphicsCommand::bindTexture(diffuse_id, getDiffuseTexture());
+    shader->setInt("texture_diffuse", diffuse_id);
+    _used_texture_ids[0] = diffuse_id;
+
+    uint32_t normal_id   = renderer->popTextureID();
+    _used_texture_ids[1] = normal_id;
+
+    uint32_t roughness_id = renderer->popTextureID();
+    _used_texture_ids[2]  = roughness_id;
+
+    uint32_t metallic_id = renderer->popTextureID();
+    _used_texture_ids[3] = metallic_id;
+
+    uint32_t ior_id      = renderer->popTextureID();
+    _used_texture_ids[4] = ior_id;
+
+    // Select shading functions
+    shader->selectSubroutine("sr_eval_brdf", "eval_brdf_diffuse");
+    shader->selectSubroutine("sr_image_based_lighting", "image_based_lighting_diffuse");
+
+    _uploaded = true;
+}
+
+atcg::ref_ptr<atcg::Material> DiffuseMaterial::clone() const
+{
+    atcg::ref_ptr<DiffuseMaterial> material = atcg::make_ref<DiffuseMaterial>();
+
+    material->setDiffuseTexture(std::dynamic_pointer_cast<atcg::Texture2D>(getDiffuseTexture()->clone()));
+
+    return material;
+}
+
+void DiffuseMaterial::setDiffuseColor(const glm::vec3& color)
+{
+    atcg::TextureSpecification spec_diffuse;
+    spec_diffuse.width  = 1;
+    spec_diffuse.height = 1;
+    glm::u8vec4 color_quant((uint8_t)(color[0] * 255.0f),
+                            (uint8_t)(color[1] * 255.0f),
+                            (uint8_t)(color[2] * 255.0f),
+                            (uint8_t)(255.0f));
+    _diffuse_texture = atcg::Texture2D::create(&color_quant, spec_diffuse);
+}
+
+bool MaterialGUIRenderer<DiffuseMaterial>::renderGUI(const atcg::ref_ptr<DiffuseMaterial>& material,
+                                                     const std::string& key)
+{
+    bool updated = false;
+
+    auto diffuse = material->getDiffuseTexture()->getData(atcg::CPU);
+
+    float color[4] = {diffuse.index({0, 0, 0}).item<float>() / 255.0f,
+                      diffuse.index({0, 0, 1}).item<float>() / 255.0f,
+                      diffuse.index({0, 0, 2}).item<float>() / 255.0f,
+                      diffuse.index({0, 0, 3}).item<float>() / 255.0f};
+
+    if(ImGui::ColorEdit4(("Diffuse##" + key).c_str(), color))
+    {
+        glm::vec4 new_color = glm::make_vec4(color);
+        material->setDiffuseColor(new_color);
+        updated = true;
+    }
+
+    return updated;
+}
+
+atcg::ref_ptr<atcg::Material> DiffuseMaterial::create()
+{
+    return atcg::make_ref<DiffuseMaterial>();
+}
+
+ATCG_REGISTER_MATERIAL("Diffuse", DiffuseMaterial);
+
 }    // namespace atcg
 
 ATCG_PLUGIN_LIBRARY();
@@ -129,4 +217,5 @@ ATCG_PLUGIN_LIBRARY();
 extern "C" __declspec(dllexport) void registerPlugin(atcg::PluginRegistry& registry)
 {
     registry.registerClass<atcg::Integrator, atcg::TestIntegrator>("TestIntegrator");
+    registry.registerClass<atcg::Material, atcg::DiffuseMaterial>("Diffuse");
 }
