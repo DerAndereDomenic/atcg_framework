@@ -764,6 +764,7 @@ inline void defineBindings(py::module_& m)
     m_cull_mode.value("ATCG_FRONT_FACE_CULLING", atcg::CullMode::ATCG_FRONT_FACE_CULLING)
         .value("ATCG_BACK_FACE_CULLING", atcg::CullMode::ATCG_BACK_FACE_CULLING)
         .value("ATCG_BOTH_FACE_CULLING", atcg::CullMode::ATCG_BOTH_FACE_CULLING)
+        .value("ATCG_NO_CULLING", atcg::CullMode::ATCG_NO_CULLING)
         .export_values();
 
     m_primitive_topology.value("ATCG_POINTS", atcg::PrimitiveTopology::ATCG_POINTS)
@@ -1242,7 +1243,8 @@ inline void defineBindings(py::module_& m)
         .def("shader", &atcg::MeshRenderComponent::shader)
         .def("material", &atcg::MeshRenderComponent::material)
         .def_readwrite("material_handle", &atcg::MeshRenderComponent::material_handle)
-        .def_readwrite("shader_handle", &atcg::MeshRenderComponent::shader_handle);
+        .def_readwrite("shader_handle", &atcg::MeshRenderComponent::shader_handle)
+        .def_readwrite("cull_mode", &atcg::MeshRenderComponent::cull_mode);
 
     m_point_renderer
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
@@ -1256,7 +1258,8 @@ inline void defineBindings(py::module_& m)
         .def("shader", &atcg::PointSphereRenderComponent::shader)
         .def("material", &atcg::PointSphereRenderComponent::material)
         .def_readwrite("material_handle", &atcg::PointSphereRenderComponent::material_handle)
-        .def_readwrite("shader_handle", &atcg::PointSphereRenderComponent::shader_handle);
+        .def_readwrite("shader_handle", &atcg::PointSphereRenderComponent::shader_handle)
+        .def_readwrite("cull_mode", &atcg::PointSphereRenderComponent::cull_mode);
 
     m_edge_renderer.def(py::init<glm::vec3>(), "color"_a)
         .def_readwrite("visible", &atcg::EdgeRenderComponent::visible)
@@ -1265,7 +1268,8 @@ inline void defineBindings(py::module_& m)
     m_edge_cylinder_renderer.def(py::init<float>(), "radius"_a)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
         .def("material", &atcg::EdgeCylinderRenderComponent::material)
-        .def_readwrite("material_handle", &atcg::EdgeCylinderRenderComponent::material_handle);
+        .def_readwrite("material_handle", &atcg::EdgeCylinderRenderComponent::material_handle)
+        .def_readwrite("cull_mode", &atcg::EdgeCylinderRenderComponent::cull_mode);
 
     m_instance_renderer.def(py::init<>())
         .def_readwrite("visible", &atcg::InstanceRenderComponent::visible)
