@@ -36,5 +36,6 @@ public:
     virtual void execute(const RenderContext& ctx, const ResourceTable& resources) override;
 
 private:
+    uint32_t _resolution = 1024;
 };
 }    // namespace atcg

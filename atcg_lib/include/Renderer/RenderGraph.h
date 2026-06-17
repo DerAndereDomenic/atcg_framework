@@ -196,6 +196,4 @@ private:
 
     uint32_t _max_cached_resolutions = 8;
 };
-
-ATCG_API atcg::ref_ptr<RenderGraph> createRenderGraph(const CompileData& ctx);
 }    // namespace atcg

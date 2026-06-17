@@ -147,11 +147,7 @@ public:
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
 
-        atcg::CompileData compile_data;
-        compile_data.num_samples = msaa_samples[current_msaa_selection_index];
-        auto render_graph        = atcg::createRenderGraph(compile_data);
-
-        atcg::SceneRenderer::setRenderGraph(render_graph);
+        atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
     }
 
     // This gets called each frame
@@ -353,10 +349,7 @@ public:
                         if(ImGui::Selectable(msaa_samples_str[n], is_selected))
                         {
                             current_msaa_selection_index = n;
-                            atcg::CompileData compile_data;
-                            compile_data.num_samples = msaa_samples[current_msaa_selection_index];
-                            auto render_graph        = atcg::createRenderGraph(compile_data);
-                            atcg::SceneRenderer::setRenderGraph(render_graph);
+                            atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
                         }
 
                         // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)

@@ -1480,11 +1480,14 @@ inline void defineBindings(py::module_& m)
         .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
         .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap);
 
-    m_scene_renderer.def("render",
-                         [](const atcg::ref_ptr<atcg::Scene>& scene,
-                            const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-                            const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-                         { atcg::SceneRenderer::render(scene, camera, framebuffer); });
+    m_scene_renderer
+        .def("render",
+             [](const atcg::ref_ptr<atcg::Scene>& scene,
+                const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+                const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
+             { atcg::SceneRenderer::render(scene, camera, framebuffer); })
+        .def("setNumberMSAASamples", &atcg::SceneRenderer::setNumberMSAASamples, "samples"_a)
+        .def("setShadowPassResolution", &atcg::SceneRenderer::setShadowPassResolution, "resolution"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())
