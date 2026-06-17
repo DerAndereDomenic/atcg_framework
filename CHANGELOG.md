@@ -51,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added functions to swap textures
 - Added functions to detach textures from framebuffers
 - Added SceneRenderer class
+- Added cull_mode to MeshRenderComponent, PointSphereRenderComponent, and EdgeCylidnerRenderComponent
+- Add options to the SceneRenderer
 
 ### Changed
 
@@ -116,6 +118,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overhauled render passes and removed Skybox Pass (now handled in forward pass)
 - Scene class no longer holds a RenderGraph. Rendering of scenes is now handled by the new SceneRenderer class
 - Removed Math/Functions.h and merged it with Utils/HostDevice.h
+- Removed createRenderGraph()
 
 ### Fixed
 
