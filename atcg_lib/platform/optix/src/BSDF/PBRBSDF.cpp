@@ -56,5 +56,5 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
     markInitialized();
 }
 
-ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_OPAQUE, PBRBSDF);
+ATCG_REGISTER_BSDF("Opaque", PBRBSDF);
 }    // namespace atcg

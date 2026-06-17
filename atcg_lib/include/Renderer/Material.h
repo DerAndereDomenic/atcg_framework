@@ -3,6 +3,11 @@
 #include <Core/API.h>
 #include <Renderer/Texture.h>
 #include <Asset/Asset.h>
+#include <DataStructure/Dictionary.h>
+#include <Plugin/Plugin.h>
+
+#include <json.hpp>
+#include <filesystem>
 
 namespace atcg
 {
@@ -10,61 +15,18 @@ namespace atcg
 class RendererSystem;
 class Shader;
 
-enum class MaterialType
-{
-    MATERIAL_TYPE_OPAQUE,
-    MATERIAL_TYPE_DIELECTRIC,
-    MATERIAL_TYPE_NULL
-};
-
-ATCG_INLINE const char* materialTypeToString(MaterialType type)
-{
-    switch(type)
-    {
-        case MaterialType::MATERIAL_TYPE_OPAQUE:
-            return "Opaque";
-        case MaterialType::MATERIAL_TYPE_DIELECTRIC:
-            return "Dielectric";
-        case MaterialType::MATERIAL_TYPE_NULL:
-            return "Null";
-        default:
-            return "Unknown";
-    }
-}
-
-ATCG_INLINE MaterialType stringToMaterialType(const char* str)
-{
-    if(strcmp(str, "Opaque") == 0)
-    {
-        return MaterialType::MATERIAL_TYPE_OPAQUE;
-    }
-    else if(strcmp(str, "Glass") == 0)    // Backwards compatibility
-    {
-        return MaterialType::MATERIAL_TYPE_DIELECTRIC;
-    }
-    else if(strcmp(str, "Dielectric") == 0)
-    {
-        return MaterialType::MATERIAL_TYPE_DIELECTRIC;
-    }
-    else if(strcmp(str, "Null") == 0)
-    {
-        return MaterialType::MATERIAL_TYPE_NULL;
-    }
-    else
-    {
-        return MaterialType::MATERIAL_TYPE_OPAQUE;
-    }
-}
-
 /**
  * @brief A class to model a material.
  */
 struct ATCG_API Material : public Asset
 {
+    using PluginCreate = std::function<std::shared_ptr<atcg::Material>()>;
+    ATCG_PLUGIN_BASE_CLASS(Material);
+
     /**
      * @brief Constructor
      */
-    Material(MaterialType type = MaterialType::MATERIAL_TYPE_OPAQUE);
+    Material(const std::string& type);
 
     virtual ~Material() {}
 
@@ -90,20 +52,19 @@ struct ATCG_API Material : public Asset
 
     ATCG_INLINE virtual AssetType getType() const override { return getStaticType(); }
 
-    ATCG_INLINE MaterialType getMaterialType() const { return _material_type; }
+    ATCG_INLINE const std::string& getMaterialType() const { return _material_type; };
 
 
 protected:
     std::array<uint32_t, 5> _used_texture_ids;
     bool _uploaded = false;
-
-    MaterialType _material_type = MaterialType::MATERIAL_TYPE_OPAQUE;
+    std::string _material_type;
 };
 
 class ATCG_API MicrofacetMaterial : public Material
 {
 public:
-    MicrofacetMaterial(MaterialType type);
+    MicrofacetMaterial(const std::string& type);
 
     /**
      * @brief Get the diffuse texture.
@@ -188,6 +149,11 @@ protected:
 class ATCG_API OpaqueMaterial : public MicrofacetMaterial
 {
 public:
+    ATCG_PLUGIN_CLASS(OpaqueMaterial,
+                      "1.0.0",
+                      "Domenic Zingsheim",
+                      "A material modeling an opaque microfacet BRDF with a diffuse component.");
+
     OpaqueMaterial();
 
     /**
@@ -248,6 +214,11 @@ private:
 class ATCG_API DielectricMaterial : public MicrofacetMaterial
 {
 public:
+    ATCG_PLUGIN_CLASS(DielectricMaterial,
+                      "1.0.0",
+                      "Domenic Zingsheim",
+                      "A material modeling a dielectric microfacet BRDF with a diffuse component.");
+
     DielectricMaterial();
 
     /**
@@ -266,6 +237,11 @@ private:
 class ATCG_API NullMaterial : public Material
 {
 public:
+    ATCG_PLUGIN_CLASS(NullMaterial,
+                      "1.0.0",
+                      "Domenic Zingsheim",
+                      "A null material that can be used as a placeholder and does not render anything.");
+
     NullMaterial();
 
     /**
@@ -280,5 +256,125 @@ public:
 
 private:
 };
+
+template<typename T>
+struct ATCG_API MaterialSerializer
+{
+    static void serialize(const atcg::ref_ptr<T>& material, const std::filesystem::path& path) {}
+
+    static atcg::ref_ptr<T> deserialize(const std::filesystem::path& path, const nlohmann::json& material_node)
+    {
+        return nullptr;
+    }
+};
+
+template<>
+struct ATCG_API MaterialSerializer<OpaqueMaterial>
+{
+    static void serialize(const atcg::ref_ptr<OpaqueMaterial>& material, const std::filesystem::path& path);
+
+    static atcg::ref_ptr<OpaqueMaterial> deserialize(const std::filesystem::path& path,
+                                                     const nlohmann::json& material_node);
+};
+
+template<>
+struct ATCG_API MaterialSerializer<DielectricMaterial>
+{
+    static void serialize(const atcg::ref_ptr<DielectricMaterial>& material, const std::filesystem::path& path);
+
+    static atcg::ref_ptr<DielectricMaterial> deserialize(const std::filesystem::path& path,
+                                                         const nlohmann::json& material_node);
+};
+
+template<>
+struct ATCG_API MaterialSerializer<NullMaterial>
+{
+    static void serialize(const atcg::ref_ptr<NullMaterial>& material, const std::filesystem::path& path);
+
+    static atcg::ref_ptr<NullMaterial> deserialize(const std::filesystem::path& path,
+                                                   const nlohmann::json& material_node);
+};
+
+template<typename T>
+struct ATCG_API MaterialGUIRenderer
+{
+    static bool renderGUI(const atcg::ref_ptr<T>& material, const std::string& key) { return false; }
+};
+
+template<>
+struct ATCG_API MaterialGUIRenderer<OpaqueMaterial>
+{
+    static bool renderGUI(const atcg::ref_ptr<OpaqueMaterial>& material, const std::string& key);
+};
+
+template<>
+struct ATCG_API MaterialGUIRenderer<DielectricMaterial>
+{
+    static bool renderGUI(const atcg::ref_ptr<DielectricMaterial>& material, const std::string& key);
+};
+
+template<>
+struct ATCG_API MaterialGUIRenderer<NullMaterial>
+{
+    static bool renderGUI(const atcg::ref_ptr<NullMaterial>& material, const std::string& key);
+};
+
+
+using MaterialBuilder           = std::function<atcg::ref_ptr<Material>(const Dictionary&)>;
+using MaterialGUIFunction       = std::function<bool(const atcg::ref_ptr<Material>&, const std::string&)>;
+using MaterialSerializeFunction = std::function<void(const atcg::ref_ptr<Material>&, const std::filesystem::path&)>;
+using MaterialDeserializeFunction =
+    std::function<atcg::ref_ptr<Material>(const std::filesystem::path&, const nlohmann::json&)>;
+
+namespace MaterialFactory
+{
+ATCG_API void registerMaterial(std::string_view type,
+                               MaterialBuilder builder,
+                               MaterialGUIFunction gui_function,
+                               MaterialSerializeFunction serialize_function,
+                               MaterialDeserializeFunction deserialize_function);
+
+ATCG_API atcg::ref_ptr<Material> createMaterial(const std::string& type, const Dictionary& dict);
+
+ATCG_API bool renderMaterialGUI(const atcg::ref_ptr<Material>& material, const std::string& key);
+
+ATCG_API const std::vector<std::string>& getRegisteredMaterialTypes();
+
+ATCG_API void serializeMaterial(const atcg::ref_ptr<Material>& material, const std::filesystem::path& path);
+
+ATCG_API atcg::ref_ptr<Material> deserializeMaterial(std::string_view material_type,
+                                                     const std::filesystem::path& path,
+                                                     const nlohmann::json& material_node);
+}    // namespace MaterialFactory
+
+#define ATCG_REGISTER_MATERIAL(MaterialType, MaterialClass)                                                            \
+    struct MaterialFactory_##MaterialClass                                                                             \
+    {                                                                                                                  \
+        MaterialFactory_##MaterialClass()                                                                              \
+        {                                                                                                              \
+            MaterialFactory::registerMaterial(                                                                         \
+                MaterialType,                                                                                          \
+                [](const Dictionary& dict)                                                                             \
+                {                                                                                                      \
+                    auto material = atcg::make_ref<MaterialClass>();                                                   \
+                    return material;                                                                                   \
+                },                                                                                                     \
+                [](const atcg::ref_ptr<Material>& material, const std::string& key)                                    \
+                {                                                                                                      \
+                    return MaterialGUIRenderer<MaterialClass>::renderGUI(                                              \
+                        std::dynamic_pointer_cast<MaterialClass>(material),                                            \
+                        key);                                                                                          \
+                },                                                                                                     \
+                [](const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)                         \
+                {                                                                                                      \
+                    MaterialSerializer<MaterialClass>::serialize(std::dynamic_pointer_cast<MaterialClass>(material),   \
+                                                                 path);                                                \
+                },                                                                                                     \
+                [](const std::filesystem::path& path, const nlohmann::json& material_node)                             \
+                { return MaterialSerializer<MaterialClass>::deserialize(path, material_node); });                      \
+        }                                                                                                              \
+        static MaterialFactory_##MaterialClass instance;                                                               \
+    };                                                                                                                 \
+    MaterialFactory_##MaterialClass MaterialFactory_##MaterialClass::instance
 
 }    // namespace atcg

@@ -74,6 +74,8 @@ private:
     atcg::ref_ptr<Texture2D> _material_icon;
     atcg::ref_ptr<Texture2D> _mesh_icon;
     atcg::ref_ptr<Texture2D> _image_icon;
+
+    atcg::ref_ptr<Material> _material_preview;
 };
 }    // namespace GUI
 }    // namespace atcg

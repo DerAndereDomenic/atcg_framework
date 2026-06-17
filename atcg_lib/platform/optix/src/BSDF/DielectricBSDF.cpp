@@ -57,5 +57,5 @@ void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>&
     markInitialized();
 }
 
-ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_DIELECTRIC, DielectricBSDF);
+ATCG_REGISTER_BSDF("Dielectric", DielectricBSDF);
 }    // namespace atcg

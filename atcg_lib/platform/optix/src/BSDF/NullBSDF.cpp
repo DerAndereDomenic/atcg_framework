@@ -32,5 +32,5 @@ void NullBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipel
     markInitialized();
 }
 
-ATCG_REGISTER_BSDF(MaterialType::MATERIAL_TYPE_NULL, NullBSDF);
+ATCG_REGISTER_BSDF("Null", NullBSDF);
 }    // namespace atcg

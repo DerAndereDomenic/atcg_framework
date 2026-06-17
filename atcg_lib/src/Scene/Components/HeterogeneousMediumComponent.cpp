@@ -58,7 +58,7 @@ void ComponentRenderer<HeterogeneousMediumComponent>::renderComponent(atcg::Rend
     HeterogeneousMediumComponent& medium = entity.getComponent<HeterogeneousMediumComponent>();
     MeshRenderComponent& mesh_renderer   = entity.getComponent<MeshRenderComponent>();
 
-    if(mesh_renderer.material()->getMaterialType() != MaterialType::MATERIAL_TYPE_NULL)
+    if(mesh_renderer.material()->getMaterialType() != "Null")    // TODO Flags
     {
         return;
     }

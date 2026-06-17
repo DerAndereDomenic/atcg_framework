@@ -12,9 +12,12 @@ public:
         return _instance.get();
     }
 
-    void registerBuilder(MaterialType type, BSDFBuilder builder) { _registry[type] = std::move(builder); }
+    void registerBuilder(std::string_view type, BSDFBuilder builder)
+    {
+        _registry[std::string(type)] = std::move(builder);
+    }
 
-    atcg::ref_ptr<BSDF> create(MaterialType type,
+    atcg::ref_ptr<BSDF> create(const std::string& type,
                                const Dictionary& dict,
                                const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                const atcg::ref_ptr<ShaderBindingTable>& sbt)
@@ -29,19 +32,19 @@ public:
     }
 
 private:
-    std::unordered_map<MaterialType, BSDFBuilder> _registry;
+    std::unordered_map<std::string, BSDFBuilder> _registry;
     static std::unique_ptr<BSDFFactory_T> _instance;
 };
 
 std::unique_ptr<BSDFFactory_T> BSDFFactory_T::_instance;
 
-void BSDFFactory::registerBSDF(MaterialType type, BSDFBuilder builder)
+void BSDFFactory::registerBSDF(std::string_view type, BSDFBuilder builder)
 {
     auto instance = BSDFFactory_T::getInstance();
     instance->registerBuilder(type, builder);
 }
 
-atcg::ref_ptr<BSDF> BSDFFactory::createBSDF(MaterialType type,
+atcg::ref_ptr<BSDF> BSDFFactory::createBSDF(const std::string& type,
                                             const Dictionary& dict,
                                             const atcg::ref_ptr<RayTracingPipeline>& pipeline,
                                             const atcg::ref_ptr<ShaderBindingTable>& sbt)

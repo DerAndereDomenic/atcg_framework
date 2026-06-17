@@ -2,7 +2,6 @@
 
 #include <Core/API.h>
 #include <Core/Memory.h>
-#include <Core/Application.h>
 #include <Core/SystemRegistry.h>
 #include <Scene/Scene.h>
 #include <Renderer/Camera.h>
