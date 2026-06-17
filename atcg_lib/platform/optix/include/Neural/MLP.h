@@ -5,6 +5,7 @@
 #include <Core/RaytracingContext.h>
 #include <Neural/DeviceMLP.cuh>
 #include <Neural/Activations.h>
+#include <DataStructure/TorchUtils.h>
 
 #include <optix.h>
 
