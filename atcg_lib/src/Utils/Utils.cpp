@@ -613,6 +613,38 @@ AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle
 #endif
 }
 
+CullMode displayCullModeSelection(const std::string& key, CullMode cull_mode)
+{
+#ifndef ATCG_HEADLESS
+    const char* cull_mode_items[] = {"Front Face Culling", "Back Face Culling", "Both Face Culling", "No Culling"};
+    int current_item              = (int)cull_mode;
+
+    if(ImGui::BeginCombo(("Cull Mode##" + key).c_str(), cull_mode_items[current_item]))
+    {
+        for(int i = 0; i < 4; ++i)
+        {
+            bool is_selected = i == current_item;
+
+            if(ImGui::Selectable(cull_mode_items[i], is_selected))
+            {
+                current_item = i;
+            }
+
+            if(is_selected)
+            {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+
+        ImGui::EndCombo();
+    }
+
+    return (CullMode)current_item;
+#else
+    return cull_mode;
+#endif
+}
+
 void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size)
 {
     std::ofstream summary_file(file_name, std::ios::out | std::ios::binary);
