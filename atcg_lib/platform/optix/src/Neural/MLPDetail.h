@@ -2,6 +2,7 @@
 
 #include <Core/Common.h>
 #include <Utils/Utils.h>
+#include <Neural/CoopVec.h>
 
 namespace atcg
 {
@@ -42,15 +43,15 @@ void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>:
     outputNetworkDescription.layers                  = _output_layer_descs.data();
     outputNetworkDescription.numLayers               = _output_layer_descs.size();
 
-    OPTIX_CHECK(optixCoopVecMatrixConvert(_context->getContextHandle(),
-                                          nullptr,
-                                          1,
-                                          &inputNetworkDescription,
-                                          (CUdeviceptr)weights.data_ptr(),
-                                          0,
-                                          &outputNetworkDescription,
-                                          (CUdeviceptr)_weights_buffer.get(),
-                                          0));
+    atcg::CoopVecMatrixConvert(_context->getContextHandle(),
+                               nullptr,
+                               1,
+                               &inputNetworkDescription,
+                               (CUdeviceptr)weights.data_ptr(),
+                               0,
+                               &outputNetworkDescription,
+                               (CUdeviceptr)_weights_buffer.get(),
+                               0);
 }
 
 template<int num_hidden,
@@ -81,15 +82,15 @@ torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size, activation_f
     inputNetworkDescription.layers                  = _output_layer_descs.data();
     inputNetworkDescription.numLayers               = _output_layer_descs.size();
 
-    OPTIX_CHECK(optixCoopVecMatrixConvert(_context->getContextHandle(),
-                                          nullptr,
-                                          1,
-                                          &inputNetworkDescription,
-                                          (CUdeviceptr)_weights_buffer.get(),
-                                          0,
-                                          &outputNetworkDescription,
-                                          (CUdeviceptr)weights.data_ptr(),
-                                          0));
+    atcg::CoopVecMatrixConvert(_context->getContextHandle(),
+                               nullptr,
+                               1,
+                               &inputNetworkDescription,
+                               (CUdeviceptr)_weights_buffer.get(),
+                               0,
+                               &outputNetworkDescription,
+                               (CUdeviceptr)weights.data_ptr(),
+                               0);
 
     return weights;
 }
@@ -132,15 +133,15 @@ void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>:
     outputNetworkDescription.layers                  = _gradient_layer_descs.data();
     outputNetworkDescription.numLayers               = _gradient_layer_descs.size();
 
-    OPTIX_CHECK(optixCoopVecMatrixConvert(_context->getContextHandle(),
-                                          nullptr,
-                                          1,
-                                          &inputNetworkDescription,
-                                          (CUdeviceptr)weights_gradients.data_ptr(),
-                                          0,
-                                          &outputNetworkDescription,
-                                          (CUdeviceptr)_weights_gradient_buffer.get(),
-                                          0));
+    atcg::CoopVecMatrixConvert(_context->getContextHandle(),
+                               nullptr,
+                               1,
+                               &inputNetworkDescription,
+                               (CUdeviceptr)weights_gradients.data_ptr(),
+                               0,
+                               &outputNetworkDescription,
+                               (CUdeviceptr)_weights_gradient_buffer.get(),
+                               0);
 }
 
 template<int num_hidden,
@@ -172,15 +173,15 @@ torch::Tensor MLP<num_hidden, input_size, hidden_size, output_size, activation_f
     inputNetworkDescription.layers                  = _gradient_layer_descs.data();
     inputNetworkDescription.numLayers               = _gradient_layer_descs.size();
 
-    OPTIX_CHECK(optixCoopVecMatrixConvert(_context->getContextHandle(),
-                                          nullptr,
-                                          1,
-                                          &inputNetworkDescription,
-                                          (CUdeviceptr)_weights_gradient_buffer.get(),
-                                          0,
-                                          &outputNetworkDescription,
-                                          (CUdeviceptr)gradients.data_ptr(),
-                                          0));
+    atcg::CoopVecMatrixConvert(_context->getContextHandle(),
+                               nullptr,
+                               1,
+                               &inputNetworkDescription,
+                               (CUdeviceptr)_weights_gradient_buffer.get(),
+                               0,
+                               &outputNetworkDescription,
+                               (CUdeviceptr)gradients.data_ptr(),
+                               0);
 
     return gradients;
 }
@@ -272,13 +273,13 @@ size_t
 MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::_computeLayerSize(int layer_idx) const
 {
     size_t layer_size;
-    OPTIX_CHECK(optixCoopVecMatrixComputeSize(_context->getContextHandle(),
-                                              layer_idx == (num_hidden + 1) ? output_size : hidden_size,
-                                              layer_idx == 0 ? input_size : hidden_size,
-                                              OptixCoopVecElemType::OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16,
-                                              layout,
-                                              0,
-                                              &layer_size));
+    atcg::CoopVecMatrixComputeSize(_context->getContextHandle(),
+                                   layer_idx == (num_hidden + 1) ? output_size : hidden_size,
+                                   layer_idx == 0 ? input_size : hidden_size,
+                                   OptixCoopVecElemType::OPTIX_COOP_VEC_ELEM_TYPE_FLOAT16,
+                                   layout,
+                                   0,
+                                   &layer_size);
     return layer_size;
 }
 
