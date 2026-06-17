@@ -6,6 +6,7 @@
 #define SHADER_KEY          "Shader"
 #define MATERIAL_KEY        "Material"
 #define RECEIVE_SHADOWS_KEY "ReceiveShadow"
+#define CULL_MODE_KEY       "CullMode"
 
 namespace atcg
 {
@@ -80,7 +81,7 @@ void ComponentRenderer<MeshRenderComponent>::renderComponent(atcg::RendererSyste
         GraphicsCommand::bindTexture(lut_id, AssetManager::getLUTTexture());
 
         GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
-            RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true).enableCulling(true));
+            RasterizerState().setCullMode(renderer.cull_mode).enableCulling(true).enableCulling(true));
 
         _renderer->drawVAO(geometry.graph()->getVerticesArray(),
                            camera,
@@ -122,6 +123,8 @@ void ComponentSerializer<MeshRenderComponent>::serialize_component(const std::st
     j[MESH_RENDERER_KEY][RECEIVE_SHADOWS_KEY] = component.receive_shadow;
 
     j[MESH_RENDERER_KEY][MATERIAL_KEY] = (uint64_t)component.material_handle;
+
+    j[MESH_RENDERER_KEY][CULL_MODE_KEY] = (int)component.cull_mode;
 }
 
 void ComponentSerializer<MeshRenderComponent>::deserialize_component(const std::string& file_path,
@@ -149,6 +152,8 @@ void ComponentSerializer<MeshRenderComponent>::deserialize_component(const std::
     }
 
     renderComponent.receive_shadow = renderer.value(RECEIVE_SHADOWS_KEY, true);
+    renderComponent.cull_mode =
+        (atcg::CullMode)renderer.value(CULL_MODE_KEY, (int)atcg::CullMode::ATCG_BACK_FACE_CULLING);
 }
 }    // namespace Serialization
 
@@ -173,6 +178,10 @@ void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_p
     new_handle                   = Utils::displayShaderSelection("mesh", shader_handle);
     updated                      = (new_handle != shader_handle) || updated;
     component_copy.shader_handle = new_handle;
+
+    auto new_cull_mode       = Utils::displayCullModeSelection("mesh", component_copy.cull_mode);
+    updated                  = (new_cull_mode != component_copy.cull_mode) || updated;
+    component_copy.cull_mode = new_cull_mode;
 
     updated = ImGui::Checkbox("Receive Shadows##MeshRenderComponent", &component_copy.receive_shadow) || updated;
 
