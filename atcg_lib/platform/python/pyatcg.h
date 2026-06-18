@@ -763,6 +763,7 @@ inline void defineBindings(py::module_& m)
     m_cull_mode.value("ATCG_FRONT_FACE_CULLING", atcg::CullMode::ATCG_FRONT_FACE_CULLING)
         .value("ATCG_BACK_FACE_CULLING", atcg::CullMode::ATCG_BACK_FACE_CULLING)
         .value("ATCG_BOTH_FACE_CULLING", atcg::CullMode::ATCG_BOTH_FACE_CULLING)
+        .value("ATCG_NO_CULLING", atcg::CullMode::ATCG_NO_CULLING)
         .export_values();
 
     m_primitive_topology.value("ATCG_POINTS", atcg::PrimitiveTopology::ATCG_POINTS)
@@ -818,7 +819,8 @@ inline void defineBindings(py::module_& m)
         .def("endRenderPass", &atcg::GraphicsCommand::endRenderPass)
         .def("clear", &atcg::GraphicsCommand::clear)
         .def("bindTexture", &atcg::GraphicsCommand::bindTexture, "slot"_a, "texture"_a)
-        .def("bindStorageBuffer", &atcg::GraphicsCommand::bindStorageBuffer, "slot"_a, "buffer"_a);
+        .def("bindStorageBuffer", &atcg::GraphicsCommand::bindStorageBuffer, "slot"_a, "buffer"_a)
+        .def("setClearColor", &atcg::GraphicsCommand::setClearColor, "color"_a);
 
     m_renderer.def("init", &atcg::Renderer::init)
         .def("finishFrame", &atcg::Renderer::finishFrame)
@@ -1236,7 +1238,8 @@ inline void defineBindings(py::module_& m)
         .def("shader", &atcg::MeshRenderComponent::shader)
         .def("material", &atcg::MeshRenderComponent::material)
         .def_readwrite("material_handle", &atcg::MeshRenderComponent::material_handle)
-        .def_readwrite("shader_handle", &atcg::MeshRenderComponent::shader_handle);
+        .def_readwrite("shader_handle", &atcg::MeshRenderComponent::shader_handle)
+        .def_readwrite("cull_mode", &atcg::MeshRenderComponent::cull_mode);
 
     m_point_renderer
         .def(py::init<const atcg::ref_ptr<atcg::Shader>&, glm::vec3, float>(), "shader"_a, "color"_a, "point_size"_a)
@@ -1250,7 +1253,8 @@ inline void defineBindings(py::module_& m)
         .def("shader", &atcg::PointSphereRenderComponent::shader)
         .def("material", &atcg::PointSphereRenderComponent::material)
         .def_readwrite("material_handle", &atcg::PointSphereRenderComponent::material_handle)
-        .def_readwrite("shader_handle", &atcg::PointSphereRenderComponent::shader_handle);
+        .def_readwrite("shader_handle", &atcg::PointSphereRenderComponent::shader_handle)
+        .def_readwrite("cull_mode", &atcg::PointSphereRenderComponent::cull_mode);
 
     m_edge_renderer.def(py::init<glm::vec3>(), "color"_a)
         .def_readwrite("visible", &atcg::EdgeRenderComponent::visible)
@@ -1259,7 +1263,8 @@ inline void defineBindings(py::module_& m)
     m_edge_cylinder_renderer.def(py::init<float>(), "radius"_a)
         .def_readwrite("visible", &atcg::EdgeCylinderRenderComponent::visible)
         .def("material", &atcg::EdgeCylinderRenderComponent::material)
-        .def_readwrite("material_handle", &atcg::EdgeCylinderRenderComponent::material_handle);
+        .def_readwrite("material_handle", &atcg::EdgeCylinderRenderComponent::material_handle)
+        .def_readwrite("cull_mode", &atcg::EdgeCylinderRenderComponent::cull_mode);
 
     m_instance_renderer.def(py::init<>())
         .def_readwrite("visible", &atcg::InstanceRenderComponent::visible)
@@ -1474,11 +1479,14 @@ inline void defineBindings(py::module_& m)
         .def("getSkyboxTexture", &atcg::Scene::getSkyboxTexture)
         .def("getSkyboxCubeMap", &atcg::Scene::getSkyboxCubemap);
 
-    m_scene_renderer.def("render",
-                         [](const atcg::ref_ptr<atcg::Scene>& scene,
-                            const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
-                            const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
-                         { atcg::SceneRenderer::render(scene, camera, framebuffer); });
+    m_scene_renderer
+        .def("render",
+             [](const atcg::ref_ptr<atcg::Scene>& scene,
+                const atcg::ref_ptr<atcg::PerspectiveCamera>& camera,
+                const atcg::ref_ptr<atcg::Framebuffer>& framebuffer)
+             { atcg::SceneRenderer::render(scene, camera, framebuffer); })
+        .def("setNumberMSAASamples", &atcg::SceneRenderer::setNumberMSAASamples, "samples"_a)
+        .def("setShadowPassResolution", &atcg::SceneRenderer::setShadowPassResolution, "resolution"_a);
 
     m_scene_hierarchy_panel.def(py::init<>())
         .def(py::init<>())

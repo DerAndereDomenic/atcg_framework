@@ -1,5 +1,5 @@
 #include <gtest/gtest.h>
-#include <Math/Functions.h>
+#include <Utils/HostDevice.h>
 #include <DataStructure/Image.h>
 #include <DataStructure/TorchUtils.h>
 #include <Core/Path.h>

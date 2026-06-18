@@ -5,7 +5,7 @@ function(ATCG_add_executable target_name_base target_name_var source)
     add_executable(${target_name})
     
     target_sources(${target_name} PRIVATE ${source})
-    target_link_libraries(${target_name} PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,atcg_lib>")
+    target_link_libraries(${target_name} PRIVATE atcg_lib)
     target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${ATCG_PROJECT_ROOT_DIR}/src/${target_name}")
 
 	if(MSVC)
@@ -20,7 +20,7 @@ function(ATCG_add_library target_name_base target_name_var source)
     add_library(${target_name} STATIC)
     
     target_sources(${target_name} PRIVATE ${source})
-    target_link_libraries(${target_name} PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,atcg_lib>")
+    target_link_libraries(${target_name} PRIVATE atcg_lib)
     target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${ATCG_PROJECT_ROOT_DIR}/src/${target_name}")
 
 	if(MSVC)
@@ -35,7 +35,7 @@ function(ATCG_add_plugin target_name_base target_name_var source)
     add_library(${target_name} SHARED)
     
     target_sources(${target_name} PRIVATE ${source})
-    target_link_libraries(${target_name} PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,atcg_lib>")
+    target_link_libraries(${target_name} PRIVATE atcg_lib)
     target_compile_definitions(${target_name} PRIVATE ATCG_TARGET_DIR="${ATCG_PROJECT_ROOT_DIR}/plugins/${target_name}")
 
 	if(MSVC)

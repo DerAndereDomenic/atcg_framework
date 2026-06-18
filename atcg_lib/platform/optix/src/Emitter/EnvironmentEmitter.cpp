@@ -12,10 +12,40 @@ EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
     _flags               = EmitterFlags::DistantEmitter;
     _environment_texture = std::dynamic_pointer_cast<Texture2D>(texture->clone());
 
+    torch::Tensor env_map = texture->getData(atcg::GPU);
+
+    if(env_map.dim() == 3 && env_map.size(2) == 4)
+    {
+        env_map = env_map.slice(2, 0, 3);
+    }
+
+    if(env_map.dtype() != torch::kFloat32)
+    {
+        env_map = env_map.to(torch::kFloat32) / 255.0f;
+    }
+
+    torch::Tensor weights = torch::mean(env_map, -1).flip({0});
+    torch::Tensor theta   = glm::pi<float>() * (1.0f - (torch::arange(env_map.size(0), atcg::GPU)) / env_map.size(0));
+    weights               = weights * torch::sin(theta).unsqueeze(-1);
+
+    _row_pdf = torch::sum(weights, 1);
+    _row_cdf = torch::cumsum(_row_pdf, 0);
+    _row_pdf = _row_pdf / _row_cdf[-1];
+    _row_cdf = _row_cdf / _row_cdf[-1];
+
+    _col_pdfs = weights / (torch::sum(weights, 1, true) + 1e-5f);
+    _col_cdfs = torch::cumsum(_col_pdfs, 1);
+
     EnvironmentEmitterData data;
 
     data.environment_texture.texture_data.texture = _environment_texture->getTextureObject();
     data.environment_texture.spec                 = _environment_texture->getSpecification();
+    data.col_pdfs                                 = _col_pdfs.data_ptr<float>();
+    data.col_cdfs                                 = _col_cdfs.data_ptr<float>();
+    data.row_pdf                                  = _row_pdf.data_ptr<float>();
+    data.row_cdf                                  = _row_cdf.data_ptr<float>();
+    data.width                                    = env_map.size(1);
+    data.height                                   = env_map.size(0);
 
     _environment_emitter_data.upload(&data);
 }

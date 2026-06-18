@@ -45,6 +45,7 @@ struct ATCG_API PointSphereRenderComponent : public RenderComponent
 
     atcg::ref_ptr<Shader> default_shader = atcg::ShaderManager::getShader("base");
     float point_size                     = 0.1f;
+    CullMode cull_mode                   = CullMode::ATCG_BACK_FACE_CULLING;
 
     AssetHandle material_handle = 0;
     AssetHandle shader_handle   = 0;

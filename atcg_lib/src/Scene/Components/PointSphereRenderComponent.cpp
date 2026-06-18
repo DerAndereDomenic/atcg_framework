@@ -6,6 +6,7 @@
 #define POINT_SIZE_KEY            "PointSize"
 #define SHADER_KEY                "Shader"
 #define MATERIAL_KEY              "Material"
+#define CULL_MODE_KEY             "CullMode"
 
 namespace atcg
 {
@@ -83,7 +84,7 @@ void ComponentRenderer<PointSphereRenderComponent>::renderComponent(atcg::Render
         vao_sphere->pushInstanceBuffer(vbo);
 
         GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
-            RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true).enableCulling(true));
+            RasterizerState().setCullMode(renderer.cull_mode).enableCulling(true).enableCulling(true));
 
         // _renderer->setPointSize(renderer.point_size);
         _renderer->drawVAO(vao_sphere,
@@ -122,6 +123,7 @@ void ComponentSerializer<PointSphereRenderComponent>::serialize_component(const 
                                                                           nlohmann::json& j) const
 {
     j[POINT_SPHERE_RENDERER_KEY][POINT_SIZE_KEY] = component.point_size;
+    j[POINT_SPHERE_RENDERER_KEY][CULL_MODE_KEY]  = (int)component.cull_mode;
     if(AssetManager::isAssetHandleValid(component.shader_handle))
     {
         j[POINT_SPHERE_RENDERER_KEY][SHADER_KEY] = (uint64_t)component.shader_handle;
@@ -154,6 +156,9 @@ void ComponentSerializer<PointSphereRenderComponent>::deserialize_component(cons
     {
         renderComponent.material_handle = (AssetHandle)renderer[MATERIAL_KEY];
     }
+
+    renderComponent.cull_mode =
+        (atcg::CullMode)renderer.value(CULL_MODE_KEY, (int)atcg::CullMode::ATCG_BACK_FACE_CULLING);
 }
 
 }    // namespace Serialization
@@ -191,6 +196,10 @@ void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg
     new_handle              = Utils::displayShaderSelection("pointsphere", shader_handle);
     updated                 = (new_handle != shader_handle) || updated;
     component.shader_handle = new_handle;
+
+    auto new_cull_mode  = Utils::displayCullModeSelection("pointsphere", component.cull_mode);
+    updated             = (new_cull_mode != component.cull_mode) || updated;
+    component.cull_mode = new_cull_mode;
 
     if(updated)
     {

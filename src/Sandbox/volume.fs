@@ -93,7 +93,7 @@ HitInfo intersect(vec3 ray_origin, vec3 ray_dir)
 float phase_fun(float g, float costheta)
 {
     float g2 = g*g;
-    return (1-g2) / pow(1+g2-2.0*g*costheta, 3/2) / (4.0 * PI);
+    return (1-g2) / pow(1+g2-2.0*g*costheta, 1.5) / (4.0 * PI);
 }
 
 float integrate_density_light(vec3 ray_origin, vec3 ray_dir, float step_size, float tmax)
@@ -112,15 +112,15 @@ float integrate_density_light(vec3 ray_origin, vec3 ray_dir, float step_size, fl
     return exp(-density);
 }
 
-float integrate_density(vec3 ray_origin, vec3 ray_dir, float step_size, float tmax)
+void integrate_density(vec3 ray_origin, vec3 ray_dir, float step_size, float tmax)
 {
     vec3 curr = ray_origin;
     float tcurr = 0.0;
-    float density = 0.0;
 
+    float transmittance = 1.0;
     while(tcurr < tmax)
     {
-        density += sigma_t(curr) * step_size; //sigma_t = 1.0
+        float density_sample = sigma_t(curr); //sigma_t = 1.0
         tcurr += step_size;
         curr += step_size * ray_dir;
 
@@ -132,11 +132,14 @@ float integrate_density(vec3 ray_origin, vec3 ray_dir, float step_size, float tm
         HitInfo intersection = intersect(curr, light_dir);
 
         float transmittance_light = integrate_density_light(curr, light_dir, step_size * 5, intersection.tmax);
+        float delta_transmittance = exp(-density_sample * step_size);
 
-        radiance += sigma_s(curr) * light_intensity / (light_dist * light_dist) * transmittance_light * phase_fun(g, dot(light_dir, ray_dir)); //Phase fun for isotropic scattering = 1/4pi
+        vec3 Li = light_intensity / (light_dist * light_dist) *  transmittance_light * phase_fun(g, dot(light_dir, ray_dir));
+
+        radiance += transmittance * Li * density_sample * step_size; //Phase fun for isotropic scattering = 1/4pi
+        transmittance *= delta_transmittance;
     }
 
-    return exp(-density);
 }
 
 void main()
@@ -149,7 +152,7 @@ void main()
     vec3 out_pos = ray_origin + intersection.tmax * ray_dir;
 
     //float transmittance_gt = exp(-sigma_t * intersection.tmax);
-    float transmittance_march = integrate_density(ray_origin, ray_dir, 0.01, intersection.tmax);
+    integrate_density(ray_origin, ray_dir, 0.01, intersection.tmax);
 
     //radiance += transmittance_march * ambient;
 
