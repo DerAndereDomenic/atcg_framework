@@ -10,9 +10,10 @@ namespace atcg
  */
 enum CullMode
 {
-    ATCG_FRONT_FACE_CULLING,
-    ATCG_BACK_FACE_CULLING,
-    ATCG_BOTH_FACE_CULLING
+    ATCG_FRONT_FACE_CULLING = 0,
+    ATCG_BACK_FACE_CULLING  = 1,
+    ATCG_BOTH_FACE_CULLING  = 2,
+    ATCG_NO_CULLING         = 3
 };
 
 enum class PrimitiveTopology

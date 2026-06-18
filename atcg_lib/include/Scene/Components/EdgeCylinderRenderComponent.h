@@ -21,7 +21,8 @@ struct ATCG_API EdgeCylinderRenderComponent : public RenderComponent
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Edge Cylinder Renderer"; }
 
-    float radius = 0.001f;
+    float radius             = 0.001f;
+    atcg::CullMode cull_mode = atcg::CullMode::ATCG_BACK_FACE_CULLING;
 
     AssetHandle material_handle = 0;
 };
