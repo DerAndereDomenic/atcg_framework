@@ -9,7 +9,7 @@ template<typename T, uint32_t L, uint32_t F>
 HashGrid<T, L, F>::HashGrid(const torch::Tensor& weights)
 {
     allocateBuffers();
-    setWeights(weights);
+    setWeights(weights.to(torch::kFloat16));
 }
 
 template<typename T, uint32_t L, uint32_t F>
@@ -19,7 +19,7 @@ HashGrid<T, L, F>::HashGrid(const torch::Tensor& weights, uint32_t N_min, uint32
       _T_size(T)
 {
     allocateBuffers();
-    setWeights(weights);
+    setWeights(weights.to(torch::kFloat16));
 }
 
 template<typename T, uint32_t L, uint32_t F>
@@ -44,13 +44,13 @@ void HashGrid<T, L, F>::allocateBuffers()
 template<typename T, uint32_t L, uint32_t F>
 void HashGrid<T, L, F>::setWeights(const torch::Tensor& weights)
 {
-    _weights.copy_(weights);
+    _weights.copy_(weights.to(torch::kFloat16));
 }
 
 template<typename T, uint32_t L, uint32_t F>
 void HashGrid<T, L, F>::setGradWeights(const torch::Tensor& grad_weights)
 {
-    _grad_weights.copy_(grad_weights);
+    _grad_weights.copy_(grad_weights.to(torch::kFloat));
 }
 
 template<typename T, uint32_t L, uint32_t F>

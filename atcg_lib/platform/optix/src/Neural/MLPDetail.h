@@ -19,8 +19,8 @@ MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::MLP(
 {
     _initializeLayerDescriptions();
     _allocateBuffers();
-    _bias_buffer          = torch::zeros_like(bias);
-    _bias_gradient_buffer = torch::zeros_like(bias);
+    _bias_buffer          = torch::zeros_like(bias).to(torch::kFloat16);
+    _bias_gradient_buffer = torch::zeros_like(bias).to(torch::kFloat16);
 
     setWeights(weights);
     setBias(bias);
@@ -35,8 +35,9 @@ template<int num_hidden,
          int output_size,
          enum class ActivationFunction activation_function>
 void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::setWeights(
-    const torch::Tensor& weights)
+    const torch::Tensor& weights_)
 {
+    auto weights                                    = weights_.to(torch::kFloat16);
     OptixNetworkDescription inputNetworkDescription = {};
     inputNetworkDescription.layers                  = _input_layer_descs.data();
     inputNetworkDescription.numLayers               = _input_layer_descs.size();
@@ -63,7 +64,7 @@ template<int num_hidden,
          enum class ActivationFunction activation_function>
 void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::setBias(const torch::Tensor& bias)
 {
-    _bias_buffer.copy_(bias);
+    _bias_buffer.copy_(bias.to(torch::kFloat16));
 }
 
 template<int num_hidden,
@@ -125,8 +126,9 @@ template<int num_hidden,
          int output_size,
          enum class ActivationFunction activation_function>
 void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::setWeightGradients(
-    const torch::Tensor& weights_gradients)
+    const torch::Tensor& weights_gradients_)
 {
+    auto weights_gradients                          = weights_gradients_.to(torch::kFloat16);
     OptixNetworkDescription inputNetworkDescription = {};
     inputNetworkDescription.layers                  = _input_layer_descs.data();
     inputNetworkDescription.numLayers               = _input_layer_descs.size();
@@ -154,7 +156,7 @@ template<int num_hidden,
 void MLP<num_hidden, input_size, hidden_size, output_size, activation_function>::setBiasGradients(
     const torch::Tensor& bias_gradients)
 {
-    _bias_gradient_buffer.copy_(bias_gradients);
+    _bias_gradient_buffer.copy_(bias_gradients.to(torch::kFloat16));
 }
 
 template<int num_hidden,
