@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Neural/MLP.h>
+#include <Neural/HashGrid.h>
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
 #include "NeuralTextureData.cuh"
@@ -27,9 +28,9 @@ public:
 
     torch::Tensor evaluate(const uint32_t width, const uint32_t height);
 
-    ATCG_INLINE std::vector<torch::Tensor> getParameters() const { return {_weights, _bias}; }
+    ATCG_INLINE std::vector<torch::Tensor> getParameters() const { return {_weights, _bias, _hash_weights}; }
 
-    atcg::MLP<3, 8, 64, 8>& getMLP() { return _mlp; }
+    atcg::MLP<3, 32, 64, 8>& getMLP() { return _mlp; }
 
 private:
     friend class NeuralTextureNode;
@@ -38,10 +39,12 @@ private:
     std::vector<torch::Tensor> _backward(const torch::Tensor& grad_output);
 
 private:
-    atcg::MLP<3, 8, 64, 8> _mlp;
+    atcg::MLP<3, 32, 64, 8> _mlp;
+    atcg::HashGrid<half, 16, 2> _hash_grid;
 
     torch::Tensor _weights;
     torch::Tensor _bias;
+    torch::Tensor _hash_weights;
 
     uint32_t _fwd_call_index;
     uint32_t _bckwd_call_index;

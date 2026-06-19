@@ -10,24 +10,25 @@ extern "C"
     __constant__ NeuralTextureData params;
 }
 
-using T_INPUT  = OptixCoopVec<half, 8>;
+using T_INPUT  = OptixCoopVec<half, 32>;
 using T_OUTPUT = OptixCoopVec<half, 8>;
 using T_HIDDEN = OptixCoopVec<half, 64>;
 
 ATCG_DEVICE ATCG_INLINE T_INPUT encoding_forward(const glm::vec2& uv)
 {
-    T_INPUT encoding;
+    // T_INPUT encoding;
 
-    encoding[0] = __float2half(uv.x);
-    encoding[1] = __float2half(uv.y);
-    encoding[2] = __float2half(std::sin(glm::two_pi<float>() * uv.x));
-    encoding[3] = __float2half(std::sin(glm::two_pi<float>() * uv.y));
-    encoding[4] = __float2half(std::sin(2.0f * glm::two_pi<float>() * uv.x));
-    encoding[5] = __float2half(std::sin(2.0f * glm::two_pi<float>() * uv.y));
-    encoding[6] = __float2half(std::sin(4.0f * glm::two_pi<float>() * uv.x));
-    encoding[7] = __float2half(std::sin(4.0f * glm::two_pi<float>() * uv.y));
+    // encoding[0] = __float2half(uv.x);
+    // encoding[1] = __float2half(uv.y);
+    // encoding[2] = __float2half(std::sin(glm::two_pi<float>() * uv.x));
+    // encoding[3] = __float2half(std::sin(glm::two_pi<float>() * uv.y));
+    // encoding[4] = __float2half(std::sin(2.0f * glm::two_pi<float>() * uv.x));
+    // encoding[5] = __float2half(std::sin(2.0f * glm::two_pi<float>() * uv.y));
+    // encoding[6] = __float2half(std::sin(4.0f * glm::two_pi<float>() * uv.x));
+    // encoding[7] = __float2half(std::sin(4.0f * glm::two_pi<float>() * uv.y));
 
-    return encoding;
+    // return encoding;
+    return params.device_hash_grid->forward(glm::vec3(uv, 0.0f));
 }
 
 extern "C" __global__ void __raygen__fwd()
@@ -82,5 +83,6 @@ extern "C" __global__ void __raygen__bckwd()
     T_OUTPUT grad_activation =
         atcg::Activation<atcg::ActivationFunction::Sigmoid, 8>::backward(output, grad_output_slice);
 
-    params.device_mlp->backward<true>(encoding, grad_activation, hidden, activations);
+    T_INPUT grad_input = params.device_mlp->backward<true>(encoding, grad_activation, hidden, activations);
+    params.device_hash_grid->backward<true>(glm::vec3(uv, 0.0f), grad_input);
 }
