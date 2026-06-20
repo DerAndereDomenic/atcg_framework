@@ -266,10 +266,19 @@ void AssetManagerSystem::loadStandardAssets()
     }
 
     {
-        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
-                                              atcg::Vertex(glm::vec3(1, -1, 0)),
-                                              atcg::Vertex(glm::vec3(1, 1, 0)),
-                                              atcg::Vertex(glm::vec3(-1, 1, 0))};
+        std::vector<atcg::Vertex> vertices = {
+            atcg::Vertex(glm::vec3(-1, -1, 0),
+                         glm::vec3(1),
+                         glm::vec3(0, 0, 1),
+                         glm::vec3(1, 0, 0),
+                         glm::vec3(0, 0, 0)),
+            atcg::Vertex(glm::vec3(1, -1, 0), glm::vec3(1), glm::vec3(0, 0, 1), glm::vec3(1, 0, 0), glm::vec3(1, 0, 0)),
+            atcg::Vertex(glm::vec3(1, 1, 0), glm::vec3(1), glm::vec3(0, 0, 1), glm::vec3(1, 0, 0), glm::vec3(1, 1, 0)),
+            atcg::Vertex(glm::vec3(-1, 1, 0),
+                         glm::vec3(1),
+                         glm::vec3(0, 0, 1),
+                         glm::vec3(1, 0, 0),
+                         glm::vec3(0, 1, 0))};
 
         std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
 
