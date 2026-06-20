@@ -164,6 +164,11 @@ public:
     void loadStandardAssets();
 
     /**
+     * @brief Register standard assets
+     */
+    void registerStandardAssets();
+
+    /**
      * @brief Get the standard sphere mesh
      *
      * @return The sphere mesh
