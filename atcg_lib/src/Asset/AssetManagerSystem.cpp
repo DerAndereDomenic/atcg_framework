@@ -149,6 +149,8 @@ ATCG_INLINE void serialize_registry_ver1(const AssetRegistry& registry, const st
         AssetHandle handle = entry.first;
         AssetMetaData data = entry.second;
 
+        if(!data.serialize) continue;
+
         nlohmann::json asset_entry;
         asset_entry["Handle"] = (uint64_t)handle;
         asset_entry["Type"]   = assetTypeToString(data.type);

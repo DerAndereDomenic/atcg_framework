@@ -559,7 +559,15 @@ AssetPanel::AssetPanel()
         _preview_scene->setSkybox(skybox_texture);
 
         auto plane_entity = _preview_scene->createEntity("Preview Plane");
-        plane_entity.addComponent<GeometryComponent>(atcg::AssetManager::getQuadMesh());
+
+        atcg::AssetMetaData data;
+        data.type           = AssetType::Graph;
+        data.name           = "Quad Mesh";
+        data.show_in_editor = false;
+        data.serialize      = false;
+        atcg::AssetManager::registerAsset(atcg::AssetManager::getQuadMesh()->handle, data);
+
+        plane_entity.addComponent<GeometryComponent>();
         auto& renderer          = plane_entity.addComponent<MeshRenderComponent>();
         renderer.default_shader = atcg::ShaderManager::getShader("checkerboard");
         auto& transform         = plane_entity.addComponent<TransformComponent>();
@@ -1334,7 +1342,7 @@ void AssetPanel::drawAssetList()
     {
         const auto& data = entry.second;
 
-        if(_panel_state == data.type)
+        if(_panel_state == data.type && data.show_in_editor)
         {
             auto handle     = entry.first;
             std::string tag = data.name;
