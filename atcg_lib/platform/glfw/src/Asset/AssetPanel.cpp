@@ -13,6 +13,7 @@
 #include <Scene/Scene.h>
 #include <Core/Path.h>
 #include <Utils/Utils.h>
+#include <Renderer/Renderer.h>
 
 namespace atcg
 {
@@ -539,6 +540,13 @@ AssetPanel::AssetPanel()
         auto img    = atcg::IO::imread((atcg::resource_directory() / "image_icon.png").string());
         _image_icon = atcg::Texture2D::create(img);
     }
+
+    {
+        _preview_framebuffer = atcg::make_ref<Framebuffer>(512, 512);
+        _preview_framebuffer->attachColor();
+        _preview_framebuffer->attachDepth();
+        _preview_framebuffer->complete();
+    }
 }
 
 void AssetPanel::displayMaterial(AssetHandle handle)
@@ -638,6 +646,46 @@ void AssetPanel::displayGraph(AssetHandle handle)
             atcg::RevisionStack::endRecording();
         }
     }
+
+    if(!graph || graph->type() != GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH) return;
+
+    // Thumbnail preview
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+    ImGui::Image((ImTextureID)_preview_framebuffer->getColorAttachement()->getID(),
+                 ImVec2(content_scale * 256, content_scale * 256),
+                 ImVec2 {0, 1},
+                 ImVec2 {1, 0});
+
+    atcg::BoundingBox bbox = graph->getBoundingBox();
+
+    // Place a camera that has a good view on the mesh based on the bounding box
+    glm::vec3 center    = bbox.min + (bbox.max - bbox.min) * 0.5f;
+    float radius        = glm::length(bbox.max - bbox.min) * 0.5f;
+    glm::vec3 direction = glm::vec3(glm::cos(glm::radians(30.0f) * glm::cos(glm::radians(45.0f))),
+                                    glm::sin(glm::radians(30.0f)),
+                                    glm::cos(glm::radians(30.0f) * glm::sin(glm::radians(45.0f))));
+    glm::vec3 cam_pos   = glm::vec3(center.x, center.y, center.z) + 2.0f * radius * direction;
+    glm::mat4 view      = glm::lookAt(cam_pos, center, glm::vec3(0, 1, 0));
+    glm::mat4 proj      = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, radius * 10.0f);
+    glm::mat4 mvp       = proj * view;
+
+    atcg::CameraExtrinsics extrinsics(view);
+    atcg::CameraIntrinsics intrinsics(proj);
+    atcg::ref_ptr<PerspectiveCamera> camera = atcg::make_ref<PerspectiveCamera>(extrinsics, intrinsics);
+
+    atcg::GraphicsPipeline pipeline =
+        atcg::GraphicsPipeline()
+            .setShader(atcg::ShaderManager::getShader("mesh_preview"))
+            .setRasterizerState(
+                atcg::RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true));
+
+    atcg::GraphicsCommand::beginRenderPass(_preview_framebuffer);
+
+    atcg::GraphicsCommand::clear();
+    atcg::Renderer::drawVAO(graph->getVerticesArray(), camera, glm::mat4(1.0f), pipeline, graph->n_vertices());
+
+    atcg::GraphicsCommand::endRenderPass();
+
 #endif
 }
 

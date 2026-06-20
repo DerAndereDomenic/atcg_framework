@@ -3,6 +3,7 @@
 #include <Core/API.h>
 #include <Asset/Asset.h>
 #include <Renderer/Material.h>
+#include <Renderer/Framebuffer.h>
 
 namespace atcg
 {
@@ -74,6 +75,8 @@ private:
     atcg::ref_ptr<Texture2D> _material_icon;
     atcg::ref_ptr<Texture2D> _mesh_icon;
     atcg::ref_ptr<Texture2D> _image_icon;
+
+    atcg::ref_ptr<Framebuffer> _preview_framebuffer;
 };
 }    // namespace GUI
 }    // namespace atcg
