@@ -560,14 +560,7 @@ AssetPanel::AssetPanel()
 
         auto plane_entity = _preview_scene->createEntity("Preview Plane");
 
-        atcg::AssetMetaData data;
-        data.type           = AssetType::Graph;
-        data.name           = "Quad Mesh";
-        data.show_in_editor = false;
-        data.serialize      = false;
-        atcg::AssetManager::registerAsset(atcg::AssetManager::getQuadMesh()->handle, data);
-
-        plane_entity.addComponent<GeometryComponent>();
+        plane_entity.addComponent<GeometryComponent>(atcg::AssetManager::getQuadMesh());
         auto& renderer          = plane_entity.addComponent<MeshRenderComponent>();
         renderer.default_shader = atcg::ShaderManager::getShader("checkerboard");
         auto& transform         = plane_entity.addComponent<TransformComponent>();

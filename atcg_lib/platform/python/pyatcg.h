@@ -566,7 +566,9 @@ inline void defineBindings(py::module_& m)
                  &atcg::AssetManagerSystem::registerAsset))
         .def("registerAsset",
              static_cast<atcg::AssetHandle (atcg::AssetManagerSystem::*)(const atcg::ref_ptr<atcg::Asset>& asset,
-                                                                         const std::string& name)>(
+                                                                         const std::string& name,
+                                                                         bool show_in_editor,
+                                                                         bool serialize)>(
                  &atcg::AssetManagerSystem::registerAsset))
         .def("unloadAsset", &atcg::AssetManagerSystem::unloadAsset)
         .def("removeAsset", &atcg::AssetManagerSystem::removeAsset)
@@ -583,8 +585,8 @@ inline void defineBindings(py::module_& m)
         .def("updateName", &atcg::AssetManager::updateName)
         .def("registerAsset", [](const atcg::AssetMetaData& data) { return atcg::AssetManager::registerAsset(data); })
         .def("registerAsset",
-             [](const atcg::ref_ptr<atcg::Asset>& asset, const std::string& name)
-             { return atcg::AssetManager::registerAsset(asset, name); })
+             [](const atcg::ref_ptr<atcg::Asset>& asset, const std::string& name, bool show_in_editor, bool serialize)
+             { return atcg::AssetManager::registerAsset(asset, name, show_in_editor, serialize); })
         .def("unloadAsset", &atcg::AssetManager::unloadAsset)
         .def("removeAsset", &atcg::AssetManager::removeAsset)
         .def("serializeRegistry", &atcg::AssetManager::serializeRegistry)

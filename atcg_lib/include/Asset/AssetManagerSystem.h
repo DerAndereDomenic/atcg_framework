@@ -101,10 +101,15 @@ public:
      *
      * @param asset The asset to register
      * @param name The name of the asset
+     * @param show_in_editor Whether the asset should be shown in the editor
+     * @param serialize Whether the asset should be serialized
      *
      * @return The asset handle (should be the same as asset->handle)
      */
-    AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name);
+    AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset,
+                              const std::string& name,
+                              bool show_in_editor = true,
+                              bool serialize      = true);
 
     /**
      * @brief Unload an asset.
@@ -331,12 +336,20 @@ ATCG_INLINE AssetHandle registerAsset(const AssetMetaData& data)
  *
  * @param asset The asset to register
  * @param name The name of the asset
+ * @param show_in_editor Whether the asset should be shown in the editor
+ * @param serialize Whether the asset should be serialized
  *
  * @return The asset handle (should be the same as asset->handle)
  */
-ATCG_INLINE AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name)
+ATCG_INLINE AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset,
+                                      const std::string& name,
+                                      bool show_in_editor = true,
+                                      bool serialize      = true)
 {
-    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(asset, name);
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(asset,
+                                                                                      name,
+                                                                                      show_in_editor,
+                                                                                      serialize);
 }
 
 /**

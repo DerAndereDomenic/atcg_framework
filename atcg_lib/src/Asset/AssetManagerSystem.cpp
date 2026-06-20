@@ -98,11 +98,16 @@ AssetHandle AssetManagerSystem::registerAsset(AssetHandle handle, const AssetMet
     return handle;
 }
 
-AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name)
+AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset,
+                                              const std::string& name,
+                                              bool show_in_editor,
+                                              bool serialize)
 {
     AssetMetaData data;
-    data.type = asset->getType();
-    data.name = name;
+    data.type           = asset->getType();
+    data.name           = name;
+    data.show_in_editor = show_in_editor;
+    data.serialize      = serialize;
 
     _loaded_assets[asset->handle] = asset;
 
