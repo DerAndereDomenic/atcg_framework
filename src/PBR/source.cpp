@@ -405,6 +405,7 @@ public:
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMouseMoved));
         dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMousePressed));
         dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onKeyPressed));
+        dispatcher.dispatch<atcg::FileDroppedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onFileDropped));
 #endif
         dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onViewportResized));
     }
@@ -466,6 +467,27 @@ public:
             mouse_pos.x >= 0 && mouse_pos.y >= 0 && mouse_pos.y < height && mouse_pos.x < app->getViewportSize().x;
 
         return false;
+    }
+
+    bool onFileDropped(atcg::FileDroppedEvent* event)
+    {
+        std::filesystem::path filepath = event->getPath();
+
+        auto file_ending = filepath.extension().string();
+
+        if(file_ending == ".obj")
+        {
+            auto graph = atcg::IO::read_mesh(filepath.string());
+            atcg::AssetManager::registerAsset(graph, filepath.stem().string());
+        }
+        else if(file_ending == ".png" || file_ending == ".jpg" || file_ending == ".jpeg" || file_ending == ".hdr")
+        {
+            auto img     = atcg::IO::imread(filepath.string());
+            auto texture = atcg::Texture2D::create(img);
+            atcg::AssetManager::registerAsset(texture, filepath.stem().string());
+        }
+
+        return true;
     }
 #endif
 
