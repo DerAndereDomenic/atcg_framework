@@ -4,6 +4,7 @@
 #include <Asset/Asset.h>
 #include <Renderer/Material.h>
 #include <Renderer/Framebuffer.h>
+#include <Scene/Scene.h>
 
 namespace atcg
 {
@@ -75,6 +76,8 @@ private:
     atcg::ref_ptr<Texture2D> _material_icon;
     atcg::ref_ptr<Texture2D> _mesh_icon;
     atcg::ref_ptr<Texture2D> _image_icon;
+
+    atcg::ref_ptr<Scene> _preview_scene;
 
     atcg::ref_ptr<Framebuffer> _preview_framebuffer;
 };

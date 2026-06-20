@@ -14,6 +14,7 @@
 #include <Core/Path.h>
 #include <Utils/Utils.h>
 #include <Renderer/Renderer.h>
+#include <Scene/SceneRenderer.h>
 
 namespace atcg
 {
@@ -542,6 +543,32 @@ AssetPanel::AssetPanel()
     }
 
     {
+        _preview_scene = atcg::make_ref<Scene>();
+        auto entity    = _preview_scene->createEntity("Preview Entity");
+        entity.addComponent<GeometryComponent>(atcg::AssetManager::getSphereMesh());
+        entity.addComponent<MeshRenderComponent>();
+        entity.addComponent<TransformComponent>();
+
+        auto camera = atcg::make_ref<PerspectiveCamera>();
+        camera->setPosition(glm::vec3(2.0f, 1.5f, 0.0f));
+        camera->setLookAt(glm::vec3(0));
+        _preview_scene->setCamera(camera);
+
+        auto skybox         = atcg::IO::imread((atcg::resource_directory() / "studio_small.hdr").string());
+        auto skybox_texture = atcg::Texture2D::create(skybox);
+        _preview_scene->setSkybox(skybox_texture);
+
+        auto plane_entity = _preview_scene->createEntity("Preview Plane");
+        plane_entity.addComponent<GeometryComponent>(atcg::AssetManager::getQuadMesh());
+        auto& renderer          = plane_entity.addComponent<MeshRenderComponent>();
+        renderer.default_shader = atcg::ShaderManager::getShader("checkerboard");
+        auto& transform         = plane_entity.addComponent<TransformComponent>();
+        transform.setPosition(glm::vec3(0, -1, 0));
+        transform.setScale(glm::vec3(50, 50, 50));
+        transform.setRotation(glm::vec3(glm::radians(-90.0f), 0, 0));
+    }
+
+    {
         _preview_framebuffer = atcg::make_ref<Framebuffer>(512, 512);
         _preview_framebuffer->attachColor();
         _preview_framebuffer->attachDepth();
@@ -612,6 +639,19 @@ void AssetPanel::displayMaterial(AssetHandle handle)
             detail::displayNullMaterial(std::dynamic_pointer_cast<NullMaterial>(material), key, updated);
             break;
     }
+
+    // Thumbnail preview
+    ImGui::Image((ImTextureID)_preview_framebuffer->getColorAttachement()->getID(),
+                 ImVec2(content_scale * 256, content_scale * 256),
+                 ImVec2 {0, 1},
+                 ImVec2 {1, 0});
+
+    auto preview_entity      = _preview_scene->getEntitiesByName("Preview Entity")[0];
+    auto& renderer           = preview_entity.getComponent<MeshRenderComponent>();
+    renderer.material_handle = material->handle;
+
+    atcg::SceneRenderer::render(_preview_scene, _preview_scene->getCamera(), _preview_framebuffer);
+
 
     if(updated)
     {
