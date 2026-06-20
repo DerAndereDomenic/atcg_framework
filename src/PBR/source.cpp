@@ -471,20 +471,23 @@ public:
 
     bool onFileDropped(atcg::FileDroppedEvent* event)
     {
-        std::filesystem::path filepath = event->getPath();
-
-        auto file_ending = filepath.extension().string();
-
-        if(file_ending == ".obj")
+        for(int i = 0; i < event->getCount(); ++i)
         {
-            auto graph = atcg::IO::read_mesh(filepath.string());
-            atcg::AssetManager::registerAsset(graph, filepath.stem().string());
-        }
-        else if(file_ending == ".png" || file_ending == ".jpg" || file_ending == ".jpeg" || file_ending == ".hdr")
-        {
-            auto img     = atcg::IO::imread(filepath.string());
-            auto texture = atcg::Texture2D::create(img);
-            atcg::AssetManager::registerAsset(texture, filepath.stem().string());
+            std::filesystem::path filepath = event->getPath(i);
+
+            auto file_ending = filepath.extension().string();
+
+            if(file_ending == ".obj")
+            {
+                auto graph = atcg::IO::read_mesh(filepath.string());
+                atcg::AssetManager::registerAsset(graph, filepath.stem().string());
+            }
+            else if(file_ending == ".png" || file_ending == ".jpg" || file_ending == ".jpeg" || file_ending == ".hdr")
+            {
+                auto img     = atcg::IO::imread(filepath.string());
+                auto texture = atcg::Texture2D::create(img);
+                atcg::AssetManager::registerAsset(texture, filepath.stem().string());
+            }
         }
 
         return true;
