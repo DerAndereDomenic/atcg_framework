@@ -72,11 +72,20 @@ void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
                                                 ImGuizmo::LOCAL,
                                                 glm::value_ptr(model));
 
-        if(manipulated)
+        bool deactived = ImGui::IsItemDeactivated();
+
+        if(manipulated && !atcg::RevisionStack::isRecording())
         {
             atcg::RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
-            atcg::TransformComponent& transform = entity.getComponent<atcg::TransformComponent>();
+        }
+
+        if(manipulated)
+        {
             transform.setModel(model);
+        }
+
+        if(deactived && atcg::RevisionStack::isRecording())
+        {
             atcg::RevisionStack::endRecording();
         }
     }

@@ -162,7 +162,8 @@ void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atc
     EdgeCylinderRenderComponent component = _component;
     std::string id                        = std::to_string(entity.getComponent<IDComponent>().ID());
 
-    bool updated = ImGui::Checkbox("Visible##visibleedgecylinder", &component.visible);
+    bool updated     = ImGui::Checkbox("Visible##visibleedgecylinder", &component.visible);
+    bool deactivated = ImGui::IsItemDeactivated();
     std::stringstream label;
     label << "Radius##edgecylinder" << id;
     float radius = component.radius;
@@ -171,6 +172,7 @@ void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atc
         component.radius = radius;
         updated          = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     // Material
     auto material_handle = component.material_handle;
@@ -178,11 +180,20 @@ void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atc
     auto new_handle           = Utils::displayMaterialSelection("edgecylinder", material_handle);
     updated                   = (new_handle != material_handle) || updated;
     component.material_handle = new_handle;
+    deactivated               = ImGui::IsItemDeactivated() || deactivated;
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<EdgeCylinderRenderComponent>>(scene, entity);
+    }
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<EdgeCylinderRenderComponent>>(scene, entity);
         _component = component;
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
         atcg::RevisionStack::endRecording();
     }
 #endif

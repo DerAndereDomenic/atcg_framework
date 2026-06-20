@@ -23,7 +23,10 @@ namespace GUI
 
 namespace detail
 {
-void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const std::string& key, bool& updated)
+void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material,
+                           const std::string& key,
+                           bool& updated,
+                           bool& deactivated)
 {
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     {
@@ -45,6 +48,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                 material->setDiffuseColor(new_color);
                 updated = true;
             }
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -72,6 +77,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -88,6 +95,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -123,6 +132,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -139,6 +149,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -156,6 +168,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                 material->setRoughness(roughness);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -183,6 +196,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -199,6 +213,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -216,6 +232,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                 material->setMetallic(metallic);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -243,6 +260,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -259,6 +277,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -276,6 +296,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                 material->setIor(ior);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -303,6 +324,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -319,11 +341,16 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 }
 
-void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material, const std::string& key, bool& updated)
+void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material,
+                               const std::string& key,
+                               bool& updated,
+                               bool& deactivated)
 {
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     {
@@ -345,6 +372,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                 material->setDiffuseColor(new_color);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -372,6 +400,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -388,6 +417,8 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -405,6 +436,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                 material->setRoughness(roughness);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -432,6 +464,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -448,6 +481,8 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -465,6 +500,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                 material->setIor(ior);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -492,6 +528,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -508,11 +545,17 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 }
 
-void displayNullMaterial(const atcg::ref_ptr<NullMaterial>& material, const std::string& key, bool& updated) {}
+void displayNullMaterial(const atcg::ref_ptr<NullMaterial>& material,
+                         const std::string& key,
+                         bool& updated,
+                         bool& deactivated)
+{
+}
 }    // namespace detail
 
 AssetPanel::AssetPanel()
@@ -628,16 +671,23 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         ImGui::EndCombo();
     }
 
+    bool deactivated = false;
     switch(material->getMaterialType())
     {
         case MaterialType::MATERIAL_TYPE_OPAQUE:
-            detail::displayOpaqueMaterial(std::dynamic_pointer_cast<OpaqueMaterial>(material), key, updated);
+            detail::displayOpaqueMaterial(std::dynamic_pointer_cast<OpaqueMaterial>(material),
+                                          key,
+                                          updated,
+                                          deactivated);
             break;
         case MaterialType::MATERIAL_TYPE_DIELECTRIC:
-            detail::displayDielectricMaterial(std::dynamic_pointer_cast<DielectricMaterial>(material), key, updated);
+            detail::displayDielectricMaterial(std::dynamic_pointer_cast<DielectricMaterial>(material),
+                                              key,
+                                              updated,
+                                              deactivated);
             break;
         case MaterialType::MATERIAL_TYPE_NULL:
-            detail::displayNullMaterial(std::dynamic_pointer_cast<NullMaterial>(material), key, updated);
+            detail::displayNullMaterial(std::dynamic_pointer_cast<NullMaterial>(material), key, updated, deactivated);
             break;
     }
 
@@ -653,11 +703,18 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     atcg::SceneRenderer::render(_preview_scene, _preview_scene->getCamera(), _preview_framebuffer);
 
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::startRecording<AssetEditedRevision>(material_->handle);
+    }
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<AssetEditedRevision>(material_->handle);
         AssetManager::registerAsset(material, AssetManager::getMetaData(material_->handle).name);
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
         atcg::RevisionStack::endRecording();
     }
 #endif

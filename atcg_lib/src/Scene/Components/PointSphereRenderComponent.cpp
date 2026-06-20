@@ -169,7 +169,9 @@ void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg
     PointSphereRenderComponent component = _component;
     std::string id                       = std::to_string(entity.getComponent<IDComponent>().ID());
 
-    bool updated = ImGui::Checkbox("Visible##visiblepointsphere", &component.visible);
+    bool deactivated = false;
+    bool updated     = ImGui::Checkbox("Visible##visiblepointsphere", &component.visible);
+    deactivated      = ImGui::IsItemDeactivated() || deactivated;
 
     float point_size = component.point_size;
     std::stringstream label;
@@ -179,24 +181,35 @@ void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg
         component.point_size = point_size;
         updated              = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     // Material
     auto material_handle = component.material_handle;
 
     auto new_handle           = Utils::displayMaterialSelection("pointsphere", material_handle);
+    deactivated               = ImGui::IsItemDeactivated() || deactivated;
     updated                   = (new_handle != material_handle) || updated;
     component.material_handle = new_handle;
 
     auto shader_handle      = component.shader_handle;
     new_handle              = Utils::displayShaderSelection("pointsphere", shader_handle);
+    deactivated             = ImGui::IsItemDeactivated() || deactivated;
     updated                 = (new_handle != shader_handle) || updated;
     component.shader_handle = new_handle;
 
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        RevisionStack::startRecording<ComponentEditedRevision<PointSphereRenderComponent>>(scene, entity);
+    }
+
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointSphereRenderComponent>>(scene, entity);
         _component = component;
-        atcg::RevisionStack::endRecording();
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
+        RevisionStack::endRecording();
     }
 #endif
 }
