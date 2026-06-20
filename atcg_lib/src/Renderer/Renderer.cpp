@@ -266,6 +266,7 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("volume_het");
     impl->shader_manager->addShaderFromName("depth_pass_simple");
     impl->shader_manager->addShaderFromName("blit");
+    impl->shader_manager->addShaderFromName("mesh_preview");
 }
 
 void RendererSystem::use()
