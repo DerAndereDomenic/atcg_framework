@@ -5,6 +5,8 @@
 #include <Core/glm.h>
 
 #include <imgui.h>
+#include <implot.h>
+#include <ImGuizmo.h>
 
 namespace atcg
 {
@@ -93,6 +95,8 @@ public:
     glm::ivec2 getViewportPosition() const { return _viewport_position; }
 
     ImGuiContext* getImGuiContext() const;
+
+    ImPlotContext* getImPlotContext() const;
 
 private:
     bool _block_events            = true;

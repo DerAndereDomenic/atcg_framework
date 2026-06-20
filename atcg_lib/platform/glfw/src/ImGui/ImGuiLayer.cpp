@@ -206,4 +206,9 @@ ImGuiContext* ImGuiLayer::getImGuiContext() const
 {
     return ImGui::GetCurrentContext();
 }
+
+ImPlotContext* ImGuiLayer::getImPlotContext() const
+{
+    return ImPlot::GetCurrentContext();
+}
 }    // namespace atcg
