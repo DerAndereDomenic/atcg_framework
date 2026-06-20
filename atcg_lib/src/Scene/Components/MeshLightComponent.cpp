@@ -16,9 +16,37 @@ void ComponentRenderer<MeshLightComponent>::renderComponent(atcg::RendererSystem
                                                             const atcg::ref_ptr<Camera>& camera,
                                                             atcg::Dictionary& auxiliary) const
 {
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
     uint32_t entity_id           = entity.entity_handle();
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
+
+    BoundingBox bbox = geometry.graph()->getBoundingBox();
+    bbox             = Utils::transformBoundingBox(bbox, transform.getModel());
+
+    if(!Utils::isVisible(camera, bbox))
+    {
+        return;
+    }
 
     // Actual rendering of component
     MeshLightComponent renderer = entity.getComponent<MeshLightComponent>();
