@@ -329,10 +329,10 @@ void AssetManagerSystem::loadStandardAssets()
 
 void AssetManagerSystem::registerStandardAssets()
 {
-    registerAsset(_sphere_mesh, "Standard Sphere Mesh", false, false);
-    registerAsset(_cylinder_mesh, "Standard Cylinder Mesh", false, false);
-    registerAsset(_lut_texture, "Standard LUT Texture", false, false);
-    registerAsset(_camera_frustum, "Camera Frustum Mesh", false, false);
+    registerAsset(_sphere_mesh, "Sphere Mesh", false, false);
+    registerAsset(_cylinder_mesh, "Cylinder Mesh", false, false);
+    // registerAsset(_lut_texture, "LUT Texture", false, false);
+    // registerAsset(_camera_frustum, "Camera Frustum Mesh", false, false);
     registerAsset(_quad, "Quad Mesh", false, false);
     registerAsset(_cube_mesh, "Cube Mesh", false, false);
 }
