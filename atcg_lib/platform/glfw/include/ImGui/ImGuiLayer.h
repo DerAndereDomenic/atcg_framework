@@ -6,7 +6,6 @@
 
 #include <imgui.h>
 #include <implot.h>
-#include <ImGuizmo.h>
 
 namespace atcg
 {

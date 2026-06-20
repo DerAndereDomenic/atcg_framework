@@ -4,11 +4,32 @@
 #include <Scene/Components.h>
 #include <Scene/RevisionStack.h>
 
+#include <ImGuizmo.h>
+
 namespace atcg
 {
+
+namespace detail
+{
+ATCG_INLINE ImGuizmo::OPERATION toImGuizmoOperation(GuizmoOperation operation)
+{
+    switch(operation)
+    {
+        case TRANSLATE:
+            return ImGuizmo::TRANSLATE;
+        case ROTATE:
+            return ImGuizmo::ROTATE;
+        case SCALE:
+            return ImGuizmo::SCALE;
+        default:
+            return ImGuizmo::TRANSLATE;
+    }
+}
+}    // namespace detail
+
 void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
                 Entity entity,
-                ImGuizmo::OPERATION operation,
+                GuizmoOperation operation,
                 const atcg::ref_ptr<PerspectiveCamera>& camera)
 {
     bool useViewports        = atcg::Application::get()->getImGuiLayer()->dockspaceEnabled();
@@ -47,7 +68,7 @@ void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
 
         bool manipulated = ImGuizmo::Manipulate(glm::value_ptr(camera_view),
                                                 glm::value_ptr(camera_projection),
-                                                operation,
+                                                detail::toImGuizmoOperation(operation),
                                                 ImGuizmo::LOCAL,
                                                 glm::value_ptr(model));
 
@@ -66,4 +87,15 @@ void drawGuizmo(const atcg::ref_ptr<Scene>& scene,
         ImGui::PopStyleVar();
     }
 }
+
+bool isUsingGuizmo()
+{
+    return ImGuizmo::IsUsing();
+}
+
+bool isOverGuizmo()
+{
+    return ImGuizmo::IsOver();
+}
+
 }    // namespace atcg

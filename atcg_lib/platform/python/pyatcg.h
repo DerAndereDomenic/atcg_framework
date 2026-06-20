@@ -232,7 +232,7 @@ inline void defineBindings(py::module_& m)
 
 #ifndef ATCG_HEADLESS
     auto m_imgui            = m.def_submodule("ImGui");
-    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
+    auto m_guizmo_operation = py::enum_<atcg::GuizmoOperation>(m_imgui, "GuizmoOperation");
 #endif
 
 // On module initialization and destruction
@@ -1879,11 +1879,12 @@ inline void defineBindings(py::module_& m)
             }
         });
 
-    m_imgui.def("isUsing", &ImGuizmo::IsUsing);
+    m_imgui.def("isUsing", &atcg::isUsingGuizmo);
+    m_imgui.def("isOver", &atcg::isOverGuizmo);
 
-    m_guizmo_operation.value("TRANSLATE", ImGuizmo::OPERATION::TRANSLATE)
-        .value("ROTATE", ImGuizmo::OPERATION::ROTATE)
-        .value("SCALE", ImGuizmo::OPERATION::SCALE)
+    m_guizmo_operation.value("TRANSLATE", atcg::GuizmoOperation::TRANSLATE)
+        .value("ROTATE", atcg::GuizmoOperation::ROTATE)
+        .value("SCALE", atcg::GuizmoOperation::SCALE)
         .export_values();
     m_imgui.def("drawGuizmo", atcg::drawGuizmo);
 #endif
