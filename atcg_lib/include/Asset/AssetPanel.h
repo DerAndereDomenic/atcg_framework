@@ -80,6 +80,7 @@ private:
     atcg::ref_ptr<Scene> _preview_scene;
 
     atcg::ref_ptr<Framebuffer> _preview_framebuffer;
+    atcg::ref_ptr<Material> _preview_material;
 };
 }    // namespace GUI
 }    // namespace atcg

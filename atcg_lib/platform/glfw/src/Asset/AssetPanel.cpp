@@ -639,9 +639,9 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     constexpr const char* materialTypeLabels[] = {"Opaque", "Dielectric", "Null"};
 
-    atcg::ref_ptr<Material> material = material_->clone();
-    material->handle                 = material_->handle;
-    bool deactivated                 = false;
+    _preview_material         = material_->clone();
+    _preview_material->handle = material_->handle;
+    bool deactivated          = false;
     if(ImGui::BeginCombo("Material Type", materialTypeToString(material_->getMaterialType())))
     {
         for(int i = 0; i < IM_ARRAYSIZE(materialTypeLabels); ++i)
@@ -653,16 +653,16 @@ void AssetPanel::displayMaterial(AssetHandle handle)
                 switch(new_type)
                 {
                     case MaterialType::MATERIAL_TYPE_OPAQUE:
-                        material         = atcg::make_ref<OpaqueMaterial>();
-                        material->handle = handle;
+                        _preview_material         = atcg::make_ref<OpaqueMaterial>();
+                        _preview_material->handle = handle;
                         break;
                     case MaterialType::MATERIAL_TYPE_DIELECTRIC:
-                        material         = atcg::make_ref<DielectricMaterial>();
-                        material->handle = handle;
+                        _preview_material         = atcg::make_ref<DielectricMaterial>();
+                        _preview_material->handle = handle;
                         break;
                     case MaterialType::MATERIAL_TYPE_NULL:
-                        material         = atcg::make_ref<NullMaterial>();
-                        material->handle = handle;
+                        _preview_material         = atcg::make_ref<NullMaterial>();
+                        _preview_material->handle = handle;
                         break;
                 }
                 updated = true;
@@ -674,22 +674,25 @@ void AssetPanel::displayMaterial(AssetHandle handle)
     }
     deactivated = ImGui::IsItemDeactivated() || deactivated;
 
-    switch(material->getMaterialType())
+    switch(_preview_material->getMaterialType())
     {
         case MaterialType::MATERIAL_TYPE_OPAQUE:
-            detail::displayOpaqueMaterial(std::dynamic_pointer_cast<OpaqueMaterial>(material),
+            detail::displayOpaqueMaterial(std::dynamic_pointer_cast<OpaqueMaterial>(_preview_material),
                                           key,
                                           updated,
                                           deactivated);
             break;
         case MaterialType::MATERIAL_TYPE_DIELECTRIC:
-            detail::displayDielectricMaterial(std::dynamic_pointer_cast<DielectricMaterial>(material),
+            detail::displayDielectricMaterial(std::dynamic_pointer_cast<DielectricMaterial>(_preview_material),
                                               key,
                                               updated,
                                               deactivated);
             break;
         case MaterialType::MATERIAL_TYPE_NULL:
-            detail::displayNullMaterial(std::dynamic_pointer_cast<NullMaterial>(material), key, updated, deactivated);
+            detail::displayNullMaterial(std::dynamic_pointer_cast<NullMaterial>(_preview_material),
+                                        key,
+                                        updated,
+                                        deactivated);
             break;
     }
 
@@ -701,18 +704,18 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     auto preview_entity      = _preview_scene->getEntitiesByName("Preview Entity")[0];
     auto& renderer           = preview_entity.getComponent<MeshRenderComponent>();
-    renderer.material_handle = material->handle;
+    renderer.material_handle = _preview_material->handle;
 
     atcg::SceneRenderer::render(_preview_scene, _preview_scene->getCamera(), _preview_framebuffer);
 
     if(updated && !atcg::RevisionStack::isRecording())
     {
-        atcg::RevisionStack::startRecording<AssetEditedRevision>(material_->handle);
+        atcg::RevisionStack::startRecording<AssetEditedRevision>(_preview_material->handle);
     }
 
     if(updated)
     {
-        AssetManager::registerAsset(material, AssetManager::getMetaData(material_->handle).name);
+        AssetManager::registerAsset(_preview_material, AssetManager::getMetaData(_preview_material->handle).name);
     }
 
     if(deactivated && atcg::RevisionStack::isRecording())
