@@ -154,20 +154,17 @@ ATCG_DEVICE glm::vec3 DeviceHashGrid<T, L, F>::backward(const glm::vec3& positio
                 atomicAdd(&layer_grads[hash111 * F + f], dc111);
             }
 
-            glm::vec3 dpos_scaled(0.0f);
 
-            float dwdx = 0, dwdy = 0, dwdz = 0;
+            float dc_dw_x = 0, dc_dw_y = 0, dc_dw_z = 0;
 
-            // x
-            dwdx += (dc100 + dc101 + dc110 + dc111) - (dc000 + dc001 + dc010 + dc011);
-            // y
-            dwdy += (dc010 + dc011 + dc110 + dc111) - (dc000 + dc001 + dc100 + dc101);
-            // z
-            dwdz += (dc001 + dc011 + dc101 + dc111) - (dc000 + dc010 + dc100 + dc110);
+            dc_dw_x = (1 - w.z) * ((1 - w.y) * (c100 - c000) + w.y * (c110 - c010)) +
+                      w.z * ((1 - w.y) * (c101 - c001) + w.y * (c111 - c011));
 
-            dpos_scaled += glm::vec3(dwdx, dwdy, dwdz);
+            dc_dw_y = (1 - w.z) * (c10 - c00) + w.z * (c11 - c01);
 
-            dpos += dpos_scaled * (float)Nl;
+            dc_dw_z = c1 - c0;
+
+            dpos += g * glm::vec3(dc_dw_x, dc_dw_y, dc_dw_z) * (float)Nl;
         }
     }
 
