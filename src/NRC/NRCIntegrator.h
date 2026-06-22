@@ -6,6 +6,9 @@
 #include <Emitter/EnvironmentEmitter.h>
 #include <Emitter/PointEmitter.h>
 #include <Scene/OptixScene.h>
+#include <Neural/MLP.h>
+#include <Neural/HashGrid.h>
+#include <torch/torch.h>
 
 namespace atcg
 {
@@ -55,7 +58,16 @@ private:
      */
     void initializePipeline(const Dictionary& dict);
 
-    uint32_t _raygen_index;
+    void generateTrainingSamples();
+
+    void trainRadianceCache();
+
+    void renderWithRadianceCache(Dictionary& in_out_dictionary);
+
+private:
+    uint32_t _raygen_render;
+    uint32_t _raygen_sample_gen;
+    uint32_t _raygen_train;
     uint32_t _surface_miss_index;
     uint32_t _occlusion_miss_index;
 
@@ -63,5 +75,16 @@ private:
     atcg::ref_ptr<OptixScene> _optix_scene;
     atcg::dref_ptr<NRCParams> _launch_params;
     uint32_t _frame_counter = 0;
+
+    uint32_t _max_num_training_samples;
+    atcg::DeviceBuffer<TrainingSample> _training_samples;
+    atcg::DeviceBuffer<SampledSpectrum> _training_sample_radiance;
+    atcg::dref_ptr<int> _training_samples_queue_index;
+
+    // Radiance cache
+    atcg::MLP<3, 64, 64, 8> _mlp;
+    atcg::HashGrid<half, 16, 2> _hash_grid;
+    torch::Tensor _weights, _bias, _hash_weights;
+    atcg::ref_ptr<torch::optim::Adam> _optimizer;
 };
 }    // namespace atcg

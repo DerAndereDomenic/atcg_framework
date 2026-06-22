@@ -7,8 +7,23 @@
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <Sensor/SensorVPtrTable.cuh>
 
+#include <Neural/DeviceMLP.cuh>
+#include <Neural/DeviceHashGrid.h>
+
 namespace atcg
 {
+
+struct TrainingSample
+{
+    glm::vec3 position;
+    glm::vec3 normal;
+    glm::vec3 outgoing_direction;
+
+    SampledSpectrum weight;
+    SampledSpectrum radiance;
+    int pixel_index;
+};
+
 struct NRCParams
 {
     uint32_t image_width;
@@ -30,5 +45,13 @@ struct NRCParams
     const EmitterVPtrTable* environment_emitter;
 
     const SensorVPtrTable* sensor;
+
+    TrainingSample* training_samples;
+    int* training_samples_queue_index;
+    uint32_t max_training_samples;
+    SampledSpectrum* training_sample_radiance;
+
+    DeviceMLP<3, 64, 64, 8>* mlp;
+    DeviceHashGrid<half, 16, 2>* hash_grid;
 };
 }
