@@ -270,6 +270,7 @@ public:
                 atcg::RevisionStack::clearChache();
 
                 atcg::Project::getActive()->setActiveScene(atcg::make_ref<atcg::Scene>());
+                atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
                 saved = false;
             }
 
@@ -331,7 +332,20 @@ public:
             ImGui::EndMenu();
         }
 
+        if(ImGui::BeginMenu("Editor"))
+        {
+            ImGui::MenuItem("Show Editor Settings", nullptr, &show_editor_settings);
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
+
+        if(show_editor_settings)
+        {
+            ImGui::Begin("Editor Settings", &show_editor_settings);
+            ImGui::Checkbox("Create entities on import", &create_entities_on_import);
+            ImGui::End();
+        }
 
         if(show_render_settings)
         {
@@ -481,6 +495,14 @@ public:
             {
                 auto graph = atcg::IO::read_mesh(filepath.string());
                 atcg::AssetManager::registerAsset(graph, filepath.stem().string());
+
+                if(create_entities_on_import)
+                {
+                    auto entity = atcg::Project::getActive()->getActiveScene()->createEntity(filepath.stem().string());
+                    entity.addComponent<atcg::TransformComponent>();
+                    entity.addComponent<atcg::GeometryComponent>(graph);
+                    entity.addComponent<atcg::MeshRenderComponent>();
+                }
             }
             else if(file_ending == ".png" || file_ending == ".jpg" || file_ending == ".jpeg" || file_ending == ".hdr")
             {
@@ -513,8 +535,10 @@ private:
 
     glm::vec2 mouse_pos;
 
-    bool show_render_settings = false;
-    bool vsync                = true;
+    bool show_render_settings      = false;
+    bool show_editor_settings      = false;
+    bool vsync                     = true;
+    bool create_entities_on_import = true;
 
     bool enable_pathtracing = false;
 
