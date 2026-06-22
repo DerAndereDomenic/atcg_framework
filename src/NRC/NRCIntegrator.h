@@ -69,6 +69,8 @@ private:
 
     void renderWithRadianceCache(Dictionary& in_out_dictionary);
 
+    void resetCache();
+
 private:
     uint32_t _raygen_render;
     uint32_t _raygen_sample_gen;
@@ -97,5 +99,11 @@ private:
     atcg::Statistic<float> _sample_generation_time;
     atcg::Statistic<float> _training_time;
     atcg::Statistic<float> _render_time;
+
+    // Debug visualization purposes
+    int encoding_channel    = 0;
+    bool visualize_encoding = false;
+    float encoding_scaling  = 1.0f;
+    bool training_enabled   = true;
 };
 }    // namespace atcg

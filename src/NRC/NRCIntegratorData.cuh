@@ -70,5 +70,10 @@ struct NRCParams
 
     NRCDeviceMLP* mlp;
     NRCDeviceHashGrid* hash_grid;
+
+    // For debug purposes - visualize the learned encoding
+    int encoding_channel;
+    bool visualize_encoding;
+    float encoding_scaling;
 };
 }    // namespace atcg

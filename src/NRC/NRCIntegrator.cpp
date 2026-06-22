@@ -76,19 +76,7 @@ void NRCIntegrator::initializePipeline(const Dictionary& dict)
     int zero                  = 0;
     _training_samples_queue_index.upload(&zero);
 
-    _weights = torch::empty({NRC_NUM_WEIGHTS}, atcg::TensorOptions::floatDeviceOptions());
-    float a  = std::sqrt(6.0f / 128.0f);
-    torch::nn::init::uniform_(_weights, -a, a);
-    _weights = _weights.requires_grad_(true);
-    _bias    = torch::zeros({NRC_NUM_BIASES}, atcg::TensorOptions::floatDeviceOptions());
-    _bias    = _bias.requires_grad_(true);
-
-    _hash_grid    = NRCHashGrid(16, 512, (1 << 20));
-    _hash_weights = _hash_grid.getWeights().to(torch::kFloat32).requires_grad_(true);
-
-    _mlp       = NRCMLP(_context, _weights.to(torch::kFloat16), _bias.to(torch::kFloat16));
-    _optimizer = atcg::make_ref<torch::optim::Adam>(std::vector<torch::Tensor> {_weights, _bias, _hash_weights},
-                                                    torch::optim::AdamOptions(1e-3));
+    resetCache();
 }
 
 void NRCIntegrator::onImGuiRender()
@@ -116,6 +104,19 @@ void NRCIntegrator::onImGuiRender()
 
 
     ImGui::Separator();
+    ImGui::Checkbox("Enable Training", &training_enabled);
+    if(ImGui::Button("Reset Cache"))
+    {
+        resetCache();
+    }
+
+    ImGui::Separator();
+
+    ImGui::Checkbox("Visualize Encoding", &visualize_encoding);
+    ImGui::SliderInt("Encoding Channel", &encoding_channel, 0, 31);
+    ImGui::SliderFloat("Encoding Scaling", &encoding_scaling, 0.0f, 10.0f);
+
+    ImGui::Separator();
 
     for(auto shape: _optix_scene->getShapes())
     {
@@ -130,6 +131,23 @@ void NRCIntegrator::reset()
     _frame_counter = 0;
     _optix_scene->getSensor()->getFilm()->clear();
     _optix_scene->getSensor()->markDirty();
+}
+
+void NRCIntegrator::resetCache()
+{
+    _weights = torch::empty({NRC_NUM_WEIGHTS}, atcg::TensorOptions::floatDeviceOptions());
+    float a  = std::sqrt(6.0f / 128.0f);
+    torch::nn::init::uniform_(_weights, -a, a);
+    _weights = _weights.requires_grad_(true);
+    _bias    = torch::zeros({NRC_NUM_BIASES}, atcg::TensorOptions::floatDeviceOptions());
+    _bias    = _bias.requires_grad_(true);
+
+    _hash_grid    = NRCHashGrid(16, 512, (1 << 20));
+    _hash_weights = _hash_grid.getWeights().to(torch::kFloat32).requires_grad_(true);
+
+    _mlp       = NRCMLP(_context, _weights.to(torch::kFloat16), _bias.to(torch::kFloat16));
+    _optimizer = atcg::make_ref<torch::optim::Adam>(std::vector<torch::Tensor> {_weights, _bias, _hash_weights},
+                                                    torch::optim::AdamOptions(1e-3));
 }
 
 void NRCIntegrator::generateRays(Dictionary& in_out_dictionary)
@@ -154,6 +172,8 @@ void NRCIntegrator::generateRays(Dictionary& in_out_dictionary)
 
 void NRCIntegrator::generateTrainingSamples()
 {
+    if(!training_enabled) return;
+
     uint32_t width  = _optix_scene->getSensor()->getFilm()->getWidth();
     uint32_t height = _optix_scene->getSensor()->getFilm()->getHeight();
 
@@ -199,6 +219,8 @@ void NRCIntegrator::generateTrainingSamples()
 
 void NRCIntegrator::trainRadianceCache()
 {
+    if(!training_enabled) return;
+
     _mlp.zeroGradients();
     _hash_grid.zeroGradients();
     NRCParams params;
@@ -282,6 +304,11 @@ void NRCIntegrator::renderWithRadianceCache(Dictionary& in_out_dictionary)
 
     params.mlp       = _mlp.getDeviceMLP();
     params.hash_grid = _hash_grid.getDeviceHashGrid();
+
+    // Debug
+    params.visualize_encoding = visualize_encoding;
+    params.encoding_channel   = encoding_channel;
+    params.encoding_scaling   = encoding_scaling;
 
     _launch_params.upload(&params);
 

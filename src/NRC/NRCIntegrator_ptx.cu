@@ -342,6 +342,15 @@ extern "C" __global__ void __raygen__render()
 
                     glm::vec3 cached_radiance =
                         glm::vec3(__half2float(output[0]), __half2float(output[1]), __half2float(output[2]));
+
+                    if(params.visualize_encoding)
+                    {
+                        cached_radiance =
+                            params.encoding_scaling * glm::vec3(__half2float(pos_encoding[params.encoding_channel]),
+                                                                -__half2float(pos_encoding[params.encoding_channel]),
+                                                                0.0f);
+                    }
+
                     radiance += camera_ray.importance * cached_radiance;
 
                     break;
