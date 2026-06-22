@@ -5,6 +5,7 @@
 #include <DataStructure/Graph.h>
 #include <Renderer/Texture.h>
 #include <DataStructure/Skybox.h>
+#include <Renderer/Material.h>
 
 namespace atcg
 {
@@ -217,6 +218,13 @@ public:
      */
     ATCG_INLINE atcg::ref_ptr<Skybox> getDummySkybox() const { return _dummy_skybox; }
 
+    /**
+     * @brief Get the default material
+     *
+     * @return The default material
+     */
+    ATCG_INLINE atcg::ref_ptr<Material> getDefaultMaterial() const { return _default_material; }
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
@@ -229,6 +237,7 @@ private:
     atcg::ref_ptr<Graph> _quad;
     atcg::ref_ptr<Graph> _cube_mesh;
     atcg::ref_ptr<Skybox> _dummy_skybox;
+    atcg::ref_ptr<Material> _default_material;
 };
 
 namespace AssetManager
@@ -508,6 +517,16 @@ ATCG_INLINE atcg::ref_ptr<Graph> getCubeMesh()
 ATCG_INLINE atcg::ref_ptr<Skybox> getDummySkybox()
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getDummySkybox();
+}
+
+/**
+ * @brief Get the default material
+ *
+ * @return The default material
+ */
+ATCG_INLINE atcg::ref_ptr<Material> getDefaultMaterial()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getDefaultMaterial();
 }
 
 }    // namespace AssetManager
