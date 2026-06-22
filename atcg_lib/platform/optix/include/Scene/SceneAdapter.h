@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/glm.h>
 #include <Core/API.h>
 #include <Scene/OptixScene.h>
 #include <Scene/Scene.h>
@@ -29,6 +30,8 @@ public:
           _pipeline(pipeline),
           _sbt(sbt)
     {
+        _scene_aabb.min = glm::vec3(std::numeric_limits<float>::max());
+        _scene_aabb.max = glm::vec3(std::numeric_limits<float>::lowest());
     }
 
     /**
@@ -39,6 +42,8 @@ public:
      * @return The converted scene
      */
     atcg::ref_ptr<OptixScene> apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, const uint32_t height);
+
+    atcg::BoundingBox getSceneAABB() const { return _scene_aabb; }
 
 private:
     template<typename T>
@@ -51,5 +56,7 @@ private:
 
     std::unordered_map<AssetHandle, atcg::ref_ptr<Shape>> _shape_cache;
     std::unordered_map<AssetHandle, atcg::ref_ptr<BSDF>> _bsdf_cache;
+
+    atcg::BoundingBox _scene_aabb;
 };
 }    // namespace atcg
