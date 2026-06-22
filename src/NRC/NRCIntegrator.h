@@ -13,6 +13,10 @@
 
 namespace atcg
 {
+
+using NRCMLP      = MLP<NRC_NUM_HIDDEN_LAYERS, NRC_INPUT_SIZE, NRC_HIDDEN_LAYER_SIZE, NRC_OUTPUT_SIZE>;
+using NRCHashGrid = HashGrid<half, NRC_HASH_GRID_LEVELS, NRC_HASH_GRID_FEATURES_PER_LEVEL>;
+
 /**
  * @brief A simple path tracer
  */
@@ -83,8 +87,8 @@ private:
     atcg::dref_ptr<int> _training_samples_queue_index;
 
     // Radiance cache
-    atcg::MLP<3, 64, 64, 8> _mlp;
-    atcg::HashGrid<half, 16, 2> _hash_grid;
+    NRCMLP _mlp;
+    NRCHashGrid _hash_grid;
     torch::Tensor _weights, _bias, _hash_weights;
     atcg::ref_ptr<torch::optim::Adam> _optimizer;
 

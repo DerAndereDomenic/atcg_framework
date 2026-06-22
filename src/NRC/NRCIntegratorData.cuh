@@ -10,8 +10,23 @@
 #include <Neural/DeviceMLP.cuh>
 #include <Neural/DeviceHashGrid.h>
 
+#define NRC_INPUT_SIZE                   64
+#define NRC_OUTPUT_SIZE                  8
+#define NRC_HIDDEN_LAYER_SIZE            64
+#define NRC_NUM_HIDDEN_LAYERS            5
+#define NRC_HASH_GRID_LEVELS             16
+#define NRC_HASH_GRID_FEATURES_PER_LEVEL 2
+#define NRC_NUM_WEIGHTS                                                                                                \
+    ((NRC_INPUT_SIZE * NRC_HIDDEN_LAYER_SIZE) +                                                                        \
+     (NRC_HIDDEN_LAYER_SIZE * NRC_HIDDEN_LAYER_SIZE) * (NRC_NUM_HIDDEN_LAYERS) +                                       \
+     (NRC_HIDDEN_LAYER_SIZE * NRC_OUTPUT_SIZE))
+#define NRC_NUM_BIASES (NRC_HIDDEN_LAYER_SIZE * (NRC_NUM_HIDDEN_LAYERS + 1) + NRC_OUTPUT_SIZE)
+
 namespace atcg
 {
+
+using NRCDeviceMLP      = DeviceMLP<NRC_NUM_HIDDEN_LAYERS, NRC_INPUT_SIZE, NRC_HIDDEN_LAYER_SIZE, NRC_OUTPUT_SIZE>;
+using NRCDeviceHashGrid = DeviceHashGrid<half, NRC_HASH_GRID_LEVELS, NRC_HASH_GRID_FEATURES_PER_LEVEL>;
 
 struct TrainingSample
 {
@@ -51,7 +66,7 @@ struct NRCParams
     uint32_t max_training_samples;
     SampledSpectrum* training_sample_radiance;
 
-    DeviceMLP<3, 64, 64, 8>* mlp;
-    DeviceHashGrid<half, 16, 2>* hash_grid;
+    NRCDeviceMLP* mlp;
+    NRCDeviceHashGrid* hash_grid;
 };
-}
+}    // namespace atcg

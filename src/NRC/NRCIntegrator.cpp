@@ -73,17 +73,17 @@ void NRCIntegrator::initializePipeline(const Dictionary& dict)
     int zero                  = 0;
     _training_samples_queue_index.upload(&zero);
 
-    _weights = torch::empty({64 * 64 + 3 * 64 * 64 + 8 * 64}, atcg::TensorOptions::floatDeviceOptions());
+    _weights = torch::empty({NRC_NUM_WEIGHTS}, atcg::TensorOptions::floatDeviceOptions());
     float a  = std::sqrt(6.0f / 128.0f);
     torch::nn::init::uniform_(_weights, -a, a);
     _weights = _weights.requires_grad_(true);
-    _bias    = torch::zeros({64 + 64 + 64 + 64 + 8}, atcg::TensorOptions::floatDeviceOptions());
+    _bias    = torch::zeros({NRC_NUM_BIASES}, atcg::TensorOptions::floatDeviceOptions());
     _bias    = _bias.requires_grad_(true);
 
-    _hash_grid    = atcg::HashGrid<half, 16, 2>(16, 512, (1 << 20));
+    _hash_grid    = NRCHashGrid(16, 512, (1 << 20));
     _hash_weights = _hash_grid.getWeights().to(torch::kFloat32).requires_grad_(true);
 
-    _mlp       = atcg::MLP<3, 64, 64, 8>(_context, _weights.to(torch::kFloat16), _bias.to(torch::kFloat16));
+    _mlp       = NRCMLP(_context, _weights.to(torch::kFloat16), _bias.to(torch::kFloat16));
     _optimizer = atcg::make_ref<torch::optim::Adam>(std::vector<torch::Tensor> {_weights, _bias, _hash_weights},
                                                     torch::optim::AdamOptions(1e-3));
 }

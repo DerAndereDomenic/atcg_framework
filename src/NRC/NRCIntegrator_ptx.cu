@@ -190,7 +190,7 @@ extern "C" __global__ void __raygen__train()
     half target_y    = __float2half(target.y);
     half target_z    = __float2half(target.z);
 
-    OptixCoopVec<half, 64> input;
+    OptixCoopVec<half, NRC_INPUT_SIZE> input;
 
     float encodings[32];
     atcg::sphericalHarmonicEncoding<4>(sample.outgoing_direction.x,
@@ -207,12 +207,12 @@ extern "C" __global__ void __raygen__train()
         input[32 + i] = pos_encoding[i];
     }
 
-    OptixCoopVec<half, 64> hidden[4];
-    OptixCoopVec<half, 64> activations[4];
+    OptixCoopVec<half, NRC_HIDDEN_LAYER_SIZE> hidden[NRC_NUM_HIDDEN_LAYERS + 1];
+    OptixCoopVec<half, NRC_HIDDEN_LAYER_SIZE> activations[NRC_NUM_HIDDEN_LAYERS + 1];
 
     auto output = params.mlp->forward(input, hidden, activations);
 
-    output = atcg::Activation<atcg::ActivationFunction::Sigmoid, 8>::forward(output);
+    output = atcg::Activation<atcg::ActivationFunction::Sigmoid, NRC_OUTPUT_SIZE>::forward(output);
 
     // L2 loss
     half loss_scaling = half(100.0f);
@@ -220,12 +220,12 @@ extern "C" __global__ void __raygen__train()
                 ((output[0] - target_x) * (output[0] - target_x) + (output[1] - target_y) * (output[1] - target_y) +
                  (output[2] - target_z) * (output[2] - target_z));
 
-    OptixCoopVec<half, 8> grad_output(half(0.0f));
+    OptixCoopVec<half, NRC_OUTPUT_SIZE> grad_output(half(0.0f));
     grad_output[0] = half(2.0f) * loss_scaling * (output[0] - target_x);
     grad_output[1] = half(2.0f) * loss_scaling * (output[1] - target_y);
     grad_output[2] = half(2.0f) * loss_scaling * (output[2] - target_z);
 
-    grad_output = atcg::Activation<atcg::ActivationFunction::Sigmoid, 8>::backward(output, grad_output);
+    grad_output = atcg::Activation<atcg::ActivationFunction::Sigmoid, NRC_OUTPUT_SIZE>::backward(output, grad_output);
 
     auto grad_mlp = params.mlp->backward<true>(input, grad_output, hidden, activations);
 
@@ -301,7 +301,7 @@ extern "C" __global__ void __raygen__render()
                 if((int)(si.bsdf->flags & atcg::BSDFComponentType::AnyDelta) == 0)
                 {
                     // Evaluate Radiance cache and terminate
-                    OptixCoopVec<half, 64> input;
+                    OptixCoopVec<half, NRC_INPUT_SIZE> input;
 
                     float encodings[32];
                     atcg::sphericalHarmonicEncoding<4>(si.incoming_direction.x,
@@ -318,12 +318,12 @@ extern "C" __global__ void __raygen__render()
                         input[32 + i] = pos_encoding[i];
                     }
 
-                    OptixCoopVec<half, 64> hidden[4];
-                    OptixCoopVec<half, 64> activations[4];
+                    OptixCoopVec<half, NRC_HIDDEN_LAYER_SIZE> hidden[NRC_NUM_HIDDEN_LAYERS + 1];
+                    OptixCoopVec<half, NRC_HIDDEN_LAYER_SIZE> activations[NRC_NUM_HIDDEN_LAYERS + 1];
 
                     auto output = params.mlp->forward(input, hidden, activations);
 
-                    output = atcg::Activation<atcg::ActivationFunction::Sigmoid, 8>::forward(output);
+                    output = atcg::Activation<atcg::ActivationFunction::Sigmoid, NRC_OUTPUT_SIZE>::forward(output);
 
                     glm::vec3 cached_radiance =
                         glm::vec3(__half2float(output[0]), __half2float(output[1]), __half2float(output[2]));
