@@ -3,7 +3,7 @@
 #include <Core/CUDA.h>
 
 #include <Math/Random.h>
-#include <Math/Functions.h>
+#include <Utils/HostDevice.h>
 #include <Core/SurfaceInteraction.h>
 
 #include <Emitter/EmitterVPtrTable.cuh>
@@ -152,15 +152,15 @@ __direct_callable__sample_meshemitter(const atcg::AnyInteraction& si,
 {
     const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
     atcg::EmitterSamplingResult result    = detail::sampleMeshEmitter(si,
-                                                                   sbt_data->mesh_cdf,
-                                                                   sbt_data->positions,
-                                                                   sbt_data->uvs,
-                                                                   sbt_data->faces,
-                                                                   sbt_data->num_faces,
-                                                                   sbt_data->total_area,
-                                                                   sbt_data->local_to_world,
-                                                                   sbt_data->world_to_local,
-                                                                   rng);
+                                                                      sbt_data->mesh_cdf,
+                                                                      sbt_data->positions,
+                                                                      sbt_data->uvs,
+                                                                      sbt_data->faces,
+                                                                      sbt_data->num_faces,
+                                                                      sbt_data->total_area,
+                                                                      sbt_data->local_to_world,
+                                                                      sbt_data->world_to_local,
+                                                                      rng);
 
     glm::vec3 emissive_color = sbt_data->emissive_texture.read(glm::vec2(result.uvs));
 

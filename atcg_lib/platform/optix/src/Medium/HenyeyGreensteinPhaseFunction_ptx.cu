@@ -4,7 +4,7 @@
 
 #include <Math/Random.h>
 
-#include <Math/Functions.h>
+#include <Utils/HostDevice.h>
 #include <Medium/PhaseFunctionVPtrTable.cuh>
 #include <Medium/HenyeyGreensteinPhaseFunctionData.cuh>
 

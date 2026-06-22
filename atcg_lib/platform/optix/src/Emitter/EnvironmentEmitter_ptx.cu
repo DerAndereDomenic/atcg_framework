@@ -3,7 +3,7 @@
 #include <Core/CUDA.h>
 
 #include <Math/Random.h>
-#include <Math/Functions.h>
+#include <Utils/HostDevice.h>
 #include <Core/SurfaceInteraction.h>
 
 #include <Emitter/EmitterVPtrTable.cuh>
@@ -26,10 +26,13 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec2 evalEnvironmentEmitter(const atcg::
 {
     glm::vec3 ray_dir = si.incoming_direction;
 
-    float theta = std::acos(ray_dir.y) / glm::pi<float>();
-    float phi   = (std::atan2(ray_dir.z, ray_dir.x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
+    float phi   = std::atan2(ray_dir.z, ray_dir.x);
+    float theta = std::acos(ray_dir.y);
 
-    glm::vec2 uv(phi, theta);
+    float u = (phi + glm::pi<float>()) / (2.0f * glm::pi<float>());
+    float v = theta / glm::pi<float>();
+
+    glm::vec2 uv(u, v);
 
     return uv;
 }
@@ -42,47 +45,44 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE glm::vec2 evalEnvironmentEmitter(const atcg::
  *
  * @return The sampling result
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleEnvironmentEmitter(const atcg::AnyInteraction& ai,
-                                                                                        atcg::PCG32& rng)
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult
+sampleEnvironmentEmitter(const atcg::EnvironmentEmitterData* sbt_data, const atcg::AnyInteraction& ai, atcg::PCG32& rng)
 {
     atcg::EmitterSamplingResult result;
 
-    glm::vec3 random_dir;
-    float pdf;
+    // Sample pixel
+    uint32_t row_index = atcg::Math::binary_search(sbt_data->row_cdf, rng.nextFloat(), sbt_data->height);
+    uint32_t col_index =
+        atcg::Math::binary_search(sbt_data->col_cdfs + row_index * sbt_data->width, rng.nextFloat(), sbt_data->width);
+
+    row_index = glm::clamp(row_index, 0u, static_cast<uint32_t>(sbt_data->height - 1));
+    col_index = glm::clamp(col_index, 0u, static_cast<uint32_t>(sbt_data->width - 1));
+
+    glm::vec2 jitter = rng.next2d();
+    float u          = (col_index + jitter.x) / sbt_data->width;
+    float v          = (row_index + jitter.y) / sbt_data->height;
+
+    float phi   = u * 2.0f * glm::pi<float>() - glm::pi<float>();
+    float theta = v * glm::pi<float>();
+
+    float pixel_pdf = sbt_data->row_pdf[row_index] * sbt_data->col_pdfs[row_index * sbt_data->width + col_index];
+    float jacobian =
+        (2.0f * glm::pi<float>() * glm::pi<float>() * std::sin(theta)) / float(sbt_data->width * sbt_data->height);
+    float direction_pdf = pixel_pdf / jacobian;
+
+    result.distance_to_light = std::numeric_limits<float>::infinity();
+    result.uvs               = glm::vec3(u, v, 0);
+    result.sampling_pdf      = direction_pdf;
+    result.direction_to_light =
+        glm::vec3(std::sin(theta) * std::cos(phi), std::cos(theta), std::sin(theta) * std::sin(phi));
+
     if(ai.is_surface())
     {
-        atcg::SurfaceInteraction si = ai;
-        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_COSINE> strategy;
-        random_dir        = strategy.sample(rng.next2d());
-        pdf               = strategy.pdf(random_dir);
-        atcg::Frame frame = atcg::Frame(si.normal);
-
-        random_dir = frame.toWorld(random_dir);
+        if(glm::dot(result.direction_to_light, ai.si.normal) < 0)
+        {
+            result.sampling_pdf = 0.0f;    // Invalid
+        }
     }
-    else if(ai.is_medium())
-    {
-        atcg::SamplingStrategy<atcg::SamplingStrategyType::SPHERE_UNIFORM> strategy;
-        random_dir = strategy.sample(rng.next2d());
-        pdf        = strategy.pdf(random_dir);
-    }
-    else
-    {
-        printf("Evaluated environment emitter with invalid interaction type. This should not happen.\n");
-        return result;
-    }
-
-
-    glm::vec3 ray_dir = random_dir;
-
-    float theta = std::acos(ray_dir.y) / glm::pi<float>();
-    float phi   = (std::atan2(ray_dir.z, ray_dir.x) + glm::pi<float>()) / (2.0f * glm::pi<float>());
-
-    glm::vec3 uv(phi, theta, 0);
-
-    result.distance_to_light  = std::numeric_limits<float>::infinity();
-    result.sampling_pdf       = pdf;
-    result.uvs                = uv;
-    result.direction_to_light = random_dir;
 
     return result;
 }
@@ -95,29 +95,29 @@ ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::EmitterSamplingResult sampleEnvironment
  *
  * @return The pdf
  */
-ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalEnvironmentEmitterSamplingPdf(const atcg::AnyInteraction& last_si,
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE float evalEnvironmentEmitterSamplingPdf(const atcg::EnvironmentEmitterData* sbt_data,
+                                                                           const atcg::AnyInteraction& last_si,
                                                                            const atcg::SurfaceInteraction& si)
 {
     // We can assume that outgoing ray dir actually intersects the light source.
 
-    // Probability of sampling this direction via light source sampling
-    if(last_si.is_surface())
-    {
-        atcg::Frame frame            = atcg::Frame(last_si.si.normal);
-        glm::vec3 local_dir_to_light = frame.toLocal(si.incoming_direction);
-        atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_COSINE> strategy;
-        return strategy.pdf(local_dir_to_light);
-    }
-    else if(last_si.is_medium())
-    {
-        atcg::SamplingStrategy<atcg::SamplingStrategyType::SPHERE_UNIFORM> strategy;
-        return strategy.pdf(si.incoming_direction);
-    }
-    else
-    {
-        printf("Evaluated environment emitter sampling pdf with invalid interaction type. This should not happen.\n");
-        return 0.0f;
-    }
+    float phi   = std::atan2(si.incoming_direction.z, si.incoming_direction.x);
+    float theta = std::acos(si.incoming_direction.y);
+
+    float u = (phi + glm::pi<float>()) * glm::one_over_two_pi<float>();
+    float v = theta / glm::pi<float>();
+
+    uint32_t col_index =
+        glm::clamp(static_cast<uint32_t>(u * sbt_data->width), 0u, static_cast<uint32_t>(sbt_data->width - 1));
+    uint32_t row_index =
+        glm::clamp(static_cast<uint32_t>(v * sbt_data->height), 0u, static_cast<uint32_t>(sbt_data->height - 1));
+
+    float pixel_pdf = sbt_data->row_pdf[row_index] * sbt_data->col_pdfs[row_index * sbt_data->width + col_index];
+    float jacobian =
+        (2.0f * glm::pi<float>() * glm::pi<float>() * std::sin(theta)) / float(sbt_data->width * sbt_data->height);
+    float direction_pdf = pixel_pdf / jacobian;
+
+    return direction_pdf;
 }
 }    // namespace detail
 
@@ -129,12 +129,10 @@ __direct_callable__sample_environmentemitter(const atcg::AnyInteraction& si,
     const atcg::EnvironmentEmitterData* sbt_data =
         *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
 
-    atcg::EmitterSamplingResult result = detail::sampleEnvironmentEmitter(si, rng);
+    atcg::EmitterSamplingResult result = detail::sampleEnvironmentEmitter(sbt_data, si, rng);
 
     glm::vec3 color = sbt_data->environment_texture.read(glm::vec2(result.uvs.x, 1.0f - result.uvs.y));
 
-    result.distance_to_light           = std::numeric_limits<float>::infinity();
-    result.sampling_pdf                = result.sampling_pdf;
     result.radiance_weight_at_receiver = atcg::SampledSpectrum::fromRGB(color, wavelengths) / result.sampling_pdf;
 
     return result;
@@ -160,5 +158,5 @@ extern "C" __device__ float __direct_callable__evalpdf_environmentemitter(const 
         *reinterpret_cast<const atcg::EnvironmentEmitterData**>(optixGetSbtDataPointer());
     // We can assume that outgoing ray dir actually intersects the light source.
 
-    return detail::evalEnvironmentEmitterSamplingPdf(last_si, si);
+    return detail::evalEnvironmentEmitterSamplingPdf(sbt_data, last_si, si);
 }

@@ -234,6 +234,18 @@ ATCG_API AssetHandle displayTexture2DSelection(const std::string& key, AssetHand
 ATCG_API AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
+ * @brief Display a cull mode selection dialog and return the selected cull mode. This is used in the editor and returns
+ * the selected cull mode.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param cull_mode The currently selected cull mode
+ * @param deactivated Whether the selection was deactivated this frame
+ *
+ * @return The selected cull mode
+ */
+ATCG_API CullMode displayCullModeSelection(const std::string& key, CullMode cull_mode, bool& deactivated);
+
+/**
  * @brief Serialize a buffer
  *
  * @param file_name The file name

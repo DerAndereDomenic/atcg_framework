@@ -5,6 +5,7 @@
 #define EDGE_CYLINDER_RENDERER_KEY "EdgeCylinderRenderer"
 #define MATERIAL_KEY               "Material"
 #define RADIUS_KEY                 "Radius"
+#define CULL_MODE_KEY              "CullMode"
 
 namespace atcg
 {
@@ -86,7 +87,7 @@ void ComponentRenderer<EdgeCylinderRenderComponent>::renderComponent(atcg::Rende
         vao_cylinder->pushInstanceBuffer(indices);
 
         GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader).setRasterizerState(
-            RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true).enableCulling(true));
+            RasterizerState().setCullMode(renderer.cull_mode).enableCulling(true).enableCulling(true));
 
         _renderer->drawVAO(vao_cylinder,
                            camera,
@@ -125,7 +126,8 @@ void ComponentSerializer<EdgeCylinderRenderComponent>::serialize_component(const
 {
     j[EDGE_CYLINDER_RENDERER_KEY][RADIUS_KEY] = component.radius;
 
-    j[EDGE_CYLINDER_RENDERER_KEY][MATERIAL_KEY] = (uint64_t)component.material_handle;
+    j[EDGE_CYLINDER_RENDERER_KEY][MATERIAL_KEY]  = (uint64_t)component.material_handle;
+    j[EDGE_CYLINDER_RENDERER_KEY][CULL_MODE_KEY] = (int)component.cull_mode;
 }
 
 void ComponentSerializer<EdgeCylinderRenderComponent>::deserialize_component(const std::string& file_path,
@@ -147,6 +149,9 @@ void ComponentSerializer<EdgeCylinderRenderComponent>::deserialize_component(con
     {
         renderComponent.material_handle = (AssetHandle)renderer[MATERIAL_KEY];
     }
+
+    renderComponent.cull_mode =
+        (atcg::CullMode)renderer.value(CULL_MODE_KEY, (int)atcg::CullMode::ATCG_BACK_FACE_CULLING);
 }
 
 }    // namespace Serialization
@@ -180,6 +185,10 @@ void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atc
     auto new_handle           = Utils::displayMaterialSelection("edgecylinder", material_handle, deactivated);
     updated                   = (new_handle != material_handle) || updated;
     component.material_handle = new_handle;
+
+    auto new_cull_mode  = Utils::displayCullModeSelection("edgecylinder", component.cull_mode, deactivated);
+    updated             = (new_cull_mode != component.cull_mode) || updated;
+    component.cull_mode = new_cull_mode;
 
     if(updated && !atcg::RevisionStack::isRecording())
     {

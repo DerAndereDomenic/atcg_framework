@@ -161,6 +161,11 @@ void GraphicsAPI::bindPipeline(const GraphicsPipeline& pipeline)
             glCullFace(GL_FRONT_AND_BACK);
         }
         break;
+        case CullMode::ATCG_NO_CULLING:
+        {
+            glDisable(GL_CULL_FACE);
+        }
+        break;
     }
 
     if(_current_pipeline.rasterizer_state.depth_state.depth_testing_enabled)
