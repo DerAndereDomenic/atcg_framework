@@ -26,6 +26,9 @@ ATCG_DEVICE OptixCoopVec<T, L * F> DeviceHashGrid<T, L, F>::forward(const glm::v
         uint32_t Nl          = (uint32_t)(N_min * glm::pow(b, (float)l));
         glm::vec3 pos_scaled = position * (float)Nl;
         glm::ivec3 pos_floor = glm::floor(pos_scaled);
+        pos_floor.x          = glm::clamp(pos_floor.x, 0, (int)Nl - 1);
+        pos_floor.y          = glm::clamp(pos_floor.y, 0, (int)Nl - 1);
+        pos_floor.z          = glm::clamp(pos_floor.z, 0, (int)Nl - 1);
 
         uint32_t hash000 = _hash(pos_floor + glm::ivec3(0, 0, 0), T_size);
         uint32_t hash001 = _hash(pos_floor + glm::ivec3(0, 0, 1), T_size);
@@ -83,6 +86,9 @@ ATCG_DEVICE glm::vec3 DeviceHashGrid<T, L, F>::backward(const glm::vec3& positio
 
         glm::vec3 pos_scaled = position * (float)Nl;
         glm::ivec3 pos_floor = glm::floor(pos_scaled);
+        pos_floor.x          = glm::clamp(pos_floor.x, 0, (int)Nl - 1);
+        pos_floor.y          = glm::clamp(pos_floor.y, 0, (int)Nl - 1);
+        pos_floor.z          = glm::clamp(pos_floor.z, 0, (int)Nl - 1);
 
         glm::vec3 w = pos_scaled - glm::vec3(pos_floor);
 
