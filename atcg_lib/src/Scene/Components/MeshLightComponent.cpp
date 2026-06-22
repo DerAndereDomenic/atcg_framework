@@ -169,8 +169,7 @@ void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_pt
 
         ImGui::Separator();
 
-        auto new_handle = Utils::displayTexture2DSelection("meshlight", component.emissive_handle);
-        deactivated     = ImGui::IsItemDeactivated() || deactivated;
+        auto new_handle = Utils::displayTexture2DSelection("meshlight", component.emissive_handle, deactivated);
 
         updated                   = (new_handle != component.emissive_handle) || updated;
         component.emissive_handle = new_handle;

@@ -286,7 +286,7 @@ setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader,
     return std::make_pair(irradiance_id, prefiltered_id);
 }
 
-AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle)
+AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle, bool& deactivated)
 {
 #ifndef ATCG_HEADLESS
     const auto& data = AssetManager::getMetaData(handle);
@@ -340,7 +340,7 @@ AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle)
 #endif
 }
 
-AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle)
+AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle, bool& deactivated)
 {
 #ifndef ATCG_HEADLESS
     const auto& data = AssetManager::getMetaData(handle);
@@ -394,7 +394,7 @@ AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle)
 #endif
 }
 
-AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle)
+AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle, bool& deactivated)
 {
 #ifndef ATCG_HEADLESS
     const auto& data = AssetManager::getMetaData(handle);
@@ -415,6 +415,7 @@ AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle)
             {
                 current_item = 0;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             if(is_selected)
             {
@@ -432,6 +433,7 @@ AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle)
             {
                 current_item = it->first;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             if(is_selected)
             {
@@ -441,6 +443,7 @@ AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle)
 
         ImGui::EndCombo();
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     return current_item;
 #else
@@ -448,7 +451,7 @@ AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle)
 #endif
 }
 
-AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
+AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle, bool& deactivated)
 {
 #ifndef ATCG_HEADLESS
     const auto& data = AssetManager::getMetaData(handle);
@@ -469,6 +472,7 @@ AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
             {
                 current_item = 0;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             if(is_selected)
             {
@@ -489,6 +493,7 @@ AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
             {
                 current_item = it->first;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             if(is_selected)
             {
@@ -498,6 +503,7 @@ AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
 
         ImGui::EndCombo();
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     return current_item;
 #else
@@ -505,7 +511,7 @@ AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle)
 #endif
 }
 
-AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle)
+AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle, bool& deactivated)
 {
 #ifndef ATCG_HEADLESS
     const auto& data = AssetManager::getMetaData(handle);
@@ -526,6 +532,7 @@ AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle
             {
                 current_item = 0;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             if(is_selected)
             {
@@ -543,6 +550,7 @@ AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle
             {
                 current_item = it->first;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             if(is_selected)
             {
@@ -552,6 +560,7 @@ AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle
 
         ImGui::EndCombo();
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     return current_item;
 #else
@@ -559,7 +568,7 @@ AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle
 #endif
 }
 
-AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle)
+AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle, bool& deactivated)
 {
 #ifndef ATCG_HEADLESS
     const auto& data = AssetManager::getMetaData(handle);
@@ -580,6 +589,7 @@ AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle
             {
                 current_item = 0;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             if(is_selected)
             {
@@ -597,6 +607,7 @@ AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle
             {
                 current_item = it->first;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             if(is_selected)
             {
@@ -606,6 +617,7 @@ AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle
 
         ImGui::EndCombo();
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     return current_item;
 #else

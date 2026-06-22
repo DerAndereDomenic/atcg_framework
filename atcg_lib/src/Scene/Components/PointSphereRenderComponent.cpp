@@ -186,14 +186,12 @@ void ComponentGUIRenderer<PointSphereRenderComponent>::draw_component(const atcg
     // Material
     auto material_handle = component.material_handle;
 
-    auto new_handle           = Utils::displayMaterialSelection("pointsphere", material_handle);
-    deactivated               = ImGui::IsItemDeactivated() || deactivated;
+    auto new_handle           = Utils::displayMaterialSelection("pointsphere", material_handle, deactivated);
     updated                   = (new_handle != material_handle) || updated;
     component.material_handle = new_handle;
 
     auto shader_handle      = component.shader_handle;
-    new_handle              = Utils::displayShaderSelection("pointsphere", shader_handle);
-    deactivated             = ImGui::IsItemDeactivated() || deactivated;
+    new_handle              = Utils::displayShaderSelection("pointsphere", shader_handle, deactivated);
     updated                 = (new_handle != shader_handle) || updated;
     component.shader_handle = new_handle;
 

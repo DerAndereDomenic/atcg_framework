@@ -326,8 +326,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 
     ImGui::Separator();
 
-    auto new_handle = Utils::displayTexture2DSelection("camera", component.image_handle);
-    deactivated     = ImGui::IsItemDeactivated() || deactivated;
+    auto new_handle = Utils::displayTexture2DSelection("camera", component.image_handle, deactivated);
 
     updated                = (new_handle != component.image_handle) || updated;
     component.image_handle = new_handle;

@@ -177,10 +177,9 @@ void ComponentGUIRenderer<EdgeCylinderRenderComponent>::draw_component(const atc
     // Material
     auto material_handle = component.material_handle;
 
-    auto new_handle           = Utils::displayMaterialSelection("edgecylinder", material_handle);
+    auto new_handle           = Utils::displayMaterialSelection("edgecylinder", material_handle, deactivated);
     updated                   = (new_handle != material_handle) || updated;
     component.material_handle = new_handle;
-    deactivated               = ImGui::IsItemDeactivated() || deactivated;
 
     if(updated && !atcg::RevisionStack::isRecording())
     {

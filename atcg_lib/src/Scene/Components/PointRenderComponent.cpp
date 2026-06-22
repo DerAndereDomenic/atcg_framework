@@ -180,8 +180,7 @@ void ComponentGUIRenderer<PointRenderComponent>::draw_component(const atcg::ref_
     deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     auto shader_handle      = component.shader_handle;
-    auto new_handle         = Utils::displayShaderSelection("point", shader_handle);
-    deactivated             = ImGui::IsItemDeactivated() || deactivated;
+    auto new_handle         = Utils::displayShaderSelection("point", shader_handle, deactivated);
     updated                 = (new_handle != shader_handle) || updated;
     component.shader_handle = new_handle;
 
