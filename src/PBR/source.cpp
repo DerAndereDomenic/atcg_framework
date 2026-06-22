@@ -397,6 +397,7 @@ public:
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
         hovered_entity = panel.getSelectedEntity();
+        atcg::Project::getActive()->getActiveScene()->setSelectedEntity(hovered_entity);
 
         asset_panel.renderPanel();
 
@@ -466,6 +467,7 @@ public:
         {
             hovered_entity = atcg::Utils::pickEntity(mouse_pos);
             panel.selectEntity(hovered_entity);
+            atcg::Project::getActive()->getActiveScene()->setSelectedEntity(hovered_entity);
         }
         return true;
     }
