@@ -641,6 +641,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     atcg::ref_ptr<Material> material = material_->clone();
     material->handle                 = material_->handle;
+    bool deactivated                 = false;
     if(ImGui::BeginCombo("Material Type", materialTypeToString(material_->getMaterialType())))
     {
         for(int i = 0; i < IM_ARRAYSIZE(materialTypeLabels); ++i)
@@ -666,12 +667,13 @@ void AssetPanel::displayMaterial(AssetHandle handle)
                 }
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
             if(isSelected) ImGui::SetItemDefaultFocus();
         }
         ImGui::EndCombo();
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
-    bool deactivated = false;
     switch(material->getMaterialType())
     {
         case MaterialType::MATERIAL_TYPE_OPAQUE:
@@ -1141,8 +1143,9 @@ void AssetPanel::displayScene(AssetHandle handle)
     }
 
     ImGui::Text("Skybox:");
-    auto new_handle = Utils::displayTexture2DSelection("skybox", skybox_handle);
-    bool updated    = (new_handle != skybox_handle);
+    bool deactivated = false;
+    auto new_handle  = Utils::displayTexture2DSelection("skybox", skybox_handle, deactivated);
+    bool updated     = (new_handle != skybox_handle);
 
     if(updated)
     {
