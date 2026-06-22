@@ -230,11 +230,15 @@ void AssetManagerSystem::clear()
 {
     _asset_registry.clear();
     _loaded_assets.clear();
+
+    registerStandardAssets();
 }
 
 void AssetManagerSystem::destroy()
 {
-    clear();
+    // Force complete clearance, event of standard assets
+    _asset_registry.clear();
+    _loaded_assets.clear();
 }
 
 void AssetManagerSystem::loadStandardAssets()

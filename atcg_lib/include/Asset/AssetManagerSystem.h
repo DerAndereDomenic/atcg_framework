@@ -151,6 +151,7 @@ public:
 
     /**
      * @brief Clears all assets
+     * @note This does not clear the default assets
      */
     void clear();
 
@@ -435,6 +436,7 @@ ATCG_INLINE void serializeAssets(const std::filesystem::path& root_path)
 
 /**
  * @brief Clears all assets
+ * @note This does not clear the default assets
  */
 ATCG_INLINE void clear()
 {
