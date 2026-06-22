@@ -6,6 +6,7 @@
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <BSDF/BSDFVPtrTable.cuh>
 #include <Sensor/SensorVPtrTable.cuh>
+#include <DataStructure/BoundingBox.h>
 
 #include <Neural/DeviceMLP.cuh>
 #include <Neural/DeviceHashGrid.h>
@@ -47,6 +48,7 @@ struct NRCParams
     int32_t* entity_ids;
 
     OptixTraversableHandle handle;
+    atcg::BoundingBox* scene_aabb;
 
     TraceParameters surface_trace_params;
     TraceParameters occlusion_trace_params;

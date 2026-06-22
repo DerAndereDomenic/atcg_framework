@@ -78,6 +78,7 @@ private:
 
     atcg::ref_ptr<Scene> _scene;
     atcg::ref_ptr<OptixScene> _optix_scene;
+    atcg::dref_ptr<atcg::BoundingBox> _scene_aabb;
     atcg::dref_ptr<NRCParams> _launch_params;
     uint32_t _frame_counter = 0;
 

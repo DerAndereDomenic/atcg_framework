@@ -48,7 +48,10 @@ void NRCIntegrator::initializePipeline(const Dictionary& dict)
 
     uint32_t width  = dict.getValue<uint32_t>("width");
     uint32_t height = dict.getValue<uint32_t>("height");
-    _optix_scene    = SceneAdapter(_context, _pipeline, _sbt).apply(scene, width, height);
+    auto adapter    = SceneAdapter(_context, _pipeline, _sbt);
+    _optix_scene    = adapter.apply(scene, width, height);
+    auto scene_aabb = adapter.getSceneAABB();
+    _scene_aabb.upload(&scene_aabb);
 
     const std::string ptx_raygen_filename = "./bin/NRCIntegrator_ptx.ptx";
     OptixProgramGroup raygen_prog_group   = _pipeline->addRaygenShader({ptx_raygen_filename, "__raygen__render"});
@@ -161,6 +164,7 @@ void NRCIntegrator::generateTrainingSamples()
     params.image_height = height;
     params.image_width  = width;
     params.handle       = _optix_scene->getIAS()->getTraversableHandle();
+    params.scene_aabb   = _scene_aabb.get();
 
     params.entity_ids = nullptr;
 
@@ -206,6 +210,7 @@ void NRCIntegrator::trainRadianceCache()
     params.max_training_samples     = (uint32_t)num_samples;
     params.mlp                      = _mlp.getDeviceMLP();
     params.hash_grid                = _hash_grid.getDeviceHashGrid();
+    params.scene_aabb               = _scene_aabb.get();
 
     _launch_params.upload(&params);
 
@@ -260,6 +265,7 @@ void NRCIntegrator::renderWithRadianceCache(Dictionary& in_out_dictionary)
     params.image_height = height;
     params.image_width  = width;
     params.handle       = _optix_scene->getIAS()->getTraversableHandle();
+    params.scene_aabb   = _scene_aabb.get();
 
     params.entity_ids = output_entities.numel() > 0 ? (int32_t*)output_entities.data_ptr() : nullptr;
 

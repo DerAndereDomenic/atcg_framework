@@ -19,6 +19,19 @@ extern "C"
     __constant__ atcg::NRCParams params;
 }
 
+ATCG_INLINE ATCG_DEVICE glm::vec3 clampBecauseGLMisTrash(glm::vec3 value, float min, float max)
+{
+    return glm::vec3(glm::clamp(value.x, min, max), glm::clamp(value.y, min, max), glm::clamp(value.z, min, max));
+}
+
+ATCG_INLINE ATCG_DEVICE glm::vec3 mapToBoundingBox(const glm::vec3& pos)
+{
+    glm::vec3 bbox_min = params.scene_aabb->min;
+    glm::vec3 bbox_max = params.scene_aabb->max;
+
+    return clampBecauseGLMisTrash((pos - (bbox_min)) / (bbox_max - bbox_min), 0.0f, 1.0f);
+}
+
 extern "C" __global__ void __raygen__sample_generation()
 {
     uint3 launch_idx = optixGetLaunchIndex();
@@ -199,7 +212,8 @@ extern "C" __global__ void __raygen__train()
                                        &encodings[0]);
     atcg::sphericalHarmonicEncoding<4>(sample.normal.x, sample.normal.y, sample.normal.z, &encodings[16]);
 
-    OptixCoopVec<half, 32> pos_encoding = params.hash_grid->forward(sample.position);
+    glm::vec3 mapped_position           = mapToBoundingBox(sample.position);
+    OptixCoopVec<half, 32> pos_encoding = params.hash_grid->forward(mapped_position);
 
     for(int i = 0; i < 32; ++i)
     {
@@ -235,7 +249,7 @@ extern "C" __global__ void __raygen__train()
         grad_pos_encoding[i] = grad_mlp[32 + i];
     }
 
-    params.hash_grid->backward<true>(sample.position, grad_pos_encoding);
+    params.hash_grid->backward<true>(mapped_position, grad_pos_encoding);
 }
 
 extern "C" __global__ void __raygen__render()
@@ -310,7 +324,8 @@ extern "C" __global__ void __raygen__render()
                                                        &encodings[0]);
                     atcg::sphericalHarmonicEncoding<4>(si.normal.x, si.normal.y, si.normal.z, &encodings[16]);
 
-                    OptixCoopVec<half, 32> pos_encoding = params.hash_grid->forward(si.position);
+                    glm::vec3 mapped_position           = mapToBoundingBox(si.position);
+                    OptixCoopVec<half, 32> pos_encoding = params.hash_grid->forward(mapped_position);
 
                     for(int i = 0; i < 32; ++i)
                     {
