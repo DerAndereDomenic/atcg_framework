@@ -47,8 +47,10 @@ public:
  */
 struct ATCG_API AssetMetaData
 {
-    AssetType type   = AssetType::None;
-    std::string name = "Asset";
+    AssetType type      = AssetType::None;
+    std::string name    = "Asset";
+    bool show_in_editor = true;
+    bool serialize      = true;
 
     operator bool() const { return type != AssetType::None; }
 };

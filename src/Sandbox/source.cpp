@@ -226,28 +226,9 @@ public:
         ImGui::End();
 
         // Gizmo test
-        ImGuizmo::SetOrthographic(false);
-        ImGuizmo::BeginFrame();
+        atcg::drawGuizmo(scene, selected_entity, current_operation, camera_controller->getCamera());
 
-        const auto& window   = atcg::Application::get()->getWindow();
-        glm::vec2 window_pos = window->getPosition();
-        ImGuizmo::SetRect(window_pos.x, window_pos.y, (float)window->getWidth(), (float)window->getHeight());
-
-        glm::mat4 camera_projection = camera_controller->getCamera()->getProjection();
-        glm::mat4 camera_view       = camera_controller->getCamera()->getView();
-
-        glm::mat4 transform =
-            selected_entity.getComponent<atcg::TransformComponent>().getModel();    // sphere->getModel();
-
-        ImGuizmo::Manipulate(glm::value_ptr(camera_view),
-                             glm::value_ptr(camera_projection),
-                             current_operation,
-                             ImGuizmo::LOCAL,
-                             glm::value_ptr(transform));
-
-        selected_entity.getComponent<atcg::TransformComponent>().setModel(transform);
-
-        // if(ImGuizmo::IsUsing()) { sphere->setModel(transform); }
+        // if(atcg::GuizmoOperation::IsUsing()) { sphere->setModel(transform); }
     }
 #endif
 
@@ -267,15 +248,15 @@ public:
     {
         if(event->getKeyCode() == ATCG_KEY_T)
         {
-            current_operation = ImGuizmo::OPERATION::TRANSLATE;
+            current_operation = atcg::GuizmoOperation::TRANSLATE;
         }
         if(event->getKeyCode() == ATCG_KEY_R)
         {
-            current_operation = ImGuizmo::OPERATION::ROTATE;
+            current_operation = atcg::GuizmoOperation::ROTATE;
         }
         if(event->getKeyCode() == ATCG_KEY_S)
         {
-            current_operation = ImGuizmo::OPERATION::SCALE;
+            current_operation = atcg::GuizmoOperation::SCALE;
         }
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
@@ -303,7 +284,7 @@ private:
     float dt           = 1.0f / 60.0f;
 
 #ifndef ATCG_HEADLESS
-    ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+    atcg::GuizmoOperation current_operation = atcg::GuizmoOperation::TRANSLATE;
 #endif
 };
 

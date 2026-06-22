@@ -7,7 +7,7 @@ layout(location = 2) out uint out_stencil;
 in vec2 frag_uv;
 
 uniform sampler2DMS in_color;
-uniform isampler2DMS in_entityID;
+uniform isampler2DMS in_entity;
 uniform usampler2DMS in_stencil;
 uniform sampler2DMS in_depth;
 
@@ -30,7 +30,7 @@ void main()
     }
     color /= float(samples);
 
-    entityID = texelFetch(in_entityID, texel, 0).r;
+    entityID = texelFetch(in_entity, texel, 0).r;
     stencil = texelFetch(in_stencil, texel, 0).r;
 
     out_color = color;

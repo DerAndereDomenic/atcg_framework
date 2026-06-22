@@ -232,7 +232,7 @@ inline void defineBindings(py::module_& m)
 
 #ifndef ATCG_HEADLESS
     auto m_imgui            = m.def_submodule("ImGui");
-    auto m_guizmo_operation = py::enum_<ImGuizmo::OPERATION>(m_imgui, "GuizmoOperation");
+    auto m_guizmo_operation = py::enum_<atcg::GuizmoOperation>(m_imgui, "GuizmoOperation");
 #endif
 
 // On module initialization and destruction
@@ -566,7 +566,9 @@ inline void defineBindings(py::module_& m)
                  &atcg::AssetManagerSystem::registerAsset))
         .def("registerAsset",
              static_cast<atcg::AssetHandle (atcg::AssetManagerSystem::*)(const atcg::ref_ptr<atcg::Asset>& asset,
-                                                                         const std::string& name)>(
+                                                                         const std::string& name,
+                                                                         bool show_in_editor,
+                                                                         bool serialize)>(
                  &atcg::AssetManagerSystem::registerAsset))
         .def("unloadAsset", &atcg::AssetManagerSystem::unloadAsset)
         .def("removeAsset", &atcg::AssetManagerSystem::removeAsset)
@@ -583,8 +585,8 @@ inline void defineBindings(py::module_& m)
         .def("updateName", &atcg::AssetManager::updateName)
         .def("registerAsset", [](const atcg::AssetMetaData& data) { return atcg::AssetManager::registerAsset(data); })
         .def("registerAsset",
-             [](const atcg::ref_ptr<atcg::Asset>& asset, const std::string& name)
-             { return atcg::AssetManager::registerAsset(asset, name); })
+             [](const atcg::ref_ptr<atcg::Asset>& asset, const std::string& name, bool show_in_editor, bool serialize)
+             { return atcg::AssetManager::registerAsset(asset, name, show_in_editor, serialize); })
         .def("unloadAsset", &atcg::AssetManager::unloadAsset)
         .def("removeAsset", &atcg::AssetManager::removeAsset)
         .def("serializeRegistry", &atcg::AssetManager::serializeRegistry)
@@ -1887,11 +1889,12 @@ inline void defineBindings(py::module_& m)
             }
         });
 
-    m_imgui.def("isUsing", &ImGuizmo::IsUsing);
+    m_imgui.def("isUsing", &atcg::isUsingGuizmo);
+    m_imgui.def("isOver", &atcg::isOverGuizmo);
 
-    m_guizmo_operation.value("TRANSLATE", ImGuizmo::OPERATION::TRANSLATE)
-        .value("ROTATE", ImGuizmo::OPERATION::ROTATE)
-        .value("SCALE", ImGuizmo::OPERATION::SCALE)
+    m_guizmo_operation.value("TRANSLATE", atcg::GuizmoOperation::TRANSLATE)
+        .value("ROTATE", atcg::GuizmoOperation::ROTATE)
+        .value("SCALE", atcg::GuizmoOperation::SCALE)
         .export_values();
     m_imgui.def("drawGuizmo", atcg::drawGuizmo);
 #endif

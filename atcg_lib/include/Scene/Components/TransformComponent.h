@@ -134,7 +134,7 @@ namespace GUI
 {
 ATCG_DECLARE_COMPONENT_GUI_RENDERER(TransformComponent);
 
-bool displayTransform(const std::string& id, TransformComponent& component);
+std::pair<bool, bool> displayTransform(const std::string& id, TransformComponent& component);
 }    // namespace GUI
 
 }    // namespace atcg

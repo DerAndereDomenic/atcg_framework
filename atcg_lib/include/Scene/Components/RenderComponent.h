@@ -1,12 +1,13 @@
 #pragma once
 
 #include <Renderer/Material.h>
+#include <Asset/AssetManagerSystem.h>
 
 namespace atcg
 {
 struct ATCG_API RenderComponent
 {
-    RenderComponent() { default_material = atcg::make_ref<OpaqueMaterial>(); }
+    RenderComponent() { default_material = AssetManager::getDefaultMaterial(); }
 
     bool visible = true;
 

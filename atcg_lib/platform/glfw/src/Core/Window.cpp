@@ -169,7 +169,7 @@ Window::Window(const WindowProps& props)
                         {
                             WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
 
-                            FileDroppedEvent event(paths[0]);
+                            FileDroppedEvent event(paths, path_count);
                             data.on_event(&event);
                         });
 
@@ -269,8 +269,8 @@ void Window::toggleFullscreen()
             glfwGetMonitorWorkarea(monitors[i], &mx, &my, &mw, &mh);
 
             int overlapWidth  = std::max(0,
-                                        std::min((int)_data.fullscreen_x + (int)_data.fullscreen_width, mx + mw) -
-                                            std::max(_data.fullscreen_x, mx));
+                                         std::min((int)_data.fullscreen_x + (int)_data.fullscreen_width, mx + mw) -
+                                             std::max(_data.fullscreen_x, mx));
             int overlapHeight = std::max(0,
                                          std::min((int)_data.fullscreen_y + (int)_data.fullscreen_height, my + mh) -
                                              std::max(_data.fullscreen_y, my));

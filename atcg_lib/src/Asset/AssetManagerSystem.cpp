@@ -98,11 +98,16 @@ AssetHandle AssetManagerSystem::registerAsset(AssetHandle handle, const AssetMet
     return handle;
 }
 
-AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name)
+AssetHandle AssetManagerSystem::registerAsset(const atcg::ref_ptr<Asset>& asset,
+                                              const std::string& name,
+                                              bool show_in_editor,
+                                              bool serialize)
 {
     AssetMetaData data;
-    data.type = asset->getType();
-    data.name = name;
+    data.type           = asset->getType();
+    data.name           = name;
+    data.show_in_editor = show_in_editor;
+    data.serialize      = serialize;
 
     _loaded_assets[asset->handle] = asset;
 
@@ -148,6 +153,8 @@ ATCG_INLINE void serialize_registry_ver1(const AssetRegistry& registry, const st
     {
         AssetHandle handle = entry.first;
         AssetMetaData data = entry.second;
+
+        if(!data.serialize) continue;
 
         nlohmann::json asset_entry;
         asset_entry["Handle"] = (uint64_t)handle;
@@ -207,6 +214,8 @@ void AssetManagerSystem::deserializeRegistry(const std::filesystem::path& regist
     {
         detail::deserialize_registry_ver1(_asset_registry, j);
     }
+
+    registerStandardAssets();
 }
 
 void AssetManagerSystem::serializeAssets(const std::filesystem::path& root_path)
@@ -221,11 +230,15 @@ void AssetManagerSystem::clear()
 {
     _asset_registry.clear();
     _loaded_assets.clear();
+
+    registerStandardAssets();
 }
 
 void AssetManagerSystem::destroy()
 {
-    clear();
+    // Force complete clearance, event of standard assets
+    _asset_registry.clear();
+    _loaded_assets.clear();
 }
 
 void AssetManagerSystem::loadStandardAssets()
@@ -266,10 +279,19 @@ void AssetManagerSystem::loadStandardAssets()
     }
 
     {
-        std::vector<atcg::Vertex> vertices = {atcg::Vertex(glm::vec3(-1, -1, 0)),
-                                              atcg::Vertex(glm::vec3(1, -1, 0)),
-                                              atcg::Vertex(glm::vec3(1, 1, 0)),
-                                              atcg::Vertex(glm::vec3(-1, 1, 0))};
+        std::vector<atcg::Vertex> vertices = {
+            atcg::Vertex(glm::vec3(-1, -1, 0),
+                         glm::vec3(1),
+                         glm::vec3(0, 0, 1),
+                         glm::vec3(1, 0, 0),
+                         glm::vec3(0, 0, 0)),
+            atcg::Vertex(glm::vec3(1, -1, 0), glm::vec3(1), glm::vec3(0, 0, 1), glm::vec3(1, 0, 0), glm::vec3(1, 0, 0)),
+            atcg::Vertex(glm::vec3(1, 1, 0), glm::vec3(1), glm::vec3(0, 0, 1), glm::vec3(1, 0, 0), glm::vec3(1, 1, 0)),
+            atcg::Vertex(glm::vec3(-1, 1, 0),
+                         glm::vec3(1),
+                         glm::vec3(0, 0, 1),
+                         glm::vec3(1, 0, 0),
+                         glm::vec3(0, 1, 0))};
 
         std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
 
@@ -304,7 +326,20 @@ void AssetManagerSystem::loadStandardAssets()
         _cube_mesh = atcg::Graph::createTriangleMesh(points, faces);
     }
 
-    _dummy_skybox = atcg::make_ref<Skybox>();
+    _dummy_skybox     = atcg::make_ref<Skybox>();
+    _default_material = atcg::make_ref<OpaqueMaterial>();
+
+    registerStandardAssets();
+}
+
+void AssetManagerSystem::registerStandardAssets()
+{
+    registerAsset(_sphere_mesh, "Sphere Mesh", false, false);
+    registerAsset(_cylinder_mesh, "Cylinder Mesh", false, false);
+    // registerAsset(_lut_texture, "LUT Texture", false, false);
+    // registerAsset(_camera_frustum, "Camera Frustum Mesh", false, false);
+    registerAsset(_quad, "Quad Mesh", false, false);
+    registerAsset(_cube_mesh, "Cube Mesh", false, false);
 }
 
 }    // namespace atcg

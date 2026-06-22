@@ -167,10 +167,11 @@ setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader,
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected material or an invalid handle if no material was selected
  */
-ATCG_API AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a graph selection dialog and return the selected graph handle. This is used in the editor and returns
@@ -178,10 +179,11 @@ ATCG_API AssetHandle displayMaterialSelection(const std::string& key, AssetHandl
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected graph or an invalid handle if no graph was selected
  */
-ATCG_API AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a script selection dialog and return the selected script handle. This is used in the editor and
@@ -189,10 +191,11 @@ ATCG_API AssetHandle displayGraphSelection(const std::string& key, AssetHandle h
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected script or an invalid handle if no script was selected
  */
-ATCG_API AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a texture selection dialog and return the selected texture handle. This is used in the editor and
@@ -200,10 +203,11 @@ ATCG_API AssetHandle displayScriptSelection(const std::string& key, AssetHandle 
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected texture or an invalid handle if no texture was selected
  */
-ATCG_API AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a material selection dialog and return the selected material handle. This is used in the editor and
@@ -211,10 +215,11 @@ ATCG_API AssetHandle displayShaderSelection(const std::string& key, AssetHandle 
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected material or an invalid handle if no material was selected
  */
-ATCG_API AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a texture selection dialog and return the selected texture handle. This is used in the editor and
@@ -222,10 +227,11 @@ ATCG_API AssetHandle displayTexture2DSelection(const std::string& key, AssetHand
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected texture or an invalid handle if no texture was selected
  */
-ATCG_API AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a cull mode selection dialog and return the selected cull mode. This is used in the editor and returns
@@ -233,10 +239,11 @@ ATCG_API AssetHandle displayTexture3DSelection(const std::string& key, AssetHand
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param cull_mode The currently selected cull mode
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The selected cull mode
  */
-ATCG_API CullMode displayCullModeSelection(const std::string& key, CullMode cull_mode);
+ATCG_API CullMode displayCullModeSelection(const std::string& key, CullMode cull_mode, bool& deactivated);
 
 /**
  * @brief Serialize a buffer

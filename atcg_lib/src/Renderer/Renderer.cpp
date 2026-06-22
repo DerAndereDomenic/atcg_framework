@@ -266,6 +266,9 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("volume_het");
     impl->shader_manager->addShaderFromName("depth_pass_simple");
     impl->shader_manager->addShaderFromName("blit");
+    impl->shader_manager->addShaderFromName("mesh_preview");
+    impl->shader_manager->addShaderFromName("checkerboard");
+    impl->shader_manager->addShaderFromName("outline");
 }
 
 void RendererSystem::use()

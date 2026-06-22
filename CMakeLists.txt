@@ -109,18 +109,18 @@ if(NOT ATCG_HEADLESS)
 
     # imguizmo
     add_library(atcg_imguizmo STATIC)
-    target_sources(atcg_imguizmo PRIVATE "external/imguizmo/GraphEditor.cpp"
-                                    "external/imguizmo/GraphEditor.h"
-                                    "external/imguizmo/ImCurveEdit.cpp"
-                                    "external/imguizmo/ImCurveEdit.h"
-                                    "external/imguizmo/ImGradient.cpp"
-                                    "external/imguizmo/ImGradient.h"
-                                    "external/imguizmo/ImGuizmo.cpp"
-                                    "external/imguizmo/ImGuizmo.h"
-                                    "external/imguizmo/ImSequencer.cpp"
-                                    "external/imguizmo/ImSequencer.h"
-                                    "external/imguizmo/ImZoomSlider.h")
-    target_include_directories(atcg_imguizmo PUBLIC "external/imguizmo")
+    target_sources(atcg_imguizmo PRIVATE "external/imguizmo/src/GraphEditor.cpp"
+                                    "external/imguizmo/src/GraphEditor.h"
+                                    "external/imguizmo/src/ImCurveEdit.cpp"
+                                    "external/imguizmo/src/ImCurveEdit.h"
+                                    "external/imguizmo/src/ImGradient.cpp"
+                                    "external/imguizmo/src/ImGradient.h"
+                                    "external/imguizmo/src/ImGuizmo.cpp"
+                                    "external/imguizmo/src/ImGuizmo.h"
+                                    "external/imguizmo/src/ImSequencer.cpp"
+                                    "external/imguizmo/src/ImSequencer.h"
+                                    "external/imguizmo/src/ImZoomSlider.h")
+    target_include_directories(atcg_imguizmo PUBLIC "external/imguizmo/src")
     target_link_libraries(atcg_imguizmo PUBLIC atcg::imgui)
     add_library(atcg::imguizmo ALIAS atcg_imguizmo)
 endif()

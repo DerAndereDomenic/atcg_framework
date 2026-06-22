@@ -21,6 +21,8 @@ public:
 
     atcg::ref_ptr<Skybox> skybox;
     bool has_skybox = false;
+
+    Entity selected_entity;
 };
 
 Scene::Impl::Impl()
@@ -185,6 +187,16 @@ void Scene::_updateEntityName(atcg::Entity entity, const std::string& old_name, 
 
     auto& entities = impl->_entites_by_name[new_name];
     entities.push_back((entt::entity)entity.entity_handle());
+}
+
+void Scene::setSelectedEntity(Entity entity)
+{
+    impl->selected_entity = entity;
+}
+
+Entity Scene::getSelectedEntity() const
+{
+    return impl->selected_entity;
 }
 
 }    // namespace atcg

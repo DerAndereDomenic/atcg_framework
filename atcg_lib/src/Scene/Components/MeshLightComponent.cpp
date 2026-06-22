@@ -16,9 +16,37 @@ void ComponentRenderer<MeshLightComponent>::renderComponent(atcg::RendererSystem
                                                             const atcg::ref_ptr<Camera>& camera,
                                                             atcg::Dictionary& auxiliary) const
 {
+    if(!entity.hasComponent<TransformComponent>())
+    {
+        ATCG_WARN("Entity does not have transform component!");
+        return;
+    }
+
+    if(!entity.hasComponent<GeometryComponent>())
+    {
+        ATCG_WARN("Entity does not have geometry component!");
+        return;
+    }
+
     uint32_t entity_id           = entity.entity_handle();
     TransformComponent transform = entity.getComponent<TransformComponent>();
     GeometryComponent geometry   = entity.getComponent<GeometryComponent>();
+
+    if(!geometry.graph())
+    {
+        ATCG_WARN("Entity does have geometry component but mesh is empty");
+        return;
+    }
+
+    geometry.graph()->unmapAllPointers();
+
+    BoundingBox bbox = geometry.graph()->getBoundingBox();
+    bbox             = Utils::transformBoundingBox(bbox, transform.getModel());
+
+    if(!Utils::isVisible(camera, bbox))
+    {
+        return;
+    }
 
     // Actual rendering of component
     MeshLightComponent renderer = entity.getComponent<MeshLightComponent>();
@@ -112,12 +140,14 @@ void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_pt
 #ifndef ATCG_HEADLESS
     MeshLightComponent component = _component;
 
-    float updated = false;
+    bool updated     = false;
+    bool deactivated = false;
     {
         // auto spec        = component.getEmissiveTexture()->getSpecification();
         // bool useTextures = spec.width != 1 || spec.height != 1;
 
-        updated = ImGui::DragFloat("Scaling", &component.intensity, 0.005f, 0.0f, FLT_MAX) || updated;
+        updated     = ImGui::DragFloat("Scaling", &component.intensity, 0.005f, 0.0f, FLT_MAX) || updated;
+        deactivated = ImGui::IsItemDeactivated() || deactivated;
 
         if(!AssetManager::isAssetHandleValid(component.emissive_handle))
         {
@@ -134,11 +164,12 @@ void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_pt
                 component.setEmissiveColor(new_color);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
 
         ImGui::Separator();
 
-        auto new_handle = Utils::displayTexture2DSelection("meshlight", component.emissive_handle);
+        auto new_handle = Utils::displayTexture2DSelection("meshlight", component.emissive_handle, deactivated);
 
         updated                   = (new_handle != component.emissive_handle) || updated;
         component.emissive_handle = new_handle;
@@ -146,10 +177,18 @@ void ComponentGUIRenderer<MeshLightComponent>::draw_component(const atcg::ref_pt
         ImGui::Separator();
     }
 
-    if(updated)
+    if(updated && !atcg::RevisionStack::isRecording())
     {
         atcg::RevisionStack::startRecording<ComponentEditedRevision<MeshLightComponent>>(scene, entity);
+    }
+
+    if(updated)
+    {
         _component = component;
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
         atcg::RevisionStack::endRecording();
     }
 #endif
