@@ -12,6 +12,7 @@
 #include <DataStructure/WorkerPool.h>
 #include <Emitter/MeshEmitter.h>
 #include <Scene/SceneAdapter.h>
+#include <DataStructure/Timer.h>
 
 #include <torch/torch.h>
 #include <torch/csrc/autograd/variable.h>
@@ -31,6 +32,10 @@ NRCIntegrator::NRCIntegrator(const atcg::ref_ptr<RaytracingContext>& context, co
     : Integrator(context, dict)
 {
     initializePipeline(dict);
+
+    _sample_generation_time = Statistic<float>("Sample Generation Time");
+    _training_time          = Statistic<float>("Training Time");
+    _render_time            = Statistic<float>("Render Time");
 }
 
 NRCIntegrator::~NRCIntegrator() {}
@@ -87,6 +92,28 @@ void NRCIntegrator::onImGuiRender()
 {
 #ifndef ATCG_HEADLESS
     ImGui::Begin("NRCIntegrator");
+
+    {
+        std::stringstream ss;
+        ss << _sample_generation_time;
+        ImGui::Text(ss.str().c_str());
+    }
+
+    {
+        std::stringstream ss;
+        ss << _training_time;
+        ImGui::Text(ss.str().c_str());
+    }
+
+    {
+        std::stringstream ss;
+        ss << _render_time;
+        ImGui::Text(ss.str().c_str());
+    }
+
+
+    ImGui::Separator();
+
     for(auto shape: _optix_scene->getShapes())
     {
         shape->onImGuiRender();
@@ -104,9 +131,21 @@ void NRCIntegrator::reset()
 
 void NRCIntegrator::generateRays(Dictionary& in_out_dictionary)
 {
-    generateTrainingSamples();
-    trainRadianceCache();
-    renderWithRadianceCache(in_out_dictionary);
+    {
+        atcg::Timer timer;
+        generateTrainingSamples();
+        _sample_generation_time.addSample(timer.elapsedMillis());
+    }
+    {
+        atcg::Timer timer;
+        trainRadianceCache();
+        _training_time.addSample(timer.elapsedMillis());
+    }
+    {
+        atcg::Timer timer;
+        renderWithRadianceCache(in_out_dictionary);
+        _render_time.addSample(timer.elapsedMillis());
+    }
 }
 
 

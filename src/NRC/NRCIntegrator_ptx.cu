@@ -220,11 +220,6 @@ extern "C" __global__ void __raygen__train()
                 ((output[0] - target_x) * (output[0] - target_x) + (output[1] - target_y) * (output[1] - target_y) +
                  (output[2] - target_z) * (output[2] - target_z));
 
-    if(launch_idx.x == 0)
-    {
-        printf("Loss: %f\n", __half2float(loss));
-    }
-
     OptixCoopVec<half, 8> grad_output(half(0.0f));
     grad_output[0] = half(2.0f) * loss_scaling * (output[0] - target_x);
     grad_output[1] = half(2.0f) * loss_scaling * (output[1] - target_y);

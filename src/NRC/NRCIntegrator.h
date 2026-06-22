@@ -9,6 +9,7 @@
 #include <Neural/MLP.h>
 #include <Neural/HashGrid.h>
 #include <torch/torch.h>
+#include <DataStructure/Statistics.h>
 
 namespace atcg
 {
@@ -86,5 +87,10 @@ private:
     atcg::HashGrid<half, 16, 2> _hash_grid;
     torch::Tensor _weights, _bias, _hash_weights;
     atcg::ref_ptr<torch::optim::Adam> _optimizer;
+
+    // Some statistics
+    atcg::Statistic<float> _sample_generation_time;
+    atcg::Statistic<float> _training_time;
+    atcg::Statistic<float> _render_time;
 };
 }    // namespace atcg
