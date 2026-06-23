@@ -295,7 +295,7 @@ public:
     {
         if(event->getKeyCode() == ATCG_KEY_T)
         {
-            current_operation = ImGuizmo::OPERATION::TRANSLATE;
+            current_operation = atcg::GuizmoOperation::TRANSLATE;
         }
         if(event->getKeyCode() == ATCG_KEY_R)
         {
@@ -305,12 +305,12 @@ public:
             }
             else
             {
-                current_operation = ImGuizmo::OPERATION::ROTATE;
+                current_operation = atcg::GuizmoOperation::ROTATE;
             }
         }
         if(event->getKeyCode() == ATCG_KEY_S)
         {
-            current_operation = ImGuizmo::OPERATION::SCALE;
+            current_operation = atcg::GuizmoOperation::SCALE;
         }
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
@@ -319,7 +319,7 @@ public:
 
     bool onMousePressed(atcg::MouseButtonPressedEvent* event)
     {
-        if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
+        if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !atcg::isOverGuizmo())
         {
             hovered_entity = atcg::Utils::pickEntity(mouse_pos);
             panel.selectEntity(hovered_entity);
@@ -370,7 +370,7 @@ private:
     uint32_t current_msaa_selection_index = 0;
     bool msaa_enabled                     = true;
 #ifndef ATCG_HEADLESS
-    ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+    atcg::GuizmoOperation current_operation = atcg::GuizmoOperation::TRANSLATE;
 #endif
 
 #ifdef ATCG_CUDA_BACKEND
