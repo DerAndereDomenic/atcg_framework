@@ -397,7 +397,7 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     auto shader               = impl->shader_manager->getShader("screen");
-    GraphicsPipeline pipeline = GraphicsPipeline();
+    GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
     GraphicsCommand::bindVertexArray(impl->quad_vao);
     shader->setInt("screen_texture", 0);
 
