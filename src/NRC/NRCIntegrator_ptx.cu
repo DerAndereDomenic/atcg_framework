@@ -229,15 +229,16 @@ extern "C" __global__ void __raygen__train()
     output = atcg::Activation<atcg::ActivationFunction::Sigmoid, NRC_OUTPUT_SIZE>::forward(output);
 
     // L2 loss
-    half loss_scaling = half(100.0f);
-    half loss = loss_scaling *
-                ((output[0] - target_x) * (output[0] - target_x) + (output[1] - target_y) * (output[1] - target_y) +
-                 (output[2] - target_z) * (output[2] - target_z));
+    half loss_scaling = half(1.0f);
+    // half loss = loss_scaling *
+    //             ((output[0] - target_x) * (output[0] - target_x) + (output[1] - target_y) * (output[1] - target_y) +
+    //              (output[2] - target_z) * (output[2] - target_z));
 
     OptixCoopVec<half, NRC_OUTPUT_SIZE> grad_output(half(0.0f));
-    grad_output[0] = half(2.0f) * loss_scaling * (output[0] - target_x);
-    grad_output[1] = half(2.0f) * loss_scaling * (output[1] - target_y);
-    grad_output[2] = half(2.0f) * loss_scaling * (output[2] - target_z);
+    half luminance = half(0.2126f) * output[0] + half(0.7152f) * output[1] + half(0.0722f) * output[2];
+    grad_output[0] = half(2.0f) * loss_scaling * (output[0] - target_x) / (luminance * luminance + half(0.01f));
+    grad_output[1] = half(2.0f) * loss_scaling * (output[1] - target_y) / (luminance * luminance + half(0.01f));
+    grad_output[2] = half(2.0f) * loss_scaling * (output[2] - target_z) / (luminance * luminance + half(0.01f));
 
     grad_output = atcg::Activation<atcg::ActivationFunction::Sigmoid, NRC_OUTPUT_SIZE>::backward(output, grad_output);
 
