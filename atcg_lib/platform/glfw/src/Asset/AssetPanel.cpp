@@ -13,6 +13,8 @@
 #include <Scene/Scene.h>
 #include <Core/Path.h>
 #include <Utils/Utils.h>
+#include <Renderer/Renderer.h>
+#include <Scene/SceneRenderer.h>
 
 namespace atcg
 {
@@ -21,7 +23,10 @@ namespace GUI
 
 namespace detail
 {
-void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const std::string& key, bool& updated)
+void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material,
+                           const std::string& key,
+                           bool& updated,
+                           bool& deactivated)
 {
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     {
@@ -43,6 +48,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                 material->setDiffuseColor(new_color);
                 updated = true;
             }
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -70,6 +77,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -86,6 +95,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -121,6 +132,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -137,6 +149,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -154,6 +168,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                 material->setRoughness(roughness);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -181,6 +196,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -197,6 +213,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -214,6 +232,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                 material->setMetallic(metallic);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -241,6 +260,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -257,6 +277,8 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -274,6 +296,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                 material->setIor(ior);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -301,6 +324,7 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -317,11 +341,16 @@ void displayOpaqueMaterial(const atcg::ref_ptr<OpaqueMaterial>& material, const 
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 }
 
-void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material, const std::string& key, bool& updated)
+void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material,
+                               const std::string& key,
+                               bool& updated,
+                               bool& deactivated)
 {
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     {
@@ -343,6 +372,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                 material->setDiffuseColor(new_color);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -370,6 +400,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -386,6 +417,8 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -403,6 +436,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                 material->setRoughness(roughness);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -430,6 +464,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -446,6 +481,8 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -463,6 +500,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                 material->setIor(ior);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -490,6 +528,7 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -506,11 +545,17 @@ void displayDielectricMaterial(const atcg::ref_ptr<DielectricMaterial>& material
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 }
 
-void displayNullMaterial(const atcg::ref_ptr<NullMaterial>& material, const std::string& key, bool& updated) {}
+void displayNullMaterial(const atcg::ref_ptr<NullMaterial>& material,
+                         const std::string& key,
+                         bool& updated,
+                         bool& deactivated)
+{
+}
 }    // namespace detail
 
 AssetPanel::AssetPanel()
@@ -539,6 +584,40 @@ AssetPanel::AssetPanel()
         auto img    = atcg::IO::imread((atcg::resource_directory() / "image_icon.png").string());
         _image_icon = atcg::Texture2D::create(img);
     }
+
+    {
+        _preview_scene = atcg::make_ref<Scene>();
+        auto entity    = _preview_scene->createEntity("Preview Entity");
+        entity.addComponent<GeometryComponent>(atcg::AssetManager::getSphereMesh());
+        entity.addComponent<MeshRenderComponent>();
+        entity.addComponent<TransformComponent>();
+
+        auto camera = atcg::make_ref<PerspectiveCamera>();
+        camera->setPosition(glm::vec3(2.0f, 1.5f, 0.0f));
+        camera->setLookAt(glm::vec3(0));
+        _preview_scene->setCamera(camera);
+
+        auto skybox         = atcg::IO::imread((atcg::resource_directory() / "studio_small.hdr").string());
+        auto skybox_texture = atcg::Texture2D::create(skybox);
+        _preview_scene->setSkybox(skybox_texture);
+
+        auto plane_entity = _preview_scene->createEntity("Preview Plane");
+
+        plane_entity.addComponent<GeometryComponent>(atcg::AssetManager::getQuadMesh());
+        auto& renderer          = plane_entity.addComponent<MeshRenderComponent>();
+        renderer.default_shader = atcg::ShaderManager::getShader("checkerboard");
+        auto& transform         = plane_entity.addComponent<TransformComponent>();
+        transform.setPosition(glm::vec3(0, -1, 0));
+        transform.setScale(glm::vec3(50, 50, 50));
+        transform.setRotation(glm::vec3(glm::radians(-90.0f), 0, 0));
+    }
+
+    {
+        _preview_framebuffer = atcg::make_ref<Framebuffer>(512, 512);
+        _preview_framebuffer->attachColor();
+        _preview_framebuffer->attachDepth();
+        _preview_framebuffer->complete();
+    }
 }
 
 void AssetPanel::displayMaterial(AssetHandle handle)
@@ -560,8 +639,9 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     constexpr const char* materialTypeLabels[] = {"Opaque", "Dielectric", "Null"};
 
-    atcg::ref_ptr<Material> material = material_->clone();
-    material->handle                 = material_->handle;
+    _preview_material         = material_->clone();
+    _preview_material->handle = material_->handle;
+    bool deactivated          = false;
     if(ImGui::BeginCombo("Material Type", materialTypeToString(material_->getMaterialType())))
     {
         for(int i = 0; i < IM_ARRAYSIZE(materialTypeLabels); ++i)
@@ -573,42 +653,73 @@ void AssetPanel::displayMaterial(AssetHandle handle)
                 switch(new_type)
                 {
                     case MaterialType::MATERIAL_TYPE_OPAQUE:
-                        material         = atcg::make_ref<OpaqueMaterial>();
-                        material->handle = handle;
+                        _preview_material         = atcg::make_ref<OpaqueMaterial>();
+                        _preview_material->handle = handle;
                         break;
                     case MaterialType::MATERIAL_TYPE_DIELECTRIC:
-                        material         = atcg::make_ref<DielectricMaterial>();
-                        material->handle = handle;
+                        _preview_material         = atcg::make_ref<DielectricMaterial>();
+                        _preview_material->handle = handle;
                         break;
                     case MaterialType::MATERIAL_TYPE_NULL:
-                        material         = atcg::make_ref<NullMaterial>();
-                        material->handle = handle;
+                        _preview_material         = atcg::make_ref<NullMaterial>();
+                        _preview_material->handle = handle;
                         break;
                 }
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
             if(isSelected) ImGui::SetItemDefaultFocus();
         }
         ImGui::EndCombo();
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
-    switch(material->getMaterialType())
+    switch(_preview_material->getMaterialType())
     {
         case MaterialType::MATERIAL_TYPE_OPAQUE:
-            detail::displayOpaqueMaterial(std::dynamic_pointer_cast<OpaqueMaterial>(material), key, updated);
+            detail::displayOpaqueMaterial(std::dynamic_pointer_cast<OpaqueMaterial>(_preview_material),
+                                          key,
+                                          updated,
+                                          deactivated);
             break;
         case MaterialType::MATERIAL_TYPE_DIELECTRIC:
-            detail::displayDielectricMaterial(std::dynamic_pointer_cast<DielectricMaterial>(material), key, updated);
+            detail::displayDielectricMaterial(std::dynamic_pointer_cast<DielectricMaterial>(_preview_material),
+                                              key,
+                                              updated,
+                                              deactivated);
             break;
         case MaterialType::MATERIAL_TYPE_NULL:
-            detail::displayNullMaterial(std::dynamic_pointer_cast<NullMaterial>(material), key, updated);
+            detail::displayNullMaterial(std::dynamic_pointer_cast<NullMaterial>(_preview_material),
+                                        key,
+                                        updated,
+                                        deactivated);
             break;
+    }
+
+    // Thumbnail preview
+    ImGui::Image((ImTextureID)_preview_framebuffer->getColorAttachement()->getID(),
+                 ImVec2(content_scale * 256, content_scale * 256),
+                 ImVec2 {0, 1},
+                 ImVec2 {1, 0});
+
+    auto preview_entity      = _preview_scene->getEntitiesByName("Preview Entity")[0];
+    auto& renderer           = preview_entity.getComponent<MeshRenderComponent>();
+    renderer.material_handle = _preview_material->handle;
+
+    atcg::SceneRenderer::render(_preview_scene, _preview_scene->getCamera(), _preview_framebuffer);
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::startRecording<AssetEditedRevision>(_preview_material->handle);
     }
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<AssetEditedRevision>(material_->handle);
-        AssetManager::registerAsset(material, AssetManager::getMetaData(material_->handle).name);
+        AssetManager::registerAsset(_preview_material, AssetManager::getMetaData(_preview_material->handle).name);
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
         atcg::RevisionStack::endRecording();
     }
 #endif
@@ -638,6 +749,46 @@ void AssetPanel::displayGraph(AssetHandle handle)
             atcg::RevisionStack::endRecording();
         }
     }
+
+    if(!graph || graph->type() != GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH) return;
+
+    // Thumbnail preview
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+    ImGui::Image((ImTextureID)_preview_framebuffer->getColorAttachement()->getID(),
+                 ImVec2(content_scale * 256, content_scale * 256),
+                 ImVec2 {0, 1},
+                 ImVec2 {1, 0});
+
+    atcg::BoundingBox bbox = graph->getBoundingBox();
+
+    // Place a camera that has a good view on the mesh based on the bounding box
+    glm::vec3 center    = bbox.min + (bbox.max - bbox.min) * 0.5f;
+    float radius        = glm::length(bbox.max - bbox.min) * 0.5f;
+    glm::vec3 direction = glm::vec3(glm::cos(glm::radians(30.0f) * glm::cos(glm::radians(45.0f))),
+                                    glm::sin(glm::radians(30.0f)),
+                                    glm::cos(glm::radians(30.0f) * glm::sin(glm::radians(45.0f))));
+    glm::vec3 cam_pos   = glm::vec3(center.x, center.y, center.z) + 2.0f * radius * direction;
+    glm::mat4 view      = glm::lookAt(cam_pos, center, glm::vec3(0, 1, 0));
+    glm::mat4 proj      = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, radius * 10.0f);
+    glm::mat4 mvp       = proj * view;
+
+    atcg::CameraExtrinsics extrinsics(view);
+    atcg::CameraIntrinsics intrinsics(proj);
+    atcg::ref_ptr<PerspectiveCamera> camera = atcg::make_ref<PerspectiveCamera>(extrinsics, intrinsics);
+
+    atcg::GraphicsPipeline pipeline =
+        atcg::GraphicsPipeline()
+            .setShader(atcg::ShaderManager::getShader("mesh_preview"))
+            .setRasterizerState(
+                atcg::RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true));
+
+    atcg::GraphicsCommand::beginRenderPass(_preview_framebuffer);
+
+    atcg::GraphicsCommand::clear();
+    atcg::Renderer::drawVAO(graph->getVerticesArray(), camera, glm::mat4(1.0f), pipeline, graph->n_vertices());
+
+    atcg::GraphicsCommand::endRenderPass();
+
 #endif
 }
 
@@ -995,8 +1146,9 @@ void AssetPanel::displayScene(AssetHandle handle)
     }
 
     ImGui::Text("Skybox:");
-    auto new_handle = Utils::displayTexture2DSelection("skybox", skybox_handle);
-    bool updated    = (new_handle != skybox_handle);
+    bool deactivated = false;
+    auto new_handle  = Utils::displayTexture2DSelection("skybox", skybox_handle, deactivated);
+    bool updated     = (new_handle != skybox_handle);
 
     if(updated)
     {
@@ -1246,7 +1398,7 @@ void AssetPanel::drawAssetList()
     {
         const auto& data = entry.second;
 
-        if(_panel_state == data.type)
+        if(_panel_state == data.type && data.show_in_editor)
         {
             auto handle     = entry.first;
             std::string tag = data.name;

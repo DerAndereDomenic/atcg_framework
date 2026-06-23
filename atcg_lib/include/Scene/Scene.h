@@ -173,6 +173,20 @@ public:
      */
     atcg::ref_ptr<Skybox> getSkybox() const;
 
+    /**
+     * @brief Get the currently selected entity
+     *
+     * @return The selected entity
+     */
+    void setSelectedEntity(Entity entity);
+
+    /**
+     * @brief Get the currently selected entity
+     *
+     * @return The selected entity
+     */
+    Entity getSelectedEntity() const;
+
     static AssetType getStaticType() { return AssetType::Scene; }
 
     virtual AssetType getType() const override { return getStaticType(); }

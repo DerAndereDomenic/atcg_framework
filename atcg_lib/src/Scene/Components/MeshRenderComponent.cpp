@@ -171,15 +171,16 @@ void ComponentGUIRenderer<MeshRenderComponent>::draw_component(const atcg::ref_p
     auto material_handle = component_copy.material_handle;
     auto shader_handle   = component_copy.shader_handle;
 
-    auto new_handle                = Utils::displayMaterialSelection("mesh", material_handle);
+    bool deactived                 = false;
+    auto new_handle                = Utils::displayMaterialSelection("mesh", material_handle, deactived);
     updated                        = (new_handle != material_handle) || updated;
     component_copy.material_handle = new_handle;
 
-    new_handle                   = Utils::displayShaderSelection("mesh", shader_handle);
+    new_handle                   = Utils::displayShaderSelection("mesh", shader_handle, deactived);
     updated                      = (new_handle != shader_handle) || updated;
     component_copy.shader_handle = new_handle;
 
-    auto new_cull_mode       = Utils::displayCullModeSelection("mesh", component_copy.cull_mode);
+    auto new_cull_mode       = Utils::displayCullModeSelection("mesh", component_copy.cull_mode, deactived);
     updated                  = (new_cull_mode != component_copy.cull_mode) || updated;
     component_copy.cull_mode = new_cull_mode;
 

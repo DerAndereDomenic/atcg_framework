@@ -147,8 +147,9 @@ void ComponentGUIRenderer<EdgeRenderComponent>::draw_component(const atcg::ref_p
 
     std::string id = std::to_string(entity.getComponent<IDComponent>().ID());
 
-    bool updated    = ImGui::Checkbox("Visible##visibleedge", &component.visible);
-    glm::vec3 color = component.color;
+    bool updated     = ImGui::Checkbox("Visible##visibleedge", &component.visible);
+    bool deactivated = ImGui::IsItemDeactivated();
+    glm::vec3 color  = component.color;
     std::stringstream label;
     label << "Base Color##edge" << id;
     if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color)))
@@ -156,12 +157,21 @@ void ComponentGUIRenderer<EdgeRenderComponent>::draw_component(const atcg::ref_p
         component.color = color;
         updated         = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        RevisionStack::startRecording<ComponentEditedRevision<EdgeRenderComponent>>(scene, entity);
+    }
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<EdgeRenderComponent>>(scene, entity);
         _component = component;
-        atcg::RevisionStack::endRecording();
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
+        RevisionStack::endRecording();
     }
 #endif
 }

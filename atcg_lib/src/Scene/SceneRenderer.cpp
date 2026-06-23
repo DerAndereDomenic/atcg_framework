@@ -5,6 +5,7 @@
 #include <Renderer/RenderPasses/ShadowPass.h>
 #include <Renderer/RenderPasses/TonemapPass.h>
 #include <Renderer/RenderPasses/DepthPass.h>
+#include <Renderer/RenderPasses/OutlinePass.h>
 
 namespace atcg
 {
@@ -42,11 +43,14 @@ atcg::ref_ptr<RenderGraph> SceneRendererSystem::Impl::createRenderGraph()
     Dictionary shadow_pass_properties;
     shadow_pass_properties.setValue("resolution", shadow_pass_resolution);
     atcg::ref_ptr<ShadowPass> shadow_pass = atcg::make_ref<ShadowPass>(shadow_pass_properties);
+    Dictionary outline_pass_properties;
+    atcg::ref_ptr<OutlinePass> outline_pass = atcg::make_ref<OutlinePass>(outline_pass_properties);
 
     auto forward_handle = graph->addRenderPass(forward_pass);
     auto tonemap_handle = graph->addRenderPass(tonemap_pass);
     auto depth_handle   = graph->addRenderPass(depth_pass);
     auto shadow_handle  = graph->addRenderPass(shadow_pass);
+    auto outline_handle = graph->addRenderPass(outline_pass);
     auto output_handle  = graph->outputPassHandle();
 
     graph->addDependency(depth_handle, "depth_buffer", forward_handle, "depth_buffer");
@@ -72,6 +76,7 @@ atcg::ref_ptr<RenderGraph> SceneRendererSystem::Impl::createRenderGraph()
         graph->addDependency(blit_handle, "out_entity_buffer", output_handle, "entities");
         graph->addDependency(blit_handle, "out_stencil_buffer", output_handle, "stencil");
         graph->addDependency(blit_handle, "out_depth_buffer", output_handle, "depth");
+        graph->addDependency(blit_handle, "out_entity_buffer", outline_handle, "input_entity_buffer");
     }
     else
     {
@@ -80,9 +85,11 @@ atcg::ref_ptr<RenderGraph> SceneRendererSystem::Impl::createRenderGraph()
         graph->addDependency(forward_handle, "entity_buffer", output_handle, "entities");
         graph->addDependency(forward_handle, "stencil_buffer", output_handle, "stencil");
         graph->addDependency(forward_handle, "out_depth_buffer", output_handle, "depth");
+        graph->addDependency(forward_handle, "entity_buffer", outline_handle, "input_entity_buffer");
     }
 
-    graph->addDependency(tonemap_handle, "output_color", output_handle, "color");
+    graph->addDependency(tonemap_handle, "output_color", outline_handle, "input_color_buffer");
+    graph->addDependency(outline_handle, "out_color_buffer", output_handle, "color");
 
     graph->compile(ctx);
 

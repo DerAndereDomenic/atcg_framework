@@ -40,8 +40,9 @@ else()
     set(ATCG_CONTEXT "glfw")
     target_link_libraries(atcg_lib PRIVATE glfw)
     target_link_libraries(atcg_lib PUBLIC atcg::imgui
-                                          atcg::imguizmo
-                                          atcg::implot)
+                                          atcg::implot
+                                   PRIVATE
+                                          atcg::imguizmo)
 endif()
 
 # Find backend files
