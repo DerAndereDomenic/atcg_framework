@@ -71,8 +71,8 @@ struct host_allocator
      */
     void memcpy_dev2dev(void* dst, const void* src, std::size_t n) { memcpy_host2host(dst, src, n); }
 
-    static std::size_t bytes_allocated;
-    static std::size_t bytes_deallocated;
+    inline static std::size_t bytes_allocated   = 0;
+    inline static std::size_t bytes_deallocated = 0;
 };
 #ifdef ATCG_CUDA_BACKEND
 /**
@@ -150,8 +150,8 @@ struct device_allocator
         CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDeviceToDevice));
     }
 
-    static std::size_t bytes_allocated;
-    static std::size_t bytes_deallocated;
+    inline static std::size_t bytes_allocated   = 0;
+    inline static std::size_t bytes_deallocated = 0;
 };
 #else
 using device_allocator = host_allocator;

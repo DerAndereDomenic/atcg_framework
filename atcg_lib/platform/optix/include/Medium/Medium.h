@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/Memory.h>
 #include <Core/OptixComponent.h>
 #include <DataStructure/Dictionary.h>
 #include <Medium/PhaseFunction.h>
@@ -11,7 +12,7 @@
 
 namespace atcg
 {
-class Medium : public OptixComponent
+class ATCG_API Medium : public OptixComponent
 {
 public:
     /**
@@ -58,7 +59,7 @@ protected:
     atcg::ref_ptr<PhaseFunction> _phase_function;
 };
 
-struct MediumComponent
+struct ATCG_API MediumComponent
 {
     MediumComponent() = default;
     MediumComponent(const atcg::ref_ptr<Medium>& medium) : medium(medium) {}

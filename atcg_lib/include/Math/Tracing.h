@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Scene/Entity.h>
 
 namespace atcg
@@ -22,7 +23,7 @@ struct HitInfo
  * @param entity The entity to prepare the BVH structure for
  *
  */
-void prepareAccelerationStructure(Entity entity);
+ATCG_API void prepareAccelerationStructure(Entity entity);
 
 /**
  * @brief Trace a ray agains the geometry
@@ -36,7 +37,8 @@ void prepareAccelerationStructure(Entity entity);
  *
  * @return HitInfo of the intersection
  */
-HitInfo traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max);
+ATCG_API HitInfo
+traceRay(Entity entity, const glm::vec3& ray_origin, const glm::vec3& ray_dir, float t_min, float t_max);
 
 
 }    // namespace Tracing

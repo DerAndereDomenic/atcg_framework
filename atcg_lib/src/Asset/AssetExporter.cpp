@@ -465,6 +465,6 @@ void AssetExporter::exportAsset(const std::filesystem::path& path,
                                 const atcg::ref_ptr<Asset>& asset,
                                 const AssetMetaData& data)
 {
-    if(asset) detail::export_asset_ver1(path, asset, data);
+    if(asset && data.serialize) detail::export_asset_ver1(path, asset, data);
 }
 }    // namespace atcg

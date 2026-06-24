@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <cstdint>
 
 namespace atcg
@@ -10,7 +11,7 @@ namespace atcg
 /**
  * @brief A class to model an UUID
  */
-class UUID
+class ATCG_API UUID
 {
 public:
     /**

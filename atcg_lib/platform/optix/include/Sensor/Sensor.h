@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Core/OptixComponent.h>
 #include <Renderer/Camera.h>
@@ -10,7 +11,7 @@
 
 namespace atcg
 {
-class Sensor : public OptixComponent
+class ATCG_API Sensor : public OptixComponent
 {
 public:
     /**

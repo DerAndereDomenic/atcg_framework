@@ -13,7 +13,7 @@ namespace atcg
 /**
  * @brief Class to model a shape instance
  */
-class ShapeInstance : public OptixComponent
+class ATCG_API ShapeInstance : public OptixComponent
 {
 public:
     /**

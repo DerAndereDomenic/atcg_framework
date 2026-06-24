@@ -66,16 +66,28 @@ void ComponentGUIRenderer<PointLightComponent>::draw_component(const atcg::ref_p
                                                                PointLightComponent& _component) const
 {
 #ifndef ATCG_HEADLESS
+    bool deactivated              = false;
     PointLightComponent component = _component;
     bool updated = ImGui::DragFloat("Intensity##PointLight", &component.intensity, 0.01f, 0.0f, FLT_MAX);
+    deactivated  = ImGui::IsItemDeactivated() || deactivated;
     updated      = ImGui::ColorEdit3("Color##PointLight", glm::value_ptr(component.color)) || updated;
+    deactivated  = ImGui::IsItemDeactivated() || deactivated;
     updated      = ImGui::Checkbox("Cast Shadows##PointLight", &component.cast_shadow) || updated;
+    deactivated  = ImGui::IsItemDeactivated() || deactivated;
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        RevisionStack::startRecording<ComponentEditedRevision<PointLightComponent>>(scene, entity);
+    }
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<PointLightComponent>>(scene, entity);
         _component = component;
-        atcg::RevisionStack::endRecording();
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
+        RevisionStack::endRecording();
     }
 #endif
 }

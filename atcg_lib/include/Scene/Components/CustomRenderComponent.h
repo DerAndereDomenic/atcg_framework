@@ -6,7 +6,7 @@
 
 namespace atcg
 {
-struct CustomRenderComponent : public RenderComponent
+struct ATCG_API CustomRenderComponent : public RenderComponent
 {
     using RenderCallbackFn = std::function<void(Entity, const atcg::ref_ptr<Camera>& camera)>;
 

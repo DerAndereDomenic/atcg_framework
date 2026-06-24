@@ -6,7 +6,10 @@
 
 namespace atcg
 {
-ShadowPass::ShadowPass(Dictionary& properties) : RenderPass(properties, "ShadowPass") {}
+ShadowPass::ShadowPass(Dictionary& properties) : RenderPass(properties, "ShadowPass")
+{
+    _resolution = properties.getValueOr<uint32_t>("resolution", 1024u);
+}
 
 RenderPassReflection ShadowPass::reflect(const CompileData& ctx)
 {
@@ -20,7 +23,7 @@ RenderPassReflection ShadowPass::reflect(const CompileData& ctx)
 
     uint32_t depth_handle = reflection.addOutput("point_light_depth_maps", desc);
 
-    reflection.setOutputFramebufferData(1024, 1024, {depth_handle});
+    reflection.setOutputFramebufferData(_resolution, _resolution, {depth_handle});
 
     return reflection;
 }

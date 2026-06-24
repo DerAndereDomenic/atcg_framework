@@ -1,5 +1,7 @@
 # Define the target
-charonload_add_torch_library(atcg_lib STATIC)
+charonload_add_torch_library(atcg_lib SHARED)
+
+target_compile_definitions(atcg_lib PRIVATE ATCG_EXPORT)
 
 # Link against cuda if requested
 if(ATCG_CUDA_BACKEND)
@@ -36,10 +38,11 @@ if(ATCG_HEADLESS)
     target_link_libraries(atcg_lib PUBLIC OpenGL::EGL)
 else()
     set(ATCG_CONTEXT "glfw")
-    target_link_libraries(atcg_lib PUBLIC glfw
-                                          atcg::imgui
-                                          atcg::imguizmo
-                                          atcg::implot)
+    target_link_libraries(atcg_lib PRIVATE glfw)
+    target_link_libraries(atcg_lib PUBLIC atcg::imgui
+                                          atcg::implot
+                                   PRIVATE
+                                          atcg::imguizmo)
 endif()
 
 # Find backend files
@@ -102,11 +105,8 @@ target_include_directories(atcg_lib PUBLIC "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/in
                                            "${ATCG_PROJECT_ROOT_DIR}/atcg_lib/platform/python"
 )
 
-target_link_libraries(atcg_lib PUBLIC atcg::glad
-                                      OpenGL::GL
-                                      OpenMeshCore
+target_link_libraries(atcg_lib PUBLIC OpenMeshCore
                                       OpenMeshTools
-                                      stb_image
                                       atcg::tinyobjloader
                                       atcg::entt
                                       atcg::nanort
@@ -121,4 +121,9 @@ target_link_libraries(atcg_lib PUBLIC atcg::glad
                                       torch_python_interface
                                       atcg::openvr
                                       CuDiff
+)
+
+target_link_libraries(atcg_lib PRIVATE atcg::glad
+                                       OpenGL::GL
+                                       stb_image
 )

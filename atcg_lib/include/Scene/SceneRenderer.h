@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/SystemRegistry.h>
 #include <Renderer/Renderer.h>
@@ -11,7 +12,7 @@ namespace atcg
 /**
  * @brief A system to render a scene using a render graph.
  */
-class SceneRendererSystem
+class ATCG_API SceneRendererSystem
 {
 public:
     /**
@@ -52,6 +53,20 @@ public:
      * @param graph The render graph to use in this renderer system
      */
     void setRenderGraph(const atcg::ref_ptr<RenderGraph>& graph);
+
+    /**
+     * @brief Set the number of MSAA samples used in the forward pass. This requires recompiling the render graph.
+     *
+     * @param num_samples The number of MSAA samples to use in the forward pass
+     */
+    void setNumberMSAASamples(uint32_t num_samples);
+
+    /**
+     * @brief Set the resolution of the shadow maps used in the shadow pass. This requires recompiling the render graph.
+     *
+     * @param resolution The resolution (width and height) of the shadow maps to use in the shadow pass
+     */
+    void setShadowPassResolution(uint32_t resolution);
 
 private:
     class Impl;
@@ -94,6 +109,26 @@ ATCG_INLINE atcg::ref_ptr<RenderGraph> getRenderGraph()
 ATCG_INLINE void setRenderGraph(atcg::ref_ptr<RenderGraph>& graph)
 {
     SystemRegistry::instance()->getSystem<SceneRendererSystem>()->setRenderGraph(graph);
+}
+
+/**
+ * @brief Set the number of MSAA samples used in the forward pass. This requires recompiling the render graph.
+ *
+ * @param num_samples The number of MSAA samples to use in the forward pass
+ */
+ATCG_INLINE void setNumberMSAASamples(uint32_t num_samples)
+{
+    SystemRegistry::instance()->getSystem<SceneRendererSystem>()->setNumberMSAASamples(num_samples);
+}
+
+/**
+ * @brief Set the resolution of the shadow maps used in the shadow pass. This requires recompiling the render graph.
+ *
+ * @param resolution The resolution (width and height) of the shadow maps to use in the shadow pass
+ */
+ATCG_INLINE void setShadowPassResolution(uint32_t resolution)
+{
+    SystemRegistry::instance()->getSystem<SceneRendererSystem>()->setShadowPassResolution(resolution);
 }
 
 }    // namespace SceneRenderer

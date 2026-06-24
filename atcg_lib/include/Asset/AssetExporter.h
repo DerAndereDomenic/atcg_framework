@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Asset/Asset.h>
 
 namespace atcg
@@ -15,6 +16,7 @@ namespace AssetExporter
  * @param asset The asset
  * @param data The asset meta data
  */
-void exportAsset(const std::filesystem::path& path, const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data);
+ATCG_API void
+exportAsset(const std::filesystem::path& path, const atcg::ref_ptr<Asset>& asset, const AssetMetaData& data);
 };    // namespace AssetExporter
 }    // namespace atcg

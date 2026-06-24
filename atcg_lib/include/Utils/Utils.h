@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <DataStructure/Graph.h>
 #include <Scene/Components.h>
@@ -15,7 +16,7 @@ namespace Utils
  *
  * @param graph The graph to normalize
  */
-void normalize(const atcg::ref_ptr<Graph>& graph);
+ATCG_API void normalize(const atcg::ref_ptr<Graph>& graph);
 
 /**
  * @brief Normalizes a graph to the unit cube and writes the inverse transformation into a transform
@@ -23,7 +24,7 @@ void normalize(const atcg::ref_ptr<Graph>& graph);
  * @param graph The graph to normalize
  * @param transform The transform component
  */
-void normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform);
+ATCG_API void normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform);
 
 /**
  * @brief Apply a transform to a given mesh.
@@ -32,7 +33,7 @@ void normalize(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& tran
  * @param graph The graph
  * @param transform The transform
  */
-void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform);
+ATCG_API void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent& transform);
 
 /**
  * @brief Apply a transform to a given mesh.
@@ -43,10 +44,10 @@ void applyTransform(const atcg::ref_ptr<Graph>& graph, atcg::TransformComponent&
  * @param tangents The tangents
  * @param transform The transform
  */
-void applyTransform(torch::Tensor& positions,
-                    torch::Tensor& normals,
-                    torch::Tensor& tangents,
-                    atcg::TransformComponent& transform);
+ATCG_API void applyTransform(torch::Tensor& positions,
+                             torch::Tensor& normals,
+                             torch::Tensor& tangents,
+                             atcg::TransformComponent& transform);
 
 /**
  * @brief Convert datatype from network to host byte order.
@@ -57,7 +58,7 @@ void applyTransform(torch::Tensor& positions,
  * @return The host representation
  */
 template<typename T>
-T ntoh(T network);
+ATCG_API T ntoh(T network);
 
 /**
  * @brief Convert datatype from network to host byte order
@@ -79,7 +80,7 @@ T hton(T host)
  * @param path The path
  * @param data The data
  */
-void dumpBinary(const std::string& path, const torch::Tensor& data);
+ATCG_API void dumpBinary(const std::string& path, const torch::Tensor& data);
 
 /**
  * @brief Take a screenshot and save it to disk
@@ -89,10 +90,10 @@ void dumpBinary(const std::string& path, const torch::Tensor& data);
  * @param width The output width. Height is calculated from the camera's aspect ratio
  * @param path The output path
  */
-void screenshot(const atcg::ref_ptr<Scene>& scene,
-                const atcg::ref_ptr<Camera>& camera,
-                const uint32_t width,
-                const std::string& path);
+ATCG_API void screenshot(const atcg::ref_ptr<Scene>& scene,
+                         const atcg::ref_ptr<Camera>& camera,
+                         const uint32_t width,
+                         const std::string& path);
 
 /**
  * @brief Take a screenshot and save it to disk
@@ -103,11 +104,11 @@ void screenshot(const atcg::ref_ptr<Scene>& scene,
  * @param height The output height
  * @param path The output path
  */
-void screenshot(const atcg::ref_ptr<Scene>& scene,
-                const atcg::ref_ptr<Camera>& camera,
-                const uint32_t width,
-                const uint32_t height,
-                const std::string& path);
+ATCG_API void screenshot(const atcg::ref_ptr<Scene>& scene,
+                         const atcg::ref_ptr<Camera>& camera,
+                         const uint32_t width,
+                         const uint32_t height,
+                         const std::string& path);
 
 /**
  * @brief Take a screenshot and return it as tensor
@@ -118,7 +119,8 @@ void screenshot(const atcg::ref_ptr<Scene>& scene,
  *
  * @return The pixel data as tensor
  */
-torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width);
+ATCG_API torch::Tensor
+screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<Camera>& camera, const uint32_t width);
 
 /**
  * @brief Pick an entity at the given screen coordinates. This reads information from the current framebuffer, i.e.,
@@ -128,7 +130,7 @@ torch::Tensor screenshot(const atcg::ref_ptr<Scene>& scene, const atcg::ref_ptr<
  *
  * @return The picked entity
  */
-Entity pickEntity(const glm::vec2& mouse_pos);
+ATCG_API Entity pickEntity(const glm::vec2& mouse_pos);
 
 /**
  * @brief Set the sky light of the shader based on the given skybox. This will bind the irradiance map of the skybox to
@@ -140,10 +142,10 @@ Entity pickEntity(const glm::vec2& mouse_pos);
  *
  * @return The id of the bound texture
  */
-uint32_t setLights(atcg::RendererSystem* renderer,
-                   Scene* scene,
-                   const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
-                   const atcg::ref_ptr<Shader>& shader);
+ATCG_API uint32_t setLights(atcg::RendererSystem* renderer,
+                            Scene* scene,
+                            const atcg::ref_ptr<atcg::TextureCubeArray>& point_light_depth_maps,
+                            const atcg::ref_ptr<Shader>& shader);
 
 /**
  * @brief Set the sky light of the shader based on the given skybox. This will bind the irradiance map of the skybox to
@@ -156,7 +158,7 @@ uint32_t setLights(atcg::RendererSystem* renderer,
  * @return The id of the bound texture
  * @return The id of the bound prefiltered map
  */
-std::pair<uint32_t, uint32_t>
+ATCG_API std::pair<uint32_t, uint32_t>
 setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader, const atcg::ref_ptr<Skybox>& skybox);
 
 /**
@@ -165,10 +167,11 @@ setSkyLight(atcg::RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader,
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected material or an invalid handle if no material was selected
  */
-AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a graph selection dialog and return the selected graph handle. This is used in the editor and returns
@@ -176,10 +179,11 @@ AssetHandle displayMaterialSelection(const std::string& key, AssetHandle handle)
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected graph or an invalid handle if no graph was selected
  */
-AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a script selection dialog and return the selected script handle. This is used in the editor and
@@ -187,10 +191,11 @@ AssetHandle displayGraphSelection(const std::string& key, AssetHandle handle);
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected script or an invalid handle if no script was selected
  */
-AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a texture selection dialog and return the selected texture handle. This is used in the editor and
@@ -198,10 +203,11 @@ AssetHandle displayScriptSelection(const std::string& key, AssetHandle handle);
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected texture or an invalid handle if no texture was selected
  */
-AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a material selection dialog and return the selected material handle. This is used in the editor and
@@ -209,10 +215,11 @@ AssetHandle displayShaderSelection(const std::string& key, AssetHandle handle);
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected material or an invalid handle if no material was selected
  */
-AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle, bool& deactivated);
 
 /**
  * @brief Display a texture selection dialog and return the selected texture handle. This is used in the editor and
@@ -220,10 +227,23 @@ AssetHandle displayTexture2DSelection(const std::string& key, AssetHandle handle
  *
  * @param key The key to identify the selection (e.g. for which component this selection is)
  * @param handle The currently selected handle (can be invalid)
+ * @param deactivated Whether the selection was deactivated this frame
  *
  * @return The handle of the selected texture or an invalid handle if no texture was selected
  */
-AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle);
+ATCG_API AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle, bool& deactivated);
+
+/**
+ * @brief Display a cull mode selection dialog and return the selected cull mode. This is used in the editor and returns
+ * the selected cull mode.
+ *
+ * @param key The key to identify the selection (e.g. for which component this selection is)
+ * @param cull_mode The currently selected cull mode
+ * @param deactivated Whether the selection was deactivated this frame
+ *
+ * @return The selected cull mode
+ */
+ATCG_API CullMode displayCullModeSelection(const std::string& key, CullMode cull_mode, bool& deactivated);
 
 /**
  * @brief Serialize a buffer
@@ -232,7 +252,7 @@ AssetHandle displayTexture3DSelection(const std::string& key, AssetHandle handle
  * @param data The buffer data
  * @param byte_size The buffer size in bytes
  */
-void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size);
+ATCG_API void serializeBuffer(const std::string& file_name, const char* data, const uint32_t byte_size);
 
 /**
  * @brief Deserialize a buffer
@@ -241,7 +261,7 @@ void serializeBuffer(const std::string& file_name, const char* data, const uint3
  *
  * @return The deserialized data
  */
-std::vector<uint8_t> deserializeBuffer(const std::string& file_name);
+ATCG_API std::vector<uint8_t> deserializeBuffer(const std::string& file_name);
 
 /**
  * @brief Serialize a layout
@@ -250,7 +270,7 @@ std::vector<uint8_t> deserializeBuffer(const std::string& file_name);
  *
  * @return The json object representing the layout
  */
-nlohmann::json serializeLayout(const atcg::BufferLayout& layout);
+ATCG_API nlohmann::json serializeLayout(const atcg::BufferLayout& layout);
 
 /**
  * @brief Deserialize a layout
@@ -259,7 +279,7 @@ nlohmann::json serializeLayout(const atcg::BufferLayout& layout);
  *
  * @return The BufferLayout
  */
-atcg::BufferLayout deserializeLayout(nlohmann::json& layout_node);
+ATCG_API atcg::BufferLayout deserializeLayout(nlohmann::json& layout_node);
 
 }    // namespace Utils
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/glm.h>
 
 namespace atcg
@@ -7,7 +8,7 @@ namespace atcg
 /**
  * @brief A class to model camera extrinsics
  */
-class CameraExtrinsics
+class ATCG_API CameraExtrinsics
 {
 public:
     /**
@@ -85,7 +86,7 @@ private:
 /**
  * @brief A class to model camera intrinsics
  */
-class CameraIntrinsics
+class ATCG_API CameraIntrinsics
 {
 public:
     /**
@@ -243,7 +244,7 @@ namespace CameraUtils
  *
  * @return The opencv projection matrix K
  */
-glm::mat3 convert_to_opencv(const glm::mat4& projection, const uint32_t width, const uint32_t height);
+ATCG_API glm::mat3 convert_to_opencv(const glm::mat4& projection, const uint32_t width, const uint32_t height);
 
 /**
  * @brief Convert an opengl clip space matrix to an opencv intrinsics matrix
@@ -254,7 +255,7 @@ glm::mat3 convert_to_opencv(const glm::mat4& projection, const uint32_t width, c
  *
  * @return The opencv projection matrix K
  */
-glm::mat3 convert_to_opencv(const CameraIntrinsics& intrinsics, const uint32_t width, const uint32_t height);
+ATCG_API glm::mat3 convert_to_opencv(const CameraIntrinsics& intrinsics, const uint32_t width, const uint32_t height);
 
 /**
  * @brief Convert an opencv projection matrix to an opengl clipspace matrix
@@ -270,14 +271,14 @@ glm::mat3 convert_to_opencv(const CameraIntrinsics& intrinsics, const uint32_t w
  *
  * @return Converted camera intrinsics
  */
-CameraIntrinsics convert_from_opencv(const float fx,
-                                     const float fy,
-                                     const float cx,
-                                     const float cy,
-                                     const float n,
-                                     const float f,
-                                     const uint32_t width,
-                                     const uint32_t height);
+ATCG_API CameraIntrinsics convert_from_opencv(const float fx,
+                                              const float fy,
+                                              const float cx,
+                                              const float cy,
+                                              const float n,
+                                              const float f,
+                                              const uint32_t width,
+                                              const uint32_t height);
 
 /**
  * @brief Convert an opencv projection matrix to an opengl clipspace matrix
@@ -288,7 +289,7 @@ CameraIntrinsics convert_from_opencv(const float fx,
  *
  * @return Converted camera intrinsics
  */
-CameraIntrinsics
+ATCG_API CameraIntrinsics
 convert_from_opencv(const glm::mat3& K, const float n, const float f, const uint32_t width, const uint32_t height);
 }    // namespace CameraUtils
 }    // namespace atcg

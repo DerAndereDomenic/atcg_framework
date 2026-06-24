@@ -12,7 +12,7 @@ namespace atcg
  * @brief A RenderPass that blits the input buffers to the output framebuffer. This is used as the final pass in the
  * render graph to present the rendered image to the screen.
  */
-class BlitPass : public RenderPass
+class ATCG_API BlitPass : public RenderPass
 {
 public:
     /**

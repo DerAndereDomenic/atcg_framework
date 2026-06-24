@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Scene/Scene.h>
 
 #include <Renderer/Framebuffer.h>

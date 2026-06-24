@@ -82,7 +82,7 @@
 
 //-------- Math -----------
 #include <Math/Constants.h>
-#include <Math/Functions.h>
+#include <Utils/HostDevice.h>
 #include <Math/Tracing.h>
 #include <Math/Color.h>
 

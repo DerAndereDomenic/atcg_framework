@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/glm.h>
 #include <Renderer/Buffer.h>
@@ -20,7 +20,7 @@ namespace atcg
 /**
  * @brief A structure to model different geometries
  */
-class Graph : public Asset
+class ATCG_API Graph : public Asset
 {
 public:
     /**

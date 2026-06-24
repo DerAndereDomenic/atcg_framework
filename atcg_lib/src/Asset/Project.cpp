@@ -1,5 +1,6 @@
 #include <Asset/Project.h>
 #include <Asset/AssetManagerSystem.h>
+#include <Scene/RevisionStack.h>
 
 namespace atcg
 {
@@ -14,6 +15,7 @@ atcg::ref_ptr<Project> Project::create(const std::filesystem::path& path)
 
 atcg::ref_ptr<Project> Project::load(const std::filesystem::path& path)
 {
+    RevisionStack::clearChache();
     s_active_project                = atcg::make_ref<Project>();
     s_active_project->_project_path = path.parent_path();
 

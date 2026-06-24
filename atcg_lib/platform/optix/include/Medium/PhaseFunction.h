@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Core/Memory.h>
+#include <Core/Memory.h>
 #include <Core/OptixComponent.h>
 #include <DataStructure/Dictionary.h>
 #include <Medium/PhaseFunctionVPtrTable.cuh>
@@ -11,7 +12,7 @@
 
 namespace atcg
 {
-class PhaseFunction : public OptixComponent
+class ATCG_API PhaseFunction : public OptixComponent
 {
 public:
     PhaseFunction() = default;
@@ -31,7 +32,7 @@ protected:
     atcg::dref_ptr<PhaseFunctionVPtrTable> _vptr_table;
 };
 
-struct PhaseFunctionComponent
+struct ATCG_API PhaseFunctionComponent
 {
     PhaseFunctionComponent() = default;
     PhaseFunctionComponent(const atcg::ref_ptr<PhaseFunction>& phase_function) : phase_function(phase_function) {}

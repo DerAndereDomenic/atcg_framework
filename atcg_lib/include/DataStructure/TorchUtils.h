@@ -3,6 +3,7 @@
 #include <DataStructure/GraphDefinitions.h>
 #include <torch/types.h>
 #include <Renderer/Buffer.h>
+#include <Core/CUDA.h>
 
 namespace atcg
 {
@@ -61,6 +62,11 @@ ATCG_INLINE torch::TensorOptions uint64HostOptions()
     return torch::TensorOptions {}.dtype(torch::kUInt64).device(atcg::CPU);
 }
 
+ATCG_INLINE torch::TensorOptions halfHostOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kFloat16).device(atcg::CPU);
+}
+
 ATCG_INLINE torch::TensorOptions floatHostOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kFloat32).device(atcg::CPU);
@@ -109,6 +115,11 @@ ATCG_INLINE torch::TensorOptions int64DeviceOptions()
 ATCG_INLINE torch::TensorOptions uint64DeviceOptions()
 {
     return torch::TensorOptions {}.dtype(torch::kUInt64).device(atcg::GPU);
+}
+
+ATCG_INLINE torch::TensorOptions halfDeviceOptions()
+{
+    return torch::TensorOptions {}.dtype(torch::kFloat16).device(atcg::GPU);
 }
 
 ATCG_INLINE torch::TensorOptions floatDeviceOptions()
@@ -176,6 +187,12 @@ ATCG_INLINE torch::TensorOptions HostOptions<uint64_t>()
 }
 
 template<>
+ATCG_INLINE torch::TensorOptions HostOptions<half>()
+{
+    return halfHostOptions();
+}
+
+template<>
 ATCG_INLINE torch::TensorOptions HostOptions<float>()
 {
     return floatHostOptions();
@@ -235,6 +252,11 @@ ATCG_INLINE torch::TensorOptions DeviceOptions<uint64_t>()
     return uint64DeviceOptions();
 }
 
+template<>
+ATCG_INLINE torch::TensorOptions DeviceOptions<half>()
+{
+    return halfDeviceOptions();
+}
 
 template<>
 ATCG_INLINE torch::TensorOptions DeviceOptions<float>()

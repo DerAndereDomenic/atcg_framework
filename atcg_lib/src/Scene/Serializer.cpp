@@ -4,6 +4,7 @@
 
 #include <Scene/ComponentSerializer.h>
 #include <Scene/ComponentRegistry.h>
+#include <Scene/Components/ScriptComponent.h>
 
 namespace atcg
 {
@@ -23,6 +24,17 @@ nlohmann::json SceneSerializer::serializeEntity(const std::string& file_name, En
 void SceneSerializer::deserializeEntity(const std::string& file_name, Entity entity, nlohmann::json& entity_object)
 {
     ComponentRegistry::deserializeAllComponents(file_name, _scene, entity, entity_object);
+
+    // onAttach expects a complete entity, therefore we have to call it after all components are deserialized
+    if(entity.hasComponent<ScriptComponent>())
+    {
+        auto& script = entity.getComponent<ScriptComponent>();
+        if(script.script())
+        {
+            auto behavior = script.behavior(_scene, entity, /*recreate = */ true);
+            if(behavior) behavior->onAttach();
+        }
+    }
 }
 
 SceneSerializer::SceneSerializer(const atcg::ref_ptr<Scene>& scene) : _scene(scene) {}

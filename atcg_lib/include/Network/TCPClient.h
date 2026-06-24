@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <SFML/Network.hpp>
 #include <torch/types.h>
 
@@ -11,7 +12,7 @@ namespace atcg
 /**
  * @brief Class to model a TCP client.
  */
-class TCPClient
+class ATCG_API TCPClient
 {
 public:
     /**

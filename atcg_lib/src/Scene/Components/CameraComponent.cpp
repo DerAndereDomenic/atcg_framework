@@ -176,6 +176,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 #ifndef ATCG_HEADLESS
     CameraComponent component = _component;
     bool updated              = false;
+    bool deactivated          = false;
 
     float content_scale = atcg::Application::get()->getWindow()->getContentScale();
     std::string id      = std::to_string(entity.getComponent<IDComponent>().ID());
@@ -206,6 +207,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
         intrinsics.setAspectRatio(aspect_ratio);
         updated = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     label.str(std::string());
     label << "FOV##" << id;
@@ -214,6 +216,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
         intrinsics.setFOV(fov);
         updated = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     label.str(std::string());
     label << "Resolution##" << id;
@@ -223,6 +226,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
         component.height = res[1];
         updated          = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     label.str(std::string());
     label << "Optical Center##" << id;
@@ -231,6 +235,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
         intrinsics.setOpticalCenter(glm::make_vec2(offset));
         updated = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     ImGui::Separator();
 
@@ -248,6 +253,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
                                                             component.height);
         updated    = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     label.str(std::string());
     label << "Principal Point##" << id;
@@ -263,14 +269,17 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
                                                             component.height);
         updated    = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     label.str(std::string());
     label << "Color##" << id;
-    updated = ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(component.color)) || updated;
+    updated     = ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(component.color)) || updated;
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     label.str(std::string());
     label << "Scale##" << id;
-    updated = ImGui::DragFloat(label.str().c_str(), &component.render_scale, 0.01f, 0.01f, FLT_MAX) || updated;
+    updated     = ImGui::DragFloat(label.str().c_str(), &component.render_scale, 0.01f, 0.01f, FLT_MAX) || updated;
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     uint32_t preview_height = 128;
     uint32_t preview_width =
@@ -290,7 +299,8 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 
     atcg::SceneRenderer::render(scene, component.camera, component.preview, false);
 
-    updated = ImGui::Checkbox("Show Preview##cam", &component.render_preview) || updated;
+    updated     = ImGui::Checkbox("Show Preview##cam", &component.render_preview) || updated;
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     uint64_t textureID = component.preview->getColorAttachement(0)->getID();
 
@@ -316,7 +326,7 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 
     ImGui::Separator();
 
-    auto new_handle = Utils::displayTexture2DSelection("camera", component.image_handle);
+    auto new_handle = Utils::displayTexture2DSelection("camera", component.image_handle, deactivated);
 
     updated                = (new_handle != component.image_handle) || updated;
     component.image_handle = new_handle;
@@ -347,14 +357,23 @@ void ComponentGUIRenderer<CameraComponent>::draw_component(const atcg::ref_ptr<S
 
             updated = true;
         }
+        deactivated = ImGui::IsItemDeactivated() || deactivated;
+    }
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(scene, entity);
     }
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<CameraComponent>>(scene, entity);
         _component = component;
         camera->setIntrinsics(intrinsics);
         _component.camera = camera;
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
         atcg::RevisionStack::endRecording();
     }
 

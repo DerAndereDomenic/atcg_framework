@@ -152,17 +152,31 @@ void ComponentGUIRenderer<HomogeneousMediumComponent>::draw_component(const atcg
 #ifndef ATCG_HEADLESS
     HomogeneousMediumComponent _component = component;
 
-    bool updated = false;
-    updated      = ImGui::DragFloat("Density##homogen", &_component.density, 0.05f, 0.0f, 50.0f) || updated;
-    updated      = ImGui::DragFloat("g##homogen", &_component.g, 0.01f, -1.0f, 1.0f) || updated;
-    updated      = ImGui::ColorEdit3("albedo##homogen", glm::value_ptr(_component.albedo)) || updated;
-    updated      = ImGui::DragFloat("Le##homogen", &_component.Le, 0.01f, 0.0f, 100.0f) || updated;
-    updated      = ImGui::ColorEdit3("LeColor##homogen", glm::value_ptr(_component.Le_color)) || updated;
+    bool updated     = false;
+    bool deactivated = false;
+    updated          = ImGui::DragFloat("Density##homogen", &_component.density, 0.05f, 0.0f, 50.0f) || updated;
+    deactivated      = ImGui::IsItemDeactivated() || deactivated;
+    updated          = ImGui::DragFloat("g##homogen", &_component.g, 0.01f, -1.0f, 1.0f) || updated;
+    deactivated      = ImGui::IsItemDeactivated() || deactivated;
+    updated          = ImGui::ColorEdit3("albedo##homogen", glm::value_ptr(_component.albedo)) || updated;
+    deactivated      = ImGui::IsItemDeactivated() || deactivated;
+    updated          = ImGui::DragFloat("Le##homogen", &_component.Le, 0.01f, 0.0f, 100.0f) || updated;
+    deactivated      = ImGui::IsItemDeactivated() || deactivated;
+    updated          = ImGui::ColorEdit3("LeColor##homogen", glm::value_ptr(_component.Le_color)) || updated;
+    deactivated      = ImGui::IsItemDeactivated() || deactivated;
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::startRecording<ComponentEditedRevision<HomogeneousMediumComponent>>(scene, entity);
+    }
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<ComponentEditedRevision<HomogeneousMediumComponent>>(scene, entity);
         component = _component;
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
         atcg::RevisionStack::endRecording();
     }
 #endif

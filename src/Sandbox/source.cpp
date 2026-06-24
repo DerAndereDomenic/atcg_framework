@@ -3,8 +3,6 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
-#include <glad/glad.h>
-
 #include <algorithm>
 
 
@@ -18,6 +16,26 @@ public:
         atcg::TransformComponent transform = entity.getComponent<atcg::TransformComponent>();
 
         atcg::Renderer::drawCircle(transform.getPosition(), 0.1f, 0.2f, glm::vec3(1), camera);
+    }
+
+    void drawVolume(atcg::Entity entity, const atcg::ref_ptr<atcg::Camera>& camera)
+    {
+        atcg::TransformComponent transform = entity.getComponent<atcg::TransformComponent>();
+
+        auto volume_shader = atcg::ShaderManager::getShader("volume");
+        uint32_t noise_id  = atcg::Renderer::popTextureID();
+        volume_shader->setInt("noise_texture", noise_id);
+
+        atcg::GraphicsPipeline pipeline =
+            atcg::GraphicsPipeline()
+                .setShader(volume_shader)
+                .setRasterizerState(
+                    atcg::RasterizerState().enableCulling(true).setCullMode(atcg::CullMode::ATCG_BACK_FACE_CULLING));
+
+        atcg::GraphicsCommand::bindTexture(noise_id, noise_texture);
+
+        atcg::Renderer::drawVAO(cube->getVerticesArray(), camera, transform.getModel(), pipeline, cube->n_vertices());
+        atcg::Renderer::pushTextureID(noise_id);
     }
 
     atcg::ref_ptr<atcg::Texture2D> createWhiteNoiseTexture2D(glm::ivec2 dim)
@@ -126,7 +144,8 @@ public:
         cube_entity = scene->createEntity();
         cube_entity.addComponent<atcg::TransformComponent>();
         cube_entity.addComponent<atcg::GeometryComponent>(cube);
-        cube_entity.addComponent<atcg::MeshRenderComponent>(atcg::ShaderManager::getShader("volume"));
+        cube_entity.addComponent<atcg::CustomRenderComponent>(ATCG_BIND_EVENT_FN(SandboxLayer::drawVolume));
+        // cube_entity.addComponent<atcg::MeshRenderComponent>(atcg::ShaderManager::getShader("volume"));
 
         light_entity = scene->createEntity();
         light_entity.addComponent<atcg::TransformComponent>();
@@ -146,7 +165,7 @@ public:
         atcg::GraphicsCommand::endRenderPass();
 
         glm::vec3 light_pos = light_entity.getComponent<atcg::TransformComponent>().getPosition();
-        atcg::ShaderManager::getShader("volume")->setInt("noise_texture", 0);
+        // atcg::ShaderManager::getShader("volume")->setInt("noise_texture", 0);
         atcg::ShaderManager::getShader("volume")->setVec3("light_position", light_pos);
         atcg::ShaderManager::getShader("volume")->setFloat("sigma_s_base", sigma_s_base);
         atcg::ShaderManager::getShader("volume")->setFloat("sigma_a_base", sigma_a_base);
@@ -207,28 +226,9 @@ public:
         ImGui::End();
 
         // Gizmo test
-        ImGuizmo::SetOrthographic(false);
-        ImGuizmo::BeginFrame();
+        atcg::drawGuizmo(scene, selected_entity, current_operation, camera_controller->getCamera());
 
-        const auto& window   = atcg::Application::get()->getWindow();
-        glm::vec2 window_pos = window->getPosition();
-        ImGuizmo::SetRect(window_pos.x, window_pos.y, (float)window->getWidth(), (float)window->getHeight());
-
-        glm::mat4 camera_projection = camera_controller->getCamera()->getProjection();
-        glm::mat4 camera_view       = camera_controller->getCamera()->getView();
-
-        glm::mat4 transform =
-            selected_entity.getComponent<atcg::TransformComponent>().getModel();    // sphere->getModel();
-
-        ImGuizmo::Manipulate(glm::value_ptr(camera_view),
-                             glm::value_ptr(camera_projection),
-                             current_operation,
-                             ImGuizmo::LOCAL,
-                             glm::value_ptr(transform));
-
-        selected_entity.getComponent<atcg::TransformComponent>().setModel(transform);
-
-        // if(ImGuizmo::IsUsing()) { sphere->setModel(transform); }
+        // if(atcg::GuizmoOperation::IsUsing()) { sphere->setModel(transform); }
     }
 #endif
 
@@ -248,15 +248,15 @@ public:
     {
         if(event->getKeyCode() == ATCG_KEY_T)
         {
-            current_operation = ImGuizmo::OPERATION::TRANSLATE;
+            current_operation = atcg::GuizmoOperation::TRANSLATE;
         }
         if(event->getKeyCode() == ATCG_KEY_R)
         {
-            current_operation = ImGuizmo::OPERATION::ROTATE;
+            current_operation = atcg::GuizmoOperation::ROTATE;
         }
         if(event->getKeyCode() == ATCG_KEY_S)
         {
-            current_operation = ImGuizmo::OPERATION::SCALE;
+            current_operation = atcg::GuizmoOperation::SCALE;
         }
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
@@ -284,7 +284,7 @@ private:
     float dt           = 1.0f / 60.0f;
 
 #ifndef ATCG_HEADLESS
-    ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+    atcg::GuizmoOperation current_operation = atcg::GuizmoOperation::TRANSLATE;
 #endif
 };
 

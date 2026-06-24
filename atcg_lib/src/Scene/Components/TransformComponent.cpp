@@ -67,10 +67,11 @@ void ComponentSerializer<TransformComponent>::deserialize_component(const std::s
 
 namespace GUI
 {
-bool displayTransform(const std::string& id, TransformComponent& transform)
+std::pair<bool, bool> displayTransform(const std::string& id, TransformComponent& transform)
 {
 #ifndef ATCG_HEADLESS
     bool updated       = false;
+    bool deactivated   = false;
     glm::vec3 position = transform.getPosition();
     std::stringstream label;
     label << "Position##" << id;
@@ -79,6 +80,7 @@ bool displayTransform(const std::string& id, TransformComponent& transform)
         transform.setPosition(position);
         updated = true;
     }
+    deactivated     = ImGui::IsItemDeactivated() || deactivated;
     glm::vec3 scale = transform.getScale();
     label.str(std::string());
     label << "Scale##" << id;
@@ -88,6 +90,7 @@ bool displayTransform(const std::string& id, TransformComponent& transform)
         transform.setScale(scale);
         updated = true;
     }
+    deactivated        = ImGui::IsItemDeactivated() || deactivated;
     glm::vec3 rotation = glm::degrees(transform.getRotation());
     label.str(std::string());
     label << "Rotation##" << id;
@@ -96,10 +99,11 @@ bool displayTransform(const std::string& id, TransformComponent& transform)
         transform.setRotation(glm::radians(rotation));
         updated = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
-    return updated;
+    return std::make_pair(updated, deactivated);
 #else
-    return false;
+    return std::make_pair(false, false);
 #endif
 }
 
@@ -112,13 +116,21 @@ void ComponentGUIRenderer<TransformComponent>::draw_component(const atcg::ref_pt
 
     TransformComponent transform_ = transform;
 
-    bool updated = displayTransform(id, transform_);
+    auto [updated, deactivated] = displayTransform(id, transform_);
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
+    }
 
     if(updated)
     {
-        RevisionStack::startRecording<ComponentEditedRevision<TransformComponent>>(scene, entity);
         transform = transform_;
-        atcg::RevisionStack::endRecording();
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
+        RevisionStack::endRecording();
     }
 #endif
 }

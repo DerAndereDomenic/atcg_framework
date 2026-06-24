@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/Platform.h>
 
@@ -12,7 +13,7 @@ class RaytracingContextManagerSystem;
 /**
  * @brief A class to model a raytracing context
  */
-class RaytracingContext
+class ATCG_API RaytracingContext
 {
 public:
     /**
@@ -22,7 +23,7 @@ public:
 
     /**
      * @brief Get the context handle
-     * 
+     *
      * @return The Optix Context
      */
     ATCG_INLINE OptixDeviceContext getContextHandle() const { return _context; }

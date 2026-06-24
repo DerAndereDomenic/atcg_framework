@@ -5,7 +5,7 @@
 
 namespace atcg
 {
-struct AccelerationStructureComponent
+struct ATCG_API AccelerationStructureComponent
 {
     AccelerationStructureComponent() = default;
 

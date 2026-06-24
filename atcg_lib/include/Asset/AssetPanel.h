@@ -1,7 +1,10 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Asset/Asset.h>
 #include <Renderer/Material.h>
+#include <Renderer/Framebuffer.h>
+#include <Scene/Scene.h>
 
 namespace atcg
 {
@@ -10,7 +13,7 @@ namespace GUI
 /**
  * @brief Class to model an asset panel
  */
-class AssetPanel
+class ATCG_API AssetPanel
 {
 public:
     /**
@@ -73,6 +76,11 @@ private:
     atcg::ref_ptr<Texture2D> _material_icon;
     atcg::ref_ptr<Texture2D> _mesh_icon;
     atcg::ref_ptr<Texture2D> _image_icon;
+
+    atcg::ref_ptr<Scene> _preview_scene;
+
+    atcg::ref_ptr<Framebuffer> _preview_framebuffer;
+    atcg::ref_ptr<Material> _preview_material;
 };
 }    // namespace GUI
 }    // namespace atcg

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Scene/Scene.h>
 
@@ -15,7 +16,7 @@ namespace atcg
  *
  * A project handles the high level serialization and deserialization of assets and scenes.
  */
-class Project
+class ATCG_API Project
 {
 public:
     /**

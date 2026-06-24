@@ -85,10 +85,11 @@ void GraphicsAPI::init()
 #ifndef NDEBUG
     glEnable(GL_DEBUG_OUTPUT);
     glDebugMessageCallback(detail::MessageCallback, 0);
+#endif
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
     glEnable(GL_MULTISAMPLE);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-#endif
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
     ATCG_INFO("OpenGL Renderer:");
     ATCG_INFO("    Vendor: {0}", (const char*)glGetString(GL_VENDOR));
@@ -158,6 +159,11 @@ void GraphicsAPI::bindPipeline(const GraphicsPipeline& pipeline)
         case CullMode::ATCG_BOTH_FACE_CULLING:
         {
             glCullFace(GL_FRONT_AND_BACK);
+        }
+        break;
+        case CullMode::ATCG_NO_CULLING:
+        {
+            glDisable(GL_CULL_FACE);
         }
         break;
     }

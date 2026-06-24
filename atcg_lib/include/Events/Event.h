@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/API.h>
+
 #include <string>
 #include <ostream>
 #include <Core/Platform.h>
@@ -66,7 +68,7 @@ enum EventCategory
         return category;                                                                                               \
     }
 
-class Event
+class ATCG_API Event
 {
 public:
     virtual ~Event() = default;
@@ -81,7 +83,7 @@ public:
     bool isInCategory(EventCategory category) { return getCategoryFlags() & category; }
 };
 
-class EventDispatcher
+class ATCG_API EventDispatcher
 {
 public:
     EventDispatcher(Event* event) : _event(event) {}

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Core/OptixComponent.h>
 #include <DataStructure/Dictionary.h>
@@ -8,7 +9,7 @@
 
 namespace atcg
 {
-class Film : public OptixComponent
+class ATCG_API Film : public OptixComponent
 {
 public:
     /**

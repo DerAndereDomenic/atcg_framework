@@ -6,6 +6,7 @@
     #include <iostream>
     #include "cuda_runtime.h"
     #include "device_launch_parameters.h"
+    #include <cuda_fp16.h>
     #include <Core/glm.h>
     #include <Core/Log.h>
 

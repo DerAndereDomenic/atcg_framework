@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Renderer/Buffer.h>
 
@@ -10,7 +11,7 @@ class GraphicsAPI;
 /**
  * @brief A class to model a VertexArray
  */
-class VertexArray
+class ATCG_API VertexArray
 {
 public:
     /**

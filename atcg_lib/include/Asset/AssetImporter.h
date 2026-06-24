@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Asset/Asset.h>
 
 namespace atcg
@@ -21,6 +22,7 @@ namespace AssetImporter
  *
  * @return The deserialized asset
  */
-atcg::ref_ptr<Asset> importAsset(const std::filesystem::path& path, AssetHandle handle, const AssetMetaData& metadata);
+ATCG_API atcg::ref_ptr<Asset>
+importAsset(const std::filesystem::path& path, AssetHandle handle, const AssetMetaData& metadata);
 };    // namespace AssetImporter
 }    // namespace atcg

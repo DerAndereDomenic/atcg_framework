@@ -156,8 +156,10 @@ void ComponentGUIRenderer<PointRenderComponent>::draw_component(const atcg::ref_
 
     PointRenderComponent component = _component;
 
-    bool updated    = ImGui::Checkbox("Visible##visiblepoints", &component.visible);
-    glm::vec3 color = component.color;
+    bool deactivated = false;
+    bool updated     = ImGui::Checkbox("Visible##visiblepoints", &component.visible);
+    deactivated      = ImGui::IsItemDeactivated() || deactivated;
+    glm::vec3 color  = component.color;
     std::stringstream label;
     label << "Base Color##point" << id;
     if(ImGui::ColorEdit3(label.str().c_str(), glm::value_ptr(color)))
@@ -165,6 +167,7 @@ void ComponentGUIRenderer<PointRenderComponent>::draw_component(const atcg::ref_
         component.color = color;
         updated         = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     int point_size = (int)component.point_size;
     label.str(std::string());
@@ -174,16 +177,25 @@ void ComponentGUIRenderer<PointRenderComponent>::draw_component(const atcg::ref_
         component.point_size = (float)point_size;
         updated              = true;
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
     auto shader_handle      = component.shader_handle;
-    auto new_handle         = Utils::displayShaderSelection("point", shader_handle);
+    auto new_handle         = Utils::displayShaderSelection("point", shader_handle, deactivated);
     updated                 = (new_handle != shader_handle) || updated;
     component.shader_handle = new_handle;
 
-    if(updated)
+    if(updated && !atcg::RevisionStack::isRecording())
     {
         atcg::RevisionStack::startRecording<ComponentEditedRevision<PointRenderComponent>>(scene, entity);
+    }
+
+    if(updated)
+    {
         _component = component;
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
         atcg::RevisionStack::endRecording();
     }
 #endif

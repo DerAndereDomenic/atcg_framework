@@ -10,7 +10,7 @@ namespace atcg
 /**
  * @brief A mesh emitter
  */
-class MeshEmitter : public Emitter
+class ATCG_API MeshEmitter : public Emitter
 {
 public:
     /**

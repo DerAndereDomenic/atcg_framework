@@ -63,20 +63,25 @@ public:
 class FileDroppedEvent : public Event
 {
 public:
-    FileDroppedEvent(const std::string& path) : _path(path) {}
+    FileDroppedEvent(const char** _paths, int _count) : _paths(_paths), _count(_count) {}
 
     std::string toString() const override
     {
         std::stringstream ss;
-        ss << "FileDroppedEvent: " << _path;
+        ss << "FileDroppedEvent: " << _paths[0];
         return ss.str();
     }
 
-    const std::string& getPath() const { return _path; }
+    const char* getPath(int i = 0) const { return _paths[i]; }
+
+    const char** getPaths() const { return _paths; }
+
+    int getCount() const { return _count; }
 
     EVENT_CLASS_TYPE(FileDropped)
     EVENT_CLASS_CATEGORY(EventCategoryApplication)
 private:
-    std::string _path;
+    const char** _paths;
+    int _count;
 };
 }    // namespace atcg

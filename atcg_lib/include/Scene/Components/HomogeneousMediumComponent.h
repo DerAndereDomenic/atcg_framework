@@ -7,7 +7,7 @@
 
 namespace atcg
 {
-struct HomogeneousMediumComponent
+struct ATCG_API HomogeneousMediumComponent
 {
     HomogeneousMediumComponent() = default;
 

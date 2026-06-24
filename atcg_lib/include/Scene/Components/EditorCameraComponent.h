@@ -5,7 +5,7 @@
 
 namespace atcg
 {
-struct EditorCameraComponent : public CameraComponent
+struct ATCG_API EditorCameraComponent : public CameraComponent
 {
     EditorCameraComponent() = default;
     EditorCameraComponent(const atcg::ref_ptr<Camera>& camera) : CameraComponent(camera) {}

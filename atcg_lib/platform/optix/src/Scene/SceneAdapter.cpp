@@ -114,6 +114,11 @@ void SceneAdapter::prepareComponent<MeshRenderComponent>(const atcg::ref_ptr<Opt
     new_entity.addComponent<BSDFComponent>(bsdf);
     new_entity.addComponent<TransformComponent>(transform);
     new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
+
+    // Add AABB of the shape to the scene AABB
+    atcg::BoundingBox shape_aabb = geometry.graph()->getBoundingBox();
+    shape_aabb                   = atcg::Utils::transformBoundingBox(shape_aabb, transform.getModel());
+    _scene_aabb                  = _scene_aabb + shape_aabb;
 }
 
 template<>
@@ -178,6 +183,11 @@ void SceneAdapter::prepareComponent<PointSphereRenderComponent>(const atcg::ref_
         new_entity.addComponent<TransformComponent>(total_transform);
         new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
         new_entity.addComponent<glm::vec3>(color);
+
+        // Add AABB of the shape to the scene AABB
+        atcg::BoundingBox shape_aabb = graph->getBoundingBox();
+        shape_aabb                   = atcg::Utils::transformBoundingBox(shape_aabb, transform.getModel());
+        _scene_aabb                  = _scene_aabb + shape_aabb;
     }
 
     mesh->unmapAllHostPointers();
@@ -260,6 +270,11 @@ void SceneAdapter::prepareComponent<EdgeCylinderRenderComponent>(const atcg::ref
         new_entity.addComponent<TransformComponent>(model_edge);
         new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
         new_entity.addComponent<glm::vec3>(edge_color);
+
+        // Add AABB of the shape to the scene AABB
+        atcg::BoundingBox shape_aabb = graph->getBoundingBox();
+        shape_aabb                   = atcg::Utils::transformBoundingBox(shape_aabb, transform.getModel());
+        _scene_aabb                  = _scene_aabb + shape_aabb;
     }
 
     mesh->unmapAllHostPointers();
@@ -314,6 +329,11 @@ void SceneAdapter::prepareComponent<InstanceRenderComponent>(const atcg::ref_ptr
         new_entity.addComponent<TransformComponent>(global_transform * transforms[i]);
         new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
         new_entity.addComponent<glm::vec3>(colors[i]);
+
+        // Add AABB of the shape to the scene AABB
+        atcg::BoundingBox shape_aabb = geometry.graph()->getBoundingBox();
+        shape_aabb                   = atcg::Utils::transformBoundingBox(shape_aabb, transform.getModel());
+        _scene_aabb                  = _scene_aabb + shape_aabb;
     }
 
     transform_vbo->unmapHostPointers();
@@ -354,6 +374,11 @@ void SceneAdapter::prepareComponent<MeshLightComponent>(const atcg::ref_ptr<Opti
     new_entity.addComponent<TransformComponent>(transform);
     new_entity.addComponent<int32_t>((int32_t)entity.entity_handle());
     new_entity.addComponent<EmitterComponent>(mesh_emitter);
+
+    // Add AABB of the shape to the scene AABB
+    atcg::BoundingBox shape_aabb = geometry.graph()->getBoundingBox();
+    shape_aabb                   = atcg::Utils::transformBoundingBox(shape_aabb, transform.getModel());
+    _scene_aabb                  = _scene_aabb + shape_aabb;
 }
 
 atcg::ref_ptr<OptixScene>

@@ -56,6 +56,11 @@ void VolPathtracingIntegrator::onImGuiRender()
 {
 #ifndef ATCG_HEADLESS
     _panel.renderPanel(_optix_scene);
+
+    if(_optix_scene->getEnvironmentEmitter())
+    {
+        _optix_scene->getEnvironmentEmitter()->onImGuiRender();
+    }
 #endif
 }
 

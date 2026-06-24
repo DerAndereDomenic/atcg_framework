@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Renderer/PerspectiveCamera.h>
 #include <Events/Event.h>
 #include <Events/MouseEvent.h>
@@ -16,7 +17,7 @@ namespace atcg
  * Scroll to zoom
  * Drag to rotate
  */
-class CameraController
+class ATCG_API CameraController
 {
 public:
     /**
@@ -60,7 +61,7 @@ protected:
     atcg::ref_ptr<PerspectiveCamera> _camera;
 };
 
-class FocusedController : public CameraController
+class ATCG_API FocusedController : public CameraController
 {
 public:
     /**
@@ -97,7 +98,7 @@ private:
     float _currentX = 0, _currentY = 0;
 };
 
-class FirstPersonController : public CameraController
+class ATCG_API FirstPersonController : public CameraController
 {
 public:
     /**
@@ -150,7 +151,7 @@ private:
     bool _clicked_right = false;
 };
 
-class VRController : public CameraController
+class ATCG_API VRController : public CameraController
 {
 public:
     /**

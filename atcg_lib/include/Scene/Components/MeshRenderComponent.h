@@ -10,7 +10,7 @@
 
 namespace atcg
 {
-struct MeshRenderComponent : public RenderComponent
+struct ATCG_API MeshRenderComponent : public RenderComponent
 {
     MeshRenderComponent() : RenderComponent() {}
     MeshRenderComponent(const atcg::ref_ptr<Shader>& shader) : RenderComponent()
@@ -41,6 +41,7 @@ struct MeshRenderComponent : public RenderComponent
 
     atcg::ref_ptr<Shader> default_shader = atcg::ShaderManager::getShader("base");
     bool receive_shadow                  = true;
+    CullMode cull_mode                   = CullMode::ATCG_BACK_FACE_CULLING;
 
     AssetHandle material_handle = 0;
     AssetHandle shader_handle   = 0;

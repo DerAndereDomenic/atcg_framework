@@ -1,11 +1,12 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <functional>
 
 namespace atcg
 {
-class Worker
+class ATCG_API Worker
 {
 public:
     /**

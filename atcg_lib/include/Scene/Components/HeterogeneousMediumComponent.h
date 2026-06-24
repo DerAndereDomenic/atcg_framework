@@ -9,7 +9,7 @@
 
 namespace atcg
 {
-struct HeterogeneousMediumComponent
+struct ATCG_API HeterogeneousMediumComponent
 {
     HeterogeneousMediumComponent()
     {

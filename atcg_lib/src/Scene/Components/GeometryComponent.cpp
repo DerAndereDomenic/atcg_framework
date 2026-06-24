@@ -92,8 +92,10 @@ void ComponentGUIRenderer<GeometryComponent>::draw_component(const atcg::ref_ptr
 {
 #ifndef ATCG_HEADLESS
     GeometryComponent copy = component;
-    auto new_handle        = Utils::displayGraphSelection("geometry", copy.graph_handle);
+    bool deactivated       = false;
+    auto new_handle        = Utils::displayGraphSelection("geometry", copy.graph_handle, deactivated);
     bool updated           = (new_handle != copy.graph_handle);
+    copy.graph_handle      = new_handle;
 
     updated = updated || ImGui::Checkbox("Draw Bounding Box", &copy.draw_bounding_box);
 

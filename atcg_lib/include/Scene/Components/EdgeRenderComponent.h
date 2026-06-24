@@ -7,7 +7,7 @@
 
 namespace atcg
 {
-struct EdgeRenderComponent : public RenderComponent
+struct ATCG_API EdgeRenderComponent : public RenderComponent
 {
     EdgeRenderComponent(const glm::vec3& color = glm::vec3(1)) : RenderComponent(), color(color) {}
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <unordered_map>
 
 namespace atcg
@@ -10,7 +11,7 @@ namespace atcg
  * Input, etc. This class does not manage the lifetime of the registered systems but only grants global access to the
  * systems.
  */
-class SystemRegistry
+class ATCG_API SystemRegistry
 {
 public:
     SystemRegistry(SystemRegistry const&) = delete;

@@ -12,7 +12,7 @@ namespace atcg
 /**
  * @brief A simple path tracer
  */
-class PathtracingIntegrator : public Integrator
+class ATCG_API PathtracingIntegrator : public Integrator
 {
 public:
     /**

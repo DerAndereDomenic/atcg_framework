@@ -3,12 +3,9 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
-#include <glad/glad.h>
-
 #include <algorithm>
 
 #include <random>
-#include <stb_image.h>
 #include <portable-file-dialogs.h>
 
 #include <Core/Common.h>
@@ -108,11 +105,7 @@ public:
         integrator->markOptimizable();
         optimizer = atcg::make_ref<torch::optim::Adam>(integrator->getParameters(), torch::optim::AdamOptions(0.01));
 
-        atcg::CompileData compile_data;
-        compile_data.num_samples = msaa_samples[current_msaa_selection_index];
-        auto render_graph        = atcg::createRenderGraph(compile_data);
-
-        atcg::SceneRenderer::setRenderGraph(render_graph);
+        atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
     }
 
     // This gets called each frame
@@ -327,10 +320,7 @@ public:
                         if(ImGui::Selectable(msaa_samples_str[n], is_selected))
                         {
                             current_msaa_selection_index = n;
-                            atcg::CompileData compile_data;
-                            compile_data.num_samples = msaa_samples[current_msaa_selection_index];
-                            auto render_graph        = atcg::createRenderGraph(compile_data);
-                            atcg::SceneRenderer::setRenderGraph(render_graph);
+                            atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
                         }
 
                         // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -433,7 +423,7 @@ public:
     {
         if(event->getKeyCode() == ATCG_KEY_T)
         {
-            current_operation = ImGuizmo::OPERATION::TRANSLATE;
+            current_operation = atcg::GuizmoOperation::TRANSLATE;
         }
         if(event->getKeyCode() == ATCG_KEY_R)
         {
@@ -443,12 +433,12 @@ public:
             }
             else
             {
-                current_operation = ImGuizmo::OPERATION::ROTATE;
+                current_operation = atcg::GuizmoOperation::ROTATE;
             }
         }
         if(event->getKeyCode() == ATCG_KEY_S)
         {
-            current_operation = ImGuizmo::OPERATION::SCALE;
+            current_operation = atcg::GuizmoOperation::SCALE;
         }
 
         if(event->getKeyCode() == ATCG_KEY_P)
@@ -462,7 +452,7 @@ public:
 
     bool onMousePressed(atcg::MouseButtonPressedEvent* event)
     {
-        if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
+        if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !atcg::isOverGuizmo())
         {
             hovered_entity = atcg::Utils::pickEntity(mouse_pos);
             panel.selectEntity(hovered_entity);
@@ -515,7 +505,7 @@ private:
     uint32_t current_msaa_selection_index = 4;
     bool msaa_enabled                     = true;
 #ifndef ATCG_HEADLESS
-    ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+    atcg::GuizmoOperation current_operation = atcg::GuizmoOperation::TRANSLATE;
 #endif
 
 #ifdef ATCG_CUDA_BACKEND

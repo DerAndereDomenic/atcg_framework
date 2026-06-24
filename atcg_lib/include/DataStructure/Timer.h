@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <chrono>
 
 namespace atcg
@@ -7,7 +8,7 @@ namespace atcg
 /**
  * @brief This class models a timer
  */
-class Timer
+class ATCG_API Timer
 {
 public:
     /**

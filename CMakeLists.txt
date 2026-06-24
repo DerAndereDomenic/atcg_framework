@@ -11,10 +11,14 @@ list(PREPEND CMAKE_MODULE_PATH "${ATCG_PROJECT_ROOT_DIR}/cmake")
 
 include(ATCGFunctions)
 
+# Create bin and lib directories if not exist
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/bin")
+file(MAKE_DIRECTORY "${CMAKE_SOURCE_DIR}/lib")
+
 # Configure C++
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/lib)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 17)
 
@@ -60,10 +64,9 @@ find_package(OpenGL REQUIRED)
 
 # OpenMesh
 if(NOT TARGET OpenMeshCore AND NOT TARGET OpenMeshTools)
+    set(OPENMESH_BUILD_SHARED ON CACHE BOOL "Build as shared library(DLL)?" FORCE)
     add_subdirectory(external/openmesh)
 endif()
-target_compile_definitions(OpenMeshCore PUBLIC OM_STATIC_BUILD)
-target_compile_definitions(OpenMeshTools PUBLIC OM_STATIC_BUILD)
 
 # stbimage
 if(NOT TARGET stb_image)
@@ -109,18 +112,18 @@ if(NOT ATCG_HEADLESS)
 
     # imguizmo
     add_library(atcg_imguizmo STATIC)
-    target_sources(atcg_imguizmo PRIVATE "external/imguizmo/GraphEditor.cpp"
-                                    "external/imguizmo/GraphEditor.h"
-                                    "external/imguizmo/ImCurveEdit.cpp"
-                                    "external/imguizmo/ImCurveEdit.h"
-                                    "external/imguizmo/ImGradient.cpp"
-                                    "external/imguizmo/ImGradient.h"
-                                    "external/imguizmo/ImGuizmo.cpp"
-                                    "external/imguizmo/ImGuizmo.h"
-                                    "external/imguizmo/ImSequencer.cpp"
-                                    "external/imguizmo/ImSequencer.h"
-                                    "external/imguizmo/ImZoomSlider.h")
-    target_include_directories(atcg_imguizmo PUBLIC "external/imguizmo")
+    target_sources(atcg_imguizmo PRIVATE "external/imguizmo/src/GraphEditor.cpp"
+                                    "external/imguizmo/src/GraphEditor.h"
+                                    "external/imguizmo/src/ImCurveEdit.cpp"
+                                    "external/imguizmo/src/ImCurveEdit.h"
+                                    "external/imguizmo/src/ImGradient.cpp"
+                                    "external/imguizmo/src/ImGradient.h"
+                                    "external/imguizmo/src/ImGuizmo.cpp"
+                                    "external/imguizmo/src/ImGuizmo.h"
+                                    "external/imguizmo/src/ImSequencer.cpp"
+                                    "external/imguizmo/src/ImSequencer.h"
+                                    "external/imguizmo/src/ImZoomSlider.h")
+    target_include_directories(atcg_imguizmo PUBLIC "external/imguizmo/src")
     target_link_libraries(atcg_imguizmo PUBLIC atcg::imgui)
     add_library(atcg::imguizmo ALIAS atcg_imguizmo)
 endif()
@@ -233,7 +236,7 @@ if(ATCG_PYTHON_MODULE)
     if(charonload_FOUND)
         charonload_add_torch_library(${TORCH_EXTENSION_NAME} MODULE)
         target_sources(${TORCH_EXTENSION_NAME} PRIVATE atcg_lib/platform/python/pyatcg.cpp)
-        target_link_libraries(${TORCH_EXTENSION_NAME} PRIVATE "$<LINK_LIBRARY:WHOLE_ARCHIVE,atcg_lib>")
+        target_link_libraries(${TORCH_EXTENSION_NAME} PRIVATE atcg_lib)
         target_compile_definitions(${TORCH_EXTENSION_NAME} PUBLIC ATCG_PYTHON_MODULE)
         target_compile_definitions(atcg_lib PUBLIC TORCH_EXTENSION_NAME=${TORCH_EXTENSION_NAME})
     endif()

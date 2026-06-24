@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Renderer/Texture.h>
 
 namespace atcg
@@ -7,7 +8,7 @@ namespace atcg
 /**
  * @brief A class to model a skybox
  */
-class Skybox
+class ATCG_API Skybox
 {
 public:
     /**

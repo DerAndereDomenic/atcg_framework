@@ -21,8 +21,6 @@
 #include <c10/cuda/CUDAGuard.h>
 #include <Utils/Utils.h>
 
-#include <optix_stubs.h>
-
 namespace atcg
 {
 
@@ -163,16 +161,13 @@ torch::Tensor VolDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dic
 
     auto stream = at::cuda::getCurrentCUDAStream();
 
-    OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
-                            stream,
-                            (CUdeviceptr)_launch_params.get(),
-                            sizeof(VolDiffPathtracingParams),
-                            _sbt->getSBT(_raygen_index_forward),
-                            width,
-                            height,
-                            1));    // depth
-
-    CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+    _pipeline->launch((CUdeviceptr)_launch_params.get(),
+                      sizeof(VolDiffPathtracingParams),
+                      _sbt->getSBT(_raygen_index_forward),
+                      width,
+                      height,
+                      1,
+                      stream);
 
     return current_sample;
 }
@@ -225,16 +220,13 @@ void VolDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 
     auto stream = at::cuda::getCurrentCUDAStream();
 
-    OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
-                            stream,
-                            (CUdeviceptr)_launch_params.get(),
-                            sizeof(VolDiffPathtracingParams),
-                            _sbt->getSBT(_raygen_index_forward),
-                            width,
-                            height,
-                            1));    // depth
-
-    CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+    _pipeline->launch((CUdeviceptr)_launch_params.get(),
+                      sizeof(VolDiffPathtracingParams),
+                      _sbt->getSBT(_raygen_index_forward),
+                      width,
+                      height,
+                      1,
+                      stream);
 }
 
 torch::Tensor VolDiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary)

@@ -5,7 +5,7 @@
 
 namespace atcg
 {
-struct NameComponent
+struct ATCG_API NameComponent
 {
     NameComponent() = default;
     NameComponent(const std::string& name) : _name(name) {}

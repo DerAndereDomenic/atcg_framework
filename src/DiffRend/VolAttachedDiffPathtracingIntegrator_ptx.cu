@@ -8,7 +8,6 @@
 #include <Core/SurfaceInteraction.h>
 #include <Core/Payload.h>
 #include <Math/Random.h>
-#include <Math/Functions.h>
 #include <DataStructure/Frame.h>
 #include <Integrator/MIS.h>
 #include <Utils/HostDevice.h>

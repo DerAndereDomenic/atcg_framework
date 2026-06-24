@@ -12,7 +12,7 @@ namespace atcg
  * @brief A RenderPass that renders the scene using a forward rendering approach. This is used as the main render pass
  * in the render graph.
  */
-class ForwardPass : public RenderPass
+class ATCG_API ForwardPass : public RenderPass
 {
 public:
     /**

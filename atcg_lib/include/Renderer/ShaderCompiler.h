@@ -3,6 +3,7 @@
 #include <string>
 #include <cstdint>
 
+#include <Core/API.h>
 #include <Renderer/ShaderType.h>
 
 namespace atcg
@@ -14,7 +15,7 @@ class Shader;
  * @brief A class to model a shader compiler.
  * This class is used internally to create shader. Calling this class manually is not advised.
  */
-class ShaderCompiler
+class ATCG_API ShaderCompiler
 {
 public:
     /**

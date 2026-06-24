@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Core/Platform.h>
 #include <Events/Event.h>
@@ -12,7 +13,7 @@ namespace atcg
 /**
  * @brief A class that models the behavior of an entity
  */
-class Behavior
+class ATCG_API Behavior
 {
 public:
     /**
@@ -55,7 +56,7 @@ private:
 /**
  * @brief Behavior incapsulated into a python script
  */
-class PythonBehavior : public Behavior
+class ATCG_API PythonBehavior : public Behavior
 {
 public:
     /**

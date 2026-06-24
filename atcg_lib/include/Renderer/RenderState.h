@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 namespace atcg
 {
 
@@ -9,9 +10,10 @@ namespace atcg
  */
 enum CullMode
 {
-    ATCG_FRONT_FACE_CULLING,
-    ATCG_BACK_FACE_CULLING,
-    ATCG_BOTH_FACE_CULLING
+    ATCG_FRONT_FACE_CULLING = 0,
+    ATCG_BACK_FACE_CULLING  = 1,
+    ATCG_BOTH_FACE_CULLING  = 2,
+    ATCG_NO_CULLING         = 3
 };
 
 enum class PrimitiveTopology
@@ -33,7 +35,7 @@ enum class DepthFunction
     ATCG_NOTEQUAL
 };
 
-struct DepthState
+struct ATCG_API DepthState
 {
     bool depth_testing_enabled   = true;
     bool depth_write_enabled     = true;
@@ -66,7 +68,7 @@ struct DepthState
     }
 };
 
-struct BlendState
+struct ATCG_API BlendState
 {
     bool blend_enabled = true;
 
@@ -81,7 +83,7 @@ struct BlendState
     ATCG_INLINE bool operator==(const BlendState& other) const { return blend_enabled == other.blend_enabled; }
 };
 
-struct RasterizerState
+struct ATCG_API RasterizerState
 {
     CullMode cull_mode   = ATCG_BACK_FACE_CULLING;
     bool culling_enabled = false;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <Core/API.h>
+
 namespace atcg
 {
 /**
@@ -8,12 +10,12 @@ namespace atcg
  * @param argc The number of arguments
  * @param argv The list of arguments as char*
  */
-void registerCommandLineArguments(int argc, char** argv);
+ATCG_API void registerCommandLineArguments(int argc, char** argv);
 
 /**
  * @brief Get the command line arguments of the application
  *
  * @return The command line arguments
  */
-const std::vector<std::string>& getCommandLineArguments();
+ATCG_API const std::vector<std::string>& getCommandLineArguments();
 }    // namespace atcg

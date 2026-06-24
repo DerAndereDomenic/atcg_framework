@@ -10,7 +10,7 @@ namespace atcg
 /**
  * @brief A RenderPass that renders the depth of the scene (only MeshRenderComponents)
  */
-class DepthPass : public RenderPass
+class ATCG_API DepthPass : public RenderPass
 {
 public:
     /**

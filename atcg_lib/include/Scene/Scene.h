@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include <Core/API.h>
 #include <Asset/Asset.h>
 #include <Core/UUID.h>
 #include <Core/Memory.h>
@@ -23,7 +23,7 @@ class Entity;
 /**
  * @brief A class to model a scene.
  */
-class Scene : public Asset, public std::enable_shared_from_this<Scene>
+class ATCG_API Scene : public Asset, public std::enable_shared_from_this<Scene>
 {
 public:
     /**
@@ -172,6 +172,20 @@ public:
      * @return The skybox
      */
     atcg::ref_ptr<Skybox> getSkybox() const;
+
+    /**
+     * @brief Get the currently selected entity
+     *
+     * @return The selected entity
+     */
+    void setSelectedEntity(Entity entity);
+
+    /**
+     * @brief Get the currently selected entity
+     *
+     * @return The selected entity
+     */
+    Entity getSelectedEntity() const;
 
     static AssetType getStaticType() { return AssetType::Scene; }
 

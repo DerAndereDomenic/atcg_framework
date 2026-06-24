@@ -2,6 +2,7 @@
 
 #include <optix.h>
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Core/RaytracingPipeline.h>
 #include <Core/ShaderBindingTable.h>
@@ -18,7 +19,7 @@ namespace atcg
 /**
  * @brief A class to model an integrator
  */
-class Integrator
+class ATCG_API Integrator
 {
 public:
     /**

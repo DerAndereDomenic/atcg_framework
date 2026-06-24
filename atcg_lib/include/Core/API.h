@@ -6,3 +6,40 @@
     {                                                                                                                  \
         return this->fn(std::forward<decltype(args)>(args)...);                                                        \
     }
+
+// -----------------------------
+// Platform detection
+// -----------------------------
+#if defined(_WIN32) || defined(_WIN64)
+    #define ATCG_PLATFORM_WINDOWS 1
+#else
+    #define ATCG_PLATFORM_WINDOWS 0
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+    #define ATCG_COMPILER_GCC_OR_CLANG 1
+#else
+    #define ATCG_COMPILER_GCC_OR_CLANG 0
+#endif
+
+// -----------------------------
+// Shared / static build toggle
+// -----------------------------
+#if ATCG_PLATFORM_WINDOWS
+    #if defined(ATCG_EXPORT)
+        #define ATCG_API __declspec(dllexport)
+    #else
+        #define ATCG_API __declspec(dllimport)
+    #endif
+#else
+    // Linux / macOS
+
+    // Hidden by default improves compile times and symbol cleanliness
+    #if ATCG_COMPILER_GCC_OR_CLANG
+        #define ATCG_API   __attribute__((visibility("default")))
+        #define ATCG_LOCAL __attribute__((visibility("hidden")))
+    #else
+        #define ATCG_API
+        #define ATCG_LOCAL
+    #endif
+#endif

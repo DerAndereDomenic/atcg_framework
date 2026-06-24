@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Renderer/Camera.h>
 
 namespace atcg
@@ -8,7 +9,7 @@ namespace atcg
  * @brief A class to model an orthographic camera
  *
  */
-class OrthographicCamera : public Camera
+class ATCG_API OrthographicCamera : public Camera
 {
 public:
     /**

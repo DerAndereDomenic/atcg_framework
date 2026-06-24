@@ -21,8 +21,6 @@
 #include <c10/cuda/CUDAGuard.h>
 #include <Utils/Utils.h>
 
-#include <optix_stubs.h>
-
 namespace atcg
 {
 
@@ -147,16 +145,13 @@ torch::Tensor DiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictio
 
     auto stream = at::cuda::getCurrentCUDAStream();
 
-    OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
-                            stream,
-                            (CUdeviceptr)_launch_params.get(),
-                            sizeof(DiffPathtracingParams),
-                            _sbt->getSBT(_raygen_index_forward),
-                            width,
-                            height,
-                            1));    // depth
-
-    CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+    _pipeline->launch((CUdeviceptr)_launch_params.get(),
+                      sizeof(DiffPathtracingParams),
+                      _sbt->getSBT(_raygen_index_forward),
+                      width,
+                      height,
+                      1,
+                      stream);
 
     return current_sample;
 }
@@ -209,16 +204,13 @@ void DiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dictionary)
 
     auto stream = at::cuda::getCurrentCUDAStream();
 
-    OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
-                            stream,
-                            (CUdeviceptr)_launch_params.get(),
-                            sizeof(DiffPathtracingParams),
-                            _sbt->getSBT(_raygen_index_forward),
-                            width,
-                            height,
-                            1));    // depth
-
-    CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+    _pipeline->launch((CUdeviceptr)_launch_params.get(),
+                      sizeof(DiffPathtracingParams),
+                      _sbt->getSBT(_raygen_index_forward),
+                      width,
+                      height,
+                      1,
+                      stream);
 }
 
 torch::Tensor DiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary)

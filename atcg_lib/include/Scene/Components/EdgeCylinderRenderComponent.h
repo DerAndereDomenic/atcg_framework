@@ -9,7 +9,7 @@
 
 namespace atcg
 {
-struct EdgeCylinderRenderComponent : public RenderComponent
+struct ATCG_API EdgeCylinderRenderComponent : public RenderComponent
 {
     EdgeCylinderRenderComponent(float radius = 0.001f) : RenderComponent(), radius(radius) {}
 
@@ -21,7 +21,8 @@ struct EdgeCylinderRenderComponent : public RenderComponent
 
     static ATCG_CONSTEXPR ATCG_INLINE const char* toString() { return "Edge Cylinder Renderer"; }
 
-    float radius = 0.001f;
+    float radius             = 0.001f;
+    atcg::CullMode cull_mode = atcg::CullMode::ATCG_BACK_FACE_CULLING;
 
     AssetHandle material_handle = 0;
 };

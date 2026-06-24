@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <SFML/Network.hpp>
 
 #include <memory>
@@ -13,7 +14,7 @@ namespace atcg
  * When calling server->start(); it starts a new thread that listens to newly incomming directions and calls a user
  * defined callback when receiving data.
  */
-class TCPServer
+class ATCG_API TCPServer
 {
 public:
     /**

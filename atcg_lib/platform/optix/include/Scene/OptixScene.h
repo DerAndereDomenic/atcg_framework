@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Platform.h>
 #include <Shape/Shape.h>
 #include <Shape/ShapeInstance.h>
@@ -17,7 +18,7 @@ class SceneAdapter;
 /**
  * @brief A class to model a scene with optix components
  */
-class OptixScene : public Scene
+class ATCG_API OptixScene : public Scene
 {
 public:
     /**

@@ -8,7 +8,7 @@
 
 namespace atcg
 {
-struct ScriptComponent
+struct ATCG_API ScriptComponent
 {
     ScriptComponent() = default;
 

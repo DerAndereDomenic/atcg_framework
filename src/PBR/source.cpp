@@ -3,12 +3,9 @@
 #include <Core/EntryPoint.h>
 #include <ATCG.h>
 
-#include <glad/glad.h>
-
 #include <algorithm>
 
 #include <random>
-#include <stb_image.h>
 #include <portable-file-dialogs.h>
 
 #include <Core/Common.h>
@@ -150,11 +147,7 @@ public:
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
 
-        atcg::CompileData compile_data;
-        compile_data.num_samples = msaa_samples[current_msaa_selection_index];
-        auto render_graph        = atcg::createRenderGraph(compile_data);
-
-        atcg::SceneRenderer::setRenderGraph(render_graph);
+        atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
     }
 
     // This gets called each frame
@@ -273,6 +266,7 @@ public:
                 atcg::RevisionStack::clearChache();
 
                 atcg::Project::getActive()->setActiveScene(atcg::make_ref<atcg::Scene>());
+                atcg::Project::getActive()->getActiveScene()->setCamera(camera_controller->getCamera());
                 saved = false;
             }
 
@@ -334,7 +328,20 @@ public:
             ImGui::EndMenu();
         }
 
+        if(ImGui::BeginMenu("Editor"))
+        {
+            ImGui::MenuItem("Show Editor Settings", nullptr, &show_editor_settings);
+            ImGui::EndMenu();
+        }
+
         ImGui::EndMainMenuBar();
+
+        if(show_editor_settings)
+        {
+            ImGui::Begin("Editor Settings", &show_editor_settings);
+            ImGui::Checkbox("Create entities on import", &create_entities_on_import);
+            ImGui::End();
+        }
 
         if(show_render_settings)
         {
@@ -356,10 +363,7 @@ public:
                         if(ImGui::Selectable(msaa_samples_str[n], is_selected))
                         {
                             current_msaa_selection_index = n;
-                            atcg::CompileData compile_data;
-                            compile_data.num_samples = msaa_samples[current_msaa_selection_index];
-                            auto render_graph        = atcg::createRenderGraph(compile_data);
-                            atcg::SceneRenderer::setRenderGraph(render_graph);
+                            atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
                         }
 
                         // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
@@ -386,6 +390,7 @@ public:
         performance_panel.renderPanel(show_performance);
         panel.renderPanel(atcg::Project::getActive()->getActiveScene());
         hovered_entity = panel.getSelectedEntity();
+        atcg::Project::getActive()->getActiveScene()->setSelectedEntity(hovered_entity);
 
         asset_panel.renderPanel();
 
@@ -408,6 +413,7 @@ public:
         dispatcher.dispatch<atcg::MouseMovedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMouseMoved));
         dispatcher.dispatch<atcg::MouseButtonPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onMousePressed));
         dispatcher.dispatch<atcg::KeyPressedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onKeyPressed));
+        dispatcher.dispatch<atcg::FileDroppedEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onFileDropped));
 #endif
         dispatcher.dispatch<atcg::ViewportResizeEvent>(ATCG_BIND_EVENT_FN(PBRLayer::onViewportResized));
     }
@@ -426,7 +432,7 @@ public:
     {
         if(event->getKeyCode() == ATCG_KEY_T)
         {
-            current_operation = ImGuizmo::OPERATION::TRANSLATE;
+            current_operation = atcg::GuizmoOperation::TRANSLATE;
         }
         if(event->getKeyCode() == ATCG_KEY_R)
         {
@@ -436,12 +442,12 @@ public:
             }
             else
             {
-                current_operation = ImGuizmo::OPERATION::ROTATE;
+                current_operation = atcg::GuizmoOperation::ROTATE;
             }
         }
         if(event->getKeyCode() == ATCG_KEY_S)
         {
-            current_operation = ImGuizmo::OPERATION::SCALE;
+            current_operation = atcg::GuizmoOperation::SCALE;
         }
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
@@ -450,10 +456,11 @@ public:
 
     bool onMousePressed(atcg::MouseButtonPressedEvent* event)
     {
-        if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !ImGuizmo::IsOver())
+        if(in_viewport && event->getMouseButton() == ATCG_MOUSE_BUTTON_LEFT && !atcg::isOverGuizmo())
         {
             hovered_entity = atcg::Utils::pickEntity(mouse_pos);
             panel.selectEntity(hovered_entity);
+            atcg::Project::getActive()->getActiveScene()->setSelectedEntity(hovered_entity);
         }
         return true;
     }
@@ -469,6 +476,38 @@ public:
             mouse_pos.x >= 0 && mouse_pos.y >= 0 && mouse_pos.y < height && mouse_pos.x < app->getViewportSize().x;
 
         return false;
+    }
+
+    bool onFileDropped(atcg::FileDroppedEvent* event)
+    {
+        for(int i = 0; i < event->getCount(); ++i)
+        {
+            std::filesystem::path filepath = event->getPath(i);
+
+            auto file_ending = filepath.extension().string();
+
+            if(file_ending == ".obj")
+            {
+                auto graph = atcg::IO::read_mesh(filepath.string());
+                atcg::AssetManager::registerAsset(graph, filepath.stem().string());
+
+                if(create_entities_on_import)
+                {
+                    auto entity = atcg::Project::getActive()->getActiveScene()->createEntity(filepath.stem().string());
+                    entity.addComponent<atcg::TransformComponent>();
+                    entity.addComponent<atcg::GeometryComponent>(graph);
+                    entity.addComponent<atcg::MeshRenderComponent>();
+                }
+            }
+            else if(file_ending == ".png" || file_ending == ".jpg" || file_ending == ".jpeg" || file_ending == ".hdr")
+            {
+                auto img     = atcg::IO::imread(filepath.string());
+                auto texture = atcg::Texture2D::create(img);
+                atcg::AssetManager::registerAsset(texture, filepath.stem().string());
+            }
+        }
+
+        return true;
     }
 #endif
 
@@ -491,8 +530,10 @@ private:
 
     glm::vec2 mouse_pos;
 
-    bool show_render_settings = false;
-    bool vsync                = true;
+    bool show_render_settings      = false;
+    bool show_editor_settings      = false;
+    bool vsync                     = true;
+    bool create_entities_on_import = true;
 
     bool enable_pathtracing = false;
 
@@ -501,7 +542,7 @@ private:
     uint32_t current_msaa_selection_index = 0;
     bool msaa_enabled                     = true;
 #ifndef ATCG_HEADLESS
-    ImGuizmo::OPERATION current_operation = ImGuizmo::OPERATION::TRANSLATE;
+    atcg::GuizmoOperation current_operation = atcg::GuizmoOperation::TRANSLATE;
 #endif
 
 #ifdef ATCG_CUDA_BACKEND

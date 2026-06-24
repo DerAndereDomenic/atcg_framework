@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 
 #include <cstdint>
@@ -134,7 +135,7 @@ struct BufferElement
  * @brief The layout of the buffer.
  * Basically a collection of BufferElements
  */
-class BufferLayout
+class ATCG_API BufferLayout
 {
 public:
     BufferLayout() = default;
@@ -173,7 +174,7 @@ private:
 /**
  * @brief A class to model a vertex buffer
  */
-class VertexBuffer
+class ATCG_API VertexBuffer
 {
 public:
     /**
@@ -397,7 +398,7 @@ protected:
  * @brief A class to model an IndexBuffer.
  * An index buffer is just a vertex buffer with uint32_t and a different binding
  */
-class IndexBuffer : public VertexBuffer
+class ATCG_API IndexBuffer : public VertexBuffer
 {
 public:
     /**

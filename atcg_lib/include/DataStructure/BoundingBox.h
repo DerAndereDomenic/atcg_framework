@@ -1,8 +1,12 @@
 #pragma once
 
 #include <Core/glm.h>
+#include <Core/CUDA.h>
 #include <array>
-#include <Renderer/Camera.h>
+
+#ifndef __CUDACC__
+    #include <Renderer/Camera.h>
+#endif
 
 namespace atcg
 {
@@ -15,7 +19,7 @@ struct BoundingBox
     glm::vec3 max = glm::vec3(1);
 };
 
-ATCG_INLINE BoundingBox operator+(const BoundingBox& a, const BoundingBox& b)
+ATCG_INLINE ATCG_HOST_DEVICE BoundingBox operator+(const BoundingBox& a, const BoundingBox& b)
 {
     BoundingBox result;
     result.min = glm::min(a.min, b.min);
@@ -25,7 +29,7 @@ ATCG_INLINE BoundingBox operator+(const BoundingBox& a, const BoundingBox& b)
 
 namespace Utils
 {
-ATCG_INLINE BoundingBox transformBoundingBox(const BoundingBox& bbox, const glm::mat4& transform)
+ATCG_INLINE ATCG_HOST_DEVICE BoundingBox transformBoundingBox(const BoundingBox& bbox, const glm::mat4& transform)
 {
     glm::vec3 min = transform * glm::vec4(bbox.min, 1.0f);
     glm::vec3 max = transform * glm::vec4(bbox.max, 1.0f);
@@ -36,7 +40,7 @@ ATCG_INLINE BoundingBox transformBoundingBox(const BoundingBox& bbox, const glm:
     return result;
 }
 
-ATCG_INLINE glm::mat4 boundingBoxToModelMatrix(const BoundingBox& bbox)
+ATCG_INLINE ATCG_HOST_DEVICE glm::mat4 boundingBoxToModelMatrix(const BoundingBox& bbox)
 {
     glm::vec3 center = (bbox.min + bbox.max) * 0.5f;
     glm::vec3 scale  = bbox.max - bbox.min;
@@ -45,12 +49,13 @@ ATCG_INLINE glm::mat4 boundingBoxToModelMatrix(const BoundingBox& bbox)
     return model;
 }
 
-ATCG_INLINE bool insideBoundingBox(const glm::vec3& point, const BoundingBox& bbox)
+ATCG_INLINE ATCG_HOST_DEVICE bool insideBoundingBox(const glm::vec3& point, const BoundingBox& bbox)
 {
     return (point.x >= bbox.min.x && point.x <= bbox.max.x) && (point.y >= bbox.min.y && point.y <= bbox.max.y) &&
            (point.z >= bbox.min.z && point.z <= bbox.max.z);
 }
 
+#ifndef __CUDACC__
 ATCG_INLINE std::array<glm::vec3, 8> getBoundingBoxCorners(const BoundingBox& bbox)
 {
     std::array<glm::vec3, 8> corners;
@@ -97,6 +102,6 @@ ATCG_INLINE bool isVisible(const atcg::ref_ptr<Camera>& camera, const BoundingBo
     }
     return true;
 }
-
+#endif
 }    // namespace Utils
 }    // namespace atcg

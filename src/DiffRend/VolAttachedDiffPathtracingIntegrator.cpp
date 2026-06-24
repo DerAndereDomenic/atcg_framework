@@ -21,8 +21,6 @@
 #include <ATen/cuda/ApplyGridUtils.cuh>
 #include <c10/cuda/CUDAGuard.h>
 
-#include <optix_stubs.h>
-
 namespace atcg
 {
 
@@ -225,16 +223,13 @@ VolAttachedDiffPathtracingIntegrator::_forwardTrace(Dictionary& in_out_dictionar
     _launch_params.upload(&params);
 
     auto stream = at::cuda::getCurrentCUDAStream();
-    OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
-                            stream,
-                            (CUdeviceptr)_launch_params.get(),
-                            sizeof(VolAttachedDiffPathtracingParams),
-                            _sbt->getSBT(_raygen_index_forward),
-                            width,
-                            height,
-                            1));    // depth
-
-    CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+    _pipeline->launch((CUdeviceptr)_launch_params.get(),
+                      sizeof(VolAttachedDiffPathtracingParams),
+                      _sbt->getSBT(_raygen_index_forward),
+                      width,
+                      height,
+                      1,
+                      stream);
 
     return {current_sample, current_JL};
 }
@@ -284,16 +279,13 @@ void VolAttachedDiffPathtracingIntegrator::_backwardTrace(Dictionary& in_out_dic
     _launch_params.upload(&params);
 
     auto stream = at::cuda::getCurrentCUDAStream();
-    OPTIX_CHECK(optixLaunch(_pipeline->getPipeline(),
-                            stream,
-                            (CUdeviceptr)_launch_params.get(),
-                            sizeof(VolAttachedDiffPathtracingParams),
-                            _sbt->getSBT(_raygen_index_forward),
-                            width,
-                            height,
-                            1));    // depth
-
-    CUDA_SAFE_CALL(cudaStreamSynchronize(stream));
+    _pipeline->launch((CUdeviceptr)_launch_params.get(),
+                      sizeof(VolAttachedDiffPathtracingParams),
+                      _sbt->getSBT(_raygen_index_forward),
+                      width,
+                      height,
+                      1,
+                      stream);
 }
 
 torch::Tensor VolAttachedDiffPathtracingIntegrator::sample(Dictionary& in_out_dictionary)

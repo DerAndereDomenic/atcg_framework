@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/Memory.h>
 #include <Scripting/Script.h>
 
@@ -8,7 +9,7 @@ namespace atcg
 /**
  * @brief The interface for scripting engines
  */
-class ScriptEngine
+class ATCG_API ScriptEngine
 {
 public:
     /**
@@ -35,7 +36,7 @@ public:
 /**
  * @brief A scripting engine for python scripts
  */
-class PythonScriptEngine : public ScriptEngine
+class ATCG_API PythonScriptEngine : public ScriptEngine
 {
 public:
     /**

@@ -8,7 +8,7 @@
 
 namespace atcg
 {
-struct GeometryComponent
+struct ATCG_API GeometryComponent
 {
     GeometryComponent() = default;
     GeometryComponent(AssetHandle handle) : graph_handle(handle) {}

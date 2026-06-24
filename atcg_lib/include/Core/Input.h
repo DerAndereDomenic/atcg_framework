@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Core/API.h>
 #include <Core/glm.h>
 
 namespace atcg
@@ -10,7 +11,7 @@ namespace atcg
 /**
  * @brief A class used for event polling
  */
-class Input
+class ATCG_API Input
 {
 public:
     /**
