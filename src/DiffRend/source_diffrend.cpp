@@ -16,6 +16,7 @@
 #include "FiniteDiffPathIntegrator.h"
 #include "VolDiffPathtracingIntegrator.h"
 #include "VolAttachedDiffPathtracingIntegrator.h"
+#include "RBPIntegrator.h"
 
 #ifndef ATCG_HEADLESS
     #include <implot.h>
@@ -66,6 +67,10 @@ public:
         else if(current_integrator_index == 4)
         {
             integrator = atcg::make_ref<atcg::VolAttachedDiffPathtracingIntegrator>(optx_context, dict);
+        }
+        else if(current_integrator_index == 5)
+        {
+            integrator = atcg::make_ref<atcg::RBPIntegrator>(optx_context, dict);
         }
 #endif
     }
@@ -126,7 +131,7 @@ public:
             {
                 optimizer->zero_grad(false);
                 // integrator->zeroGrad();
-                uint32_t num_samples = 16;
+                uint32_t num_samples = 128;
 
                 torch::Tensor result = torch::zeros({output_texture->height(), output_texture->width(), 3},
                                                     atcg::TensorOptions::floatDeviceOptions());
@@ -157,6 +162,13 @@ public:
 
                 auto difference = (result_injected - target) * (result_injected - target);
                 auto L          = torch::sum(torch::abs(difference));
+
+                {
+                    torch::NoGradGuard no_grad;
+
+                    torch::Tensor adjoint = 2.0f * (result_injected - target);
+                    integrator->setAdjoint(adjoint);
+                }
 
                 L.backward();
                 optimizer->step();
@@ -611,8 +623,9 @@ private:
 #ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::DifferentiableIntegrator> integrator;
-    const char* integrator_labels[5]  = {"Attached", "Detached", "Finite Difference", "VolDetached", "VolAttached"};
-    uint32_t current_integrator_index = 4;
+    const char* integrator_labels[6] =
+        {"Attached", "Detached", "Finite Difference", "VolDetached", "VolAttached", "RBP"};
+    uint32_t current_integrator_index = 5;
     torch::Tensor target;
     torch::Tensor accumulated_output;
     bool optimize          = false;
@@ -643,8 +656,8 @@ public:
 atcg::Application* atcg::createApplication()
 {
     atcg::WindowProps props;
-    // props.width  = 3000;
-    // props.height = 1800;
-    props.vsync = true;
+    props.width  = 3000;
+    props.height = 1800;
+    props.vsync  = true;
     return new DiffRend(props);
 }

@@ -27,5 +27,10 @@ public:
         auto result = sample(in_out_dictionary);
         in_out_dictionary.setValue("output_img", result);
     }
+
+    void setAdjoint(const torch::Tensor& adjoint_) { adjoint = adjoint_; }
+
+protected:
+    torch::Tensor adjoint;
 };
 }    // namespace atcg
