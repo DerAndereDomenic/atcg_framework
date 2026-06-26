@@ -23,11 +23,12 @@ extern "C" __global__ void __raygen__rg()
     uint64_t seed        = atcg::sampleTEA64(pixel_index, params.frame_counter);
     atcg::PCG32 rng(seed);
 
-    glm::vec2 jitter = rng.next2d();
-    float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
-    float v          = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
+    atcg::CameraRay camera_ray = params.sensor->generateRay(glm::ivec2(launch_idx.x, launch_idx.y), rng);
 
-    atcg::CameraRay camera_ray = params.sensor->generateRay(glm::vec2(u, v));
+    if(!camera_ray.valid)
+    {
+        return;
+    }
 
     atcg::SampledSpectrum radiance(0);
     atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleSpectrum(rng.nextFloat(), 380.0f, 780.0f);
@@ -248,7 +249,7 @@ extern "C" __global__ void __raygen__rg()
                     si.bsdf->evalBSDF(si, emitter_sampling.direction_to_light, wavelengths);
 
                 float bsdf_pdf   = (int)(emitter->flags & atcg::EmitterFlags::InfinitesimalSize) != 0 ||
-                                         (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
+                                           (int)(bsdf_result.flags & atcg::BSDFComponentType::AnyDelta) != 0
                                        ? 0.0f
                                        : bsdf_result.sample_probability;
                 float mis_weight = atcg::BalanceHeuristic::apply(emitter_sampling.sampling_pdf, bsdf_pdf);
