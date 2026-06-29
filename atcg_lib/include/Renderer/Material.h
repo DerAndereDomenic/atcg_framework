@@ -5,7 +5,6 @@
 #include <Renderer/Texture.h>
 #include <Asset/Asset.h>
 #include <DataStructure/Dictionary.h>
-#include <Plugin/Plugin.h>
 #include <DataStructure/Registry.h>
 
 #include <json.hpp>
@@ -22,9 +21,6 @@ class Shader;
  */
 struct ATCG_API Material : public Asset
 {
-    using PluginCreate = std::function<std::shared_ptr<atcg::Material>()>;
-    ATCG_PLUGIN_BASE_CLASS(Material);
-
     /**
      * @brief Constructor
      */
@@ -229,11 +225,6 @@ protected:
 class ATCG_API OpaqueMaterial : public MicrofacetMaterial
 {
 public:
-    ATCG_PLUGIN_CLASS(OpaqueMaterial,
-                      "1.0.0",
-                      "Domenic Zingsheim",
-                      "A material modeling an opaque microfacet BRDF with a diffuse component.");
-
     OpaqueMaterial();
 
     /**
@@ -296,11 +287,6 @@ private:
 class ATCG_API DielectricMaterial : public MicrofacetMaterial
 {
 public:
-    ATCG_PLUGIN_CLASS(DielectricMaterial,
-                      "1.0.0",
-                      "Domenic Zingsheim",
-                      "A material modeling a dielectric microfacet BRDF with a diffuse component.");
-
     DielectricMaterial();
 
     /**
@@ -321,11 +307,6 @@ private:
 class ATCG_API NullMaterial : public Material
 {
 public:
-    ATCG_PLUGIN_CLASS(NullMaterial,
-                      "1.0.0",
-                      "Domenic Zingsheim",
-                      "A null material that can be used as a placeholder and does not render anything.");
-
     NullMaterial();
 
     /**
@@ -408,23 +389,44 @@ struct ATCG_API MaterialGUIRenderer<NullMaterial>
 
 #define ATCG_REGISTER_MATERIAL(registry, MaterialType, MaterialClass)                                                  \
     {                                                                                                                  \
-        MaterialRegistry::MaterialFunctions functions = {                                                              \
-            [](const Dictionary& dict) { return atcg::make_ref<MaterialClass>(); },                                    \
-            [](const atcg::ref_ptr<Material>& material, const std::string& key, bool& deactivated)                     \
+        atcg::MaterialRegistry::MaterialFunctions functions = {                                                        \
+            [](const atcg::Dictionary& dict) { return atcg::make_ref<MaterialClass>(); },                              \
+            [](const atcg::ref_ptr<atcg::Material>& material, const std::string& key, bool& deactivated)               \
             {                                                                                                          \
-                return MaterialGUIRenderer<MaterialClass>::renderGUI(                                                  \
+                return atcg::MaterialGUIRenderer<MaterialClass>::renderGUI(                                            \
                     std::dynamic_pointer_cast<MaterialClass>(material),                                                \
                     key,                                                                                               \
                     deactivated);                                                                                      \
             },                                                                                                         \
-            [](const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)                             \
+            [](const atcg::ref_ptr<atcg::Material>& material, const std::filesystem::path& path)                       \
             {                                                                                                          \
-                MaterialSerializer<MaterialClass>::serialize(std::dynamic_pointer_cast<MaterialClass>(material),       \
-                                                             path);                                                    \
+                atcg::MaterialSerializer<MaterialClass>::serialize(std::dynamic_pointer_cast<MaterialClass>(material), \
+                                                                   path);                                              \
             },                                                                                                         \
             [](const std::filesystem::path& path, const nlohmann::json& material_node)                                 \
-            { return MaterialSerializer<MaterialClass>::deserialize(path, material_node); }};                          \
+            { return atcg::MaterialSerializer<MaterialClass>::deserialize(path, material_node); }};                    \
         registry->registerType(MaterialType, std::move(functions));                                                    \
+    }
+
+#define ATCG_REGISTER_MATERIAL_PLUGIN(registry, handle, MaterialType, MaterialClass)                                   \
+    {                                                                                                                  \
+        atcg::MaterialRegistry::MaterialFunctions functions = {                                                        \
+            [](const atcg::Dictionary& dict) { return atcg::make_ref<MaterialClass>(); },                              \
+            [](const atcg::ref_ptr<atcg::Material>& material, const std::string& key, bool& deactivated)               \
+            {                                                                                                          \
+                return atcg::MaterialGUIRenderer<MaterialClass>::renderGUI(                                            \
+                    std::dynamic_pointer_cast<MaterialClass>(material),                                                \
+                    key,                                                                                               \
+                    deactivated);                                                                                      \
+            },                                                                                                         \
+            [](const atcg::ref_ptr<atcg::Material>& material, const std::filesystem::path& path)                       \
+            {                                                                                                          \
+                atcg::MaterialSerializer<MaterialClass>::serialize(std::dynamic_pointer_cast<MaterialClass>(material), \
+                                                                   path);                                              \
+            },                                                                                                         \
+            [](const std::filesystem::path& path, const nlohmann::json& material_node)                                 \
+            { return atcg::MaterialSerializer<MaterialClass>::deserialize(path, material_node); }};                    \
+        registry->registerType(handle, MaterialType, std::move(functions));                                            \
     }
 
 }    // namespace atcg

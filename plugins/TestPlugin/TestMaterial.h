@@ -8,13 +8,6 @@ namespace atcg
 class DiffuseMaterial : public atcg::Material
 {
 public:
-    ATCG_PLUGIN_CLASS(DiffuseMaterial,
-                      "1.0.0",
-                      "Domenic Zingsheim",
-                      "A simple test material modeling a perfect diffuse reflector.");
-
-    static atcg::ref_ptr<Material> create();
-
     DiffuseMaterial();
 
     virtual void uploadMaterial(atcg::RendererSystem* renderer, const atcg::ref_ptr<atcg::Shader>& shader) override;

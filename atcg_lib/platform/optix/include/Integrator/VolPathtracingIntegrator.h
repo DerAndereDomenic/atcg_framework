@@ -17,11 +17,6 @@ namespace atcg
 class ATCG_API VolPathtracingIntegrator : public Integrator
 {
 public:
-    ATCG_PLUGIN_CLASS(VolPathtracingIntegrator,
-                      "1.0.0",
-                      "Domenic Zingsheim",
-                      "A simple volumetric path tracing integrator.");
-
     /**
      * @brief Constructor
      *

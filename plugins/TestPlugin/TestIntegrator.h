@@ -15,11 +15,6 @@ namespace atcg
 class TestIntegrator : public Integrator
 {
 public:
-    ATCG_PLUGIN_CLASS(TestIntegrator, "1.0.0", "Domenic Zingsheim", "A simple test integrator.");
-
-    static atcg::ref_ptr<Integrator> create(const atcg::ref_ptr<RaytracingContext>& context,
-                                            const atcg::Dictionary& dict);
-
     /**
      * @brief Constructor
      *

@@ -6,7 +6,6 @@ namespace atcg
 
 PluginManager::~PluginManager()
 {
-    _registered_classes.clear();
     for(auto& [path, handle]: _loaded_plugins)
     {
         FreeLibrary(static_cast<HMODULE>(handle));    // TODO Platform-specific implementation for releasing plugin
@@ -50,7 +49,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path)
     }
     registerSystems(ImGui::GetCurrentContext());
 
-    PluginRegistry registry(*this, handle);
+    PluginRegistry registry(handle);
     registerPlugin(registry);
 
     _loaded_plugins[path] = handle;
@@ -64,17 +63,18 @@ bool PluginManager::releasePlugin(const std::filesystem::path& path)
     if(it != _loaded_plugins.end())
     {
         // Remove all classes registered by this plugin
-        for(auto it_class = _registered_classes.begin(); it_class != _registered_classes.end();)
-        {
-            if(it_class->second->library_handle == it->second)
-            {
-                it_class = _registered_classes.erase(it_class);
-            }
-            else
-            {
-                ++it_class;
-            }
-        }
+        // TODO
+        // for(auto it_class = _registered_classes.begin(); it_class != _registered_classes.end();)
+        // {
+        //     if(it_class->second->library_handle == it->second)
+        //     {
+        //         it_class = _registered_classes.erase(it_class);
+        //     }
+        //     else
+        //     {
+        //         ++it_class;
+        //     }
+        // }
 
         // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
         FreeLibrary(static_cast<HMODULE>(it->second));

@@ -117,12 +117,6 @@ void TestIntegrator::generateRays(Dictionary& in_out_dictionary)
     in_out_dictionary.setValue("entity_ids", output_entities);
 }
 
-atcg::ref_ptr<Integrator> TestIntegrator::create(const atcg::ref_ptr<RaytracingContext>& context,
-                                                 const atcg::Dictionary& dict)
-{
-    return atcg::make_ref<TestIntegrator>(context, dict);
-}
-
 DiffuseMaterial::DiffuseMaterial() : atcg::Material("Diffuse")
 {
     atcg::TextureSpecification spec_diffuse;
@@ -205,19 +199,15 @@ bool MaterialGUIRenderer<DiffuseMaterial>::renderGUI(const atcg::ref_ptr<Diffuse
     return updated;
 }
 
-atcg::ref_ptr<atcg::Material> DiffuseMaterial::create()
-{
-    return atcg::make_ref<DiffuseMaterial>();
-}
-
-ATCG_REGISTER_MATERIAL("Diffuse", DiffuseMaterial);
-
 }    // namespace atcg
 
 ATCG_PLUGIN_LIBRARY();
 
 extern "C" __declspec(dllexport) void registerPlugin(atcg::PluginRegistry& registry)
 {
-    registry.registerClass<atcg::Integrator, atcg::TestIntegrator>("TestIntegrator");
-    registry.registerClass<atcg::Material, atcg::DiffuseMaterial>("Diffuse");
+    registry.registerMaterial<atcg::DiffuseMaterial>("Diffuse");
+    // atcg::MaterialRegistry::Registry* material_registry = atcg::MaterialRegistry::getRegistry();
+    // ATCG_REGISTER_MATERIAL(material_registry, "Diffuse", atcg::DiffuseMaterial);
+    // registry.registerClass<atcg::Integrator, atcg::TestIntegrator>("TestIntegrator");
+    // registry.registerClass<atcg::Material, atcg::DiffuseMaterial>("Diffuse");
 }
