@@ -6,6 +6,7 @@
 #include <Scene/Scene.h>
 #include <Renderer/Camera.h>
 #include <Renderer/GraphicsAPI.h>
+#include <Plugin/PluginHandle.h>
 #include <imgui.h>
 
 #include <filesystem>
@@ -22,8 +23,6 @@ struct PluginInfo
     const char* author;
     const char* description;
 };
-
-using PluginHandle = void*;
 
 class ATCG_API PluginManager
 {
