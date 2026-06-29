@@ -28,136 +28,50 @@
 namespace atcg
 {
 
-#pragma region MaterialFactory
-struct MaterialFactoryFunctions
+#pragma region MaterialRegistry
+
+namespace MaterialRegistry
 {
-    MaterialBuilder builder;
-    MaterialGUIFunction gui_function;
-    MaterialSerializeFunction serializer_function;
-    MaterialDeserializeFunction deserializer_function;
-};
-
-class MaterialFactory_T
+void registerMaterial(Registry* registry, std::string_view type, MaterialFunctions functions)
 {
-public:
-    static MaterialFactory_T* getInstance()
-    {
-        if(!_instance) _instance = std::make_unique<MaterialFactory_T>();
-        return _instance.get();
-    }
-
-    void registerFunctions(std::string_view type,
-                           MaterialBuilder builder,
-                           MaterialGUIFunction gui_function,
-                           MaterialSerializeFunction serializer_function,
-                           MaterialDeserializeFunction deserializer_function)
-    {
-        _registry[std::string(type)] = {std::move(builder),
-                                        std::move(gui_function),
-                                        std::move(serializer_function),
-                                        std::move(deserializer_function)};
-        _registered_types.push_back(std::string(type));
-    }
-
-    atcg::ref_ptr<Material> create(const std::string& type, const Dictionary& dict)
-    {
-        auto it = _registry.find(type);
-        if(it == _registry.end())
-        {
-            throw std::runtime_error("Unknown MaterialType");
-        }
-
-        return it->second.builder(dict);
-    }
-
-    bool renderGUI(const atcg::ref_ptr<Material>& material, const std::string& key, bool& deactivated)
-    {
-        auto it = _registry.find(material->getMaterialType());
-        if(it == _registry.end())
-        {
-            throw std::runtime_error("Unknown MaterialType");
-        }
-
-        return it->second.gui_function(material, key, deactivated);
-    }
-
-    void serializeMaterial(const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)
-    {
-        auto it = _registry.find(material->getMaterialType());
-        if(it == _registry.end())
-        {
-            throw std::runtime_error("Unknown MaterialType");
-        }
-
-        it->second.serializer_function(material, path);
-    }
-
-    atcg::ref_ptr<Material> deserializeMaterial(std::string_view material_type,
-                                                const std::filesystem::path& path,
-                                                const nlohmann::json& material_node)
-    {
-        auto it = _registry.find(std::string(material_type));
-        if(it == _registry.end())
-        {
-            throw std::runtime_error("Unknown MaterialType");
-        }
-
-        return it->second.deserializer_function(path, material_node);
-    }
-
-    const std::vector<std::string>& getRegisteredTypes() const { return _registered_types; }
-
-private:
-    std::vector<std::string> _registered_types;
-    std::unordered_map<std::string, MaterialFactoryFunctions> _registry;
-    static std::unique_ptr<MaterialFactory_T> _instance;
-};
-
-std::unique_ptr<MaterialFactory_T> MaterialFactory_T::_instance;
-
-void MaterialFactory::registerMaterial(std::string_view type,
-                                       MaterialBuilder builder,
-                                       MaterialGUIFunction gui_function,
-                                       MaterialSerializeFunction serializer_function,
-                                       MaterialDeserializeFunction deserializer_function)
-{
-    auto instance = MaterialFactory_T::getInstance();
-    instance->registerFunctions(type, builder, gui_function, serializer_function, deserializer_function);
+    registry->registerType(type, std::move(functions));
 }
 
-atcg::ref_ptr<Material> MaterialFactory::createMaterial(const std::string& type, const Dictionary& dict)
+atcg::ref_ptr<Material> createMaterial(Registry* registry, const std::string& type, const Dictionary& dict)
 {
-    auto instance = MaterialFactory_T::getInstance();
-    return instance->create(type, dict);
+    const MaterialFunctions* desc = registry->find(type);
+    return desc->builder(dict);
 }
 
-bool MaterialFactory::renderMaterialGUI(const atcg::ref_ptr<Material>& material,
-                                        const std::string& key,
-                                        bool& deactivated)
+bool renderMaterialGUI(Registry* registry,
+                       const atcg::ref_ptr<Material>& material,
+                       const std::string& key,
+                       bool& deactivated)
 {
-    auto instance = MaterialFactory_T::getInstance();
-    return instance->renderGUI(material, key, deactivated);
+    const MaterialFunctions* desc = registry->find(material->getMaterialType());
+    return desc->gui_function(material, key, deactivated);
 }
 
-void MaterialFactory::serializeMaterial(const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)
+const std::vector<std::string>& getRegisteredMaterialTypes(Registry* registry)
 {
-    auto instance = MaterialFactory_T::getInstance();
-    instance->serializeMaterial(material, path);
+    return registry->getRegisteredTypes();
 }
 
-atcg::ref_ptr<Material> MaterialFactory::deserializeMaterial(std::string_view material_type,
-                                                             const std::filesystem::path& path,
-                                                             const nlohmann::json& material_node)
+void serializeMaterial(Registry* registry, const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)
 {
-    auto instance = MaterialFactory_T::getInstance();
-    return instance->deserializeMaterial(material_type, path, material_node);
+    const MaterialFunctions* desc = registry->find(material->getMaterialType());
+    desc->serializer_function(material, path);
 }
 
-const std::vector<std::string>& MaterialFactory::getRegisteredMaterialTypes()
+atcg::ref_ptr<Material> deserializeMaterial(Registry* registry,
+                                            std::string_view material_type,
+                                            const std::filesystem::path& path,
+                                            const nlohmann::json& material_node)
 {
-    auto instance = MaterialFactory_T::getInstance();
-    return instance->getRegisteredTypes();
+    const MaterialFunctions* desc = registry->find(material_type);
+    return desc->deserializer_function(path, material_node);
 }
+}    // namespace MaterialRegistry
 
 #pragma endregion
 
@@ -319,6 +233,11 @@ atcg::ref_ptr<Material> OpaqueMaterial::clone() const
     return material;
 }
 
+void OpaqueMaterial::registerMaterial(MaterialRegistry::Registry* registry)
+{
+    ATCG_REGISTER_MATERIAL(registry, "Opaque", OpaqueMaterial);
+}
+
 DielectricMaterial::DielectricMaterial() : MicrofacetMaterial("Dielectric") {}
 
 void DielectricMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
@@ -368,6 +287,11 @@ atcg::ref_ptr<Material> DielectricMaterial::clone() const
     return material;
 }
 
+void DielectricMaterial::registerMaterial(MaterialRegistry::Registry* registry)
+{
+    ATCG_REGISTER_MATERIAL(registry, "Dielectric", DielectricMaterial);
+}
+
 NullMaterial::NullMaterial() : Material("Null") {}
 
 void NullMaterial::uploadMaterial(RendererSystem* renderer, const atcg::ref_ptr<Shader>& shader)
@@ -413,6 +337,12 @@ atcg::ref_ptr<Material> NullMaterial::clone() const
 
     return material;
 }
+
+void NullMaterial::registerMaterial(MaterialRegistry::Registry* registry)
+{
+    ATCG_REGISTER_MATERIAL(registry, "Null", NullMaterial);
+}
+
 
 #pragma endregion
 
@@ -1309,14 +1239,6 @@ atcg::ref_ptr<NullMaterial> MaterialSerializer<NullMaterial>::deserialize(const 
 {
     return atcg::make_ref<NullMaterial>();
 }
-
-#pragma endregion
-
-#pragma region MaterialRegistration
-
-ATCG_REGISTER_MATERIAL("Opaque", OpaqueMaterial);
-ATCG_REGISTER_MATERIAL("Dielectric", DielectricMaterial);
-ATCG_REGISTER_MATERIAL("Null", NullMaterial);
 
 #pragma endregion
 
