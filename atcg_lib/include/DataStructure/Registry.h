@@ -25,6 +25,8 @@ public:
     void unregisterPlugin(Handle plugin)
     {
         std::erase_if(_entries, [&](auto& pair) { return pair.second.plugin == plugin; });
+        std::erase_if(_registered_types,
+                      [&](const std::string& type) { return _entries.find(type) == _entries.end(); });
     }
 
     const Desc* find(std::string_view type) const
