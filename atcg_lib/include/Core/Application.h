@@ -1,22 +1,23 @@
 #pragma once
 
-#include <Core/API.h>
-#include <Core/Memory.h>
-#include <Core/LayerStack.h>
-#include <Core/Window.h>
-#include <Events/WindowEvent.h>
-#include <Events/KeyEvent.h>
-#include <Core/Platform.h>
-#include <Scene/RevisionStack.h>
-#include <Renderer/ShaderManager.h>
-#include <Renderer/Renderer.h>
-#include <Renderer/VRSystem.h>
-#include <Renderer/ContextManager.h>
-#include <Scripting/ScriptEngine.h>
 #include <Asset/AssetManagerSystem.h>
-#include <Scene/ComponentRegistry.h>
+#include <Core/API.h>
+#include <Core/LayerStack.h>
+#include <Core/Memory.h>
+#include <Core/Platform.h>
+#include <Core/Window.h>
+#include <Events/KeyEvent.h>
+#include <Events/WindowEvent.h>
+#include <Renderer/ContextManager.h>
 #include <Renderer/GraphicsAPI.h>
+#include <Renderer/Material.h>
+#include <Renderer/Renderer.h>
+#include <Renderer/ShaderManager.h>
+#include <Renderer/VRSystem.h>
+#include <Scene/ComponentRegistry.h>
+#include <Scene/RevisionStack.h>
 #include <Scene/SceneRenderer.h>
+#include <Scripting/ScriptEngine.h>
 
 #ifndef ATCG_HEADLESS
     #include <ImGui/ImGuiLayer.h>
@@ -175,6 +176,7 @@ private:
     // Systems
     atcg::ref_ptr<AssetManagerSystem> _asset_manager;
     atcg::ref_ptr<ShaderManagerSystem> _shader_manager;
+    atcg::ref_ptr<MaterialRegistry::Registry> _material_registry;
     atcg::ref_ptr<SceneRendererSystem> _scene_renderer;
     atcg::ref_ptr<RendererSystem> _renderer;
     atcg::ref_ptr<VRSystem> _vr_system;

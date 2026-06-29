@@ -38,7 +38,7 @@ atcg::ref_ptr<Material> deserializeMaterialType_ver1(const std::filesystem::path
 
     const std::string& material_type = material_type_string;
 
-    return MaterialFactory::deserializeMaterial(material_type, path, material_node);
+    return MaterialRegistry::deserializeMaterial(material_type, path, material_node);
 }
 
 atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path, const nlohmann::json& material_node)

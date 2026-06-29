@@ -56,7 +56,7 @@ ATCG_INLINE void serialize_material_ver1(const atcg::ref_ptr<Material>& material
 {
     const std::string& type = material->getMaterialType();
 
-    MaterialFactory::serializeMaterial(material, path);
+    MaterialRegistry::serializeMaterial(material, path);
 }
 
 ATCG_INLINE void

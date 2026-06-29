@@ -98,7 +98,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
 
     ImGui::Text("Material");
 
-    const std::vector<std::string>& materialTypeLabels = MaterialFactory::getRegisteredMaterialTypes();
+    const std::vector<std::string>& materialTypeLabels = MaterialRegistry::getRegisteredMaterialTypes();
 
     std::vector<const char*> materialTypeCStrs;
     for(const auto& label: materialTypeLabels)
@@ -119,7 +119,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
             {
                 Dictionary dict;
                 auto new_type             = materialTypeCStrs[i];
-                _preview_material         = MaterialFactory::createMaterial(new_type, dict);
+                _preview_material         = MaterialRegistry::createMaterial(new_type, dict);
                 _preview_material->handle = handle;
 
                 updated = true;
@@ -131,7 +131,7 @@ void AssetPanel::displayMaterial(AssetHandle handle)
     }
     deactivated = ImGui::IsItemDeactivated() || deactivated;
 
-    updated = atcg::MaterialFactory::renderMaterialGUI(_preview_material, key, deactivated) || updated;
+    updated = atcg::MaterialRegistry::renderMaterialGUI(_preview_material, key, deactivated) || updated;
 
     // Thumbnail preview
     ImGui::Image((ImTextureID)_preview_framebuffer->getColorAttachement()->getID(),

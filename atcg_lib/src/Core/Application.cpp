@@ -79,6 +79,14 @@ void Application::init(const WindowProps& props)
     _scene_renderer = atcg::make_ref<SceneRendererSystem>(_renderer.get());
     SystemRegistry::instance()->registerSystem(_scene_renderer.get());
 
+    // Register the material types
+    _material_registry = atcg::make_ref<MaterialRegistry::Registry>();
+    OpaqueMaterial::registerMaterial(_material_registry.get());
+    DielectricMaterial::registerMaterial(_material_registry.get());
+    NullMaterial::registerMaterial(_material_registry.get());
+
+    SystemRegistry::instance()->registerSystem(_material_registry.get());
+
     // Create an active project
     atcg::Project::create("./DefaultProject");
 
