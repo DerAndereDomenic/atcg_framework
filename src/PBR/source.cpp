@@ -38,8 +38,8 @@ public:
         dict.setValue<uint32_t>("width", atcg::Renderer::getFramebuffer()->width());
         dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
 
-        integrator = plugin_manager.createClass<atcg::Integrator>("TestIntegrator", optx_context, dict);
-        // integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
+        // integrator = plugin_manager.createClass<atcg::Integrator>("TestIntegrator", optx_context, dict);
+        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
 #endif
     }
 
