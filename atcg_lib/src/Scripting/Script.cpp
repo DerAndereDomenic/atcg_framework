@@ -32,13 +32,16 @@ void PythonScript::init()
     std::filesystem::path script_dir = _file_path.parent_path();
     std::string module_name          = _file_path.stem().string();
 
-    py::module_ sys = py::module_::import("sys");
-    sys.attr("path").attr("insert")(0, script_dir.string());
-
-
     try
     {
-        impl->script = py::module_::import(module_name.c_str());
+        // Import potentially the same file but with unique name to force reloads to work properly
+        py::module_ util = py::module_::import("importlib.util");
+
+        std::string unique_name = module_name + "_" + std::to_string(UUID());
+        py::object spec         = util.attr("spec_from_file_location")(unique_name, _file_path.string());
+
+        impl->script = util.attr("module_from_spec")(spec);
+        spec.attr("loader").attr("exec_module")(impl->script);
     }
     catch(const py::error_already_set& e)
     {
@@ -49,7 +52,7 @@ void PythonScript::init()
         ATCG_ERROR(e.what());
     }
 
-    ATCG_INFO("Initialized Script {}", module_name);
+    ATCG_INFO("Initialized Script {}, {}", module_name, _file_path.string());
 }
 
 atcg::ref_ptr<Behavior> PythonScript::createBehavior(const atcg::ref_ptr<Scene>& scene, atcg::Entity entity)
@@ -80,7 +83,13 @@ void PythonScript::reload()
 {
     try
     {
-        impl->script.reload();
+        py::module_ util        = py::module_::import("importlib.util");
+        std::string module_name = _file_path.stem().string();
+        std::string unique_name = module_name + "_" + std::to_string(UUID());
+        py::object spec         = util.attr("spec_from_file_location")(unique_name, _file_path.string());
+
+        impl->script = util.attr("module_from_spec")(spec);
+        spec.attr("loader").attr("exec_module")(impl->script);
     }
     catch(const py::error_already_set& e)
     {

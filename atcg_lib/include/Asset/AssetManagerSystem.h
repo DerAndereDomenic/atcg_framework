@@ -5,6 +5,7 @@
 #include <DataStructure/Graph.h>
 #include <Renderer/Texture.h>
 #include <DataStructure/Skybox.h>
+#include <Renderer/Material.h>
 
 namespace atcg
 {
@@ -101,10 +102,15 @@ public:
      *
      * @param asset The asset to register
      * @param name The name of the asset
+     * @param show_in_editor Whether the asset should be shown in the editor
+     * @param serialize Whether the asset should be serialized
      *
      * @return The asset handle (should be the same as asset->handle)
      */
-    AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name);
+    AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset,
+                              const std::string& name,
+                              bool show_in_editor = true,
+                              bool serialize      = true);
 
     /**
      * @brief Unload an asset.
@@ -145,6 +151,7 @@ public:
 
     /**
      * @brief Clears all assets
+     * @note This does not clear the default assets
      */
     void clear();
 
@@ -157,6 +164,11 @@ public:
      * @brief Load standard assets like sphere mesh, cylinder mesh, lut texture
      */
     void loadStandardAssets();
+
+    /**
+     * @brief Register standard assets
+     */
+    void registerStandardAssets();
 
     /**
      * @brief Get the standard sphere mesh
@@ -207,6 +219,13 @@ public:
      */
     ATCG_INLINE atcg::ref_ptr<Skybox> getDummySkybox() const { return _dummy_skybox; }
 
+    /**
+     * @brief Get the default material
+     *
+     * @return The default material
+     */
+    ATCG_INLINE atcg::ref_ptr<Material> getDefaultMaterial() const { return _default_material; }
+
 protected:
     AssetRegistry _asset_registry;
     AssetMap _loaded_assets;
@@ -219,6 +238,7 @@ private:
     atcg::ref_ptr<Graph> _quad;
     atcg::ref_ptr<Graph> _cube_mesh;
     atcg::ref_ptr<Skybox> _dummy_skybox;
+    atcg::ref_ptr<Material> _default_material;
 };
 
 namespace AssetManager
@@ -331,12 +351,20 @@ ATCG_INLINE AssetHandle registerAsset(const AssetMetaData& data)
  *
  * @param asset The asset to register
  * @param name The name of the asset
+ * @param show_in_editor Whether the asset should be shown in the editor
+ * @param serialize Whether the asset should be serialized
  *
  * @return The asset handle (should be the same as asset->handle)
  */
-ATCG_INLINE AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset, const std::string& name)
+ATCG_INLINE AssetHandle registerAsset(const atcg::ref_ptr<Asset>& asset,
+                                      const std::string& name,
+                                      bool show_in_editor = true,
+                                      bool serialize      = true)
 {
-    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(asset, name);
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->registerAsset(asset,
+                                                                                      name,
+                                                                                      show_in_editor,
+                                                                                      serialize);
 }
 
 /**
@@ -408,6 +436,7 @@ ATCG_INLINE void serializeAssets(const std::filesystem::path& root_path)
 
 /**
  * @brief Clears all assets
+ * @note This does not clear the default assets
  */
 ATCG_INLINE void clear()
 {
@@ -490,6 +519,16 @@ ATCG_INLINE atcg::ref_ptr<Graph> getCubeMesh()
 ATCG_INLINE atcg::ref_ptr<Skybox> getDummySkybox()
 {
     return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getDummySkybox();
+}
+
+/**
+ * @brief Get the default material
+ *
+ * @return The default material
+ */
+ATCG_INLINE atcg::ref_ptr<Material> getDefaultMaterial()
+{
+    return SystemRegistry::instance()->getSystem<AssetManagerSystem>()->getDefaultMaterial();
 }
 
 }    // namespace AssetManager

@@ -298,30 +298,30 @@ struct ATCG_API MaterialSerializer<NullMaterial>
 template<typename T>
 struct ATCG_API MaterialGUIRenderer
 {
-    static bool renderGUI(const atcg::ref_ptr<T>& material, const std::string& key) { return false; }
+    static bool renderGUI(const atcg::ref_ptr<T>& material, const std::string& key, bool& deactivated) { return false; }
 };
 
 template<>
 struct ATCG_API MaterialGUIRenderer<OpaqueMaterial>
 {
-    static bool renderGUI(const atcg::ref_ptr<OpaqueMaterial>& material, const std::string& key);
+    static bool renderGUI(const atcg::ref_ptr<OpaqueMaterial>& material, const std::string& key, bool& deactivated);
 };
 
 template<>
 struct ATCG_API MaterialGUIRenderer<DielectricMaterial>
 {
-    static bool renderGUI(const atcg::ref_ptr<DielectricMaterial>& material, const std::string& key);
+    static bool renderGUI(const atcg::ref_ptr<DielectricMaterial>& material, const std::string& key, bool& deactivated);
 };
 
 template<>
 struct ATCG_API MaterialGUIRenderer<NullMaterial>
 {
-    static bool renderGUI(const atcg::ref_ptr<NullMaterial>& material, const std::string& key);
+    static bool renderGUI(const atcg::ref_ptr<NullMaterial>& material, const std::string& key, bool& deactivated);
 };
 
 
 using MaterialBuilder           = std::function<atcg::ref_ptr<Material>(const Dictionary&)>;
-using MaterialGUIFunction       = std::function<bool(const atcg::ref_ptr<Material>&, const std::string&)>;
+using MaterialGUIFunction       = std::function<bool(const atcg::ref_ptr<Material>&, const std::string&, bool&)>;
 using MaterialSerializeFunction = std::function<void(const atcg::ref_ptr<Material>&, const std::filesystem::path&)>;
 using MaterialDeserializeFunction =
     std::function<atcg::ref_ptr<Material>(const std::filesystem::path&, const nlohmann::json&)>;
@@ -336,7 +336,7 @@ ATCG_API void registerMaterial(std::string_view type,
 
 ATCG_API atcg::ref_ptr<Material> createMaterial(const std::string& type, const Dictionary& dict);
 
-ATCG_API bool renderMaterialGUI(const atcg::ref_ptr<Material>& material, const std::string& key);
+ATCG_API bool renderMaterialGUI(const atcg::ref_ptr<Material>& material, const std::string& key, bool& deactivated);
 
 ATCG_API const std::vector<std::string>& getRegisteredMaterialTypes();
 
@@ -359,11 +359,12 @@ ATCG_API atcg::ref_ptr<Material> deserializeMaterial(std::string_view material_t
                     auto material = atcg::make_ref<MaterialClass>();                                                   \
                     return material;                                                                                   \
                 },                                                                                                     \
-                [](const atcg::ref_ptr<Material>& material, const std::string& key)                                    \
+                [](const atcg::ref_ptr<Material>& material, const std::string& key, bool& deactivated)                 \
                 {                                                                                                      \
                     return MaterialGUIRenderer<MaterialClass>::renderGUI(                                              \
                         std::dynamic_pointer_cast<MaterialClass>(material),                                            \
-                        key);                                                                                          \
+                        key,                                                                                           \
+                        deactivated);                                                                                  \
                 },                                                                                                     \
                 [](const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)                         \
                 {                                                                                                      \

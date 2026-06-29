@@ -266,6 +266,9 @@ void RendererSystem::init(uint32_t width,
     impl->shader_manager->addShaderFromName("volume_het");
     impl->shader_manager->addShaderFromName("depth_pass_simple");
     impl->shader_manager->addShaderFromName("blit");
+    impl->shader_manager->addShaderFromName("mesh_preview");
+    impl->shader_manager->addShaderFromName("checkerboard");
+    impl->shader_manager->addShaderFromName("outline");
 }
 
 void RendererSystem::use()
@@ -394,7 +397,7 @@ void RendererSystem::drawImage(const atcg::ref_ptr<Texture2D>& img, const atcg::
     ATCG_ASSERT(impl->context->isCurrent(), "Context of Renderer not current.");
 
     auto shader               = impl->shader_manager->getShader("screen");
-    GraphicsPipeline pipeline = GraphicsPipeline();
+    GraphicsPipeline pipeline = GraphicsPipeline().setShader(shader);
     GraphicsCommand::bindVertexArray(impl->quad_vao);
     shader->setInt("screen_texture", 0);
 

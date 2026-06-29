@@ -13,6 +13,8 @@
 #include <Scene/Scene.h>
 #include <Core/Path.h>
 #include <Utils/Utils.h>
+#include <Renderer/Renderer.h>
+#include <Scene/SceneRenderer.h>
 
 namespace atcg
 {
@@ -45,6 +47,40 @@ AssetPanel::AssetPanel()
         auto img    = atcg::IO::imread((atcg::resource_directory() / "image_icon.png").string());
         _image_icon = atcg::Texture2D::create(img);
     }
+
+    {
+        _preview_scene = atcg::make_ref<Scene>();
+        auto entity    = _preview_scene->createEntity("Preview Entity");
+        entity.addComponent<GeometryComponent>(atcg::AssetManager::getSphereMesh());
+        entity.addComponent<MeshRenderComponent>();
+        entity.addComponent<TransformComponent>();
+
+        auto camera = atcg::make_ref<PerspectiveCamera>();
+        camera->setPosition(glm::vec3(2.0f, 1.5f, 0.0f));
+        camera->setLookAt(glm::vec3(0));
+        _preview_scene->setCamera(camera);
+
+        auto skybox         = atcg::IO::imread((atcg::resource_directory() / "studio_small.hdr").string());
+        auto skybox_texture = atcg::Texture2D::create(skybox);
+        _preview_scene->setSkybox(skybox_texture);
+
+        auto plane_entity = _preview_scene->createEntity("Preview Plane");
+
+        plane_entity.addComponent<GeometryComponent>(atcg::AssetManager::getQuadMesh());
+        auto& renderer          = plane_entity.addComponent<MeshRenderComponent>();
+        renderer.default_shader = atcg::ShaderManager::getShader("checkerboard");
+        auto& transform         = plane_entity.addComponent<TransformComponent>();
+        transform.setPosition(glm::vec3(0, -1, 0));
+        transform.setScale(glm::vec3(50, 50, 50));
+        transform.setRotation(glm::vec3(glm::radians(-90.0f), 0, 0));
+    }
+
+    {
+        _preview_framebuffer = atcg::make_ref<Framebuffer>(512, 512);
+        _preview_framebuffer->attachColor();
+        _preview_framebuffer->attachDepth();
+        _preview_framebuffer->complete();
+    }
 }
 
 void AssetPanel::displayMaterial(AssetHandle handle)
@@ -71,8 +107,9 @@ void AssetPanel::displayMaterial(AssetHandle handle)
         std::distance(materialTypeLabels.begin(),
                       std::find(materialTypeLabels.begin(), materialTypeLabels.end(), material_->getMaterialType())));
 
-    _material_preview         = material_->clone();
-    _material_preview->handle = material_->handle;
+    _preview_material         = material_->clone();
+    _preview_material->handle = material_->handle;
+    bool deactivated          = false;
     if(ImGui::BeginCombo("Material Type", material_->getMaterialType().c_str()))
     {
         for(int i = 0; i < materialTypeLabels.size(); ++i)
@@ -82,22 +119,44 @@ void AssetPanel::displayMaterial(AssetHandle handle)
             {
                 Dictionary dict;
                 auto new_type             = materialTypeCStrs[i];
-                _material_preview         = MaterialFactory::createMaterial(new_type, dict);
-                _material_preview->handle = handle;
+                _preview_material         = MaterialFactory::createMaterial(new_type, dict);
+                _preview_material->handle = handle;
 
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
             if(isSelected) ImGui::SetItemDefaultFocus();
         }
         ImGui::EndCombo();
     }
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
 
-    updated = atcg::MaterialFactory::renderMaterialGUI(_material_preview, key) || updated;
+    updated = atcg::MaterialFactory::renderMaterialGUI(_preview_material, key, deactivated) || updated;
+
+    // Thumbnail preview
+    ImGui::Image((ImTextureID)_preview_framebuffer->getColorAttachement()->getID(),
+                 ImVec2(content_scale * 256, content_scale * 256),
+                 ImVec2 {0, 1},
+                 ImVec2 {1, 0});
+
+    auto preview_entity      = _preview_scene->getEntitiesByName("Preview Entity")[0];
+    auto& renderer           = preview_entity.getComponent<MeshRenderComponent>();
+    renderer.material_handle = _preview_material->handle;
+
+    atcg::SceneRenderer::render(_preview_scene, _preview_scene->getCamera(), _preview_framebuffer);
+
+    if(updated && !atcg::RevisionStack::isRecording())
+    {
+        atcg::RevisionStack::startRecording<AssetEditedRevision>(_preview_material->handle);
+    }
 
     if(updated)
     {
-        atcg::RevisionStack::startRecording<AssetEditedRevision>(material_->handle);
-        AssetManager::registerAsset(_material_preview, AssetManager::getMetaData(material_->handle).name);
+        AssetManager::registerAsset(_preview_material, AssetManager::getMetaData(_preview_material->handle).name);
+    }
+
+    if(deactivated && atcg::RevisionStack::isRecording())
+    {
         atcg::RevisionStack::endRecording();
     }
 #endif
@@ -127,6 +186,46 @@ void AssetPanel::displayGraph(AssetHandle handle)
             atcg::RevisionStack::endRecording();
         }
     }
+
+    if(!graph || graph->type() != GraphType::ATCG_GRAPH_TYPE_TRIANGLEMESH) return;
+
+    // Thumbnail preview
+    float content_scale = atcg::Application::get()->getWindow()->getContentScale();
+    ImGui::Image((ImTextureID)_preview_framebuffer->getColorAttachement()->getID(),
+                 ImVec2(content_scale * 256, content_scale * 256),
+                 ImVec2 {0, 1},
+                 ImVec2 {1, 0});
+
+    atcg::BoundingBox bbox = graph->getBoundingBox();
+
+    // Place a camera that has a good view on the mesh based on the bounding box
+    glm::vec3 center    = bbox.min + (bbox.max - bbox.min) * 0.5f;
+    float radius        = glm::length(bbox.max - bbox.min) * 0.5f;
+    glm::vec3 direction = glm::vec3(glm::cos(glm::radians(30.0f) * glm::cos(glm::radians(45.0f))),
+                                    glm::sin(glm::radians(30.0f)),
+                                    glm::cos(glm::radians(30.0f) * glm::sin(glm::radians(45.0f))));
+    glm::vec3 cam_pos   = glm::vec3(center.x, center.y, center.z) + 2.0f * radius * direction;
+    glm::mat4 view      = glm::lookAt(cam_pos, center, glm::vec3(0, 1, 0));
+    glm::mat4 proj      = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, radius * 10.0f);
+    glm::mat4 mvp       = proj * view;
+
+    atcg::CameraExtrinsics extrinsics(view);
+    atcg::CameraIntrinsics intrinsics(proj);
+    atcg::ref_ptr<PerspectiveCamera> camera = atcg::make_ref<PerspectiveCamera>(extrinsics, intrinsics);
+
+    atcg::GraphicsPipeline pipeline =
+        atcg::GraphicsPipeline()
+            .setShader(atcg::ShaderManager::getShader("mesh_preview"))
+            .setRasterizerState(
+                atcg::RasterizerState().setCullMode(CullMode::ATCG_BACK_FACE_CULLING).enableCulling(true));
+
+    atcg::GraphicsCommand::beginRenderPass(_preview_framebuffer);
+
+    atcg::GraphicsCommand::clear();
+    atcg::Renderer::drawVAO(graph->getVerticesArray(), camera, glm::mat4(1.0f), pipeline, graph->n_vertices());
+
+    atcg::GraphicsCommand::endRenderPass();
+
 #endif
 }
 
@@ -484,8 +583,9 @@ void AssetPanel::displayScene(AssetHandle handle)
     }
 
     ImGui::Text("Skybox:");
-    auto new_handle = Utils::displayTexture2DSelection("skybox", skybox_handle);
-    bool updated    = (new_handle != skybox_handle);
+    bool deactivated = false;
+    auto new_handle  = Utils::displayTexture2DSelection("skybox", skybox_handle, deactivated);
+    bool updated     = (new_handle != skybox_handle);
 
     if(updated)
     {
@@ -735,7 +835,7 @@ void AssetPanel::drawAssetList()
     {
         const auto& data = entry.second;
 
-        if(_panel_state == data.type)
+        if(_panel_state == data.type && data.show_in_editor)
         {
             auto handle     = entry.first;
             std::string tag = data.name;

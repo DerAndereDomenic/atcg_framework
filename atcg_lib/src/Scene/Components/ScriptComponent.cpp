@@ -31,15 +31,6 @@ void ComponentSerializer<ScriptComponent>::deserialize_component(const std::stri
     auto& script = entity.addComponent<ScriptComponent>();
 
     script.script_handle = (AssetHandle)j[SCRIPT_KEY];
-
-    if(!script.script())
-    {
-        return;
-    }
-
-    auto behavior = script.behavior(scene, entity);
-
-    if(behavior) behavior->onAttach();
 }
 }    // namespace Serialization
 
@@ -50,8 +41,9 @@ void ComponentGUIRenderer<ScriptComponent>::draw_component(const atcg::ref_ptr<S
                                                            ScriptComponent& _component) const
 {
 #ifndef ATCG_HEADLESS
-    auto new_handle = Utils::displayScriptSelection("script", _component.script_handle);
-    bool updated    = (new_handle != _component.script_handle);
+    bool deactivated = false;
+    auto new_handle  = Utils::displayScriptSelection("script", _component.script_handle, deactivated);
+    bool updated     = (new_handle != _component.script_handle);
 
     if(updated)
     {

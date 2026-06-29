@@ -70,7 +70,7 @@ public:
         return it->second.builder(dict);
     }
 
-    bool renderGUI(const atcg::ref_ptr<Material>& material, const std::string& key)
+    bool renderGUI(const atcg::ref_ptr<Material>& material, const std::string& key, bool& deactivated)
     {
         auto it = _registry.find(material->getMaterialType());
         if(it == _registry.end())
@@ -78,7 +78,7 @@ public:
             throw std::runtime_error("Unknown MaterialType");
         }
 
-        return it->second.gui_function(material, key);
+        return it->second.gui_function(material, key, deactivated);
     }
 
     void serializeMaterial(const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)
@@ -131,10 +131,12 @@ atcg::ref_ptr<Material> MaterialFactory::createMaterial(const std::string& type,
     return instance->create(type, dict);
 }
 
-bool MaterialFactory::renderMaterialGUI(const atcg::ref_ptr<Material>& material, const std::string& key)
+bool MaterialFactory::renderMaterialGUI(const atcg::ref_ptr<Material>& material,
+                                        const std::string& key,
+                                        bool& deactivated)
 {
     auto instance = MaterialFactory_T::getInstance();
-    return instance->renderGUI(material, key);
+    return instance->renderGUI(material, key, deactivated);
 }
 
 void MaterialFactory::serializeMaterial(const atcg::ref_ptr<Material>& material, const std::filesystem::path& path)
@@ -417,7 +419,8 @@ atcg::ref_ptr<Material> NullMaterial::clone() const
 #pragma region MaterialGUIRenderers
 
 bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMaterial>& material,
-                                                    const std::string& key)
+                                                    const std::string& key,
+                                                    bool& deactivated)
 {
     bool updated = false;
 #ifndef ATCG_HEADLESS
@@ -441,6 +444,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                 material->setDiffuseColor(new_color);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -468,6 +472,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -484,6 +489,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -519,6 +525,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -535,6 +542,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -552,6 +560,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                 material->setRoughness(roughness);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -579,6 +588,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -595,6 +605,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -612,6 +623,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                 material->setMetallic(metallic);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -639,6 +651,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -655,6 +668,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -672,6 +686,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                 material->setIor(ior);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -699,6 +714,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -715,6 +731,7 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 #endif
@@ -722,7 +739,8 @@ bool MaterialGUIRenderer<OpaqueMaterial>::renderGUI(const atcg::ref_ptr<OpaqueMa
 }
 
 bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<DielectricMaterial>& material,
-                                                        const std::string& key)
+                                                        const std::string& key,
+                                                        bool& deactivated)
 {
     bool updated = false;
 #ifndef ATCG_HEADLESS
@@ -746,6 +764,7 @@ bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<Diel
                 material->setDiffuseColor(new_color);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -773,6 +792,7 @@ bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<Diel
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -789,6 +809,7 @@ bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<Diel
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -806,6 +827,7 @@ bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<Diel
                 material->setRoughness(roughness);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -833,6 +855,7 @@ bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<Diel
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -849,6 +872,7 @@ bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<Diel
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 
@@ -866,6 +890,7 @@ bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<Diel
                 material->setIor(ior);
                 updated = true;
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
 
             ImGui::SameLine();
 
@@ -893,6 +918,7 @@ bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<Diel
                     updated = true;
                 }
             }
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
         else
         {
@@ -909,13 +935,16 @@ bool MaterialGUIRenderer<DielectricMaterial>::renderGUI(const atcg::ref_ptr<Diel
                              ImVec2(content_scale * 128, content_scale * 128),
                              ImVec2 {0, 1},
                              ImVec2 {1, 0});
+            deactivated = ImGui::IsItemDeactivated() || deactivated;
         }
     }
 #endif
     return updated;
 }
 
-bool MaterialGUIRenderer<NullMaterial>::renderGUI(const atcg::ref_ptr<NullMaterial>& material, const std::string& key)
+bool MaterialGUIRenderer<NullMaterial>::renderGUI(const atcg::ref_ptr<NullMaterial>& material,
+                                                  const std::string& key,
+                                                  bool& deactivated)
 {
     return false;
 }

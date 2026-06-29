@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added functions to swap textures
 - Added functions to detach textures from framebuffers
 - Added SceneRenderer class
+- Added previews for meshes and materials
+- Added Standard Assets that are always available and registered to the AssetManager
+- Added object outlining in editor
 - Added cull_mode to MeshRenderComponent, PointSphereRenderComponent, and EdgeCylidnerRenderComponent
 - Add options to the SceneRenderer
 
@@ -117,8 +120,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changed RenderGraph and RenderPass API to use a reflection model with explicit input output declaration
 - Overhauled render passes and removed Skybox Pass (now handled in forward pass)
 - Scene class no longer holds a RenderGraph. Rendering of scenes is now handled by the new SceneRenderer class
+  <<<<<<< HEAD
+- Applications no longer link against ImGuizmo. Use exposed wrappers in Guizmo.h instead
+- FileDroppedEvent now holds all dropped files if multiple are dropped in at once
+- The revision stack now no longer tracks every change but only edits that may span multiple frames (e.g. for slider)
+- # AssetManager::clear will not clear standard assets
 - Removed Math/Functions.h and merged it with Utils/HostDevice.h
 - Removed createRenderGraph()
+  > > > > > > > dev
 
 ### Fixed
 
@@ -129,6 +138,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed garbage collection of Render Graph resources based on application counter and reduce how many frames are cached
 - Fixed tonemapping of background color
 - Fixed crash when trying to add path tracing components to entities via the gui
+- Fixed crash when adding a MeshLight without mesh
+- Fixed Guizmo deselecting entity
+- Fixed Deserialization of Script Components
+- Fixed export of textures that have a width that is not a multiple of 4
 
 ## [0.2.1-beta]
 

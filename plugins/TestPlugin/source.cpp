@@ -182,7 +182,8 @@ void DiffuseMaterial::setDiffuseColor(const glm::vec3& color)
 }
 
 bool MaterialGUIRenderer<DiffuseMaterial>::renderGUI(const atcg::ref_ptr<DiffuseMaterial>& material,
-                                                     const std::string& key)
+                                                     const std::string& key,
+                                                     bool& deactivated)
 {
     bool updated = false;
 
@@ -200,6 +201,7 @@ bool MaterialGUIRenderer<DiffuseMaterial>::renderGUI(const atcg::ref_ptr<Diffuse
         updated = true;
     }
 
+    deactivated = ImGui::IsItemDeactivated() || deactivated;
     return updated;
 }
 
