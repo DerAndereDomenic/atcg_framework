@@ -23,11 +23,11 @@ struct PluginInfo
     const char* description;
 };
 
+using PluginHandle = void*;
+
 class ATCG_API PluginManager
 {
 public:
-    using SharedLibraryHandle = void*;
-
     ~PluginManager();
 
     bool loadPlugin(const std::filesystem::path& path);
@@ -61,10 +61,10 @@ public:
 private:
     struct ClassDescBase
     {
-        ClassDescBase(SharedLibraryHandle handle, std::string_view type) : library_handle(handle), type(type) {}
+        ClassDescBase(PluginHandle handle, std::string_view type) : library_handle(handle), type(type) {}
         virtual ~ClassDescBase() {}
 
-        SharedLibraryHandle library_handle;
+        PluginHandle library_handle;
         std::string type;
     };
 
@@ -73,7 +73,7 @@ private:
     {
         using PluginCreate = typename BaseT::PluginCreate;
 
-        ClassDesc(SharedLibraryHandle handle, std::string_view type, PluginCreate create, PluginInfo plugin_info)
+        ClassDesc(PluginHandle handle, std::string_view type, PluginCreate create, PluginInfo plugin_info)
             : ClassDescBase(handle, type),
               create(create),
               plugin_info(plugin_info)
@@ -85,7 +85,7 @@ private:
     };
 
     template<typename BaseT>
-    void registerClass(SharedLibraryHandle handle,
+    void registerClass(PluginHandle handle,
                        std::string_view type,
                        typename BaseT::PluginCreate create,
                        const PluginInfo& plugin_info)
@@ -109,7 +109,7 @@ private:
     }
 
 private:
-    std::unordered_map<std::filesystem::path, SharedLibraryHandle> _loaded_plugins;
+    std::unordered_map<std::filesystem::path, PluginHandle> _loaded_plugins;
     std::unordered_map<std::string, std::shared_ptr<ClassDescBase>> _registered_classes;
 
 
@@ -119,11 +119,7 @@ private:
 class ATCG_API PluginRegistry
 {
 public:
-    PluginRegistry(PluginManager& manager, PluginManager::SharedLibraryHandle handle)
-        : _manager(manager),
-          _handle(handle)
-    {
-    }
+    PluginRegistry(PluginManager& manager, PluginHandle handle) : _manager(manager), _handle(handle) {}
 
     PluginRegistry(const PluginRegistry&)            = delete;
     PluginRegistry& operator=(const PluginRegistry&) = delete;
@@ -142,7 +138,7 @@ public:
 
 private:
     PluginManager& _manager;
-    PluginManager::SharedLibraryHandle _handle;
+    PluginHandle _handle;
 };
 
 #define ATCG_PLUGIN_BASE_CLASS(base_class)                                                                             \
