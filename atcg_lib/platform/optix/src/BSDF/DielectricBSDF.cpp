@@ -2,7 +2,6 @@
 
 #include <Renderer/Texture.h>
 #include <Renderer/Material.h>
-#include <BSDF/BSDFFactory.h>
 
 #include <Core/Common.h>
 
@@ -57,5 +56,8 @@ void DielectricBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>&
     markInitialized();
 }
 
-ATCG_REGISTER_BSDF("Dielectric", DielectricBSDF);
+void DielectricBSDF::registerBSDF(BSDFRegistry::Registry* registry)
+{
+    ATCG_REGISTER_BSDF(registry, "Dielectric", DielectricBSDF);
+}
 }    // namespace atcg

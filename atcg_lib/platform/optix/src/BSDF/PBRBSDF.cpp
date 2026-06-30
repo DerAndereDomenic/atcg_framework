@@ -1,7 +1,6 @@
 #include <BSDF/PBRBSDF.h>
 
 #include <Core/Common.h>
-#include <BSDF/BSDFFactory.h>
 #include <Renderer/Texture.h>
 
 namespace atcg
@@ -56,5 +55,8 @@ void PBRBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipeli
     markInitialized();
 }
 
-ATCG_REGISTER_BSDF("Opaque", PBRBSDF);
+void PBRBSDF::registerBSDF(BSDFRegistry::Registry* registry)
+{
+    ATCG_REGISTER_BSDF(registry, "Opaque", PBRBSDF);
+}
 }    // namespace atcg

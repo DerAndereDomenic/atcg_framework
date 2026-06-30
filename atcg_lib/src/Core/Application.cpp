@@ -8,6 +8,12 @@
 #include <Renderer/ShaderManager.h>
 #include <Asset/Project.h>
 
+#ifdef ATCG_CUDA_BACKEND
+    #include <BSDF/PBRBSDF.h>
+    #include <BSDF/NullBSDF.h>
+    #include <BSDF/DielectricBSDF.h>
+#endif
+
 namespace atcg
 {
 Application* Application::s_instance = nullptr;
@@ -43,6 +49,12 @@ void Application::init(const WindowProps& props)
 #ifdef ATCG_CUDA_BACKEND
     _rt_context_manager = atcg::make_ref<RaytracingContextManagerSystem>();
     SystemRegistry::instance()->registerSystem(_rt_context_manager.get());
+
+    _bsdf_registry = atcg::make_ref<BSDFRegistry::Registry>();
+    PBRBSDF::registerBSDF(_bsdf_registry.get());
+    DielectricBSDF::registerBSDF(_bsdf_registry.get());
+    NullBSDF::registerBSDF(_bsdf_registry.get());
+    SystemRegistry::instance()->registerSystem(_bsdf_registry.get());
 #endif
 
     _shader_manager = atcg::make_ref<ShaderManagerSystem>();

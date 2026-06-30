@@ -5,7 +5,7 @@
 #include <Shape/MeshShape.h>
 #include <Core/Path.h>
 #include <Core/Assert.h>
-#include <BSDF/BSDFFactory.h>
+#include <BSDF/BSDFRegistry.h>
 
 // !TEST
 #include <Medium/HenyeyGreensteinPhaseFunction.h>
@@ -410,7 +410,7 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
                 atcg::Dictionary bsdf_dict;
                 bsdf_dict.setValue("material", material);
                 atcg::ref_ptr<BSDF> bsdf =
-                    BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
+                    BSDFRegistry::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
 
                 _bsdf_cache.insert(std::make_pair(entry.first, bsdf));
             }
@@ -421,7 +421,7 @@ SceneAdapter::apply(const atcg::ref_ptr<Scene>& scene, const uint32_t width, con
     atcg::ref_ptr<Material> material = atcg::make_ref<OpaqueMaterial>();
     atcg::Dictionary bsdf_dict;
     bsdf_dict.setValue("material", material);
-    atcg::ref_ptr<BSDF> bsdf = BSDFFactory::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
+    atcg::ref_ptr<BSDF> bsdf = BSDFRegistry::createBSDF(material->getMaterialType(), bsdf_dict, _pipeline, _sbt);
 
     _bsdf_cache.insert(std::make_pair(0, bsdf));
 

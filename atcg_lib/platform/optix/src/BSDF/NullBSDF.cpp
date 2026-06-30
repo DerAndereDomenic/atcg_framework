@@ -1,7 +1,6 @@
 #include <BSDF/NullBSDF.h>
 
 #include <Core/Common.h>
-#include <BSDF/BSDFFactory.h>
 
 namespace atcg
 {
@@ -32,5 +31,8 @@ void NullBSDF::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pipel
     markInitialized();
 }
 
-ATCG_REGISTER_BSDF("Null", NullBSDF);
+void NullBSDF::registerBSDF(BSDFRegistry::Registry* registry)
+{
+    ATCG_REGISTER_BSDF(registry, "Null", NullBSDF);
+}
 }    // namespace atcg
