@@ -39,7 +39,13 @@ public:
         dict.setValue<uint32_t>("height", atcg::Renderer::getFramebuffer()->height());
 
         // integrator = plugin_manager.createClass<atcg::Integrator>("TestIntegrator", optx_context, dict);
-        integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
+        // integrator = atcg::make_ref<atcg::VolPathtracingIntegrator>(optx_context, dict);
+        auto registry                                          = atcg::IntegratorRegistry::getRegistry();
+        const std::vector<std::string>& registered_integrators = registry->getRegisteredTypes();
+        integrator =
+            atcg::IntegratorRegistry::createIntegrator(registered_integrators[current_integrator_selection_index],
+                                                       optx_context,
+                                                       dict);
 #endif
     }
 
@@ -380,6 +386,31 @@ public:
             {
                 if(enable_pathtracing) initializePathtracer();
             }
+
+            if(enable_pathtracing)
+            {
+                auto registry                                   = atcg::IntegratorRegistry::getRegistry();
+                const std::vector<std::string> integrator_names = registry->getRegisteredTypes();
+                const char* combo_preview_value_integrator =
+                    integrator_names[current_integrator_selection_index].c_str();
+
+                if(ImGui::BeginCombo("Integrator", combo_preview_value_integrator))
+                {
+                    for(int n = 0; n < integrator_names.size(); n++)
+                    {
+                        const bool is_selected = (current_integrator_selection_index == n);
+                        if(ImGui::Selectable(integrator_names[n].c_str(), is_selected))
+                        {
+                            current_integrator_selection_index = n;
+                            initializePathtracer();
+                        }
+
+                        // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
+                        if(is_selected) ImGui::SetItemDefaultFocus();
+                    }
+                    ImGui::EndCombo();
+                }
+            }
     #endif
 
             ImGui::End();
@@ -550,6 +581,7 @@ private:
 #ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<atcg::RaytracingContext> optx_context;
     atcg::ref_ptr<atcg::Integrator> integrator;
+    uint32_t current_integrator_selection_index = 0;
 #endif
 
     atcg::ref_ptr<atcg::Texture2D> output_texture;
