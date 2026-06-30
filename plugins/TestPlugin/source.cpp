@@ -206,8 +206,5 @@ ATCG_PLUGIN_LIBRARY();
 extern "C" __declspec(dllexport) void registerPlugin(atcg::PluginRegistry& registry)
 {
     registry.registerMaterial<atcg::DiffuseMaterial>("Diffuse");
-    // atcg::MaterialRegistry::Registry* material_registry = atcg::MaterialRegistry::getRegistry();
-    // ATCG_REGISTER_MATERIAL(material_registry, "Diffuse", atcg::DiffuseMaterial);
-    // registry.registerClass<atcg::Integrator, atcg::TestIntegrator>("TestIntegrator");
-    // registry.registerClass<atcg::Material, atcg::DiffuseMaterial>("Diffuse");
+    registry.registerIntegrator<atcg::TestIntegrator>("TestIntegrator");
 }
