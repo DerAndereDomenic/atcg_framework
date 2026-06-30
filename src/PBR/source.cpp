@@ -555,7 +555,7 @@ private:
     atcg::ref_ptr<atcg::Texture2D> output_texture;
     atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
 
-    atcg::PluginManager plugin_manager;
+    atcg::PluginManagerSystem plugin_manager;
 
     uint32_t last_revision = 0;
 };

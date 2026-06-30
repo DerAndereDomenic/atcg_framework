@@ -4,7 +4,7 @@
 namespace atcg
 {
 
-PluginManager::~PluginManager()
+PluginManagerSystem::~PluginManagerSystem()
 {
     for(auto& [path, handle]: _loaded_plugins)
     {
@@ -14,7 +14,7 @@ PluginManager::~PluginManager()
     _loaded_plugins.clear();
 }
 
-bool PluginManager::loadPlugin(const std::filesystem::path& path)
+bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
 {
     // TODO Platform-specific implementation for loading plugin using LoadLibrary (Windows) or dlopen (Linux)
     // Implementation for loading plugin
@@ -57,7 +57,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path)
     return true;
 }
 
-bool PluginManager::releasePlugin(const std::filesystem::path& path)
+bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
 {
     auto it = _loaded_plugins.find(path);
     if(it != _loaded_plugins.end())

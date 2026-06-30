@@ -25,10 +25,10 @@ struct PluginInfo
     const char* description;
 };
 
-class ATCG_API PluginManager
+class ATCG_API PluginManagerSystem
 {
 public:
-    ~PluginManager();
+    ~PluginManagerSystem();
 
     bool loadPlugin(const std::filesystem::path& path);
 
