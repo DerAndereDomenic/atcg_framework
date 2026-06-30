@@ -61,8 +61,14 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
         MaterialRegistry::Registry* material_registry = MaterialRegistry::getRegistry();
         material_registry->unregisterPlugin(it->second);
 
+#ifndef ATCG_CUDA_BACKEND
         BSDFRegistry::Registry* bsdf_registry = BSDFRegistry::getRegistry();
         bsdf_registry->unregisterPlugin(it->second);
+
+        IntegratorRegistry::Registry* integrator_registry = IntegratorRegistry::getRegistry();
+        integrator_registry->unregisterPlugin(it->second);
+
+#endif
 
 
         // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
@@ -81,8 +87,13 @@ bool PluginManagerSystem::releaseAllPlugins()
         MaterialRegistry::Registry* material_registry = MaterialRegistry::getRegistry();
         material_registry->unregisterPlugin(handle);
 
+#ifdef ATCG_CUDA_BACKEND
         BSDFRegistry::Registry* bsdf_registry = BSDFRegistry::getRegistry();
         bsdf_registry->unregisterPlugin(handle);
+
+        IntegratorRegistry::Registry* integrator_registry = IntegratorRegistry::getRegistry();
+        integrator_registry->unregisterPlugin(handle);
+#endif
 
         // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
         if(!FreeLibrary(static_cast<HMODULE>(handle)))

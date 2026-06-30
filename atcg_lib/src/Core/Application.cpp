@@ -12,6 +12,8 @@
     #include <BSDF/PBRBSDF.h>
     #include <BSDF/NullBSDF.h>
     #include <BSDF/DielectricBSDF.h>
+    #include <Integrator/PathtracingIntegrator.h>
+    #include <Integrator/VolPathtracingIntegrator.h>
 #endif
 
 namespace atcg
@@ -56,6 +58,11 @@ void Application::init(const WindowProps& props)
     DielectricBSDF::registerBSDF(_bsdf_registry.get());
     NullBSDF::registerBSDF(_bsdf_registry.get());
     SystemRegistry::instance()->registerSystem(_bsdf_registry.get());
+
+    _integrator_registry = atcg::make_ref<IntegratorRegistry::Registry>();
+    VolPathtracingIntegrator::registerIntegrator(_integrator_registry.get());
+    PathtracingIntegrator::registerIntegrator(_integrator_registry.get());
+    SystemRegistry::instance()->registerSystem(_integrator_registry.get());
 #endif
 
     _shader_manager = atcg::make_ref<ShaderManagerSystem>();

@@ -27,6 +27,7 @@
 #ifdef ATCG_CUDA_BACKEND
     #include <Core/RaytracingContextManager.h>
     #include <BSDF/BSDFRegistry.h>
+    #include <Integrator/IntegratorRegistry.h>
 #endif
 namespace atcg
 {
@@ -167,6 +168,7 @@ private:
 #ifdef ATCG_CUDA_BACKEND
     atcg::ref_ptr<RaytracingContextManagerSystem> _rt_context_manager;
     atcg::ref_ptr<BSDFRegistry::Registry> _bsdf_registry;
+    atcg::ref_ptr<IntegratorRegistry::Registry> _integrator_registry;
 #endif
     atcg::scope_ptr<Window> _window;
 #ifndef ATCG_HEADLESS

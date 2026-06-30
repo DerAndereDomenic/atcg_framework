@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Integrator/Integrator.h>
+#include <Integrator/IntegratorRegistry.h>
 #include <Shape/IAS.h>
 #include <Integrator/VolPathtracingData.cuh>
 #include <Emitter/EnvironmentEmitter.h>
@@ -49,6 +50,8 @@ public:
      * @brief Reset the internal structure of the integrator
      */
     virtual void reset() override;
+
+    static void registerIntegrator(IntegratorRegistry::Registry* registry);
 
 private:
     /**
