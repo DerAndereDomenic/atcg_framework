@@ -36,9 +36,12 @@ atcg::ref_ptr<Material> deserializeMaterialType_ver1(const std::filesystem::path
 {
     std::string material_type_string = material_node.value(TYPE_KEY, "Opaque");
 
-    const std::string& material_type = material_type_string;
+    if(material_type_string == "Glass")
+    {
+        material_type_string = "Dielectric";    // Backwards compatibility
+    }
 
-    return MaterialRegistry::deserializeMaterial(material_type, path, material_node);
+    return MaterialRegistry::deserializeMaterial(material_type_string, path, material_node);
 }
 
 atcg::ref_ptr<Asset> deserializeMaterial_ver1(const std::filesystem::path& path, const nlohmann::json& material_node)
