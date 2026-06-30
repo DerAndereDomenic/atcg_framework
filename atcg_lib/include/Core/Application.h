@@ -8,6 +8,7 @@
 #include <Core/Window.h>
 #include <Events/KeyEvent.h>
 #include <Events/WindowEvent.h>
+#include <Plugin/Plugin.h>
 #include <Renderer/ContextManager.h>
 #include <Renderer/GraphicsAPI.h>
 #include <Renderer/Material.h>
@@ -186,6 +187,7 @@ private:
     atcg::ref_ptr<RevisionSystem> _revision_system;
     atcg::ref_ptr<GraphicsAPI> _graphics_api;
     atcg::ref_ptr<ComponentRegistrySystem> _component_registry;
+    atcg::ref_ptr<PluginManagerSystem> _plugin_manager;
 
     friend int atcg::atcg_main();
     static Application* s_instance;

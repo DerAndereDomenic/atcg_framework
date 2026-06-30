@@ -33,6 +33,7 @@ Application::~Application()
     _revision_system->clearChache();
     if(_asset_manager) _asset_manager->destroy();
     if(_script_engine) _script_engine->destroy();
+    if(_plugin_manager) _plugin_manager->releaseAllPlugins();
 }
 
 void Application::init(const WindowProps& props)
@@ -98,6 +99,9 @@ void Application::init(const WindowProps& props)
     NullMaterial::registerMaterial(_material_registry.get());
 
     SystemRegistry::instance()->registerSystem(_material_registry.get());
+
+    _plugin_manager = atcg::make_ref<PluginManagerSystem>();
+    SystemRegistry::instance()->registerSystem(_plugin_manager.get());
 
     // Create an active project
     atcg::Project::create("./DefaultProject");

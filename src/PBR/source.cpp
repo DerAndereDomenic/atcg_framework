@@ -148,7 +148,7 @@ public:
 
         createOutputTexture(atcg::Renderer::getFramebuffer()->width(), atcg::Renderer::getFramebuffer()->height());
 
-        plugin_manager.loadPlugin("bin/Debug/TestPlugin.dll");
+        atcg::PluginManager::loadPlugin("bin/Debug/TestPlugin.dll");
         atcg::SceneRenderer::setNumberMSAASamples(msaa_samples[current_msaa_selection_index]);
     }
 
@@ -554,8 +554,6 @@ private:
 
     atcg::ref_ptr<atcg::Texture2D> output_texture;
     atcg::ref_ptr<atcg::Texture2D> output_entity_texture;
-
-    atcg::PluginManagerSystem plugin_manager;
 
     uint32_t last_revision = 0;
 };
