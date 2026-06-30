@@ -8,6 +8,9 @@
 #include <Renderer/GraphicsAPI.h>
 #include <Plugin/PluginHandle.h>
 #include <Renderer/Material.h>
+#ifdef ATCG_CUDA_BACKEND
+    #include <BSDF/BSDFRegistry.h>
+#endif
 #include <imgui.h>
 
 #include <filesystem>
@@ -34,6 +37,8 @@ public:
 
     bool releasePlugin(const std::filesystem::path& path);
 
+    bool releaseAllPlugins();
+
 private:
 private:
     std::unordered_map<std::filesystem::path, PluginHandle> _loaded_plugins;
@@ -54,9 +59,36 @@ public:
         ATCG_REGISTER_MATERIAL_PLUGIN(registry, _handle, type, MaterialT);
     }
 
+#ifdef ATCG_CUDA_BACKEND
+    template<typename BSDFT>
+    void registerBSDF(std::string_view type)
+    {
+        BSDFRegistry::Registry* registry = BSDFRegistry::getRegistry();
+        ATCG_REGISTER_BSDF_PLUGIN(registry, _handle, type, BSDFT);
+    }
+#endif
+
 private:
     PluginHandle _handle;
 };
+
+namespace PluginManager
+{
+ATCG_INLINE bool loadPlugin(const std::filesystem::path& path)
+{
+    return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->loadPlugin(path);
+}
+
+ATCG_INLINE bool releasePlugin(const std::filesystem::path& path)
+{
+    return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->releasePlugin(path);
+}
+
+ATCG_INLINE bool releaseAllPlugins()
+{
+    return SystemRegistry::instance()->getSystem<PluginManagerSystem>()->releaseAllPlugins();
+}
+}    // namespace PluginManager
 
 #define ATCG_PLUGIN_LIBRARY()                                                                                          \
     extern "C" __declspec(dllexport) void registerSystems(ImGuiContext* imgui_context)                                 \

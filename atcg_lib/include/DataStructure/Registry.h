@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Plugin/PluginHandle.h>
+#include <vector>
 
 namespace atcg
 {
@@ -24,9 +25,21 @@ public:
 
     void unregisterPlugin(Handle plugin)
     {
-        std::erase_if(_entries, [&](auto& pair) { return pair.second.plugin == plugin; });
-        std::erase_if(_registered_types,
-                      [&](const std::string& type) { return _entries.find(type) == _entries.end(); });
+        // Erase matching entries from the map.
+        for(auto it = _entries.begin(); it != _entries.end();)
+        {
+            if(it->second.plugin == plugin)
+                it = _entries.erase(it);
+            else
+                ++it;
+        }
+
+        // Erase types that no longer exist in the map.
+        _registered_types.erase(std::remove_if(_registered_types.begin(),
+                                               _registered_types.end(),
+                                               [&](const std::string& type)
+                                               { return _entries.find(type) == _entries.end(); }),
+                                _registered_types.end());
     }
 
     const Desc* find(std::string_view type) const

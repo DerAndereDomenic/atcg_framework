@@ -6,12 +6,7 @@ namespace atcg
 
 PluginManagerSystem::~PluginManagerSystem()
 {
-    for(auto& [path, handle]: _loaded_plugins)
-    {
-        FreeLibrary(static_cast<HMODULE>(handle));    // TODO Platform-specific implementation for releasing plugin
-                                                      // using FreeLibrary (Windows) or dlclose (Linux)
-    }
-    _loaded_plugins.clear();
+    releaseAllPlugins();
 }
 
 bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
@@ -63,18 +58,12 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
     if(it != _loaded_plugins.end())
     {
         // Remove all classes registered by this plugin
-        // TODO
-        // for(auto it_class = _registered_classes.begin(); it_class != _registered_classes.end();)
-        // {
-        //     if(it_class->second->library_handle == it->second)
-        //     {
-        //         it_class = _registered_classes.erase(it_class);
-        //     }
-        //     else
-        //     {
-        //         ++it_class;
-        //     }
-        // }
+        MaterialRegistry::Registry* material_registry = MaterialRegistry::getRegistry();
+        material_registry->unregisterPlugin(it->second);
+
+        BSDFRegistry::Registry* bsdf_registry = BSDFRegistry::getRegistry();
+        bsdf_registry->unregisterPlugin(it->second);
+
 
         // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
         FreeLibrary(static_cast<HMODULE>(it->second));
@@ -82,5 +71,26 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
         return true;
     }
     return false;
+}
+
+bool PluginManagerSystem::releaseAllPlugins()
+{
+    bool success = true;
+    for(auto& [path, handle]: _loaded_plugins)
+    {
+        MaterialRegistry::Registry* material_registry = MaterialRegistry::getRegistry();
+        material_registry->unregisterPlugin(handle);
+
+        BSDFRegistry::Registry* bsdf_registry = BSDFRegistry::getRegistry();
+        bsdf_registry->unregisterPlugin(handle);
+
+        // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
+        if(!FreeLibrary(static_cast<HMODULE>(handle)))
+        {
+            success = false;
+        }
+    }
+    _loaded_plugins.clear();
+    return success;
 }
 }    // namespace atcg
