@@ -95,7 +95,7 @@ private:
 
     std::vector<Differentiable*> _differentiable_components;
 
-    GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("AttDiffPath");
+    GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
 
     torch::Tensor _last_JL;
     atcg::ref_ptr<Texture2D> _last_JL_texture;

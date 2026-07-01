@@ -95,7 +95,7 @@ private:
 
     std::vector<Differentiable*> _differentiable_components;
 
-    GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("AttDiffPath");
+    GUI::SceneHierarchyPanel _panel = GUI::SceneHierarchyPanel("DiffPath");
 };
 
 }    // namespace atcg
