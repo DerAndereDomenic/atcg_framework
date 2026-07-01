@@ -482,6 +482,22 @@ public:
         {
             current_operation = atcg::GuizmoOperation::SCALE;
         }
+
+        if(event->getKeyCode() == ATCG_KEY_P)
+        {
+            ATCG_DEBUG("Reloading Plugins");
+            if(integrator)
+            {
+                integrator.reset();
+            }
+            atcg::PluginManager::releasePlugin("bin/Debug/TestPlugin.dll");
+            atcg::PluginManager::loadPlugin("bin/Debug/TestPlugin.dll");
+
+            if(enable_pathtracing)
+            {
+                initializePathtracer();
+            }
+        }
         // if(event->getKeyCode() == ATCG_KEY_L) { camera_controller->getCamera()->setLookAt(sphere->getPosition()); }
 
         return true;
