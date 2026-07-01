@@ -11,10 +11,15 @@ PluginManagerSystem::~PluginManagerSystem()
 
 bool PluginManagerSystem::loadPlugin(const std::filesystem::path& path)
 {
+    // Create temp copy of dll at path_temp to avoid file locking issues when reloading the plugin
+    std::filesystem::path temp_path = path;
+    temp_path.replace_extension(".temp.dll");
+    std::filesystem::copy(path, temp_path, std::filesystem::copy_options::overwrite_existing);
+
     // TODO Platform-specific implementation for loading plugin using LoadLibrary (Windows) or dlopen (Linux)
     // Implementation for loading plugin
 
-    auto handle = LoadLibraryA(path.string().c_str());
+    auto handle = LoadLibraryA(temp_path.string().c_str());
     if(!handle)
     {
         // Handle error
@@ -67,13 +72,17 @@ bool PluginManagerSystem::releasePlugin(const std::filesystem::path& path)
 
         IntegratorRegistry::Registry* integrator_registry = IntegratorRegistry::getRegistry();
         integrator_registry->unregisterPlugin(it->second);
-
 #endif
 
 
         // TODO Platform-specific implementation for releasing plugin using FreeLibrary (Windows) or dlclose (Linux)
         FreeLibrary(static_cast<HMODULE>(it->second));
         _loaded_plugins.erase(it);
+
+        std::filesystem::path temp_path = path;
+        temp_path.replace_extension(".temp.dll");
+        std::filesystem::remove(temp_path);
+
         return true;
     }
     return false;
@@ -100,6 +109,10 @@ bool PluginManagerSystem::releaseAllPlugins()
         {
             success = false;
         }
+
+        std::filesystem::path temp_path = path;
+        temp_path.replace_extension(".temp.dll");
+        std::filesystem::remove(temp_path);
     }
     _loaded_plugins.clear();
     return success;
