@@ -71,6 +71,13 @@ public:
      */
     ATCG_INLINE const atcg::ref_ptr<Sensor>& getSensor() const { return _sensor; }
 
+    /**
+     * @brief Set the sensor
+     *
+     * @param sensor The sensor
+     */
+    ATCG_INLINE void setSensor(const atcg::ref_ptr<Sensor>& sensor) { _sensor = sensor; }
+
 private:
     friend class SceneAdapter;
 

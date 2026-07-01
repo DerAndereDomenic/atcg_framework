@@ -320,11 +320,8 @@ extern "C" __global__ void __raygen__forward()
 
     atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleSpectrum(rng.next1d(), 380.0f, 780.0f);
 
-    glm::vec2 jitter = rng.next2d();
-    float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
-    float v          = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
 
-    atcg::CameraRay camera_ray = params.sensor->generateRay(glm::vec2(u, v));
+    atcg::CameraRay camera_ray = params.sensor->generateRay(glm::ivec2(launch_idx.x, launch_idx.y), rng);
 
     atcg::Ray ray = camera_ray.ray;
 
@@ -346,11 +343,7 @@ extern "C" __global__ void __raygen__backward()
 
     atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleSpectrum(rng.next1d(), 380.0f, 780.0f);
 
-    glm::vec2 jitter = rng.next2d();
-    float u          = (((float)launch_idx.x + jitter.x) / (float)params.image_width - 0.5f) * 2.0f;
-    float v          = (((float)launch_idx.y + jitter.y) / (float)params.image_height - 0.5f) * 2.0f;
-
-    atcg::CameraRay camera_ray = params.sensor->generateRay(glm::vec2(u, v));
+    atcg::CameraRay camera_ray = params.sensor->generateRay(glm::ivec2(launch_idx.x, launch_idx.y), rng);
     atcg::Ray ray              = camera_ray.ray;
 
     dLi(params.adjoint_y[pixel_index], ray, wavelengths, NUM_BOUNCES, rng);

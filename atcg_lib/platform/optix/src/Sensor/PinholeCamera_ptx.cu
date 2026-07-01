@@ -6,10 +6,17 @@
 
 #include <Spectrum/SampledSpectrum.h>
 
-extern "C" __device__ atcg::CameraRay __direct_callable__generate_ray_pinhole(const glm::vec2& raster_pos)
+extern "C" __device__ atcg::CameraRay __direct_callable__generate_ray_pinhole(const glm::ivec2& raster_pos,
+                                                                              atcg::PCG32& rng)
 {
     const atcg::PinholeCameraData* pinhole_camera_data =
         *reinterpret_cast<const atcg::PinholeCameraData**>(optixGetSbtDataPointer());
+
+    glm::vec2 jitter = rng.next2d();
+    int width        = pinhole_camera_data->film->getWidth();
+    int height       = pinhole_camera_data->film->getHeight();
+    float u          = (((float)raster_pos.x + jitter.x) / (float)width - 0.5f) * 2.0f;
+    float v          = (((float)raster_pos.y + jitter.y) / (float)height - 0.5f) * 2.0f;
 
     atcg::CameraRay camera_ray;
 
@@ -17,12 +24,13 @@ extern "C" __device__ atcg::CameraRay __direct_callable__generate_ray_pinhole(co
     glm::vec3 V = pinhole_camera_data->V;
     glm::vec3 W = pinhole_camera_data->W / glm::tan(glm::radians(pinhole_camera_data->fov_y / 2.0f));
 
-    glm::vec3 ray_dir    = glm::normalize((raster_pos.x + pinhole_camera_data->optical_center.x) * U +
-                                       (raster_pos.y + pinhole_camera_data->optical_center.y) * V + W);
+    glm::vec3 ray_dir    = glm::normalize((u + pinhole_camera_data->optical_center.x) * U +
+                                          (v + pinhole_camera_data->optical_center.y) * V + W);
     glm::vec3 ray_origin = pinhole_camera_data->cam_eye;
 
     camera_ray.ray        = atcg::Ray(ray_origin, ray_dir);
     camera_ray.importance = atcg::SampledSpectrum(1.0f);
+    camera_ray.valid      = true;
 
     return camera_ray;
 }
