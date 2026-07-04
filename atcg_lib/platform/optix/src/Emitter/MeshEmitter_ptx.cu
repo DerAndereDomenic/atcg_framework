@@ -8,6 +8,8 @@
 
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <Emitter/MeshEmitterData.cuh>
+#include <DataStructure/Frame.h>
+#include <BSDF/Sampling.h>
 
 namespace detail
 {
@@ -143,6 +145,77 @@ evalMeshEmitterPDF(const atcg::AnyInteraction& last_si, const float total_area, 
 
     return light_direction_pdf;
 }
+
+ATCG_HOST_DEVICE ATCG_FORCE_INLINE atcg::PhotonSamplingResult
+samplePhoton(const atcg::MeshEmitterData* sbt_data, const atcg::SampledWavelengths& wavelengths, atcg::PCG32& rng)
+{
+    atcg::PhotonSamplingResult result;
+
+    atcg::EmitterSamplingResult result;
+
+    // Select the triangle to sample a direction from uniformly at random, proportional to its surface area
+    uint32_t triangle_index = 0;
+    // Sample the barycentric coordinates on the triangle uniformly.
+    glm::vec2 triangle_barys = glm::vec2(0, 0);
+
+    triangle_index = atcg::Math::binary_search(sbt_data->mesh_cdf, rng.next1d(), sbt_data->num_faces);
+
+    triangle_barys = rng.next2d();
+    // Mirror barys at diagonal line to cover a triangle instead of a square
+    if(triangle_barys.x + triangle_barys.y > 1) triangle_barys = glm::vec2(1) - triangle_barys;
+
+
+    // Compute the `light_position` using the triangle_index and the triangle_barys on the mesh:
+
+    // Indices of triangle vertices in the mesh
+    glm::u32vec3 vertex_indices = sbt_data->faces[triangle_index];
+
+    // Vertex positions of selected triangle
+    glm::vec3 P0 = sbt_data->positions[vertex_indices.x];
+    glm::vec3 P1 = sbt_data->positions[vertex_indices.y];
+    glm::vec3 P2 = sbt_data->positions[vertex_indices.z];
+
+    glm::vec3 UV0 = sbt_data->uvs[vertex_indices.x];
+    glm::vec3 UV1 = sbt_data->uvs[vertex_indices.y];
+    glm::vec3 UV2 = sbt_data->uvs[vertex_indices.z];
+
+    // Compute local position
+    glm::vec3 local_light_position =
+        (1.0f - triangle_barys.x - triangle_barys.y) * P0 + triangle_barys.x * P1 + triangle_barys.y * P2;
+    // Transform local position to world position
+    glm::vec3 light_position = glm::vec3(sbt_data->local_to_world * glm::vec4(local_light_position, 1));
+
+    // Compute UVS
+    glm::vec3 uv = (1.0f - triangle_barys.x - triangle_barys.y) * UV0 + triangle_barys.x * UV1 + triangle_barys.y * UV2;
+    result.uvs   = uv;
+
+    // Compute local normal
+    glm::vec3 local_light_normal = glm::cross(P1 - P0, P2 - P0);
+    // Normals are transformed by (A^-1)^T instead of A
+    glm::vec3 light_normal = glm::normalize(glm::transpose(glm::mat3(sbt_data->world_to_local)) * local_light_normal);
+
+    atcg::Frame<glm::vec3> frame(light_normal);
+
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::HEMISPHERE_COSINE> sampling_strategy;
+    glm::vec3 local_dir = sampling_strategy.sample(rng.next2d());
+    glm::vec3 world_dir = frame.toWorld(local_dir);
+
+    float position_pdf  = 1 / sbt_data->total_area;
+    float direction_pdf = sampling_strategy.pdf(local_dir);
+    float pdf           = position_pdf * direction_pdf;
+
+    result.position        = light_position;
+    result.direction       = world_dir;
+    result.normal          = light_normal;
+    result.pdf             = pdf;
+    result.radiance_weight = atcg::SampledSpectrum::fromRGB(sbt_data->emitter_scaling *
+                                                                sbt_data->emissive_texture.read(glm::vec2(result.uvs)),
+                                                            wavelengths) *
+                             glm::pi<float>() / position_pdf;
+
+    return result;
+}
+
 }    // namespace detail
 
 extern "C" __device__ atcg::EmitterSamplingResult
@@ -187,4 +260,11 @@ extern "C" __device__ float __direct_callable__evalpdf_meshemitter(const atcg::A
     // We can assume that outgoing ray dir actually intersects the light source.
 
     return detail::evalMeshEmitterPDF(last_si, sbt_data->total_area, si);
+}
+
+extern "C" __device__ atcg::PhotonSamplingResult
+__direct_callable__samplephoton_meshemitter(const atcg::SampledWavelengths& wavelengths, atcg::PCG32& rng)
+{
+    const atcg::MeshEmitterData* sbt_data = *reinterpret_cast<const atcg::MeshEmitterData**>(optixGetSbtDataPointer());
+    return detail::samplePhoton(sbt_data, wavelengths, rng);
 }

@@ -8,6 +8,7 @@
 
 #include <Emitter/EmitterVPtrTable.cuh>
 #include <Emitter/PointEmitterData.cuh>
+#include <BSDF/Sampling.h>
 
 
 extern "C" __device__ atcg::EmitterSamplingResult
@@ -48,4 +49,24 @@ extern "C" __device__ float __direct_callable__evalpdf_pointemitter(const atcg::
         *reinterpret_cast<const atcg::PointEmitterData**>(optixGetSbtDataPointer());
 
     return 0.0f;
+}
+
+extern "C" __device__ atcg::PhotonSamplingResult
+__direct_callable__sample_photon_pointemitter(const atcg::SampledWavelengths& wavelengths, atcg::PCG32& rng)
+{
+    const atcg::PointEmitterData* sbt_data =
+        *reinterpret_cast<const atcg::PointEmitterData**>(optixGetSbtDataPointer());
+
+    atcg::PhotonSamplingResult result;
+
+    atcg::SamplingStrategy<atcg::SamplingStrategyType::SPHERE_UNIFORM> sampling_strategy;
+
+    result.position        = sbt_data->position;
+    result.direction       = sampling_strategy.sample(rng.next2d());
+    result.normal          = result.direction;
+    result.radiance_weight = atcg::SampledSpectrum::fromRGB(sbt_data->color, wavelengths) * sbt_data->intensity;
+    result.pdf             = sampling_strategy.pdf(result.direction);
+    result.uvs             = glm::vec3(0.0f);
+
+    return result;
 }
