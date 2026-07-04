@@ -1,0 +1,2 @@
+#define CUBQL_GPU_BUILDER_IMPLEMENTATION 1
+#include <cuBQL/bvh.h>
