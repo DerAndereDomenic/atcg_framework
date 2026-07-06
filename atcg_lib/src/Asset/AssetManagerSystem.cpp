@@ -243,8 +243,10 @@ void AssetManagerSystem::destroy()
 
 void AssetManagerSystem::loadStandardAssets()
 {
-    _sphere_mesh   = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
-    _cylinder_mesh = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
+    _sphere_mesh           = atcg::IO::read_mesh((atcg::resource_directory() / "sphere_low.obj").string());
+    _sphere_mesh->handle   = 1;    // Assign a fixed handle for the standard sphere mesh
+    _cylinder_mesh         = atcg::IO::read_mesh((atcg::resource_directory() / "cylinder.obj").string());
+    _cylinder_mesh->handle = 2;    // Assign a fixed handle for the standard cylinder mesh
 
     auto img = IO::imread((atcg::resource_directory() / "LUT.hdr").string());
     TextureSpecification spec_lut;
@@ -253,6 +255,7 @@ void AssetManagerSystem::loadStandardAssets()
     spec_lut.format            = TextureFormat::RGBFLOAT;
     spec_lut.sampler.wrap_mode = TextureWrapMode::CLAMP_TO_EDGE;
     _lut_texture               = atcg::Texture2D::create(img, spec_lut);
+    _lut_texture->handle       = 3;    // Assign a fixed handle for the standard LUT texture
 
     {
         glm::vec3 eye = glm::vec3(0);
@@ -275,7 +278,8 @@ void AssetManagerSystem::loadStandardAssets()
         edges.push_back({glm::vec2(3, 4), glm::vec3(1), 0.01f});
         edges.push_back({glm::vec2(4, 1), glm::vec3(1), 0.01f});
 
-        _camera_frustum = atcg::Graph::createGraph(points, edges);
+        _camera_frustum         = atcg::Graph::createGraph(points, edges);
+        _camera_frustum->handle = 4;    // Assign a fixed handle for the standard camera frustum mesh
     }
 
     {
@@ -295,7 +299,8 @@ void AssetManagerSystem::loadStandardAssets()
 
         std::vector<glm::u32vec3> edges = {glm::u32vec3(0, 1, 2), glm::u32vec3(0, 2, 3)};
 
-        _quad = atcg::Graph::createTriangleMesh(vertices, edges);
+        _quad         = atcg::Graph::createTriangleMesh(vertices, edges);
+        _quad->handle = 5;    // Assign a fixed handle for the standard quad mesh
     }
 
     {
@@ -323,11 +328,13 @@ void AssetManagerSystem::loadStandardAssets()
         faces.push_back(glm::u32vec3(0, 2, 3));
         faces.push_back(glm::u32vec3(4, 0, 1));
 
-        _cube_mesh = atcg::Graph::createTriangleMesh(points, faces);
+        _cube_mesh         = atcg::Graph::createTriangleMesh(points, faces);
+        _cube_mesh->handle = 6;    // Assign a fixed handle for the standard cube mesh
     }
 
-    _dummy_skybox     = atcg::make_ref<Skybox>();
-    _default_material = atcg::make_ref<OpaqueMaterial>();
+    _dummy_skybox             = atcg::make_ref<Skybox>();
+    _default_material         = atcg::make_ref<OpaqueMaterial>();
+    _default_material->handle = 7;    // Assign a fixed handle for the standard default material
 
     registerStandardAssets();
 }
