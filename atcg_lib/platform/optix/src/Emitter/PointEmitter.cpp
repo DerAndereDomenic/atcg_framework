@@ -33,11 +33,11 @@ void PointEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& p
     uint32_t sample_photon_idx = sbt->addCallableEntry(sample_photon_prog_group, _point_emitter_data.get());
 
     EmitterVPtrTable table;
-    table.flags            = _flags;
-    table.sampleCallIndex  = sample_idx;
-    table.evalCallIndex    = eval_idx;
-    table.evalPdfCallIndex = evalpdf_idx;
-    table.sampleCallIndex  = sample_photon_idx;
+    table.flags                 = _flags;
+    table.sampleCallIndex       = sample_idx;
+    table.evalCallIndex         = eval_idx;
+    table.evalPdfCallIndex      = evalpdf_idx;
+    table.samplePhotonCallIndex = sample_photon_idx;
 
     _vptr_table.upload(&table);
 

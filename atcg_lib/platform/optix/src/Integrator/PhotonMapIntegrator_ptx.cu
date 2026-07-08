@@ -154,7 +154,7 @@ extern "C" __global__ void __raygen__rg()
 
     bool next_ray_valid = true;
 
-    for(int n = 0; n < 8; ++n)
+    for(int n = 0; n < PHOTON_MAP_TRACE_DEPTH; ++n)
     {
         if(!next_ray_valid) break;
         next_ray_valid = false;
