@@ -151,8 +151,6 @@ samplePhoton(const atcg::MeshEmitterData* sbt_data, const atcg::SampledWavelengt
 {
     atcg::PhotonSamplingResult result;
 
-    atcg::EmitterSamplingResult result;
-
     // Select the triangle to sample a direction from uniformly at random, proportional to its surface area
     uint32_t triangle_index = 0;
     // Sample the barycentric coordinates on the triangle uniformly.

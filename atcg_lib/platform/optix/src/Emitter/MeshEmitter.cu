@@ -175,11 +175,11 @@ void MeshEmitter::initializePipeline(const atcg::ref_ptr<RayTracingPipeline>& pi
     uint32_t samplephoton_idx = sbt->addCallableEntry(samplephoton_prog_group, _mesh_emitter_data.get());
 
     EmitterVPtrTable table;
-    table.flags            = _flags;
-    table.sampleCallIndex  = sample_idx;
-    table.evalCallIndex    = eval_idx;
-    table.evalPdfCallIndex = eval_pdf_idx;
-    table.sampleCallIndex  = samplephoton_idx;
+    table.flags                 = _flags;
+    table.sampleCallIndex       = sample_idx;
+    table.evalCallIndex         = eval_idx;
+    table.evalPdfCallIndex      = eval_pdf_idx;
+    table.samplePhotonCallIndex = samplephoton_idx;
 
     _vptr_table.upload(&table);
 

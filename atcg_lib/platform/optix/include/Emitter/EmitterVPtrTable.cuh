@@ -68,7 +68,7 @@ struct EmitterVPtrTable
 
     __device__ PhotonSamplingResult samplePhoton(const atcg::SampledWavelengths& wavelengths, PCG32& rng) const
     {
-        return optixDirectCall<PhotonSamplingResult, const atcg::SampledWavelengths&, PCG32&>(sampleCallIndex,
+        return optixDirectCall<PhotonSamplingResult, const atcg::SampledWavelengths&, PCG32&>(samplePhotonCallIndex,
                                                                                               wavelengths,
                                                                                               rng);
     }
