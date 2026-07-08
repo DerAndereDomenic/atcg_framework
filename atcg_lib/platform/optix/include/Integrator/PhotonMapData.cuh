@@ -29,9 +29,10 @@ struct PhotonMapData
 
 struct PhotonGatherData
 {
-    uint32_t photon_count          = 0;
-    float gather_radius_sq         = PHOTON_MAP_GATHER_RADIUS_SQ;
-    SampledSpectrum gathered_power = SampledSpectrum(0.0f);
+    uint32_t photon_count           = 0;
+    float gather_radius_sq          = PHOTON_MAP_GATHER_RADIUS_SQ;
+    SampledSpectrum gathered_power  = SampledSpectrum(0.0f);
+    SampledSpectrum direct_radiance = SampledSpectrum(0.0f);
 };
 
 struct PhotonMapParams

@@ -147,14 +147,12 @@ extern "C" __global__ void __raygen__rg()
         params.photon_gather_data[pixel_index].gathered_power   = atcg::SampledSpectrum(0.0f);
     }
 
-    atcg::SampledSpectrum radiance(0);
+    atcg::SampledSpectrum mc_radiance(0);
+    atcg::SampledSpectrum ppm_radiance(0);
     atcg::SampledWavelengths wavelengths = atcg::SampledWavelengths::sampleSpectrum(rng.nextFloat(), 380.0f, 780.0f);
     int32_t entity_id                    = -1;
 
     bool next_ray_valid = true;
-
-    atcg::SurfaceInteraction last_si;
-    last_si.pdf = 1.0f;
 
     for(int n = 0; n < 8; ++n)
     {
@@ -180,22 +178,19 @@ extern "C" __global__ void __raygen__rg()
             // Check for light source
             if(si.emitter)
             {
-                bool mis_valid              = last_si.isValid();
-                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
-                float emitter_sampling_pdf =
-                    mis_valid ? si.emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf : 0.0f;
-                float mis_weight = atcg::BalanceHeuristic::apply(last_si.pdf, emitter_sampling_pdf);
-                radiance += mis_weight * camera_ray.importance * si.emitter->evalLight(si, wavelengths);
+                mc_radiance += camera_ray.importance * si.emitter->evalLight(si, wavelengths);
             }
 
             // PBR Sampling
             if(si.bsdf)
             {
-                if(!atcg::hasBSDFFlag(si.bsdf->flags, atcg::BSDFComponentType::AnyDelta))
+                auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);
+                if(!atcg::hasBSDFFlag(si.bsdf->flags, atcg::BSDFComponentType::AnyDelta) &&
+                   !atcg::hasBSDFFlag(result.flags, atcg::BSDFComponentType::AnyDelta))
                 {
-                    float radius_sq = params.photon_gather_data[pixel_index].gather_radius_sq;
                     cuBQL::vec3f query_pos(si.position.x, si.position.y, si.position.z);
 
+                    float radius_sq = params.photon_gather_data[pixel_index].gather_radius_sq;
                     int num_photons = 0;
                     atcg::SampledSpectrum photon_power(0.0f);
                     atcg::PhotonMapData* photon_data = params.photon_data;
@@ -218,11 +213,11 @@ extern "C" __global__ void __raygen__rg()
 
                     // PPM
                     atcg::SampledSpectrum gathered_total_power = params.photon_gather_data[pixel_index].gathered_power;
-                    gathered_total_power += photon_power;
-                    uint32_t N = params.photon_gather_data[pixel_index].photon_count;
-                    uint32_t M = num_photons;
+                    gathered_total_power += camera_ray.importance * photon_power;
+                    float N = (float)params.photon_gather_data[pixel_index].photon_count;
+                    float M = (float)num_photons;
 
-                    uint32_t gather_photon_count = N + PHOTON_MAP_REDUCTION_FACTOR * M;
+                    float gather_photon_count = N + PHOTON_MAP_REDUCTION_FACTOR * M;
 
                     if(M != 0)
                     {
@@ -231,11 +226,6 @@ extern "C" __global__ void __raygen__rg()
                         gathered_total_power *= reduction_factor_sq;
                     }
 
-                    int total_emitted_photons =
-                        (params.frame_counter + 1) * (PHOTON_MAP_MAX_NUM_PHOTONS / PHOTON_MAP_TRACE_DEPTH);
-                    radiance += camera_ray.importance * gathered_total_power /
-                                ((float)total_emitted_photons * glm::pi<float>() * radius_sq);
-
                     params.photon_gather_data[pixel_index].gather_radius_sq = radius_sq;
                     params.photon_gather_data[pixel_index].gathered_power   = gathered_total_power;
                     params.photon_gather_data[pixel_index].photon_count     = gather_photon_count;
@@ -243,7 +233,6 @@ extern "C" __global__ void __raygen__rg()
                     break;
                 }
 
-                auto result = si.bsdf->sampleBSDF(si, wavelengths, rng);
 
                 if(result.sample_probability > 0.0f)
                 {
@@ -251,14 +240,6 @@ extern "C" __global__ void __raygen__rg()
                     camera_ray.ray.direction = result.out_dir;
                     camera_ray.importance *= result.bsdf_weight;
                     next_ray_valid = true;
-
-                    last_si     = si;
-                    last_si.pdf = result.sample_probability;
-
-                    if((int)(result.flags & atcg::BSDFComponentType::AnyDelta) != 0)
-                    {
-                        last_si.setInvalid();
-                    }
                 }
             }
         }
@@ -266,19 +247,28 @@ extern "C" __global__ void __raygen__rg()
         {
             if(params.environment_emitter)
             {
-                bool mis_valid              = last_si.isValid();
-                float emitter_selection_pdf = 1.0f / ((float)params.num_emitters);
-                float emitter_sampling_pdf =
-                    mis_valid ? params.environment_emitter->evalLightSamplingPdf(last_si, si) * emitter_selection_pdf
-                              : 0.0f;
-                float mis_weight = last_si.pdf / (last_si.pdf + emitter_sampling_pdf);
-                radiance += mis_weight * camera_ray.importance * params.environment_emitter->evalLight(si, wavelengths);
+                mc_radiance += camera_ray.importance * params.environment_emitter->evalLight(si, wavelengths);
             }
         }
     }
 
+    if(params.frame_counter > 0)
+    {
+        // Mix with previous subframes if present!
+        const float a                                    = 1.0f / static_cast<float>(params.frame_counter + 1);
+        const atcg::SampledSpectrum prev_output_radiance = params.photon_gather_data[pixel_index].direct_radiance;
+        mc_radiance                                      = (1.0f - a) * prev_output_radiance + a * mc_radiance;
+    }
+
+    atcg::SampledSpectrum gathered_total_power = params.photon_gather_data[pixel_index].gathered_power;
+    float radius_sq                            = params.photon_gather_data[pixel_index].gather_radius_sq;
+
+    int total_emitted_photons = (params.frame_counter + 1) * PHOTON_MAP_PHOTONS_PER_LAUNCH;
+    ppm_radiance              = gathered_total_power / ((float)total_emitted_photons * glm::pi<float>() * radius_sq);
+
+    params.photon_gather_data[pixel_index].direct_radiance = mc_radiance;
     params.sensor->addSample(glm::ivec3(launch_idx.x, launch_idx.y, 0),
-                             radiance,
+                             mc_radiance + ppm_radiance,
                              wavelengths);    // Set sample count to 0 so no accumulation happens in film
 
     if(params.entity_ids)
