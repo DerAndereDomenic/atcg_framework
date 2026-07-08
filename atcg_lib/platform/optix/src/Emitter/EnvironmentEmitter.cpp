@@ -8,6 +8,7 @@ namespace atcg
 EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
 {
     atcg::ref_ptr<atcg::Texture2D> texture = dict.getValue<atcg::ref_ptr<Texture2D>>("environment_texture");
+    atcg::BoundingBox scene_aabb           = dict.getValueOr<atcg::BoundingBox>("scene_aabb", atcg::BoundingBox());
 
     _flags               = EmitterFlags::DistantEmitter;
     _environment_texture = std::dynamic_pointer_cast<Texture2D>(texture->clone());
@@ -46,6 +47,7 @@ EnvironmentEmitter::EnvironmentEmitter(const Dictionary& dict)
     data.row_cdf                                  = _row_cdf.data_ptr<float>();
     data.width                                    = env_map.size(1);
     data.height                                   = env_map.size(0);
+    data.bounding_box                             = scene_aabb;
 
     _environment_emitter_data.upload(&data);
 }
