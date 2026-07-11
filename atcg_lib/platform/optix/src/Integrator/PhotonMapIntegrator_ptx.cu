@@ -201,7 +201,10 @@ extern "C" __global__ void __raygen__rg()
                         if(glm::dot(si.normal, current_photon.normal) > 0.2f)
                         {
                             auto bsdf_val = si.bsdf->evalBSDF(si, current_photon.direction, wavelengths);
-                            photon_power += bsdf_val.bsdf_value * current_photon.throughput;
+                            float NdotL   = glm::max(1e-3f, glm::dot(si.normal, current_photon.direction));
+                            // Divide by NdotL because this cancels out with the bsdf's cosine when substituting
+                            // radiance with power
+                            photon_power += bsdf_val.bsdf_value * current_photon.throughput / NdotL;
 
                             ++num_photons;
                         }
